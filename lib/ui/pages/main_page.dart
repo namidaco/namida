@@ -505,7 +505,8 @@ class AlbumSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
   Widget build(BuildContext context) {
     return AlbumsPage(
       albumIdentifiers: SearchSortController.inst.albumSearchTemp,
-      countPerRow: settings.albumGridCount.value,
+      countPerRow: settings.mediaGridCounts.value.get(LibraryTab.albums),
+      enableGridIconButton: false,
     );
   }
 }
@@ -523,7 +524,8 @@ class ArtistSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
     return ArtistsPage(
       enableHero: false,
       artists: artists,
-      countPerRow: settings.artistGridCount.value,
+      countPerRow: settings.mediaGridCounts.value.get(LibraryTab.artists),
+      enableGridIconButton: false,
       customType: type,
     );
   }

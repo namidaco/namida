@@ -26,6 +26,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
 
   final RxList<String>? albumIdentifiers;
   final CountPerRow countPerRow;
+  final bool enableGridIconButton;
   final bool animateTiles;
   final bool enableHero;
 
@@ -33,6 +34,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
     super.key,
     this.albumIdentifiers,
     required this.countPerRow,
+    this.enableGridIconButton = true,
     this.animateTiles = true,
     this.enableHero = true,
   });
@@ -42,7 +44,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   Widget build(BuildContext context) {
     final scrollController = LibraryTab.albums.scrollController;
-    final countPerRowResolved = countPerRow.resolve();
+    final countPerRowResolved = countPerRow.resolve(context);
 
     return BackgroundWrapper(
       child: NamidaScrollbar(
@@ -55,14 +57,12 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                 Obx(
                   (context) => ExpandableBox(
                     enableHero: enableHero,
-                    gridWidget: ChangeGridCountWidget(
-                      currentCount: countPerRow,
-                      forStaggered: settings.useAlbumStaggeredGridView.valueR,
-                      onTap: (count) {
-                        final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.albums, count, animateTiles: false);
-                        settings.save(albumGridCount: newCount);
-                      },
-                    ),
+                    gridWidget: enableGridIconButton
+                        ? ChangeGridCountWidget(
+                            tab: LibraryTab.albums,
+                            forStaggered: settings.useAlbumStaggeredGridView.valueR,
+                          )
+                        : null,
                     isBarVisible: LibraryTab.albums.isBarVisible.valueR,
                     showSearchBox: LibraryTab.albums.isSearchBoxVisible.valueR,
                     leftText: finalAlbums.length.displayAlbumKeyword,
@@ -112,7 +112,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                   itemCount: finalAlbums.length,
                                   mainAxisSpacing: 8.0,
                                   gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: countPerRow.resolve(),
+                                    crossAxisCount: countPerRowResolved,
                                   ),
                                   itemBuilder: (context, i) {
                                     final albumId = finalAlbums[i];
@@ -132,7 +132,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                             : Expanded(
                                 child: GridView.builder(
                                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: countPerRow.resolve(),
+                                    crossAxisCount: countPerRowResolved,
                                     childAspectRatio: 0.75,
                                     mainAxisSpacing: 8.0,
                                   ),

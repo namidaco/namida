@@ -83,7 +83,7 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                           subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
                           thirdLineText: tracks.albumArtist,
                           heroTag: 'album_$albumIdentifier',
-                          imageBuilder: (size) => Dimensions.inst.shouldAlbumBeSquared // non reactive
+                          imageBuilder: (size) => Dimensions.inst.shouldAlbumBeSquared(context) // non reactive
                               ? MultiArtworkContainer(
                                   size: size,
                                   heroTag: 'album_$albumIdentifier',

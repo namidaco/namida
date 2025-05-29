@@ -254,7 +254,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
     final scrollController = isInsideDialog ? null : LibraryTab.playlists.scrollController;
     final defaultCardHorizontalPadding = Dimensions.inst.availableAppContentWidth * 0.045;
     final defaultCardHorizontalPaddingCenter = Dimensions.inst.availableAppContentWidth * 0.035;
-    final countPerRowResolved = widget.countPerRow.resolve();
+    final countPerRowResolved = widget.countPerRow.resolve(context);
 
     return BackgroundWrapper(
       child: Listener(
@@ -274,12 +274,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                     enableHero: widget.enableHero && enableHero,
                     gridWidget: isInsideDialog
                         ? null
-                        : ChangeGridCountWidget(
-                            currentCount: settings.playlistGridCount.valueR,
-                            onTap: (count) {
-                              final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.playlists, count);
-                              settings.save(playlistGridCount: newCount);
-                            },
+                        : const ChangeGridCountWidget(
+                            tab: LibraryTab.playlists,
                           ),
                     isBarVisible: LibraryTab.playlists.isBarVisible.valueR,
                     showSearchBox: LibraryTab.playlists.isSearchBoxVisible.valueR,

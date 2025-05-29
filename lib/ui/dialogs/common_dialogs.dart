@@ -15,6 +15,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -62,7 +63,7 @@ class NamidaDialogs {
       "${tracks.displayTrackKeyword} & ${artists.length.displayArtistKeyword}",
       QueueSource.album,
       thirdLineText: artists.join(', ').overflow,
-      forceSquared: Dimensions.inst.shouldAlbumBeSquared,
+      forceSquared: Dimensions.inst.shouldAlbumBeSquared(rootContext),
       forceSingleArtwork: true,
       heroTag: 'album_$albumIdentifier',
       albumToAddFrom: (tracks.album, albumIdentifier),

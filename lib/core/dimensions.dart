@@ -26,6 +26,11 @@ class Dimensions {
     return showSubpageInfoAtSide;
   }
 
+  double availableAppContentWidthContext(BuildContext context) {
+    context.width; // vip to rebuild
+    return availableAppContentWidth;
+  }
+
   double miniplayerMaxWidth = 0.0;
   double sideInfoMaxWidth = 0.0;
   double availableAppContentWidth = 0.0;
@@ -88,8 +93,9 @@ class Dimensions {
     return globalBottomPaddingFABR + globalBottomPaddingEffectiveR;
   }
 
-  bool get shouldAlbumBeSquared {
-    final albumGridCount = settings.albumGridCount.value.resolve();
+  bool shouldAlbumBeSquared(BuildContext context) {
+    final countPerRow = settings.mediaGridCounts.value.get(LibraryTab.albums);
+    final albumGridCount = countPerRow.resolve(context);
     return (albumGridCount > 1 && !settings.useAlbumStaggeredGridView.value) || (albumGridCount == 1 && settings.forceSquaredAlbumThumbnail.value);
   }
 

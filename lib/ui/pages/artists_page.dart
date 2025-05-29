@@ -26,6 +26,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
 
   final RxList<String>? artists;
   final CountPerRow countPerRow;
+  final bool enableGridIconButton;
   final bool animateTiles;
   final bool enableHero;
   final MediaType? customType;
@@ -34,6 +35,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
     super.key,
     this.artists,
     required this.countPerRow,
+    this.enableGridIconButton = true,
     this.animateTiles = true,
     required this.enableHero,
     this.customType,
@@ -85,7 +87,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   Widget build(BuildContext context) {
     final scrollController = LibraryTab.artists.scrollController;
-    final countPerRowResolved = countPerRow.resolve();
+    final countPerRowResolved = countPerRow.resolve(context);
     final artistTypeColor = context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.8);
     return BackgroundWrapper(
       child: NamidaScrollbar(
@@ -103,13 +105,11 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                   children: [
                     ExpandableBox(
                       enableHero: enableHero,
-                      gridWidget: ChangeGridCountWidget(
-                        currentCount: settings.artistGridCount.valueR,
-                        onTap: (count) {
-                          final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.artists, count);
-                          settings.save(artistGridCount: newCount);
-                        },
-                      ),
+                      gridWidget: enableGridIconButton
+                          ? const ChangeGridCountWidget(
+                              tab: LibraryTab.artists,
+                            )
+                          : null,
                       isBarVisible: LibraryTab.artists.isBarVisible.valueR,
                       showSearchBox: LibraryTab.artists.isSearchBoxVisible.valueR,
                       leftText: customType != null ? artistLeftText : '',

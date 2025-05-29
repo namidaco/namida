@@ -98,25 +98,26 @@ extension LibraryTabUtils on LibraryTab {
   int toInt() => settings.libraryTabs.value.indexOf(this);
 
   NamidaRouteWidget toWidget([CountPerRow? gridCount, bool animateTiles = true, bool enableHero = true]) {
+    gridCount ??= settings.mediaGridCounts.value.get(this);
     return switch (this) {
       LibraryTab.tracks => TracksPage(animateTiles: animateTiles),
       LibraryTab.albums => AlbumsPage(
-          countPerRow: gridCount ?? settings.albumGridCount.value,
+          countPerRow: gridCount,
           animateTiles: animateTiles,
           enableHero: enableHero,
         ),
       LibraryTab.artists => ArtistsPage(
-          countPerRow: gridCount ?? settings.artistGridCount.value,
+          countPerRow: gridCount,
           animateTiles: animateTiles,
           enableHero: enableHero,
         ),
       LibraryTab.genres => GenresPage(
-          countPerRow: gridCount ?? settings.genreGridCount.value,
+          countPerRow: gridCount,
           animateTiles: animateTiles,
           enableHero: enableHero,
         ),
       LibraryTab.playlists => PlaylistsPage(
-          countPerRow: gridCount ?? settings.playlistGridCount.value,
+          countPerRow: gridCount,
           animateTiles: animateTiles,
           enableHero: enableHero,
         ),

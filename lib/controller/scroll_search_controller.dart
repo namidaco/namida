@@ -80,10 +80,10 @@ class ScrollSearchController {
     NamidaNavigator.inst.navigateOffAll(w, transition: transition, durationMs: isVertical ? 300 : 400);
   }
 
-  CountPerRow animateChangingGridSize(LibraryTab tab, CountPerRow nextGridCount, {int minimum = 1, bool animateTiles = true}) {
+  CountPerRow animateChangingGridSize(LibraryTab tab, CountPerRow gridCount) {
     _updateScrollPositions(tab, tab);
-    NamidaNavigator.inst.navigateOff(tab.toWidget(nextGridCount, false, true), durationInMs: 500);
-    return nextGridCount;
+    NamidaNavigator.inst.navigateOff(tab.toWidget(gridCount, false, true), durationInMs: 500);
+    return gridCount;
   }
 
   void initialize() {

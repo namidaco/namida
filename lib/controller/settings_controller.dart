@@ -70,10 +70,12 @@ class _SettingsController with SettingsFileWriter {
   final forceSquaredAlbumThumbnail = false.obs;
   final useAlbumStaggeredGridView = false.obs;
   final useSettingCollapsedTiles = true.obs;
-  final albumGridCount = CountPerRow(2).obs;
-  final artistGridCount = CountPerRow(3).obs;
-  final genreGridCount = CountPerRow(2).obs;
-  final playlistGridCount = CountPerRow(1).obs;
+  final mediaGridCounts = <LibraryTab, CountPerRow?>{
+    LibraryTab.albums: null,
+    LibraryTab.artists: null,
+    LibraryTab.genres: null,
+    LibraryTab.playlists: CountPerRow(1),
+  }.obs;
   final enableBlurEffect = false.obs;
   final enableGlowEffect = false.obs;
   final hourFormat12 = true.obs;
@@ -406,10 +408,13 @@ class _SettingsController with SettingsFileWriter {
       forceSquaredAlbumThumbnail.value = json['forceSquaredAlbumThumbnail'] ?? forceSquaredAlbumThumbnail.value;
       useAlbumStaggeredGridView.value = json['useAlbumStaggeredGridView'] ?? useAlbumStaggeredGridView.value;
       useSettingCollapsedTiles.value = json['useSettingCollapsedTiles'] ?? useSettingCollapsedTiles.value;
-      albumGridCount.value = CountPerRow.fromJsonValue(json['albumGridCount']) ?? albumGridCount.value;
-      artistGridCount.value = CountPerRow.fromJsonValue(json['artistGridCount']) ?? artistGridCount.value;
-      genreGridCount.value = CountPerRow.fromJsonValue(json['genreGridCount']) ?? genreGridCount.value;
-      playlistGridCount.value = CountPerRow.fromJsonValue(json['playlistGridCount']) ?? playlistGridCount.value;
+
+      final mediaGridCountsInStorage = json["mediaGridCounts"];
+      if (mediaGridCountsInStorage is Map && mediaGridCountsInStorage.isNotEmpty) {
+        mediaGridCounts.value = {
+          for (final e in mediaGridCountsInStorage.entries) LibraryTab.values.getEnum(e.key) ?? LibraryTab.tracks: CountPerRow.fromJsonValue(e.value),
+        };
+      }
       enableBlurEffect.value = json['enableBlurEffect'] ?? enableBlurEffect.value;
       enableGlowEffect.value = json['enableGlowEffect'] ?? enableGlowEffect.value;
       hourFormat12.value = json['hourFormat12'] ?? hourFormat12.value;
@@ -621,10 +626,7 @@ class _SettingsController with SettingsFileWriter {
         'forceSquaredAlbumThumbnail': forceSquaredAlbumThumbnail.value,
         'useAlbumStaggeredGridView': useAlbumStaggeredGridView.value,
         'useSettingCollapsedTiles': useSettingCollapsedTiles.value,
-        'albumGridCount': albumGridCount.value.rawValue,
-        'artistGridCount': artistGridCount.value.rawValue,
-        'genreGridCount': genreGridCount.value.rawValue,
-        'playlistGridCount': playlistGridCount.value.rawValue,
+        'mediaGridCounts': mediaGridCounts.value.map((key, value) => MapEntry(key.name, value?.rawValue)),
         'enableBlurEffect': enableBlurEffect.value,
         'enableGlowEffect': enableGlowEffect.value,
         'hourFormat12': hourFormat12.value,
@@ -782,10 +784,6 @@ class _SettingsController with SettingsFileWriter {
     bool? forceSquaredAlbumThumbnail,
     bool? useAlbumStaggeredGridView,
     bool? useSettingCollapsedTiles,
-    CountPerRow? albumGridCount,
-    CountPerRow? artistGridCount,
-    CountPerRow? genreGridCount,
-    CountPerRow? playlistGridCount,
     bool? enableBlurEffect,
     bool? enableGlowEffect,
     bool? hourFormat12,
@@ -951,10 +949,6 @@ class _SettingsController with SettingsFileWriter {
     if (forceSquaredAlbumThumbnail != null) this.forceSquaredAlbumThumbnail.value = forceSquaredAlbumThumbnail;
     if (useAlbumStaggeredGridView != null) this.useAlbumStaggeredGridView.value = useAlbumStaggeredGridView;
     if (useSettingCollapsedTiles != null) this.useSettingCollapsedTiles.value = useSettingCollapsedTiles;
-    if (albumGridCount != null) this.albumGridCount.value = albumGridCount;
-    if (artistGridCount != null) this.artistGridCount.value = artistGridCount;
-    if (genreGridCount != null) this.genreGridCount.value = genreGridCount;
-    if (playlistGridCount != null) this.playlistGridCount.value = playlistGridCount;
     if (enableBlurEffect != null) this.enableBlurEffect.value = enableBlurEffect;
     if (enableGlowEffect != null) this.enableGlowEffect.value = enableGlowEffect;
     if (hourFormat12 != null) this.hourFormat12.value = hourFormat12;
@@ -1222,10 +1216,23 @@ class _SettingsController with SettingsFileWriter {
     _writeToStorage();
   }
 
+  void updateMediaGridCounts(LibraryTab tab, CountPerRow? countPerRow) {
+    mediaGridCounts[tab] = countPerRow;
+    _writeToStorage();
+  }
+
   @override
   String get filePath => AppPaths.SETTINGS;
 }
 
 extension _ListieMapper on Iterable<dynamic> {
   List<T> toListy<T>() => whereType<T>().toList();
+}
+
+extension CountPerRowMapUtils on Map<LibraryTab, CountPerRow?> {
+  CountPerRow get(LibraryTab tab) {
+    final val = this[tab];
+    if (val == null || val.rawValue < 1) return CountPerRow.autoForTab(tab);
+    return val;
+  }
 }

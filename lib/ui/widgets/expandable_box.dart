@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -271,13 +274,12 @@ class SortByMenu extends StatelessWidget {
 }
 
 class ChangeGridCountWidget extends StatelessWidget {
-  final void Function(CountPerRow countPerRow) onTap;
-  final CountPerRow currentCount;
+  final LibraryTab tab;
   final bool forStaggered;
+
   const ChangeGridCountWidget({
     super.key,
-    required this.onTap,
-    required this.currentCount,
+    required this.tab,
     this.forStaggered = false,
   });
 
@@ -286,35 +288,66 @@ class ChangeGridCountWidget extends StatelessWidget {
         2 => forStaggered ? Broken.grid_3 : Broken.grid_2,
         3 => Broken.grid_8,
         4 => Broken.grid_1,
+        < 0 => Broken.autobrightness,
         _ => Broken.grid_1,
       };
 
+  void _onTap(CountPerRow? count) {
+    if (count != null) {
+      if (count.rawValue != settings.mediaGridCounts.value.get(tab).rawValue) {
+        final newCount = ScrollSearchController.inst.animateChangingGridSize(tab, count);
+        settings.updateMediaGridCounts(tab, newCount);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    //  final List<IconData> normal = [Broken.grid_1 /* dummy */, Broken.row_vertical, Broken.grid_2, Broken.grid_8, Broken.grid_1];
+    // final List<IconData> normal = [Broken.grid_1 /* dummy */, Broken.row_vertical, Broken.grid_2, Broken.grid_8, Broken.grid_1];
     // final List<IconData> staggered = [Broken.grid_1 /* dummy */, Broken.row_vertical, Broken.grid_3, Broken.grid_edit, Broken.grid_1];
-    final count = currentCount.resolve();
-    final text = "$count";
-    // final text = count == currentCount.rawValue ? "$count" : "${count}x";
-    return NamidaPopupWrapper(
-      childrenDefault: () => CountPerRow.getAvailableOptions()
-          .map(
-            (e) => NamidaPopupItem(
-              icon: _resolveIcon(e.rawValue),
-              title: '${e.rawValue}',
-              onTap: () => onTap(e),
+    return ObxO(
+      rx: settings.mediaGridCounts,
+      builder: (context, mediaGridCounts) {
+        final currentCount = mediaGridCounts.get(tab);
+        final count = currentCount.resolve(context);
+        String? secondaryText;
+        IconData? secondaryIcon;
+        if (currentCount.isAuto) {
+          secondaryIcon = Broken.autobrightness;
+        } else {
+          secondaryText = "$count";
+        }
+
+        return NamidaPopupWrapper(
+          childrenDefault: () {
+            final autoCountPerRow = CountPerRow.autoForTab(tab);
+            return [
+              NamidaPopupItem(
+                icon: _resolveIcon(autoCountPerRow.rawValue),
+                title: lang.AUTO,
+                onTap: () => _onTap(autoCountPerRow),
+              ),
+              ...CountPerRow.getAvailableOptions().map(
+                (e) => NamidaPopupItem(
+                  icon: _resolveIcon(e.rawValue),
+                  title: '${e.rawValue}',
+                  onTap: () => _onTap(e),
+                ),
+              ),
+            ];
+          },
+          child: NamidaInkWell(
+            transparentHighlight: true,
+            onTap: () => _onTap(currentCount.getNext()),
+            child: StackedIcon(
+              baseIcon: _resolveIcon(count),
+              secondaryText: secondaryText,
+              secondaryIcon: secondaryIcon,
+              iconSize: 22.0,
             ),
-          )
-          .toList(),
-      child: NamidaInkWell(
-        transparentHighlight: true,
-        onTap: () => onTap(currentCount.getNext()),
-        child: StackedIcon(
-          baseIcon: _resolveIcon(count),
-          secondaryText: text,
-          iconSize: 22.0,
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

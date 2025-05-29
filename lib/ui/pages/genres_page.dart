@@ -40,6 +40,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
   @override
   Widget build(BuildContext context) {
     final scrollController = LibraryTab.genres.scrollController;
+    final countPerRowResolved = countPerRow.resolve(context);
 
     return BackgroundWrapper(
       child: NamidaScrollbar(
@@ -50,12 +51,8 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
               children: [
                 ExpandableBox(
                   enableHero: enableHero,
-                  gridWidget: ChangeGridCountWidget(
-                    currentCount: settings.genreGridCount.valueR,
-                    onTap: (count) {
-                      final newCount = ScrollSearchController.inst.animateChangingGridSize(LibraryTab.genres, count, minimum: 2);
-                      settings.save(genreGridCount: newCount);
-                    },
+                  gridWidget: const ChangeGridCountWidget(
+                    tab: LibraryTab.genres,
                   ),
                   isBarVisible: LibraryTab.genres.isBarVisible.valueR,
                   showSearchBox: LibraryTab.genres.isSearchBoxVisible.valueR,
@@ -77,7 +74,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                 Expanded(
                   child: GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: countPerRow.resolve(),
+                      crossAxisCount: countPerRowResolved,
                       childAspectRatio: 0.8,
                       mainAxisSpacing: 8.0,
                     ),
