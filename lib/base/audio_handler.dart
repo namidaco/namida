@@ -337,8 +337,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final wasPlayWhenReady = playWhenReady.value;
     if (newItem is Selectable && current is! Selectable) {
       await clearQueue();
+      await onDispose();
     } else if (newItem is YoutubeID && current is! YoutubeID) {
       await clearQueue();
+      await onDispose();
     }
     setPlayWhenReady(wasPlayWhenReady);
   }
