@@ -69,8 +69,10 @@ class AlbumCard extends StatelessWidget {
             } else {
               remainingVerticalSpace = constraints.maxHeight - imageSize;
             }
-            final itemImagePercentageMultiplier = imageSize * 0.02;
-            double getFontSize(double m) => (remainingVerticalSpace * m).withMaximum(15.0);
+            final itemImagePercentageMultiplier = imageSize * 0.015;
+            double getFontSize(double m) => (remainingVerticalSpace * m * 0.9).withMaximum(15.0);
+            final playIconBgColor = context.theme.cardColor.withValues(alpha: (imageSize / 200).clampDouble(0, 1));
+
             return NamidaInkWell(
               onTap: () => dummyCard ? null : NamidaOnTaps.inst.onAlbumTap(identifier),
               onLongPress: () => dummyCard ? null : NamidaDialogs.inst.showAlbumDialog(identifier),
@@ -105,7 +107,10 @@ class AlbumCard extends StatelessWidget {
                                         fit: BoxFit.fitWidth,
                                         child: Text(
                                           topRightText ?? finalYear,
-                                          style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0, fontWeight: FontWeight.bold),
+                                          style: context.textTheme.displaySmall?.copyWith(
+                                            fontSize: getFontSize(0.18),
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                           softWrap: false,
                                           overflow: TextOverflow.fade,
                                         ),
@@ -118,15 +123,16 @@ class AlbumCard extends StatelessWidget {
                                 right: 2.0 + itemImagePercentageMultiplier,
                                 child: NamidaInkWell(
                                   decoration: BoxDecoration(
+                                    color: playIconBgColor,
                                     boxShadow: [
                                       BoxShadow(
+                                        blurRadius: 8.0,
                                         offset: const Offset(0.0, 2.0),
-                                        color: context.theme.cardColor,
+                                        color: playIconBgColor.withValues(alpha: 0.5),
                                       ),
                                     ],
                                   ),
-                                  borderRadius: 10.0,
-                                  bgColor: context.theme.cardColor,
+                                  borderRadius: 10.0.withMaximum(imageSize * 0.08),
                                   onTap: () => Player.inst.playOrPause(0, album, QueueSource.album, homePageItem: homepageItem),
                                   padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
                                   child: Icon(
