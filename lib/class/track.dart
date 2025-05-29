@@ -234,7 +234,7 @@ class Track extends Selectable<String> {
   int get hashCode => path.hashCode;
 
   @override
-  String toString() => "path: $path";
+  String toString() => "Track($path)";
 
   @override
   String toJson() => path;

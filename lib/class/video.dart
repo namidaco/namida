@@ -213,6 +213,9 @@ class Video extends Track {
   Track get track => this;
 
   const Video.explicit(super.path) : super.explicit();
+
+  @override
+  String toString() => "Video($path)";
 }
 
 extension VideoUtils on Video {

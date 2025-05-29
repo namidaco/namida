@@ -8,7 +8,9 @@ import 'package:jiffy/jiffy.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -60,6 +62,24 @@ class StorageCacheManager {
 
   Future<void> deleteTempAudios() async {
     return _AudioVideoTrimmer._deleteTempFilesIsolate.thready({'normal': AppDirs.AUDIOS_CACHE});
+  }
+
+  Future<void> deleteMediaFilesThatAlreadyExistsInLocalLibrary(Map<String, List<Track>> idsMap, {required bool forVideos}) async {
+    final dirPath = forVideos ? AppDirs.VIDEOS_CACHE : AppDirs.AUDIOS_CACHE;
+    return _AudioVideoTrimmer._deleteAudioFilesThatAlreadyExistsIsolate.thready({
+      'normal': dirPath,
+      'idsMap': idsMap,
+      'forVideos': forVideos,
+    });
+  }
+
+  Future<(List<File>, int)> countMediaFilesThatAlreadyExistsInLocalLibrary(Map<String, List<Track>> idsMap, {required bool forVideos}) async {
+    final dirPath = forVideos ? AppDirs.VIDEOS_CACHE : AppDirs.AUDIOS_CACHE;
+    return _AudioVideoTrimmer._countAudioFilesThatAlreadyExistsIsolate.thready({
+      'normal': dirPath,
+      'idsMap': idsMap,
+      'forVideos': forVideos,
+    });
   }
 
   Future<void> deleteAllAudios() async {
@@ -120,18 +140,31 @@ class StorageCacheManager {
     required String? Function(T item) itemToYtId,
     required String Function(T item, int itemSize) itemToSubtitle,
     required String Function(int length, int totalSize) confirmDialogText,
-    required Future<void> Function(List<T> itemsToDelete) onDeleteFiles,
+    required Future<void> Function(Iterable<T> itemsToDelete) onDeleteFiles,
     required Future<int> Function() tempFilesSize,
     required Future<void> Function() onDeleteTempFiles,
     bool includeLocalTracksListens = true,
+    required bool forVideos,
   }) {
-    final itemsToDelete = <T>[].obs;
+    final itemsToDelete = <T>{}.obs;
     final itemsToDeleteSize = 0.obs;
     final allFiles = allItems.obs;
+    final allItemsByPaths = {for (final e in allFiles.value) itemToPath(e): e};
 
     final deleteTempFiles = false.obs;
     final tempFilesSizeFinal = 0.obs;
+    final deleteAlreadyInLocalLibraryFiles = false.obs;
+    final alreadyInLocalLibraryFilesSizeFinal = (<File>[], 0).obs;
     tempFilesSize().then((value) => tempFilesSizeFinal.value = value);
+
+    countMediaFilesThatAlreadyExistsInLocalLibrary(
+      Indexer.inst.allTracksMappedByYTID,
+      forVideos: forVideos,
+    ).then(
+      (countAndSize) {
+        alreadyInLocalLibraryFilesSizeFinal.value = countAndSize;
+      },
+    );
 
     final currentSort = _CacheSorting.recommended.obs;
 
@@ -228,6 +261,8 @@ class StorageCacheManager {
         itemsToDelete.close();
         deleteTempFiles.close();
         tempFilesSizeFinal.close();
+        deleteAlreadyInLocalLibraryFiles.close();
+        alreadyInLocalLibraryFilesSizeFinal.close();
         allFiles.close();
         currentSort.close();
       },
@@ -267,7 +302,10 @@ class StorageCacheManager {
                         },
                       ),
                     ],
-                    bodyText: [firstLine, tempFilesLine].joinText(separator: '\n'),
+                    bodyText: [
+                      firstLine,
+                      tempFilesLine,
+                    ].joinText(separator: '\n'),
                   ),
                 );
               },
@@ -324,96 +362,108 @@ class StorageCacheManager {
               const SizedBox(height: 6.0),
               Expanded(
                 child: NamidaScrollbarWithController(
-                  child: (sc) => Obx(
-                    (context) => ListView.builder(
-                      controller: sc,
-                      padding: EdgeInsets.zero,
-                      itemCount: allFiles.valueR.length,
-                      itemBuilder: (context, index) {
-                        final item = allFiles.value[index];
-                        final id = itemToYtId(item);
-                        final title = id == null ? null : YoutubeInfoController.utils.getVideoName(id);
-                        final listens = id == null ? null : listensMap[id];
-                        final itemSize = sizesMap[itemToPath(item)] ?? 0;
-                        String? lastPlayedTimeText;
-                        if (currentSort.value == _CacheSorting.accessTime || currentSort.value == _CacheSorting.recommended) {
-                          final accessTime = accessTimeMap[itemToPath(item)];
-                          if (accessTime != null) lastPlayedTimeText = Jiffy.parseFromMillisecondsSinceEpoch(accessTime).fromNow();
-                        }
-                        return NamidaInkWell(
-                          margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                          onTap: () {
-                            final didRemove = itemsToDelete.remove(item);
-                            if (didRemove) {
-                              itemsToDeleteSize.value -= itemSize;
-                            } else {
-                              itemsToDelete.add(item);
-                              itemsToDeleteSize.value += itemSize;
-                            }
-                          },
-                          child: Row(
-                            children: [
-                              YoutubeThumbnail(
-                                key: Key(id ?? ''),
-                                type: ThumbnailType.video,
-                                videoId: id,
-                                borderRadius: 8.0,
-                                iconSize: 24.0,
-                                width: 92.0,
-                                height: 92 * 9 / 16,
-                                forceSquared: true,
-                                isImportantInCache: false,
-                              ),
-                              const SizedBox(width: 8.0),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      title ?? id ?? '',
-                                      style: context.textTheme.displayMedium,
-                                    ),
-                                    Text(
-                                      itemToSubtitle(item, itemSize),
-                                      style: context.textTheme.displaySmall,
-                                    ),
-                                    if (lastPlayedTimeText != null)
-                                      Text(
-                                        lastPlayedTimeText,
-                                        style: context.textTheme.displaySmall,
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8.0),
-                              if (listens != null && listens > 0) ...[
-                                Text(
-                                  listens.toString(),
-                                  style: context.textTheme.displaySmall,
+                  child: (sc) => ObxO(
+                    rx: allFiles,
+                    builder: (context, allFiles) => ObxO(
+                      rx: itemsToDelete,
+                      builder: (context, toDelete) => ListView.builder(
+                        controller: sc,
+                        padding: EdgeInsets.zero,
+                        itemCount: allFiles.length,
+                        itemBuilder: (context, index) {
+                          final item = allFiles[index];
+                          final id = itemToYtId(item);
+                          final title = id == null ? null : YoutubeInfoController.utils.getVideoName(id);
+                          final listens = id == null ? null : listensMap[id];
+                          final itemSize = sizesMap[itemToPath(item)] ?? 0;
+                          String? lastPlayedTimeText;
+                          if (currentSort.value == _CacheSorting.accessTime || currentSort.value == _CacheSorting.recommended) {
+                            final accessTime = accessTimeMap[itemToPath(item)];
+                            if (accessTime != null) lastPlayedTimeText = Jiffy.parseFromMillisecondsSinceEpoch(accessTime).fromNow();
+                          }
+                          final isSelected = toDelete.contains(item);
+                          return NamidaInkWell(
+                            animationDurationMS: 200,
+                            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                            decoration: BoxDecoration(
+                              border: isSelected
+                                  ? Border.all(
+                                      color: context.theme.colorScheme.secondary.withValues(alpha: 0.5),
+                                      width: 2.0,
+                                    )
+                                  : null,
+                            ),
+                            onTap: () {
+                              final didRemove = itemsToDelete.value.remove(item);
+                              if (didRemove) {
+                                itemsToDeleteSize.value -= itemSize;
+                              } else {
+                                itemsToDelete.value.add(item);
+                                itemsToDeleteSize.value += itemSize;
+                              }
+                              itemsToDelete.refresh();
+                            },
+                            child: Row(
+                              children: [
+                                YoutubeThumbnail(
+                                  key: Key(id ?? ''),
+                                  type: ThumbnailType.video,
+                                  videoId: id,
+                                  borderRadius: 8.0,
+                                  iconSize: 24.0,
+                                  width: 92.0,
+                                  height: 92 * 9 / 16,
+                                  forceSquared: true,
+                                  isImportantInCache: false,
                                 ),
                                 const SizedBox(width: 8.0),
-                              ],
-                              IgnorePointer(
-                                child: SizedBox(
-                                  height: 16.0,
-                                  width: 16.0,
-                                  child: ObxO(
-                                    rx: itemsToDelete,
-                                    builder: (context, toDelete) => CheckMark(
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        title ?? id ?? '',
+                                        style: context.textTheme.displayMedium,
+                                      ),
+                                      Text(
+                                        itemToSubtitle(item, itemSize),
+                                        style: context.textTheme.displaySmall,
+                                      ),
+                                      if (lastPlayedTimeText != null)
+                                        Text(
+                                          lastPlayedTimeText,
+                                          style: context.textTheme.displaySmall,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8.0),
+                                if (listens != null && listens > 0) ...[
+                                  Text(
+                                    listens.toString(),
+                                    style: context.textTheme.displaySmall,
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                ],
+                                IgnorePointer(
+                                  child: SizedBox(
+                                    height: 16.0,
+                                    width: 16.0,
+                                    child: CheckMark(
                                       strokeWidth: 2,
                                       activeColor: context.theme.listTileTheme.iconColor!,
                                       inactiveColor: context.theme.listTileTheme.iconColor!,
                                       duration: const Duration(milliseconds: 400),
-                                      active: toDelete.contains(item),
+                                      active: isSelected,
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -427,7 +477,7 @@ class StorageCacheManager {
                           rx: deleteTempFiles,
                           builder: (context, deleteTempf) => AnimatedOpacity(
                             duration: const Duration(milliseconds: 200),
-                            opacity: deleteTempFiles.value ? 1.0 : 0.6,
+                            opacity: deleteTempf ? 1.0 : 0.6,
                             child: NamidaInkWell(
                               borderRadius: 6.0,
                               bgColor: namida.theme.cardColor,
@@ -448,12 +498,80 @@ class StorageCacheManager {
                                     active: deleteTempf,
                                   ),
                                   const SizedBox(width: 8.0),
-                                  ObxO(
-                                    rx: tempFilesSizeFinal,
-                                    builder: (context, tempf) => Text(
-                                      '${lang.DELETE_TEMP_FILES} (${tempf.fileSizeFormatted})',
-                                      style: namida.textTheme.displaySmall,
-                                    ),
+                                  Text(
+                                    '${lang.DELETE_TEMP_FILES} (${tempfs.fileSizeFormatted})',
+                                    style: namida.textTheme.displaySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    : const SizedBox(),
+              ),
+              ObxO(
+                rx: alreadyInLocalLibraryFilesSizeFinal,
+                builder: (context, alrInLocalLib) => alrInLocalLib.$1.isNotEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.only(left: 8.0, top: 8.0, right: 8.0),
+                        child: ObxO(
+                          rx: deleteAlreadyInLocalLibraryFiles,
+                          builder: (context, deleteAlrInLocalLib) => AnimatedOpacity(
+                            duration: const Duration(milliseconds: 200),
+                            opacity: deleteAlrInLocalLib ? 1.0 : 0.6,
+                            child: NamidaInkWell(
+                              borderRadius: 6.0,
+                              bgColor: namida.theme.cardColor,
+                              padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
+                              onTap: () {
+                                deleteAlreadyInLocalLibraryFiles.toggle();
+
+                                int effectiveSize = 0;
+
+                                if (deleteAlreadyInLocalLibraryFiles.value) {
+                                  for (final f in alreadyInLocalLibraryFilesSizeFinal.value.$1) {
+                                    final item = allItemsByPaths[f.path];
+                                    if (item != null) {
+                                      final alreadySelected = itemsToDelete.value.contains(item);
+                                      if (!alreadySelected) {
+                                        effectiveSize += sizesMap[f.path] ?? 0;
+                                        itemsToDelete.value.add(item);
+                                      }
+                                    }
+                                  }
+                                } else {
+                                  for (final f in alreadyInLocalLibraryFilesSizeFinal.value.$1) {
+                                    final item = allItemsByPaths[f.path];
+                                    if (item != null) {
+                                      final alreadySelected = itemsToDelete.value.contains(item);
+                                      if (alreadySelected) {
+                                        effectiveSize += sizesMap[f.path] ?? 0;
+                                        itemsToDelete.value.remove(item);
+                                      }
+                                    }
+                                  }
+                                }
+
+                                if (deleteAlreadyInLocalLibraryFiles.value) {
+                                  itemsToDeleteSize.value += effectiveSize;
+                                } else {
+                                  itemsToDeleteSize.value -= effectiveSize;
+                                }
+
+                                itemsToDelete.refresh();
+                              },
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  NamidaCheckMark(
+                                    size: 12.0,
+                                    active: deleteAlrInLocalLib,
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                  Text(
+                                    '${lang.SELECT_FILES_ALREADY_IN_LOCAL_LIBRARY} [${alrInLocalLib.$1.length}] (${alrInLocalLib.$2.fileSizeFormatted})',
+                                    style: namida.textTheme.displaySmall,
                                   ),
                                 ],
                               ),
@@ -765,6 +883,45 @@ class _AudioVideoTrimmer {
             e.deleteSync();
           } catch (_) {}
         }
+      }
+    });
+  }
+
+  static (List<File>, int) _countAudioFilesThatAlreadyExistsIsolate(Map params) {
+    int totalSize = 0;
+    final files = <File>[];
+    _loopAudioCacheExistingIdsMap(params, (file, isMetadata) {
+      if (!isMetadata) {
+        // -- we only get non-metadata files, but for deletion we delete all
+        totalSize += file.fileSizeSync() ?? 0;
+        files.add(file);
+      }
+    });
+    return (files, totalSize);
+  }
+
+  static void _deleteAudioFilesThatAlreadyExistsIsolate(Map params) {
+    return _loopAudioCacheExistingIdsMap(params, (file, isMetadata) => file.deleteSync());
+  }
+
+  static void _loopAudioCacheExistingIdsMap(Map params, void Function(File file, bool isMetadata) callback) {
+    final normalDir = params['normal'] as String;
+    final alreadyExistingInLibrary = params['idsMap'] as Map<String, List<Track>>;
+    final forVideos = params['forVideos'] as bool;
+    // ignore: prefer_function_declarations_over_variables
+    final forVideosChecker = forVideos ? (Track tr) => tr is Video : (Track tr) => true;
+    Directory(normalDir).listSyncSafe().loop((file) {
+      if (file is File) {
+        try {
+          final filename = file.path.getFilename;
+          final id = filename.substring(0, 11); // 'Wd_gr91dgDa_23393.m4a' -> 'Wd_gr91dgDa'
+          final valInMap = alreadyExistingInLibrary[id];
+          final alreadyExists = valInMap != null && valInMap.isNotEmpty && valInMap.any((element) => forVideosChecker(element) && File(element.path).existsSync());
+          if (alreadyExists) {
+            final isMetadata = filename.endsWith('.metadata') || filename.endsWith('.part') || filename.endsWith('.mime');
+            callback(file, isMetadata);
+          }
+        } catch (_) {}
       }
     });
   }

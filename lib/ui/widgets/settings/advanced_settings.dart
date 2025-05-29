@@ -581,6 +581,7 @@ class __ClearVideoCacheListTileState extends State<_ClearVideoCacheListTile> {
           chooseNote: lang.CLEAR_VIDEO_CACHE_NOTE,
           onChoosePrompt: () {
             cacheManager.showChooseToDeleteDialog(
+              forVideos: true,
               allItems: allvideos,
               itemToPath: (item) => item.path,
               itemToYtId: (item) {
@@ -594,7 +595,10 @@ class __ClearVideoCacheListTileState extends State<_ClearVideoCacheListTile> {
               onDeleteFiles: (itemsToDelete) async {
                 setState(() => totalSize = -1);
                 for (final video in itemsToDelete) {
-                  await File(video.path).tryDeleting();
+                  await [
+                    File(video.path).tryDeleting(),
+                    File('${video.path}.metadata').tryDeleting(),
+                  ].wait;
                   if (video.ytID != null) VideoController.inst.removeNVFromCacheMap(video.ytID!, video.path);
                 }
                 _fillSizes();
@@ -801,6 +805,7 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
           chooseNote: lang.CLEAR_VIDEO_CACHE_NOTE,
           onChoosePrompt: () {
             cacheManager.showChooseToDeleteDialog(
+              forVideos: false,
               allItems: allaudios,
               itemToPath: (item) => item.file.path,
               itemToYtId: (item) {
@@ -815,6 +820,10 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
                 setState(() => totalSize = -1);
                 for (final audio in itemsToDelete) {
                   await audio.file.tryDeleting();
+                  await [
+                    audio.file.tryDeleting(),
+                    File('${audio.file.path}.metadata').tryDeleting(),
+                  ].wait;
                   Player.inst.audioCacheMap[audio.youtubeId]?.removeWhere((element) => element.file.path == audio.file.path);
                 }
                 _fillSizes();
