@@ -1279,6 +1279,13 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                 },
                               );
 
+                              final videoWidget = NamidaVideoWidget(
+                                isLocal: false,
+                                disableControlsUnderPercentage: 0.5,
+                                onMinimizeTap: Dimensions.inst.miniplayerIsWideScreen ? null : () => MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false),
+                                swipeUpToFullscreen: true,
+                              );
+
                               return ObxO(
                                 rx: settings.enableBottomNavBar,
                                 builder: (context, enableBottomNavBar) => ObxO(
@@ -1340,15 +1347,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                     ),
                                                     width: finalthumbnailWidth,
                                                     height: finalthumbnailHeight,
-                                                    child: NamidaVideoWidget(
-                                                      isLocal: false,
-                                                      disableControlsUnderPercentage: 0.5,
-                                                      onMinimizeTap: Dimensions.inst.miniplayerIsWideScreen
-                                                          ? null
-                                                          : () => MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false),
-                                                      swipeUpToFullscreen: true,
-                                                      isMinimized: percentage == 0,
-                                                    ),
+                                                    child: videoWidget,
                                                   ),
                                                   FadeIgnoreTransition(
                                                     completelyKillWhenPossible: true,

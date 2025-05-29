@@ -39,7 +39,6 @@ class NamidaVideoWidget extends StatefulWidget {
   final bool zoomInToFullscreen;
   final bool swipeUpToFullscreen;
   final bool isLocal;
-  final bool isMinimized;
 
   const NamidaVideoWidget({
     super.key,
@@ -51,7 +50,6 @@ class NamidaVideoWidget extends StatefulWidget {
     this.zoomInToFullscreen = true,
     this.swipeUpToFullscreen = false,
     required this.isLocal,
-    required this.isMinimized,
   });
 
   @override
@@ -128,7 +126,6 @@ class _NamidaVideoWidgetState extends State<NamidaVideoWidget> {
         showControls: showControls,
         disableControlsUnderPercentage: widget.disableControlsUnderPercentage,
         isFullScreen: widget.fullscreen,
-        isMinimized: widget.isMinimized,
       ),
     );
   }
@@ -164,7 +161,6 @@ class VideoController {
       onMinimizeTap: NamidaNavigator.inst.exitFullScreen,
       showControls: true,
       isFullScreen: true,
-      isMinimized: false,
     );
 
     await NamidaNavigator.inst.toggleFullScreen(

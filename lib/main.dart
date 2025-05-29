@@ -645,7 +645,6 @@ class Namida extends StatelessWidget {
                 showControls: false,
                 onMinimizeTap: null,
                 isLocal: true,
-                isMinimized: false,
               ),
           ],
         ),
