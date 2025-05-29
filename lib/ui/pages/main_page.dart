@@ -615,7 +615,6 @@ class _CustomAppBar extends StatelessWidget {
                         : AnimatedBuilder(
                             animation: animation,
                             builder: (context, _) {
-                              if (animation.value > 1) return const SizedBox(); // expanded/queue
                               return SizedBox(
                                 height: kToolbarHeight * (1 - animation.value * 0.3),
                                 child: appbar,
@@ -687,7 +686,6 @@ class _CustomNavBar extends StatelessWidget {
           : AnimatedBuilder(
               animation: animation,
               builder: (context, _) {
-                if (animation.value > 1) return const SizedBox(); // expanded/queue
                 return Transform.translate(
                   offset: Offset(0, (kBottomNavigationBarHeight * animation.value).withMinimum(0)),
                   child: bottomNavBar,
