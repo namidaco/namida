@@ -29,7 +29,7 @@ class YtVideoLikeManager {
 
   late final currentVideoLikeStatus = Rxn<LikeStatus>();
 
-  Future<bool> _confirmRemoveLike() async {
+  Future<bool> _confirmSomething(String action) async {
     bool confirmed = false;
     await NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
@@ -39,7 +39,7 @@ class YtVideoLikeManager {
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: lang.REMOVE.toUpperCase(),
+            text: action.toUpperCase(),
             onPressed: () async {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
@@ -51,6 +51,14 @@ class YtVideoLikeManager {
     return confirmed;
   }
 
+  Future<bool> _confirmRemoveLike() async {
+    return _confirmSomething(lang.REMOVE);
+  }
+
+  Future<bool> _confirmDislike() async {
+    return _confirmSomething(lang.DISLIKE);
+  }
+
   Future<bool> onLikeClicked(YTVideoLikeParamters parameters) async {
     if (parameters.isActive) {
       final confirmed = await _confirmRemoveLike();
@@ -60,6 +68,10 @@ class YtVideoLikeManager {
   }
 
   Future<bool> onDisLikeClicked(YTVideoLikeParamters parameters) async {
+    if (!parameters.isActive) {
+      final confirmed = await _confirmDislike();
+      if (!confirmed) return parameters.isActive;
+    }
     return _onChangeLikeStatus(parameters);
   }
 
