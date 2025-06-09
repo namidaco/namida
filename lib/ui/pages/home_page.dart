@@ -1085,6 +1085,7 @@ class _MixesCardState extends State<_MixesCard> {
       padding: EdgeInsets.only(top: topPadding),
       child: NamidaBlur(
         blur: blur,
+        fixArtifacts: true,
         child: AnimatedSizedBox(
           duration: const Duration(milliseconds: 300),
           width: widget.width - horizontalPadding,
@@ -1351,6 +1352,7 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
               child: NamidaBlur(
                 blur: 20.0,
                 enabled: settings.enableBlurEffect.value,
+                fixArtifacts: true,
                 child: AnimatedDecoration(
                   duration: Duration(milliseconds: 400),
                   decoration: BoxDecoration(

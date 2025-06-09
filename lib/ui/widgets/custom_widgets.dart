@@ -326,20 +326,24 @@ class CustomListTile extends StatelessWidget {
 class NamidaBlur extends StatelessWidget {
   final double blur;
   final bool enabled;
+  final TileMode? tileMode;
   final Widget child;
 
   const NamidaBlur({
     super.key,
     required this.blur,
     this.enabled = true,
+    bool fixArtifacts = false,
     required this.child,
-  });
+  }) : tileMode = fixArtifacts ? TileMode.decal : NamidaBlur.kDefaultTileMode;
+
+  static const kDefaultTileMode = TileMode.clamp;
 
   @override
   Widget build(BuildContext context) {
     return ImageFiltered(
       enabled: enabled && blur > 0,
-      imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+      imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur, tileMode: tileMode),
       child: child,
     );
   }
@@ -365,7 +369,7 @@ class NamidaBgBlur extends StatelessWidget {
     if (!enabled || blur == 0) return child;
     return BackdropFilter(
       backdropGroupKey: _groupKey,
-      filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+      filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur, tileMode: NamidaBlur.kDefaultTileMode),
       child: child,
     );
   }
@@ -476,6 +480,7 @@ class DropShadow extends StatelessWidget {
               imageFilter: ImageFilter.blur(
                 sigmaX: blurRadius,
                 sigmaY: blurRadius,
+                tileMode: TileMode.decal,
               ),
               child: bottomChild ?? child,
             ),
@@ -2678,7 +2683,7 @@ class _FadeIgnoreTransitionState extends State<FadeIgnoreTransition> {
   }
 
   void _checkOpacity() {
-    final shouldIgnore = widget.opacity.value <= 0.1;
+    final shouldIgnore = widget.opacity.value <= 0.01;
     if (_ignoring != shouldIgnore) {
       setState(() => _ignoring = shouldIgnore);
     }
@@ -4071,7 +4076,7 @@ class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProvider
     controller = TabController(
       length: widget.children.length,
       vsync: this,
-      animationDuration: const Duration(milliseconds: 500),
+      animationDuration: const Duration(milliseconds: 400),
       initialIndex: widget.initialIndex,
     );
     controller.addListener(fn);
@@ -5095,7 +5100,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
     final tempFilesSize = this.tempFilesSize;
     final tempFilesDelete = this.tempFilesDelete;
     return NamidaExpansionTile(
-      initiallyExpanded: items.isNotEmpty,
+      initiallyExpanded: items.isNotEmpty || tempFilesSize?.isNotEmpty == true,
       titleText: title,
       subtitleText: subtitle,
       icon: icon,

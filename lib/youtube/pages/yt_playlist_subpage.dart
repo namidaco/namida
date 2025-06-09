@@ -208,6 +208,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                       children: [
                         NamidaBlur(
                           blur: 40.0,
+                          fixArtifacts: true,
                           child: YoutubeThumbnail(
                             type: ThumbnailType.playlist,
                             key: Key("$firstID"),
@@ -321,7 +322,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                               icon: Broken.edit_2,
                                               title: lang.RENAME_PLAYLIST,
                                               onTap: () async {
-                                                final newName = await playlist.showRenamePlaylistSheet(context: context, playlistName: playlistCurrentName);
+                                                final newName = await playlist.showRenamePlaylistSheet(playlistName: playlistCurrentName);
                                                 if (newName == null) return;
                                                 refreshState(() => playlistCurrentName = newName);
                                               },
@@ -608,6 +609,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                       children: [
                         NamidaBlur(
                           blur: 40.0,
+                          fixArtifacts: true,
                           child: YoutubeThumbnail(
                             type: ThumbnailType.playlist,
                             key: Key("$firstID"),
@@ -727,7 +729,6 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                         openOnLongPress: false,
                                         childrenDefault: () => playlist.basicInfo.getPopupMenuItems(
                                           queueSource: QueueSourceYoutubeID.playlistHosted,
-                                          context: context,
                                           playlistToFetch: _playlist,
                                           userPlaylist: widget.userPlaylist,
                                           showProgressSheet: true,

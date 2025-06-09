@@ -85,6 +85,8 @@ class MiniPlayerController {
   }
 
   void _updateScreenValuesInternal(Size mediaSize, EdgeInsets viewPadding) {
+    if (NamidaChannel.inst.isInPip.value || NamidaNavigator.inst.isInFullScreen) return; // messes up things so we ignore
+
     topInset = viewPadding.top;
     bottomInset = viewPadding.bottom;
     rightInset = viewPadding.right / 2;
@@ -102,24 +104,32 @@ class MiniPlayerController {
     sMaxOffset = maxWidth;
 
     if (isWidescreen && !Dimensions.inst.miniplayerIsWideScreen) {
-      if (animation.value <= 1) {
-        // -- make sure its not minimized when its widescreen
-        this.ytMiniplayerKey.currentState?.animateToState(true, dur: Duration.zero);
-        this.snapToExpanded();
-      } else {
-        this.snapToQueue();
-      }
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) {
+          if (animation.value <= 1) {
+            // -- make sure its not minimized when its widescreen
+            this.ytMiniplayerKey.currentState?.animateToState(true, dur: Duration.zero);
+            this.snapToExpanded();
+          } else {
+            this.snapToQueue();
+          }
+        },
+      );
+
       // -- its widescreen, so immersive mode is always on
       setImmersiveMode(settings.hideStatusBarInExpandedMiniplayer.value, isWidescreen: isWidescreen);
     } else if (!isWidescreen && Dimensions.inst.miniplayerIsWideScreen) {
       // -- to fix various issues (_offset and animation mismatch)
-      if (isMinimized) {
-        this.snapToMini();
-      } else if (isInQueue) {
-        this.snapToQueue();
-      } else {
-        this.snapToExpanded();
-      }
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) {
+          if (isInQueue) {
+            this.snapToQueue();
+          } else {
+            this.snapToMini();
+            this.ytMiniplayerKey.currentState?.animateToState(false, dur: Duration.zero, bypassEnforceExpanded: true);
+          }
+        },
+      );
 
       // now portrait. do immersive mode if its expanded.
       setImmersiveMode(settings.hideStatusBarInExpandedMiniplayer.value, isWidescreen: isWidescreen);

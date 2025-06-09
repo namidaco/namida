@@ -179,7 +179,6 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                           text: '',
                           onTap: () {
                             YTUtils.comments.createReply(
-                              context: context,
                               videoId: currentId,
                               mainList: _currentReplies,
                               mainComment: _currentMainComment.value,

@@ -292,7 +292,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     );
 
     if (widget.isFullScreen) {
-      FlutterVolumeController.updateShowSystemUI(false);
       Player.inst.onVolumeChangeAddListener(
         _volumeListenerKey,
         (mv) async {
@@ -649,10 +648,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
     final inLandscape = NamidaNavigator.inst.isInLanscape;
 
-    // -- in landscape, the size is calculated based on height, to fit in correctly.
-    final fallbackHeight = inLandscape ? maxHeight : maxWidth * 9 / 16;
-    final fallbackWidth = inLandscape ? maxHeight * 16 / 9 : maxWidth;
-
     final videoBoxMaxConstraints = inLandscape
         ? BoxConstraints(
             maxHeight: maxHeight,
@@ -664,69 +659,77 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           );
 
     final finalVideoWidget = ObxO(
-        key: _videoConstraintsKey,
-        rx: Player.inst.videoPlayerInfo,
-        builder: (context, info) {
-          if (info != null && info.isInitialized) {
-            return NamidaAspectRatio(
-              aspectRatio: info.aspectRatio,
-              child: ObxO(
-                rx: VideoController.inst.videoZoomAdditionalScale,
-                builder: (context, pinchInZoom) => AnimatedScale(
-                  duration: const Duration(milliseconds: 200),
-                  scale: 1.0 + pinchInZoom * 0.02,
-                  child: Texture(textureId: info.textureId),
-                ),
-              ),
-            );
-          }
-          if (widget.isLocal && !widget.isFullScreen) {
-            return Container(
-              key: const Key('dummy_container'),
-              color: Colors.transparent,
-            );
-          }
-          // -- fallback images
-          return ConstrainedBox(
-            constraints: videoBoxMaxConstraints,
+      key: _videoConstraintsKey,
+      rx: Player.inst.videoPlayerInfo,
+      builder: (context, info) {
+        if (info != null && info.isInitialized) {
+          return NamidaAspectRatio(
+            aspectRatio: info.aspectRatio,
             child: ObxO(
-                rx: Player.inst.currentItem,
-                builder: (context, item) {
-                  if (item is YoutubeID) {
-                    final vidId = item.id;
-                    return YoutubeThumbnail(
-                      type: ThumbnailType.video,
-                      key: Key(vidId),
-                      isImportantInCache: true,
+              rx: VideoController.inst.videoZoomAdditionalScale,
+              builder: (context, pinchInZoom) => AnimatedScale(
+                duration: const Duration(milliseconds: 200),
+                scale: 1.0 + pinchInZoom * 0.02,
+                child: Texture(textureId: info.textureId),
+              ),
+            ),
+          );
+        }
+        if (widget.isLocal && !widget.isFullScreen) {
+          return Container(
+            key: const Key('dummy_container'),
+            color: Colors.transparent,
+          );
+        }
+        // -- fallback images
+        return ConstrainedBox(
+          constraints: videoBoxMaxConstraints,
+          child: LayoutWidthProvider(
+            builder: (context, providerMaxWidth) {
+              // -- in landscape, the size is calculated based on height, to fit in correctly.
+              final fallbackHeight = inLandscape ? maxHeight : maxWidth * 9 / 16;
+              final fallbackWidth = (inLandscape ? maxHeight * 16 / 9 : maxWidth).withMaximum(providerMaxWidth);
+              return ObxO(
+                  rx: Player.inst.currentItem,
+                  builder: (context, item) {
+                    if (item is YoutubeID) {
+                      final vidId = item.id;
+                      return YoutubeThumbnail(
+                        type: ThumbnailType.video,
+                        key: Key(vidId),
+                        isImportantInCache: true,
+                        width: fallbackWidth,
+                        height: fallbackHeight,
+                        borderRadius: 0,
+                        blur: 60,
+                        disableBlurBgSizeShrink: true,
+                        videoId: vidId,
+                        displayFallbackIcon: false,
+                        compressed: false,
+                        preferLowerRes: false,
+                        fit: BoxFit.cover, // never change this lil bro
+                      );
+                    }
+                    final track = item is Selectable ? item.track : null;
+                    return ArtworkWidget(
+                      key: ValueKey(track?.path),
+                      track: track,
+                      path: track?.pathToImage,
+                      thumbnailSize: fallbackWidth,
                       width: fallbackWidth,
                       height: fallbackHeight,
                       borderRadius: 0,
                       blur: 60,
                       disableBlurBgSizeShrink: true,
-                      videoId: vidId,
-                      displayFallbackIcon: false,
                       compressed: false,
-                      preferLowerRes: false,
-                      fit: BoxFit.cover, // never change this lil bro
+                      fit: BoxFit.cover, // never change this my friend
                     );
-                  }
-                  final track = item is Selectable ? item.track : null;
-                  return ArtworkWidget(
-                    key: ValueKey(track?.path),
-                    track: track,
-                    path: track?.pathToImage,
-                    thumbnailSize: fallbackWidth,
-                    width: fallbackWidth,
-                    height: fallbackHeight,
-                    borderRadius: 0,
-                    blur: 60,
-                    disableBlurBgSizeShrink: true,
-                    compressed: false,
-                    fit: BoxFit.cover, // never change this my friend
-                  );
-                }),
-          );
-        });
+                  });
+            },
+          ),
+        );
+      },
+    );
 
     final horizontalControlsPadding = widget.isFullScreen
         ? inLandscape
@@ -2272,7 +2275,6 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
         } else {
           return item.basicInfo.getPopupMenuItems(
             queueSource: QueueSourceYoutubeID.videoEndCard,
-            context: context,
             displayOpenPlaylist: true,
             showProgressSheet: true,
             playlistToFetch: fetchedPlaylist,

@@ -55,7 +55,6 @@ class NamidaNavigator {
   // ignore: avoid_rx_value_getter_outside_obx
   NamidaRoute? get currentRouteR => currentWidgetStack.valueR.lastOrNull;
 
-  RxBaseCore<double> get appBlurValue => _openedNumbersManager._appBlurValue;
   final _openedNumbersManager = _OpenedNumbersManager();
 
   final innerDrawerKey = GlobalKey<NamidaInnerDrawerState>();
@@ -321,15 +320,19 @@ class NamidaNavigator {
       WillPopScope(
         onWillPop: onWillPop,
         child: material.RepaintBoundary(
-          child: TapDetector(
-            onTap: onWillPop,
-            child: Container(
-              color: Colors.black.withValues(alpha: blackBg ? 1.0 : 0.45),
-              child: Transform.scale(
-                scale: scale,
-                child: Theme(
-                  data: theme,
-                  child: dialogBuilder == null ? dialog! : dialogBuilder(theme),
+          child: NamidaBgBlur(
+            blur: 5.0,
+            enabled: _openedNumbersManager._currentDialogNumber == 1,
+            child: TapDetector(
+              onTap: onWillPop,
+              child: Container(
+                color: Colors.black.withValues(alpha: blackBg ? 1.0 : 0.45),
+                child: Transform.scale(
+                  scale: scale,
+                  child: Theme(
+                    data: theme,
+                    child: dialogBuilder == null ? dialog! : dialogBuilder(theme),
+                  ),
                 ),
               ),
             ),
@@ -367,7 +370,6 @@ class NamidaNavigator {
   Future<T?> showSheet<T>({
     required Widget Function(BuildContext context, double bottomPadding, double maxWidth, double maxHeight) builder,
     BoxDecoration Function(BuildContext context)? decoration,
-    BuildContext? context,
     double? heightPercentage,
     bool isScrollControlled = false,
     bool isDismissible = true,
@@ -376,38 +378,46 @@ class NamidaNavigator {
   }) async {
     await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
 
-    context ??= _rootNav.currentContext!;
-    _openedNumbersManager.incrementSheets();
+    final navigator = _rootNav.currentState;
+    if (navigator == null) return null;
 
-    return await showModalBottomSheet(
-      isScrollControlled: isScrollControlled,
-      showDragHandle: showDragHandle,
-      context: context,
-      isDismissible: isDismissible,
-      backgroundColor: backgroundColor,
-      useRootNavigator: true,
-      builder: (context) {
-        final bottomPadding = MediaQuery.viewInsetsOf(context).bottom + MediaQuery.paddingOf(context).bottom;
-        return DecoratedBox(
-          decoration: decoration?.call(context) ?? const BoxDecoration(),
-          child: SizedBox(
-            height: heightPercentage == null ? null : (context.height * heightPercentage),
-            width: context.width,
-            child: material.Padding(
-              padding: EdgeInsets.only(bottom: bottomPadding),
-              child: LayoutWidthHeightProvider(
-                builder: (context, maxWidth, maxHeight) => builder(
-                  context,
-                  bottomPadding,
-                  maxWidth,
-                  maxHeight,
+    _openedNumbersManager.incrementSheets();
+    return navigator
+        .push(
+          _CustomModalBottomSheetRoute<T>(
+            backgroundBlur: _openedNumbersManager._currentSheetNumber == 1 ? 3.0 : 0.0,
+            isScrollControlled: isScrollControlled,
+            showDragHandle: showDragHandle,
+            isDismissible: isDismissible,
+            backgroundColor: backgroundColor,
+            builder: (context) {
+              final bottomMargin = MediaQuery.viewInsetsOf(context).bottom;
+              final bottomPadding = MediaQuery.paddingOf(context).bottom;
+              return material.Padding(
+                padding: EdgeInsets.only(bottom: bottomMargin),
+                child: DecoratedBox(
+                  decoration: decoration?.call(context) ?? const BoxDecoration(),
+                  child: SizedBox(
+                    height: heightPercentage == null ? null : (context.height * heightPercentage),
+                    width: context.width,
+                    child: material.Padding(
+                      padding: EdgeInsets.only(bottom: bottomPadding),
+                      child: LayoutWidthHeightProvider(
+                        builder: (context, maxWidth, maxHeight) => builder(
+                          context,
+                          bottomPadding,
+                          maxWidth,
+                          maxHeight,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
-        );
-      },
-    ).whenComplete(_openedNumbersManager.decrementSheets);
+        )
+        .whenComplete(_openedNumbersManager.decrementSheets);
   }
 
   Future<void> navigateOff<W extends NamidaRouteWidget>(
@@ -733,33 +743,31 @@ SnackbarController? snackyy({
 }
 
 class _OpenedNumbersManager {
-  final _appBlurValue = 0.0.obs;
-
   int _currentDialogNumber = 0;
   int _currentSheetNumber = 0;
   int _currentMenusNumber = 0;
 
   void incrementDialogs() {
     _currentDialogNumber++;
-    _reEvaluate();
+    // _reEvaluate();
     if (kDebugMode) _printDialogs();
   }
 
   void decrementDialogs() {
     _currentDialogNumber--;
-    _reEvaluate();
+    // _reEvaluate();
     if (kDebugMode) _printDialogs();
   }
 
   void incrementSheets() {
     _currentSheetNumber++;
-    _reEvaluate();
+    // _reEvaluate();
     if (kDebugMode) _printSheets();
   }
 
   void decrementSheets() {
     _currentSheetNumber--;
-    _reEvaluate();
+    // _reEvaluate();
     if (kDebugMode) _printSheets();
   }
 
@@ -781,16 +789,47 @@ class _OpenedNumbersManager {
     if (kDebugMode) _printMenus();
   }
 
-  void _reEvaluate() {
-    final blur = _currentDialogNumber > 0
-        ? 6.0
-        : _currentSheetNumber > 0
-            ? 4.0
-            : 0.0;
-    _appBlurValue.value = blur;
-  }
+  // void _reEvaluate() {
+  //   final blur = _currentDialogNumber > 0
+  //       ? 6.0
+  //       : _currentSheetNumber > 0
+  //           ? 4.0
+  //           : 0.0;
+  //   _appBlurValue.value = blur;
+  // }
 
   void _printDialogs() => printy("|> Current Dialogs: $_currentDialogNumber");
   void _printSheets() => printy("|> Current Sheets: $_currentSheetNumber");
   void _printMenus() => printy("|> Current Menus: $_currentMenusNumber");
+}
+
+class _CustomModalBottomSheetRoute<T> extends ModalBottomSheetRoute<T> {
+  final double backgroundBlur;
+  _CustomModalBottomSheetRoute({
+    this.backgroundBlur = 0,
+    required super.isScrollControlled,
+    super.showDragHandle,
+    super.isDismissible,
+    super.backgroundColor,
+    required super.builder,
+  });
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
+    final child = super.buildPage(context, animation, secondaryAnimation);
+    if (backgroundBlur > 0) {
+      return AnimatedBuilder(
+        animation: animation,
+        builder: (context, _) => NamidaBgBlur(
+          blur: backgroundBlur * animation.value,
+          child: child,
+        ),
+      );
+    }
+    return child;
+  }
 }

@@ -253,7 +253,6 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
 
   Future<void> _onAddGroupTap({required bool Function(String text) doesNameExist, required void Function(String text) onAdd}) async {
     final text = await showNamidaBottomSheetWithTextField(
-      context: context,
       title: '',
       textfieldConfig: BottomSheetTextFieldConfig(
         initalControllerText: '',
@@ -271,7 +270,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
     if (text != null) onAdd(text);
   }
 
-  void _showLocalFavouriteChannelsSheet(BuildContext context, String channelId) async {
+  void _showLocalFavouriteChannelsSheet(String channelId) async {
     final addedAtFirst = <String, bool>{};
     final allChannelGroups = <String>[];
     final currentGroups = (YoutubeSubscriptionsController.inst.getGroupsForChannel(channelId)).obs;
@@ -295,7 +294,6 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
     bool didChangeCurrentGroups = false;
 
     await NamidaNavigator.inst.showSheet(
-      context: context,
       builder: (context, bottomPadding, maxWidth, maxHeight) {
         return PopScope(
           onPopInvokedWithResult: (didPop, _) {
@@ -432,7 +430,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
 
     return LongPressDetector(
       enableSecondaryTap: true,
-      onLongPress: widget.channelID == null ? null : () => _showLocalFavouriteChannelsSheet(context, widget.channelID!),
+      onLongPress: widget.channelID == null ? null : () => _showLocalFavouriteChannelsSheet(widget.channelID!),
       child: ObxO(
         rx: _YTSubscribeButtonManager._activeModifications,
         builder: (context, activeModifications) => AnimatedEnabled(

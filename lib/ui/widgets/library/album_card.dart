@@ -126,13 +126,13 @@ class AlbumCard extends StatelessWidget {
                                     color: playIconBgColor,
                                     boxShadow: [
                                       BoxShadow(
-                                        blurRadius: 8.0,
+                                        blurRadius: 6.0,
                                         offset: const Offset(0.0, 2.0),
-                                        color: playIconBgColor.withValues(alpha: 0.5),
+                                        color: playIconBgColor.withValues(alpha: 0.4),
                                       ),
                                     ],
                                   ),
-                                  borderRadius: 10.0.withMaximum(imageSize * 0.08),
+                                  borderRadius: 8.0.withMaximum(imageSize * 0.07),
                                   onTap: () => Player.inst.playOrPause(0, album, QueueSource.album, homePageItem: homepageItem),
                                   padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
                                   child: Icon(

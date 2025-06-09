@@ -120,7 +120,6 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
     if (playlistToFetch == null) return [];
     return widget.playlist.getPopupMenuItems(
       queueSource: widget.queueSource,
-      context: context,
       playlistToFetch: playlistToFetch,
       userPlaylist: _userPlaylist,
       showProgressSheet: true,

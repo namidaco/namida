@@ -388,7 +388,6 @@ Future<void> showDownloadVideoBottomSheet({
 
   await NamidaNavigator.inst.showSheet(
     isScrollControlled: true,
-    context: context,
     heightPercentage: 0.7,
     builder: (context, bottomPadding, maxWidth, maxHeight) {
       WidgetsBinding.instance.addPostFrameCallback((_) => updateBodyHeight(maxHeight - bottomPadding)); // has to be always updated
@@ -495,7 +494,6 @@ Future<void> showDownloadVideoBottomSheet({
                                               if (videoInfo == null && tagsMap.isEmpty) return;
 
                                               showVideoDownloadOptionsSheet(
-                                                context: context,
                                                 videoTitle: videoInfo?.title,
                                                 videoUploader: videoInfo?.channelName,
                                                 tagMaps: tagsMap,

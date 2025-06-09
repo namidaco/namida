@@ -990,15 +990,13 @@ class YTUtils {
     );
   }
 
-  static void showFilenameBuilderOutputSheet(
-    BuildContext context, {
+  static void showFilenameBuilderOutputSheet({
     required String groupName,
     required bool showEditTags,
     required void Function(String text) onChanged,
   }) async {
     final controller = TextEditingController(text: settings.youtube.downloadFilenameBuilder.value);
     await showNamidaBottomSheetWithTextField(
-      context: context,
       title: lang.OUTPUT,
       textfieldConfig: BottomSheetTextFieldConfigWC(
         controller: controller,
@@ -1032,7 +1030,6 @@ class YTUtils {
                   title: lang.EDIT_TAGS,
                   onTap: () async {
                     await showVideoDownloadOptionsSheet(
-                      context: context,
                       videoTitle: null,
                       videoUploader: null,
                       tagMaps: settings.youtube.initialDefaultMetadataTags,

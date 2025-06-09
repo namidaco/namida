@@ -290,7 +290,6 @@ class YoutubeCommentsHeader extends StatelessWidget {
                       final videoId = Player.inst.currentVideo?.id;
                       if (videoId == null) return;
                       YTUtils.comments.createComment(
-                        context: context,
                         videoId: videoId,
                         mainList: YoutubeInfoController.current.currentComments,
                         videoPage: YoutubeInfoController.current.currentVideoPage.value,

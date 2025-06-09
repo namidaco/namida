@@ -195,7 +195,6 @@ class YTDownloadTaskItemCard extends StatelessWidget {
   }
 
   Future<({bool confirmed, bool delete})> _confirmOperation({
-    required BuildContext context,
     required String operationTitle,
     String confirmMessage = '',
     bool deleteButton = false,
@@ -261,7 +260,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     return (confirmed: confirmed, delete: delete);
   }
 
-  void _onEditIconTap({required YoutubeItemDownloadConfig config, required BuildContext context}) async {
+  void _onEditIconTap({required YoutubeItemDownloadConfig config}) async {
     await showDownloadVideoBottomSheet(
       originalIndex: config.originalIndex,
       totalLength: config.totalLength,
@@ -282,12 +281,10 @@ class YTDownloadTaskItemCard extends StatelessWidget {
   }
 
   Future<void> _onRenameIconTap({
-    required BuildContext context,
     required YoutubeItemDownloadConfig config,
     required DownloadTaskGroupName groupName,
   }) async {
     await showNamidaBottomSheetWithTextField(
-      context: context,
       title: lang.RENAME,
       textfieldConfig: BottomSheetTextFieldConfig(
         initalControllerText: config.filename.filename,
@@ -502,10 +499,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                             title: lang.RESTART,
                                             icon: Broken.refresh,
                                             onTap: () async {
-                                              final confirmation = await _confirmOperation(
-                                                context: context,
-                                                operationTitle: lang.RESTART,
-                                              );
+                                              final confirmation = await _confirmOperation(operationTitle: lang.RESTART);
                                               if (confirmation.confirmed) {
                                                 _onCancelDeleteDownloadTap([item], keepInList: true, delete: true);
                                                 // ignore: use_build_context_synchronously
@@ -544,7 +538,6 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                         betweenBrackets: downloadedFile.fileSizeFormatted() ?? '',
                                         onTap: () async {
                                           final confirmation = await _confirmOperation(
-                                            context: context,
                                             operationTitle: lang.REMOVE,
                                             deleteButton: true,
                                           );
@@ -557,7 +550,6 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                         icon: Broken.close_circle,
                                         onTap: () async {
                                           final confirmation = await _confirmOperation(
-                                            context: context,
                                             operationTitle: lang.CANCEL,
                                             confirmMessage: lang.REMOVE,
                                           );
@@ -574,7 +566,6 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                   title: lang.RENAME,
                                   icon: Broken.text,
                                   onTap: () => _onRenameIconTap(
-                                    context: context,
                                     config: item,
                                     groupName: groupName,
                                   ),
@@ -583,7 +574,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                   context: context,
                                   title: lang.EDIT,
                                   icon: Broken.edit_2,
-                                  onTap: () => _onEditIconTap(config: item, context: context),
+                                  onTap: () => _onEditIconTap(config: item),
                                 ),
                                 _getChip(
                                   context: context,

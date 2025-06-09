@@ -162,8 +162,8 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     );
   }
 
-  void animateToState(bool toExpanded, {Duration? dur, bool dismiss = false}) async {
-    if (widget.enforceExpanded) {
+  void animateToState(bool toExpanded, {Duration? dur, bool dismiss = false, bool bypassEnforceExpanded = false}) async {
+    if (widget.enforceExpanded && bypassEnforceExpanded == false) {
       toExpanded = true;
       dismiss = false;
     }

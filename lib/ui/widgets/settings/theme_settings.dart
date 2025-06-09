@@ -73,7 +73,7 @@ class ThemeSetting extends SettingSubpageProvider {
         icon: Broken.brush_4,
         title: lang.THEME_MODE,
         trailingRaw: ToggleThemeModeContainer(
-          maxWidth: Dimensions.inst.availableAppContentWidth / 3.3,
+          maxWidth: (Dimensions.inst.availableAppContentWidth * 0.4).withMaximum(248.0),
         ),
       ),
     );
@@ -402,50 +402,61 @@ class ToggleThemeModeContainer extends StatelessWidget {
     YoutubeMiniplayerUiController.inst.startDimTimer();
   }
 
+  Alignment _themeModeToAlignment(ThemeMode theme) {
+    return theme == ThemeMode.light
+        ? Alignment.center
+        : theme == ThemeMode.dark
+            ? Alignment.centerRight
+            : Alignment.centerLeft;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      (context) {
-        final currentTheme = settings.themeMode.valueR;
-        return Container(
-          decoration: BoxDecoration(
-            color: Color.alphaBlend(context.theme.listTileTheme.textColor!.withAlpha(200), Colors.white.withAlpha(160)),
-            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-            boxShadow: [
-              BoxShadow(color: context.theme.listTileTheme.iconColor!.withAlpha(80), spreadRadius: 1.0, blurRadius: blurRadius, offset: const Offset(0, 2)),
-            ],
-          ),
-          width: maxWidth,
-          padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 8.0),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: AnimatedAlign(
-                  duration: const Duration(milliseconds: 400),
-                  alignment: currentTheme == ThemeMode.light
-                      ? Alignment.center
-                      : currentTheme == ThemeMode.dark
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                  child: Container(
-                    width: maxWidth / 3.3,
-                    decoration: BoxDecoration(
-                      color: context.theme.colorScheme.surface.withAlpha(180),
-                      borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                      // boxShadow: [
-                      //   BoxShadow(color: Colors.black.withAlpha(100), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),
-                      // ],
-                    ),
+    const brConst = 8.0;
+    const horizontalPaddingConst = 8.0;
+    final itemsCount = ThemeMode.values.length;
+    final bgSlideWidth = (maxWidth / itemsCount) - horizontalPaddingConst;
+    return ObxO(
+      rx: settings.themeMode,
+      builder: (context, currentTheme) => Container(
+        decoration: BoxDecoration(
+          color: Color.alphaBlend(context.theme.listTileTheme.textColor!.withAlpha(200), Colors.white.withAlpha(160)),
+          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+          boxShadow: [
+            BoxShadow(color: context.theme.listTileTheme.iconColor!.withAlpha(80), spreadRadius: 1.0, blurRadius: blurRadius, offset: const Offset(0, 2)),
+          ],
+        ),
+        width: maxWidth,
+        padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: horizontalPaddingConst),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 400),
+                alignment: _themeModeToAlignment(currentTheme),
+                child: Container(
+                  width: bgSlideWidth,
+                  decoration: BoxDecoration(
+                    color: context.theme.colorScheme.surface.withAlpha(180),
+                    borderRadius: BorderRadius.circular(brConst.multipliedRadius),
+                    // boxShadow: [
+                    //   BoxShadow(color: Colors.black.withAlpha(100), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),
+                    // ],
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 1.2),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    ...ThemeMode.values.map(
-                      (e) => NamidaInkWell(
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  ...ThemeMode.values.map(
+                    (e) => SizedBox(
+                      width: bgSlideWidth,
+                      child: NamidaInkWell(
+                        borderRadius: brConst,
+                        padding: const EdgeInsets.symmetric(vertical: 2.0),
                         onTap: () => onThemeChangeTap(e),
                         child: Icon(
                           e.toIcon(),
@@ -453,13 +464,13 @@ class ToggleThemeModeContainer extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

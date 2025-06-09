@@ -64,7 +64,6 @@ class _YoutubeUserPlaylistsPageState extends State<YoutubeUserPlaylistsPage> {
           iconSize: 22.0,
           onPressed: () {
             YtUtilsPlaylist().promptCreatePlaylist(
-              context: context,
               onButtonConfirm: (playlistTitle, privacy) async {
                 privacy ??= PlaylistPrivacy.private;
                 final newPlaylistId = await YoutubeInfoController.userplaylist.createPlaylist(

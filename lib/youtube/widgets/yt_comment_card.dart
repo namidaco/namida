@@ -119,7 +119,6 @@ class _YTCommentCardState extends State<YTCommentCard> {
           subtitle: lang.COMMENT,
           onTap: () {
             YTUtils.comments.editComment(
-              context: context,
               videoId: widget.videoId ?? '',
               comment: comment,
               mainList: YoutubeInfoController.current.currentComments,
@@ -151,7 +150,6 @@ class _YTCommentCardState extends State<YTCommentCard> {
           onTap: () {
             if (widget.mainCommentForReplies != null) {
               YTUtils.comments.editReply(
-                context: context,
                 videoId: widget.videoId ?? '',
                 mainComment: widget.mainCommentForReplies!(),
                 reply: comment,
@@ -204,7 +202,6 @@ class _YTCommentCardState extends State<YTCommentCard> {
         onTap: () {
           if (comment == null) return;
           YTUtils.comments.createReply(
-            context: context,
             videoId: widget.videoId ?? '',
             mainComment: comment,
             replyingTo: comment,

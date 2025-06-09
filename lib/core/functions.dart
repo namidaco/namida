@@ -838,7 +838,6 @@ class BottomSheetTextFieldConfigWC extends BottomSheetTextFieldConfig {
 }
 
 Future<String?> showNamidaBottomSheetWithTextField({
-  required BuildContext context,
   bool isScrollControlled = true,
   bool showDragHandle = true,
   required String title,
@@ -863,7 +862,6 @@ Future<String?> showNamidaBottomSheetWithTextField({
   String? finalText;
 
   await NamidaNavigator.inst.showSheet(
-    context: context,
     showDragHandle: showDragHandle,
     isScrollControlled: isScrollControlled,
     builder: (context, bottomPadding, maxWidth, maxHeight) {

@@ -40,6 +40,8 @@ class SeekReadyWidget extends StatefulWidget {
 }
 
 class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProviderStateMixin {
+  /// the percentage of the seek bar that causes a seek near the left edge to trigger a magnet effect to 0.
+  late final _defaultSeekLeftMagnet = widget.isFullscreen ? 0.025 : 0.05;
   final _seekPercentage = 0.0.obs;
 
   late AnimationController _animation;
@@ -109,7 +111,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
   void _onDragFinish() {
     widget.onDraggingChange?.call(false);
 
-    if (_seekPercentage.value <= 0.05) {
+    if (_seekPercentage.value <= _defaultSeekLeftMagnet) {
       // left magnet
       _seekPercentage.value = 0;
       VibratorController.veryhigh();

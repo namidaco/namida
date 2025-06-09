@@ -64,8 +64,9 @@ class CountPerRow {
 
   factory CountPerRow.getRecommended(BuildContext context, {required double comfortableWidth}) {
     double availableWidth = Dimensions.inst.availableAppContentWidthContext(context);
+    double availableHeight = context.height;
     int count = (availableWidth ~/ comfortableWidth);
-    count += (600.0 / context.height).round().withMinimum(0); // so that smaller heights get more counts per row
+    count += (432.0 / availableHeight).round().withMinimum(0); // so that smaller heights get more counts per row
     return CountPerRow._hardCoded(count.clampInt(1, 11));
   }
 

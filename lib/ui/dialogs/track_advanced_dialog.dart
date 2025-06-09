@@ -107,6 +107,14 @@ void showTrackAdvancedDialog({
     canShowClearDialogRx.value = cachePriority == CacheVideoPriority.VIP ? false : tracks.hasAnythingCached;
   }
 
+  final setVideosPriorityChip = SetVideosPriorityChip(
+    totalCount: tracksWithYTID.length,
+    videosId: tracksWithYTID.values,
+    countToText: (count) => count.displayTrackKeyword,
+    onInitialPriority: updateCanShowClearDialog,
+    onChanged: updateCanShowClearDialog,
+  );
+
   await NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       willUpdateArtwork.close();
@@ -125,25 +133,17 @@ void showTrackAdvancedDialog({
         children: [
           ObxO(
             rx: canShowClearDialogRx,
-            builder: (context, canShowClearDialog) {
-              return NamidaOpacity(
-                opacity: canShowClearDialog ? 1.0 : 0.6,
-                child: CustomListTile(
-                  passedColor: colorScheme,
-                  title: lang.CLEAR,
-                  subtitle: lang.CHOOSE_WHAT_TO_CLEAR,
-                  icon: Broken.broom,
-                  onTap: canShowClearDialog ? () => showTrackClearDialog(tracks, colorScheme) : null,
-                  trailing: SetVideosPriorityChip(
-                    totalCount: tracksWithYTID.length,
-                    videosId: tracksWithYTID.values,
-                    countToText: (count) => count.displayTrackKeyword,
-                    onInitialPriority: updateCanShowClearDialog,
-                    onChanged: updateCanShowClearDialog,
-                  ),
-                ),
-              );
-            },
+            builder: (context, canShowClearDialog) => Opacity(
+              opacity: canShowClearDialog ? 1.0 : 0.6,
+              child: CustomListTile(
+                passedColor: colorScheme,
+                title: lang.CLEAR,
+                subtitle: lang.CHOOSE_WHAT_TO_CLEAR,
+                icon: Broken.broom,
+                onTap: canShowClearDialog ? () => showTrackClearDialog(tracks, colorScheme) : null,
+                trailing: setVideosPriorityChip,
+              ),
+            ),
           ),
           CustomListTile(
             passedColor: colorScheme,

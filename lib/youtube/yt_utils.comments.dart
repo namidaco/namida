@@ -4,13 +4,11 @@ class _YTUtilsCommentActions {
   const _YTUtilsCommentActions();
 
   Future<void> createComment({
-    required BuildContext context,
     required String videoId,
     required YoutiPieVideoPageResult? videoPage,
     required RxBaseCore<YoutiPieCommentResult?>? mainList,
   }) async {
     return _createEditCommentOrReply(
-      context: context,
       isEdit: false,
       isReply: false,
       subtitle: YoutubeInfoController.utils.getVideoName(videoId) ?? '?',
@@ -33,7 +31,6 @@ class _YTUtilsCommentActions {
   }
 
   Future<void> editComment({
-    required BuildContext context,
     required String videoId,
     required CommentInfoItem comment,
     required RxBaseCore<YoutiPieCommentResult?> mainList,
@@ -41,7 +38,6 @@ class _YTUtilsCommentActions {
     required void Function(CommentInfoItem editedComment)? onEdited,
   }) async {
     return _createEditCommentOrReply(
-      context: context,
       isEdit: true,
       isReply: false,
       subtitle: null,
@@ -93,7 +89,6 @@ class _YTUtilsCommentActions {
   }
 
   Future<void> createReply({
-    required BuildContext context,
     required String videoId,
     required CommentInfoItemBase mainComment,
     required CommentInfoItemBase replyingTo,
@@ -101,7 +96,6 @@ class _YTUtilsCommentActions {
   }) async {
     final authorHandler = mainComment.author?.displayName;
     return _createEditCommentOrReply(
-      context: context,
       isEdit: false,
       isReply: true,
       subtitle: authorHandler ?? '?',
@@ -124,15 +118,12 @@ class _YTUtilsCommentActions {
   }
 
   Future<void> editReply({
-    required BuildContext context,
     required String videoId,
     required CommentInfoItem mainComment,
     required CommentInfoItemBase reply,
     required RxBaseCore<YoutiPieCommentReplyResult?>? mainList,
   }) async {
-    // return;
     return _createEditCommentOrReply(
-      context: context,
       isEdit: true,
       isReply: true,
       // subtitle: mainComment.author?.displayName ?? '?',
@@ -180,7 +171,6 @@ class _YTUtilsCommentActions {
   }
 
   Future<void> _createEditCommentOrReply({
-    required BuildContext context,
     required bool isEdit,
     required bool isReply,
     required String? subtitle,
@@ -191,7 +181,6 @@ class _YTUtilsCommentActions {
     if (author == null) return;
 
     await showNamidaBottomSheetWithTextField(
-      context: context,
       displayAccountThumbnail: true,
       title: author,
       subtitle: subtitle == null ? null : '-> $subtitle',

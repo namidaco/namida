@@ -302,7 +302,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         icon: Broken.edit_2,
                         onPressed: () {
                           YTUtils.showFilenameBuilderOutputSheet(
-                            context,
                             showEditTags: true,
                             groupName: _groupName.value,
                             onChanged: (text) => onRenameAllTasks(text),

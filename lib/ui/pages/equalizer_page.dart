@@ -483,9 +483,8 @@ class _SliderTextWidget extends StatelessWidget {
   static String toPercentage(double val) => "${(val * 100).roundDecimals(4)}%";
   static String toXMultiplier(double val) => "${val.toStringAsFixed(2)}x";
 
-  void _showPreciseValueConfig({required BuildContext context, required double initial, required void Function(double val) onChanged}) {
+  void _showPreciseValueConfig({required double initial, required void Function(double val) onChanged}) {
     showNamidaBottomSheetWithTextField(
-      context: context,
       title: title,
       textfieldConfig: BottomSheetTextFieldConfig(
         hintText: initial.toString(),
@@ -523,7 +522,6 @@ class _SliderTextWidget extends StatelessWidget {
             onPressed: onManualChange == null
                 ? null
                 : () => _showPreciseValueConfig(
-                      context: context,
                       initial: value,
                       onChanged: onManualChange!,
                     ),

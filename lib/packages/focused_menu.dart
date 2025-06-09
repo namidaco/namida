@@ -153,7 +153,7 @@ class FocusedMenuDetails extends StatelessWidget {
               onTap: () => _onDismiss(context),
               child: enableBackgroundEffects
                   ? BackdropFilter.grouped(
-                      filter: ImageFilter.blur(sigmaX: blurSize, sigmaY: blurSize),
+                      filter: ImageFilter.blur(sigmaX: blurSize, sigmaY: blurSize, tileMode: NamidaBlur.kDefaultTileMode),
                       child: Container(
                         color: (blurBackgroundColor).withValues(alpha: backgroundOpacity),
                       ),

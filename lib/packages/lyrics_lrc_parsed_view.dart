@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
@@ -415,6 +414,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           children: [
                             NamidaBlur(
                               blur: blur,
+                              fixArtifacts: true,
                               child: Stack(
                                 children: [
                                   widget.videoOrImage,

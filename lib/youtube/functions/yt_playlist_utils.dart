@@ -43,11 +43,9 @@ class YtUtilsPlaylist {
   static final activePlaylists = <YoutiPiePlaylistEditCallbacks>[];
 
   Future<void> promptCreatePlaylist({
-    required BuildContext context,
     required FutureOr<bool> Function(String title, PlaylistPrivacy? privacy) onButtonConfirm,
   }) =>
       _promptCreateOrEditPlaylist(
-        context: context,
         isEdit: false,
         playlistId: null,
         initialTitle: null,
@@ -57,13 +55,11 @@ class YtUtilsPlaylist {
       );
 
   Future<void> promptEditPlaylist({
-    required BuildContext context,
     required YoutiPiePlaylistResult playlist,
     required PlaylistInfoItemUser userPlaylist,
     required FutureOr<bool> Function(String title, String? description, PlaylistPrivacy? privacy) onButtonConfirm,
   }) =>
       _promptCreateOrEditPlaylist(
-        context: context,
         isEdit: true,
         playlistId: playlist.info.id.isNotEmpty ? playlist.info.id : userPlaylist.id,
         initialTitle: playlist.info.title.isNotEmpty ? playlist.info.title : userPlaylist.title,
@@ -73,7 +69,6 @@ class YtUtilsPlaylist {
       );
 
   Future<void> _promptCreateOrEditPlaylist({
-    required BuildContext context,
     required bool isEdit,
     required String? playlistId,
     required String? initialTitle,
@@ -118,7 +113,6 @@ class YtUtilsPlaylist {
     }
 
     await showNamidaBottomSheetWithTextField(
-      context: context,
       title: lang.CONFIGURE,
       isInitiallyLoading: isInitiallyLoading,
       textfieldConfig: BottomSheetTextFieldConfigWC(
@@ -232,11 +226,9 @@ extension YoutubePlaylistShare on YoutubePlaylist {
   }
 
   Future<String?> showRenamePlaylistSheet({
-    required BuildContext context,
     required String playlistName,
   }) async {
     return await showNamidaBottomSheetWithTextField(
-      context: context,
       title: lang.RENAME_PLAYLIST,
       textfieldConfig: BottomSheetTextFieldConfig(
         initalControllerText: playlistName,
@@ -410,7 +402,6 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
 
   List<NamidaPopupItem> getPopupMenuItems({
     required QueueSourceYoutubeID queueSource,
-    required BuildContext context,
     required bool showProgressSheet,
     required YoutiPiePlaylistResultBase playlistToFetch,
     required PlaylistInfoItemUser? userPlaylist,
@@ -518,7 +509,6 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
           title: lang.EDIT,
           onTap: () async {
             YtUtilsPlaylist().promptEditPlaylist(
-              context: context,
               playlist: playlistToFetch,
               userPlaylist: userPlaylist,
               onButtonConfirm: (playlistTitle, description, privacy) async {

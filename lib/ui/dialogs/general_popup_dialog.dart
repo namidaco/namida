@@ -1422,7 +1422,7 @@ Future<void> showGeneralPopupDialog(
                                       child: isSingle && tracks.first == Player.inst.currentTrack?.track
                                           ? bigIcon(
                                               Broken.pause_circle,
-                                              iconWidget: NamidaOpacity(
+                                              iconWidget: Opacity(
                                                 opacity: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1 ? 0.6 : 1.0,
                                                 child: IgnorePointer(
                                                   ignoring: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1,

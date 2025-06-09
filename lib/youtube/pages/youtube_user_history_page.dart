@@ -174,7 +174,7 @@ class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
 
     final dummyCard = NamidaInkWell(
       animationDurationMS: 200,
-      margin: const EdgeInsets.symmetric(horizontal: 4.0),
+      margin: YTHistoryVideoCardBase.cardMargin(true),
       width: thumbnailWidth,
       height: thumbnailHeight,
       bgColor: context.theme.cardColor,
@@ -217,16 +217,20 @@ class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
             height: horizontalHeight,
             width: itemsLengthWithoutHiddens * thumbnailItemExtent,
             child: ListView.builder(
+              padding: EdgeInsets.zero,
               scrollDirection: Axis.horizontal,
               primary: false,
               physics: const NeverScrollableScrollPhysics(),
               itemExtentBuilder: (index, dimensions) {
                 final item = items[index];
-                if (item.isShortContent) return 0;
+                if (!isShortsVisible && item.isShortContent) return 0;
                 return thumbnailItemExtent;
               },
               itemCount: items.length,
               itemBuilder: (context, index) {
+                final item = items[index];
+                if (!isShortsVisible && item.isShortContent) return const SizedBox.shrink();
+
                 return YTHistoryVideoCardBase(
                   properties: properties,
                   mainList: items,
@@ -282,7 +286,10 @@ class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
         sliverListBuilder: (listItems, itemBuilder, dummyCard) => SliverVariedExtentList.builder(
           itemExtentBuilder: (index, dimensions) {
             final chunk = listItems.items[index];
-            return chunk.items.length * thumbnailItemExtent;
+            int itemsLengthWithoutHiddens = chunk.items.length;
+            if (!isShortsVisible) itemsLengthWithoutHiddens -= chunk.shortsItemsCount.value;
+            if (itemsLengthWithoutHiddens <= 0) return 0;
+            return itemsLengthWithoutHiddens * thumbnailItemExtent;
           },
           itemCount: listItems.items.length,
           itemBuilder: (context, index) {

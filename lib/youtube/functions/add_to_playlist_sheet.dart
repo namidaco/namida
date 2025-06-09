@@ -26,7 +26,6 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/youtube_playlists_view.dart';
 
 void showAddToPlaylistSheet({
-  BuildContext? ctx,
   required Iterable<String> ids,
   required Map<String, String?> idsNamesLookup,
   String playlistNameToAdd = '',
@@ -39,7 +38,6 @@ void showAddToPlaylistSheet({
 
   NamidaNavigator.inst.showSheet(
     isScrollControlled: true,
-    context: ctx,
     backgroundColor: Colors.transparent,
     heightPercentage: 0.65,
     decoration: (context) => BoxDecoration(
@@ -119,7 +117,6 @@ void showAddToPlaylistSheet({
                             ),
                             onTap: () async {
                               final text = await showNamidaBottomSheetWithTextField(
-                                context: context,
                                 title: lang.CONFIGURE,
                                 textfieldConfig: BottomSheetTextFieldConfig(
                                   initalControllerText: '',
@@ -513,7 +510,6 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                 onTap: () async {
                   const addAsInitial = true;
                   YtUtilsPlaylist().promptCreatePlaylist(
-                    context: context,
                     onButtonConfirm: (playlistTitle, privacy) async {
                       privacy ??= PlaylistPrivacy.private;
                       final newPlaylistId = await YoutubeInfoController.userplaylist.createPlaylist(

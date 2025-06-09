@@ -425,7 +425,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     );
   }
 
-  MiniplayerInfoData<String, YTSortType> _textBuilder(BuildContext context, Playable playbale) {
+  MiniplayerInfoData<String, YTSortType> _textBuilder(Playable playbale) {
     final video = playbale as YoutubeID;
     String firstLine = '';
     String secondLine = '';
@@ -443,7 +443,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
       favouritePlaylist: YoutubePlaylistController.inst.favouritesPlaylist,
       itemToLike: video.id,
       onLikeTap: (isLiked) async => YoutubePlaylistController.inst.favouriteButtonOnPressed(video.id),
-      onShowAddToPlaylistDialog: () => showAddToPlaylistSheet(ctx: context, ids: [video.id], idsNamesLookup: {}),
+      onShowAddToPlaylistDialog: () => showAddToPlaylistSheet(ids: [video.id], idsNamesLookup: {}),
       onMenuOpen: (d) => _openMenu(context, video, d),
       likedIcon: Broken.like_filled,
       normalIcon: Broken.like_1,
@@ -626,7 +626,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         brMultiplier: brMultiplier,
         maxHeight: maxHeight,
       ),
-      textBuilder: (item) => _textBuilder(context, item),
+      textBuilder: (item) => _textBuilder(item),
       canShowBuffering: (currentItem) => true,
     );
   }
@@ -697,7 +697,7 @@ class _AnimatingThumnailWidget extends StatelessWidget {
                       ),
                     ),
                     builder: (context, child) => BorderRadiusClip(
-                      borderRadius: BorderRadius.circular(6.0.multipliedRadius + (brMultiplier(10.0.multipliedRadius) * NamidaMiniPlayerBase.clampedAnimationBCP.value)),
+                      borderRadius: BorderRadius.circular(6.0.multipliedRadius + (brMultiplier(8.0.multipliedRadius) * NamidaMiniPlayerBase.clampedAnimationBCP.value)),
                       child: child!,
                     ),
                   )

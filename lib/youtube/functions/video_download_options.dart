@@ -16,7 +16,6 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 Future<void> showVideoDownloadOptionsSheet({
-  required BuildContext context,
   required String? videoTitle,
   required String? videoUploader,
   required Map<String, String?> tagMaps,
@@ -66,7 +65,6 @@ Future<void> showVideoDownloadOptionsSheet({
 
   await NamidaNavigator.inst.showSheet(
     isScrollControlled: true,
-    context: context,
     heightPercentage: 0.65,
     builder: (context, bottomPadding, maxWidth, maxHeight) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18.0),
@@ -90,7 +88,6 @@ Future<void> showVideoDownloadOptionsSheet({
                 icon: Broken.edit_2,
                 onPressed: () {
                   YTUtils.showFilenameBuilderOutputSheet(
-                    context,
                     showEditTags: false,
                     groupName: initialGroupName ?? '',
                     onChanged: onDownloadFilenameChanged,
