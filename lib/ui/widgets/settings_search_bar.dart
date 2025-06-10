@@ -8,13 +8,28 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class NamidaSettingSearchBar extends StatefulWidget {
   final Widget? closedChild;
-  const NamidaSettingSearchBar({super.key, this.closedChild});
+  NamidaSettingSearchBar.keyed({this.closedChild}) : super(key: globalKey);
+
+  static final globalKey = GlobalKey<_NamidaSettingSearchBarState>();
 
   @override
   State<NamidaSettingSearchBar> createState() => _NamidaSettingSearchBarState();
 }
 
 class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
+  void open() {
+    _searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
+    _onSearch(isOpen: true);
+  }
+
+  void toggle() {
+    _searchBarKey.currentState?.openCloseSearchBar();
+    final isOpen = _searchBarKey.currentState?.isOpen ?? false;
+    _onSearch(isOpen: isOpen);
+  }
+
+  static final _searchBarKey = GlobalKey<SearchBarAnimationState>();
+
   late final TextEditingController controller;
   bool canShowClosedChild = true;
 
@@ -35,6 +50,7 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
     if (controller.text != '') {
       SettingsSearchController.inst.onSearchChanged(controller.text);
     }
+    setState(() => canShowClosedChild = !isOpen);
   }
 
   @override
@@ -48,6 +64,7 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
           child: canShowClosedChild && widget.closedChild != null ? widget.closedChild! : null,
         ),
         SearchBarAnimation(
+          key: _searchBarKey,
           isSearchBoxOnRightSide: true,
           textAlignToRight: false,
           durationInMilliSeconds: animationMs,
@@ -87,13 +104,8 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
               SettingsSearchController.inst.searchResults.clear();
             },
           ),
-          onTap: () {
-            _onSearch(isOpen: true);
-          },
-          onPressButton: (isOpen) {
-            _onSearch(isOpen: isOpen);
-            setState(() => canShowClosedChild = !isOpen);
-          },
+          onTap: () => _onSearch(isOpen: true),
+          onPressButton: (isOpen) => _onSearch(isOpen: isOpen),
           onChanged: SettingsSearchController.inst.onSearchChanged,
         ),
       ],

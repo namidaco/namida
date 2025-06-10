@@ -137,6 +137,19 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: "${lang.LYRICS} (${lang.FULLSCREEN})",
     ),
     ShortcutKeyData(
+      key: LogicalKeyboardKey.keyP,
+      control: true,
+      shift: true,
+      callback: () {
+        const SettingsPage().navigate();
+        Timer(
+          Duration(milliseconds: 100),
+          () => NamidaSettingSearchBar.globalKey.currentState?.open(),
+        );
+      },
+      title: lang.SETTINGS,
+    ),
+    ShortcutKeyData(
       key: LogicalKeyboardKey.tab,
       control: true,
       callback: () {

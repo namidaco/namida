@@ -831,7 +831,7 @@ extension RouteUtils on NamidaRoute {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
       child: displaySettingSearch //
-          ? NamidaSettingSearchBar(closedChild: finalWidget)
+          ? NamidaSettingSearchBar.keyed(closedChild: finalWidget)
           : finalWidget ?? ScrollSearchController.inst.searchBarWidget,
     );
   }
