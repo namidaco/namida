@@ -32,10 +32,6 @@ jobs:
           git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
           git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
 
-      - name: Git Submodule Update
-        run: |
-          git clone https://github.com/namidaco/namida-translations/ assets/language
-
       - name: Setup dependencies
         run: |
           flutter clean
@@ -74,7 +70,7 @@ jobs:
           flutter clean
           flutter pub get
           flutter pub upgrade
-          git clone https://github.com/namidaco/namida-translations/ assets/language
+          git submodule update --init --remote --recursive
           find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
           echo ${{ secrets.ANDROID_SIGNING_KEYSTORE }} | base64 --decode > android/app/keystore.jks
           echo ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }} | base64 --decode > android/key.properties
