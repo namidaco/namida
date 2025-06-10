@@ -611,7 +611,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                           icon: Broken.share,
                                                                           onPressed: () {
                                                                             final url = videoInfo?.buildUrl() ?? YTUrlUtils.buildVideoUrl(currentId);
-                                                                            Share.share(url);
+                                                                            SharePlus.instance.share(ShareParams(uri: Uri.parse(url)));
                                                                           },
                                                                         ),
                                                                       ),

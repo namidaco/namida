@@ -530,7 +530,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         title: lang.SHARE,
         onTap: () {
           final url = this.buildUrl();
-          Share.share(url);
+          SharePlus.instance.share(ShareParams(uri: Uri.parse(url)));
         },
       ),
       if (displayDownloadItem)

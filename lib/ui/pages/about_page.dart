@@ -429,10 +429,14 @@ class _AboutPageState extends State<AboutPage> {
                     onTap: () {
                       final taggerLogsFileSize = File(AppPaths.LOGS_TAGGER).fileSizeSync();
                       final goodTaggerLogsFile = taggerLogsFileSize != null && taggerLogsFileSize > 0;
-                      Share.shareXFiles([
-                        XFile(AppPaths.LOGS),
-                        if (goodTaggerLogsFile) XFile(AppPaths.LOGS_TAGGER),
-                      ]);
+                      SharePlus.instance.share(
+                        ShareParams(
+                          files: [
+                            XFile(AppPaths.LOGS),
+                            if (goodTaggerLogsFile) XFile(AppPaths.LOGS_TAGGER),
+                          ],
+                        ),
+                      );
                     },
                   )
                 ],

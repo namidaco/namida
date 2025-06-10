@@ -169,6 +169,7 @@ class Tooltip extends StatefulWidget {
     this.message,
     this.richMessage,
     this.height,
+    this.constraints,
     this.padding,
     this.margin,
     this.verticalOffset,
@@ -184,6 +185,7 @@ class Tooltip extends StatefulWidget {
     this.triggerMode,
     this.enableFeedback,
     this.onTriggered,
+    this.ignorePointer,
     this.child,
   }) : assert(
           richMessage == null || textStyle == null,
@@ -208,6 +210,14 @@ class Tooltip extends StatefulWidget {
   ///
   /// If the [child] is null, then this is the tooltip's intrinsic height.
   final double? height;
+
+  /// Constrains the size of the [Tooltip]'s message.
+  ///
+  /// If null, then the [TooltipThemeData.constraints] of the ambient [ThemeData.tooltipTheme]
+  /// will be used. If that is also null, then a default value will be picked based on the current
+  /// platform. For desktop platforms, the default value is `BoxConstraints(minHeight: 24.0)`,
+  /// while for mobile platforms the default value is `BoxConstraints(minHeight: 32.0)`.
+  final BoxConstraints? constraints;
 
   /// The amount of space by which to inset the tooltip's [child].
   ///
@@ -353,6 +363,17 @@ class Tooltip extends StatefulWidget {
   /// or after a long press when [triggerMode] is [TooltipTriggerMode.longPress].
   final TooltipTriggeredCallback? onTriggered;
 
+  /// Whether this tooltip should be invisible to hit testing.
+  ///
+  /// If no value is passed, pointer events are ignored unless the tooltip has a
+  /// [richMessage] instead of a [message].
+  ///
+  /// See also:
+  ///
+  /// * [IgnorePointer], for more information about how pointer events are
+  /// handled or ignored.
+  final bool? ignorePointer;
+
   static final List<TooltipState> _openedTooltips = <TooltipState>[];
 
   /// Dismiss all of the tooltips that are currently shown on the screen,
@@ -449,6 +470,14 @@ class TooltipState extends State<Tooltip> with SingleTickerProviderStateMixin {
       reverseDuration: _fadeOutDuration,
       vsync: this,
     )..addStatusListener(_handleStatusChanged);
+  }
+
+  CurvedAnimation? _backingOverlayAnimation;
+  CurvedAnimation get _overlayAnimation {
+    return _backingOverlayAnimation ??= CurvedAnimation(
+      parent: _controller,
+      curve: Curves.fastOutSlowIn,
+    );
   }
 
   LongPressGestureRecognizer? _longPressRecognizer;
@@ -767,10 +796,12 @@ class TooltipState extends State<Tooltip> with SingleTickerProviderStateMixin {
     };
 
     final TooltipThemeData tooltipTheme = _tooltipTheme;
+    final BoxConstraints defaultConstraints = BoxConstraints(
+      minHeight: widget.height ?? tooltipTheme.constraints?.minHeight ?? _getDefaultTooltipHeight(),
+    );
     final _TooltipOverlay overlayChild = _TooltipOverlay(
-      excludeFromSemantics: widget.excludeFromSemantics ?? _tooltipTheme.excludeFromSemantics ?? _defaultExcludeFromSemantics,
       richMessage: widget.richMessage?.call() ?? TextSpan(text: widget.message?.call()),
-      height: widget.height ?? tooltipTheme.height ?? _getDefaultTooltipHeight(),
+      constraints: widget.constraints ?? tooltipTheme.constraints ?? defaultConstraints,
       padding: widget.padding ?? tooltipTheme.padding ?? _getDefaultPadding(),
       margin: widget.margin ?? tooltipTheme.margin ?? _defaultMargin,
       onEnter: _handleMouseEnter,
@@ -778,10 +809,11 @@ class TooltipState extends State<Tooltip> with SingleTickerProviderStateMixin {
       decoration: widget.decoration ?? tooltipTheme.decoration ?? defaultDecoration,
       textStyle: widget.textStyle ?? tooltipTheme.textStyle ?? defaultTextStyle,
       textAlign: widget.textAlign ?? tooltipTheme.textAlign ?? _defaultTextAlign,
-      animation: CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn),
+      animation: _overlayAnimation,
       target: target,
       verticalOffset: widget.verticalOffset ?? tooltipTheme.verticalOffset ?? _defaultVerticalOffset,
       preferBelow: widget.preferBelow ?? tooltipTheme.preferBelow ?? _defaultPreferBelow,
+      ignorePointer: widget.ignorePointer ?? widget.message != null,
     );
 
     return SelectionContainer.maybeOf(context) == null ? overlayChild : SelectionContainer.disabled(child: overlayChild);
@@ -801,6 +833,7 @@ class TooltipState extends State<Tooltip> with SingleTickerProviderStateMixin {
     _tapRecognizer?.dispose();
     _timer?.cancel();
     _backingController?.dispose();
+    _backingOverlayAnimation?.dispose();
     super.dispose();
   }
 
@@ -815,7 +848,11 @@ class TooltipState extends State<Tooltip> with SingleTickerProviderStateMixin {
     }
     assert(debugCheckHasOverlay(context));
 
-    Widget? result = widget.child;
+    final bool excludeFromSemantics = widget.excludeFromSemantics ?? _tooltipTheme.excludeFromSemantics ?? _defaultExcludeFromSemantics;
+    Widget result = Semantics(
+      tooltip: excludeFromSemantics ? null : _buildTooltipMessage(),
+      child: widget.child,
+    );
 
     // Only check for gestures if tooltip should be visible.
     if (_visible) {
@@ -883,45 +920,46 @@ class _TooltipPositionDelegate extends SingleChildLayoutDelegate {
 
 class _TooltipOverlay extends StatelessWidget {
   const _TooltipOverlay({
-    required this.height,
     required this.richMessage,
-    required this.excludeFromSemantics,
+    required this.constraints,
     this.padding,
     this.margin,
     this.decoration,
-    this.textStyle,
-    this.textAlign,
+    required this.textStyle,
+    required this.textAlign,
     required this.animation,
     required this.target,
     required this.verticalOffset,
     required this.preferBelow,
+    required this.ignorePointer,
     this.onEnter,
     this.onExit,
   });
 
   final InlineSpan richMessage;
-  final double height;
-  final bool excludeFromSemantics;
+  final BoxConstraints constraints;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final Decoration? decoration;
-  final TextStyle? textStyle;
-  final TextAlign? textAlign;
+  final TextStyle textStyle;
+  final TextAlign textAlign;
   final Animation<double> animation;
   final Offset target;
   final double verticalOffset;
   final bool preferBelow;
   final PointerEnterEventListener? onEnter;
   final PointerExitEventListener? onExit;
+  final bool ignorePointer;
 
   @override
   Widget build(BuildContext context) {
     Widget result = FadeTransition(
       opacity: animation,
       child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: height),
+        constraints: constraints,
         child: DefaultTextStyle(
-          style: Theme.of(context).textTheme.bodyMedium!,
+          style: textStyle,
+          textAlign: textAlign,
           child: Semantics(
             container: true,
             child: Container(
@@ -957,8 +995,8 @@ class _TooltipOverlay extends StatelessWidget {
           verticalOffset: verticalOffset,
           preferBelow: preferBelow,
         ),
-        child: Semantics(
-          tooltip: excludeFromSemantics ? null : richMessage.toPlainText(),
+        child: IgnorePointer(
+          ignoring: ignorePointer,
           child: result,
         ),
       ),

@@ -142,7 +142,7 @@ class YTVideosActionBar extends StatelessWidget {
         NamidaPopupItem(
           icon: Broken.share,
           title: lang.SHARE,
-          onTap: () => Share.share(url),
+          onTap: () => SharePlus.instance.share(ShareParams(uri: Uri.parse(url))),
         ),
       if (menuOptions.download)
         NamidaPopupItem(

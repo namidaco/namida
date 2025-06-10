@@ -453,7 +453,7 @@ class YTUtils {
             iconSize: 18.0,
             onPressed: () {
               final videoLink = YTUrlUtils.buildVideoUrl(videoId);
-              Share.share(videoLink);
+              SharePlus.instance.share(ShareParams(uri: Uri.parse(videoLink)));
             },
           )
         ],

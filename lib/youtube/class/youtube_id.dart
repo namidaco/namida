@@ -65,6 +65,6 @@ extension YoutubeIDUtils on YoutubeID {
 
 extension YoutubeIDSUtils on List<YoutubeID> {
   Future<void> shareVideos() async {
-    await Share.share(map((e) => "${YTUrlUtils.buildVideoUrl(e.id)} - ${e.dateAddedMS.dateAndClockFormattedOriginal}\n").join());
+    await SharePlus.instance.share(ShareParams(text: map((e) => "${YTUrlUtils.buildVideoUrl(e.id)} - ${e.dateAddedMS.dateAndClockFormattedOriginal}\n").join()));
   }
 }

@@ -1209,7 +1209,7 @@ Future<void> showGeneralPopupDialog(
                                   ),
                                   onTap: () async {
                                     isLoadingFilesToShare.value = true;
-                                    await Share.shareXFiles(tracksExisting.mapped((e) => XFile(e.path)));
+                                    await SharePlus.instance.share(ShareParams(files: tracksExisting.mapped((e) => XFile(e.path))));
                                     isLoadingFilesToShare.value = false;
                                     NamidaNavigator.inst.closeDialog();
                                   },
@@ -1411,7 +1411,7 @@ Future<void> showGeneralPopupDialog(
                                         () => lang.SHARE,
                                         () async {
                                           isLoadingFilesToShare.value = true;
-                                          await Share.shareXFiles(tracksExisting.mapped((e) => XFile(e.path)));
+                                          await SharePlus.instance.share(ShareParams(files: tracksExisting.mapped((e) => XFile(e.path))));
                                           isLoadingFilesToShare.value = false;
                                           NamidaNavigator.inst.closeDialog();
                                         },
