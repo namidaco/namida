@@ -38,7 +38,7 @@ class Indexer<T extends Track> {
   static final Indexer _instance = Indexer._internal();
   Indexer._internal();
 
-  bool get _defaultUseMediaStore => settings.useMediaStore.value;
+  bool get _defaultUseMediaStore => NamidaFeaturesVisibility.onAudioQueryAvailable && settings.useMediaStore.value;
   bool get _includeVideosAsTracks => settings.includeVideos.value;
 
   void _clearTracksDBAndReOpen() {
@@ -150,7 +150,7 @@ class Indexer<T extends Track> {
       return (res, null);
     }
     if (imagePath == null) return (null, null);
-    if (!settings.useMediaStore.value) return (null, null); // bcz it can generate non-accurate artworks (thanks media store)
+    if (!_defaultUseMediaStore) return (null, null); // bcz it can generate non-accurate artworks (thanks media store)
 
     if (compressed && _artworksMap[imagePath] != null) {
       await _artworksMap[imagePath]!.future;
@@ -1411,7 +1411,7 @@ class Indexer<T extends Track> {
   Future<List<(TrackExtended, int)>> _fetchMediaStoreTracks() async {
     if (!NamidaFeaturesVisibility.onAudioQueryAvailable) return [];
     final allMusic = await _audioQuery.querySongs();
-    // -- folders selected will be ignored when [settings.useMediaStore.value] is enabled.
+    // -- folders selected will be ignored when [_defaultUseMediaStore] is enabled.
     allMusic.retainWhere((element) =>
         settings.directoriesToExclude.value.every((dir) => !element.data.startsWith(dir)) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */);
     final tracks = <(TrackExtended, int)>[];

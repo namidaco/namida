@@ -738,12 +738,11 @@ class NamidaFeaturesVisibility {
   static final displayFavButtonInNotifMightCauseIssue = displayFavButtonInNotif && NamidaDeviceInfo.sdkVersion < 31;
   static final shouldRequestManageAllFilesPermission = _isAndroid && NamidaDeviceInfo.sdkVersion >= 30;
   static final showEqualizerBands = _isAndroid;
-  static final showToggleMediaStore = _isAndroid;
+  static final showToggleMediaStore = onAudioQueryAvailable;
   static final showToggleImmersiveMode = _isAndroid;
   static final showRotateScreenInFullScreen = _isAndroid;
 
   static final methodSetCanEnterPip = _isAndroid;
-  static final methodGetPlatformSdk = _isAndroid;
   static final methodSetMusicAs = _isAndroid;
   static final methodOpenSystemEqualizer = _isAndroid;
 
