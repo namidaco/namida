@@ -216,7 +216,7 @@ class YoutubeAccountController {
   static Future<ChannelInfoItem?> _youtubeSignInButton({
     required LoginPageConfiguration pageConfig,
     required bool forceSignIn,
-    required void Function(YoutiLoginProgress progress) onProgress,
+    required YoutiLoginProgressCallback onProgress,
   }) async {
     if (_checkCanSignIn()) {
       final signedInChannel = await YoutiAccountManager.signIn(
