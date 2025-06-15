@@ -131,12 +131,11 @@ class CurrentColor {
 
   void updatePlayerColorFromColor(Color color, [bool customAlpha = true]) async {
     final colorWithAlpha = customAlpha ? color.withAlpha(colorAlpha) : color;
-    _namidaColor.set(NamidaColor(
+    _namidaColor.value = NamidaColor(
       used: colorWithAlpha,
       mix: colorWithAlpha,
       palette: [colorWithAlpha],
-    ));
-    _namidaColor.refresh();
+    );
   }
 
   Future<void> refreshColorsAfterResumeApp() async {
@@ -243,8 +242,7 @@ class CurrentColor {
             namidaColor = trColors;
           }
           if (namidaColor != null && namidaColor != _namidaColor.value) {
-            _namidaColor.set(namidaColor);
-            _namidaColor.refresh(); // force refresh for pitch black/etc
+            _namidaColor.value = namidaColor;
             _updateCurrentPaletteHalfs(
               settings.forceMiniplayerTrackColor.value ? trColors : namidaColor,
             );

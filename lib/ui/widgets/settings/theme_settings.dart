@@ -278,7 +278,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   value: pitchBlack,
                   onChanged: (isTrue) {
                     settings.save(pitchBlack: !isTrue);
-                    if (context.isDarkMode) CurrentColor.inst.updatePlayerColorFromColor(CurrentColor.inst.color);
+                    if (context.isDarkMode) CurrentColor.inst.updateColorAfterThemeModeChange();
                   },
                 ),
               ),
