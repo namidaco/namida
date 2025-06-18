@@ -1331,6 +1331,24 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             if (!okaySetFromCache()) snackyy(title: lang.ERROR, message: 'Failed to get mixed source', top: false, isError: true);
             return;
           }
+        } else if (streamsResult.info?.isLive == true) {
+          UriSource? finalLiveSource;
+          if (streamsResult.hlsManifestUrl != null) {
+            finalLiveSource = HlsSource(Uri.parse(streamsResult.hlsManifestUrl!));
+          } else if (streamsResult.dashManifestUrl != null) {
+            finalLiveSource = DashSource(Uri.parse(streamsResult.dashManifestUrl!));
+          }
+
+          if (finalLiveSource != null) {
+            finalAudioSource = AudioVideoSource.file('');
+            videoSourceOptions = VideoSourceOptions(
+              source: finalLiveSource,
+              loop: false,
+              videoOnly: true,
+            );
+          } else {
+            if (!okaySetFromCache()) snackyy(title: lang.ERROR, message: 'Failed to set hls or dash source for live stream', top: false, isError: true);
+          }
         } else {
           AudioVideoSource? finalVideoSource;
 
@@ -1409,6 +1427,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                   videoOnly: false,
                 );
               }
+              }
             }
           }
 
@@ -1432,7 +1451,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             isVideoFile: false,
           );
           if (checkInterrupted()) return;
-        }
+
         // -----------------------
       } catch (e) {
         if (checkInterrupted()) return;
@@ -2048,7 +2067,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required VideoStreamsResult? streamsResult,
     required void Function(File cachedFile) onCacheDone,
   }) {
-    final isLive = streamsResult != null && streamsResult.audioStreams.isEmpty && streamsResult.mixedStreams.isNotEmpty;
+    // -- this part might not be used, live streams are built different early
+    final isLive = streamsResult != null && (streamsResult.info?.isLive == true || streamsResult.audioStreams.isEmpty && streamsResult.mixedStreams.isNotEmpty);
+    if (isLive) {
+      if (streamsResult.hlsManifestUrl != null) {
+        return HlsSource(Uri.parse(streamsResult.hlsManifestUrl!));
+      } else if (streamsResult.dashManifestUrl != null) {
+        return DashSource(Uri.parse(streamsResult.dashManifestUrl!));
+      } else {
+        return AudioVideoSource.file('');
+      }
+    }
+
     final cacheConfig = HttpCacheManager.instance.createStreamConfig();
 
     cacheConfig.onCacheDone = onCacheDone;
@@ -2060,7 +2090,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     cacheStream.download();
     final cacheUrl = cacheStream.cacheUrl;
     void disposeStream() => cacheStream.dispose(force: true);
-    return isLive ? HlsSource(cacheUrl, onDispose: disposeStream) : AudioVideoSource.uri(cacheUrl, onDispose: disposeStream);
+    return AudioVideoSource.uri(cacheUrl, onDispose: disposeStream);
   }
 
   UriSource _buildLockCachingAudioSource(Uri uriDDL, {required AudioStream stream, required String videoId, required VideoStreamsResult? streamsResult}) {

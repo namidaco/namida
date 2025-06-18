@@ -214,9 +214,16 @@ class CustomMPVPlayer implements AVPlayer {
       });
     }
 
+    if (_checkIsSourceLive(source) || _checkIsSourceLive(videoOptions?.source)) {
+      // -- not waiting for duration
+      return null;
+    }
+
     final duration = _player.stream.duration.firstWhere((element) => element > Duration.zero);
     return duration;
   }
+
+  bool _checkIsSourceLive(AudioVideoSource? source) => source is HlsSource || source is DashSource;
 
   @override
   Future<void> setVideo(VideoSourceOptions? video) async {

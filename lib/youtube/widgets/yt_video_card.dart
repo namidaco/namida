@@ -87,6 +87,8 @@ class YoutubeVideoCard extends StatelessWidget {
 
     final percentageWatched = video.percentageWatched;
 
+    final firstBadge = video.badges?.firstOrNull;
+
     Widget finalChild = NamidaPopupWrapper(
       openOnTap: false,
       childrenDefault: getMenuItems,
@@ -128,22 +130,38 @@ class YoutubeVideoCard extends StatelessWidget {
         bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(videoId: videoId, context: context),
         menuChildrenDefault: getMenuItems,
         extractColor: false,
-        onTopWidgets: percentageWatched == null
+        onTopWidgets: percentageWatched == null && firstBadge == null
             ? null
             : (thumbWidth, thumbHeight, imageColors) => [
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    child: SizedBox(
-                      height: 1.25,
-                      width: thumbWidth * percentageWatched,
-                      child: const DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Color.fromARGB(140, 255, 20, 20),
+                  if (percentageWatched != null)
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      child: SizedBox(
+                        height: 1.25,
+                        width: thumbWidth * percentageWatched,
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Color.fromARGB(140, 255, 20, 20),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  if (firstBadge != null)
+                    Positioned(
+                      bottom: 3.0,
+                      right: 4.0,
+                      child: NamidaInkWell(
+                        borderRadius: 5.0,
+                        padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
+                        bgColor: firstBadge == 'LIVE' ? Color.fromARGB(100, 255, 20, 20) : context.theme.cardColor,
+                        child: Icon(
+                          Broken.radar_1,
+                          size: 14.0,
+                          color: Color.fromARGB(222, 222, 222, 222),
+                        ),
+                      ),
+                    ),
                 ],
       ),
     );
