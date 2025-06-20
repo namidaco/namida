@@ -78,6 +78,7 @@ class _SettingsController with SettingsFileWriter {
   }.obs;
   final enableBlurEffect = false.obs;
   final enableGlowEffect = false.obs;
+  final enableGlowBehindVideo = false.obs;
   final hourFormat12 = true.obs;
   final dateTimeFormat = 'MMM yyyy'.obs;
   final RxList<String> trackArtistsSeparators = <String>['&', ',', ';', '//', ' ft. ', ' x '].obs;
@@ -417,6 +418,7 @@ class _SettingsController with SettingsFileWriter {
       }
       enableBlurEffect.value = json['enableBlurEffect'] ?? enableBlurEffect.value;
       enableGlowEffect.value = json['enableGlowEffect'] ?? enableGlowEffect.value;
+      enableGlowBehindVideo.value = json['enableGlowBehindVideo'] ?? enableGlowBehindVideo.value;
       hourFormat12.value = json['hourFormat12'] ?? hourFormat12.value;
       dateTimeFormat.value = json['dateTimeFormat'] ?? dateTimeFormat.value;
 
@@ -629,6 +631,7 @@ class _SettingsController with SettingsFileWriter {
         'mediaGridCounts': mediaGridCounts.value.map((key, value) => MapEntry(key.name, value?.rawValue)),
         'enableBlurEffect': enableBlurEffect.value,
         'enableGlowEffect': enableGlowEffect.value,
+        'enableGlowBehindVideo': enableGlowBehindVideo.value,
         'hourFormat12': hourFormat12.value,
         'dateTimeFormat': dateTimeFormat.value,
         'trackArtistsSeparators': trackArtistsSeparators.value,
@@ -786,6 +789,7 @@ class _SettingsController with SettingsFileWriter {
     bool? useSettingCollapsedTiles,
     bool? enableBlurEffect,
     bool? enableGlowEffect,
+    bool? enableGlowBehindVideo,
     bool? hourFormat12,
     String? dateTimeFormat,
     List<String>? trackArtistsSeparators,
@@ -951,6 +955,7 @@ class _SettingsController with SettingsFileWriter {
     if (useSettingCollapsedTiles != null) this.useSettingCollapsedTiles.value = useSettingCollapsedTiles;
     if (enableBlurEffect != null) this.enableBlurEffect.value = enableBlurEffect;
     if (enableGlowEffect != null) this.enableGlowEffect.value = enableGlowEffect;
+    if (enableGlowBehindVideo != null) this.enableGlowBehindVideo.value = enableGlowBehindVideo;
     if (hourFormat12 != null) this.hourFormat12.value = hourFormat12;
     if (dateTimeFormat != null) this.dateTimeFormat.value = dateTimeFormat;
 

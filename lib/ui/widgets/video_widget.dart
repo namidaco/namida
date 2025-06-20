@@ -636,6 +636,14 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         newDeviceInsets.bottom > _deviceInsets.bottom;
   }
 
+  void toggleGlowBehindVideo() {
+    final newValueEnabled = !settings.enableGlowBehindVideo.value;
+    settings.save(enableGlowBehindVideo: newValueEnabled);
+    if (newValueEnabled) {
+      snackyy(title: lang.WARNING, message: lang.PERFORMANCE_NOTE, icon: Broken.danger);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final newDeviceInsets = MediaQuery.viewPaddingOf(context);
@@ -659,7 +667,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           );
 
     final finalVideoWidget = ObxO(
-      key: _videoConstraintsKey,
       rx: Player.inst.videoPlayerInfo,
       builder: (context, info) {
         if (info != null && info.isInitialized) {
@@ -690,41 +697,42 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               final fallbackHeight = inLandscape ? maxHeight : maxWidth * 9 / 16;
               final fallbackWidth = (inLandscape ? maxHeight * 16 / 9 : maxWidth).withMaximum(providerMaxWidth);
               return ObxO(
-                  rx: Player.inst.currentItem,
-                  builder: (context, item) {
-                    if (item is YoutubeID) {
-                      final vidId = item.id;
-                      return YoutubeThumbnail(
-                        type: ThumbnailType.video,
-                        key: Key(vidId),
-                        isImportantInCache: true,
-                        width: fallbackWidth,
-                        height: fallbackHeight,
-                        borderRadius: 0,
-                        blur: 60,
-                        disableBlurBgSizeShrink: true,
-                        videoId: vidId,
-                        displayFallbackIcon: false,
-                        compressed: false,
-                        preferLowerRes: false,
-                        fit: BoxFit.cover, // never change this lil bro
-                      );
-                    }
-                    final track = item is Selectable ? item.track : null;
-                    return ArtworkWidget(
-                      key: ValueKey(track?.path),
-                      track: track,
-                      path: track?.pathToImage,
-                      thumbnailSize: fallbackWidth,
+                rx: Player.inst.currentItem,
+                builder: (context, item) {
+                  if (item is YoutubeID) {
+                    final vidId = item.id;
+                    return YoutubeThumbnail(
+                      type: ThumbnailType.video,
+                      key: Key(vidId),
+                      isImportantInCache: true,
                       width: fallbackWidth,
                       height: fallbackHeight,
                       borderRadius: 0,
-                      blur: 60,
+                      blur: 0,
                       disableBlurBgSizeShrink: true,
+                      videoId: vidId,
+                      displayFallbackIcon: false,
                       compressed: false,
-                      fit: BoxFit.cover, // never change this my friend
+                      preferLowerRes: false,
+                      fit: BoxFit.cover, // never change this lil bro
                     );
-                  });
+                  }
+                  final track = item is Selectable ? item.track : null;
+                  return ArtworkWidget(
+                    key: ValueKey(track?.path),
+                    track: track,
+                    path: track?.pathToImage,
+                    thumbnailSize: fallbackWidth,
+                    width: fallbackWidth,
+                    height: fallbackHeight,
+                    borderRadius: 0,
+                    blur: 0,
+                    disableBlurBgSizeShrink: true,
+                    compressed: false,
+                    fit: BoxFit.cover, // never change this my friend
+                  );
+                },
+              );
             },
           ),
         );
@@ -866,7 +874,14 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    finalVideoWidget,
+                    ObxO(
+                      key: _videoConstraintsKey,
+                      rx: settings.enableGlowBehindVideo,
+                      builder: (context, enableGlowBehindVideo) => _DropShadowWrapper(
+                        enabled: widget.isFullScreen && enableGlowBehindVideo,
+                        child: finalVideoWidget,
+                      ),
+                    ),
                     if (showEndcards)
                       ConstrainedBox(
                         constraints: videoBoxMaxConstraints,
@@ -1018,6 +1033,48 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         : const SizedBox(),
                                   ),
                                   const SizedBox(width: 4.0),
+
+                                  // ==== Toggle glow  ====
+                                  if (widget.isFullScreen)
+                                    Padding(
+                                      padding: const EdgeInsets.all(4.0),
+                                      child: NamidaBgBlurClipped(
+                                        blur: 3.0,
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                        ),
+                                        child: NamidaTooltip(
+                                          message: () => lang.ENABLE_GLOW_EFFECT,
+                                          child: NamidaInkWell(
+                                            borderRadius: 0,
+                                            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+                                            onTap: () {
+                                              _startTimer();
+                                              toggleGlowBehindVideo();
+                                            },
+                                            child: ObxO(
+                                              rx: settings.enableGlowBehindVideo,
+                                              builder: (context, enabled) => enabled
+                                                  ? StackedIcon(
+                                                      baseIcon: Broken.drop,
+                                                      iconSize: 16.0,
+                                                      baseIconColor: itemsColor,
+                                                      secondaryIcon: Broken.tick_circle,
+                                                      secondaryIconColor: itemsColor,
+                                                      secondaryIconSize: 9.0,
+                                                    )
+                                                  : Icon(
+                                                      Broken.drop,
+                                                      size: 16.0,
+                                                      color: itemsColor,
+                                                    ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+
                                   // ==== Reset Brightness ====
                                   ObxO(
                                     rx: _currentBrigthnessDim,
@@ -2361,6 +2418,39 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
                 );
               },
             ),
+    );
+  }
+}
+class _DropShadowWrapper extends StatelessWidget {
+  final bool enabled;
+  final Widget child;
+
+  const _DropShadowWrapper({
+    required this.enabled,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        AnimatedSwitcher(
+          duration: Duration(milliseconds: 800),
+          reverseDuration: Duration(milliseconds: 500),
+          child: enabled
+              ? DropShadow(
+                  blurRadius: 40,
+                  offset: const Offset(0, 0.0),
+                  bgSizePercentage: 1.1,
+                  sizePercentage: 1.0,
+                  child: child,
+                )
+              : const SizedBox(
+                  key: ValueKey('video_bg_blur_disabled'),
+                ),
+        ),
+        child
+      ],
     );
   }
 }
