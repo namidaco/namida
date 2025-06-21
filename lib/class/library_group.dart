@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/library_item_map.dart';
 import 'package:namida/class/track.dart';
@@ -83,24 +85,23 @@ class LibraryGroup<T extends Track> {
     for (final entry in mediasWithSorts.entries) {
       final e = entry.key;
       final sorters = entry.value;
-      Future<void> sortPls<Tr extends Track>(Iterable<List<Tr>> trs, MediaType type) async {
+      void sortPls(Iterable<List<T>> trs, MediaType type) {
         final reverse = mediaItemsTrackSortingReverse[type] ?? false;
         if (reverse) {
           for (final e in trs) {
             e.sortByReverseAlts(sorters);
-            await Future.delayed(Duration.zero);
           }
         } else {
           for (final e in trs) {
             e.sortByAlts(sorters);
-            await Future.delayed(Duration.zero);
           }
         }
       }
 
       final listsToSort = _mediaTypeToLists(e, allTracks);
       if (listsToSort != null) {
-        await sortPls(listsToSort, e);
+        sortPls(listsToSort, e);
+        await Future.delayed(Duration.zero);
       }
     }
   }
@@ -113,7 +114,7 @@ class LibraryGroup<T extends Track> {
     for (final entry in mediasWithSorts.entries) {
       final e = entry.key;
       final sorters = entry.value;
-      void sortPls<Tr extends Track>(Iterable<List<Tr>> trs, MediaType type) {
+      void sortPls(Iterable<List<T>> trs, MediaType type) {
         final reverse = mediaItemsTrackSortingReverse[type] ?? false;
         if (reverse) {
           for (final e in trs) {
@@ -133,16 +134,16 @@ class LibraryGroup<T extends Track> {
     }
   }
 
-  Iterable<List<Track>>? _mediaTypeToLists(MediaType e, List<T> allTracks) {
+  Iterable<List<T>>? _mediaTypeToLists(MediaType e, List<T> allTracks) {
     return switch (e) {
       MediaType.track => [allTracks],
-      MediaType.album => mainMapAlbums.value.values,
-      MediaType.artist => mainMapArtists.value.values,
-      MediaType.albumArtist => mainMapAlbumArtists.value.values,
-      MediaType.composer => mainMapComposer.value.values,
-      MediaType.genre => mainMapGenres.value.values,
+      MediaType.album => mainMapAlbums.value.values as Iterable<List<T>>,
+      MediaType.artist => mainMapArtists.value.values as Iterable<List<T>>,
+      MediaType.albumArtist => mainMapAlbumArtists.value.values as Iterable<List<T>>,
+      MediaType.composer => mainMapComposer.value.values as Iterable<List<T>>,
+      MediaType.genre => mainMapGenres.value.values as Iterable<List<T>>,
       MediaType.folder => mainMapFolders.values,
-      MediaType.folderVideo => mainMapFoldersVideos.values,
+      MediaType.folderVideo => mainMapFoldersVideos.values as Iterable<List<T>>,
       _ => null,
     };
   }

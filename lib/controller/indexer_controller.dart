@@ -31,6 +31,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -242,7 +243,7 @@ class Indexer<T extends Track> {
     }
   }
 
-  void rebuildTracksAfterSplitConfigChanges() {
+  void rebuildTracksAfterSplitConfigChanges() async {
     final splitConfig = _createSplitConfig();
     final keysList = allTracksMappedByPath.keys.toList();
     for (int i = 0; i < keysList.length; i++) {
@@ -268,11 +269,11 @@ class Indexer<T extends Track> {
         ),
       );
     }
-    _afterIndexing();
+    await _afterIndexing();
     tracksInfoList.refresh();
   }
 
-  void rebuildTracksAfterExtractFeatArtistChanges() {
+  void rebuildTracksAfterExtractFeatArtistChanges() async {
     final artistsSplitConfig = ArtistsSplitConfig.settings();
     final keysList = allTracksMappedByPath.keys.toList();
     for (int i = 0; i < keysList.length; i++) {
@@ -286,7 +287,7 @@ class Indexer<T extends Track> {
         ),
       );
     }
-    _afterIndexing();
+    await _afterIndexing();
     tracksInfoList.refresh();
   }
 
@@ -322,7 +323,7 @@ class Indexer<T extends Track> {
       );
     }
 
-    _afterIndexing();
+    await _afterIndexing();
     isIndexing.value = false;
     if (showFinishedSnackbar) snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
   }
@@ -344,16 +345,16 @@ class Indexer<T extends Track> {
   Future<void> sortMediaTracksSubLists(List<MediaType> medias) async {
     final sorters = {for (final e in medias) e: SearchSortController.inst.getMediaTracksSortingComparables(e)};
     final mediaItemsTrackSortingReverse = settings.mediaItemsTrackSortingReverse.value;
-    await this.mainMapsGroup.sortAll(sorters, mediaItemsTrackSortingReverse, tracksInfoList.value).ignoreError(); // can have concurrent modification error
+    await this.mainMapsGroup.sortAll(sorters, mediaItemsTrackSortingReverse, tracksInfoList.value);
+    _refreshMediaTracksSubListsAfterSort(sorters.keys); // -- vip vro
   }
 
   void _refreshMediaTracksSubListsAfterSort(Iterable<MediaType> sortedMedias) {
     for (final e in sortedMedias) {
       final fn = switch (e) {
         MediaType.track => () => SearchSortController.inst.searchTracks(LibraryTab.tracks.textSearchController?.text ?? ''),
-        // -- not needed
-        // MediaType.album || MediaType.artist || MediaType.albumArtist || MediaType.composer || MediaType.genre => () =>
-        //     SearchSortController.inst.searchMedia(e.toLibraryTab().textSearchController?.text ?? '', e),
+        MediaType.album || MediaType.artist || MediaType.albumArtist || MediaType.composer || MediaType.genre => () =>
+            SearchSortController.inst.searchMedia(e.toLibraryTab().textSearchController?.text ?? '', e),
         MediaType.folder => FoldersController.tracks.refreshAfterSorting,
         MediaType.folderVideo => FoldersController.videos.refreshAfterSorting,
         _ => null,
@@ -1218,6 +1219,8 @@ class Indexer<T extends Track> {
           FoldersController.videos.onMapChanged(mainMapFoldersVideos.value);
           FoldersController.tracks.onFirstLoad();
           FoldersController.videos.onFirstLoad();
+          _refreshMediaTracksSubListsAfterSort(mediaSorters.keys);
+
           SearchSortController.inst.disposeResources(); // -- vip to refresh filtering
         },
       ),
