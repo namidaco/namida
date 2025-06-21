@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:history_manager/history_manager.dart';
@@ -23,13 +25,15 @@ final settings = _SettingsController._internal();
 class _SettingsController with SettingsFileWriter {
   _SettingsController._internal();
 
-  void prepareAllSettings() {
-    this.prepareSettingsFile();
-    this.equalizer.prepareSettingsFile();
-    this.player.prepareSettingsFile();
-    this.youtube.prepareSettingsFile();
-    this.extra.prepareSettingsFile();
-    this.tutorial.prepareSettingsFile();
+  Future<void> prepareAllSettings() async {
+    await Future.wait([
+      this.prepareSettingsFile(),
+      this.equalizer.prepareSettingsFile(),
+      this.player.prepareSettingsFile(),
+      this.youtube.prepareSettingsFile(),
+      this.extra.prepareSettingsFile(),
+      this.tutorial.prepareSettingsFile(),
+    ]);
   }
 
   final equalizer = EqualizerSettings._internal();
@@ -113,8 +117,8 @@ class _SettingsController with SettingsFileWriter {
   final respectNoMedia = false.obs;
   final defaultBackupLocation = Rxn<String?>();
   final autoBackupIntervalDays = 2.obs;
-  final defaultFolderStartupLocation = kStoragePaths.first.obs;
-  final defaultFolderStartupLocationVideos = kStoragePaths.first.obs;
+  final defaultFolderStartupLocation = kStoragePaths.firstOrNull.obs;
+  final defaultFolderStartupLocationVideos = kStoragePaths.firstOrNull.obs;
   final enableFoldersHierarchy = true.obs;
   final enableFoldersHierarchyVideos = true.obs;
   final displayArtistBeforeTitle = true.obs;
@@ -366,8 +370,8 @@ class _SettingsController with SettingsFileWriter {
     ];
   }
 
-  void prepareSettingsFile() {
-    final json = prepareSettingsFile_();
+  Future<void> prepareSettingsFile() async {
+    final json = await prepareSettingsFile_();
     if (json is! Map) return;
 
     try {

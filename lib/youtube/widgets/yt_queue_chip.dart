@@ -240,7 +240,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                       final currentIndex = Player.inst.currentIndex.valueR;
                                       final nextItem =
                                           Player.inst.currentQueue.valueR.length - 1 >= currentIndex + 1 ? Player.inst.currentQueue.valueR[currentIndex + 1] as YoutubeID : null;
-                                      final nextItemName = nextItem == null ? '' : YoutubeInfoController.utils.getVideoName(nextItem.id);
+                                      final nextItemName = nextItem == null ? '' : YoutubeInfoController.utils.getVideoNameSync(nextItem.id);
                                       final queueLength = Player.inst.currentQueue.valueR.length;
                                       return Column(
                                         mainAxisSize: MainAxisSize.min,
@@ -464,6 +464,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                       videos: queue,
                                       index: i,
                                       day: null,
+                                      isImportantInCache: true,
                                       thumbnailHeight: Dimensions.youtubeThumbnailHeight,
                                     ),
                                   );

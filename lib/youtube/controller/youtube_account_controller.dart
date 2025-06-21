@@ -77,7 +77,7 @@ class YoutubeAccountController {
     return true;
   }
 
-  static void initialize() {
+  static Future<void> initialize() async {
     current.canAddMultiAccounts = false;
 
     NamicoSubscriptionManager.initialize(dataDirectory: AppDirs.YOUTIPIE_DATA);
@@ -122,32 +122,38 @@ class YoutubeAccountController {
       return false;
     };
 
-    final patreonSupportTier = NamicoSubscriptionManager.patreon.getUserSupportTierInCacheValid();
-    if (patreonSupportTier != null) {
-      final ms = patreonSupportTier.toMembershipType();
-      membership.userPatreonTier.value = patreonSupportTier;
-      membership.userMembershipTypePatreon.value = patreonSupportTier.toMembershipType();
-      membership._updateGlobal(ms);
-    } else {
-      _pendingRequests['patreon'] = () async => await membership.checkPatreon(showError: false);
-    }
-
-    final supasub = NamicoSubscriptionManager.supabase.getUserSubInCacheValid();
-    if (supasub != null) {
-      final ms = supasub.toMembershipType();
-      membership.userSupabaseSub.value = supasub;
-      membership.userMembershipTypeSupabase.value = supasub.toMembershipType();
-      membership._updateGlobal(ms);
-    } else {
-      final info = NamicoSubscriptionManager.supabase.getUserSubInCache();
-      if (info != null) {
-        final uuid = info.uuid;
-        final email = info.email;
-        if (uuid != null && email != null) {
-          _pendingRequests['supabase'] = () async => await membership.checkSupabase(uuid, email);
+    await Future.wait([
+      () async {
+        final patreonSupportTier = await NamicoSubscriptionManager.patreon.getUserSupportTierInCacheValid();
+        if (patreonSupportTier != null) {
+          final ms = patreonSupportTier.toMembershipType();
+          membership.userPatreonTier.value = patreonSupportTier;
+          membership.userMembershipTypePatreon.value = ms;
+          membership._updateGlobal(ms);
+        } else {
+          _pendingRequests['patreon'] = () async => await membership.checkPatreon(showError: false);
         }
-      }
-    }
+      }(),
+      () async {
+        final supasub = await NamicoSubscriptionManager.supabase.getUserSubValidCache();
+        if (supasub != null) {
+          final ms = supasub.toMembershipType();
+          membership.userSupabaseSub.value = supasub;
+          membership.userMembershipTypeSupabase.value = ms;
+          membership._updateGlobal(ms);
+        } else {
+          final info = await NamicoSubscriptionManager.supabase.getUserSubInCache();
+          if (info != null) {
+            final uuid = info.uuid;
+            final email = info.email;
+            if (uuid != null && email != null) {
+              _pendingRequests['supabase'] = () async => await membership.checkSupabase(uuid, email);
+            }
+          }
+        }
+      }(),
+    ]);
+
     _executePendingRequests();
   }
 
@@ -264,12 +270,12 @@ class YoutubeAccountController {
   }
 
   static Future<ChannelInfoItem?> signIn({required LoginPageConfiguration pageConfig, required bool forceSignIn}) async {
-    void onProgress(YoutiLoginProgress p) {
+    void onProgress(YoutiLoginProgress p, [AccountCookiesValidity? cookiesValidity]) {
       _signInProgress.value = p;
       if (p == YoutiLoginProgress.canceled) {
         _showInfo(lang.SIGN_IN_CANCELED);
       } else if (p == YoutiLoginProgress.failed) {
-        _showError(lang.SIGN_IN_FAILED);
+        _showError("${lang.SIGN_IN_FAILED}\nCookies validity: ${cookiesValidity?.name ?? "?"}");
       }
     }
 

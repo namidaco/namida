@@ -56,7 +56,7 @@ class YoutubeInfoController {
 
   static const video = _VideoInfoController();
   static const playlist = YoutiPie.playlist;
-  static final history = _YoutubeHistoryLinker(() => YoutiPie.activeAccountDetails.value?.id);
+  static var history = _YoutubeHistoryLinker(() => YoutiPie.activeAccountDetails.value?.id);
   static const userplaylist = YoutiPie.userplaylist;
   static const comment = YoutiPie.comment;
   static const commentAction = YoutiPie.commentAction;
@@ -69,24 +69,41 @@ class YoutubeInfoController {
 
   static final memoryCache = YoutiPie.memoryCache;
 
-  static void initialize() {
+  static bool didInit = false;
+  static Future<void> get waitForInit => _initCompleter.future;
+  static final _initCompleter = Completer<void>();
+
+  static Future<void> initialize(Completer<void> syncItemsCompleter) async {
+    if (_initCompleter.isCompleted) {
+      syncItemsCompleter.completeIfWasnt();
+      return;
+    }
+    YoutiPie.setLogs(_YTReportingLog());
+    final accountCompleter = Completer<void>();
     YoutiPie.initialize(
       dataDirectory: AppDirs.YOUTIPIE_CACHE,
       sensitiveDataDirectory: AppDirs.YOUTIPIE_DATA,
       checkJSPlayer: false, // we properly check for jsplayer with each streams request if needed,
       checkHasConnectionCallback: () => ConnectivityController.inst.hasConnection,
+      syncItemsCompleter: syncItemsCompleter,
+      accountCompleter: accountCompleter,
     );
+    await accountCompleter.future;
     history.init(AppDirs.YOUTIPIE_CACHE);
-    YoutiPie.setLogs(_YTReportingLog());
 
     YoutubeAccountController.current.addOnAccountChanged(() {
-      final currentId = Player.inst.currentVideo?.id;
       current.resetAll();
+      history.dispose();
+      history = _YoutubeHistoryLinker(() => YoutiPie.activeAccountDetails.value?.id);
+      final currentId = Player.inst.currentVideo?.id;
       if (currentId != null) {
         current.updateVideoPageCache(currentId);
         current.updateCurrentCommentsCache(currentId);
       }
     });
+
+    didInit = true;
+    _initCompleter.complete();
   }
 
   static final current = _YoutubeCurrentInfoController._();

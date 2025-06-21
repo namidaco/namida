@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:flex_list/flex_list.dart';
-import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
@@ -474,13 +473,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     _controller = ScrollController();
     super.initState();
 
-    final cached = YoutiPie.cacheBuilder.forPlaylistVideos(playlistId: _playlist.basicInfo.id).read();
-    if (cached != null) {
-      _playlist = cached;
-      refreshState(trySortStreams);
-    }
-
-    onRefresh(() => _fetch100Video(forceRequest: _playlist is YoutiPiePlaylistResult), forceProceed: true);
+    _initValues();
 
     YtUtilsPlaylist.activePlaylists.add(_playlistInfoEditUpdater);
   }
@@ -491,6 +484,20 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     disposeResources();
     YtUtilsPlaylist.activePlaylists.remove(_playlistInfoEditUpdater);
     super.dispose();
+  }
+
+  void _initValues() async {
+    final cached = await YoutiPie.cacheBuilder.forPlaylistVideos(playlistId: _playlist.basicInfo.id).read();
+    if (cached != null) {
+      refreshState(
+        () {
+          _playlist = cached;
+          trySortStreams();
+        },
+      );
+    }
+
+    onRefresh(() => _fetch100Video(forceRequest: _playlist is YoutiPiePlaylistResult), forceProceed: true);
   }
 
   Color? bgColor;
@@ -756,64 +763,68 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                 },
                 slivers: [
                   const SliverPadding(padding: EdgeInsets.only(bottom: 4.0)),
-                  SliverStickyHeader(
-                    header: ColoredBox(
-                      color: theme.scaffoldBackgroundColor,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: sortWidget,
+                  SliverMainAxisGroup(
+                    slivers: [
+                      PinnedHeaderSliver(
+                        child: ColoredBox(
+                          color: theme.scaffoldBackgroundColor,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: sortWidget,
+                                ),
+                                ObxO(
+                                  rx: _isLoadingMoreItems,
+                                  builder: (context, isLoadingMoreItems) => NamidaInkWellButton(
+                                    animationDurationMS: 100,
+                                    sizeMultiplier: 0.95,
+                                    borderRadius: 8.0,
+                                    icon: Broken.task_square,
+                                    text: lang.LOAD_ALL,
+                                    enabled: !isLoadingMoreItems && hasMoreStreamsLeft, // this for lazylist
+                                    disableWhenLoading: false,
+                                    showLoadingWhenDisabled: hasMoreStreamsLeft,
+                                    onTap: () async {
+                                      if (_currentFetchAllRes != null) {
+                                        _currentFetchAllRes?.cancel();
+                                        _currentFetchAllRes = null;
+                                      } else {
+                                        _playlist.basicInfo.fetchAllPlaylistStreams(
+                                          playlist: _playlist,
+                                          showProgressSheet: false,
+                                          onStart: () => _isLoadingMoreItems.value = true,
+                                          onEnd: () => _isLoadingMoreItems.value = false,
+                                          controller: (fetchAllRes) => _currentFetchAllRes = fetchAllRes,
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
-                            ObxO(
-                              rx: _isLoadingMoreItems,
-                              builder: (context, isLoadingMoreItems) => NamidaInkWellButton(
-                                animationDurationMS: 100,
-                                sizeMultiplier: 0.95,
-                                borderRadius: 8.0,
-                                icon: Broken.task_square,
-                                text: lang.LOAD_ALL,
-                                enabled: !isLoadingMoreItems && hasMoreStreamsLeft, // this for lazylist
-                                disableWhenLoading: false,
-                                showLoadingWhenDisabled: hasMoreStreamsLeft,
-                                onTap: () async {
-                                  if (_currentFetchAllRes != null) {
-                                    _currentFetchAllRes?.cancel();
-                                    _currentFetchAllRes = null;
-                                  } else {
-                                    _playlist.basicInfo.fetchAllPlaylistStreams(
-                                      playlist: _playlist,
-                                      showProgressSheet: false,
-                                      onStart: () => _isLoadingMoreItems.value = true,
-                                      onEnd: () => _isLoadingMoreItems.value = false,
-                                      controller: (fetchAllRes) => _currentFetchAllRes = fetchAllRes,
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                    sliver: SliverFixedExtentList.builder(
-                      itemExtent: itemsThumbnailItemExtent,
-                      itemCount: playlist.items.length,
-                      itemBuilder: (context, index) {
-                        final item = playlist.items[index];
-                        return YoutubeVideoCard(
-                          properties: properties,
-                          thumbnailHeight: itemsThumbnailHeight,
-                          thumbnailWidth: itemsThumbnailWidth,
-                          isImageImportantInCache: false,
-                          video: item,
-                          playlistID: plIdWrapper,
-                          playlist: playlist,
-                          playlistIndexAndCount: (index: index, totalLength: playlist.basicInfo.videosCount ?? playlist.items.length, playlistId: playlist.basicInfo.id),
-                        );
-                      },
-                    ),
+                      SliverFixedExtentList.builder(
+                        itemExtent: itemsThumbnailItemExtent,
+                        itemCount: playlist.items.length,
+                        itemBuilder: (context, index) {
+                          final item = playlist.items[index];
+                          return YoutubeVideoCard(
+                            properties: properties,
+                            thumbnailHeight: itemsThumbnailHeight,
+                            thumbnailWidth: itemsThumbnailWidth,
+                            isImageImportantInCache: false,
+                            video: item,
+                            playlistID: plIdWrapper,
+                            playlist: playlist,
+                            playlistIndexAndCount: (index: index, totalLength: playlist.basicInfo.videosCount ?? playlist.items.length, playlistId: playlist.basicInfo.id),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                   SliverToBoxAdapter(
                     child: ObxO(

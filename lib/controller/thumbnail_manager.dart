@@ -24,11 +24,11 @@ class ThumbnailManager {
 
   final _thumbnailDownloader = _YTThumbnailDownloadManager();
 
-  static String getPathToYTImage(String? id) {
+  static Future<String> getPathToYTImage(String? id) async {
     String getPath(String prefix) => "${AppDirs.YT_THUMBNAILS}$prefix$id.png";
 
     final path = getPath('');
-    if (File(path).existsSync()) {
+    if (await File(path).exists()) {
       return path;
     }
 
@@ -43,6 +43,12 @@ class ThumbnailManager {
     bool isTemp = false,
   }) {
     final dirPrefix = isTemp ? 'temp${Platform.pathSeparator}' : '';
+
+    // for some weird reason, sometimes the supplied id is sus
+    if (id != null && id.length != 11) {
+      url = id;
+      id = null;
+    }
 
     final goodId = id != null && id.isNotEmpty;
     if (goodId || type == ThumbnailType.video) {
@@ -109,21 +115,31 @@ class ThumbnailManager {
     final prefix = !isLocal ? 'EXT_' : '';
     final dir = cacheDirPath ?? (isLocal ? AppDirs.THUMBNAILS : AppDirs.YT_THUMBNAILS);
     final file = File("$dir$prefix$idOrFileNameWithExt.png");
-    if (forceExtract == false && file.existsSync()) return file;
+    if (forceExtract == false && await file.exists()) return file;
     await NamidaFFMPEG.inst.extractVideoThumbnail(videoPath: videoPath, thumbnailSavePath: file.path);
     final fileExists = await file.exists();
     return fileExists ? file : null;
   }
 
-  File? getYoutubeThumbnailFromCacheSync({
+  Future<File?> getYoutubeThumbnailFromCache({
     String? id,
     String? customUrl,
-    bool isTemp = false,
+    bool? isTemp = false,
     required ThumbnailType type,
-  }) {
+  }) async {
     if (id == null && customUrl == null) return null;
+
+    if (isTemp == null) {
+      // -- check for both is temp == null
+      final file1 = imageUrlToCacheFile(id: id, url: customUrl, isTemp: false, type: type);
+      if (file1 != null && await file1.exists()) return file1;
+      final file2 = imageUrlToCacheFile(id: id, url: customUrl, isTemp: true, type: type);
+      if (file2 != null && await file2.exists()) return file2;
+      return null;
+    }
+
     final file = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp, type: type);
-    if (file != null && file.existsSync()) return file;
+    if (file != null && await file.exists()) return file;
     return null;
   }
 
@@ -140,15 +156,15 @@ class ThumbnailManager {
 
     final file = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp, type: type);
     if (file == null) return null;
-    if (file.existsSync()) return file;
+    if (await file.exists()) return file;
 
     if (symlinkId != null) {
       try {
         final symlinkfile = imageUrlToCacheFile(id: id, url: customUrl, symlinkId: symlinkId, isTemp: isTemp, type: type);
-        if (symlinkfile != null && symlinkfile.existsSync()) {
-          final targetFilePath = Link.fromUri(symlinkfile.uri).targetSync();
+        if (symlinkfile != null && await symlinkfile.exists()) {
+          final targetFilePath = await Link.fromUri(symlinkfile.uri).target();
           final targetFile = File(targetFilePath);
-          if (targetFile.existsSync()) return targetFile;
+          if (await targetFile.exists()) return targetFile;
         }
       } catch (_) {}
     }
@@ -171,7 +187,7 @@ class ThumbnailManager {
     if (isTemp == false) {
       // return the low res if high res failed
       final filetemp = imageUrlToCacheFile(id: id, url: customUrl, isTemp: true, type: type);
-      if (filetemp != null && filetemp.existsSync()) return filetemp;
+      if (filetemp != null && await filetemp.exists()) return filetemp;
     }
 
     return null;

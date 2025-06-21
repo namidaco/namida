@@ -53,6 +53,7 @@ void showTrackAdvancedDialog({
   final willUpdateArtwork = false.obs;
 
   final trackColor = await CurrentColor.inst.getTrackColors(tracks.first.track, delightnedAndAlpha: false);
+  final firstTrackExists = await File(tracks.first.track.path).exists();
 
   final reIndexedTracksSuccessful = 0.obs;
   final reIndexedTracksFailed = 0.obs;
@@ -103,8 +104,8 @@ void showTrackAdvancedDialog({
 
   final canShowClearDialogRx = true.obs;
 
-  void updateCanShowClearDialog(CacheVideoPriority? cachePriority) {
-    canShowClearDialogRx.value = cachePriority == CacheVideoPriority.VIP ? false : tracks.hasAnythingCached;
+  void updateCanShowClearDialog(CacheVideoPriority? cachePriority) async {
+    canShowClearDialogRx.value = cachePriority == CacheVideoPriority.VIP ? false : await tracks.hasAnythingCached;
   }
 
   final setVideosPriorityChip = SetVideosPriorityChip(
@@ -173,7 +174,7 @@ void showTrackAdvancedDialog({
               oldPath: firstTracksDirectoryPath,
               tracksPaths: tracksUniqued.map((e) => e.track.path),
             ),
-          if (NamidaFeaturesVisibility.methodSetMusicAs && isSingle && File(tracks.first.track.path).existsSync())
+          if (NamidaFeaturesVisibility.methodSetMusicAs && isSingle && firstTrackExists)
             CustomListTile(
               visualDensity: VisualDensity.compact,
               passedColor: colorScheme,

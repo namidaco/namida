@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
@@ -112,50 +111,20 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                             ...tracksMappedWithDisc.entries.mapIndexed(
                               (discEntry, discSectionIndex) {
                                 final indicesToIncrement = tracksIndicesIncrement?[discEntry.key] ?? 0;
-                                return SliverStickyHeader(
-                                  header: Padding(
-                                    padding: EdgeInsets.only(bottom: 4.0),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        DecoratedBox(
-                                          decoration: BoxDecoration(
-                                            color: Color.alphaBlend(context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.5), context.theme.scaffoldBackgroundColor),
-                                            borderRadius: BorderRadius.horizontal(
-                                              right: Radius.circular(6.0.multipliedRadius),
-                                            ),
-                                          ),
-                                          child: Padding(
-                                            padding: EdgeInsets.symmetric(vertical: 6.0),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                SizedBox(width: 8.0),
-                                                Icon(
-                                                  Broken.cd,
-                                                  size: 20.0,
-                                                ),
-                                                SizedBox(width: 4.0),
-                                                Flexible(
-                                                  child: Text(
-                                                    " ${discEntry.key}",
-                                                    style: context.textTheme.displayMedium,
-                                                  ),
-                                                ),
-                                                SizedBox(width: 12.0),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        Flexible(
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: DecoratedBox(
+                                return SliverMainAxisGroup(
+                                  slivers: [
+                                    PinnedHeaderSliver(
+                                      child: Padding(
+                                        padding: EdgeInsets.only(bottom: 4.0),
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            DecoratedBox(
                                               decoration: BoxDecoration(
-                                                color: context.theme.scaffoldBackgroundColor,
-                                                borderRadius: BorderRadius.only(
-                                                  bottomLeft: Radius.circular(6.0.multipliedRadius),
+                                                color: Color.alphaBlend(context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.5), context.theme.scaffoldBackgroundColor),
+                                                borderRadius: BorderRadius.horizontal(
+                                                  right: Radius.circular(6.0.multipliedRadius),
                                                 ),
                                               ),
                                               child: Padding(
@@ -164,40 +133,74 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
                                                     SizedBox(width: 8.0),
-                                                    Text(
-                                                      [
-                                                        discEntry.value.displayTrackKeyword,
-                                                        discEntry.value.totalDurationFormatted,
-                                                      ].join(' • '),
-                                                      style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                                    Icon(
+                                                      Broken.cd,
+                                                      size: 20.0,
+                                                    ),
+                                                    SizedBox(width: 4.0),
+                                                    Flexible(
+                                                      child: Text(
+                                                        " ${discEntry.key}",
+                                                        style: context.textTheme.displayMedium,
+                                                      ),
                                                     ),
                                                     SizedBox(width: 12.0),
                                                   ],
                                                 ),
                                               ),
                                             ),
-                                          ),
+                                            Flexible(
+                                              child: FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: DecoratedBox(
+                                                  decoration: BoxDecoration(
+                                                    color: context.theme.scaffoldBackgroundColor,
+                                                    borderRadius: BorderRadius.only(
+                                                      bottomLeft: Radius.circular(6.0.multipliedRadius),
+                                                    ),
+                                                  ),
+                                                  child: Padding(
+                                                    padding: EdgeInsets.symmetric(vertical: 6.0),
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        SizedBox(width: 8.0),
+                                                        Text(
+                                                          [
+                                                            discEntry.value.displayTrackKeyword,
+                                                            discEntry.value.totalDurationFormatted,
+                                                          ].join(' • '),
+                                                          style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                                        ),
+                                                        SizedBox(width: 12.0),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                  sliver: SliverFixedExtentList.builder(
-                                    itemCount: discEntry.value.length,
-                                    itemExtent: Dimensions.inst.trackTileItemExtent,
-                                    itemBuilder: (context, i) {
-                                      final track = discEntry.value[i];
-                                      final trackEffectiveIndex = i + indicesToIncrement;
-                                      return AnimatingTile(
-                                        key: ValueKey(i),
-                                        position: trackEffectiveIndex,
-                                        child: TrackTile(
-                                          properties: properties,
-                                          index: trackEffectiveIndex,
-                                          trackOrTwd: track,
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                    SliverFixedExtentList.builder(
+                                      itemCount: discEntry.value.length,
+                                      itemExtent: Dimensions.inst.trackTileItemExtent,
+                                      itemBuilder: (context, i) {
+                                        final track = discEntry.value[i];
+                                        final trackEffectiveIndex = i + indicesToIncrement;
+                                        return AnimatingTile(
+                                          key: ValueKey(i),
+                                          position: trackEffectiveIndex,
+                                          child: TrackTile(
+                                            properties: properties,
+                                            index: trackEffectiveIndex,
+                                            trackOrTwd: track,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 );
                               },
                             ).addSeparators(

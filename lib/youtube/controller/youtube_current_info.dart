@@ -75,23 +75,23 @@ class _YoutubeCurrentInfoController {
 
   Future<bool> updateVideoPageCache(String videoId) async {
     final vidcache = YoutiPie.cacheBuilder.forVideoPage(videoId: videoId);
-    final vidPageCached = await vidcache.readAsync();
+    final vidPageCached = await vidcache.read();
     if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentVideoPage.value = vidPageCached;
 
     final streamInfo = YoutiPie.cacheBuilder.forVideoStreams(videoId: videoId);
-    final streamInfoCached = await streamInfo.readAsync();
+    final streamInfoCached = await streamInfo.read();
     if (!_canSafelyModifyMetadata(videoId)) return false;
-    _currentStreamInfo.value = streamInfoCached?.info ?? YoutubeInfoController.utils.buildVideoStreamInfoFromCache(videoId);
+    _currentStreamInfo.value = streamInfoCached?.info ?? await YoutubeInfoController.utils.buildVideoStreamInfoFromCache(videoId);
 
-    final chId = vidPageCached?.channelInfo?.id ?? YoutubeInfoController.utils.getVideoChannelID(videoId);
-    final chPage = chId == null ? null : await YoutiPie.cacheBuilder.forChannel(channelId: chId).readAsync();
+    final chId = vidPageCached?.channelInfo?.id ?? await YoutubeInfoController.utils.getVideoChannelID(videoId);
+    final chPage = chId == null ? null : await YoutiPie.cacheBuilder.forChannel(channelId: chId).read();
     if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentChannelPage.value = chPage;
 
     final personzaliedRelatedVideos = _personzaliedRelatedVideos;
     final relatedcache = YoutiPie.cacheBuilder.forRelatedVideos(videoId: videoId, userPersonalized: _personzaliedRelatedVideos);
-    YoutiPieRelatedVideosResult? relatedVideos = await relatedcache.readAsync();
+    YoutiPieRelatedVideosResult? relatedVideos = await relatedcache.read();
     if (relatedVideos == null) {
       final alreadyAnonymous = YoutubeAccountController.current.activeAccountChannel.value == null;
       if (personzaliedRelatedVideos || (alreadyAnonymous && !personzaliedRelatedVideos)) relatedVideos = vidPageCached?.relatedVideosResult;
@@ -103,7 +103,7 @@ class _YoutubeCurrentInfoController {
 
   Future<bool> updateCurrentCommentsCache(String videoId) async {
     final commcache = YoutiPie.cacheBuilder.forComments(videoId: videoId);
-    final comms = await commcache.readAsync();
+    final comms = await commcache.read();
     if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentComments.value = comms;
     _isCurrentCommentsFromCache.value = _currentComments.value != null;
@@ -144,7 +144,7 @@ class _YoutubeCurrentInfoController {
     _isLoadingVideoPage.value = false;
 
     if (page != null) {
-      final chId = page.channelInfo?.id ?? YoutubeInfoController.utils.getVideoChannelID(videoId);
+      final chId = page.channelInfo?.id ?? await YoutubeInfoController.utils.getVideoChannelID(videoId);
       if (chId != null) {
         YoutubeInfoController.channel.fetchChannelInfo(channelId: page.channelInfo?.id, details: ExecuteDetails.forceRequest()).then(
           (chPage) {

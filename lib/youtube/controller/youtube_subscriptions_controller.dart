@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:namida/core/constants.dart';
@@ -50,9 +51,15 @@ class YoutubeSubscriptionsController {
     if (saveToStorage) await saveFile();
   }
 
+  final _didLoadCompleter = Completer();
   Future<void> loadSubscriptionsFileAsync() async {
+    await _loadSubscriptionsFileAsync();
+    _didLoadCompleter.completeIfWasnt();
+  }
+
+  Future<void> _loadSubscriptionsFileAsync() async {
     final file = File(AppPaths.YT_SUBSCRIPTIONS);
-    if (!file.existsSync()) return;
+    if (!await file.exists()) return;
     final res = await _parseSubscriptionsFile.thready(file);
     _availableChannels.value = res;
   }
@@ -71,6 +78,7 @@ class YoutubeSubscriptionsController {
   }
 
   Future<void> saveFile() async {
+    await _didLoadCompleter.future;
     final file = File(AppPaths.YT_SUBSCRIPTIONS);
     await file.writeAsJson(_availableChannels.map((key, value) => MapEntry(key, value.toJson())));
   }

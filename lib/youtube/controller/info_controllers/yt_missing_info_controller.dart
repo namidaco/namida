@@ -16,14 +16,14 @@ class _MissingInfoController {
     if (_infoCache[videoId] != null) return _infoCache[videoId]!;
 
     final cache = YoutiPie.cacheBuilder.forMissingInfo(videoId: videoId);
-    return _infoCache[videoId] ??= await cache.readAsync();
+    return _infoCache[videoId] ??= await cache.read();
   }
 
   MissingVideoInfo? fetchMissingInfoCacheSync(String videoId) {
     if (_infoCache[videoId] != null) return _infoCache[videoId]!;
 
     final cache = YoutiPie.cacheBuilder.forMissingInfo(videoId: videoId);
-    return _infoCache[videoId] ??= cache.read();
+    return _infoCache[videoId] ??= cache.readSync();
   }
 
   Future<File?> fetchMissingThumbnail(String videoId, {bool forceRequest = false}) async {

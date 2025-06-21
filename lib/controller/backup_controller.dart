@@ -36,11 +36,11 @@ class BackupController {
     Directory? dir;
     String? error;
     try {
-      dir = await Directory(path).create();
+      dir = await Directory(path).create(recursive: true);
     } catch (e) {
       error = e.toString();
     }
-    if (dir == null || !dir.existsSync()) {
+    if (dir == null || !await dir.exists()) {
       snackyy(
         title: "${lang.ERROR}: ${operationName ?? lang.BACKUP_AND_RESTORE}",
         message: '${error ?? lang.DIRECTORY_DOESNT_EXIST}: "$path"',
@@ -57,16 +57,17 @@ class BackupController {
     final interval = _defaultAutoBackupInterval;
     if (interval <= 0) return;
 
-    if (!await requestManageStoragePermission(request: false, showError: false)) return;
+    if (!await requestManageStoragePermission(request: false, showError: false)) {
+      snackyy(title: "${lang.ERROR}: ${lang.AUTOMATIC_BACKUP}", message: lang.STORAGE_PERMISSION_DENIED, isError: true);
+      return;
+    }
 
     final backupDirectoryPath = await _getBackupDirectoryPathEnsured(lang.AUTOMATIC_BACKUP);
     if (backupDirectoryPath == null) return;
 
-    final sortedBackupFiles = await _getBackupFilesSorted.thready(backupDirectoryPath);
-    final latestBackup = sortedBackupFiles.firstOrNull;
-    if (latestBackup != null) {
-      final lastModified = await latestBackup.stat().then((value) => value.modified);
-      final diff = DateTime.now().difference(lastModified).abs().inDays;
+    final latestBackupDate = await _getLatestBackupFileDateSync.thready(backupDirectoryPath);
+    if (latestBackupDate != null) {
+      final diff = DateTime.now().difference(latestBackupDate).abs().inDays;
       if (diff > interval) {
         final itemsToBackup = [
           AppPaths.TRACKS_OLD,
@@ -139,14 +140,14 @@ class BackupController {
     File? tempAllYoutube;
 
     /// ensures auto created db files are included, to prevent locked/corrupted databases.
-    List<File> getPossibleDbJournalFiles(String path) {
+    Future<List<File>> getPossibleDbJournalFiles(String path) async {
       final possibleFiles = <File>[
         File('$path-journal'),
         File('$path-wal'),
         File('$path-shm'),
       ];
 
-      return possibleFiles.where((f) => f.existsSync()).toList();
+      return await possibleFiles.whereAsync((f) => f.exists()).toList();
     }
 
     for (final p in backupItemsPaths) {
@@ -154,12 +155,12 @@ class BackupController {
         if (p.startsWith(AppDirs.YOUTUBE_MAIN_DIRECTORY)) {
           youtubeFilesOnly.add(File(p));
           if (p.endsWith('.db')) {
-            youtubeFilesOnly.addAll(getPossibleDbJournalFiles(p));
+            youtubeFilesOnly.addAll(await getPossibleDbJournalFiles(p));
           }
         } else {
           localFilesOnly.add(File(p));
           if (p.endsWith('.db')) {
-            localFilesOnly.addAll(getPossibleDbJournalFiles(p));
+            localFilesOnly.addAll(await getPossibleDbJournalFiles(p));
           }
         }
       }
@@ -213,7 +214,7 @@ class BackupController {
     isCreatingBackup.value = false;
   }
 
-  static List<File> _getBackupFilesSorted(String dirPath) {
+  static List<File> _getBackupFilesSortedSync(String dirPath) {
     final dir = Directory(dirPath);
     final possibleFiles = dir.listSyncSafe();
 
@@ -230,6 +231,24 @@ class BackupController {
     matchingBackups.sortByReverse((e) => e.lastModifiedSync());
 
     return matchingBackups;
+  }
+
+  static DateTime? _getLatestBackupFileDateSync(String dirPath) {
+    DateTime latestDate = DateTime(0);
+    final dir = Directory(dirPath);
+    final possibleFiles = dir.listSyncSafe();
+    for (final pf in possibleFiles) {
+      if (pf is File) {
+        if (pf.path.getFilename.startsWith('Namida Backup - ')) {
+          final modifiedDate = pf.lastModifiedSync();
+
+          if (modifiedDate.isAfter(latestDate)) {
+            latestDate = modifiedDate;
+          }
+        }
+      }
+    }
+    return latestDate;
   }
 
   static void _trimExtraBackupFiles(String dirPath) {
@@ -277,65 +296,70 @@ class BackupController {
       return;
     }
 
-    File? backupzip;
-    if (auto) {
-      final backupDirectoryPath = await _getBackupDirectoryPathEnsured(lang.RESTORE_BACKUP);
-      if (backupDirectoryPath != null) {
-        final sortedFiles = await _getBackupFilesSorted.thready(backupDirectoryPath);
-        backupzip = sortedFiles.firstOrNull;
+    try {
+      File? backupzip;
+      if (auto) {
+        final backupDirectoryPath = await _getBackupDirectoryPathEnsured(lang.RESTORE_BACKUP);
+        if (backupDirectoryPath != null) {
+          final sortedFiles = await _getBackupFilesSortedSync.thready(backupDirectoryPath);
+          backupzip = sortedFiles.firstOrNull;
+        }
+      } else {
+        final filePicked = await NamidaFileBrowser.pickFile(note: lang.RESTORE_BACKUP, allowedExtensions: NamidaFileExtensionsWrapper.zip);
+        final path = filePicked?.path;
+        if (path != null) {
+          backupzip = File(path);
+        }
       }
-    } else {
-      final filePicked = await NamidaFileBrowser.pickFile(note: lang.RESTORE_BACKUP, allowedExtensions: NamidaFileExtensionsWrapper.zip);
-      final path = filePicked?.path;
-      if (path != null) {
-        backupzip = File(path);
-      }
-    }
 
-    if (backupzip == null) return;
+      if (backupzip == null) return;
 
-    isRestoringBackup.value = true;
+      isRestoringBackup.value = true;
 
-    await _zipManager.extractZip(zipFile: backupzip, destinationDir: Directory(AppDirs.USER_DATA));
+      await _zipManager.extractZip(zipFile: backupzip, destinationDir: Directory(AppDirs.USER_DATA));
 
-    // after finishing, extracts zip files inside the main zip
-    await for (final backupItem in Directory(AppDirs.USER_DATA).list()) {
-      if (backupItem is File) {
-        final filename = backupItem.path.getFilename;
-        if (filename == 'LOCAL_FILES.zip') {
-          await _zipManager.extractZip(
-            zipFile: backupItem,
-            destinationDir: Directory(AppDirs.USER_DATA),
-          );
-          await backupItem.tryDeleting();
-        } else if (filename == 'YOUTUBE_FILES.zip') {
-          await _zipManager.extractZip(
-            zipFile: backupItem,
-            destinationDir: Directory(AppDirs.USER_DATA), // since the zipped file has the directory 'AppDirs.YOUTUBE_MAIN_DIRECTORY/'
-          );
-          await backupItem.tryDeleting();
-        } else {
-          final isLocalTemp = filename.startsWith('TEMPDIR_');
-          final isYoutubeTemp = filename.startsWith('YOUTUBE_TEMPDIR_');
-          if (isLocalTemp || isYoutubeTemp) {
-            final dir = isYoutubeTemp ? AppDirs.YOUTUBE_MAIN_DIRECTORY : AppDirs.USER_DATA;
-            final prefixToReplace = isYoutubeTemp ? 'YOUTUBE_TEMPDIR_' : 'TEMPDIR_';
-
+      // after finishing, extracts zip files inside the main zip
+      await for (final backupItem in Directory(AppDirs.USER_DATA).list()) {
+        if (backupItem is File) {
+          final filename = backupItem.path.getFilename;
+          if (filename == 'LOCAL_FILES.zip') {
             await _zipManager.extractZip(
               zipFile: backupItem,
-              destinationDir: Directory(FileParts.joinPath(dir, filename.replaceFirst(prefixToReplace, '').replaceFirst('.zip', ''))),
+              destinationDir: Directory(AppDirs.USER_DATA),
             );
             await backupItem.tryDeleting();
+          } else if (filename == 'YOUTUBE_FILES.zip') {
+            await _zipManager.extractZip(
+              zipFile: backupItem,
+              destinationDir: Directory(AppDirs.USER_DATA), // since the zipped file has the directory 'AppDirs.YOUTUBE_MAIN_DIRECTORY/'
+            );
+            await backupItem.tryDeleting();
+          } else {
+            final isLocalTemp = filename.startsWith('TEMPDIR_');
+            final isYoutubeTemp = filename.startsWith('YOUTUBE_TEMPDIR_');
+            if (isLocalTemp || isYoutubeTemp) {
+              final dir = isYoutubeTemp ? AppDirs.YOUTUBE_MAIN_DIRECTORY : AppDirs.USER_DATA;
+              final prefixToReplace = isYoutubeTemp ? 'YOUTUBE_TEMPDIR_' : 'TEMPDIR_';
+
+              await _zipManager.extractZip(
+                zipFile: backupItem,
+                destinationDir: Directory(FileParts.joinPath(dir, filename.replaceFirst(prefixToReplace, '').replaceFirst('.zip', ''))),
+              );
+              await backupItem.tryDeleting();
+            }
           }
         }
       }
-    }
 
-    Indexer.inst.calculateAllImageSizesInStorage();
-    Indexer.inst.updateColorPalettesSizeInStorage();
-    await _readNewFiles();
-    snackyy(title: lang.RESTORED_BACKUP_SUCCESSFULLY, message: lang.RESTORED_BACKUP_SUCCESSFULLY_SUB);
-    isRestoringBackup.value = false;
+      Indexer.inst.calculateAllImageSizesInStorage();
+      // Indexer.inst.updateColorPalettesSizeInStorage();
+      await _readNewFiles();
+      snackyy(title: lang.RESTORED_BACKUP_SUCCESSFULLY, message: lang.RESTORED_BACKUP_SUCCESSFULLY_SUB);
+    } catch (e) {
+      snackyy(title: "${lang.ERROR}: ${lang.RESTORE_BACKUP}", message: e.toString());
+    } finally {
+      isRestoringBackup.value = false;
+    }
   }
 
   Future<void> _readNewFiles() async {

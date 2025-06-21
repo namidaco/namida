@@ -98,7 +98,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
     await _markAsRead(mainList);
   }
 
-  List<NamidaPopupItem> getMenuItems() {
+  FutureOr<List<NamidaPopupItem>> getMenuItems() {
     final mainList = widget.mainList();
     final videoId = widget.notification.id;
     if (videoId.isEmpty) return [];
@@ -219,7 +219,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
             key: ValueKey(videoThumbnail),
             isImportantInCache: false,
             customUrl: videoThumbnail,
-            videoId: widget.notification.id, // just as a backup
+            videoId: widget.notification.id, // just as a backup. note: the id might be weird like `community?lb=UgkxpUHPp...`
             preferLowerRes: true,
             width: thumbnailWidth,
             height: thumbnailHeight,

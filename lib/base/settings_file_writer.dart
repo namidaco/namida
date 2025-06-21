@@ -14,16 +14,16 @@ mixin SettingsFileWriter {
   void applyKuruSettings();
 
   @protected
-  dynamic prepareSettingsFile_() {
+  FutureOr<dynamic> prepareSettingsFile_() async {
     final file = File(filePath);
 
     if (isKuru) applyKuruSettings();
 
-    if (!file.existsSync()) {
+    if (!await file.exists()) {
       return null;
     }
     try {
-      return file.readAsJsonSync();
+      return file.readAsJson();
     } catch (e) {
       printy(e, isError: true);
     }

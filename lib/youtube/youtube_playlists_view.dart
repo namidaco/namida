@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:jiffy/jiffy.dart';
@@ -64,7 +66,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
     return videos;
   }
 
-  List<NamidaPopupItem> getMenuItems(BuildContext context, YoutubePlaylist playlist, QueueSourceYoutubeID queueSource) {
+  FutureOr<List<NamidaPopupItem>> getMenuItems(BuildContext context, YoutubePlaylist playlist, QueueSourceYoutubeID queueSource) {
     return YTUtils.getVideosMenuItems(
       queueSource: queueSource,
       context: context,
@@ -176,16 +178,19 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
             ObxOClass(
               rx: YoutubePlaylistController.inst.favouritesPlaylist,
               builder: (context, favs) {
-                return _HorizontalSliverList(
-                  queueSource: QueueSourceYoutubeID.favourites,
-                  title: lang.FAVOURITES,
-                  icon: Broken.heart_circle,
-                  onPageOpen: YTUtils.onYoutubeLikedPlaylistTap,
-                  videos: getFavouriteVideos(favs.value),
-                  playlistName: k_PLAYLIST_NAME_FAV,
-                  playlistID: k_PLAYLIST_NAME_FAV,
-                  displayTimeAgo: false,
-                  totalVideosCountInMainList: favs.value.tracks.length,
+                return ObxO(
+                  rx: YoutubeHistoryController.inst.topTracksMapListens, // refresh cards after listens initialized
+                  builder: (context, _) => _HorizontalSliverList(
+                    queueSource: QueueSourceYoutubeID.favourites,
+                    title: lang.FAVOURITES,
+                    icon: Broken.heart_circle,
+                    onPageOpen: YTUtils.onYoutubeLikedPlaylistTap,
+                    videos: getFavouriteVideos(favs.value),
+                    playlistName: k_PLAYLIST_NAME_FAV,
+                    playlistID: k_PLAYLIST_NAME_FAV,
+                    displayTimeAgo: false,
+                    totalVideosCountInMainList: favs.value.tracks.length,
+                  ),
                 );
               },
             ),

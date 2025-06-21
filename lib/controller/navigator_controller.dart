@@ -16,7 +16,6 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -65,7 +64,7 @@ class NamidaNavigator {
   bool get isInLanscape => _isInLanscape;
 
   static const _defaultRouteAnimationDurMS = 400;
-  static const kAppBlurDuration = Duration(milliseconds: 300);
+  static const kDefaultDialogDurationMS = 300;
 
   Future<T?> showMenu<T>({
     required BuildContext context,
@@ -197,7 +196,7 @@ class NamidaNavigator {
 
   Future<void> setDeviceOrientations(bool lanscape) async {
     _isInLanscape = lanscape;
-    final orientations = lanscape ? [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight] : kDefaultOrientations;
+    final orientations = lanscape ? [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight] : DeviceOrientation.values;
     await SystemChrome.setPreferredOrientations(orientations);
   }
 
@@ -290,7 +289,7 @@ class NamidaNavigator {
   Future<T?> navigateDialog<T>({
     final Widget? dialog,
     final Widget Function(ThemeData theme)? dialogBuilder,
-    final int durationInMs = 300,
+    final int durationInMs = NamidaNavigator.kDefaultDialogDurationMS,
     final bool Function()? tapToDismiss,
     final FutureOr<void> Function()? onDismissing,
     final Color? colorScheme,

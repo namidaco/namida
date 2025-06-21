@@ -78,9 +78,11 @@ Future<void> showGeneralPopupDialog(
   final tracksExisting = <Track>[];
   if (isSingle || errorPlayingTrack != null) {
     // -- fill using real-time checks if there was an error.
-    tracks.loop((t) {
-      if (File(t.path).existsSync()) tracksExisting.add(t);
-    });
+    final int length = tracks.length;
+    for (int i = 0; i < length; i++) {
+      final t = tracks[i];
+      if (await File(t.path).exists()) tracksExisting.add(t);
+    }
   } else {
     tracks.loop((t) {
       if (t.hasInfoInLibrary()) tracksExisting.add(t);
@@ -93,14 +95,29 @@ Future<void> showGeneralPopupDialog(
           ? tracks[tracks.indexOfImage]
           : tracks.first;
 
-  final colorDelightened = CurrentColor.inst.color.obso;
-  final iconColor = Color.alphaBlend(colorDelightened.value.withAlpha(120), namida.textTheme.displayMedium!.color!).obso;
+  final colorDelightened = Colors.transparent.obso;
+  final iconColor = Colors.transparent.obso;
+
+  void onColorsObtained(Color color) {
+    if (colorDelightened.value == color) return;
+    colorDelightened.value = color;
+    iconColor.value = Color.alphaBlend(color.withAlpha(120), namida.textTheme.displayMedium!.color!);
+  }
+
+  onColorsObtained(CurrentColor.inst.color);
+
   if (extractColor && trackToExtractColorFrom != null) {
-    CurrentColor.inst.getTrackDelightnedColor(trackToExtractColorFrom, useIsolate: true).executeWithMinDelay().then((c) {
-      if (c == colorDelightened.value) return;
-      colorDelightened.value = c;
-      iconColor.value = Color.alphaBlend(c.withAlpha(120), namida.textTheme.displayMedium!.color!);
-    });
+    final colorSync = CurrentColor.inst.getTrackDelightnedColorSync(trackToExtractColorFrom);
+    if (colorSync != null) {
+      onColorsObtained(colorSync);
+    } else {
+      CurrentColor.inst
+          .getTrackDelightnedColor(trackToExtractColorFrom, useIsolate: true)
+          .executeWithMinDelay(
+            delayMS: NamidaNavigator.kDefaultDialogDurationMS,
+          )
+          .then(onColorsObtained);
+    }
   }
 
   /// name, identifier
@@ -113,7 +130,7 @@ Future<void> showGeneralPopupDialog(
 
   final Iterable<YoutubeID> availableYoutubeIDs = tracks.map((e) => YoutubeID(id: e.youtubeID, playlistID: null)).where((element) => element.id.isNotEmpty);
   final String? firstVideolId = availableYoutubeIDs.firstOrNull?.id;
-  final String? firstVideoChannelId = firstVideolId == null ? null : YoutubeInfoController.utils.getVideoChannelID(firstVideolId);
+  final String? firstVideoChannelId = firstVideolId == null ? null : await YoutubeInfoController.utils.getVideoChannelID(firstVideolId);
 
   final numberOfRepeats = 1.obso;
   final isLoadingFilesToShare = false.obso;
@@ -886,7 +903,7 @@ Future<void> showGeneralPopupDialog(
                                 onPressed: () async {
                                   if (playlistName == null) return;
                                   final alreadySetArtworkPossible = PlaylistController.inst.getArtworkFileForPlaylist(playlistName);
-                                  final alreadySetArtwork = alreadySetArtworkPossible.existsSync() ? alreadySetArtworkPossible : null;
+                                  final alreadySetArtwork = await alreadySetArtworkPossible.exists() ? alreadySetArtworkPossible : null;
 
                                   void showSnackInfo(bool success) {
                                     if (success) {
@@ -1278,20 +1295,25 @@ Future<void> showGeneralPopupDialog(
                                 trailing: isSingle
                                     ? IconButton(
                                         tooltip: lang.LYRICS,
-                                        icon: LrcSearchUtilsSelectable(tracks.first.toTrackExt(), tracks.first).hasLyrics()
-                                            ? StackedIcon(
-                                                baseIcon: Broken.document,
-                                                secondaryIcon: Broken.tick_circle,
-                                                iconSize: 20.0,
-                                                secondaryIconSize: 10.0,
-                                                baseIconColor: iconColor,
-                                                secondaryIconColor: iconColor,
-                                              )
-                                            : Icon(
-                                                Broken.document,
-                                                size: 20.0,
-                                                color: iconColor,
-                                              ),
+                                        icon: FutureBuilder(
+                                          future: LrcSearchUtilsSelectable(tracks.first.toTrackExt(), tracks.first).hasLyrics(),
+                                          builder: (context, snapshot) {
+                                            return snapshot.data == true
+                                                ? StackedIcon(
+                                                    baseIcon: Broken.document,
+                                                    secondaryIcon: Broken.tick_circle,
+                                                    iconSize: 20.0,
+                                                    secondaryIconSize: 10.0,
+                                                    baseIconColor: iconColor,
+                                                    secondaryIconColor: iconColor,
+                                                  )
+                                                : Icon(
+                                                    Broken.document,
+                                                    size: 20.0,
+                                                    color: iconColor,
+                                                  );
+                                          },
+                                        ),
                                         iconSize: 20.0,
                                         onPressed: () => showLRCSetDialog(tracks.first, colorDelightened),
                                       )

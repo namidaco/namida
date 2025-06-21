@@ -50,7 +50,7 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
     return await _readHistoryFilesCompute.thready(directoryPath);
   }
 
-  static Future<HistoryPrepareInfo<YoutubeID, String>> _readHistoryFilesCompute(String path) async {
+  static HistoryPrepareInfo<YoutubeID, String> _readHistoryFilesCompute(String path) {
     final map = SplayTreeMap<int, List<YoutubeID>>((date1, date2) => date2.compareTo(date1));
     final tempMapTopItems = <String, List<int>>{};
     int totalCount = 0;
@@ -60,15 +60,18 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
       var f = files[i];
       if (f is File) {
         try {
-          final response = f.readAsJsonSync();
+          final response = f.readAsJsonSync(ensureExists: false) as List?;
           final dayOfVideo = int.parse(f.path.getFilenameWOExt);
 
           final listVideos = <YoutubeID>[];
-          (response as List?)?.loop((e) {
-            var vid = YoutubeID.fromJson(e);
-            listVideos.add(vid);
-            tempMapTopItems.addForce(vid.id, vid.dateAddedMS);
-          });
+          if (response != null) {
+            for (int i = 0; i < response.length; i++) {
+              var vid = YoutubeID.fromJson(response[i]);
+              listVideos.add(vid);
+              tempMapTopItems.addForce(vid.id, vid.dateAddedMS);
+            }
+          }
+
           map[dayOfVideo] = listVideos;
           totalCount += listVideos.length;
         } catch (_) {}

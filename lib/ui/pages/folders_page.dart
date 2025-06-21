@@ -101,7 +101,9 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                           builder: (context, defaultFolderStartupLocation) => NamidaIconButton(
                                             horizontalPadding: 8.0,
                                             tooltip: () => lang.SET_AS_DEFAULT,
-                                            icon: currentFolder?.hasSamePathAs(defaultFolderStartupLocation) == true ? Broken.archive_tick : Broken.save_2,
+                                            icon: currentFolder == null || defaultFolderStartupLocation == null || !currentFolder.hasSamePathAs(defaultFolderStartupLocation)
+                                                ? Broken.save_2
+                                                : Broken.archive_tick,
                                             iconSize: 22.0,
                                             onPressed: () => config.onDefaultStartupFolderChanged(),
                                           ),

@@ -285,20 +285,14 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
 
   @override
   void initState() {
+    groupName.value = widget.initialFolder;
+
     // -- to put at first
     availableDirectoriesNames[widget.playlistName] = 0;
     availableDirectoriesNames[widget.initialFolder] = 0;
-    availableDirectoriesNames[''] = 0;
-    int rootFiles = 0;
-    Directory(AppDirs.YOUTUBE_DOWNLOADS).listSyncSafe().loop((d) {
-      if (d is Directory) {
-        availableDirectoriesNames[d.path.splitLast(Platform.pathSeparator)] = 0;
-      } else {
-        rootFiles++;
-      }
-    });
-    availableDirectoriesNames[''] = rootFiles;
-    groupName.value = widget.initialFolder;
+
+    initValues();
+
     super.initState();
   }
 
@@ -306,6 +300,20 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
   void dispose() {
     groupName.close();
     super.dispose();
+  }
+
+  void initValues() async {
+    availableDirectoriesNames[''] = 0;
+    int rootFiles = 0;
+    await for (final d in Directory(AppDirs.YOUTUBE_DOWNLOADS).list()) {
+      if (d is Directory) {
+        availableDirectoriesNames[d.path.splitLast(Platform.pathSeparator)] = 0;
+      } else {
+        rootFiles++;
+      }
+    }
+    availableDirectoriesNames[''] = rootFiles;
+    refreshState();
   }
 
   void onGroupNameChanged(String val) {

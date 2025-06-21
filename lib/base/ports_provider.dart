@@ -45,14 +45,14 @@ mixin PortsProvider<E> {
   static bool isDisposeMessage(dynamic message) => message == _PortsProviderDisposeMessage;
 
   @protected
-  Future<void> disposePort() async {
+  Future<void> disposePort({bool resetCompleter = true}) async {
     _recievePort?.close();
     _streamSub?.cancel();
     await sendPort(_PortsProviderDisposeMessage);
     _isolate?.kill();
     _isInitialized = false;
     onPreparing(false);
-    _initializingCompleter = null;
+    if (resetCompleter) _initializingCompleter = null;
     _portCompleter = null;
     _portCompleterResult = null;
     _recievePort = null;
@@ -64,23 +64,22 @@ mixin PortsProvider<E> {
     required void Function(dynamic result) onResult,
     required Future<void> Function(SendPort itemsSendPort) isolateFunction,
   }) async {
-    final portN = _portCompleter;
-    if (portN != null) return await portN.future;
+    if (_portCompleter != null) return await _portCompleter!.future;
 
-    await disposePort();
-    _portCompleter = Completer<SendPort>();
+    _initializingCompleter = Completer<void>(); // set early to prevent double init
+    await disposePort(resetCompleter: false);
+    final portCompleter = _portCompleter = Completer<SendPort>();
     _recievePort = ReceivePort();
-    _initializingCompleter = Completer<void>();
     _streamSub = _recievePort?.listen((result) {
       if (result is SendPort) {
-        _portCompleter?.completeIfWasnt(result);
+        portCompleter.completeIfWasnt(result);
         _portCompleterResult = result;
       } else {
         onResult(result);
       }
     });
     await isolateFunction(_recievePort!.sendPort);
-    return await _portCompleter!.future;
+    return await portCompleter.future;
   }
 
   @protected

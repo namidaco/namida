@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -6,19 +7,21 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_youtubeid.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 abstract class LrcSearchUtils {
   const LrcSearchUtils();
 
-  static LrcSearchUtils? fromPlayable(Playable item) {
+  static FutureOr<LrcSearchUtils?> fromPlayable(Playable item) {
     if (item is Selectable) {
       final tr = item.track;
       return LrcSearchUtilsSelectable(tr.toTrackExt(), tr);
     } else if (item is YoutubeID) {
-      final title = YoutubeInfoController.utils.getVideoName(item.id);
-      return LrcSearchUtilsYoutubeID(item, title);
+      return YoutubeInfoController.utils.getVideoName(item.id).then(
+            (value) => LrcSearchUtilsYoutubeID(item, value),
+          );
     }
     return null;
   }
@@ -37,8 +40,8 @@ abstract class LrcSearchUtils {
   }
 
   @mustCallSuper
-  bool hasLyrics() {
-    return cachedLRCFile.existsSync() || deviceLRCFiles.any((element) => element.existsSync()) || cachedTxtFile.existsSync();
+  Future<bool> hasLyrics() async {
+    return await cachedLRCFile.exists() || await deviceLRCFiles.anyAsync((element) => element.exists()) || await cachedTxtFile.exists();
   }
 
   List<LRCSearchDetails> searchDetailsQueries();

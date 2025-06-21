@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -401,12 +403,12 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     super.dispose();
   }
 
-  void _openMenu(BuildContext context, YoutubeID video, TapUpDetails details) {
-    final vidpage = YoutubeInfoController.video.fetchVideoPageSync(video.id);
-    final vidstreams = YoutubeInfoController.video.fetchVideoStreamsSync(video.id, infoOnly: true);
+  void _openMenu(BuildContext context, YoutubeID video, TapUpDetails details) async {
+    final vidpage = await YoutubeInfoController.video.fetchVideoPageCache(video.id);
+    final vidstreams = await YoutubeInfoController.video.fetchVideoStreamsCache(video.id);
     final videoTitle = vidpage?.videoInfo?.title ?? vidstreams?.info?.title;
     final videoChannelId = vidpage?.channelInfo?.id ?? vidstreams?.info?.channelId;
-    final popUpItems = NamidaPopupWrapper(
+    final popUpItems = await NamidaPopupWrapper(
       childrenDefault: () => YTUtils.getVideoCardMenuItemsForCurrentlyPlaying(
         queueSource: QueueSourceYoutubeID.playerQueue,
         context: context,
@@ -430,8 +432,8 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     String firstLine = '';
     String secondLine = '';
 
-    firstLine = YoutubeInfoController.utils.getVideoName(video.id) ?? '';
-    secondLine = YoutubeInfoController.utils.getVideoChannelName(video.id) ?? '';
+    firstLine = YoutubeInfoController.utils.getVideoNameSync(video.id) ?? '';
+    secondLine = YoutubeInfoController.utils.getVideoChannelNameSync(video.id) ?? '';
     if (firstLine == '') {
       firstLine = secondLine;
       secondLine = '';
@@ -486,13 +488,13 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
       topText: (currentItem) =>
           YoutubeInfoController.current.currentVideoPage.value?.channelInfo?.title ??
           YoutubeInfoController.current.currentYTStreams.value?.info?.channelName ??
-          YoutubeInfoController.utils.getVideoChannelName((currentItem as YoutubeID).id) ??
+          YoutubeInfoController.utils.getVideoChannelNameSync((currentItem as YoutubeID).id) ??
           '',
-      onTopTextTap: (currentItem) {
+      onTopTextTap: (currentItem) async {
         final pageChannel = YoutubeInfoController.current.currentVideoPage.value?.channelInfo;
         final channelId = pageChannel?.id ??
             YoutubeInfoController.current.currentYTStreams.value?.info?.channelId ?? //
-            YoutubeInfoController.utils.getVideoChannelID((currentItem as YoutubeID).id);
+            await YoutubeInfoController.utils.getVideoChannelID((currentItem as YoutubeID).id);
         if (channelId != null) YTChannelSubpage(channelID: channelId, channel: pageChannel).navigate();
       },
       onMenuOpen: (currentItem, d) => _openMenu(context, (currentItem as YoutubeID), d),

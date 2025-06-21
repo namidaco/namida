@@ -8,9 +8,8 @@ class _ChannelInfoController {
     return res;
   }
 
-  YoutiPieChannelPageResult? fetchChannelInfoSync(String channelId) {
-    final res = YoutiPie.cacheBuilder.forChannel(channelId: channelId);
-    return res.read();
+  Future<YoutiPieChannelPageResult?> fetchChannelInfoCache(String channelId) {
+    return YoutiPie.cacheBuilder.forChannel(channelId: channelId).read();
   }
 
   Future<ChannelPageAbout?> fetchChannelAbout({required YoutiPieChannelPageResult channel, ExecuteDetails? details}) async {
@@ -18,17 +17,15 @@ class _ChannelInfoController {
     return res;
   }
 
-  ChannelPageAbout? fetchChannelAboutSync(String channelId) {
-    final res = YoutiPie.cacheBuilder.forChannelAbout(channelId: channelId);
-    return res.read();
+  Future<ChannelPageAbout?> fetchChannelAboutCache(String channelId) {
+    return YoutiPie.cacheBuilder.forChannelAbout(channelId: channelId).read();
   }
 
   Future<YoutiPieChannelTabResult?> fetchChannelTab({required String channelId, required ChannelTab tab, YoutiPieItemsSort? sort, ExecuteDetails? details}) {
     return YoutiPie.channel.fetchChannelTab(channelId: channelId, tab: tab, sort: sort, details: details);
   }
 
-  YoutiPieChannelTabResult? fetchChannelTabSync({required String channelId, required ChannelTab tab}) {
-    final res = YoutiPie.cacheBuilder.forChannelTab(channelId: channelId, tab: tab);
-    return res.read();
+  Future<YoutiPieChannelTabResult?> fetchChannelTabCache({required String channelId, required ChannelTab tab}) {
+    return YoutiPie.cacheBuilder.forChannelTab(channelId: channelId, tab: tab).read();
   }
 }

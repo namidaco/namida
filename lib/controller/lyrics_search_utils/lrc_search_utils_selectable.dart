@@ -41,8 +41,8 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
   }
 
   @override
-  bool hasLyrics() {
-    return track.lyrics != '' || super.hasLyrics();
+  Future<bool> hasLyrics() async {
+    return track.lyrics != '' || await super.hasLyrics();
   }
 
   static final _durationModifiedRegex = RegExp('nightcore|sped up', caseSensitive: false);

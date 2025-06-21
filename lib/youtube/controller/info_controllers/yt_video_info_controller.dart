@@ -20,7 +20,7 @@ class _VideoInfoController {
   bool get jsPreparedIfRequired => _requiresJSPlayer ? YoutiPie.cipher.isPrepared : true;
 
   Future<bool> ensureJSPlayerInitialized() async {
-    if (YoutiPie.cipher.isPrepared) return true;
+    if (jsPreparedIfRequired) return true;
     return YoutiPie.cipher.prepareJSPlayer(cacheDirectoryPath: AppDirs.YOUTIPIE_CACHE);
   }
 
@@ -45,12 +45,17 @@ class _VideoInfoController {
     return res;
   }
 
-  YoutiPieVideoPageResult? fetchVideoPageSync(String videoId) {
+  Future<YoutiPieVideoPageResult?> fetchVideoPageCache(String videoId) {
     final res = YoutiPie.cacheBuilder.forVideoPage(videoId: videoId);
     return res.read();
   }
 
-  /// By default, this will force a network request since most implementations use this as fallback to [fetchVideoStreamsSync].
+  YoutiPieVideoPageResult? fetchVideoPageCacheSync(String videoId) {
+    final res = YoutiPie.cacheBuilder.forVideoPage(videoId: videoId);
+    return res.readSync();
+  }
+
+  /// By default, this will force a network request since most implementations use this as fallback to [fetchVideoStreamsCache].
   Future<VideoStreamsResult?> fetchVideoStreams(String videoId, {bool forceRequest = true}) async {
     // -- preparing jsplayer *before* fetching streams is important, fetching *after* will return non-working urls.
     if (_requiresJSPlayer) {
@@ -77,9 +82,23 @@ class _VideoInfoController {
   /// Returns cached streams result if exist. you need to ensure that urls didn't expire ![VideoStreamsResult.hasExpired] before consuming them.
   ///
   /// Enable [bypassJSCheck] if you gurantee using [VideoStreamsResult.info] only.
-  VideoStreamsResult? fetchVideoStreamsSync(String videoId, {bool bypassJSCheck = false, bool infoOnly = false}) {
+  Future<VideoStreamsResult?> fetchVideoStreamsCache(String videoId, {bool bypassJSCheck = false, bool infoOnly = true}) async {
     final res = YoutiPie.cacheBuilder.forVideoStreams(videoId: videoId);
-    final cached = res.read();
+    final cached = await res.read();
+    if (infoOnly) return cached;
+    if (cached == null || cached.client != _usedClient) return null;
+    if (_requiresJSPlayer && bypassJSCheck == false) {
+      if (!YoutiPie.cipher.isPrepared) {
+        ensureJSPlayerInitialized();
+        return null; // the player is not prepared, hence the urls are just useless
+      }
+    }
+    return cached;
+  }
+
+  VideoStreamsResult? fetchVideoStreamsCacheSync(String videoId, {bool bypassJSCheck = true, bool infoOnly = true}) {
+    final res = YoutiPie.cacheBuilder.forVideoStreams(videoId: videoId);
+    final cached = res.readSync();
     if (infoOnly) return cached;
     if (cached == null || cached.client != _usedClient) return null;
     if (_requiresJSPlayer && bypassJSCheck == false) {

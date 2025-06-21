@@ -135,11 +135,12 @@ class _AccountHeader extends StatelessWidget {
                           acc.title,
                           style: context.textTheme.displayMedium,
                         ),
-                        const SizedBox(height: 2.0),
-                        Text(
-                          acc.handler,
-                          style: context.textTheme.displaySmall,
-                        ),
+                        if (acc.handler.isNotEmpty) const SizedBox(height: 2.0),
+                        if (acc.handler.isNotEmpty)
+                          Text(
+                            acc.handler,
+                            style: context.textTheme.displaySmall,
+                          ),
                       ],
                     ),
                   ),

@@ -164,17 +164,36 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
   @override
   void initState() {
     super.initState();
+    _initValues();
 
-    final channelInfoCache = YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID);
-    if (channelInfoCache != null) {
-      _channelInfoSubButton.value = channelInfoCache;
-      _channelInfo = channelInfoCache;
-      final tabToBeSelected = _setTabsData(channelInfoCache);
-      if (tabToBeSelected != null) _tabIndex = tabToBeSelected;
-      _fetchCurrentTab(channelInfoCache);
-    } else {
-      _tabsGlobalKeys[0] = _videosPageKey;
-    }
+    _itemsScrollController.addListener(_scrollAnimationListener);
+  }
+
+  @override
+  void dispose() {
+    _itemsScrollController.dispose();
+    _scrollAnimation.dispose();
+    _currentFetchAllRes?.cancel();
+    _currentFetchAllRes = null;
+    _tabLastFetched.clear();
+    super.dispose();
+  }
+
+  void _initValues() async {
+    final channelInfoCache = await YoutubeInfoController.channel.fetchChannelInfoCache(ch.channelID);
+    refreshState(
+      () {
+        if (channelInfoCache != null) {
+          _channelInfoSubButton.value = channelInfoCache;
+          _channelInfo = channelInfoCache;
+          final tabToBeSelected = _setTabsData(channelInfoCache);
+          if (tabToBeSelected != null) _tabIndex = tabToBeSelected;
+          _fetchCurrentTab(channelInfoCache);
+        } else {
+          _tabsGlobalKeys[0] = _videosPageKey;
+        }
+      },
+    );
 
     // -- always get new info.
     YoutubeInfoController.channel.fetchChannelInfo(channelId: ch.channelID, details: ExecuteDetails.forceRequest()).then(
@@ -190,18 +209,6 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
         }
       },
     );
-
-    _itemsScrollController.addListener(_scrollAnimationListener);
-  }
-
-  @override
-  void dispose() {
-    _itemsScrollController.dispose();
-    _scrollAnimation.dispose();
-    _currentFetchAllRes?.cancel();
-    _currentFetchAllRes = null;
-    _tabLastFetched.clear();
-    super.dispose();
   }
 
   Future<void> _fetchCurrentTab(YoutiPieChannelPageResult channelInfo, {bool? forceRequest}) async {
@@ -235,18 +242,18 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
     required String channelID,
     required List<YoutiPieThumbnail> imagesList,
     required bool isPfp,
-  }) {
+  }) async {
     final files = <(String, File?)>[];
     imagesList.loop(
-      (item) {
+      (item) async {
         File? cf = _getThumbFileForCache(item.url, temp: false);
-        if (cf?.existsSync() == false) cf = _getThumbFileForCache(item.url, temp: true);
+        if (await cf?.exists() == false) cf = _getThumbFileForCache(item.url, temp: true);
         files.add((item.url, cf));
       },
     );
     if (isPfp) {
       final cf = _getThumbFileForCache(channelID, temp: false);
-      if (cf != null && cf.existsSync()) files.add((channelID, cf));
+      if (cf != null && await cf.exists()) files.add((channelID, cf));
     }
     if (files.isEmpty) return;
 

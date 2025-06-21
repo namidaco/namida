@@ -42,13 +42,26 @@ Future<void> showTrackInfoDialog(
   final totalListens = HistoryController.inst.topTracksMapListens.value[track] ?? [];
   final firstListenTrack = totalListens.firstOrNull;
 
-  final color = (colorScheme ?? CurrentColor.inst.color).obso;
+  final color = Colors.transparent.obso;
+
+  void onColorsObtained(Color newColor) {
+    color.value = newColor;
+  }
+
+  onColorsObtained(colorScheme ?? CurrentColor.inst.color);
 
   if (colorScheme == null) {
-    CurrentColor.inst.getTrackDelightnedColor(track, useIsolate: true).executeWithMinDelay(delayMS: 100).then((c) {
-      if (c == color.value) return;
-      color.value = c;
-    });
+    final colorSync = CurrentColor.inst.getTrackDelightnedColorSync(track);
+    if (colorSync != null) {
+      onColorsObtained(colorSync);
+    } else {
+      CurrentColor.inst
+          .getTrackDelightnedColor(track, useIsolate: true)
+          .executeWithMinDelay(
+            delayMS: NamidaNavigator.kDefaultDialogDurationMS,
+          )
+          .then(onColorsObtained);
+    }
   }
 
   bool shouldShowTheField(bool isUnknown) => !isUnknown || (settings.showUnknownFieldsInTrackInfoDialog.value && isUnknown);

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:jiffy/jiffy.dart';
@@ -13,6 +15,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -57,7 +60,7 @@ class YoutubeVideoCard extends StatelessWidget {
     this.showThirdLine = true,
   });
 
-  List<NamidaPopupItem> getMenuItems() {
+  FutureOr<List<NamidaPopupItem>> getMenuItems() {
     final videoId = video.id;
     return YTUtils.getVideoCardMenuItems(
       queueSource: properties.configs.queueSource,
@@ -115,7 +118,7 @@ class YoutubeVideoCard extends StatelessWidget {
                 ? video.channel.title
                 : video.channelName ?? '',
         displayChannelThumbnail: !dateInsteadOfChannel,
-        channelThumbnailUrl: video.channel.thumbnails.pick()?.url ?? YoutubeInfoController.utils.getVideoChannelThumbnails(videoId, checkFromStorage: false)?.pick()?.url,
+        channelThumbnailUrl: video.channel.thumbnails.pick()?.url ?? YoutubeInfoController.utils.getVideoChannelThumbnailsSync(videoId, checkFromStorage: false)?.pick()?.url,
         onTap: onTap ??
             () async {
               _VideoCardUtils.onVideoTap(
@@ -207,7 +210,7 @@ class YoutubeShortVideoCard extends StatelessWidget {
     this.thumbnailWidthPercentage = 1.0,
   });
 
-  List<NamidaPopupItem> getMenuItems() {
+  FutureOr<List<NamidaPopupItem>> getMenuItems() {
     final videoId = short.id;
     return YTUtils.getVideoCardMenuItems(
       queueSource: queueSource,
@@ -281,7 +284,7 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
     required this.thumbnailHeight,
   });
 
-  List<NamidaPopupItem> getMenuItems() {
+  FutureOr<List<NamidaPopupItem>> getMenuItems() {
     final videoId = short.id;
     return YTUtils.getVideoCardMenuItems(
       queueSource: queueSource,

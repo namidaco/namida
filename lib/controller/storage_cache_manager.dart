@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:checkmark/checkmark.dart';
 import 'package:jiffy/jiffy.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
@@ -31,12 +32,12 @@ class StorageCacheManager {
   const StorageCacheManager();
 
   Future<void> trimExtraFiles() async {
-    final priorityMap = await VideoController.inst.videosPriorityManager.priorityLookupMap;
+    final priorityDbFileInfo = VideoController.inst.videosPriorityManager.cacheVideosPriorityDB.fileInfo;
     await Future.wait([
-      _VideoTrimmer()._trimExcessVideoCache(priorityMap),
-      _ImageTrimmer()._trimExcessImageCache(priorityMap),
-      _ImageTrimmer()._trimExcessImageCacheTemp(priorityMap),
-      _AudioTrimmer()._trimExcessAudioCache(priorityMap),
+      _VideoTrimmer()._trimExcessVideoCache(priorityDbFileInfo),
+      _ImageTrimmer()._trimExcessImageCache(priorityDbFileInfo),
+      _ImageTrimmer()._trimExcessImageCacheTemp(priorityDbFileInfo),
+      _AudioTrimmer()._trimExcessAudioCache(priorityDbFileInfo),
     ]);
   }
 
@@ -145,7 +146,7 @@ class StorageCacheManager {
     required Future<void> Function() onDeleteTempFiles,
     bool includeLocalTracksListens = true,
     required bool forVideos,
-  }) {
+  }) async {
     final itemsToDelete = <T>{}.obs;
     final itemsToDeleteSize = 0.obs;
     final allFiles = allItems.obs;
@@ -168,16 +169,19 @@ class StorageCacheManager {
 
     final currentSort = _CacheSorting.recommended.obs;
 
-    final localIdTrackMap = <String, Track>{};
-    if (includeLocalTracksListens) {
-      allTracksInLibrary.loop((tr) => localIdTrackMap[tr.youtubeID] = tr);
-    }
+    final localIdTrackMap = includeLocalTracksListens ? Indexer.inst.allTracksMappedByYTID : <String, List<Track>>{};
 
     int getTotalListensForIDLength(String id) {
-      final correspondingTrack = localIdTrackMap[id];
-      final local = correspondingTrack == null ? [] : HistoryController.inst.topTracksMapListens.value[correspondingTrack] ?? [];
-      final yt = YoutubeHistoryController.inst.topTracksMapListens[id] ?? [];
-      return local.length + yt.length;
+      final correspondingTracks = localIdTrackMap[id];
+      int localCount = 0;
+      int ytCount = 0;
+      if (correspondingTracks != null && correspondingTracks.isNotEmpty) {
+        for (final t in correspondingTracks) {
+          localCount += HistoryController.inst.topTracksMapListens.value[t]?.length ?? 0;
+        }
+      }
+      ytCount = YoutubeHistoryController.inst.topTracksMapListens[id]?.length ?? 0;
+      return localCount + ytCount;
     }
 
     final listensMap = <String?, int>{};
@@ -185,9 +189,12 @@ class StorageCacheManager {
     final accessTimeMap = <String, int>{};
     int maxListenCount = 0;
 
-    allFiles.value.loop((e) {
+    final int length = allFiles.value.length;
+    for (int i = 0; i < length; i++) {
+      var e = allFiles.value[i];
+
       final path = itemToPath(e);
-      final stats = File(path).statSync();
+      final stats = await File(path).stat();
       final accessed = stats.accessed.millisecondsSinceEpoch;
       final modified = stats.modified.millisecondsSinceEpoch;
       final finalMS = modified > accessed ? modified : accessed;
@@ -200,7 +207,7 @@ class StorageCacheManager {
         listensMap[videoId] = listensCount;
         if (maxListenCount < listensCount) maxListenCount = listensCount;
       }
-    });
+    }
 
     void sortBy(_CacheSorting type) {
       currentSort.value = type;
@@ -373,7 +380,6 @@ class StorageCacheManager {
                         itemBuilder: (context, index) {
                           final item = allFiles[index];
                           final id = itemToYtId(item);
-                          final title = id == null ? null : YoutubeInfoController.utils.getVideoName(id);
                           final listens = id == null ? null : listensMap[id];
                           final itemSize = sizesMap[itemToPath(item)] ?? 0;
                           String? lastPlayedTimeText;
@@ -422,8 +428,8 @@ class StorageCacheManager {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        title ?? id ?? '',
+                                      _VideoIdToTitleWidget(
+                                        id: id ?? '',
                                         style: context.textTheme.displayMedium,
                                       ),
                                       Text(
@@ -589,10 +595,52 @@ class StorageCacheManager {
   }
 }
 
+class _VideoIdToTitleWidget extends StatefulWidget {
+  final String? id;
+  final TextStyle? style;
+
+  const _VideoIdToTitleWidget({
+    required this.id,
+    required this.style,
+  });
+
+  @override
+  State<_VideoIdToTitleWidget> createState() => _VideoIdToTitleWidgetState();
+}
+
+class _VideoIdToTitleWidgetState extends State<_VideoIdToTitleWidget> {
+  String? _title;
+
+  @override
+  void initState() {
+    super.initState();
+    initValues();
+  }
+
+  void initValues() async {
+    final id = widget.id;
+    if (id == null) return;
+    final newTitle = await YoutubeInfoController.utils.getVideoName(id);
+    if (mounted) {
+      if (newTitle != _title) {
+        setState(() => _title = newTitle);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      _title ?? widget.id ?? '',
+      style: widget.style,
+    );
+  }
+}
+
 class _VideoTrimmer {
   int get _videosMaxCacheInMB => settings.videosMaxCacheInMB.value;
 
-  Future<int> _trimExcessVideoCache(Map<String, CacheVideoPriority>? priorityMap) async {
+  Future<int> _trimExcessVideoCache(DbWrapperFileInfo priorityDbInfo) async {
     final maxMB = _videosMaxCacheInMB;
     if (maxMB < 0) return 0;
     final totalMaxBytes = maxMB * 1024 * 1024;
@@ -600,7 +648,7 @@ class _VideoTrimmer {
       maxBytes: totalMaxBytes,
       dirPath: AppDirs.VIDEOS_CACHE,
       extraDirPath: AppDirs.VIDEOS_CACHE_TEMP,
-      priorityMap: priorityMap,
+      priorityDbInfo: priorityDbInfo,
     );
     return await _trimExcessVideoCacheIsolate.thready(paramters);
   }
@@ -609,7 +657,7 @@ class _VideoTrimmer {
     final maxBytes = params.maxBytes;
     final dirPath = params.dirPath;
     final dirPathTemp = params.extraDirPath!;
-    final priorityMap = params.priorityMap;
+    final priorityMap = VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
 
     final videos = Directory(dirPath).listSyncSafe();
     final videosTemp = Directory(dirPathTemp).listSyncSafe();
@@ -649,14 +697,14 @@ class _AudioTrimmer {
   int get _audiosMaxCacheInMB => settings.audiosMaxCacheInMB.value;
 
   /// Returns total deleted bytes.
-  Future<int> _trimExcessAudioCache(Map<String, CacheVideoPriority>? priorityMap) async {
+  Future<int> _trimExcessAudioCache(DbWrapperFileInfo priorityDbInfo) async {
     final maxMB = _audiosMaxCacheInMB;
     if (maxMB < 0) return 0;
     final totalMaxBytes = maxMB * 1024 * 1024;
     final paramters = _TrimDirParam(
       maxBytes: totalMaxBytes,
       dirPath: AppDirs.AUDIOS_CACHE,
-      priorityMap: priorityMap,
+      priorityDbInfo: priorityDbInfo,
     );
     return await _trimExcessAudioCacheIsolate.thready(paramters);
   }
@@ -664,7 +712,7 @@ class _AudioTrimmer {
   static int _trimExcessAudioCacheIsolate(_TrimDirParam params) {
     final maxBytes = params.maxBytes;
     final dirPath = params.dirPath;
-    final priorityMap = params.priorityMap;
+    final priorityMap = VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
 
     final audios = Directory(dirPath).listSyncSafe();
     _Trimmer._sortFiles(audios, priorityMap);
@@ -697,7 +745,7 @@ class _ImageTrimmer {
   int get _imagesMaxCacheInMB => settings.imagesMaxCacheInMB.value;
 
   /// Returns total deleted bytes.
-  Future<int> _trimExcessImageCache(Map<String, CacheVideoPriority>? priorityMap) async {
+  Future<int> _trimExcessImageCache(DbWrapperFileInfo priorityDbInfo) async {
     final maxMB = _imagesMaxCacheInMB;
     if (maxMB < 0) return 0;
     final totalMaxBytes = maxMB * 1024 * 1024;
@@ -705,7 +753,7 @@ class _ImageTrimmer {
       maxBytes: totalMaxBytes,
       dirPath: AppDirs.YT_THUMBNAILS,
       extraDirPath: AppDirs.YT_THUMBNAILS_CHANNELS,
-      priorityMap: priorityMap,
+      priorityDbInfo: priorityDbInfo,
     );
     return await _trimExcessImageCacheIsolate.thready(paramters);
   }
@@ -714,7 +762,7 @@ class _ImageTrimmer {
     final maxBytes = params.maxBytes;
     final dirPath = params.dirPath;
     final dirPathChannel = params.extraDirPath!;
-    final priorityMap = params.priorityMap;
+    final priorityMap = VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
 
     final imagesVideos = Directory(dirPath).listSyncSafe();
     final imagesChannels = Directory(dirPathChannel).listSyncSafe();
@@ -729,20 +777,20 @@ class _ImageTrimmer {
     return total;
   }
 
-  Future<void> _trimExcessImageCacheTemp(Map<String, CacheVideoPriority> priorityMap) async {
+  Future<void> _trimExcessImageCacheTemp(DbWrapperFileInfo priorityDbInfo) async {
     final dirPath = FileParts.joinPath(AppDirs.YT_THUMBNAILS, 'temp');
     if (!await Directory(dirPath).exists()) return;
     final params = _TrimDirParam(
       dirPath: dirPath,
       maxBytes: 0, // not by bytes
-      priorityMap: priorityMap,
+      priorityDbInfo: priorityDbInfo,
     );
     return await _trimExcessImageCacheTempIsolate.thready(params);
   }
 
   static void _trimExcessImageCacheTempIsolate(_TrimDirParam params) {
     final dirPath = params.dirPath;
-    final priorityMap = params.priorityMap;
+    final priorityMap = VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
 
     final imagesPre = Directory(dirPath).listSyncSafe();
     int excess = imagesPre.length - 2000; // keeping it at max 2000 good files.
@@ -931,12 +979,12 @@ class _TrimDirParam {
   final String dirPath;
   final String? extraDirPath;
   final int maxBytes;
-  final Map<String, CacheVideoPriority>? priorityMap;
+  final DbWrapperFileInfo priorityDbInfo;
 
   const _TrimDirParam({
     required this.dirPath,
     this.extraDirPath,
     required this.maxBytes,
-    required this.priorityMap,
+    required this.priorityDbInfo,
   });
 }

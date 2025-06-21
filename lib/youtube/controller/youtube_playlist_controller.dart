@@ -114,7 +114,14 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     reverse ??= settings.ytPlaylistSortReversed.value;
 
     final playlistList = playlistsMap.entries.toList();
-    void sortThis(Comparable Function(MapEntry<String, YoutubePlaylist> p) comparable) => reverse! ? playlistList.sortByReverse(comparable) : playlistList.sortBy(comparable);
+    _performSortYTPlaylists(playlistList, sortBy: sortBy, reverse: reverse);
+    playlistsMap.assignAllEntries(playlistList);
+
+    settings.save(ytPlaylistSort: sortBy, ytPlaylistSortReversed: reverse);
+  }
+
+  static void _performSortYTPlaylists(List<MapEntry<String, YoutubePlaylist>> playlistList, {required GroupSortType sortBy, required bool reverse}) {
+    void sortThis(Comparable Function(MapEntry<String, YoutubePlaylist> p) comparable) => reverse ? playlistList.sortByReverse(comparable) : playlistList.sortBy(comparable);
 
     switch (sortBy) {
       case GroupSortType.title:
@@ -136,10 +143,6 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
       default:
         null;
     }
-
-    playlistsMap.assignAllEntries(playlistList);
-
-    settings.save(ytPlaylistSort: sortBy, ytPlaylistSortReversed: reverse);
   }
 
   Future<void> prepareAllPlaylists() async => await super.prepareAllPlaylistsFile();
@@ -192,8 +195,17 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   String get playlistsArtworksDirectory => AppDirs.YT_PLAYLISTS_ARTWORKS;
 
   @override
+  bool get sortAfterPreparing => false;
+
+  @override
   Future<Map<String, YoutubePlaylist>> prepareAllPlaylistsFunction() async {
-    return await _readPlaylistFilesCompute.thready(playlistsDirectory);
+    final params = _ReadPlaylistFilesParams(
+      path: playlistsDirectory,
+      sortBy: settings.ytPlaylistSort.value,
+      reverse: settings.ytPlaylistSortReversed.value,
+    );
+
+    return await _readPlaylistFilesCompute.thready(params);
   }
 
   @override
@@ -210,21 +222,22 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     }
   }
 
-  static Future<Map<String, YoutubePlaylist>> _readPlaylistFilesCompute(String path) async {
-    final map = <String, YoutubePlaylist>{};
-    final files = Directory(path).listSyncSafe();
+  static Map<String, YoutubePlaylist> _readPlaylistFilesCompute(_ReadPlaylistFilesParams params) {
+    final entries = <MapEntry<String, YoutubePlaylist>>[];
+    final files = Directory(params.path).listSyncSafe();
     final filesL = files.length;
     for (int i = 0; i < filesL; i++) {
       var f = files[i];
       if (f is File) {
         try {
-          final response = f.readAsJsonSync();
+          final response = f.readAsJsonSync(ensureExists: false);
           final pl = YoutubePlaylist.fromJson(response, (itemJson) => YoutubeID.fromJson(itemJson), _sortFromJson);
-          map[pl.name] = pl;
+          entries.add(MapEntry(pl.name, pl));
         } catch (_) {}
       }
     }
-    return map;
+    _performSortYTPlaylists(entries, sortBy: params.sortBy, reverse: params.reverse);
+    return Map<String, YoutubePlaylist>.fromEntries(entries);
   }
 
   @override
@@ -238,7 +251,8 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   }
 
   @override
-  void onPlaylistItemsSort(List<YTSortType> sorts, bool reverse, List<YoutubeID> items) {
+  Future<void> onPlaylistItemsSort(List<YTSortType> sorts, bool reverse, List<YoutubeID> items) async {
+    await _ensureItemsHasDataForSorting(sorts, items);
     final comparables = <Comparable<dynamic> Function(YoutubeID vid)>[];
     for (final s in sorts) {
       final comparable = _mediaTracksSortingComparables(s);
@@ -252,12 +266,19 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     }
   }
 
+  Future<void> _ensureItemsHasDataForSorting(List<YTSortType> sorts, List<YoutubeID> items) async {
+    if (sorts.contains(YTSortType.title)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoName(e.id)));
+    if (sorts.contains(YTSortType.channelTitle)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoChannelName(e.id)));
+    if (sorts.contains(YTSortType.duration)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoDurationSeconds(e.id)));
+    if (sorts.contains(YTSortType.date)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoReleaseDate(e.id)));
+  }
+
   Comparable Function(YoutubeID e)? _mediaTracksSortingComparables(YTSortType type) {
     return switch (type) {
-      YTSortType.title => (e) => YoutubeInfoController.utils.getVideoName(e.id) ?? '',
-      YTSortType.channelTitle => (e) => YoutubeInfoController.utils.getVideoChannelName(e.id) ?? '',
-      YTSortType.duration => (e) => YoutubeInfoController.utils.getVideoDurationSeconds(e.id) ?? 0,
-      YTSortType.date => (e) => YoutubeInfoController.utils.getVideoReleaseDate(e.id) ?? DateTime(0),
+      YTSortType.title => (e) => YoutubeInfoController.utils.getVideoNameSync(e.id, checkFromStorage: false) ?? '',
+      YTSortType.channelTitle => (e) => YoutubeInfoController.utils.getVideoChannelNameSync(e.id, checkFromStorage: false) ?? '',
+      YTSortType.duration => (e) => YoutubeInfoController.utils.getVideoDurationSecondsSyncTemp(e.id) ?? 0,
+      YTSortType.date => (e) => YoutubeInfoController.utils.getVideoReleaseDateSyncTemp(e.id) ?? DateTime(0),
       YTSortType.dateAdded => (e) => e.dateAddedMS,
       YTSortType.shuffle => null,
       YTSortType.mostPlayed => (e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.length ?? 0,
@@ -265,4 +286,16 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
       YTSortType.firstListen => (e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.firstOrNull ?? 0,
     };
   }
+}
+
+class _ReadPlaylistFilesParams {
+  final String path;
+  final GroupSortType sortBy;
+  final bool reverse;
+
+  const _ReadPlaylistFilesParams({
+    required this.path,
+    required this.sortBy,
+    required this.reverse,
+  });
 }

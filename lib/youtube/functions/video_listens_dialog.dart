@@ -15,13 +15,14 @@ void showVideoListensDialog(String videoId, {List<int> datesOfListen = const [],
     datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : YoutubeHistoryController.inst.topTracksMapListens.value[videoId] ?? [],
     colorScheme: colorScheme,
     colorSchemeFunction: () async {
-      final image = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: videoId, type: ThumbnailType.video);
+      final image = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(id: videoId, type: ThumbnailType.video);
       if (image != null) {
         final color = await CurrentColor.inst.extractPaletteFromImage(image.path, paletteSaveDirectory: Directory(AppDirs.YT_PALETTES), useIsolate: true);
         return color?.color;
       }
       return null;
     },
+    colorSchemeFunctionSync: null,
     onListenTap: (listen) => YTUtils.onYoutubeHistoryPlaylistTap(initialListen: listen),
   );
 }

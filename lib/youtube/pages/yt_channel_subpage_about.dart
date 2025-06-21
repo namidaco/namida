@@ -51,15 +51,22 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
 
   @override
   void initState() {
-    final aboutResultCache = YoutubeInfoController.channel.fetchChannelAboutSync(widget.channelId);
-    if (aboutResultCache != null) {
-      _aboutResult = aboutResultCache;
-    } else {
-      _isLoadingInitial = true;
-    }
-
+    _initValues();
     if (widget.shouldForceRequest()) widget.tabFetcher(fetchAboutAndUpdate);
     super.initState();
+  }
+
+  void _initValues() async {
+    final aboutResultCache = await YoutubeInfoController.channel.fetchChannelAboutCache(widget.channelId);
+    refreshState(
+      () {
+        if (aboutResultCache != null) {
+          _aboutResult = aboutResultCache;
+        } else {
+          _isLoadingInitial = true;
+        }
+      },
+    );
   }
 
   String _getWorkingUrl(ChannelAboutLink aboutLink) {

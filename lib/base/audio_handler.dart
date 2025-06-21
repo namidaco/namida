@@ -145,7 +145,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   Future<void> _updateYoutubeIDLastPosition(YoutubeID item, int lastPositionMS) async {
-    final duration = YoutubeInfoController.utils.getVideoDuration(item.id) ?? _currentItemDuration.value;
+    final duration = await YoutubeInfoController.utils.getVideoDuration(item.id) ?? _currentItemDuration.value;
 
     if (duration != null) {
       // Saves a starting position in case the remaining was less than 30 seconds.
@@ -156,25 +156,27 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     await YoutubeController.inst.statsManager.updateStats(item, lastPositionInMs: lastPositionMS);
   }
 
-  Duration? _getItemInitialPosition(Q item, Duration? itemDuration) {
+  FutureOr<Duration?> _getItemInitialPosition(Q item, Duration? itemDuration) async {
     final minValueInSetMinutes = settings.player.minTrackDurationToRestoreLastPosInMinutes.value;
 
     if (minValueInSetMinutes >= 0) {
       final minValueInSetMS = minValueInSetMinutes * 60 * 1000;
       final seekValueInMS = settings.player.seekDurationInSeconds.value * 1000;
 
-      final lastPosAndDurationMS = item._execute(
+      final lastPosAndDurationMSFn = item._executeAsync(
         selectable: (finalItem) {
           final track = finalItem.track.toTrackExt();
           final duration = itemDuration?.inMilliseconds ?? track.durationMS;
           return (track.stats?.lastPositionInMs, duration);
         },
-        youtubeID: (finalItem) {
-          final duration = itemDuration ?? YoutubeInfoController.utils.getVideoDuration(finalItem.id);
-          final stats = YoutubeController.inst.statsManager.getStatsSync(finalItem);
+        youtubeID: (finalItem) async {
+          final duration = itemDuration ?? await YoutubeInfoController.utils.getVideoDuration(finalItem.id);
+          final stats = await YoutubeController.inst.statsManager.getStats(finalItem);
           return (stats?.lastPositionInMs, duration?.inMilliseconds);
         },
       );
+
+      final lastPosAndDurationMS = lastPosAndDurationMSFn is Future ? await lastPosAndDurationMSFn : lastPosAndDurationMSFn;
       if (lastPosAndDurationMS != null) {
         final lastPosMS = lastPosAndDurationMS.$1;
         final durationMS = lastPosAndDurationMS.$2;
@@ -231,8 +233,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required bool isItemFavourite,
     required int itemIndex,
     required Duration? duration,
-  }) {
-    final media = item.toMediaItem(currentIndex.value, currentQueue.value.length, duration);
+  }) async {
+    final media = await item.toMediaItem(currentIndex.value, currentQueue.value.length, duration);
     mediaItem.add(media);
     playbackState.add(transformEvent(PlaybackEvent(currentIndex: currentIndex.value), isItemFavourite, itemIndex));
 
@@ -244,13 +246,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required bool isItemFavourite,
     required int itemIndex,
     required YoutubeIDToMediaItemCallback? youtubeIdMediaItem,
-  }) {
+  }) async {
     youtubeIdMediaItem ??= (index, ql) {
       return item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, currentItemDuration.value);
     };
     final index = currentIndex.value;
     final ql = currentQueue.value.length;
-    final media = youtubeIdMediaItem(index, ql);
+    final media = await youtubeIdMediaItem(index, ql);
     mediaItem.add(media);
     playbackState.add(transformEvent(PlaybackEvent(currentIndex: index), isItemFavourite, itemIndex));
     _refreshPlatformStatusDependers(media, playWhenReady.value, isItemFavourite);
@@ -447,7 +449,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             }
           },
           youtubeID: (finalItem) async {
-            final durSecCache = YoutubeInfoController.utils.getVideoDurationSeconds(finalItem.id);
+            final durSecCache = await YoutubeInfoController.utils.getVideoDurationSeconds(finalItem.id);
             return durSecCache;
           },
         )) ??
@@ -576,7 +578,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     // }
 
     Future<Duration?> setPls() async {
-      if (!File(tr.path).existsSync()) throw PathNotFoundException(tr.path, const OSError(), 'Track file not found or couldn\'t be accessed.');
+      if (!await File(tr.path).exists()) throw PathNotFoundException(tr.path, const OSError(), 'Track file not found or couldn\'t be accessed.');
       final videoOptions = initialVideo == null
           ? isVideo
               ? VideoSourceOptions(
@@ -594,7 +596,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         tr.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
         item: pi,
         videoOptions: videoOptions,
-        initialPosition: _getItemInitialPosition(pi, duration),
+        initialPosition: await _getItemInitialPosition(pi, duration),
         initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
         isVideoFile: true,
       );
@@ -682,9 +684,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     currentVideoStream.value = stream;
     currentCachedVideo.value = null;
 
-    mainStreams ??= YoutubeInfoController.video.fetchVideoStreamsSync(videoId) ?? YoutubeInfoController.current.currentYTStreams.value;
+    mainStreams ??= await YoutubeInfoController.video.fetchVideoStreams(videoId, forceRequest: false) ?? YoutubeInfoController.current.currentYTStreams.value;
 
-    if (useCache && cachedFile != null && cachedFile.existsSync()) {
+    if (useCache && cachedFile != null && await cachedFile.exists()) {
       currentCachedVideo.value = videoItem;
       await setVideoSource(source: AudioVideoSource.file(cachedFile.path), isFile: true);
     } else if (stream != null) {
@@ -809,11 +811,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _freePlayerTemporarily();
 
     currentAudioStream.value = stream;
-    mainStreams ??= YoutubeInfoController.video.fetchVideoStreamsSync(videoId) ?? YoutubeInfoController.current.currentYTStreams.value;
+    mainStreams ??= await YoutubeInfoController.video.fetchVideoStreams(videoId, forceRequest: false) ?? YoutubeInfoController.current.currentYTStreams.value;
 
-    final cachedAudio = stream?.getCachedFile(videoId);
+    final cachedAudio = await stream?.getCachedFile(videoId);
 
-    if (useCache && cachedAudio != null && cachedAudio.existsSync()) {
+    if (useCache && cachedAudio != null && await cachedAudio.exists()) {
       final positionToRestore = currentPositionMS.value.milliseconds;
       await setSource(
         AudioVideoSource.file(cachedAudio.path),
@@ -910,7 +912,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> _onVideoCacheAddPendingInfo(String videoId) async {
     final prevVideoStream = currentVideoStream.value;
     if (prevVideoStream != null) {
-      final maybeCached = prevVideoStream.getCachedFile(videoId);
+      final maybeCached = await prevVideoStream.getCachedFile(videoId);
       if (maybeCached != null) {
         final prevVideoInfo = YoutubeInfoController.current.currentYTStreams.value?.info;
         VideoController.inst.addYTVideoToCacheMap(
@@ -1053,7 +1055,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       return;
     }
 
-    VideoStreamsResult? streamsResult = YoutubeInfoController.video.fetchVideoStreamsSync(item.id, infoOnly: true);
+    VideoStreamsResult? streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(item.id);
 
     void setReplayGainIfRequired() {
       if (settings.player.replayGain.value && streamsResult != null) {
@@ -1071,7 +1073,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     Duration? duration = streamsResult?.audioStreams.firstOrNull?.duration;
     _ytNotificationVideoInfo = streamsResult?.info;
-    _ytNotificationVideoThumbnail = item.getThumbnailSync(temp: false);
+    _ytNotificationVideoThumbnail = await item.getThumbnail(temp: false);
 
     bool checkInterrupted({bool refreshNoti = true}) {
       final curr = currentItem.value;
@@ -1114,11 +1116,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (_ytNotificationVideoThumbnail == null) {
       // -- assign low res thumbnail temporarily until full res is fetched
-      final tempThumb = item.getThumbnailSync(temp: true);
+      final tempThumb = await item.getThumbnail(temp: true);
       if (tempThumb != null) onInfoOrThumbObtained(thumbnail: tempThumb);
 
-      ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: item.id, type: ThumbnailType.video).then((thumbFile) {
-        thumbFile ??= item.getThumbnailSync(temp: true);
+      ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: item.id, type: ThumbnailType.video).then((thumbFile) async {
+        thumbFile ??= await item.getThumbnail(temp: true);
         if (thumbFile != null) onInfoOrThumbObtained(thumbnail: thumbFile);
       });
     }
@@ -1182,20 +1184,20 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       }
     }
 
-    Duration? initialPosition = _getItemInitialPosition(pi, duration);
+    Duration? initialPosition = await _getItemInitialPosition(pi, duration);
 
     /// try playing cache always for faster playback initialization, if the quality should be
     /// different then it will be set later after fetching.
     playedFromCacheDetails = await _trySetYTVideoWithoutConnection(
       item: item,
-      mediaItemFn: () => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
+      // mediaItemFn: () => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
       checkInterrupted: checkInterrupted,
       index: index,
       canPlayAudioOnly: canPlayAudioOnlyFromCache,
       disableVideo: _isAudioOnlyPlayback,
       whatToAwait: playerStoppingSeikoo?.future,
       positionToRestore: initialPosition,
-      initialPositionFallback: (duration) => initialPosition = _getItemInitialPosition(pi, duration),
+      initialPositionFallback: (duration) async => initialPosition = await _getItemInitialPosition(pi, duration),
       possibleAudioFiles: audioCacheMap[item.id] ?? [],
       possibleLocalFiles: Indexer.inst.allTracksMappedByYTID[item.id] ?? [],
     );
@@ -1382,7 +1384,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
           if (!_isAudioOnlyPlayback &&
               videoStreams.isNotEmpty &&
-              ConnectivityController.inst.dataSaverMode.canFetchNetworkVideoStreamShortContent(YoutubeInfoController.utils.isShortContent(item.id))) {
+              ConnectivityController.inst.dataSaverMode.canFetchNetworkVideoStreamShortContent(await YoutubeInfoController.utils.isShortContent(item.id))) {
             if (cachedVideoSet != null ? _allowSwitchingVideoStreamIfCachedPlaying : true) {
               final prefferedVideoStream = YoutubeController.inst.getPreferredStreamQuality(videoStreams, preferIncludeWebm: false);
               bool isVideoStreamRequiredBetterThanCachedSet = cachedVideoSet == null
@@ -1427,30 +1429,30 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                   videoOnly: false,
                 );
               }
-              }
             }
           }
+        }
 
-          if (finalAudioSource == null) {
-            if (!okaySetFromCache()) snackyy(title: lang.ERROR, message: 'Failed to get audio source', top: false, isError: true);
-            return;
-          }
+        if (finalAudioSource == null) {
+          if (!okaySetFromCache()) snackyy(title: lang.ERROR, message: 'Failed to get audio source', top: false, isError: true);
+          return;
+        }
 
-          await playerStoppingSeikoo?.future;
-          if (checkInterrupted()) return;
-          if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
-          if (checkInterrupted()) return;
+        await playerStoppingSeikoo?.future;
+        if (checkInterrupted()) return;
+        if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
+        if (checkInterrupted()) return;
 
-          duration = await setSource(
-            finalAudioSource,
-            item: pi,
-            initialPosition: positionToRestore,
-            initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
-            videoOptions: videoSourceOptions,
-            keepOldVideoSource: false,
-            isVideoFile: false,
-          );
-          if (checkInterrupted()) return;
+        duration = await setSource(
+          finalAudioSource,
+          item: pi,
+          initialPosition: positionToRestore,
+          initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
+          videoOptions: videoSourceOptions,
+          keepOldVideoSource: false,
+          isVideoFile: false,
+        );
+        if (checkInterrupted()) return;
 
         // -----------------------
       } catch (e) {
@@ -1467,7 +1469,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           printy(e, isError: true);
           playedFromCacheDetails = await _trySetYTVideoWithoutConnection(
             item: item,
-            mediaItemFn: () => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
+            // mediaItemFn: () => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
             checkInterrupted: checkInterrupted,
             index: index,
             canPlayAudioOnly: canPlayAudioOnlyFromCache,
@@ -1498,11 +1500,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
   }
 
-  void recheckCachedVideos(String videoId) {
+  Future<void> recheckCachedVideos(String videoId) async {
     final current = currentItem.value;
     if (current is! YoutubeID || current.id != videoId) return;
 
-    final allCachedVideos = VideoController.inst.getNVFromIDSorted(videoId);
+    final allCachedVideos = await VideoController.inst.getNVFromIDSorted(videoId);
     YoutubeInfoController.current.currentCachedQualities.value = allCachedVideos;
 
     final currCachedV = currentCachedVideo.value;
@@ -1516,22 +1518,21 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   /// Returns Audio File and Video File.
   Future<({AudioCacheDetails? audio, NamidaVideo? video, Duration? duration})> _trySetYTVideoWithoutConnection({
     required YoutubeID item,
-    required MediaItem Function() mediaItemFn,
     required bool Function() checkInterrupted,
     required int index,
     required bool canPlayAudioOnly,
     required bool disableVideo,
     required Future<void>? whatToAwait,
     required Duration? positionToRestore,
-    required Duration? Function(Duration duration) initialPositionFallback,
+    required FutureOr<Duration?> Function(Duration duration) initialPositionFallback,
     required List<AudioCacheDetails> possibleAudioFiles,
     required List<Track> possibleLocalFiles,
   }) async {
     // ------ Getting Video ------
-    final allCachedVideos = VideoController.inst.getNVFromIDSorted(item.id);
+    final allCachedVideos = await VideoController.inst.getNVFromIDSorted(item.id);
     YoutubeInfoController.current.currentCachedQualities.value = allCachedVideos;
 
-    final cachedVideo = allCachedVideos.firstWhereEff((e) => File(e.path).existsSync());
+    final cachedVideo = await allCachedVideos.firstWhereEffAsync((e) => File(e.path).exists());
 
     // ------ Getting Audio ------
     final audioFiles = possibleAudioFiles.isNotEmpty
@@ -1541,10 +1542,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             "id": item.id,
           });
     final finalAudioFiles = audioFiles..sortByReverseAlt((e) => e.bitrate ?? 0, (e) => e.file.fileSizeSync() ?? 0);
-    AudioCacheDetails? cachedAudio = finalAudioFiles.firstWhereEff((e) => e.file.existsSync());
+    AudioCacheDetails? cachedAudio = await finalAudioFiles.firstWhereEffAsync((e) => e.file.exists());
 
     if (cachedAudio == null) {
-      final localTrack = possibleLocalFiles.firstWhereEff((e) => File(e.path).existsSync());
+      final localTrack = await possibleLocalFiles.firstWhereEffAsync((e) => File(e.path).exists());
       if (localTrack != null) {
         cachedAudio = AudioCacheDetails(
           youtubeId: item.id,
@@ -1565,7 +1566,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       try {
         if (checkInterrupted()) return nullResult;
         final dur = await setSource(
-          AudioVideoSource.file(cachedAudio.file.path, tag: mediaItemFn()),
+          AudioVideoSource.file(cachedAudio.file.path),
           item: item as Q?,
           initialPosition: positionToRestore,
           initialPositionFallback: initialPositionFallback,
@@ -1596,7 +1597,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       await whatToAwait;
       if (checkInterrupted()) return nullResult;
       final dur = await setSource(
-        AudioVideoSource.file(cachedAudio.file.path, tag: mediaItemFn()),
+        AudioVideoSource.file(cachedAudio.file.path),
         item: item as Q?,
         initialPosition: positionToRestore,
         initialPositionFallback: initialPositionFallback,
@@ -2000,7 +2001,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required Q? item,
     bool preload = true,
     Duration? initialPosition,
-    Duration? Function(Duration duration)? initialPositionFallback,
+    FutureOr<Duration?> Function(Duration duration)? initialPositionFallback,
     VideoSourceOptions? videoOptions,
     bool isVideoFile = false,
     String? cachedAudioPath,
@@ -2023,14 +2024,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       keepOldVideoSource: keepOldVideoSource,
     );
     if (initialPosition == null && initialPositionFallback != null && duration != null) {
-      final p = initialPositionFallback(duration);
+      final p = await initialPositionFallback(duration);
       if (p != null) seek(p);
     }
     return duration;
   }
 
   @override
-  MediaItem itemToMediaItem(Q item) {
+  Future<MediaItem> itemToMediaItem(Q item) {
     return item._execute(
       selectable: (finalItem) {
         int durMS = finalItem.track.durationMS;
@@ -2038,6 +2039,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       },
       youtubeID: (finalItem) =>
           finalItem.toMediaItem(finalItem.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, currentIndex.value, currentQueue.value.length, currentItemDuration.value),
+    )!;
+  }
+
+  @override
+  String itemToMediaItemId(Q item) {
+    return item._execute(
+      selectable: (finalItem) => finalItem.toMediaItemId(),
+      youtubeID: (finalItem) => finalItem.toMediaItemId(),
     )!;
   }
 
@@ -2139,14 +2148,16 @@ extension TrackToAudioSourceMediaItem on Selectable {
     );
   }
 
-  MediaItem toMediaItem(int currentIndex, int queueLength, Duration? duration) {
+  String toMediaItemId() => track.path;
+
+  Future<MediaItem> toMediaItem(int currentIndex, int queueLength, Duration? duration) async {
     final tr = track.toTrackExt();
     final artist = tr.originalArtist == '' ? UnknownTags.ARTIST : tr.originalArtist;
     final imagePath = tr.pathToImage;
-    String? imagePathToUse = File(imagePath).existsSync() ? imagePath : null;
+    String? imagePathToUse = await File(imagePath).exists() ? imagePath : null;
     imagePathToUse ??= Indexer.inst.getFallbackFolderArtworkPath(folderPath: tr.folderPath);
     return MediaItem(
-      id: tr.path,
+      id: this.toMediaItemId(),
       title: tr.title,
       displayTitle: tr.title,
       displaySubtitle: tr.hasUnknownAlbum ? artist : "$artist - ${tr.album}",
@@ -2161,12 +2172,14 @@ extension TrackToAudioSourceMediaItem on Selectable {
 }
 
 extension YoutubeIDToMediaItem on YoutubeID {
-  MediaItem toMediaItem(String videoId, VideoStreamInfo? videoInfo, File? thumbnail, int currentIndex, int queueLength, Duration? duration) {
-    final id = videoInfo?.id ?? videoId;
-    final videoTitle = videoInfo?.title ?? YoutubeInfoController.utils.getVideoName(videoId);
+  String toMediaItemId() => id;
+
+  Future<MediaItem> toMediaItem(String videoId, VideoStreamInfo? videoInfo, File? thumbnail, int currentIndex, int queueLength, Duration? duration) async {
+    final id = this.id.isNotEmpty ? this.id : videoInfo?.id ?? videoId;
+    final videoTitle = videoInfo?.title ?? await YoutubeInfoController.utils.getVideoName(videoId);
     final artistAndTitle = videoTitle?.splitArtistAndTitle();
-    final videoChannelTitle = videoInfo?.channelName ?? YoutubeInfoController.utils.getVideoChannelName(videoId);
-    final videoDuration = duration ?? videoInfo?.durSeconds?.seconds ?? YoutubeInfoController.utils.getVideoDurationSeconds(videoId)?.seconds;
+    final videoChannelTitle = videoInfo?.channelName ?? await YoutubeInfoController.utils.getVideoChannelName(videoId);
+    final videoDuration = duration ?? videoInfo?.durSeconds?.seconds ?? await YoutubeInfoController.utils.getVideoDurationSeconds(videoId).then((value) => value?.seconds);
 
     final title = artistAndTitle?.$2?.keepFeatKeywordsOnly() ?? videoTitle ?? '';
     String? artistName = artistAndTitle?.$1;
@@ -2176,6 +2189,9 @@ extension YoutubeIDToMediaItem on YoutubeID {
         artistName = videoChannelTitle.substring(0, videoChannelTitle.length - topic.length);
       }
     }
+
+    final imagePath = thumbnail?.path;
+    String? imagePathToUse = imagePath != null && await File(imagePath).exists() ? imagePath : null;
 
     return MediaItem(
       id: id,
@@ -2187,7 +2203,7 @@ extension YoutubeIDToMediaItem on YoutubeID {
       displaySubtitle: videoChannelTitle,
       displayDescription: "${currentIndex + 1}/$queueLength",
       duration: videoDuration ?? Duration.zero,
-      artUri: Uri.file((thumbnail != null && thumbnail.existsSync()) ? thumbnail.path : AppPaths.NAMIDA_LOGO_MONET),
+      artUri: Uri.file(imagePathToUse ?? AppPaths.NAMIDA_LOGO_MONET),
     );
   }
 }
@@ -2205,9 +2221,22 @@ extension _PlayableExecuter on Playable {
     }
     return null;
   }
+
+  FutureOr<T?> _executeAsync<T>({
+    required FutureOr<T?> Function(Selectable finalItem) selectable,
+    required FutureOr<T?> Function(YoutubeID finalItem) youtubeID,
+  }) {
+    final item = this;
+    if (item is Selectable) {
+      return selectable(item);
+    } else if (item is YoutubeID) {
+      return youtubeID(item);
+    }
+    return null;
+  }
 }
 
-typedef YoutubeIDToMediaItemCallback = MediaItem Function(int index, int queueLength);
+typedef YoutubeIDToMediaItemCallback = Future<MediaItem> Function(int index, int queueLength);
 
 /// Used to indicate that a file has been cached and should be set as a source.
 class _NextSeekCachedFileData {

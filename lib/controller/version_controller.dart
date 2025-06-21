@@ -5,6 +5,7 @@ import 'package:rhttp/rhttp.dart';
 
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/connectivity.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
 class VersionController {
@@ -55,7 +56,30 @@ class VersionController {
     return latestFetchedTime.difference(DateTime.now()).abs() > const Duration(hours: 2);
   }
 
-  Future<dynamic> _requestReleasesApi(bool isBeta, {String endpoint = '', Map<String, dynamic>? queryParameters}) async {
+  Future<VersionWrapper?> __fetchLatestVersionOnly(bool isBeta) async {
+    return _IsolateExecuter.__fetchLatestVersionOnlyIsolate.thready(isBeta);
+  }
+
+  Future<List<VersionReleaseInfo>?> _fetchReleasesAfterOnly({required VersionWrapper currentVersion}) async {
+    return _IsolateExecuter._fetchReleasesAfterOnlyIsolate.thready(currentVersion);
+  }
+}
+
+class VersionReleaseInfo {
+  final VersionWrapper version;
+  final String body;
+
+  const VersionReleaseInfo({
+    required this.version,
+    required this.body,
+  });
+
+  @override
+  String toString() => 'VersionReleaseInfo(name: $version, body: $body)';
+}
+
+class _IsolateExecuter {
+  static Future<dynamic> _requestReleasesApi(bool isBeta, {String endpoint = '', Map<String, dynamic>? queryParameters}) async {
     final repoName = isBeta ? 'namida-snapshots' : 'namida';
     final uri = Uri.https('api.github.com', '/repos/namidaco/$repoName/releases$endpoint', queryParameters);
     const String? token = null;
@@ -69,7 +93,8 @@ class VersionController {
     return jsonDecode(response.body);
   }
 
-  Future<VersionWrapper?> __fetchLatestVersionOnly(bool isBeta) async {
+  static Future<VersionWrapper?> __fetchLatestVersionOnlyIsolate(bool isBeta) async {
+    await Rhttp.init().ignoreError();
     try {
       final resMap = await _requestReleasesApi(isBeta, endpoint: '/latest') as Map;
       final latestRelease = resMap['name'] as String?;
@@ -80,7 +105,9 @@ class VersionController {
     return null;
   }
 
-  Future<List<VersionReleaseInfo>?> _fetchReleasesAfterOnly({required VersionWrapper currentVersion}) async {
+  static Future<List<VersionReleaseInfo>?> _fetchReleasesAfterOnlyIsolate(VersionWrapper currentVersion) async {
+    await Rhttp.init().ignoreError();
+
     final allReleasesAfterCurrent = <VersionReleaseInfo>[];
 
     final int perPage = currentVersion.isBeta ? 20 : 10;
@@ -116,7 +143,7 @@ class VersionController {
     return allReleasesAfterCurrent;
   }
 
-  List<VersionReleaseInfo> _filterReleasesAfter({
+  static List<VersionReleaseInfo> _filterReleasesAfter({
     required VersionWrapper currentVersion,
     required List<Map<String, dynamic>> allReleases,
   }) {
@@ -137,17 +164,4 @@ class VersionController {
     }
     return releasesAfterCurrent;
   }
-}
-
-class VersionReleaseInfo {
-  final VersionWrapper version;
-  final String body;
-
-  const VersionReleaseInfo({
-    required this.version,
-    required this.body,
-  });
-
-  @override
-  String toString() => 'VersionReleaseInfo(name: $version, body: $body)';
 }

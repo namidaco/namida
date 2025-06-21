@@ -129,8 +129,8 @@ class _YoutubeSettings with SettingsFileWriter {
     dataSaverMode.value = DataSaverMode.medium;
   }
 
-  void prepareSettingsFile() {
-    final json = prepareSettingsFile_();
+  Future<void> prepareSettingsFile() async {
+    final json = await prepareSettingsFile_();
     if (json is! Map) return;
 
     try {

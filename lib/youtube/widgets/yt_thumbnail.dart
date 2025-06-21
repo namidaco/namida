@@ -39,6 +39,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final double borderRadius;
   final bool isCircle;
   final EdgeInsetsGeometry? margin;
+  final void Function()? onImageFetchStart;
   final void Function(File? imageFile)? onImageReady;
   final void Function(NamidaColor? color)? onColorReady;
   final List<Widget> Function(NamidaColor? color)? onTopWidgets;
@@ -60,6 +61,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final AlignmentGeometry alignment;
   final int fadeMilliSeconds;
   final bool disableBlurBgSizeShrink;
+  final bool reduceInitialFlashes;
 
   const YoutubeThumbnail({
     required super.key,
@@ -71,6 +73,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.borderRadius = 12.0,
     this.isCircle = false,
     this.margin,
+    this.onImageFetchStart,
     this.onImageReady,
     this.onColorReady,
     this.onTopWidgets,
@@ -92,6 +95,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.alignment = Alignment.center,
     this.fadeMilliSeconds = 200,
     this.disableBlurBgSizeShrink = false,
+    this.reduceInitialFlashes = false,
   });
 
   @override
@@ -99,8 +103,7 @@ class YoutubeThumbnail extends StatefulWidget {
 }
 
 class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDelayMixin {
-  bool _canDisplayFallbackIcon = false;
-  String? imagePath;
+  String? imagePath = ArtworkWidget.kImagePathInitialValue;
   NamidaColor? imageColors;
   Color? smallBoxDynamicColor;
 
@@ -132,19 +135,32 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
 
   Future<void> _getThumbnail() async {
     if (_dontTouchMeImFetchingThumbnail?.isActive == true) return;
-    if (imagePath != null && imageColors != null) return;
+    if (imagePath != ArtworkWidget.kImagePathInitialValue && imageColors != null) return;
 
-    if (imagePath == null) {
+    if (imagePath == ArtworkWidget.kImagePathInitialValue) {
+      // -- basic init
+      if (widget.reduceInitialFlashes) {
+        imagePath = ThumbnailManager.inst
+                .imageUrlToCacheFile(
+                  id: widget.videoId,
+                  url: widget.customUrl,
+                  isTemp: !widget.isImportantInCache,
+                  type: widget.type,
+                )
+                ?.path ??
+            ArtworkWidget.kImagePathInitialValue;
+      }
+
       final videoId = widget.videoId;
 
-      File? res = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(
+      File? res = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(
         id: videoId,
         customUrl: widget.customUrl,
         isTemp: false,
         type: widget.type,
       );
       if (res == null && (!widget.isImportantInCache || widget.preferLowerRes)) {
-        res = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(
+        res = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(
           id: videoId,
           customUrl: widget.customUrl,
           isTemp: true,
@@ -153,6 +169,8 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       }
 
       if (res == null) {
+        widget.onImageFetchStart?.call();
+
         _dontTouchMeImFetchingThumbnail?.cancel();
         _dontTouchMeImFetchingThumbnail = Timer(const Duration(seconds: 8), () {});
         await Future.delayed(Duration.zero);
@@ -190,13 +208,14 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       widget.onImageReady?.call(res);
 
       // -- only put the image if bytes are NOT valid, or if specified by parent
-      final newPath = res?.path;
+      String? newPath = res?.path;
+      newPath ??= ArtworkWidget.kImagePathInitialValue;
       if (imagePath != newPath) {
         refreshState(() => imagePath = newPath);
       }
     }
 
-    if (imageColors == null && widget.extractColor && imagePath != null) {
+    if (imageColors == null && widget.extractColor && imagePath != null && imagePath != ArtworkWidget.kImagePathInitialValue) {
       final c = await CurrentColor.inst.extractPaletteFromImage(
         imagePath!,
         useIsolate: true,
@@ -207,8 +226,8 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       if (mounted) setState(() => smallBoxDynamicColor = c?.color);
     }
 
-    if (imagePath == null && widget.displayFallbackIcon && _canDisplayFallbackIcon == false) {
-      if (mounted) setState(() => _canDisplayFallbackIcon = true);
+    if (imagePath == ArtworkWidget.kImagePathInitialValue && widget.displayFallbackIcon) {
+      if (mounted) setState(() => imagePath = null);
     }
   }
 
@@ -220,12 +239,6 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       padding: widget.margin ?? EdgeInsets.zero,
       child: ArtworkWidget(
         key: thumbKey,
-        onError: () {
-          imagePath = null;
-          imageColors = null;
-          smallBoxDynamicColor = null;
-          _getThumbnail();
-        },
         isCircle: widget.isCircle,
         bgcolor: context.theme.cardColor.withAlpha(60),
         compressed: widget.compressed,
@@ -255,7 +268,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
               ),
             ),
         ],
-        displayIcon: _canDisplayFallbackIcon,
+        displayIcon: true,
         fit: widget.fit,
         alignment: widget.alignment,
         isYTThumbnail: true,

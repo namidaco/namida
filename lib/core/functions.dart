@@ -1,5 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +15,7 @@ import 'package:playlist_manager/playlist_manager.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/core/extensions.dart' show ThumbnailPickerExt;
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/queue_insertion.dart';
@@ -1019,102 +1023,161 @@ double checkIfListsSimilar<E>(List<E> q1, List<E> q2, {bool fullyFunctional = fa
   }
 }
 
-/// **takes:**
-/// ```
-/// {
-///   'allAvailableDirectories': <Directory, bool>{},
-///   'directoriesToExclude': <String>[],
-///   'extensions': <String>{},
-///   'imageExtensions': <String>{},
-///   'respectNoMedia': bool ?? true,
-/// }
-/// ```
-///
-/// **returns:**
-/// ```
-/// {
-/// 'allPaths': <String>{},
-/// 'pathsExcludedByNoMedia': <String>{},
-/// 'folderCovers': <String, String>{},
-/// }
-/// ```
-Map<String, Object> getFilesTypeIsolate(Map parameters) {
-  final allAvailableDirectories = parameters['allAvailableDirectories'] as Map<Directory, bool>;
-  final directoriesToExclude = parameters['directoriesToExclude'] as List<String>? ?? [];
-  final extensions = parameters['extensions'] as NamidaFileExtensionsWrapper;
-  final imageExtensions = parameters['imageExtensions'] as NamidaFileExtensionsWrapper?;
-  final respectNoMedia = parameters['respectNoMedia'] as bool? ?? true;
+class DirsFileFilterResult {
+  final Set<String> allPaths;
+  final Set<String> excludedByNoMedia;
+  final Map<String, String> folderCovers;
 
-  final allPaths = <String>{};
-  final excludedByNoMedia = <String>{};
-  final folderCovers = <String, String>{};
+  const DirsFileFilterResult({
+    required this.allPaths,
+    required this.excludedByNoMedia,
+    required this.folderCovers,
+  });
+}
 
-  final coversNames = imageExtensions != null && imageExtensions.extensions.isNotEmpty
-      ? {
-          "folder": true,
-          "front": true,
-          "cover": true,
-          "thumbnail": true,
-          "thumb": true,
-          "album": true,
-          "albumart": true,
-          "albumartsmall": true,
-        }
-      : null;
-  final fillFolderCovers = imageExtensions != null && coversNames != null;
+class DirsFileFilter {
+  final List<String>? directoriesToExclude;
+  final NamidaFileExtensionsWrapper extensions;
+  final NamidaFileExtensionsWrapper? imageExtensions;
+  final bool strictNoMedia;
 
-  allAvailableDirectories.keys.toList().loop((d) {
-    final hasNoMedia = allAvailableDirectories[d] ?? false;
-    try {
-      final allFiles = d.listSyncSafe();
-      final allFilesLength = allFiles.length;
-      for (int i = 0; i < allFilesLength; i++) {
-        var systemEntity = allFiles[i];
-        if (systemEntity is File) {
-          final path = systemEntity.path;
+  final List<String> _directoriesToScan;
+  final bool _respectNoMedia;
 
-          if (fillFolderCovers) {
-            final dirPath = d.path;
-            if (folderCovers[dirPath] == null) {
-              if (imageExtensions.isPathValid(path)) {
-                final filenameCleaned = path.getFilenameWOExt.toLowerCase();
-                final isValidCover = coversNames[filenameCleaned] == true;
-                if (isValidCover) folderCovers[dirPath] = path;
+  DirsFileFilter({
+    required this.directoriesToExclude,
+    required this.extensions,
+    this.imageExtensions,
+    this.strictNoMedia = true,
+  })  : _directoriesToScan = settings.directoriesToScan.value,
+        _respectNoMedia = settings.respectNoMedia.value;
 
-                continue;
+  Future<DirsFileFilterResult> filter() async {
+    return await Isolate.run(() => _filterIsolate(this));
+  }
+
+  DirsFileFilterResult filterSync() => _filterIsolate(this);
+
+  static DirsFileFilterResult _filterIsolate(DirsFileFilter parameters) {
+    final allAvailableDirectories = _getAvailableDirectoriesIsolate(
+      directoriesToScan: parameters._directoriesToScan,
+      respectNoMedia: parameters._respectNoMedia,
+      strictNoMedia: parameters.strictNoMedia,
+    );
+
+    final directoriesToExclude = parameters.directoriesToExclude;
+    final extensions = parameters.extensions;
+    final imageExtensions = parameters.imageExtensions;
+    final respectNoMedia = parameters._respectNoMedia;
+
+    final allPaths = <String>{};
+    final excludedByNoMedia = <String>{};
+    final folderCovers = <String, String>{};
+
+    final coversNames = imageExtensions != null && imageExtensions.extensions.isNotEmpty
+        ? {
+            "folder": true,
+            "front": true,
+            "cover": true,
+            "thumbnail": true,
+            "thumb": true,
+            "album": true,
+            "albumart": true,
+            "albumartsmall": true,
+          }
+        : null;
+    final fillFolderCovers = imageExtensions != null && coversNames != null;
+
+    allAvailableDirectories.keys.toList().loop((d) {
+      final hasNoMedia = allAvailableDirectories[d] ?? false;
+      try {
+        final allFiles = d.listSyncSafe();
+        final allFilesLength = allFiles.length;
+        for (int i = 0; i < allFilesLength; i++) {
+          var systemEntity = allFiles[i];
+          if (systemEntity is File) {
+            final path = systemEntity.path;
+
+            if (fillFolderCovers) {
+              final dirPath = d.path;
+              if (folderCovers[dirPath] == null) {
+                if (imageExtensions.isPathValid(path)) {
+                  final filenameCleaned = path.getFilenameWOExt.toLowerCase();
+                  final isValidCover = coversNames[filenameCleaned] == true;
+                  if (isValidCover) folderCovers[dirPath] = path;
+
+                  continue;
+                }
               }
             }
+
+            // -- skips if the file is included in one of the excluded folders.
+            if (directoriesToExclude != null && directoriesToExclude.any((exc) => path.startsWith(exc))) {
+              continue;
+            }
+
+            // -- skip if not in extensions
+            if (!extensions.isPathValid(path)) {
+              continue;
+            }
+
+            // -- skip if hidden
+            if (path.getFilename.startsWith('.')) continue;
+
+            // -- skip if in nomedia folder & specified to exclude
+            if (respectNoMedia && hasNoMedia) {
+              excludedByNoMedia.add(path);
+              continue;
+            }
+
+            allPaths.add(path);
           }
+        }
+      } catch (_) {}
+    });
+    return DirsFileFilterResult(
+      allPaths: allPaths,
+      excludedByNoMedia: excludedByNoMedia,
+      folderCovers: folderCovers,
+    );
+  }
 
-          // -- skips if the file is included in one of the excluded folders.
-          if (directoriesToExclude.any((exc) => path.startsWith(exc))) {
-            continue;
+  static Map<Directory, bool> _getAvailableDirectoriesIsolate({required List<String> directoriesToScan, required bool respectNoMedia, required bool strictNoMedia}) {
+    final allAvailableDirectories = <Directory, bool>{};
+
+    directoriesToScan.loop((dirPath) {
+      final directory = Directory(dirPath);
+
+      if (directory.existsSync()) {
+        allAvailableDirectories[directory] = false;
+        directory.listSyncSafe(recursive: true, followLinks: true).loop((file) {
+          if (file is Directory) {
+            allAvailableDirectories[file] = false;
           }
+        });
+      }
+    });
 
-          // -- skip if not in extensions
-          if (!extensions.isPathValid(path)) {
-            continue;
+    /// Assigning directories and sub-subdirectories that has .nomedia.
+    if (respectNoMedia) {
+      for (final d in allAvailableDirectories.keys) {
+        final hasNoMedia = FileParts.join(d.path, ".nomedia").existsSync();
+        if (hasNoMedia) {
+          if (strictNoMedia) {
+            // strictly applies bool to all subdirectories.
+            allAvailableDirectories.forEach((key, value) {
+              if (key.path.startsWith(d.path)) {
+                allAvailableDirectories[key] = true;
+              }
+            });
+          } else {
+            allAvailableDirectories[d] = true;
           }
-
-          // -- skip if hidden
-          if (path.getFilename.startsWith('.')) continue;
-
-          // -- skip if in nomedia folder & specified to exclude
-          if (respectNoMedia && hasNoMedia) {
-            excludedByNoMedia.add(path);
-            continue;
-          }
-
-          allPaths.add(path);
         }
       }
-    } catch (_) {}
-  });
-  return {
-    'allPaths': allPaths,
-    'pathsExcludedByNoMedia': excludedByNoMedia,
-    'folderCovers': folderCovers,
-  };
+    }
+    return allAvailableDirectories;
+  }
 }
 
 class TracksAddOnTap {
@@ -1451,11 +1514,11 @@ class TracksAddOnTap {
     );
   }
 
-  void onAddVideosTap(BuildContext context) {
+  void onAddVideosTap(BuildContext context) async {
     final currentVideo = Player.inst.currentVideo;
     if (currentVideo == null) return;
     final currentVideoId = currentVideo.id;
-    final currentVideoName = YoutubeInfoController.utils.getVideoName(currentVideoId) ?? currentVideoId;
+    final currentVideoName = await YoutubeInfoController.utils.getVideoName(currentVideoId) ?? currentVideoId;
 
     final isLoadingVideoDate = false.obs;
     final isLoadingMixPlaylist = false.obs;
@@ -1577,7 +1640,7 @@ class TracksAddOnTap {
                   icon: Broken.calendar_1,
                   insertionType: QueueInsertionType.sameReleaseDate,
                   onTap: (insertionType) async {
-                    DateTime? date = YoutubeInfoController.utils.getVideoReleaseDate(currentVideoId);
+                    DateTime? date = await YoutubeInfoController.utils.getVideoReleaseDate(currentVideoId);
                     if (date == null) {
                       isLoadingVideoDate.value = true;
                       final info = await YoutubeInfoController.video.fetchVideoStreams(currentVideoId, forceRequest: false);

@@ -30,17 +30,17 @@ class EditDeleteController {
   }
 
   Future<void> deleteCachedVideos(List<Selectable> tracks) async {
-    tracks.loop((e) {
+    for (final e in tracks) {
       var ytid = e.track.youtubeID;
-      VideoController.inst.deleteAllVideosForVideoId(ytid);
-    });
+      await VideoController.inst.deleteAllVideosForVideoId(ytid);
+    }
   }
 
   Future<void> deleteCachedAudios(List<Selectable> tracks) async {
     tracks.loop((e) {
       var ytid = e.track.youtubeID;
       final audios = Player.inst.audioCacheMap[ytid];
-      audios?.loop((item) => item.file.deleteSync());
+      audios?.loop((item) => item.file.delete());
       Player.inst.audioCacheMap.remove(ytid);
     });
   }
@@ -216,11 +216,11 @@ class EditDeleteController {
 
 extension HasCachedFiles on List<Selectable> {
   // we use [pathToImage] to ensure when [settings.groupArtworksByAlbum] is enabled
-  bool get hasArtworkCached => _doesAnyPathExist(AppDirs.ARTWORKS, 'png', fullPath: (tr) => tr.track.pathToImage);
+  Future<bool> get hasArtworkCached => _doesAnyPathExist(AppDirs.ARTWORKS, 'png', fullPath: (tr) => tr.track.pathToImage);
 
-  bool get hasTXTLyricsCached => _doesAnyPathExist(AppDirs.LYRICS, 'txt');
-  bool get hasLRCLyricsCached => _doesAnyPathExist(AppDirs.LYRICS, 'lrc');
-  bool get hasColorCached => _doesAnyPathExist(AppDirs.PALETTES, 'palette');
+  Future<bool> get hasTXTLyricsCached => _doesAnyPathExist(AppDirs.LYRICS, 'txt');
+  Future<bool> get hasLRCLyricsCached => _doesAnyPathExist(AppDirs.LYRICS, 'lrc');
+  Future<bool> get hasColorCached => _doesAnyPathExist(AppDirs.PALETTES, 'palette');
   bool get hasVideoCached {
     for (int i = 0; i < length; i++) {
       final tr = this[i];
@@ -243,12 +243,12 @@ extension HasCachedFiles on List<Selectable> {
     return false;
   }
 
-  bool get hasAnythingCached => hasArtworkCached || hasTXTLyricsCached || hasLRCLyricsCached /* || hasColorCached */;
+  Future<bool> get hasAnythingCached async => await hasArtworkCached || await hasTXTLyricsCached || await hasLRCLyricsCached /* || await hasColorCached */;
 
-  bool _doesAnyPathExist(String directory, String extension, {String Function(Selectable tr)? fullPath}) {
+  Future<bool> _doesAnyPathExist(String directory, String extension, {String Function(Selectable tr)? fullPath}) async {
     for (int i = 0; i < length; i++) {
       final track = this[i];
-      if (File(fullPath != null ? fullPath(track) : "$directory${track.track.filename}.$extension").existsSync()) {
+      if (await File(fullPath != null ? fullPath(track) : "$directory${track.track.filename}.$extension").exists()) {
         return true;
       }
     }

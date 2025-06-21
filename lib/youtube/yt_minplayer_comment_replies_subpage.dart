@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 
 import 'package:youtipie/class/comments/comment_info_item.dart';
@@ -53,13 +55,11 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
   void initState() {
     super.initState();
     sc = ScrollController();
-    final cachedReplies = YoutiPie.cacheBuilder.forCommentReplies(commentId: _currentMainComment.value.commentId).read();
-    if (cachedReplies != null) {
-      _currentReplies.value = cachedReplies;
-      _lastFetchWasCached.value = true;
-    } else {
-      _fetchReplies();
-    }
+
+    _isLoadingCurrentReplies.value = true;
+    _initValues().whenComplete(
+      () => _isLoadingCurrentReplies.value = false,
+    );
   }
 
   @override
@@ -73,9 +73,19 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
     super.dispose();
   }
 
+  Future<void> _initValues() async {
+    final cachedReplies = await YoutiPie.cacheBuilder.forCommentReplies(commentId: _currentMainComment.value.commentId).read();
+    if (cachedReplies != null) {
+      _currentReplies.value = cachedReplies;
+      _lastFetchWasCached.value = true;
+    } else {
+      return _fetchReplies();
+    }
+  }
+
   bool get _hasConnection => ConnectivityController.inst.hasConnection;
   void _showNetworkError() {
-    Future.delayed(Duration.zero, () {
+    Timer(Duration.zero, () {
       snackyy(
         title: lang.ERROR,
         message: lang.NO_NETWORK_AVAILABLE_TO_FETCH_DATA,
@@ -89,12 +99,10 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
     if (!_hasConnection) return _showNetworkError();
 
     _lastFetchWasCached.value = false;
-    _isLoadingCurrentReplies.value = true;
     final val = await YoutubeInfoController.comment.fetchCommentReplies(
       mainComment: _currentMainComment.value,
       details: ExecuteDetails.forceRequest(),
     );
-    _isLoadingCurrentReplies.value = false;
     if (val != null) {
       _currentReplies.value = val;
     } else {

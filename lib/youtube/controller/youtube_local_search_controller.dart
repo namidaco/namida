@@ -234,7 +234,8 @@ class YTLocalSearchController with PortsProvider<Map> {
     final start = DateTime.now();
 
     YoutiPie.cacheManager.init(databasesDir);
-    final activeChannel = YoutiPie.getActiveAccountChannelIsolate(sensitiveDataDir);
+    YoutiPie.cacheManagerSync.init(databasesDir);
+    final activeChannel = await YoutiPie.getActiveAccountChannelIsolate(sensitiveDataDir);
     final activeChannelId = activeChannel?.id;
 
     if (activeChannelId != null && activeChannelId.isNotEmpty) {
@@ -269,7 +270,7 @@ class YTLocalSearchController with PortsProvider<Map> {
 
     lookupListStreamInfoMapCacheDetails.loop(
       (db) {
-        db.loadEverything((map) {
+        db.loadEverythingSync((map) {
           try {
             final info = StreamInfoItem.fromMap(map);
             final wrapper = _StreamResultInfoWrapper.fromInfo(info);
@@ -281,7 +282,7 @@ class YTLocalSearchController with PortsProvider<Map> {
     );
     lookupListVideoStreamsMapCacheDetails.loop(
       (db) {
-        db.loadEverything((wholeStreamsResultMap) {
+        db.loadEverythingSync((wholeStreamsResultMap) {
           try {
             final map = wholeStreamsResultMap['info'] as Map; // VideoStreamInfo
             final info = VideoStreamInfo.fromMap(map).toStreamInfo();
@@ -295,7 +296,7 @@ class YTLocalSearchController with PortsProvider<Map> {
 
     lookupListVideoMissingVideoCacheDetails.loop(
       (db) {
-        db.loadEverything((map) {
+        db.loadEverythingSync((map) {
           try {
             final info = MissingVideoInfo.fromMap(map).toStreamInfo();
             final wrapper = _StreamResultInfoWrapper.fromInfo(info);
@@ -309,7 +310,7 @@ class YTLocalSearchController with PortsProvider<Map> {
     Directory(statsDir).listSyncSafe().loop((f) {
       if (f is File) {
         try {
-          final response = f.readAsJsonSync();
+          final response = f.readAsJsonSync(ensureExists: false);
           if (response is List) {
             response.loop(
               (map) {
@@ -329,6 +330,9 @@ class YTLocalSearchController with PortsProvider<Map> {
     }
 
     sendPort.send(null); // finished filling
+
+    YoutiPie.cacheManager.closeAll();
+    YoutiPie.cacheManagerSync.closeAll();
 
     final durationTaken = start.difference(DateTime.now());
 

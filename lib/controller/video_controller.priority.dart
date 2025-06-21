@@ -1,47 +1,38 @@
 part of 'video_controller.dart';
 
-class _VideosPriorityManager {
-  _VideosPriorityManager();
+class VideosPriorityManager {
+  VideosPriorityManager();
 
   static const _priorityKey = 'priority';
+  static const _dbConfig = DBConfig(
+    createIfNotExist: true,
+    customTypes: [
+      DBColumnType(
+        type: DBColumnTypeEnum.int,
+        name: _priorityKey,
+        nullable: true,
+      ),
+    ],
+  );
 
-  static DBWrapper _openDb(DbWrapperFileInfo fileInfo) {
+  static DBWrapperAsync _openDb(DbWrapperFileInfo fileInfo) {
     return DBWrapper.openFromInfo(
       fileInfo: fileInfo,
-      createIfNotExist: true,
-      customTypes: [
-        DBColumnType(
-          type: DBColumnTypeEnum.int,
-          name: _priorityKey,
-          nullable: true,
-        ),
-      ],
+      config: _dbConfig,
     );
   }
 
-  late final _cacheVideosPriorityDB = _openDb(AppPaths.CACHE_VIDEOS_PRIORITY);
+  late final cacheVideosPriorityDB = _openDb(AppPaths.CACHE_VIDEOS_PRIORITY);
 
-  Future<Map<String, CacheVideoPriority>> get priorityLookupMap async {
-    await _loadCompleter.future;
-    return _videosPriorityMap;
-  }
+  final _videosPriorityMap = <String, CacheVideoPriority>{};
 
-  final _loadCompleter = Completer<void>();
-
-  var _videosPriorityMap = <String, CacheVideoPriority>{};
-
-  Future<void> loadDb() async {
-    final res = await _loadDbSync.thready(AppPaths.CACHE_VIDEOS_PRIORITY);
-    final modifiedValues = Map<String, CacheVideoPriority>.from(_videosPriorityMap);
-    _videosPriorityMap = res;
-    _videosPriorityMap.addAll(modifiedValues);
-    _loadCompleter.completeIfWasnt();
-  }
-
-  static Map<String, CacheVideoPriority> _loadDbSync(DbWrapperFileInfo fileInfo) {
+  static Map<String, CacheVideoPriority> loadEverythingSync(DbWrapperFileInfo fileInfo) {
     NamicoDBWrapper.initialize();
     final values = CacheVideoPriority.values;
-    final db = _VideosPriorityManager._openDb(fileInfo);
+    final db = DBWrapper.openFromInfoSync(
+      fileInfo: fileInfo,
+      config: _dbConfig.copyWith(autoDisposeTimerDuration: null),
+    );
     var videosPriorityMap = <String, CacheVideoPriority>{};
     db.loadEverythingKeyed((key, map) {
       final int valueIndex = map[_priorityKey];
@@ -65,15 +56,15 @@ class _VideosPriorityManager {
     }
   }
 
-  CacheVideoPriority getVideoPriority(String videoId) {
-    return _videosPriorityMap[videoId] ?? _mapToPriority(_cacheVideosPriorityDB.get(videoId)) ?? CacheVideoPriority.normal;
+  FutureOr<CacheVideoPriority> getVideoPriority(String videoId) async {
+    return _videosPriorityMap[videoId] ??= _mapToPriority(await cacheVideosPriorityDB.get(videoId)) ?? CacheVideoPriority.normal;
   }
 
   void setVideoPriority(String videoId, CacheVideoPriority priority) {
     final alreadySet = _videosPriorityMap[videoId] == priority;
     if (!alreadySet) {
       _videosPriorityMap[videoId] = priority;
-      _cacheVideosPriorityDB.putAsync(videoId, {_priorityKey: priority.index});
+      unawaited(cacheVideosPriorityDB.put(videoId, {_priorityKey: priority.index}));
     }
   }
 

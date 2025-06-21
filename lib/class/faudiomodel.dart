@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -16,7 +17,7 @@ class FArtwork {
 
   bool get hasArtwork => file != null || bytes != null;
 
-  int? get sizeActual => bytes?.length ?? file?.fileSizeSync();
+  FutureOr<int?> get sizeActual => bytes?.length ?? file?.fileSize();
 
   FArtwork({
     this.file,

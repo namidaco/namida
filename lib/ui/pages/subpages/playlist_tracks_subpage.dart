@@ -222,7 +222,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                               itemCount: tracks.length,
                               itemBuilder: (context, i) {
                                 final tr = tracks[i];
-                                final topRightWidget = listenOrderWidget(tr, tr.track, smallTextStyle, enableTopRightRadius: false);
+                                final topRightWidget = listenOrderWidget(tr, tr.track, smallTextStyle);
                                 return TrackTile(
                                   properties: properties,
                                   trackOrTwd: tr,
@@ -367,7 +367,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
   @override
   void initState() {
     super.initState();
-    randomTracks = List<Track>.from(allTracksInLibrary.take(150));
+    randomTracks = allTracksInLibrary.getRandomSample(150);
   }
 
   @override

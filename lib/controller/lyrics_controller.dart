@@ -100,7 +100,7 @@ class Lyrics {
     if (!_lyricsEnabled) return;
     if (item is YoutubeID && !_canDisplayLRCForYoutubeID) return;
 
-    final LrcSearchUtils? lrcUtils = LrcSearchUtils.fromPlayable(item);
+    final LrcSearchUtils? lrcUtils = await LrcSearchUtils.fromPlayable(item);
 
     if (lrcUtils == null) return;
 

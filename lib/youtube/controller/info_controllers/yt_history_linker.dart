@@ -11,6 +11,10 @@ class _YoutubeHistoryLinker {
     ConnectivityController.inst.registerOnConnectionRestored(_onConnectionRestored);
   }
 
+  void dispose() {
+    _pendingRequestsDBIdle?.close();
+  }
+
   void _onConnectionRestored() {
     if (_hasPendingRequests) executePendingRequests();
   }
@@ -29,8 +33,8 @@ class _YoutubeHistoryLinker {
     executePendingRequests();
   }
 
-  DBWrapper? _pendingRequestsDBIdle;
-  DBWrapper? get _pendingRequestsDB {
+  DBWrapperAsync? _pendingRequestsDBIdle;
+  DBWrapperAsync? get _pendingRequestsDB {
     _ensureDBOpened();
     return _pendingRequestsDBIdle;
   }
@@ -53,17 +57,11 @@ class _YoutubeHistoryLinker {
       'statsPlaybackUrl': streamResult?.statsPlaybackUrl,
       'statsWatchtimeUrl': streamResult?.statsWatchtimeUrl,
     };
-    db.putAsync(key, map);
+    unawaited(db.put(key, map));
   }
 
-  List<String> getPendingRequestsSync() {
-    final list = <String>[];
-    _pendingRequestsDB?.loadEverythingKeyed(
-      (key, value) {
-        list.add(key);
-      },
-    );
-    return list;
+  Future<List<String>>? getPendingRequests() {
+    return _pendingRequestsDB?.loadAllKeysResult();
   }
 
   void executePendingRequests() async {
@@ -85,8 +83,9 @@ class _YoutubeHistoryLinker {
 
     final db = _pendingRequestsDB;
 
-    db?.loadEverythingKeyed(
-      (key, value) {
+    final result = await db?.loadEverythingKeyedResult();
+    if (db != null && result != null) {
+      for (final e in result.entries) {
         if (hadError) return;
         if (!_hasConnection) {
           hadError = true;
@@ -103,6 +102,8 @@ class _YoutubeHistoryLinker {
               return;
             }
 
+            final key = e.key;
+            final value = e.value;
             bool added = false;
             try {
               String? statsPlaybackUrl = value['statsPlaybackUrl'];
@@ -124,14 +125,14 @@ class _YoutubeHistoryLinker {
             } catch (_) {}
             if (added || _hasConnection) {
               // had connection but didnt mark. idc
-              db.deleteAsync(key);
+              unawaited(db.delete(key));
             } else {
               hadError = true; // no connection, will not proceed anymore
             }
           },
         );
-      },
-    );
+      }
+    }
 
     if (itemsAddedToQueue > 0) await queue.onComplete;
 

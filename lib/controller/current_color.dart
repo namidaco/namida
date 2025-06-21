@@ -339,6 +339,16 @@ class CurrentColor {
     return nc.color;
   }
 
+  Color? getTrackDelightnedColorSync(Track track, {bool fallbackToPlayerStaticColor = false, bool useIsolate = _defaultUseIsolate}) {
+    final nc = getTrackColorsSync(
+      track,
+      fallbackToPlayerStaticColor: fallbackToPlayerStaticColor,
+      delightnedAndAlpha: true,
+      useIsolate: useIsolate,
+    );
+    return nc?.color;
+  }
+
   void updateCurrentColorSchemeOfSubPages([Color? color, bool customAlpha = true]) async {
     final colorWithAlpha = customAlpha ? color?.withAlpha(colorAlpha) : color;
     _colorSchemeOfSubPages.value = colorWithAlpha;
@@ -402,7 +412,7 @@ class CurrentColor {
     } catch (_) {}
     final nc = NamidaColor(used: null, mix: mixIntColors(pcolors), palette: pcolors.toList());
     await paletteFile.writeAsJson(nc.toJson()); // writing the file bothways, to prevent reduntant re-extraction.
-    Indexer.inst.updateColorPalettesSizeInStorage(newPalettePath: paletteFile.path);
+    // Indexer.inst.updateColorPalettesSizeInStorage(newPalettePath: paletteFile.path);
     _printie("Color Extracted From Image (${pcolors.length})");
     return pcolors.isEmpty ? null : nc;
   }

@@ -35,6 +35,9 @@ class YTOnGoingFinishedDownloads {
       addToListy(filter: (fileExists, isDownloadingOrFetching) => fileExists && !isDownloadingOrFetching);
     }
 
+    final dateNow = DateTime.now();
+    youtubeDownloadTasksTempList.value.sortByReverseAlt((e) => e.$2.addedAt ?? e.$2.fileDate ?? dateNow, (e) => -(e.$2.originalIndex ?? 0));
+
     youtubeDownloadTasksTempList.refresh();
   }
 }

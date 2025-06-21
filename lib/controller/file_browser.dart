@@ -1018,9 +1018,14 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                     if (value.isEmpty) {
                                       return lang.PLEASE_ENTER_A_NAME;
                                     }
-                                    if (!Directory(value).existsSync()) {
-                                      return lang.DIRECTORY_DOESNT_EXIST;
+                                    try {
+                                      if (!Directory(value).existsSync()) {
+                                        return lang.DIRECTORY_DOESNT_EXIST;
+                                      }
+                                    } catch (e) {
+                                      return e.toString();
                                     }
+
                                     return null;
                                   },
                                 ),

@@ -220,6 +220,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
     super.initState();
     _videoInfoListener();
     Player.inst.videoPlayerInfo.addListener(_videoInfoListener);
+    WidgetsBinding.instance.addPostFrameCallback((_) => refreshState()); // fix screen touch absorb when minimized
   }
 
   @override
@@ -785,7 +786,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                   ...?ytVideos?.map(
                                     (element) {
                                       final currentId = focusedMenuOptions.currentId(currentItem);
-                                      final cacheFile = currentId == null ? null : element.getCachedFile(currentId);
+                                      final cacheFile = currentId == null ? null : element.getCachedFileSync(currentId);
                                       final cacheExists = cacheFile != null;
                                       var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
                                       var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';

@@ -213,7 +213,7 @@ class QueueController {
       var f = files[i];
       if (f is File) {
         try {
-          final response = f.readAsJsonSync();
+          final response = f.readAsJsonSync(ensureExists: false);
           final q = Queue.fromJson(response);
           map[q.date] = q;
           if (q.date > newestQueueDate) newestQueueDate = q.date;
@@ -273,8 +273,7 @@ class QueueController {
         .toList();
 
     try {
-      final file = File(AppPaths.LATEST_QUEUE);
-      file.createSync(recursive: true);
+      final file = await File(AppPaths.LATEST_QUEUE).create(recursive: true);
       const encoder = JsonEncoder();
       await file.writeAsString(encoder.convert(queueObjects));
     } catch (e) {

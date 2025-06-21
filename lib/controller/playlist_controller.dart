@@ -5,12 +5,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/generators_controller.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -191,15 +191,20 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   }
 
   Future<List<Track>> readM3UFiles(Set<String> filesPaths) async {
-    final resBoth = await _parseM3UPlaylistFiles.thready({
-      'paths': filesPaths,
-      'libraryTracks': allTracksInLibrary,
-      'backupDirPath': AppDirs.M3UBackup,
-    });
-    final infoMap = resBoth['infoMap'] as Map<String, String?>;
-    _pathsM3ULookup.addAll(infoMap);
+    final params = _ParseM3UPlaylistFilesParams(
+      paths: filesPaths,
+      tracksDbInfo: AppPaths.TRACKS_DB_INFO,
+      backupDirPath: AppDirs.M3UBackup,
+    );
+    final resBoth = await _parseM3UPlaylistFiles.thready(params);
+    final infoMap = resBoth.infoMap;
+    if (_pathsM3ULookup.isEmpty) {
+      _pathsM3ULookup = infoMap;
+    } else {
+      _pathsM3ULookup.addAll(infoMap);
+    }
 
-    final paths = resBoth['paths'] as Map<String, (String, List<Track>)>;
+    final paths = resBoth.paths;
     final listy = <Track>[];
     for (final p in paths.entries) {
       listy.addAll(p.value.$2);
@@ -214,17 +219,19 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       final isM3U = e.value.m3uPath?.isNotEmpty == true;
       if (isM3U) keysToRemove.add(e.key);
     }
-    keysToRemove.loop(
-      (key) {
-        final pl = playlistsMap.value[key]!;
-        final canRemove = canRemovePlaylist(pl);
-        if (canRemove) {
-          onPlaylistRemovedFromMap(pl);
-          playlistsMap.value.remove(key);
-        }
-      },
-    );
-    playlistsMap.refresh();
+    if (keysToRemove.isNotEmpty) {
+      keysToRemove.loop(
+        (key) {
+          final pl = playlistsMap.value[key]!;
+          final canRemove = canRemovePlaylist(pl);
+          if (canRemove) {
+            onPlaylistRemovedFromMap(pl);
+            playlistsMap.value.remove(key);
+          }
+        },
+      );
+      playlistsMap.refresh();
+    }
   }
 
   final _m3uPlaylistsCompleter = Completer<bool>();
@@ -242,28 +249,14 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     if (addAsM3U) _addedM3UPlaylists = true;
 
     try {
-      late final Set<String> allPaths;
-      if (forPaths.isNotEmpty) {
-        allPaths = forPaths;
-      } else {
-        final allAvailableDirectories = await Indexer.inst.getAvailableDirectories(strictNoMedia: false);
-        final parameters = {
-          'allAvailableDirectories': allAvailableDirectories,
-          'directoriesToExclude': <String>[],
-          'extensions': NamidaFileExtensionsWrapper.m3u,
-          'respectNoMedia': false,
-        };
-        final mapResult = await getFilesTypeIsolate.thready(parameters);
-        allPaths = mapResult['allPaths'] as Set<String>;
-      }
-
-      final resBoth = await _parseM3UPlaylistFiles.thready({
-        'paths': allPaths,
-        'libraryTracks': allTracksInLibrary,
-        'backupDirPath': AppDirs.M3UBackup,
-      });
-      final paths = resBoth['paths'] as Map<String, (String, List<Track>)>;
-      final infoMap = resBoth['infoMap'] as Map<String, String?>;
+      final params = _ParseM3UPlaylistFilesParams(
+        paths: forPaths,
+        tracksDbInfo: AppPaths.TRACKS_DB_INFO,
+        backupDirPath: AppDirs.M3UBackup,
+      );
+      final resBoth = await _parseM3UPlaylistFiles.thready(params);
+      final paths = resBoth.paths;
+      final infoMap = resBoth.infoMap;
 
       // -- removing old m3u playlists (only if preparing all)
       if (forPaths.isEmpty) {
@@ -275,7 +268,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           final plName = e.key;
           final m3uPath = e.value.$1;
           final trs = e.value.$2;
-          final creationDate = File(m3uPath).statSync().creationDate.millisecondsSinceEpoch;
+          final creationDate = (await File(m3uPath).stat()).creationDate.millisecondsSinceEpoch;
           this.addNewPlaylist(
             plName,
             tracks: trs,
@@ -300,10 +293,38 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   /// saves each track m3u info for writing back
   var _pathsM3ULookup = <String, String?>{}; // {trackPath: EXTINFO}
 
-  static Map _parseM3UPlaylistFiles(Map params) {
-    final paths = params['paths'] as Set<String>;
-    final allTracksPaths = params['libraryTracks'] as List<Track>; // used as a fallback lookup
-    final backupDirPath = params['backupDirPath'] as String; // used as a backup for newly found m3u files.
+  static _ParseM3UPlaylistFilesResult _parseM3UPlaylistFiles(_ParseM3UPlaylistFilesParams params) {
+    Set<String>? allm3uPaths = params.paths;
+    if (allm3uPaths == null || allm3uPaths.isEmpty) {
+      final dirsFilterer = DirsFileFilter(
+        directoriesToExclude: null,
+        extensions: NamidaFileExtensionsWrapper.m3u,
+        strictNoMedia: false,
+      );
+      final result = dirsFilterer.filterSync();
+      allm3uPaths = result.allPaths;
+    }
+
+    final backupDirPath = params.backupDirPath;
+
+    DBWrapperSync? tracksDBManager;
+    final libraryTracksPaths = <String>[];
+
+    void loadTracksDb() {
+      try {
+        NamicoDBWrapper.initialize();
+        tracksDBManager = DBWrapper.openFromInfoSync(
+          fileInfo: params.tracksDbInfo,
+          config: DBConfig(
+            createIfNotExist: true,
+            autoDisposeTimerDuration: null, // we close manually
+          ),
+        );
+        tracksDBManager!.loadAllKeys(libraryTracksPaths.add);
+      } finally {
+        tracksDBManager?.close();
+      }
+    }
 
     bool pathExists(String path) => File(path).existsSync();
 
@@ -311,7 +332,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
     final all = <String, (String, List<Track>)>{};
     final infoMap = <String, String?>{};
-    for (final path in paths) {
+    for (final path in allm3uPaths) {
       final file = File(path);
       final filename = file.path.getFilenameWOExt;
       final fileParentDirectory = file.path.getDirectoryPath;
@@ -336,9 +357,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           }
 
           if (!fileExists) {
-            final maybeTrack = allTracksPaths.firstWhereEff((e) => e.path.endsWith(line)); // no idea, trying to get from library
-            if (maybeTrack != null) {
-              fullPath = maybeTrack.path;
+            if (tracksDBManager == null) loadTracksDb();
+            final maybePath = libraryTracksPaths.firstWhereEff((path) => path.endsWith(line)); // no idea, trying to get from library
+            if (maybePath != null) {
+              fullPath = maybePath;
               // if (pathExists(fullPath)) fileExists = true; // no further checks
             }
           }
@@ -363,10 +385,11 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         File(m3u.value.$1).copySync(backupFile.path);
       }
     }
-    return {
-      'paths': all,
-      'infoMap': infoMap,
-    };
+
+    return _ParseM3UPlaylistFilesResult(
+      paths: all,
+      infoMap: infoMap,
+    );
   }
 
   static Future<void> _saveM3UPlaylistToFile(Map params) async {
@@ -483,6 +506,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   String get favouritePlaylistPath => AppPaths.FAVOURITES_PLAYLIST;
 
   @override
+  bool get sortAfterPreparing => true;
+
+  @override
   String get EMPTY_NAME => lang.PLEASE_ENTER_A_NAME;
 
   @override
@@ -572,7 +598,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     return null;
   }
 
-  static Future<Map<String, LocalPlaylist>> _readPlaylistFilesCompute(String path) async {
+  static Map<String, LocalPlaylist> _readPlaylistFilesCompute(String path) {
     final map = <String, LocalPlaylist>{};
     final files = Directory(path).listSyncSafe();
     final filesL = files.length;
@@ -580,12 +606,13 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       var f = files[i];
       if (f is File) {
         try {
-          final response = f.readAsJsonSync();
+          final response = f.readAsJsonSync(ensureExists: false);
           final pl = LocalPlaylist.fromJson(response, TrackWithDate.fromJson, sortFromJson);
           map[pl.name] = pl;
         } catch (_) {}
       }
     }
+
     return map;
   }
 
@@ -595,4 +622,26 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     } catch (_) {}
     return null;
   }
+}
+
+class _ParseM3UPlaylistFilesParams {
+  final Set<String>? paths;
+  final DbWrapperFileInfo tracksDbInfo; // used as a fallback lookup
+  final String backupDirPath; // used as a backup for newly found m3u files.
+
+  const _ParseM3UPlaylistFilesParams({
+    this.paths,
+    required this.tracksDbInfo,
+    required this.backupDirPath,
+  });
+}
+
+class _ParseM3UPlaylistFilesResult {
+  final Map<String, (String, List<Track>)> paths;
+  final Map<String, String?> infoMap;
+
+  const _ParseM3UPlaylistFilesResult({
+    required this.paths,
+    required this.infoMap,
+  });
 }

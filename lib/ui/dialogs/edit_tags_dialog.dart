@@ -217,12 +217,26 @@ Widget get _getKeepDatesWidget => ObxO(
 Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
   if (!await requestManageStoragePermission()) return;
 
-  final color = (colorScheme ?? CurrentColor.inst.color).obso;
+  final color = Colors.transparent.obso;
+
+  void onColorsObtained(Color newColor) {
+    color.value = newColor;
+  }
+
+  onColorsObtained(colorScheme ?? CurrentColor.inst.color);
+
   if (colorScheme == null) {
-    CurrentColor.inst.getTrackDelightnedColor(track, useIsolate: true).executeWithMinDelay().then((c) {
-      if (c == color.value) return;
-      color.value = c;
-    });
+    final colorSync = CurrentColor.inst.getTrackDelightnedColorSync(track);
+    if (colorSync != null) {
+      onColorsObtained(colorSync);
+    } else {
+      CurrentColor.inst
+          .getTrackDelightnedColor(track, useIsolate: true)
+          .executeWithMinDelay(
+            delayMS: NamidaNavigator.kDefaultDialogDurationMS,
+          )
+          .then(onColorsObtained);
+    }
   }
 
   FTags? tags;
@@ -244,7 +258,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
 
   final audioInfoFormatted = TrackExtended.buildAudioInfoFormatted(
     infoFull.durationMS ?? 0,
-    File(track.path).fileSizeSync() ?? 0,
+    await File(track.path).fileSize() ?? 0,
     infoFull.bitRate ?? 0,
     infoFull.sampleRate ?? 0,
     tags.gainData,

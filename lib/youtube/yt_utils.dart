@@ -180,15 +180,15 @@ class YTUtils {
     );
   }
 
-  static List<NamidaPopupItem> getVideosMenuItems({
+  static Future<List<NamidaPopupItem>> getVideosMenuItems({
     required QueueSourceYoutubeID queueSource,
     required BuildContext context,
     required List<YoutubeID> videos,
     required String playlistName,
     YoutubePlaylist? playlistToRemove,
     bool showPlayAllReverse = true,
-  }) {
-    final playAfterVid = getPlayerAfterVideo();
+  }) async {
+    final playAfterVid = await getPlayerAfterVideo();
 
     final setPriorityChipController = SetVideosPriorityChipController();
     final setPriorityChip = SetVideosPriorityChip(
@@ -269,7 +269,7 @@ class YTUtils {
     ];
   }
 
-  static List<NamidaPopupItem> getVideoCardMenuItemsForCurrentlyPlaying({
+  static Future<List<NamidaPopupItem>> getVideoCardMenuItemsForCurrentlyPlaying({
     required QueueSourceYoutubeID queueSource,
     required BuildContext context,
     required Rx<int> numberOfRepeats,
@@ -278,10 +278,10 @@ class YTUtils {
     required String? channelID,
     required bool displayGoToChannel,
     required bool displayCopyUrl,
-  }) {
+  }) async {
     final currentItem = Player.inst.currentItem.value;
     NamidaPopupItem? repeatForWidget;
-    final defaultItems = YTUtils.getVideoCardMenuItems(
+    final defaultItems = await YTUtils.getVideoCardMenuItems(
       queueSource: queueSource,
       downloadIndex: null,
       totalLength: null,
@@ -349,11 +349,11 @@ class YTUtils {
     return items;
   }
 
-  static void showCopyItemsDialog(String videoId) {
+  static void showCopyItemsDialog(String videoId) async {
     final videoLink = YTUrlUtils.buildVideoUrl(videoId);
     String? videoLinkTimeStamp;
-    final title = YoutubeInfoController.utils.getVideoName(videoId) ?? '';
-    final channelTitle = YoutubeInfoController.utils.getVideoChannelName(videoId) ?? '';
+    final title = await YoutubeInfoController.utils.getVideoName(videoId) ?? '';
+    final channelTitle = await YoutubeInfoController.utils.getVideoChannelName(videoId) ?? '';
 
     if (videoId == Player.inst.currentVideo?.id) {
       int currentSeconds = Player.inst.nowPlayingPosition.value ~/ 1000;
@@ -478,7 +478,7 @@ class YTUtils {
     return null;
   }
 
-  static List<NamidaPopupItem> getVideoCardMenuItems({
+  static Future<List<NamidaPopupItem>> getVideoCardMenuItems({
     required QueueSourceYoutubeID queueSource,
     required int? downloadIndex,
     required int? totalLength,
@@ -499,11 +499,11 @@ class YTUtils {
     bool showInfoTile = true,
     bool showFavouritesTile = false,
     Iterable<YoutubeID>? videosToPlayAll,
-  }) {
-    final playAfterVid = getPlayerAfterVideo();
+  }) async {
+    final playAfterVid = await getPlayerAfterVideo();
     final currentVideo = Player.inst.currentVideo;
     final isCurrentlyPlaying = currentVideo != null && videoId == currentVideo.id;
-    if (displayGoToChannel && (channelID == null || channelID.isEmpty)) channelID = YoutubeInfoController.utils.getVideoChannelID(videoId);
+    if (displayGoToChannel && (channelID == null || channelID.isEmpty)) channelID = await YoutubeInfoController.utils.getVideoChannelID(videoId);
 
     NamidaPopupItem? favouriteItem;
     if (showFavouritesTile) {
@@ -633,13 +633,13 @@ class YTUtils {
     ];
   }
 
-  static ({YoutubeID video, int diff, String name})? getPlayerAfterVideo() {
+  static Future<({YoutubeID video, int diff, String name})?> getPlayerAfterVideo() async {
     final player = Player.inst;
     if (player.currentItem.value is YoutubeID && player.latestInsertedIndex != player.currentIndex.value) {
       try {
         final playAfterVideo = player.currentQueue.value[player.latestInsertedIndex] as YoutubeID;
         final diff = player.latestInsertedIndex - player.currentIndex.value;
-        final name = YoutubeInfoController.utils.getVideoName(playAfterVideo.id) ?? '';
+        final name = await YoutubeInfoController.utils.getVideoName(playAfterVideo.id) ?? '';
         return (video: playAfterVideo, diff: diff, name: name);
       } catch (_) {}
     }
@@ -806,7 +806,7 @@ class YTUtils {
     String videoId, {
     final void Function(Map<String, bool> pathsDeleted)? afterDeleting,
     List<NamidaClearDialogExpansionTile<dynamic>> Function(RxMap<String, bool> pathsToDelete, Rx<int> totalSizeToDelete, Rx<bool> allSelected)? extraTiles,
-  }) {
+  }) async {
     final pathsToDelete = <String, bool>{}.obs;
     final allSelected = false.obs;
     final totalSizeToDelete = 0.obs;
@@ -817,8 +817,8 @@ class YTUtils {
     final tempFilesSizeVideo = <File, int>{}.obs;
 
     final extraTilesBuilt = extraTiles?.call(pathsToDelete, totalSizeToDelete, allSelected);
-    final videosCached = VideoController.inst.getNVFromID(videoId);
-    final audiosCached = Player.inst.audioCacheMap[videoId]?.where((element) => element.file.existsSync()).toList() ?? [];
+    final videosCached = await VideoController.inst.getNVFromID(videoId);
+    final audiosCached = await Player.inst.audioCacheMap[videoId]?.whereAsync((element) => element.file.exists()).toList() ?? [];
 
     final fileSizeLookup = <String, int>{};
     final fileTypeLookup = <String, int>{};
@@ -826,12 +826,15 @@ class YTUtils {
     int videosSize = 0;
     int audiosSize = 0;
 
-    audiosCached.loop((e) {
-      final s = e.file.fileSizeSync() ?? 0;
+    final int length = audiosCached.length;
+    for (int i = 0; i < length; i++) {
+      final e = audiosCached[i];
+      final s = await e.file.fileSize() ?? 0;
       audiosSize += s;
       fileSizeLookup[e.file.path] = s;
       fileTypeLookup[e.file.path] = 0;
-    });
+    }
+
     videosCached.loop((e) {
       final s = e.sizeInBytes;
       videosSize += s;

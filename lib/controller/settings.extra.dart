@@ -35,8 +35,8 @@ class _ExtraSettings with SettingsFileWriter {
     staticLibraryTab.value = LibraryTab.playlists;
   }
 
-  void prepareSettingsFile() {
-    final json = prepareSettingsFile_();
+  Future<void> prepareSettingsFile() async {
+    final json = await prepareSettingsFile_();
     if (json is! Map) return;
 
     try {

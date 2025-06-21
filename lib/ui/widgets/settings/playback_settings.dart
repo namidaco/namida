@@ -386,7 +386,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                 if (currentItem is Track) {
                   vol = currentItem.toTrackExt().gainData?.calculateGainAsVolume();
                 } else if (currentItem is YoutubeID) {
-                  final streamsResult = YoutubeInfoController.video.fetchVideoStreamsSync(currentItem.id);
+                  final streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(currentItem.id);
                   final loudnessDb = streamsResult?.loudnessDBData?.loudnessDb;
                   if (loudnessDb != null) vol = ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
                 }

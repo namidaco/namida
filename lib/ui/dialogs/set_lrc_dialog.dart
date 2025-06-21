@@ -24,7 +24,7 @@ import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 void showLRCSetDialog(Playable item, Color colorScheme) async {
-  final LrcSearchUtils? lrcUtils = LrcSearchUtils.fromPlayable(item);
+  final LrcSearchUtils? lrcUtils = await LrcSearchUtils.fromPlayable(item);
   if (lrcUtils == null) return;
 
   final fetchingFromInternet = Rxn<bool>();
@@ -48,10 +48,10 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       ),
     );
   }
-  if (cachedTxt.existsSync()) {
+  if (await cachedTxt.exists()) {
     availableLyrics.add(
       LyricsModel(
-        lyrics: cachedTxt.readAsStringSync(),
+        lyrics: await cachedTxt.readAsString(),
         synced: false,
         fromInternet: false,
         isInCache: true,
@@ -60,10 +60,10 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       ),
     );
   }
-  if (cachedLRC.existsSync()) {
+  if (await cachedLRC.exists()) {
     availableLyrics.add(
       LyricsModel(
-        lyrics: cachedLRC.readAsStringSync(),
+        lyrics: await cachedLRC.readAsString(),
         synced: true,
         fromInternet: false,
         isInCache: true,
@@ -72,11 +72,13 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       ),
     );
   }
-  localLRCFiles.loop((localLRC) {
-    if (localLRC.existsSync()) {
+  final int length = localLRCFiles.length;
+  for (int i = 0; i < length; i++) {
+    var localLRC = localLRCFiles[i];
+    if (await localLRC.exists()) {
       availableLyrics.add(
         LyricsModel(
-          lyrics: localLRC.readAsStringSync(),
+          lyrics: await localLRC.readAsString(),
           synced: true,
           fromInternet: false,
           isInCache: false,
@@ -85,7 +87,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         ),
       );
     }
-  });
+  }
 
   void updateForCurrentTrack() {
     if (item == Player.inst.currentItem.value) {
@@ -538,7 +540,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   if (path != null) {
                     final file = File(path);
                     final ext = path.getExtension;
-                    final text = file.readAsStringSync();
+                    final text = await file.readAsString();
                     final lrcModel = LyricsModel(
                       lyrics: text,
                       synced: ext == 'lrc' || ext == 'LRC',

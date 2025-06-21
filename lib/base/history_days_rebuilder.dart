@@ -33,13 +33,21 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
   void initState() {
     _updateDays();
     historyManager.modifiedDays.addListener(_updateDaysAndRefresh);
+    historyManager.totalHistoryItemsCount.addListener(_onItemCountChange);
     super.initState();
   }
 
   @override
   void dispose() {
     historyManager.modifiedDays.removeListener(_updateDaysAndRefresh);
+    historyManager.totalHistoryItemsCount.removeListener(_onItemCountChange);
     super.dispose();
+  }
+
+  void _onItemCountChange() {
+    try {
+      historyManager.scrollController.positions.lastOrNull?.notifyListeners(); // re-adjust eepy header
+    } catch (_) {}
   }
 
   void _updateDaysAndRefresh() {
@@ -113,7 +121,7 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
     );
   }
 
-  Widget? listenOrderWidget(ItemWithDate watch, S subitem, TextStyle? smallTextStyle, {required bool enableTopRightRadius}) {
+  Widget? listenOrderWidget(ItemWithDate watch, S subitem, TextStyle? smallTextStyle, {double topRightRadius = 0.0}) {
     final listens = historyManager.topTracksMapListens[subitem];
     Widget? topRightWidget;
     if (listens != null) {
@@ -140,7 +148,7 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
       topRightWidget = NamidaBlurryContainer(
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(6.0.multipliedRadius),
-          topRight: enableTopRightRadius ? Radius.circular(6.0.multipliedRadius) : Radius.zero,
+          topRight: topRightRadius > 0 ? Radius.circular(topRightRadius.multipliedRadius) : Radius.zero,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
         child: topRightWidget,

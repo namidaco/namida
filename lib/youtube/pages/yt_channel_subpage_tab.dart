@@ -67,14 +67,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
 
   @override
   void initState() {
-    final tabResultCache = YoutubeInfoController.channel.fetchChannelTabSync(channelId: widget.channelId, tab: widget.tab);
-    if (tabResultCache != null) {
-      _tabResult = tabResultCache;
-      _currentSort = tabResultCache.itemsSort.firstWhereEff((e) => e.initiallySelected);
-    } else {
-      _isLoadingInitial = true;
-    }
-
+    _initValues();
     if (widget.shouldForceRequest()) widget.tabFetcher(fetchTabAndUpdate);
     super.initState();
   }
@@ -83,6 +76,18 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
   void dispose() {
     _isLoadingMoreItems.close();
     super.dispose();
+  }
+
+  void _initValues() async {
+    final tabResultCache = await YoutubeInfoController.channel.fetchChannelTabCache(channelId: widget.channelId, tab: widget.tab);
+    refreshState(() {
+      if (tabResultCache != null) {
+        _tabResult = tabResultCache;
+        _currentSort = tabResultCache.itemsSort.firstWhereEff((e) => e.initiallySelected);
+      } else {
+        _isLoadingInitial = true;
+      }
+    });
   }
 
   @override

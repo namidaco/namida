@@ -1,7 +1,7 @@
 // ignore_for_file: avoid_rx_value_getter_outside_obx
+
 import 'package:flutter/material.dart';
 
-import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:jiffy/jiffy.dart';
 
 import 'package:namida/controller/current_color.dart';
@@ -329,16 +329,15 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                             slivers: [
                               if (_isOnGoingSelectedR == null)
                                 ...keys.mapIndexed(
-                                  (e, index) {
-                                    final groupName = keys[index];
+                                  (groupName, index) {
                                     final list = YoutubeController.inst.youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
                                     final lastEditedMSSE = YoutubeController.inst.latestEditedGroupDownloadTask[groupName] ?? 0;
                                     final lastEditedAgo = lastEditedMSSE == 0 ? null : Jiffy.parseFromMillisecondsSinceEpoch(lastEditedMSSE).fromNow();
 
-                                    return SliverStickyHeader(
-                                      header: NamidaInkWell(
+                                    final headerWidget = LayoutWidthProvider(
+                                      builder: (context, maxWidth) => NamidaInkWell(
                                         borderRadius: 0.0,
-                                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                        padding: const EdgeInsets.symmetric(vertical: 8.0),
                                         bgColor: context.theme.scaffoldBackgroundColor,
                                         onTap: () {
                                           _hiddenGroupsMap.value[groupName] = _hiddenGroupsMap.value[groupName] == true ? false : true;
@@ -349,12 +348,16 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                           children: [
                                             const SizedBox(width: 12.0),
                                             NamidaInkWell(
+                                              width: maxWidth * 0.12,
                                               borderRadius: 8.0,
-                                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                                               bgColor: context.theme.cardColor,
-                                              child: Text(
-                                                "${list.length}",
-                                                style: context.textTheme.displayLarge,
+                                              child: FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: Text(
+                                                  "${list.length}",
+                                                  style: context.textTheme.displayLarge,
+                                                ),
                                               ),
                                             ),
                                             const SizedBox(width: 12.0),
@@ -432,24 +435,34 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                           ],
                                         ),
                                       ),
-                                      sliver: ObxO(
-                                        rx: _hiddenGroupsMap,
-                                        builder: (context, hiddenGroups) => hiddenGroups[groupName] == true
-                                            ? const SliverToBoxAdapter()
-                                            : SliverPadding(
-                                                padding: const EdgeInsets.only(bottom: 8.0, top: 2.0),
-                                                sliver: SliverList.builder(
-                                                  itemCount: list.length,
-                                                  itemBuilder: (context, index) {
-                                                    return YTDownloadTaskItemCard(
-                                                      videos: list,
-                                                      index: index,
-                                                      groupName: groupName,
-                                                    );
-                                                  },
-                                                ),
+                                    );
+
+                                    final listSliver = ObxO(
+                                      rx: _hiddenGroupsMap,
+                                      builder: (context, hiddenGroups) => hiddenGroups[groupName] == true
+                                          ? const SliverToBoxAdapter()
+                                          : SliverPadding(
+                                              padding: const EdgeInsets.only(bottom: 8.0, top: 2.0),
+                                              sliver: SliverList.builder(
+                                                itemCount: list.length,
+                                                itemBuilder: (context, index) {
+                                                  return YTDownloadTaskItemCard(
+                                                    videos: list,
+                                                    index: index,
+                                                    groupName: groupName,
+                                                  );
+                                                },
                                               ),
-                                      ),
+                                            ),
+                                    );
+
+                                    return SliverMainAxisGroup(
+                                      slivers: [
+                                        PinnedHeaderSliver(
+                                          child: headerWidget,
+                                        ),
+                                        listSliver,
+                                      ],
                                     );
                                   },
                                 )

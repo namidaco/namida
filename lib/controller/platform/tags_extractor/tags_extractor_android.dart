@@ -109,7 +109,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
 
       if (ffmpegInfo != null && isVideo) {
         try {
-          final stats = File(trackPath).statSync();
+          final stats = await File(trackPath).stat();
           videoController.addLocalVideoFileInfoToCacheMap(trackPath, ffmpegInfo, stats);
         } catch (_) {}
       }

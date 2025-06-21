@@ -29,10 +29,10 @@ void showAddToPlaylistSheet({
   required Iterable<String> ids,
   required Map<String, String?> idsNamesLookup,
   String playlistNameToAdd = '',
-}) {
-  final videoNamesSubtitle = ids
-          .map((id) => idsNamesLookup[id] ?? YoutubeInfoController.utils.getVideoName(id) ?? id) //
+}) async {
+  final videoNamesSubtitle = await ids
           .take(3)
+          .mapAsync((id) async => idsNamesLookup[id] ?? await YoutubeInfoController.utils.getVideoName(id) ?? id) //
           .join(', ') +
       (ids.length > 3 ? '... + ${ids.length - 3}' : '');
 

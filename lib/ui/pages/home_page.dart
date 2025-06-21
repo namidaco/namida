@@ -34,18 +34,6 @@ import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/artist_card.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
-extension _ListUtilsHomePage<E> on List<E> {
-  void addAllIfEmpty(Iterable<E> iterable) {
-    if (isEmpty) addAll(iterable);
-  }
-}
-
-extension _MapUtilsHomePage<K, V> on Map<K, V> {
-  void addAllIfEmpty(Map<K, V> other) {
-    if (isEmpty) addAll(other);
-  }
-}
-
 final int _lowestDateMSSEToDisplay = DateTime(1980).millisecondsSinceEpoch + 1;
 
 class HomePage extends StatefulWidget with NamidaRouteWidget {
@@ -132,19 +120,23 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     _recentlyAdded.addAll(alltracks.take(40));
 
     // -- Recent Listens --
-    _recentListened.addAllIfEmpty(
-        NamidaGenerator.inst.generateItemsFromHistoryDates(DateTime(timeNow.year, timeNow.month, timeNow.day - 3), timeNow, sortByListensInRangeIfRequired: false).take(40));
+    if (_recentListened.isEmpty) {
+      _recentListened.addAll(
+          NamidaGenerator.inst.generateItemsFromHistoryDates(DateTime(timeNow.year, timeNow.month, timeNow.day - 3), timeNow, sortByListensInRangeIfRequired: false).take(40));
+    }
 
     // -- Top Recents --
-    _topRecentListened.addAllIfEmpty(
-      HistoryController.inst
-          .getMostListensInTimeRange(
-            mptr: _topRecentsTimeRange,
-            isStartOfDay: false,
-            mainItemToSubItem: (item) => item.track,
-          )
-          .take(50),
-    );
+    if (_topRecentListened.isEmpty) {
+      _topRecentListened.addAll(
+        HistoryController.inst
+            .getMostListensInTimeRange(
+              mptr: _topRecentsTimeRange,
+              isStartOfDay: false,
+              mainItemToSubItem: (item) => item.track,
+            )
+            .take(50),
+      );
+    }
 
     // -- Lost Memories --
     _lostMemoriesYears = HistoryController.inst.getHistoryYears()..remove(timeNow.year);
@@ -155,10 +147,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     _updateSameTimeNYearsAgo(timeNow, minusYearClamped);
 
     // -- Recent Albums --
-    _recentAlbums.addAllIfEmpty(_recentListened.mappedUniqued((e) => e.track.albumIdentifier).take(25));
+    if (_recentAlbums.isEmpty) _recentAlbums.addAll(_recentListened.mappedUniqued((e) => e.track.albumIdentifier).take(25));
 
     // -- Recent Artists --
-    _recentArtists.addAllIfEmpty(_recentListened.mappedUniquedList((e) => e.track.artistsList).take(25));
+    if (_recentArtists.isEmpty) _recentArtists.addAll(_recentListened.mappedUniquedList((e) => e.track.artistsList).take(25));
 
     _topRecentListened.loop((e) {
       // -- Top Recent Albums --
@@ -173,36 +165,36 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
     // ==== Mixes ====
     // -- Random --
-    _randomTracks.addAllIfEmpty(NamidaGenerator.inst.getRandomTracks(min: 24, max: 25));
+    if (_randomTracks.isEmpty) _randomTracks.addAll(NamidaGenerator.inst.getRandomTracks(min: 25, max: 26));
 
     // -- favs --
     final favs = List<TrackWithDate>.from(PlaylistController.inst.favouritesPlaylist.value.tracks);
 
     favs.shuffle();
 
-    // -- supermacy
-    final ct = Player.inst.currentTrack?.track;
-    final maxCount = settings.queueInsertion.value[QueueInsertionType.algorithm]?.numberOfTracks.withMinimum(10) ?? 25;
-    MapEntry<String, List<Track>>? supremacyEntry;
-    if (ct != null) {
-      final sameAsCurrent = NamidaGenerator.inst.generateRecommendedTrack(ct).take(maxCount);
-      if (sameAsCurrent.isNotEmpty) {
-        final supremacy = [ct, ...sameAsCurrent];
-        supremacyEntry = MapEntry('"${ct.title}" ${lang.SUPREMACY}', supremacy);
+    if (_mixes.isEmpty) {
+      // -- supermacy
+      final ct = Player.inst.currentTrack?.track;
+      final maxCount = settings.queueInsertion.value[QueueInsertionType.algorithm]?.numberOfTracks.withMinimum(10) ?? 25;
+      MapEntry<String, List<Track>>? supremacyEntry;
+      if (ct != null) {
+        final sameAsCurrent = NamidaGenerator.inst.generateRecommendedTrack(ct).take(maxCount);
+        if (sameAsCurrent.isNotEmpty) {
+          final supremacy = [ct, ...sameAsCurrent];
+          supremacyEntry = MapEntry('"${ct.title}" ${lang.SUPREMACY}', supremacy);
+        }
       }
-    }
-
-    _mixes.addAllIfEmpty([
-      MapEntry(lang.TOP_RECENTS, _topRecentListened.map((e) => e.key).toList()),
-      if (supremacyEntry != null) supremacyEntry,
-      MapEntry(lang.FAVOURITES, favs.take(25).tracks.toList()),
-      MapEntry(lang.RANDOM_PICKS, _randomTracks),
-    ]);
-
-    for (final m in _mixes) {
-      if (m.value.isEmpty) {
-        _mixes.sort((a, b) => b.value.isEmpty ? 0 : 1);
-        break;
+      _mixes.addAll([
+        MapEntry(lang.TOP_RECENTS, _topRecentListened.map((e) => e.key).toList()),
+        if (supremacyEntry != null) supremacyEntry,
+        MapEntry(lang.FAVOURITES, favs.take(25).tracks.toList()),
+        MapEntry(lang.RANDOM_PICKS, _randomTracks),
+      ]);
+      for (final m in _mixes) {
+        if (m.value.isEmpty) {
+          _mixes.sort((a, b) => b.value.isEmpty ? 0 : 1);
+          break;
+        }
       }
     }
 

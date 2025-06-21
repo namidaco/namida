@@ -412,7 +412,7 @@ class _AboutPageState extends State<AboutPage> {
                       icon: Broken.direct_send,
                       tooltip: () => AppSocial.EMAIL,
                       onPressed: () async {
-                        final taggerLogsFileSize = File(AppPaths.LOGS_TAGGER).fileSizeSync();
+                        final taggerLogsFileSize = await File(AppPaths.LOGS_TAGGER).fileSize();
                         final goodTaggerLogsFile = taggerLogsFileSize != null && taggerLogsFileSize > 0;
                         final mailOptions = MailOptions(
                           body: 'pls look at this report im beggin u pls solve my issue pls i wa-',
@@ -426,8 +426,8 @@ class _AboutPageState extends State<AboutPage> {
                         await FlutterMailer.send(mailOptions);
                       },
                     ),
-                    onTap: () {
-                      final taggerLogsFileSize = File(AppPaths.LOGS_TAGGER).fileSizeSync();
+                    onTap: () async {
+                      final taggerLogsFileSize = await File(AppPaths.LOGS_TAGGER).fileSize();
                       final goodTaggerLogsFile = taggerLogsFileSize != null && taggerLogsFileSize > 0;
                       SharePlus.instance.share(
                         ShareParams(

@@ -22,6 +22,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 
 typedef YoutubeMainPageFetcherItemBuilder<T, W> = Widget? Function(T item, int index, W list);
@@ -113,7 +114,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
 
   bool get _hasConnection => ConnectivityController.inst.hasConnection;
   void _showNetworkError() {
-    Future.delayed(Duration.zero, () {
+    Timer(Duration.zero, () {
       snackyy(
         title: lang.ERROR,
         message: lang.NO_NETWORK_AVAILABLE_TO_FETCH_DATA,
@@ -143,7 +144,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
       }
     }
 
-    final cachedFeed = await widget.cacheReader.readAsync();
+    final cachedFeed = await widget.cacheReader.read();
     if (cachedFeed != null) {
       _currentFeed.value = cachedFeed;
       _lastFetchWasCached.value = true;
@@ -181,7 +182,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     widget.onInitState?.call(_currentFeed);
     YoutubeAccountController.current.addOnAccountChanged(_onAccChanged);
     if (widget.onListUpdated != null) _currentFeed.addListener(_onListUpdated);
-    Future.delayed(Duration.zero, _onInit); // delayed to prevent setState error when snackbar is shown
+    Timer(Duration.zero, _onInit); // delayed to prevent setState error when snackbar is shown
   }
 
   @override
@@ -204,6 +205,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     _lastFetchWasCached.value = false;
     _refreshButtonShown.value = false;
     _isLoadingCurrentFeed.value = true;
+    if (!YoutubeInfoController.didInit) await YoutubeInfoController.waitForInit;
     final val = await widget.networkFetcher(ExecuteDetails.forceRequest());
     _resultsFetchTime[W] = DateTime.now();
     _isLoadingCurrentFeed.value = false;
@@ -218,6 +220,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   Future<void> _fetchFeedSilent() async {
     if (!_hasConnection) return _showNetworkError();
 
+    if (!YoutubeInfoController.didInit) await YoutubeInfoController.waitForInit;
     final val = await widget.networkFetcher(ExecuteDetails.forceRequest());
     _resultsFetchTime[W] = DateTime.now();
     if (val != null) {

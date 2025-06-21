@@ -113,7 +113,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
     return pl is PlaylistInfoItemUser ? pl : null;
   }
 
-  List<NamidaPopupItem> getMenuItems() {
+  FutureOr<List<NamidaPopupItem>> getMenuItems() {
     if (_fetchTimer?.isActive == true || this.playlistToFetch == null) _forceFetch();
 
     final playlistToFetch = this.playlistToFetch;

@@ -127,7 +127,7 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
     return await _readHistoryFilesCompute.thready(directoryPath);
   }
 
-  static Future<HistoryPrepareInfo<TrackWithDate, Track>> _readHistoryFilesCompute(String path) async {
+  static HistoryPrepareInfo<TrackWithDate, Track> _readHistoryFilesCompute(String path) {
     final map = SplayTreeMap<int, List<TrackWithDate>>((date1, date2) => date2.compareTo(date1));
     final tempMapTopItems = <Track, List<int>>{};
     int totalCount = 0;
@@ -137,14 +137,17 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
       var f = files[i];
       if (f is File) {
         try {
-          final response = f.readAsJsonSync();
+          final response = f.readAsJsonSync(ensureExists: false) as List?;
           final dayOfTrack = int.parse(f.path.getFilenameWOExt);
           final listTracks = <TrackWithDate>[];
-          (response as List?)?.loop((e) {
-            var twd = TrackWithDate.fromJson(e);
-            listTracks.add(twd);
-            tempMapTopItems.addForce(twd.track, twd.dateAdded);
-          });
+          if (response != null) {
+            for (var i = 0; i < response.length; i++) {
+              var twd = TrackWithDate.fromJson(response[i]);
+              listTracks.add(twd);
+              tempMapTopItems.addForce(twd.track, twd.dateAdded);
+            }
+          }
+
           map[dayOfTrack] = listTracks;
           totalCount += listTracks.length;
         } catch (_) {}

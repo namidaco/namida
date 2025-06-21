@@ -5,6 +5,8 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+// ignore: depend_on_referenced_packages
+import 'package:collection/collection.dart';
 import 'package:dart_extensions/dart_extensions.dart';
 import 'package:lrc/lrc.dart';
 
@@ -163,6 +165,12 @@ extension ListieListieUtils<T> on List<T> {
     return this[index];
   }
 
+  List<T> getRandomSample(int count) {
+    final list = this;
+    if (list.isEmpty) return list;
+    return list.sample(count);
+  }
+
   List<List<T>> split([int parts = 2]) {
     final mainList = this;
     if (parts > mainList.length) parts = mainList.length;
@@ -173,6 +181,46 @@ extension ListieListieUtils<T> on List<T> {
       }
     }
     return finalParts;
+  }
+}
+
+extension ListieFutureUtils<T> on List<T> {
+  Stream<T> whereAsync(FutureOr<bool> Function(T element) test) async* {
+    for (var i = 0; i < length; i++) {
+      var e = this[i];
+      if (await test(e)) yield e;
+    }
+  }
+
+  Future<T?> firstWhereEffAsync(FutureOr<bool> Function(T element) test, {T? fallback}) async {
+    for (var i = 0; i < length; i++) {
+      var e = this[i];
+      if (await test(e)) return e;
+    }
+    return fallback;
+  }
+
+  Future<bool> anyAsync(FutureOr<bool> Function(T element) test, {T? fallback}) async {
+    for (var i = 0; i < length; i++) {
+      var e = this[i];
+      if (await test(e)) return true;
+    }
+    return false;
+  }
+
+  Stream<E> mapAsync<E>(FutureOr<E> Function(T element) converter) async* {
+    for (var i = 0; i < length; i++) {
+      var e = this[i];
+      yield await converter(e);
+    }
+  }
+}
+
+extension IterableFutureUtils<T> on Iterable<T> {
+  Stream<E> mapAsync<E>(FutureOr<E> Function(T element) converter) async* {
+    for (final e in this) {
+      yield await converter(e);
+    }
   }
 }
 
@@ -492,6 +540,13 @@ extension IterableExtensions<E> on Iterable<E> {
     if (!it.moveNext()) return false; // empty
     if (it.moveNext()) return false; // more than 1
     return true;
+  }
+
+  Future<bool> anyAsync(FutureOr<bool> Function(E element) test, {E? fallback}) async {
+    for (var e in this) {
+      if (await test(e)) return true;
+    }
+    return false;
   }
 }
 

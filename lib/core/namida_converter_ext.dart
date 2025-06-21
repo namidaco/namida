@@ -217,10 +217,16 @@ extension CacheGetterAudio on AudioStream {
     return p.join(AppDirs.AUDIOS_CACHE, cacheKey(id));
   }
 
-  File? getCachedFile(String? id) {
+  File? getCachedFileSync(String? id) {
     if (id == null) return null;
     final path = cachePath(id);
     return File(path).existsSync() ? File(path) : null;
+  }
+
+  Future<File?> getCachedFile(String? id) async {
+    if (id == null) return null;
+    final path = cachePath(id);
+    return await File(path).exists() ? File(path) : null;
   }
 }
 
@@ -240,10 +246,16 @@ extension CacheGetterVideo on VideoStream {
     return p.join(AppDirs.VIDEOS_CACHE_TEMP, cacheKey(id));
   }
 
-  File? getCachedFile(String? id) {
+  File? getCachedFileSync(String? id) {
     if (id == null) return null;
     final path = cachePath(id);
     return File(path).existsSync() ? File(path) : null;
+  }
+
+  Future<File?> getCachedFile(String? id) async {
+    if (id == null) return null;
+    final path = cachePath(id);
+    return await File(path).exists() ? File(path) : null;
   }
 }
 
@@ -525,9 +537,9 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
       case OnYoutubeLinkOpenAction.playAfter:
         return Player.inst.addToQueue(getPlayables(), insertAfterLatest: true);
       case OnYoutubeLinkOpenAction.alwaysAsk:
-        final videoNamesSubtitle = ids
-                .map((id) => YoutubeInfoController.utils.getVideoName(id) ?? id) //
+        final videoNamesSubtitle = await ids
                 .take(3)
+                .mapAsync((id) async => await YoutubeInfoController.utils.getVideoName(id) ?? id) //
                 .join(', ') +
             (ids.length > 3 ? '... + ${ids.length - 3}' : '');
         _showAskDialog((action) => action.execute(ids), title: videoNamesSubtitle);
@@ -535,14 +547,14 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
     }
   }
 
-  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {String? title}) {
+  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {String? title}) async {
     final isItemEnabled = <OnYoutubeLinkOpenAction, bool>{
       OnYoutubeLinkOpenAction.playNext: true,
       OnYoutubeLinkOpenAction.playAfter: true,
       OnYoutubeLinkOpenAction.playLast: true,
     }.obs;
 
-    final playAfterVid = YTUtils.getPlayerAfterVideo();
+    final playAfterVid = await YTUtils.getPlayerAfterVideo();
 
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
@@ -897,6 +909,8 @@ extension RouteUtils on NamidaRoute {
     final showPlaylistMenu = route == RouteType.SUBPAGE_playlistTracks || route == RouteType.SUBPAGE_historyTracks || route == RouteType.SUBPAGE_mostPlayedTracks;
 
     return <Widget>[
+      const SizedBox(width: 2.0),
+
       _getAnimatedCrossFade(
         child: NamidaAppBarIcon(
           icon: Broken.trush_square,

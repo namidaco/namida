@@ -654,12 +654,12 @@ class SearchSortController {
     sendPort.send(null);
   }
 
-  void sortAll() {
-    _sortTracks();
-    _sortAlbums();
-    _sortArtistsCurrent(artistType: settings.activeArtistType.value);
-    _sortGenres();
-    _sortPlaylists();
+  Future<void> sortAll() async {
+    await Future.delayed(Duration.zero, _sortTracks);
+    await Future.delayed(Duration.zero, _sortAlbums);
+    await Future.delayed(Duration.zero, () => _sortArtistsCurrent(artistType: settings.activeArtistType.value));
+    await Future.delayed(Duration.zero, _sortGenres);
+    await Future.delayed(Duration.zero, _sortPlaylists);
   }
 
   void sortMedia(MediaType media, {SortType? sortBy, GroupSortType? groupSortBy, bool? reverse, bool forceSingleSorting = false}) {

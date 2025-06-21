@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
@@ -440,14 +439,15 @@ class ExtrasSettings extends SettingSubpageProvider {
               bgColor: getBgColor(_ExtraSettingsKeys.extractAllPalettes),
               icon: Broken.colorfilter,
               title: lang.EXTRACT_ALL_COLOR_PALETTES,
-              trailing: Obx(
-                (context) => Column(
-                  children: [
-                    Text("${Indexer.inst.colorPalettesInStorage.valueR}/${Indexer.inst.artworksInStorage.valueR}"),
-                    if (CurrentColor.inst.isGeneratingAllColorPalettes.valueR) const LoadingIndicator(),
-                  ],
-                ),
-              ),
+              trailing: CurrentColor.inst.isGeneratingAllColorPalettes.valueR ? const LoadingIndicator() : null,
+              // trailing: Obx(
+              //   (context) => Column(
+              //     children: [
+              //       Text("${Indexer.inst.colorPalettesInStorage.valueR}/${Indexer.inst.artworksInStorage.valueR}"),
+              //       if (CurrentColor.inst.isGeneratingAllColorPalettes.valueR) const LoadingIndicator(),
+              //     ],
+              //   ),
+              // ),
               onTap: () async {
                 if (CurrentColor.inst.isGeneratingAllColorPalettes.value) {
                   NamidaNavigator.inst.navigateDialog(
@@ -471,7 +471,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                     dialog: CustomBlurryDialog(
                       title: lang.NOTE,
                       bodyText: lang.EXTRACT_ALL_COLOR_PALETTES_SUBTITLE
-                          .replaceFirst('_REMAINING_COLOR_PALETTES_', '${allTracksInLibrary.length - Indexer.inst.colorPalettesInStorage.value}'),
+                          .replaceFirst('_REMAINING_COLOR_PALETTES_', '' /* '${allTracksInLibrary.length - Indexer.inst.colorPalettesInStorage.value}' */),
                       actions: [
                         const CancelButton(),
                         NamidaButton(

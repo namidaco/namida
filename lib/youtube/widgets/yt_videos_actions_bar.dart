@@ -1,4 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import 'package:share_plus/share_plus.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
+
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -11,9 +18,6 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/yt_utils.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
-import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 class YTVideosActionBarOptions {
   final bool shuffle;
@@ -126,10 +130,10 @@ class YTVideosActionBar extends StatelessWidget {
     );
   }
 
-  List<NamidaPopupItem> getMenuItems() {
+  FutureOr<List<NamidaPopupItem>> getMenuItems() async {
     final videos = videosCallback();
     final videosCount = videos?.length ?? 0;
-    final playAfterVid = menuOptions.playAfter ? YTUtils.getPlayerAfterVideo() : null;
+    final playAfterVid = menuOptions.playAfter ? await YTUtils.getPlayerAfterVideo() : null;
     final url = urlBuilder?.call();
     return [
       if (menuOptions.addToPlaylist)
@@ -189,7 +193,7 @@ class YTVideosActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final playAfterVid = barOptions.playAfter ? YTUtils.getPlayerAfterVideo() : null;
+    // final playAfterVid = barOptions.playAfter ? YTUtils.getPlayerAfterVideo() : null;
     return Row(
       children: [
         if (barOptions.addToPlaylist)
@@ -222,31 +226,31 @@ class YTVideosActionBar extends StatelessWidget {
             tooltip: lang.PLAY_NEXT,
             onTap: _onPlayNext,
           ),
-        if (playAfterVid != null)
-          _ActionItem(
-            icon: Broken.hierarchy_square,
-            tooltip: "${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}",
-            onTap: _onPlayAfter,
-          ),
+        // if (playAfterVid != null)
+        //   _ActionItem(
+        //     icon: Broken.hierarchy_square,
+        //     tooltip: "${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}",
+        //     onTap: _onPlayAfter,
+        //   ),
         if (barOptions.playLast)
           _ActionItem(
             icon: Broken.play_cricle,
             tooltip: lang.PLAY_LAST,
             onTap: _onPlayLast,
           ),
-        if (getMenuItems().isNotEmpty)
-          NamidaPopupWrapper(
-            openOnLongPress: false,
-            childrenDefault: getMenuItems,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 3.0),
-              child: Icon(
-                Broken.more_2,
-                size: 24.0,
-                color: context.defaultIconColor(),
-              ),
+
+        NamidaPopupWrapper(
+          openOnLongPress: false,
+          childrenDefault: getMenuItems,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 3.0),
+            child: Icon(
+              Broken.more_2,
+              size: 24.0,
+              color: context.defaultIconColor(),
             ),
           ),
+        ),
       ],
     );
   }

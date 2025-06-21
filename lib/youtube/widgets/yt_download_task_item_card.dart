@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -30,7 +32,7 @@ import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
-class YTDownloadTaskItemCard extends StatelessWidget {
+class YTDownloadTaskItemCard extends StatefulWidget {
   final List<YoutubeItemDownloadConfig> videos;
   final int index;
   final DownloadTaskGroupName groupName;
@@ -42,6 +44,11 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     required this.groupName,
   });
 
+  @override
+  State<YTDownloadTaskItemCard> createState() => _YTDownloadTaskItemCardState();
+}
+
+class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
   Widget _getChip({
     required BuildContext context,
     required IconData icon,
@@ -88,7 +95,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
   void _onPauseDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig) {
     YoutubeController.inst.pauseDownloadTask(
       itemsConfig: itemsConfig,
-      groupName: groupName,
+      groupName: widget.groupName,
     );
   }
 
@@ -100,20 +107,20 @@ class YTDownloadTaskItemCard extends StatelessWidget {
       keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
       downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
       itemsConfig: itemsConfig,
-      groupName: groupName,
+      groupName: widget.groupName,
       onFileDownloaded: (downloadedFile) async {
         if (downloadedFile != null) {
-          build(context);
+          refreshState();
         }
       },
       onOldFileDeleted: (deletedFile) async {
-        build(context);
+        refreshState();
       },
     );
   }
 
   void _onCancelDeleteDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig, {bool keepInList = false, required bool delete}) {
-    YoutubeController.inst.cancelDownloadTask(itemsConfig: itemsConfig, groupName: groupName, keepInList: keepInList, delete: delete);
+    YoutubeController.inst.cancelDownloadTask(itemsConfig: itemsConfig, groupName: widget.groupName, keepInList: keepInList, delete: delete);
   }
 
   void _showInfoDialog(
@@ -121,23 +128,24 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     final YoutubeItemDownloadConfig item,
     final StreamInfoItem? info,
     final DownloadTaskGroupName groupName,
-  ) {
-    NamidaNavigator.inst.navigateDialog(
+  ) async {
+    final itemLocalInfoWidgets = await _getItemLocalInfoWidgets(context: context);
+    await NamidaNavigator.inst.navigateDialog(
       dialog: VideoInfoDialog(
         videoId: item.id.videoId,
         info: info,
         saveLocation: FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName, item.filename.filename),
         tags: item.ffmpegTags,
-        extraColumnChildren: _getItemLocalInfoWidgets(context: context),
+        extraColumnChildren: itemLocalInfoWidgets,
       ),
     );
   }
 
-  List<Widget> _getItemLocalInfoWidgets({
+  Future<List<Widget>> _getItemLocalInfoWidgets({
     required BuildContext context,
-  }) {
-    final item = videos[index];
-    final itemDirectoryPath = FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName);
+  }) async {
+    final item = widget.videos[widget.index];
+    final itemDirectoryPath = FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, widget.groupName.groupName);
     final file = FileParts.join(itemDirectoryPath, item.filename.filename);
 
     final videoStream = item.videoStream;
@@ -160,13 +168,13 @@ class YTDownloadTaskItemCard extends StatelessWidget {
 
     return [
       getRow(icon: Broken.location, texts: [itemDirectoryPath]),
-      if (file.existsSync()) ...[
+      if (await file.exists()) ...[
         const SizedBox(height: 6.0),
         getRow(
           icon: Broken.document_code,
           texts: [
             file.fileSizeFormatted() ?? '',
-            (item.fileDate ?? file.statSync().creationDate).millisecondsSinceEpoch.dateAndClockFormattedOriginal,
+            (item.fileDate ?? (await file.stat()).creationDate).millisecondsSinceEpoch.dateAndClockFormattedOriginal,
           ],
         ),
       ],
@@ -199,9 +207,10 @@ class YTDownloadTaskItemCard extends StatelessWidget {
     String confirmMessage = '',
     bool deleteButton = false,
   }) async {
-    final item = videos[index];
+    final item = widget.videos[widget.index];
     bool confirmed = false;
     bool delete = false;
+    final itemLocalInfoWidgets = await _getItemLocalInfoWidgets(context: context);
     await NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: lang.WARNING,
@@ -251,7 +260,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24.0),
-              ..._getItemLocalInfoWidgets(context: context),
+              ...itemLocalInfoWidgets,
             ],
           ),
         ),
@@ -316,32 +325,86 @@ class YTDownloadTaskItemCard extends StatelessWidget {
           groupName: groupName,
           renameCacheFiles: true,
         );
-        // ignore: use_build_context_synchronously
         if (wasDownloading) _onResumeDownloadTap([config], context);
         return true;
       },
     );
   }
 
+  late Directory directory;
+  late YoutubeItemDownloadConfig item;
+  late File downloadedFile;
+  late DownloadTaskVideoId videoIdWrapper;
+  String videoId = '';
+
+  bool _isInitializingValues = false;
+  StreamInfoItem? _infoFinal;
+  String? _duration;
+
+  @override
+  void initState() {
+    super.initState();
+    _assignItemInfoFromIndex();
+  }
+
+  @override
+  void didUpdateWidget(covariant YTDownloadTaskItemCard oldWidget) {
+    _assignItemInfoFromIndex();
+    super.didUpdateWidget(oldWidget);
+  }
+
+  void _assignItemInfoFromIndex() {
+    directory = Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, widget.groupName.groupName));
+    item = widget.videos[widget.index];
+    downloadedFile = FileParts.join(directory.path, item.filename.filename);
+    videoIdWrapper = item.id;
+    final newVideoId = videoIdWrapper.videoId;
+
+    if (newVideoId != videoId) {
+      videoId = newVideoId;
+      _initValues(videoId);
+    } else {
+      refreshState();
+    }
+  }
+
+  void _initValues(String videoId) async {
+    if (_isInitializingValues) return;
+
+    _isInitializingValues = true;
+    StreamInfoItem? infoFinal = widget.videos[widget.index].streamInfoItem;
+    if (infoFinal != null) {
+      _infoFinal = infoFinal;
+      _duration = infoFinal.durSeconds?.secondsLabel;
+    } else {
+      final newInfo = await YoutubeInfoController.utils.getStreamInfo(videoId);
+      refreshState(
+        () {
+          infoFinal = newInfo;
+          _duration = newInfo?.durSeconds?.secondsLabel;
+        },
+      );
+    }
+
+    if (_duration?.isEmpty ?? true) {
+      final newDuration = await YoutubeInfoController.utils.getVideoDurationSeconds(videoId);
+      refreshState(() => _duration = newDuration?.secondsLabel);
+    }
+    _isInitializingValues = false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final directory = Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
-    final item = videos[index];
-    final downloadedFile = FileParts.join(directory.path, item.filename.filename);
-
     const thumbHeight = 24.0 * 2.6;
     const thumbWidth = thumbHeight * 16 / 9;
-
-    final videoIdWrapper = item.id;
-    final videoId = videoIdWrapper.videoId;
 
     final itemIcon = item.videoStream != null
         ? Broken.video
         : item.audioStream != null
             ? Broken.musicnote
             : null;
-    final infoFinal = videos[index].streamInfoItem ?? YoutubeInfoController.utils.getStreamInfoSync(videoId);
-    final duration = (infoFinal?.durSeconds ?? YoutubeInfoController.utils.getVideoDurationSeconds(videoId))?.secondsLabel;
+    final infoFinal = _infoFinal;
+    final duration = _duration;
     return NamidaPopupWrapper(
       openOnTap: true,
       openOnLongPress: true,
@@ -357,7 +420,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
         idsNamesLookup: {videoId: infoFinal?.title},
         playlistName: '',
         videoYTID: null,
-        videosToPlayAll: videos.map((e) => YoutubeID(id: e.id.videoId, playlistID: null)),
+        videosToPlayAll: widget.videos.map((e) => YoutubeID(id: e.id.videoId, playlistID: null)),
       ),
       child: NamidaInkWell(
         borderRadius: 10.0,
@@ -400,7 +463,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                 final speedText = speedB == null ? '' : ' (${speedB.fileSizeFormatted}/s)';
                 final downloadInfoText = "${cp.fileSizeFormatted}/${ctp == 0 ? '?' : ctp.fileSizeFormatted}$speedText";
 
-                final fileExists = YoutubeController.inst.downloadedFilesMap[groupName]?[filename] != null;
+                final fileExists = YoutubeController.inst.downloadedFilesMap[widget.groupName]?[filename] != null;
 
                 double finalPercentage = 0.0;
                 if (fileExists) {
@@ -490,8 +553,8 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                   (context) {
                                     final isDownloading = YoutubeController.inst.isDownloading[videoId]?[item.filename] ?? false;
                                     final isFetching = YoutubeController.inst.isFetchingData[videoId]?[item.filename] ?? false;
-                                    final willBeDownloaded = YoutubeController.inst.youtubeDownloadTasksInQueueMap[groupName]?[item.filename] == true;
-                                    final fileExists = YoutubeController.inst.downloadedFilesMap[groupName]?[item.filename] != null;
+                                    final willBeDownloaded = YoutubeController.inst.youtubeDownloadTasksInQueueMap[widget.groupName]?[item.filename] == true;
+                                    final fileExists = YoutubeController.inst.downloadedFilesMap[widget.groupName]?[item.filename] != null;
 
                                     return fileExists
                                         ? _getChip(
@@ -502,7 +565,6 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                               final confirmation = await _confirmOperation(operationTitle: lang.RESTART);
                                               if (confirmation.confirmed) {
                                                 _onCancelDeleteDownloadTap([item], keepInList: true, delete: true);
-                                                // ignore: use_build_context_synchronously
                                                 _onResumeDownloadTap([item], context);
                                               }
                                             })
@@ -567,7 +629,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                   icon: Broken.text,
                                   onTap: () => _onRenameIconTap(
                                     config: item,
-                                    groupName: groupName,
+                                    groupName: widget.groupName,
                                   ),
                                 ),
                                 _getChip(
@@ -580,7 +642,7 @@ class YTDownloadTaskItemCard extends StatelessWidget {
                                   context: context,
                                   title: lang.INFO,
                                   icon: Broken.info_circle,
-                                  onTap: () => _showInfoDialog(context, item, infoFinal, groupName),
+                                  onTap: () => _showInfoDialog(context, item, infoFinal, widget.groupName),
                                 ),
                               ],
                             ),

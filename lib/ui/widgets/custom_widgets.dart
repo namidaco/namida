@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
@@ -1071,6 +1073,7 @@ class NamidaExpansionTile extends StatelessWidget {
   final Color? bgColor;
   final bool bigahh;
   final bool compact;
+  final bool borderless;
 
   const NamidaExpansionTile({
     super.key,
@@ -1093,6 +1096,7 @@ class NamidaExpansionTile extends StatelessWidget {
     this.bgColor,
     this.bigahh = false,
     this.compact = true,
+    this.borderless = false,
   });
 
   @override
@@ -1100,6 +1104,8 @@ class NamidaExpansionTile extends StatelessWidget {
     return ListTileTheme(
       dense: !bigahh,
       child: ExpansionTile(
+        collapsedShape: borderless ? const Border() : null,
+        shape: borderless ? const Border() : null,
         visualDensity: compact ? VisualDensity.compact : VisualDensity.comfortable,
         controlAffinity: ListTileControlAffinity.trailing,
         collapsedBackgroundColor: bgColor,
@@ -2619,9 +2625,9 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
         ),
         builder: (context, child) {
           final p = _animation.value;
-          if (p == 0) return child!;
+          // if (p == 0) return child!; // causes unecessary rebuilds
           return Transform.translate(
-            offset: Offset(p * widget.friction * maxWidth, 0),
+            offset: p == 0 ? Offset.zero : Offset(p * widget.friction * maxWidth, 0),
             child: child!,
           );
         },
@@ -3282,35 +3288,35 @@ class NamidaInkWell extends StatelessWidget {
     final highlightColor = transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor);
     final bgColor = this.bgColor ?? decoration.color ?? Colors.transparent;
     final decorationFinal = BoxDecoration(
-        color: bgColor,
-        borderRadius: borderR,
-        backgroundBlendMode: decoration.backgroundBlendMode,
-        boxShadow: decoration.boxShadow,
-        gradient: decoration.gradient,
-        shape: decoration.shape,
-        image: decoration.image,
+      color: bgColor,
+      borderRadius: borderR,
+      backgroundBlendMode: decoration.backgroundBlendMode,
+      boxShadow: decoration.boxShadow,
+      gradient: decoration.gradient,
+      shape: decoration.shape,
+      image: decoration.image,
     );
 
     final foregroundDecorationFinal = BoxDecoration(
-        border: decoration.border,
-        borderRadius: borderR,
+      border: decoration.border,
+      borderRadius: borderR,
     );
     final childFinal = Material(
-        clipBehavior: Clip.none,
-        type: MaterialType.transparency,
-        child: InkWell(
-          borderRadius: borderR,
-          hoverColor: highlightColor,
-          highlightColor: highlightColor,
-          onTap: onTap,
-          onLongPress: onLongPress,
-          onSecondaryTap: enableSecondaryTap ? onLongPress ?? onTap : null,
-          child: SizedBox(
-            height: height,
-            width: width,
-            child: Padding(
-              padding: padding,
-              child: child,
+      clipBehavior: Clip.none,
+      type: MaterialType.transparency,
+      child: InkWell(
+        borderRadius: borderR,
+        hoverColor: highlightColor,
+        highlightColor: highlightColor,
+        onTap: onTap,
+        onLongPress: onLongPress,
+        onSecondaryTap: enableSecondaryTap ? onLongPress ?? onTap : null,
+        child: SizedBox(
+          height: height,
+          width: width,
+          child: Padding(
+            padding: padding,
+            child: child,
           ),
         ),
       ),
@@ -3332,7 +3338,7 @@ class NamidaInkWell extends StatelessWidget {
             foregroundDecoration: foregroundDecorationFinal,
             clipBehavior: Clip.none,
             child: childFinal,
-    );
+          );
   }
 }
 
@@ -3873,8 +3879,8 @@ class NamidaPopupItem {
 
 class NamidaPopupWrapper extends StatelessWidget {
   final Widget child;
-  final List<Widget> Function()? children;
-  final List<NamidaPopupItem> Function()? childrenDefault;
+  final FutureOr<List<Widget>> Function()? children;
+  final FutureOr<List<NamidaPopupItem>> Function()? childrenDefault;
   final bool childrenAfterChildrenDefault;
   final VoidCallback? onTap;
   final VoidCallback? onPop;
@@ -3911,11 +3917,11 @@ class NamidaPopupWrapper extends StatelessWidget {
     );
   }
 
-  List<PopupMenuEntry<dynamic>> convertItems(BuildContext context) {
+  FutureOr<List<PopupMenuEntry<dynamic>>> convertItems(BuildContext context) async {
     return [
-      if (children != null && !childrenAfterChildrenDefault) ..._mapChildren(children!()),
+      if (children != null && !childrenAfterChildrenDefault) ..._mapChildren(await children!()),
       if (childrenDefault != null)
-        ...childrenDefault!().map(
+        ...(await childrenDefault!()).map(
           (e) {
             final titleStyle = context.textTheme.displayMedium?.copyWith(color: e.enabled ? null : context.textTheme.displayMedium?.color?.withValues(alpha: 0.4));
             Widget popupItem = Row(
@@ -3969,7 +3975,7 @@ class NamidaPopupWrapper extends StatelessWidget {
             );
           },
         ),
-      if (children != null && childrenAfterChildrenDefault) ..._mapChildren(children!()),
+      if (children != null && childrenAfterChildrenDefault) ..._mapChildren(await children!()),
     ];
   }
 
@@ -3987,7 +3993,7 @@ class NamidaPopupWrapper extends StatelessWidget {
     await NamidaNavigator.inst.showMenu(
       context: context,
       position: position,
-      items: convertItems(context),
+      items: await convertItems(context),
     );
     if (context.mounted) {
       popMenu(handleClosing: false);
@@ -4072,7 +4078,7 @@ class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProvider
 
   @override
   void initState() {
-    if (widget.reportIndexChangedOnInit) Future.delayed(Duration.zero, () => widget.onIndexChanged(widget.initialIndex));
+    if (widget.reportIndexChangedOnInit) Timer(Duration.zero, () => widget.onIndexChanged(widget.initialIndex));
     controller = TabController(
       length: widget.children.length,
       vsync: this,
@@ -5100,7 +5106,8 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
     final tempFilesSize = this.tempFilesSize;
     final tempFilesDelete = this.tempFilesDelete;
     return NamidaExpansionTile(
-      initiallyExpanded: items.isNotEmpty || tempFilesSize?.isNotEmpty == true,
+      borderless: true,
+      initiallyExpanded: true,
       titleText: title,
       subtitleText: subtitle,
       icon: icon,
@@ -5297,12 +5304,17 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
 
   @override
   void initState() {
-    if (widget.totalCount == 1) {
-      cachePriority = VideoController.inst.videosPriorityManager.getVideoPriority(widget.videosId.first);
-      WidgetsBinding.instance.addPostFrameCallback((_) => widget.onInitialPriority?.call(cachePriority));
-    }
+    _initCachePriority();
     widget.controller?._menuWrapperFn = _getPopupWrapper;
     super.initState();
+  }
+
+  void _initCachePriority() async {
+    if (widget.totalCount == 1) {
+      final newCP = await VideoController.inst.videosPriorityManager.getVideoPriority(widget.videosId.first);
+      refreshState(() => cachePriority = newCP);
+      widget.onInitialPriority?.call(cachePriority);
+    }
   }
 
   Future<bool> _confirmSetPriorityForAll(int count) async {

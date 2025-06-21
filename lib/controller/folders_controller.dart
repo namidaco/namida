@@ -141,7 +141,7 @@ class FoldersController<T extends Folder> {
   void onFirstLoad() {
     if (_config.enableFoldersHierarchy.value) {
       final startupPath = _config.defaultFolderStartupLocation.value;
-      stepIn(Folder.fromType<T>(startupPath));
+      if (startupPath != null) stepIn(Folder.fromType<T>(startupPath));
     }
   }
 
@@ -307,7 +307,7 @@ class _ParsedResult {
 }
 
 class FoldersPageConfig {
-  final Rx<String> defaultFolderStartupLocation;
+  final Rx<String?> defaultFolderStartupLocation;
   final Rx<bool> enableFoldersHierarchy;
   final void Function() onDefaultStartupFolderChanged;
 

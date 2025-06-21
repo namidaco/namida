@@ -190,14 +190,28 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomWidget = getChipsRow(context);
     const bottomPadding = 0.0;
-    final headerWidget = header?.call(bottomWidget, bottomPadding);
+    final headerWidget = ColoredBox(
+      color: context.theme.scaffoldBackgroundColor,
+      child: header?.call(bottomWidget, bottomPadding),
+    );
+
     return BackgroundWrapper(
-      child: NamidaListView(
-        itemExtent: itemExtent,
-        header: headerWidget,
+      child: NamidaListViewRaw(
         infoBox: infoBox == null ? null : (maxWidth) => infoBox!(bottomWidget, bottomPadding, maxWidth),
-        itemCount: itemsCount,
-        itemBuilder: (context, i) => itemBuilder(context, i),
+        slivers: [
+          SliverMainAxisGroup(
+            slivers: [
+              PinnedHeaderSliver(
+                child: headerWidget,
+              ),
+              SliverFixedExtentList.builder(
+                itemExtent: itemExtent,
+                itemBuilder: itemBuilder,
+                itemCount: itemsCount,
+              ),
+            ],
+          )
+        ],
       ),
     );
   }

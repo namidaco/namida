@@ -524,8 +524,8 @@ class Player {
     );
   }
 
-  void recheckCachedVideos(String videoId) {
-    _audioHandler.recheckCachedVideos(videoId);
+  Future<void> recheckCachedVideos(String videoId) {
+    return _audioHandler.recheckCachedVideos(videoId);
   }
 
   Future<void> play() async {

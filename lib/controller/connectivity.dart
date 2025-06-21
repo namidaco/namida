@@ -20,23 +20,35 @@ class ConnectivityController {
 
   StreamSubscription<List<ConnectivityResult>>? _streamSub;
 
-  void initialize() {
+  Future<void> initialize() async {
+    await _initValues();
+    _setupListener();
+  }
+
+  Future<void> _initValues() async {
+    final initialConnections = await _connectivity.checkConnectivity();
+    return _onConnectionsChanged(initialConnections);
+  }
+
+  void _setupListener() {
     _streamSub?.cancel();
-    _streamSub = _connectivity.onConnectivityChanged.listen((connections) {
-      if (connections.contains(ConnectivityResult.none)) {
-        _hasConnection.value = false;
-        _hasHighConnection.value = false;
-      } else {
-        final highConnection = connections.contains(ConnectivityResult.wifi) ||
-            connections.contains(ConnectivityResult.ethernet) || //
-            connections.contains(ConnectivityResult.other);
-        _hasHighConnection.value = highConnection;
-        _hasConnection.value = true;
-        if (_onConnectionRestored.isNotEmpty) {
-          _onConnectionRestored.loop((item) => item());
-        }
+    _streamSub = _connectivity.onConnectivityChanged.listen(_onConnectionsChanged);
+  }
+
+  void _onConnectionsChanged(List<ConnectivityResult> connections) {
+    if (connections.contains(ConnectivityResult.none)) {
+      _hasConnection.value = false;
+      _hasHighConnection.value = false;
+    } else {
+      final highConnection = connections.contains(ConnectivityResult.wifi) ||
+          connections.contains(ConnectivityResult.ethernet) || //
+          connections.contains(ConnectivityResult.other);
+      _hasHighConnection.value = highConnection;
+      _hasConnection.value = true;
+      if (_onConnectionRestored.isNotEmpty) {
+        _onConnectionRestored.loop((item) => item());
       }
-    });
+    }
   }
 
   void executeOrRegister(void Function() callback) {

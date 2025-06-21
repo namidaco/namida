@@ -308,7 +308,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                               final channelIsVerified = channel?.isVerified ?? false;
                               final channelSubs = channel?.subscribersCount;
                               String? channelID = channel?.id ?? videoInfoStream?.channelId;
-                              if (channelID == null || channelID.isEmpty) channelID = YoutubeInfoController.utils.getVideoChannelID(currentId);
+                              if (channelID == null || channelID.isEmpty) channelID = YoutubeInfoController.utils.getVideoChannelIDSync(currentId, checkFromStorage: false);
 
                               final videoViewCount = videoInfo?.viewsCount;
 
@@ -727,10 +727,10 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                 child: Material(
                                                                   type: MaterialType.transparency,
                                                                   child: InkWell(
-                                                                    onTap: () {
+                                                                    onTap: () async {
                                                                       final channelInfo = channel ?? YoutubeInfoController.current.currentVideoPage.value?.channelInfo;
                                                                       String? chid = channel?.id ?? YoutubeInfoController.current.currentVideoPage.value?.channelInfo?.id;
-                                                                      if (chid == null || chid.isEmpty) chid = YoutubeInfoController.utils.getVideoChannelID(currentId);
+                                                                      if (chid == null || chid.isEmpty) chid = await YoutubeInfoController.utils.getVideoChannelID(currentId);
                                                                       if (chid != null) YTChannelSubpage(channelID: chid, channel: channelInfo).navigate();
                                                                     },
                                                                     child: LayoutWidthProvider(
@@ -1280,6 +1280,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                               );
 
                               final videoWidget = NamidaVideoWidget(
+                                key: const ValueKey('nvw'),
                                 isLocal: false,
                                 disableControlsUnderPercentage: 0.5,
                                 onMinimizeTap: Dimensions.inst.miniplayerIsWideScreen ? null : () => MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false),

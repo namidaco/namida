@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:io';
 
@@ -281,7 +283,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
       },
     );
     final allGroupsFile = File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL);
-    (allGroupsFile.readAsJsonSync() as List?)?.loop(
+    (await allGroupsFile.readAsJson() as List?)?.loop(
       (item) {
         item as String;
         if (addedAtFirst[item] != true) {

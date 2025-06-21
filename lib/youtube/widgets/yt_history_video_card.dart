@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:jiffy/jiffy.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -250,7 +254,7 @@ class YTHistoryVideoCard extends StatelessWidget {
   }
 }
 
-class YTHistoryVideoCardBase<T> extends StatelessWidget {
+class YTHistoryVideoCardBase<T> extends StatefulWidget {
   final List<T> mainList;
   final (String, YTWatch?) Function(T item) itemToYTVideoId;
   final int? day;
@@ -299,54 +303,185 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
     required this.properties,
   });
 
-  YoutubeID itemToYTIDPlay(T item) {
-    final e = itemToYTVideoId(item);
-    return YoutubeID(id: e.$1, watchNull: e.$2, playlistID: properties.configs.playlistID);
-  }
+  static const kDefaultBorderRadiusThumbnail = 8.0;
+  static const kDefaultBorderRadiusMinimalCard = kDefaultBorderRadiusThumbnail;
+  static const kDefaultBorderRadius = 10.0;
 
   static const minimalCardExtraThumbCropHeight = 6.0;
   static const minimalCardExtraThumbCropWidth = 8.0;
   static EdgeInsets cardMargin(bool minimal) => EdgeInsets.symmetric(horizontal: minimal ? 2.0 : 4.0, vertical: Dimensions.youtubeCardItemVerticalPadding);
 
   @override
+  State<YTHistoryVideoCardBase<T>> createState() => _YTHistoryVideoCardBaseState<T>();
+}
+
+class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
+  YoutubeID itemToYTIDPlay(T item) {
+    final e = widget.itemToYTVideoId(item);
+    return YoutubeID(id: e.$1, watchNull: e.$2, playlistID: widget.properties.configs.playlistID);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _assignItemInfoFromIndex();
+  }
+
+  @override
+  void didUpdateWidget(covariant YTHistoryVideoCardBase<T> oldWidget) {
+    _assignItemInfoFromIndex();
+    super.didUpdateWidget(oldWidget);
+  }
+
+  void _assignItemInfoFromIndex() {
+    index = widget.reversedList ? widget.mainList.length - 1 - this.widget.index : this.widget.index;
+    item = widget.mainList[index];
+    final videoIdWatch = widget.itemToYTVideoId(item);
+    final newVideoId = videoIdWatch.$1;
+    videoWatch = videoIdWatch.$2;
+
+    if (newVideoId != videoId) {
+      videoId = newVideoId;
+      refreshState(
+        () {
+          _infoFinal = null;
+          _videoTitle = ' ';
+          _videoChannel = ' ';
+          _duration = null;
+        },
+      );
+      _initValues(videoId);
+    } else {
+      refreshState();
+    }
+  }
+
+  late int index;
+  late T item;
+  String videoId = '';
+  late YTWatch? videoWatch;
+
+  bool _isInitializingValues = false;
+  StreamInfoItem? _infoFinal;
+  VideoStreamInfo? _infoVideoFinal;
+  String? _videoTitle = ' '; // nice hack to preserve an empty verical place for the future title :D
+  String? _videoChannel = ' ';
+  String? _duration;
+  bool _isVideoUnavailable = false;
+
+  void _initValues(String videoId) async {
+    if (_isInitializingValues) return;
+
+    StreamInfoItem? infoFinal = this.widget.info?.call(item);
+    if (infoFinal != null) {
+      _infoFinal = infoFinal;
+      _videoTitle = _infoFinal?.title;
+      _videoChannel = _infoFinal?.channelName?.nullifyEmpty() ?? _infoFinal?.channel.title.nullifyEmpty();
+      _duration = infoFinal.durSeconds?.secondsLabel;
+      return;
+    }
+
+    // -- basic init to reduce eliminate flashes, checkFromStorage is always false to prevent ui blocking
+    _infoFinal = YoutubeInfoController.utils.tempVideoInfosFromStreams[videoId];
+    _videoTitle = YoutubeInfoController.utils.getVideoNameSync(videoId, checkFromStorage: false);
+    _videoChannel = YoutubeInfoController.utils.getVideoChannelNameSync(videoId, checkFromStorage: false);
+    _duration = YoutubeInfoController.utils.getVideoDurationSecondsSyncTemp(videoId)?.secondsLabel;
+
+    _isInitializingValues = true;
+
+    final newInfo = await YoutubeInfoController.utils.getStreamInfo(videoId);
+    refreshState(
+      () {
+        _infoFinal = newInfo;
+        _videoTitle = _infoFinal?.title;
+        _videoChannel = _infoFinal?.channelName?.nullifyEmpty() ?? _infoFinal?.channel.title.nullifyEmpty();
+        _duration = newInfo?.durSeconds?.secondsLabel;
+      },
+    );
+
+    String? newVideoTitle = _videoTitle;
+    String? newVideoChannel = _videoChannel;
+    String? newDuration = _duration;
+    bool newIsVideoUnavailable = _isVideoUnavailable;
+
+    await [
+      () async {
+        if (newDuration?.isEmpty ?? true) {
+          final dur = await YoutubeInfoController.utils.getVideoDurationSeconds(videoId);
+          newDuration = dur?.secondsLabel;
+        }
+      }(),
+      () async {
+        if (newVideoTitle?.isEmpty ?? true) {
+          newVideoTitle = await YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: () {
+            VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
+            newIsVideoUnavailable = true;
+          });
+        } else if (newVideoTitle?.isYTTitleFaulty() == true) {
+          VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
+          newIsVideoUnavailable = true;
+          newVideoTitle = await YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: null);
+        }
+      }(),
+      () async {
+        if (newVideoChannel?.isEmpty ?? true) {
+          newVideoChannel = await YoutubeInfoController.utils.getVideoChannelName(videoId);
+        }
+      }(),
+    ].wait;
+
+    if (newVideoTitle != _videoTitle || newVideoChannel != _videoChannel || newDuration != _duration || newIsVideoUnavailable != _isVideoUnavailable) {
+      refreshState(
+        () {
+          _videoTitle = newVideoTitle;
+          _videoChannel = newVideoChannel;
+          _duration = newDuration;
+          _isVideoUnavailable = newIsVideoUnavailable;
+        },
+      );
+    }
+
+    if (mounted && (_videoTitle?.isEmpty ?? true)) {
+      await _fetchNewInfo();
+    }
+
+    _isInitializingValues = false;
+  }
+
+  Future<void> _fetchNewInfo() async {
+    if (!ConnectivityController.inst.hasConnection) return;
+    final newInfo = await YoutubeInfoController.video.fetchVideoStreams(videoId, forceRequest: false);
+    if (newInfo != null) {
+      refreshState(
+        () {
+          _infoVideoFinal = newInfo.info;
+          _videoTitle = newInfo.info?.title;
+          _videoChannel = newInfo.info?.channelName?.nullifyEmpty();
+          _duration = (newInfo.info?.durSeconds ?? newInfo.audioStreams.firstOrNull?.duration?.inSeconds)?.secondsLabel;
+        },
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final configs = properties.configs;
+    final configs = widget.properties.configs;
 
-    final index = reversedList ? mainList.length - 1 - this.index : this.index;
-    final item = mainList[index];
-    final videoIdWatch = itemToYTVideoId(item);
-    final videoId = videoIdWatch.$1;
-    final videoWatch = videoIdWatch.$2;
-    double thumbHeight = thumbnailHeight ?? (minimalCard ? 24.0 * 3.2 : Dimensions.youtubeCardItemHeight);
-    double thumbWidth = minimalCardWidth ?? thumbHeight * 16 / 9;
-    if (minimalCard) {
+    double thumbHeight = widget.thumbnailHeight ?? (widget.minimalCard ? 24.0 * 3.2 : Dimensions.youtubeCardItemHeight);
+    double thumbWidth = widget.minimalCardWidth ?? thumbHeight * 16 / 9;
+    if (widget.minimalCard) {
       // this might crop the image since we enabling forceSquared.
-      thumbHeight -= minimalCardExtraThumbCropHeight;
-      thumbWidth -= minimalCardExtraThumbCropWidth;
+      thumbHeight -= YTHistoryVideoCardBase.minimalCardExtraThumbCropHeight;
+      thumbWidth -= YTHistoryVideoCardBase.minimalCardExtraThumbCropWidth;
     }
 
-    final info = this.info?.call(item) ?? YoutubeInfoController.utils.getStreamInfoSync(videoId);
-    final duration = (info?.durSeconds ?? YoutubeInfoController.utils.getVideoDurationSeconds(videoId))?.secondsLabel;
-    String? videoTitle = info?.title;
-    bool isVideoUnavailable = false;
-
-    if (videoTitle == null || videoTitle.isEmpty) {
-      videoTitle = YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: () {
-        VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
-        isVideoUnavailable = true;
-      });
-    } else if (videoTitle.isYTTitleFaulty()) {
-      VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
-      isVideoUnavailable = true;
-      videoTitle = YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: null);
-    }
-
-    String? videoChannel = info?.channelName?.nullifyEmpty() ?? info?.channel.title.nullifyEmpty() ?? YoutubeInfoController.utils.getVideoChannelName(videoId);
+    final info = _infoFinal;
+    final duration = _duration;
 
     String? dateText;
     if (configs.displayTimeAgo) {
       final watchMS = videoWatch?.dateMSNull;
-      if (watchMS != null) dateText = minimalCard ? Jiffy.parseFromMillisecondsSinceEpoch(watchMS).fromNow() : watchMS.dateAndClockFormattedOriginal;
+      if (watchMS != null) dateText = widget.minimalCard ? Jiffy.parseFromMillisecondsSinceEpoch(watchMS).fromNow() : watchMS.dateAndClockFormattedOriginal;
     }
 
     Widget? draggingThumbWidget;
@@ -371,17 +506,20 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
       }
     }
 
-    final willSleepAfterThis = properties.sleepingIndex == index;
+    final willSleepAfterThis = widget.properties.sleepingIndex == index;
+
+    final videoTitle = _videoTitle;
+    final videoChannel = _videoChannel;
 
     final displayVideoChannel = videoChannel != null && videoChannel.isNotEmpty;
     final displayDateText = dateText != null && dateText.isNotEmpty;
 
-    final bool isRightIndex = properties.canHaveDuplicates ? index == properties.currentPlayingIndex : true;
+    final bool isRightIndex = widget.properties.canHaveDuplicates ? index == widget.properties.currentPlayingIndex : true;
     bool isCurrentlyPlaying = false;
 
     if (isRightIndex) {
-      final curr = properties.currentPlayingVideo;
-      if (videoId == curr?.id && videoIdWatch.$2 == curr?.watchNull) isCurrentlyPlaying = true;
+      final curr = widget.properties.currentPlayingVideo;
+      if (videoId == curr?.id && videoWatch == curr?.watchNull) isCurrentlyPlaying = true;
     }
 
     Widget? threeLines;
@@ -390,12 +528,12 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
     Color? itemsColor5;
 
     if (isCurrentlyPlaying) {
-      itemsColor7 = properties.itemsColor7;
-      itemsColor6 = properties.itemsColor6;
-      itemsColor5 = properties.itemsColor5;
-      threeLines = properties.threeLinesPlaying;
+      itemsColor7 = widget.properties.itemsColor7;
+      itemsColor6 = widget.properties.itemsColor6;
+      itemsColor5 = widget.properties.itemsColor5;
+      threeLines = widget.properties.threeLinesPlaying;
     } else {
-      threeLines = properties.threeLines;
+      threeLines = widget.properties.threeLines;
     }
 
     final children = [
@@ -405,23 +543,24 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
         children: [
           Center(
             child: Padding(
-              padding: minimalCard ? const EdgeInsets.all(1.0) : const EdgeInsets.all(2.0),
+              padding: widget.minimalCard ? const EdgeInsets.all(1.0) : const EdgeInsets.all(2.0),
               child: YoutubeThumbnail(
                 type: ThumbnailType.video,
                 key: Key(videoId),
-                borderRadius: 8.0,
-                isImportantInCache: isImportantInCache,
+                borderRadius: YTHistoryVideoCardBase.kDefaultBorderRadiusThumbnail,
+                isImportantInCache: widget.isImportantInCache,
                 width: thumbWidth,
                 height: thumbHeight,
                 videoId: videoId,
                 preferLowerRes: true,
-                customUrl: info?.liveThumbs.pick()?.url,
+                customUrl: _infoVideoFinal?.thumbnails.pick()?.url ?? info?.liveThumbs.pick()?.url,
                 smallBoxText: duration,
                 smallBoxIcon: willSleepAfterThis
                     ? Broken.timer_1
-                    : isVideoUnavailable
+                    : _isVideoUnavailable
                         ? Broken.danger
                         : null,
+                reduceInitialFlashes: configs.draggingEnabled,
                 forceSquared: true, // -- if false, low quality images with black bars would appear
               ),
             ),
@@ -432,17 +571,17 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
       const SizedBox(width: 8.0),
       Expanded(
         child: Padding(
-            padding: minimalCard ? const EdgeInsets.fromLTRB(4.0, 0, 4.0, 4.0) : EdgeInsets.zero,
+            padding: widget.minimalCard ? const EdgeInsets.fromLTRB(4.0, 0, 4.0, 4.0) : EdgeInsets.zero,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   videoTitle ?? videoId,
-                  maxLines: minimalCard && (displayVideoChannel || displayDateText) ? 1 : 2,
+                  maxLines: widget.minimalCard && (displayVideoChannel || displayDateText) ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
                   style: context.textTheme.displayMedium?.copyWith(
-                    fontSize: minimalCard ? 12.0 * minimalCardFontMultiplier : null,
+                    fontSize: widget.minimalCard ? 12.0 * widget.minimalCardFontMultiplier : null,
                     color: itemsColor7,
                   ),
                 ),
@@ -452,7 +591,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.textTheme.displaySmall?.copyWith(
-                      fontSize: minimalCard ? 11.5 * minimalCardFontMultiplier : null,
+                      fontSize: widget.minimalCard ? 11.5 * widget.minimalCardFontMultiplier : null,
                       color: itemsColor6,
                     ),
                   ),
@@ -462,7 +601,7 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.textTheme.displaySmall?.copyWith(
-                      fontSize: minimalCard ? 11.0 * minimalCardFontMultiplier : null,
+                      fontSize: widget.minimalCard ? 11.0 * widget.minimalCardFontMultiplier : null,
                       color: itemsColor5,
                     ),
                   ),
@@ -473,47 +612,50 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
       const SizedBox(width: 8.0),
     ];
 
+    final borderRadiusRawValue = widget.minimalCard ? YTHistoryVideoCardBase.kDefaultBorderRadiusMinimalCard : YTHistoryVideoCardBase.kDefaultBorderRadius;
+
     Widget finalChild = NamidaPopupWrapper(
       openOnTap: false,
       openOnLongPress: configs.openMenuOnLongPress,
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
         queueSource: configs.queueSource,
-        downloadIndex: downloadIndex,
-        totalLength: downloadTotalLength,
+        downloadIndex: widget.downloadIndex,
+        totalLength: widget.downloadTotalLength,
         streamInfoItem: info,
         videoId: videoId,
-        channelID: info?.channelId ?? info?.channel.id,
+        channelID: _infoVideoFinal?.channelId ?? info?.channelId ?? info?.channel.id,
         playlistID: configs.playlistID,
-        idsNamesLookup: {videoId: info?.title},
+        idsNamesLookup: {videoId: _infoVideoFinal?.title},
         playlistName: configs.playlistName,
         videoYTID: itemToYTIDPlay(item),
       ),
       child: NamidaInkWell(
-        borderRadius: minimalCard ? 8.0 : 10.0,
-        width: minimalCard ? thumbWidth : null,
-        onTap: onTap ??
+        animationDurationMS: 300,
+        borderRadius: borderRadiusRawValue,
+        width: widget.minimalCard ? thumbWidth : null,
+        onTap: widget.onTap ??
             () {
               YTUtils.expandMiniplayer();
-              if (properties.comingFromQueue) {
-                final i = this.index;
+              if (widget.properties.comingFromQueue) {
+                final i = this.widget.index;
                 if (i == Player.inst.currentIndex.value) {
                   Player.inst.togglePlayPause();
                 } else {
-                  Player.inst.skipToQueueItem(this.index);
+                  Player.inst.skipToQueueItem(this.widget.index);
                 }
               } else {
-                final finalList = reversedList ? mainList.reversed : mainList;
-                if (playSingle) {
+                final finalList = widget.reversedList ? widget.mainList.reversed : widget.mainList;
+                if (widget.playSingle) {
                   Player.inst.playOrPause(
                     0,
-                    [itemToYTIDPlay(finalList.elementAt(this.index))],
+                    [itemToYTIDPlay(finalList.elementAt(this.widget.index))],
                     configs.queueSource,
                     gentlePlay: true,
                   );
                 } else {
                   final gentlePlay = finalList.hasSingleItem();
                   Player.inst.playOrPause(
-                    this.index,
+                    this.widget.index,
                     finalList.map(itemToYTIDPlay),
                     configs.queueSource,
                     gentlePlay: gentlePlay,
@@ -521,18 +663,15 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                 }
               }
             },
-        height: minimalCard ? null : Dimensions.youtubeCardItemExtent,
-        margin: cardMargin(minimalCard),
-        bgColor: bgColor ??
+        height: widget.minimalCard ? null : Dimensions.youtubeCardItemExtent,
+        margin: YTHistoryVideoCardBase.cardMargin(widget.minimalCard),
+        bgColor: widget.bgColor ??
             (isCurrentlyPlaying
-                ? (properties.comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme).withAlpha(140)
-                : (context.theme.cardColor.withValues(alpha: cardColorOpacity))),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-        ),
+                ? (widget.properties.comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme).withAlpha(140)
+                : (context.theme.cardColor.withValues(alpha: widget.cardColorOpacity))),
         child: Stack(
           children: [
-            minimalCard
+            widget.minimalCard
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: children,
@@ -542,16 +681,16 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                   ),
             Positioned(
               bottom: 4.0,
-              right: minimalCard ? 2.0 : 12.0,
+              right: widget.minimalCard ? 2.0 : 12.0,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: YTUtils.getVideoCacheStatusIcons(
                   context: context,
                   videoId: videoId,
                   iconsColor: itemsColor5,
-                  overrideListens: overrideListens,
-                  displayCacheIcons: !minimalCard,
-                  fontMultiplier: minimalCard ? minimalCardFontMultiplier : null,
+                  overrideListens: widget.overrideListens,
+                  displayCacheIcons: !widget.minimalCard,
+                  fontMultiplier: widget.minimalCard ? widget.minimalCardFontMultiplier : null,
                 ),
               ),
             ),
@@ -562,11 +701,11 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                 child: NamidaPopupWrapper(
                   childrenDefault: () => YTUtils.getVideoCardMenuItems(
                     queueSource: configs.queueSource,
-                    downloadIndex: downloadIndex,
-                    totalLength: downloadTotalLength,
+                    downloadIndex: widget.downloadIndex,
+                    totalLength: widget.downloadTotalLength,
                     streamInfoItem: info,
                     videoId: videoId,
-                    channelID: info?.channelId ?? info?.channel.id,
+                    channelID: _infoVideoFinal?.channelId ?? info?.channelId ?? info?.channel.id,
                     playlistID: configs.playlistID,
                     idsNamesLookup: {videoId: videoTitle},
                     playlistName: configs.playlistName,
@@ -581,17 +720,19 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
                   ),
                 ),
               ),
-            if (topRightWidget != null)
-              Positioned(
-                top: 0.0,
-                right: 0.0,
-                child: topRightWidget!,
-              ),
-            if (fadeOpacity > 0)
+            Positioned(
+              top: 0.0,
+              right: 0.0,
+              child: widget.topRightWidget ?? const SizedBox(),
+            ),
+            if (widget.fadeOpacity > 0)
               Positioned.fill(
                 child: IgnorePointer(
-                  child: ColoredBox(
-                    color: context.theme.cardColor.withValues(alpha: fadeOpacity),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(borderRadiusRawValue.multipliedRadius),
+                      color: context.theme.cardColor.withValues(alpha: widget.fadeOpacity),
+                    ),
                   ),
                 ),
               ),
@@ -600,13 +741,13 @@ class YTHistoryVideoCardBase<T> extends StatelessWidget {
       ),
     );
 
-    if (!minimalCard && configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
+    if (!widget.minimalCard && configs.horizontalGestures && (widget.properties.allowSwipeLeft || widget.properties.allowSwipeRight)) {
       final plItem = itemToYTIDPlay(item);
       return SwipeQueueAddTile(
         item: plItem,
         dismissibleKey: plItem,
-        allowSwipeLeft: properties.allowSwipeLeft,
-        allowSwipeRight: properties.allowSwipeRight,
+        allowSwipeLeft: widget.properties.allowSwipeLeft,
+        allowSwipeRight: widget.properties.allowSwipeRight,
         onAddToPlaylist: (_) => showAddToPlaylistSheet(ids: [videoId], idsNamesLookup: {videoId: videoTitle}),
         onOpenInfo: (_) => NamidaNavigator.inst.navigateDialog(dialog: VideoInfoDialog(videoId: videoId)),
         child: finalChild,

@@ -43,21 +43,8 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
 
   @override
   void initState() {
-    final channelID = this.channelID;
-    if (channelID != null) {
-      final cachedChannelInfoV = YoutubeInfoController.channel.fetchChannelInfoSync(channelID)?.tabs.getVideosTab();
-      if (cachedChannelInfoV != null) {
-        final tabResultCache = YoutubeInfoController.channel.fetchChannelTabSync(channelId: channelID, tab: cachedChannelInfoV);
-        if (tabResultCache != null) {
-          channelVideoTab = tabResultCache;
-          isLoadingInitialStreams = false;
-          final st = tabResultCache.items;
-          updatePeakDates(st.cast());
-        }
-      }
-    }
-
     super.initState();
+    _initValues();
   }
 
   @override
@@ -65,6 +52,27 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
     isLoadingMoreUploads.close();
     disposeResources();
     super.dispose();
+  }
+
+  Future<void> _initValues() async {
+    final channelID = this.channelID;
+    if (channelID != null) {
+      final cachedChannelInfo = await YoutubeInfoController.channel.fetchChannelInfoCache(channelID);
+      final cachedChannelInfoV = cachedChannelInfo?.tabs.getVideosTab();
+      if (cachedChannelInfoV != null) {
+        final tabResultCache = await YoutubeInfoController.channel.fetchChannelTabCache(channelId: channelID, tab: cachedChannelInfoV);
+        if (tabResultCache != null) {
+          refreshState(
+            () {
+              channelVideoTab = tabResultCache;
+              isLoadingInitialStreams = false;
+              final st = tabResultCache.items;
+              updatePeakDates(st.cast());
+            },
+          );
+        }
+      }
+    }
   }
 
   /// TODO(youtipie): this is not really accurate

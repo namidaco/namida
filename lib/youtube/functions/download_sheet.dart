@@ -160,7 +160,7 @@ Future<void> showDownloadVideoBottomSheet({
     }
   }
 
-  void onStreamsObtained(VideoStreamsResult? streams) {
+  void onStreamsObtained(VideoStreamsResult? streams) async {
     streamResultRx.value = streams;
     if (streams?.info != null) videoInfo.value = streams!.info!;
 
@@ -172,9 +172,9 @@ Future<void> showDownloadVideoBottomSheet({
       }
     }
     if (settings.downloadAudioOnly.value == false) {
-      selectedVideoOnlyStream.value = streams?.videoStreams.firstWhereEff(
-            (e) {
-              final cached = e.getCachedFile(videoId);
+      selectedVideoOnlyStream.value = await streams?.videoStreams.firstWhereEffAsync(
+            (e) async {
+              final cached = await e.getCachedFile(videoId);
               if (cached != null) return true;
               final strQualityLabel = e.qualityLabel.videoLabelToSettingLabel();
               return !e.isWebm && settings.youtubeVideoQualities.contains(strQualityLabel);
@@ -207,7 +207,7 @@ Future<void> showDownloadVideoBottomSheet({
     }
   }
 
-  final streamsInCache = YoutubeInfoController.video.fetchVideoStreamsSync(videoId);
+  final streamsInCache = await YoutubeInfoController.video.fetchVideoStreamsCache(videoId, infoOnly: false);
   if (streamsInCache != null) {
     if (streamsInCache.hasExpired() || streamsInCache.audioStreams.isEmpty) {
       YoutubeInfoController.video.fetchVideoStreams(videoId).then(onStreamsObtained);
@@ -590,7 +590,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                 itemBuilder: (element) {
                                                   return Obx(
                                                     (context) {
-                                                      final cacheFile = element.getCachedFile(videoId);
+                                                      final cacheFile = element.getCachedFileSync(videoId);
                                                       return getQualityButton(
                                                         selected: selectedAudioOnlyStream.valueR == element,
                                                         cacheExists: cacheFile != null,
@@ -651,7 +651,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                 itemBuilder: (element) {
                                                   return Obx(
                                                     (context) {
-                                                      final cacheFile = element.getCachedFile(videoId);
+                                                      final cacheFile = element.getCachedFileSync(videoId);
 
                                                       var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
                                                       var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
@@ -789,6 +789,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                     prefferedAudioQualityID: selectedAudioOnlyStream.value?.itag.toString(),
                                                     fetchMissingAudio: selectedAudioOnlyStream.value != null,
                                                     fetchMissingVideo: selectedVideoOnlyStream.value != null,
+                                                    addedAt: DateTime.now(),
                                                   );
                                                   if (onConfirmButtonTap != null) {
                                                     final accept = onConfirmButtonTap(groupName, itemConfig);

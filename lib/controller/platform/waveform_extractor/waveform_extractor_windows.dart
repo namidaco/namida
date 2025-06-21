@@ -23,33 +23,31 @@ class _WaveformExtractorWindows extends WaveformExtractor {
       final cacheDir = AppDirs.APP_CACHE;
       cacheKey ??= source.hashCode.toString();
       cacheFile = FileParts.join(cacheDir, '$cacheKey.txt');
-      final cachedWaveform = _parseWaveformFile(cacheFile);
+      final cachedWaveform = await _parseWaveformFile(cacheFile);
       if (cachedWaveform != null && cachedWaveform.isNotEmpty) return cachedWaveform;
     }
     final wavelist = await _extractWaveformRaw(
       source,
       samplesPerSecond: samplesPerSecond,
+      cacheFile: cacheFile,
     );
-    if (cacheFile != null) _encodeWaveformFile(cacheFile, wavelist);
     return wavelist;
   }
 
-  List<num>? _parseWaveformFile(File cacheFile) {
-    if (cacheFile.existsSync()) return LineSplitter.split(cacheFile.readAsStringSync()).map((e) => num.parse(e)).toList();
+  Future<List<num>?> _parseWaveformFile(File cacheFile) async {
+    if (await cacheFile.exists()) return LineSplitter.split(await cacheFile.readAsString()).map((e) => num.parse(e)).toList();
     return null;
-  }
-
-  void _encodeWaveformFile(File cacheFile, List<num> list) {
-    if (list.isNotEmpty) cacheFile.writeAsStringSync(list.join('\n'));
   }
 
   Future<List<num>> _extractWaveformRaw(
     String source, {
     int? samplesPerSecond,
+    File? cacheFile,
   }) async {
     final res = await _isolateExecuter.executeIsolate(
       source,
       samplesPerSecond: samplesPerSecond,
+      cacheFile: cacheFile,
     );
     return res as List<num>;
   }
@@ -66,12 +64,13 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
   Future<dynamic> executeIsolate(
     String source, {
     int? samplesPerSecond,
+    File? cacheFile,
   }) async {
     if (!isInitialized) await initialize();
     final token = _messageTokenWrapper.getToken();
     _completers[token]?.complete(null); // useless but anyways
     final completer = _completers[token] = Completer<dynamic>();
-    sendPort([token, source, samplesPerSecond]);
+    sendPort([token, source, samplesPerSecond, cacheFile]);
     var res = await completer.future;
     return res;
   }
@@ -107,6 +106,7 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
       final token = p[0] as int;
       final source = p[1] as String;
       final samplesPerSecond = p[2] as int?;
+      final cacheFile = p[3] as File?;
 
       final extension = source.getExtension;
       const multiplier = 0.05;
@@ -162,6 +162,8 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
       }
 
       sendPort.send([token, combinedList]);
+
+      if (cacheFile != null && combinedList.isNotEmpty) unawaited(cacheFile.writeAsString(combinedList.join('\n')));
     });
 
     sendPort.send(null); // prepared

@@ -23,6 +23,7 @@ void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Co
     datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : HistoryController.inst.topTracksMapListens.value[track] ?? [],
     colorScheme: colorScheme,
     colorSchemeFunction: () => CurrentColor.inst.getTrackDelightnedColor(track, useIsolate: true),
+    colorSchemeFunctionSync: () => CurrentColor.inst.getTrackDelightnedColorSync(track, useIsolate: true),
     onListenTap: (listen) => NamidaOnTaps.inst.onHistoryPlaylistTap(initialListen: listen),
   );
 }
@@ -30,17 +31,34 @@ void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Co
 void showListensDialog({
   required List<int> datesOfListen,
   required Future<Color?> Function()? colorSchemeFunction,
+  required Color? Function()? colorSchemeFunctionSync,
   required Color? colorScheme,
   required void Function(int listen) onListenTap,
 }) async {
   if (datesOfListen.isEmpty) return;
 
-  final color = (colorScheme ?? CurrentColor.inst.color).obso;
+  final color = Colors.transparent.obso;
 
-  if (colorScheme == null && colorSchemeFunction != null) {
-    colorSchemeFunction().executeWithMinDelay(delayMS: 100).then((c) {
-      if (c != null && c != color.value) color.value = c;
-    });
+  void onColorsObtained(Color? newColor) {
+    if (newColor != null) {
+      color.value = newColor;
+    }
+  }
+
+  onColorsObtained(colorScheme ?? CurrentColor.inst.color);
+
+  if (colorScheme == null) {
+    final colorSync = colorSchemeFunctionSync?.call();
+    if (colorSync != null) {
+      onColorsObtained(colorSync);
+    } else {
+      colorSchemeFunction
+          ?.call()
+          .executeWithMinDelay(
+            delayMS: NamidaNavigator.kDefaultDialogDurationMS,
+          )
+          .then(onColorsObtained);
+    }
   }
 
   late final datesMapByDay = <DateTime, List<DateTime>>{};

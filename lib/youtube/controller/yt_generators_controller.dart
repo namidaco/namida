@@ -183,7 +183,8 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     final start = DateTime.now();
 
     YoutiPie.cacheManager.init(databasesDir);
-    final activeChannel = YoutiPie.getActiveAccountChannelIsolate(sensitiveDataDir);
+    YoutiPie.cacheManagerSync.init(databasesDir);
+    final activeChannel = await YoutiPie.getActiveAccountChannelIsolate(sensitiveDataDir);
     final activeChannelId = activeChannel?.id;
 
     if (activeChannelId != null && activeChannelId.isNotEmpty) {
@@ -196,7 +197,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
 
     lookupListStreamInfoMapCacheDetails.loop(
       (db) {
-        db.loadEverything(
+        db.loadEverythingSync(
           (map) {
             try {
               final id = map['id'];
@@ -216,7 +217,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
       },
     );
     lookupListVideoStreamsMapCacheDetails.loop((db) {
-      db.loadEverything(
+      db.loadEverythingSync(
         (map) {
           try {
             final info = map['info'] as Map;
@@ -244,7 +245,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     Directory(statsDir).listSyncSafe().loop((f) {
       if (f is File) {
         try {
-          final response = f.readAsJsonSync();
+          final response = f.readAsJsonSync(ensureExists: false);
           if (response is List) {
             response.loop(
               (r) {
@@ -284,6 +285,9 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     }
     // -- end filling from playlists
     sendPort.send(null); // finished filling
+
+    YoutiPie.cacheManager.closeAll();
+    YoutiPie.cacheManagerSync.closeAll();
 
     final durationTaken = start.difference(DateTime.now());
     printo('Initialized 4 Lists in $durationTaken');

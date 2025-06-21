@@ -31,7 +31,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
 
     if (itemslistLength <= 2) return [];
 
-    /// ignore min and max if the value is more than the alltrackslist.
+    /// ignore min and max if the value is more than the list.
     if (max != null && max > itemslist.length) {
       max = null;
       min = null;
@@ -42,15 +42,9 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
     // number of resulting tracks.
     final int randomNumber = (max - min).getRandomNumberBelow(min);
 
-    final randomListMap = <R, bool>{};
-    for (int i = 0; i <= randomNumber; i++) {
-      final item = list[itemslistLength.getRandomNumberBelow()];
-      randomListMap[item] = true;
-    }
-
-    if (exclude != null) randomListMap.remove(exclude);
-
-    return randomListMap.keys;
+    final randomList = list.getRandomSample(randomNumber);
+    if (exclude != null) randomList.remove(exclude);
+    return randomList;
   }
 
   Iterable<E2> generateRecommendedItemsFor<E2>(E item, E2 Function(T current) itemToSub) {

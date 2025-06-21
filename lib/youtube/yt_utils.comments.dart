@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 part of 'yt_utils.dart';
 
 class _YTUtilsCommentActions {
@@ -11,11 +13,11 @@ class _YTUtilsCommentActions {
     return _createEditCommentOrReply(
       isEdit: false,
       isReply: false,
-      subtitle: YoutubeInfoController.utils.getVideoName(videoId) ?? '?',
+      subtitle: await YoutubeInfoController.utils.getVideoName(videoId) ?? '?',
       initialComment: null,
       onButtonConfirm: (commentText) async {
         final newComment = await YoutubeInfoController.commentAction.createComment(
-          mainList: mainList?.value ?? YoutiPie.cacheBuilder.forComments(videoId: videoId).read(),
+          mainList: mainList?.value ?? await YoutiPie.cacheBuilder.forComments(videoId: videoId).read(),
           createCommentParams: mainList?.value?.createParams ?? videoPage?.commentResult.createParams,
           content: commentText,
         );
@@ -44,7 +46,7 @@ class _YTUtilsCommentActions {
       initialComment: comment.content.rawText ?? '',
       onButtonConfirm: (commentText) async {
         final editedComment = await YoutubeInfoController.commentAction.editComment(
-          mainList: mainList.value ?? YoutiPie.cacheBuilder.forComments(videoId: videoId).read(),
+          mainList: mainList.value ?? await YoutiPie.cacheBuilder.forComments(videoId: videoId).read(),
           comment: comment,
           content: commentText,
         );
@@ -72,7 +74,7 @@ class _YTUtilsCommentActions {
           () async {
             final didDelete = await YoutubeInfoController.commentAction.deleteComment(
               comment: comment,
-              mainList: mainList.value ?? YoutiPie.cacheBuilder.forComments(videoId: videoId).read(),
+              mainList: mainList.value ?? await YoutiPie.cacheBuilder.forComments(videoId: videoId).read(),
             );
             if (didDelete == true) {
               mainList.refresh();
@@ -102,7 +104,7 @@ class _YTUtilsCommentActions {
       initialComment: authorHandler == null ? null : '$authorHandler ',
       onButtonConfirm: (replyText) async {
         final newComment = await YoutubeInfoController.commentAction.createReply(
-          mainList: mainList?.value ?? YoutiPie.cacheBuilder.forCommentReplies(commentId: mainComment.commentId).read(),
+          mainList: mainList?.value ?? await YoutiPie.cacheBuilder.forCommentReplies(commentId: mainComment.commentId).read(),
           createReplyParams: replyingTo.engagement.createReplyParams,
           content: replyText,
         );
@@ -131,7 +133,7 @@ class _YTUtilsCommentActions {
       initialComment: reply.content.rawText ?? '',
       onButtonConfirm: (replyText) async {
         final editedComment = await YoutubeInfoController.commentAction.editReply(
-          mainList: mainList?.value ?? YoutiPie.cacheBuilder.forCommentReplies(commentId: mainComment.commentId).read(),
+          mainList: mainList?.value ?? await YoutiPie.cacheBuilder.forCommentReplies(commentId: mainComment.commentId).read(),
           reply: reply,
           content: replyText,
         );
@@ -156,7 +158,7 @@ class _YTUtilsCommentActions {
           () async {
             final didDelete = await YoutubeInfoController.commentAction.deleteReply(
               reply: reply,
-              mainList: mainList?.value ?? YoutiPie.cacheBuilder.forCommentReplies(commentId: mainComment.commentId).read(),
+              mainList: mainList?.value ?? await YoutiPie.cacheBuilder.forCommentReplies(commentId: mainComment.commentId).read(),
             );
             if (didDelete == true) {
               mainList?.refresh();

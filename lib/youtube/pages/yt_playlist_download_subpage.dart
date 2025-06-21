@@ -83,8 +83,11 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   void onRenameAllTasks(String? defaultFilename) {
+    final timeNow = DateTime.now();
     final group = DownloadTaskGroupName(groupName: _groupName.value);
-    widget.ids.mapIndexed((ytid, originalIndex) => _configMap.value[ytid.id] = _getDummyDownloadConfig(ytid.id, originalIndex, group, defaultFilename: defaultFilename)).toList();
+    widget.ids
+        .mapIndexed((ytid, originalIndex) => _configMap.value[ytid.id] = _getDummyDownloadConfig(ytid.id, originalIndex, group, defaultFilename: defaultFilename, timeNow: timeNow))
+        .toList();
   }
 
   void _updateAudioOnly(bool audioOnly) {
@@ -93,11 +96,11 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     _configMap.refresh();
   }
 
-  YoutubeItemDownloadConfig _getDummyDownloadConfig(String id, int originalIndex, DownloadTaskGroupName group, {String? defaultFilename}) {
+  YoutubeItemDownloadConfig _getDummyDownloadConfig(String id, int originalIndex, DownloadTaskGroupName group, {String? defaultFilename, required DateTime timeNow}) {
     final streamInfoItem = widget.infoLookup[id];
     final filenameBuilderSettings = settings.youtube.downloadFilenameBuilder.value;
     final filename =
-        filenameBuilderSettings.isNotEmpty ? filenameBuilderSettings : (defaultFilename ?? streamInfoItem?.title ?? YoutubeInfoController.utils.getVideoName(id) ?? id);
+        filenameBuilderSettings.isNotEmpty ? filenameBuilderSettings : (defaultFilename ?? streamInfoItem?.title ?? YoutubeInfoController.utils.getVideoNameSync(id) ?? id);
     return YoutubeItemDownloadConfig(
       originalIndex: originalIndex,
       totalLength: widget.playlistInfo?.videosCount ?? widget.ids.length,
@@ -114,6 +117,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       prefferedAudioQualityID: null,
       fetchMissingAudio: true,
       fetchMissingVideo: !settings.downloadAudioOnly.value,
+      addedAt: timeNow,
     );
   }
 
@@ -471,11 +475,10 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                                     iconSize: 15.0,
                                                   ),
                                                   const SizedBox(width: 2.0),
-                                                  Text(
-                                                    info?.channelName ?? info?.channel.title ?? YoutubeInfoController.utils.getVideoChannelName(id) ?? '',
+                                                  _VideoIdToChannelNameWidget(
+                                                    channelName: info?.channelName ?? info?.channel.title,
+                                                    videoId: id,
                                                     style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0 * _hmultiplier),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
                                                   ),
                                                 ],
                                               ),
@@ -565,6 +568,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                       onPressed: () async {
                         if (_selectedList.isEmpty) return;
                         if (!await requestManageStoragePermission()) return;
+                        final timeNow = DateTime.now();
                         final group = DownloadTaskGroupName(groupName: _groupName.value);
                         final itemsConfig = _selectedList.value
                             .map(
@@ -576,6 +580,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                     id,
                                     widget.ids.indexWhere((element) => element.id == id),
                                     group,
+                                    timeNow: timeNow,
                                   ),
                             )
                             .toList();
@@ -657,6 +662,57 @@ class YTDownloadFilenameBuilderRow extends StatelessWidget {
             )
             .toList(),
       ),
+    );
+  }
+}
+
+class _VideoIdToChannelNameWidget extends StatefulWidget {
+  final String? channelName;
+  final String videoId;
+  final TextStyle? style;
+
+  const _VideoIdToChannelNameWidget({
+    required this.channelName,
+    required this.videoId,
+    required this.style,
+  });
+
+  @override
+  State<_VideoIdToChannelNameWidget> createState() => _VideoIdToTitleWidgetState();
+}
+
+class _VideoIdToTitleWidgetState extends State<_VideoIdToChannelNameWidget> {
+  String? _channelName;
+
+  @override
+  void initState() {
+    super.initState();
+    final channelName = widget.channelName;
+    if (channelName == null || channelName.isEmpty) {
+      initValues();
+    } else {
+      _channelName = channelName;
+    }
+  }
+
+  void initValues() async {
+    final id = widget.videoId;
+    if (id.isEmpty) return;
+    final newChannelName = await YoutubeInfoController.utils.getVideoChannelName(id);
+    if (mounted) {
+      if (newChannelName != _channelName) {
+        setState(() => _channelName = newChannelName);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      _channelName ?? '',
+      style: widget.style,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }

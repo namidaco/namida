@@ -13,7 +13,7 @@ import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-class FolderTile extends StatelessWidget {
+class FolderTile extends StatefulWidget {
   final Folder folder;
   final FoldersController controller;
   final List<Track> tracks;
@@ -32,35 +32,54 @@ class FolderTile extends StatelessWidget {
   });
 
   static final _infoMap = <Folder, String>{};
-  static String _getFolderExtraInfo(Folder folder) {
+  static Future<String> _fetchFolderExtraInfo(Folder folder) async {
     final file = FileParts.join(folder.path, '.info.txt');
-    if (file.existsSync()) {
+    if (await file.exists()) {
       try {
-        return file.readAsStringSync();
+        return await file.readAsString();
       } catch (_) {}
     }
     return '';
   }
 
+  @override
+  State<FolderTile> createState() => _FolderTileState();
+}
+
+class _FolderTileState extends State<FolderTile> {
+  String? _getFolderExtraInfo(Folder folder) {
+    final valInMap = FolderTile._infoMap[folder];
+    if (valInMap != null) return valInMap;
+    FolderTile._fetchFolderExtraInfo(folder).then(
+      (value) {
+        FolderTile._infoMap[folder] = value;
+        if (value.isNotEmpty) {
+          refreshState();
+        }
+      },
+    );
+    return null;
+  }
+
   void _showFolderDialog({bool? preferRecursive}) {
-    bool isRecursive = isTracksRecursive;
-    List<Track> tracks = this.tracks;
-    if (preferRecursive == false && isTracksRecursive) {
-      final newDirectTracks = folder.tracks();
+    bool isRecursive = widget.isTracksRecursive;
+    List<Track> tracks = this.widget.tracks;
+    if (preferRecursive == false && widget.isTracksRecursive) {
+      final newDirectTracks = widget.folder.tracks();
       if (newDirectTracks.isNotEmpty) {
         isRecursive = false;
         tracks = newDirectTracks;
       }
-    } else if (preferRecursive == true && !isTracksRecursive) {
-      final newRecursiveTracks = controller.getNodeTracks(folder, recursive: true);
+    } else if (preferRecursive == true && !widget.isTracksRecursive) {
+      final newRecursiveTracks = widget.controller.getNodeTracks(widget.folder, recursive: true);
       if (newRecursiveTracks.isNotEmpty) {
         isRecursive = true;
         tracks = newRecursiveTracks;
       }
     }
     NamidaDialogs.inst.showFolderDialog(
-      folder: folder,
-      controller: controller,
+      folder: widget.folder,
+      controller: widget.controller,
       tracks: tracks,
       isTracksRecursive: isRecursive,
     );
@@ -70,10 +89,10 @@ class FolderTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final double iconSize = (settings.trackThumbnailSizeinList.value / 1.35).clampDouble(0, settings.trackListTileHeight.value);
     final double thumbSize = (settings.trackThumbnailSizeinList.value / 2.6).clampDouble(0, settings.trackListTileHeight.value * 0.5);
-    final extraInfo = _infoMap[folder] ??= _getFolderExtraInfo(folder);
+    final extraInfo = _getFolderExtraInfo(widget.folder);
 
     final subtitleTextStyle = context.textTheme.displaySmall?.copyWith(fontSize: 12.0);
-    final subtitleFirstPart = tracks.isEmpty
+    final subtitleFirstPart = widget.tracks.isEmpty
         ? null
         : <Widget>[
             Icon(
@@ -82,13 +101,13 @@ class FolderTile extends StatelessWidget {
             ),
             SizedBox(width: 4.0),
             Text(
-              '${tracks.length}',
+              '${widget.tracks.length}',
               overflow: TextOverflow.ellipsis,
               softWrap: false,
               style: subtitleTextStyle,
             ),
           ];
-    final subtitleSecondPart = dirInsideCount <= 0
+    final subtitleSecondPart = widget.dirInsideCount <= 0
         ? null
         : <Widget>[
             Icon(
@@ -97,7 +116,7 @@ class FolderTile extends StatelessWidget {
             ),
             SizedBox(width: 4.0),
             Text(
-              '$dirInsideCount',
+              '${widget.dirInsideCount}',
               overflow: TextOverflow.ellipsis,
               softWrap: false,
               style: subtitleTextStyle,
@@ -123,7 +142,7 @@ class FolderTile extends StatelessWidget {
       child: NamidaInkWell(
         bgColor: context.theme.cardColor,
         borderRadius: 10.0,
-        onTap: folder.navigate,
+        onTap: widget.folder.navigate,
         onLongPress: _showFolderDialog,
         enableSecondaryTap: true,
         child: Padding(
@@ -146,18 +165,18 @@ class FolderTile extends StatelessWidget {
                         Positioned(
                           child: Padding(
                             padding: const EdgeInsets.only(top: 8.0),
-                            child: tracks.isEmpty && dirInsideCount > 0
+                            child: widget.tracks.isEmpty && widget.dirInsideCount > 0
                                 ? Icon(
                                     Broken.folder_open,
                                     size: thumbSize,
                                   )
                                 : ArtworkWidget(
-                                    key: ValueKey(tracks.firstOrNull),
-                                    track: tracks.firstOrNull,
+                                    key: ValueKey(widget.tracks.firstOrNull),
+                                    track: widget.tracks.firstOrNull,
                                     blur: 3.0,
                                     borderRadius: 5.0,
                                     thumbnailSize: thumbSize,
-                                    path: tracks.firstOrNull?.pathToImage,
+                                    path: widget.tracks.firstOrNull?.pathToImage,
                                     forceSquared: true,
                                   ),
                           ),
@@ -173,12 +192,12 @@ class FolderTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    extraInfo.isNotEmpty
+                    extraInfo != null && extraInfo.isNotEmpty
                         ? Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                folder.folderName,
+                                widget.folder.folderName,
                                 style: context.textTheme.displayMedium,
                               ),
                               Text(
@@ -188,12 +207,12 @@ class FolderTile extends StatelessWidget {
                             ],
                           )
                         : Text(
-                            folder.folderName,
+                            widget.folder.folderName,
                             style: context.textTheme.displayMedium,
                           ),
-                    if (subtitle != null)
+                    if (widget.subtitle != null)
                       Text(
-                        subtitle!,
+                        widget.subtitle!,
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                         style: context.textTheme.displaySmall,

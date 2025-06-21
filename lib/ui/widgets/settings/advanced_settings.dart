@@ -913,7 +913,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                         }
 
                         if (formKey.currentState?.validate() ?? false) {
-                          if (tracksPaths != null && tracksPaths!.any((element) => File(element).existsSync())) {
+                          if (tracksPaths != null && await tracksPaths!.anyAsync((element) => File(element).exists())) {
                             NamidaNavigator.inst.navigateDialog(
                               colorScheme: colorScheme,
                               dialogBuilder: (theme) => CustomBlurryDialog(
@@ -970,8 +970,12 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                             if (value.isEmpty) {
                               return lang.PLEASE_ENTER_A_NAME;
                             }
-                            if (!Directory(value).existsSync()) {
-                              return lang.DIRECTORY_DOESNT_EXIST;
+                            try {
+                              if (!Directory(value).existsSync()) {
+                                return lang.DIRECTORY_DOESNT_EXIST;
+                              }
+                            } catch (e) {
+                              return e.toString();
                             }
                             return null;
                           },

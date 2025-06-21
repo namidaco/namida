@@ -331,7 +331,7 @@ class NamidaFFMPEG {
         bool isTempThumbnail = false;
         try {
           // -- try getting cropped version if required
-          final channelName = await YoutubeInfoController.utils.getVideoChannelNameAsync(videoId);
+          final channelName = await YoutubeInfoController.utils.getVideoChannelName(videoId);
           const topic = '- Topic';
           if (channelName != null && channelName.endsWith(topic)) {
             final thumbFilePath = FileParts.joinPath(Directory.systemTemp.path, '$videoId.png');

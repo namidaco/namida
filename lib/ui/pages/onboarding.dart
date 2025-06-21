@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/controller/backup_controller.dart';
@@ -22,8 +24,7 @@ import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
 class FirstRunConfigureScreen extends StatefulWidget {
-  final void Function(BuildContext context) onContextAvailable;
-  const FirstRunConfigureScreen({super.key, required this.onContextAvailable});
+  const FirstRunConfigureScreen({super.key});
 
   @override
   State<FirstRunConfigureScreen> createState() => _FirstRunConfigureScreenState();
@@ -51,7 +52,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
   void initState() {
     super.initState();
     c = ScrollController()..addListener(_scrollListener);
-    Future.delayed(Duration.zero, _scrollListener);
+    Timer(Duration.zero, _scrollListener);
 
     _requestPermission(request: false); // just to set it to true only if granted.
   }
@@ -82,7 +83,6 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     Navigator.of(context).pushReplacement(MaterialPageRoute(
       builder: (context) {
         return MainPageWrapper(
-          onContextAvailable: widget.onContextAvailable,
           shouldShowOnBoarding: false,
         );
       },

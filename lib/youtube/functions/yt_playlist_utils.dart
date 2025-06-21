@@ -400,7 +400,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     ).navigate();
   }
 
-  List<NamidaPopupItem> getPopupMenuItems({
+  FutureOr<List<NamidaPopupItem>> getPopupMenuItems({
     required QueueSourceYoutubeID queueSource,
     required bool showProgressSheet,
     required YoutiPiePlaylistResultBase playlistToFetch,
@@ -410,7 +410,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     bool displayPlay = true,
     bool displayOpenPlaylist = false,
     bool isInFullScreen = false,
-  }) {
+  }) async {
     final playlist = this;
     final videosCount = playlist.videosCount;
     String? countText;
@@ -421,7 +421,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     }
     countText ??= '?';
 
-    final playAfterVid = YTUtils.getPlayerAfterVideo();
+    final playAfterVid = await YTUtils.getPlayerAfterVideo();
 
     Future<List<YoutubeID>> fetchAllIDs() async => await fetchAllPlaylistAsYTIDs(showProgressSheet: showProgressSheet, playlistToFetch: playlistToFetch);
 

@@ -1,16 +1,13 @@
 part of 'youtube_controller.dart';
 
 class _YoutubeIDStatsManager {
-  late final _statsDBManager = DBWrapper.openFromInfo(fileInfo: AppPaths.VIDEO_ID_STATS_DB_INFO, createIfNotExist: true);
-
-  YoutubeIDStats? getStatsSync(YoutubeID item) {
-    final json = _statsDBManager.get(item.id);
-    if (json == null) return null;
-    return YoutubeIDStats.fromJsonWithoutVideoId(item.id, json);
-  }
+  late final _statsDBManager = DBWrapper.openFromInfo(
+    fileInfo: AppPaths.VIDEO_ID_STATS_DB_INFO,
+    config: const DBConfig(createIfNotExist: true),
+  );
 
   Future<YoutubeIDStats?> getStats(YoutubeID item) async {
-    final json = await _statsDBManager.getAsync(item.id);
+    final json = await _statsDBManager.get(item.id);
     if (json == null) return null;
     return YoutubeIDStats.fromJsonWithoutVideoId(item.id, json);
   }
@@ -39,6 +36,6 @@ class _YoutubeIDStatsManager {
       lastPositionInMs: lastPositionInMs,
     );
 
-    return _statsDBManager.putAsync(item.id, newStats.toJsonWithoutVideoId());
+    return _statsDBManager.put(item.id, newStats.toJsonWithoutVideoId());
   }
 }

@@ -27,9 +27,8 @@ import 'package:namida/ui/widgets/settings/theme_settings.dart';
 
 class MainPageWrapper extends StatefulWidget {
   final bool shouldShowOnBoarding;
-  final void Function(BuildContext context) onContextAvailable;
 
-  const MainPageWrapper({super.key, required this.shouldShowOnBoarding, required this.onContextAvailable});
+  const MainPageWrapper({super.key, required this.shouldShowOnBoarding});
 
   @override
   State<MainPageWrapper> createState() => _MainPageWrapperState();
@@ -39,30 +38,15 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
   @override
   void initState() {
     super.initState();
-    widget.onContextAvailable(context);
     if (widget.shouldShowOnBoarding) {
       WidgetsBinding.instance.addPostFrameCallback(
         (timeStamp) {
           Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) {
-            return FirstRunConfigureScreen(
-              onContextAvailable: widget.onContextAvailable,
-            );
+            return const FirstRunConfigureScreen();
           }));
         },
       );
     }
-  }
-
-  @override
-  void didChangeDependencies() {
-    widget.onContextAvailable(context);
-    super.didChangeDependencies();
-  }
-
-  @override
-  void didUpdateWidget(covariant MainPageWrapper oldWidget) {
-    widget.onContextAvailable(context);
-    super.didUpdateWidget(oldWidget);
   }
 
   @override

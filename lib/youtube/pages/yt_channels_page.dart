@@ -1,6 +1,14 @@
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:jiffy/jiffy.dart';
+import 'package:youtipie/class/channels/channel_page_result.dart';
+import 'package:youtipie/class/execute_details.dart';
+import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/youtipie.dart';
+
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/class/route.dart';
@@ -26,9 +34,6 @@ import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
-import 'package:youtipie/class/execute_details.dart';
-import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
-import 'package:youtipie/youtipie.dart';
 
 class YoutubeChannelsPage extends StatefulWidget {
   const YoutubeChannelsPage({super.key});
@@ -59,6 +64,8 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   final _allChannelsStreamsLoading = false.obs;
 
   late final Rx<DateTime> allChannelFetchOldestDate;
+
+  YoutiPieChannelPageResult? currentChannelInfo;
 
   @override
   void initState() {
@@ -91,15 +98,19 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     setState(() {
       isLoadingInitialStreams = true;
       channel = sub;
+      currentChannelInfo = null;
       streamsPeakDates = null;
       _allStreamsList = null;
     });
 
     if (sub != null) {
+      _updateChannelInfoCache(sub.channelID);
       final channelInfo = await YoutubeInfoController.channel.fetchChannelInfo(
         channelId: sub.channelID,
         // details: forceRequest ? ExecuteDetails.forceRequest() : null, // -- info is not force requested
       );
+
+      refreshState(() => currentChannelInfo = channelInfo);
 
       if (channelInfo != null && channel == sub) {
         return fetchChannelStreams(channelInfo, forceRequest: forceRequest);
@@ -109,9 +120,14 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     }
   }
 
+  void _updateChannelInfoCache(String channelID) async {
+    final res = await YoutubeInfoController.channel.fetchChannelInfoCache(channelID);
+    refreshState(() => currentChannelInfo = res);
+  }
+
   bool get _hasConnection => ConnectivityController.inst.hasConnection;
   void _showNetworkError() {
-    Future.delayed(Duration.zero, () {
+    Timer(Duration.zero, () {
       snackyy(
         title: lang.ERROR,
         message: lang.NO_NETWORK_AVAILABLE_TO_FETCH_DATA,
@@ -243,15 +259,16 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
 
-    final ch = channel;
-    final currentChannelInfo = ch == null ? null : YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID);
+    final selectedChannel = channel;
     final currentChannelThumbnail = currentChannelInfo?.thumbnails.pick()?.url;
+
+    final selectedChannelBgColor = context.theme.colorScheme.secondary.withValues(alpha: 0.1);
 
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          child: ch == null
+          child: selectedChannel == null
               ? Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -335,7 +352,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                           borderRadius: 24.0,
                           bgColor: context.theme.cardColor,
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          onTap: YTChannelSubpage(channelID: ch.channelID, sub: ch).navigate,
+                          onTap: YTChannelSubpage(channelID: selectedChannel.channelID, sub: selectedChannel).navigate,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -346,7 +363,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                 width: 32.0,
                                 isImportantInCache: true,
                                 customUrl: currentChannelThumbnail,
-                                urlSymLinkId: ch.channelID,
+                                urlSymLinkId: selectedChannel.channelID,
                                 isCircle: true,
                               ),
                               const SizedBox(width: 8.0),
@@ -354,11 +371,11 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    ch.title != '' ? ch.title : YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID)?.title ?? '',
+                                    selectedChannel.title != '' ? selectedChannel.title : currentChannelInfo?.title ?? '',
                                     style: context.textTheme.displayMedium,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  if (ch.subscribed ?? false)
+                                  if (selectedChannel.subscribed ?? false)
                                     Text(
                                       lang.SUBSCRIBED,
                                       style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0),
@@ -554,39 +571,13 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                           itemBuilder: (context, indexPre) {
                             final index = totalIDsLength - indexPre - 1;
                             final key = channelIDS[index];
-                            final ch = YoutubeSubscriptionsController.inst.availableChannels.valueR[key]!;
-                            final info = YoutubeInfoController.channel.fetchChannelInfoSync(ch.channelID);
-                            final channelTitle = info?.title;
-                            final channelName = channelTitle == null || channelTitle == '' ? ch.title : channelTitle;
-                            final channelThumbnail = info?.thumbnails.pick()?.url;
-                            return NamidaInkWell(
-                              borderRadius: 10.0,
-                              animationDurationMS: 150,
-                              bgColor: channel?.channelID == ch.channelID ? context.theme.colorScheme.secondary.withValues(alpha: 0.1) : null,
+                            final sub = YoutubeSubscriptionsController.inst.availableChannels.valueR[key]!;
+                            return _ChannelSmallCard(
+                              sub: sub,
+                              bgColor: channel?.channelID == sub.channelID ? selectedChannelBgColor : null,
                               width: _thumbSize,
-                              padding: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
-                              margin: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
-                              onTap: () => _updateChannel(ch, forceRequest: false),
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: 4.0),
-                                  YoutubeThumbnail(
-                                    type: ThumbnailType.channel,
-                                    key: Key(channelThumbnail ?? ''),
-                                    width: _thumbSize,
-                                    isImportantInCache: true,
-                                    customUrl: channelThumbnail,
-                                    urlSymLinkId: ch.channelID,
-                                    isCircle: true,
-                                  ),
-                                  const SizedBox(height: 4.0),
-                                  Text(
-                                    channelName,
-                                    style: context.textTheme.displaySmall,
-                                    overflow: TextOverflow.ellipsis,
-                                  )
-                                ],
-                              ),
+                              horizontalPadding: horizontalPadding,
+                              onTap: () => _updateChannel(sub, forceRequest: false),
                             );
                           },
                         ),
@@ -599,6 +590,78 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ChannelSmallCard extends StatefulWidget {
+  final YoutubeSubscription sub;
+  final Color? bgColor;
+  final double width;
+  final double horizontalPadding;
+  final void Function() onTap;
+
+  const _ChannelSmallCard({
+    required this.sub,
+    this.bgColor,
+    required this.width,
+    required this.horizontalPadding,
+    required this.onTap,
+  });
+
+  @override
+  State<_ChannelSmallCard> createState() => __ChannelSmallCardState();
+}
+
+class __ChannelSmallCardState extends State<_ChannelSmallCard> {
+  YoutiPieChannelPageResult? _channelInfo;
+
+  @override
+  void initState() {
+    _initValues();
+    super.initState();
+  }
+
+  void _initValues() async {
+    final res = await YoutubeInfoController.channel.fetchChannelInfoCache(widget.sub.channelID);
+    refreshState(() => _channelInfo = res);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ch = widget.sub;
+    final info = _channelInfo;
+    final channelTitle = info?.title;
+    final channelName = channelTitle == null || channelTitle == '' ? ch.title : channelTitle;
+    final channelThumbnail = info?.thumbnails.pick()?.url;
+    return NamidaInkWell(
+      borderRadius: 10.0,
+      animationDurationMS: 150,
+      bgColor: widget.bgColor,
+      width: widget.width,
+      padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding / 2),
+      margin: EdgeInsets.symmetric(horizontal: widget.horizontalPadding / 2),
+      onTap: widget.onTap,
+      child: Column(
+        children: [
+          const SizedBox(height: 4.0),
+          YoutubeThumbnail(
+            type: ThumbnailType.channel,
+            key: Key(channelThumbnail ?? ''),
+            width: widget.width,
+            isImportantInCache: true,
+            customUrl: channelThumbnail,
+            urlSymLinkId: ch.channelID,
+            isCircle: true,
+          ),
+          const SizedBox(height: 4.0),
+          Text(
+            channelName,
+            style: context.textTheme.displaySmall,
+            overflow: TextOverflow.ellipsis,
+          )
+        ],
+      ),
     );
   }
 }

@@ -53,12 +53,20 @@ class _YTNotificationDataHolder {
   late final _titlesLookupTemp = <DownloadTaskVideoId, String?>{};
   late final _imagesLookupTemp = <DownloadTaskVideoId, File?>{};
 
-  String? titleCallback(DownloadTaskVideoId videoId) {
-    return _titlesLookupTemp[videoId] ??= YoutubeInfoController.utils.getVideoName(videoId.videoId);
+  FutureOr<String?> titleCallback(DownloadTaskVideoId videoId) {
+    final valInMap = _titlesLookupTemp[videoId];
+    if (valInMap != null) return valInMap;
+    return YoutubeInfoController.utils.getVideoName(videoId.videoId).then(
+          (value) => _titlesLookupTemp[videoId] = value,
+        );
   }
 
-  File? imageCallback(DownloadTaskVideoId videoId) {
-    return _imagesLookupTemp[videoId] ??= ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: videoId.videoId, type: ThumbnailType.video);
+  FutureOr<File?> imageCallback(DownloadTaskVideoId videoId) {
+    final valInMap = _imagesLookupTemp[videoId];
+    if (valInMap != null) return valInMap;
+    return ThumbnailManager.inst.getYoutubeThumbnailFromCache(id: videoId.videoId, type: ThumbnailType.video).then(
+          (value) => _imagesLookupTemp[videoId] = value,
+        );
   }
 
   void clearAll() {
@@ -125,26 +133,26 @@ class YoutubeController {
     // ignore: invalid_use_of_protected_member
     config.rename(newFilename);
     final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(groupName.groupName);
-    await downloadTasksGroupDB.putAsync(config.filename.key, config.toJson());
+    await downloadTasksGroupDB.put(config.filename.key, config.toJson());
 
     final directory = Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
     final existingFile = FileParts.join(directory.path, oldFilename);
-    if (existingFile.existsSync()) {
+    if (await existingFile.exists()) {
       try {
-        existingFile.renameSync(FileParts.joinPath(directory.path, newFilename));
+        await existingFile.rename(FileParts.joinPath(directory.path, newFilename));
       } catch (_) {}
     }
     if (renameCacheFiles) {
       final aFile = File(_getTempAudioPath(groupName: groupName, fullFilename: oldFilename));
       final vFile = File(_getTempVideoPath(groupName: groupName, fullFilename: oldFilename));
 
-      if (aFile.existsSync()) {
+      if (await aFile.exists()) {
         final newPath = _getTempAudioPath(groupName: groupName, fullFilename: newFilename);
-        aFile.renameSync(newPath);
+        await aFile.rename(newPath);
       }
-      if (vFile.existsSync()) {
+      if (await vFile.exists()) {
         final newPath = _getTempVideoPath(groupName: groupName, fullFilename: newFilename);
-        vFile.renameSync(newPath);
+        await vFile.rename(newPath);
       }
     }
 
@@ -192,9 +200,9 @@ class YoutubeController {
     required int Function(DownloadTaskFilename key, int progress) speedInBytes,
     required DateTime startTime,
     required bool isAudio,
-    required String? Function(DownloadTaskVideoId videoId) titleCallback,
-    required File? Function(DownloadTaskVideoId videoId) imageCallback,
-  }) {
+    required FutureOr<String?> Function(DownloadTaskVideoId videoId) titleCallback,
+    required FutureOr<File?> Function(DownloadTaskVideoId videoId) imageCallback,
+  }) async {
     List<void Function()>? pendingFnsAfterLoop;
     final downloadingText = isAudio ? "Audio" : "Video";
     for (final bigEntry in downloadingMap.entries) {
@@ -218,7 +226,7 @@ class YoutubeController {
           });
         }
 
-        final title = titleCallback(videoId) ?? videoId;
+        final title = await titleCallback(videoId) ?? videoId;
         final speedB = speedInBytes(filename, progressInfo.progress);
         if (currentSpeedsInByte.value[videoId] == null) {
           currentSpeedsInByte.value[videoId] = <DownloadTaskFilename, int>{}.obs;
@@ -233,7 +241,7 @@ class YoutubeController {
           progress: p,
           total: tp,
           subtitle: (progressText) => "$progressText (${speedB.fileSizeFormatted}/s)",
-          imagePath: imageCallback(videoId)?.path,
+          imagePath: (await imageCallback(videoId))?.path,
           displayTime: startTime,
           isRunning: isRunning,
         );
@@ -252,14 +260,14 @@ class YoutubeController {
     required File? downloadedFile,
     required DownloadTaskFilename filename,
     required bool canceledByUser,
-  }) {
+  }) async {
     if (downloadedFile == null) {
       if (!canceledByUser) {
         NotificationManager.instance.doneDownloadingYoutubeNotification(
           filenameWrapper: nameIdentifier,
           videoTitle: videoTitle,
           subtitle: 'Download Failed',
-          imagePath: _notificationData.imageCallback(videoId)?.path,
+          imagePath: (await _notificationData.imageCallback(videoId))?.path,
           failed: true,
         );
       }
@@ -269,7 +277,7 @@ class YoutubeController {
         filenameWrapper: nameIdentifier,
         videoTitle: downloadedFile.path.getFilenameWOExt,
         subtitle: size == null ? '' : 'Downloaded: $size',
-        imagePath: _notificationData.imageCallback(videoId)?.path,
+        imagePath: (await _notificationData.imageCallback(videoId))?.path,
         failed: false,
       );
       // -- remove progress only if succeeded.
@@ -446,7 +454,7 @@ class YoutubeController {
   }
 
   void _breakRetrievingInfoRequest(YoutubeItemDownloadConfig c) {
-    _completersVAI[c]?.completeErrorIfWasnt(Exception('Download was canceled by the user'));
+    _completersVAI[c]?.completeErrorIfWasnt(const _UserCanceledException());
     _completersVAI[c] = null;
   }
 
@@ -475,7 +483,10 @@ class YoutubeController {
     bool keepInListIfRemoved = false,
     bool allInGroupName = false,
   }) async {
-    final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(groupName.groupName, createIfNotExist: true);
+    final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(
+      groupName.groupName,
+      config: const DBConfig(createIfNotExist: true),
+    );
 
     youtubeDownloadTasksMap.value[groupName] ??= {};
     youtubeDownloadTasksInQueueMap[groupName] ??= {};
@@ -498,23 +509,21 @@ class YoutubeController {
         }
         if (delete) {
           try {
-            FileParts.join(directory.path, c.filename.filename).deleteSync();
+            await FileParts.join(directory.path, c.filename.filename).delete();
           } catch (_) {}
         }
         downloadedFilesMap[groupName]?[c.filename] = null;
       }
-      downloadTasksGroupDB.claimFreeSpaceAsync();
+      downloadTasksGroupDB.claimFreeSpace();
 
       // -- remove groups if emptied.
       if (youtubeDownloadTasksMap.value[groupName]?.isEmpty == true) {
         youtubeDownloadTasksMap.value.remove(groupName);
-        downloadTasksGroupDB
-          ..deleteEverything()
-          ..claimFreeSpaceAsync();
-        // downloadTasksGroupDB.fileInfo.file.deleteSync(); // db.deleteEverything() leaves leftovers.
+        downloadTasksGroupDB.deleteEverything();
+        // await downloadTasksGroupDB.fileInfo.file.delete(); // db.deleteEverything() leaves leftovers.
       }
     } else {
-      await downloadTasksGroupDB.putAllAsync(
+      await downloadTasksGroupDB.putAll(
         itemsConfig,
         (c) {
           youtubeDownloadTasksMap.value[groupName]![c.filename] = c;
@@ -635,8 +644,10 @@ class YoutubeController {
           config.fileDate = info?.publishDate.date ?? info?.uploadDate.date;
         }
       } catch (e) {
-        printy(e, isError: true);
-        snackyy(title: lang.ERROR, message: e.toString(), isError: true);
+        if (e is! _UserCanceledException) {
+          printy(e, isError: true);
+          snackyy(title: lang.ERROR, message: e.toString(), isError: true);
+        }
         // -- force break
         isFetchingData.value[videoID]?[config.filename] = false;
         return;
@@ -671,7 +682,7 @@ class YoutubeController {
           bool isTempThumbnail = false;
           try {
             // -- try getting cropped version if required
-            final channelName = await YoutubeInfoController.utils.getVideoChannelNameAsync(videoId);
+            final channelName = await YoutubeInfoController.utils.getVideoChannelName(videoId);
             const topic = '- Topic';
             if (channelName != null && channelName.endsWith(topic)) {
               final thumbFilePath = FileParts.joinPath(Directory.systemTemp.path, '$videoId.png');
@@ -914,7 +925,7 @@ class YoutubeController {
       try {
         // --------- Downloading Choosen Video.
         if (videoStream != null) {
-          final filecache = videoStream.getCachedFile(id.videoId);
+          final filecache = await videoStream.getCachedFile(id.videoId);
           if (useCachedVersionsIfAvailable && filecache != null && await fileSizeQualified(file: filecache, targetSize: videoStream.sizeInBytes)) {
             videoFile = filecache;
             isVideoFileCached = true;
@@ -969,7 +980,7 @@ class YoutubeController {
         if (skipAudio == false && audioStream != null) {
           downloadsVideoProgressMap[id]?.remove(finalFilenameWrapper); // remove video progress so that audio progress is shown
 
-          final filecache = audioStream.getCachedFile(id.videoId);
+          final filecache = await audioStream.getCachedFile(id.videoId);
           if (useCachedVersionsIfAvailable && filecache != null && await fileSizeQualified(file: filecache, targetSize: audioStream.sizeInBytes)) {
             audioFile = filecache;
             isAudioFileCached = true;
@@ -1049,7 +1060,7 @@ class YoutubeController {
             if (isCachedVersion) {
               await file.copy(path);
             } else {
-              await file.rename(path);
+              await file.move(path);
             }
           }
 
@@ -1069,9 +1080,11 @@ class YoutubeController {
           ]);
           if (await File(output).exists()) df = File(output);
         }
-      } catch (e) {
+      } on _UserCanceledException catch (_) {
+      } catch (e, st) {
         printy('Error Downloading YT Video: $e', isError: true);
         snackyy(title: 'Error Downloading', message: e.toString(), isError: true);
+        logger.error('YoutubeController.downloadYoutubeVideoRaw: Error Downloading', e: e, st: st);
       }
     }
 
@@ -1213,9 +1226,11 @@ class YoutubeController {
           bitrate: erabaretaStream.bitrate,
         );
       }
-    } catch (e) {
+    } on _UserCanceledException catch (_) {
+    } catch (e, st) {
       printy('Error Downloading YT Video: $e', isError: true);
       snackyy(title: 'Error Downloading', message: e.toString(), isError: true);
+      logger.error('YoutubeController.downloadYoutubeVideo: Error Downloading', e: e, st: st);
     }
 
     return dv;
@@ -1414,7 +1429,7 @@ class _IsolateFunctions {
   static _DownloadTaskInitWrapper loadDownloadTasksInfoFileSync(_DownloadTasksLoadParams params) {
     NamicoDBWrapper.initialize();
 
-    late final downloadTasksMainDBManager = DBWrapperMain(params.tasksDatabasesPath);
+    late final downloadTasksMainDBManager = DBWrapperMainSync(params.tasksDatabasesPath);
 
     final youtubeDownloadTasksMap = <DownloadTaskGroupName, Map<DownloadTaskFilename, YoutubeItemDownloadConfig>>{};
     final downloadedFilesMap = <DownloadTaskGroupName, Map<DownloadTaskFilename, File?>>{};
@@ -1440,9 +1455,12 @@ class _IsolateFunctions {
         final group = fileToGroupName(file);
 
         try {
-          final res = file.readAsJsonSync() as Map<String, dynamic>?;
+          final res = file.readAsJsonSync(ensureExists: false) as Map<String, dynamic>?;
           if (res != null) {
-            final downloadTasksGroupDB = downloadTasksMainDBManager.getDB(group.groupName, createIfNotExist: true, autoDisposeTimerDuration: null);
+            final downloadTasksGroupDB = downloadTasksMainDBManager.getDB(
+              group.groupName,
+              config: const DBConfig(createIfNotExist: true, autoDisposeTimerDuration: null),
+            );
             for (final r in res.entries) {
               downloadTasksGroupDB.put(r.key, r.value);
             }
@@ -1480,7 +1498,7 @@ class _IsolateFunctions {
         }
 
         try {
-          final downloadTasksGroupDB = downloadTasksMainDBManager.getDB(group.groupName, autoDisposeTimerDuration: null);
+          final downloadTasksGroupDB = downloadTasksMainDBManager.getDB(group.groupName, config: const DBConfig(autoDisposeTimerDuration: null));
           downloadTasksGroupDB.loadEverything((itemMap) {
             final ytitem = YoutubeItemDownloadConfig.fromJson(itemMap);
             final saveDirPath = FileParts.joinPath(params.downloadLocation, group.groupName);
@@ -1593,4 +1611,8 @@ extension _RxMapUtils<MK, K, V> on Map<MK, RxMap<K, V>> {
       }
     }
   }
+}
+
+class _UserCanceledException implements Exception {
+  const _UserCanceledException();
 }

@@ -121,8 +121,8 @@ class _PlayerSettings with SettingsFileWriter {
     replayGain.value = true;
   }
 
-  void prepareSettingsFile() {
-    final json = prepareSettingsFile_();
+  Future<void> prepareSettingsFile() async {
+    final json = await prepareSettingsFile_();
     if (json is! Map) return;
 
     try {

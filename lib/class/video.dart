@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 /// used for stats.
@@ -188,21 +185,21 @@ extension NamidaVideoUtils on NamidaVideo {
 
   int get framerate => frameratePrecise.round();
 
-  String get pathToImage {
-    final isLocal = ytID == null;
-    final dir = isLocal ? AppDirs.THUMBNAILS : AppDirs.YT_THUMBNAILS;
-    final idOrFileNameWOExt = ytID ?? path.getFilenameWOExt;
+  // Future<String> pathToImage() async {
+  //   final isLocal = ytID == null;
+  //   final dir = isLocal ? AppDirs.THUMBNAILS : AppDirs.YT_THUMBNAILS;
+  //   final idOrFileNameWOExt = ytID ?? path.getFilenameWOExt;
 
-    String getPath(String prefix) => "$dir$prefix$idOrFileNameWOExt.png";
+  //   String getPath(String prefix) => "$dir$prefix$idOrFileNameWOExt.png";
 
-    if (!isLocal) {
-      final path = getPath('');
-      if (File(path).existsSync()) {
-        return path;
-      }
-    }
-    return getPath('EXT_');
-  }
+  //   if (!isLocal) {
+  //     final path = getPath('');
+  //     if (await File(path).exists()) {
+  //       return path;
+  //     }
+  //   }
+  //   return getPath('EXT_');
+  // }
 }
 
 class Video extends Track {

@@ -989,46 +989,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     child: widget.isFullScreen
                                         ? Material(
                                             type: MaterialType.transparency,
-                                            child: Obx((context) {
-                                              String? videoName;
-                                              String? channelName;
-
-                                              if (widget.isLocal) {
-                                                final track = Player.inst.currentTrackR?.track;
-                                                videoName = track?.title;
-                                                channelName = track?.originalArtist;
-                                              } else {
-                                                videoName = YoutubeInfoController.current.currentVideoPage.valueR?.videoInfo?.title ??
-                                                    YoutubeInfoController.current.currentYTStreams.valueR?.info?.title;
-                                                if (videoName == null) {
-                                                  final vidId = Player.inst.currentVideoR?.id;
-                                                  if (vidId != null) videoName = YoutubeInfoController.utils.getVideoName(vidId);
-                                                }
-
-                                                channelName = YoutubeInfoController.current.currentVideoPage.valueR?.channelInfo?.title ??
-                                                    YoutubeInfoController.current.currentYTStreams.valueR?.info?.channelName;
-                                                if (channelName == null) {
-                                                  final vidId = Player.inst.currentVideoR?.id;
-                                                  if (vidId != null) channelName = YoutubeInfoController.utils.getVideoChannelName(vidId);
-                                                }
-                                              }
-                                              return Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  if (videoName != null && videoName != '')
-                                                    Text(
-                                                      videoName,
-                                                      style: context.textTheme.displayLarge?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.85)),
-                                                    ),
-                                                  if (channelName != null && channelName != '')
-                                                    Text(
-                                                      channelName,
-                                                      style: context.textTheme.displaySmall?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.7)),
-                                                    ),
-                                                ],
-                                              );
-                                            }),
+                                            child: _VideoTitleSubtitleWidget(
+                                              isLocal: widget.isLocal,
+                                            ),
                                           )
                                         : const SizedBox(),
                                   ),
@@ -1220,42 +1183,42 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             _resetTimer();
                                             setControlsVisibily(true);
                                           },
-                                          children: () => [
-                                            ...streamsMap.values.map(
-                                              (element) => Obx(
-                                                (context) {
-                                                  bool isSelected = false;
-                                                  final audioTrack = element.audioTrack;
-                                                  final langCode = audioTrack?.langCode;
-                                                  if (langCode != null) {
-                                                    if (langCode == Player.inst.currentCachedAudio.valueR?.langaugeCode) {
-                                                      isSelected = true;
-                                                    } else if (langCode == Player.inst.currentAudioStream.valueR?.audioTrack?.langCode) {
-                                                      isSelected = true;
-                                                    }
-                                                  }
-                                                  final id = Player.inst.currentVideoR?.id;
-                                                  return _getQualityChip(
-                                                    title: audioTrack?.displayName ?? '?',
-                                                    subtitle: " • ${audioTrack?.langCode ?? 0}",
-                                                    onPlay: (isSelected) {
-                                                      if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized == true) {
-                                                        Player.inst.onItemPlayYoutubeIDSetAudio(
-                                                          stream: element,
-                                                          mainStreams: streams,
-                                                          cachedFile: null,
-                                                          useCache: true,
-                                                          videoId: Player.inst.currentVideo?.id ?? '',
-                                                        );
+                                          children: () => streamsMap.values
+                                              .map(
+                                                (element) => Obx(
+                                                  (context) {
+                                                    bool isSelected = false;
+                                                    final audioTrack = element.audioTrack;
+                                                    final langCode = audioTrack?.langCode;
+                                                    if (langCode != null) {
+                                                      if (langCode == Player.inst.currentCachedAudio.valueR?.langaugeCode) {
+                                                        isSelected = true;
+                                                      } else if (langCode == Player.inst.currentAudioStream.valueR?.audioTrack?.langCode) {
+                                                        isSelected = true;
                                                       }
-                                                    },
-                                                    selected: isSelected,
-                                                    isCached: element.getCachedFile(id) != null,
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          ],
+                                                    }
+                                                    final id = Player.inst.currentVideoR?.id;
+                                                    return _getQualityChip(
+                                                      title: audioTrack?.displayName ?? '?',
+                                                      subtitle: " • ${audioTrack?.langCode ?? 0}",
+                                                      onPlay: (isSelected) {
+                                                        if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized == true) {
+                                                          Player.inst.onItemPlayYoutubeIDSetAudio(
+                                                            stream: element,
+                                                            mainStreams: streams,
+                                                            cachedFile: null,
+                                                            useCache: true,
+                                                            videoId: Player.inst.currentVideo?.id ?? '',
+                                                          );
+                                                        }
+                                                      },
+                                                      selected: isSelected,
+                                                      isCached: element.getCachedFileSync(id) != null,
+                                                    );
+                                                  },
+                                                ),
+                                              )
+                                              .toList(),
                                           child: Padding(
                                             padding: const EdgeInsets.all(4.0),
                                             child: NamidaBgBlurClipped(
@@ -1397,7 +1360,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                 );
                                               } else {
                                                 final id = Player.inst.currentVideoR?.id;
-                                                final cachedFile = id == null ? null : element.getCachedFile(id);
+                                                final cachedFile = id == null ? null : element.getCachedFileSync(id);
                                                 bool isSelected = false;
                                                 if (settings.youtube.isAudioOnlyMode.valueR) {
                                                   isSelected = false;
@@ -2264,7 +2227,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
     ];
   }
 
-  List<NamidaPopupItem> _getItemChildren(EndScreenItemBase item) {
+  FutureOr<List<NamidaPopupItem>> _getItemChildren(EndScreenItemBase item) async {
     switch (item) {
       case EndScreenItemVideo():
         final videoId = item.videoId;
@@ -2300,7 +2263,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
         final fetchedPlaylistC = _fetchedPlaylistsCompleters[item.basicInfo.id];
         if (fetchedPlaylistC == null) {
           final completer = _fetchedPlaylistsCompleters[item.basicInfo.id] = Completer<void>();
-          final cachedPlaylist = YoutiPie.cacheBuilder.forPlaylistVideos(playlistId: item.basicInfo.id).read();
+          final cachedPlaylist = await YoutiPie.cacheBuilder.forPlaylistVideos(playlistId: item.basicInfo.id).read();
           if (cachedPlaylist != null) {
             _fetchedPlaylists[item.basicInfo.id] = cachedPlaylist;
             completer.complete();
@@ -2421,6 +2384,101 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
     );
   }
 }
+
+class _VideoTitleSubtitleWidget extends StatefulWidget {
+  final bool isLocal;
+
+  const _VideoTitleSubtitleWidget({
+    required this.isLocal,
+  });
+
+  @override
+  State<_VideoTitleSubtitleWidget> createState() => _VideoIdToTitleWidgetState();
+}
+
+class _VideoIdToTitleWidgetState extends State<_VideoTitleSubtitleWidget> {
+  String? _videoName;
+  String? _channelName;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isLocal) {
+      _onLocalChange();
+      Player.inst.currentItem.addListener(_onLocalChange);
+    } else {
+      _onYTChange();
+      Player.inst.currentItem.addListener(_onYTChange);
+      YoutubeInfoController.current.currentVideoPage.addListener(_onYTChange);
+      YoutubeInfoController.current.currentYTStreams.addListener(_onYTChange);
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (widget.isLocal) {
+      Player.inst.currentItem.removeListener(_onLocalChange);
+    } else {
+      Player.inst.currentItem.removeListener(_onYTChange);
+      YoutubeInfoController.current.currentVideoPage.removeListener(_onYTChange);
+      YoutubeInfoController.current.currentYTStreams.removeListener(_onYTChange);
+    }
+  }
+
+  void _onLocalChange() async {
+    final item = Player.inst.currentItem.value;
+    if (item is! Selectable) return;
+    final track = item.track;
+    _videoName = track.title;
+    _channelName = track.originalArtist;
+
+    refreshState();
+  }
+
+  void _onYTChange() async {
+    final item = Player.inst.currentItem.value;
+    if (item is! YoutubeID) return;
+    final vidId = item.id;
+
+    String? videoName = YoutubeInfoController.current.currentVideoPage.value?.videoInfo?.title;
+    if (videoName == null || videoName.isEmpty) videoName = YoutubeInfoController.current.currentYTStreams.value?.info?.title;
+    if (videoName == null || videoName.isEmpty) videoName = await YoutubeInfoController.utils.getVideoName(vidId);
+
+    String? channelName = YoutubeInfoController.current.currentVideoPage.value?.channelInfo?.title;
+    if (channelName == null || channelName.isEmpty) channelName = YoutubeInfoController.current.currentYTStreams.value?.info?.channelName;
+    if (channelName == null || channelName.isEmpty) channelName = await YoutubeInfoController.utils.getVideoChannelName(vidId);
+
+    if (videoName != _videoName || channelName != _channelName) {
+      _videoName = videoName;
+      _channelName = channelName;
+      refreshState();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final videoName = _videoName;
+    final channelName = _channelName;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (videoName != null && videoName.isNotEmpty)
+          Text(
+            videoName,
+            style: context.textTheme.displayLarge?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.85)),
+          ),
+        if (channelName != null && channelName.isNotEmpty)
+          Text(
+            channelName,
+            style: context.textTheme.displaySmall?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.7)),
+          ),
+      ],
+    );
+  }
+}
+
 class _DropShadowWrapper extends StatelessWidget {
   final bool enabled;
   final Widget child;

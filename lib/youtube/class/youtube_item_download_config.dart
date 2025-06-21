@@ -27,6 +27,7 @@ class YoutubeItemDownloadConfig {
   final int? originalIndex;
   final int? totalLength;
   final String? playlistId;
+  final DateTime? addedAt;
 
   YoutubeItemDownloadConfig({
     required this.id,
@@ -44,7 +45,9 @@ class YoutubeItemDownloadConfig {
     required this.originalIndex,
     required this.totalLength,
     required this.playlistId,
-  }) : _filename = filename.obs;
+    required DateTime? addedAt,
+  })  : _filename = filename.obs,
+        this.addedAt = addedAt ?? DateTime.now();
 
   /// Using this method is restricted only for the function that will rename all the other instances in other parts.
   @protected
@@ -68,7 +71,7 @@ class YoutubeItemDownloadConfig {
     } catch (_) {}
 
     return YoutubeItemDownloadConfig(
-      id: DownloadTaskVideoId(videoId: map['id'] ?? 'UNKNOWN_ID'),
+      id: DownloadTaskVideoId(videoId: map['id'] ?? ''),
       filename: DownloadTaskFilename.fromMap(map['filename']),
       groupName: DownloadTaskGroupName(groupName: map['groupName'] ?? ''),
       fileDate: DateTime.fromMillisecondsSinceEpoch(map['fileDate'] ?? 0),
@@ -83,6 +86,7 @@ class YoutubeItemDownloadConfig {
       originalIndex: map['index'],
       totalLength: map['totalLength'],
       playlistId: map['playlistId'],
+      addedAt: map['addedAt'] is int ? DateTime.fromMicrosecondsSinceEpoch(map['addedAt'] as int) : null,
     );
   }
 
@@ -103,6 +107,7 @@ class YoutubeItemDownloadConfig {
       'index': originalIndex,
       'totalLength': totalLength,
       'playlistId': playlistId,
+      'addedAt': addedAt?.microsecondsSinceEpoch,
     };
   }
 
@@ -134,6 +139,7 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
     int? originalIndex,
     int? totalLength,
     String? playlistId,
+    DateTime? addedAt,
   }) {
     return YoutubeItemDownloadConfig(
       id: id ?? this.id,
@@ -151,6 +157,7 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
       originalIndex: originalIndex ?? this.originalIndex,
       totalLength: totalLength ?? this.totalLength,
       playlistId: playlistId ?? this.playlistId,
+      addedAt: addedAt ?? this.addedAt,
     );
   }
 }

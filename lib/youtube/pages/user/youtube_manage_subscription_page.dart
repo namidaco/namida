@@ -121,7 +121,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
   }
 
   Future<void> _refreshSupabase() async {
-    final info = NamicoSubscriptionManager.supabase.getUserSubInCache();
+    final info = await NamicoSubscriptionManager.supabase.getUserSubInCache();
     if (info != null) {
       final uuid = info.uuid;
       final email = info.email;

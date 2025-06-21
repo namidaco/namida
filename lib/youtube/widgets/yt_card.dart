@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/color_m.dart';
@@ -27,7 +29,7 @@ class YoutubeCard extends StatelessWidget {
   final IconData? smallBoxIcon;
   final bool extractColor;
   final void Function(NamidaColor? color)? onColorReady;
-  final List<NamidaPopupItem> Function()? menuChildrenDefault;
+  final FutureOr<List<NamidaPopupItem>> Function()? menuChildrenDefault;
   final bool isCircle;
   final List<Widget> bottomRightWidgets;
   final bool isImageImportantInCache;
@@ -252,7 +254,7 @@ class YoutubeCardMinimal extends StatelessWidget {
   final IconData? smallBoxIcon;
   final bool extractColor;
   final void Function(NamidaColor? color)? onColorReady;
-  final List<NamidaPopupItem> Function()? menuChildrenDefault;
+  final FutureOr<List<NamidaPopupItem>> Function()? menuChildrenDefault;
   final bool isCircle;
   final List<Widget> bottomRightWidgets;
   final bool isImageImportantInCache;

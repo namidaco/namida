@@ -62,30 +62,17 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
   late final videoId = widget.videoId.replaceFirst(' ', '');
   late final isDummyVideoId = videoId.isEmpty || videoId == 'null';
 
-  void _setLoadingIfThumbDoesntExist() {
-    if (isDummyVideoId) return;
-    final thumbInCache = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(
-      id: videoId,
-      customUrl: null,
-      isTemp: false,
-      type: ThumbnailType.video,
-    );
-    if (thumbInCache == null) {
-      _isLoadingThumbnail.value = true;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
     _videoLikeManager.init();
-    _fillInfo();
-    _fillMissingInfoIfRequired().then(
-      (value) {
-        _isLoadingInfo.value = false;
-      },
-    );
-    _setLoadingIfThumbDoesntExist();
+    _fillInfo().then((_) {
+      _fillMissingInfoIfRequired().then(
+        (value) {
+          _isLoadingInfo.value = false;
+        },
+      );
+    });
   }
 
   @override
@@ -106,32 +93,48 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
   String? description;
   String? sourcesText;
 
-  void _fillInfo() {
+  Future<void> _fillInfo() async {
     if (isDummyVideoId) return;
     final videoId = this.videoId;
 
     final info = widget.info;
 
-    String? title = info?.title;
-    if (title == null || title.isEmpty) {
-      title = YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: () {
-        isTitleFetchedFromMissingInfo = true;
-        VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
-      });
-    } else if (title.isYTTitleFaulty()) {
-      title = YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: null);
-      isTitleFetchedFromMissingInfo = true;
-      VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
-    }
-    videoTitle = title ?? '?';
+    await Future.wait([
+      () async {
+        String? title = info?.title;
+        if (title == null || title.isEmpty) {
+          title = await YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: () {
+            isTitleFetchedFromMissingInfo = true;
+            VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
+          });
+        } else if (title.isYTTitleFaulty()) {
+          title = await YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: null);
+          isTitleFetchedFromMissingInfo = true;
+          VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
+        }
 
-    channelTitle = info?.channel.title ?? YoutubeInfoController.utils.getVideoChannelName(videoId);
-    channelId = info?.channel.id ?? YoutubeInfoController.utils.getVideoChannelID(videoId);
-    dateMS = (info?.publishedAt.accurateDate ?? YoutubeInfoController.utils.getVideoReleaseDate(videoId))?.millisecondsSinceEpoch;
-    durationSeconds = info?.durSeconds ?? YoutubeInfoController.utils.getVideoDurationSeconds(videoId);
-    description = YoutubeInfoController.utils.getVideoDescription(videoId);
-
-    _videoPageInfo.value = YoutubeInfoController.video.fetchVideoPageSync(videoId);
+        videoTitle = title ?? '?';
+      }(),
+      () async {
+        channelTitle = info?.channel.title ?? await YoutubeInfoController.utils.getVideoChannelName(videoId);
+      }(),
+      () async {
+        channelId = info?.channel.id ?? await YoutubeInfoController.utils.getVideoChannelID(videoId);
+      }(),
+      () async {
+        dateMS = (info?.publishedAt.accurateDate ?? (await YoutubeInfoController.utils.getVideoReleaseDate(videoId)))?.millisecondsSinceEpoch;
+      }(),
+      () async {
+        durationSeconds = info?.durSeconds ?? await YoutubeInfoController.utils.getVideoDurationSeconds(videoId);
+      }(),
+      () async {
+        description = await YoutubeInfoController.utils.getVideoDescription(videoId);
+      }(),
+      () async {
+        _videoPageInfo.value = await YoutubeInfoController.video.fetchVideoPageCache(videoId);
+      }(),
+    ]);
+    refreshState();
   }
 
   Future<void> _fillMissingInfoIfRequired() async {
@@ -408,6 +411,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                 )
               ],
               fetchMissingIfRequired: true,
+              onImageFetchStart: () => _isLoadingThumbnail.value = true,
               onImageReady: (_) => _isLoadingThumbnail.value = false,
             );
             return SizedBox(
@@ -429,8 +433,12 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                               children: [
                                 const SizedBox(width: 2.0),
                                 TapDetector(
-                                  onTap: () {
-                                    final imgFile = ThumbnailManager.inst.getYoutubeThumbnailFromCacheSync(id: videoId, type: ThumbnailType.video);
+                                  onTap: () async {
+                                    final imgFile = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(
+                                      id: videoId,
+                                      type: ThumbnailType.video,
+                                      isTemp: null,
+                                    );
                                     if (imgFile == null) return;
                                     NamidaNavigator.inst.navigateDialog(
                                       scale: 1.0,

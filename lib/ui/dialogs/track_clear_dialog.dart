@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -19,29 +21,29 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
-void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) {
+void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
   final tracksMap = <Track, bool>{};
   int videosTotalSize = 0;
   int audiosTotalSize = 0;
   int lyricsTotalSize = 0;
   int imagesTotalSize = 0;
   tracksPre.loop(
-    (item) {
+    (item) async {
       var tr = item.track;
       if (tracksMap[tr] == null) {
         tracksMap[tr] = true;
         var ytId = tr.youtubeID;
-        VideoController.inst.getNVFromID(tr.youtubeID).loop((item) => videosTotalSize += item.sizeInBytes);
-        Player.inst.audioCacheMap[ytId]?.loop((item) => audiosTotalSize += item.file.fileSizeSync() ?? 0);
+        (await VideoController.inst.getNVFromID(tr.youtubeID)).loop((item) => videosTotalSize += item.sizeInBytes);
+        Player.inst.audioCacheMap[ytId]?.loop((item) async => audiosTotalSize += await item.file.fileSize() ?? 0);
 
         final artworkFile = File(tr.pathToImage);
-        if (artworkFile.existsSync()) imagesTotalSize += artworkFile.fileSizeSync() ?? 0;
+        if (await artworkFile.exists()) imagesTotalSize += await artworkFile.fileSize() ?? 0;
 
         final lrcUtils = LrcSearchUtilsSelectable(kDummyExtendedTrack, tr);
         final cachedLRCFile = lrcUtils.cachedLRCFile;
         final cachedTxtFile = lrcUtils.cachedTxtFile;
-        if (cachedLRCFile.existsSync()) lyricsTotalSize += cachedLRCFile.fileSizeSync() ?? 0;
-        if (cachedTxtFile.existsSync()) lyricsTotalSize += cachedTxtFile.fileSizeSync() ?? 0;
+        if (await cachedLRCFile.exists()) lyricsTotalSize += await cachedLRCFile.fileSize() ?? 0;
+        if (await cachedTxtFile.exists()) lyricsTotalSize += await cachedTxtFile.fileSize() ?? 0;
       }
     },
   );
@@ -53,9 +55,9 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) {
     // -- show custom goofy dialog for single track that has a video id
     final ctx = namida.context;
     if (ctx != null) {
-      (String, int, bool, bool)? magikify(String? img, bool isThumbnail, bool isTempThumbnail) {
-        if (img != null && File(img).existsSync()) {
-          final size = File(img).fileSizeSync() ?? 0;
+      Future<(String, int, bool, bool)?> magikify(String? img, bool isThumbnail, bool isTempThumbnail) async {
+        if (img != null && await File(img).exists()) {
+          final size = await File(img).fileSize() ?? 0;
           imagesTotalSize += size;
           return (img, size, isThumbnail, isTempThumbnail);
         }
@@ -64,29 +66,32 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) {
 
       final singleTrack = tracks[0];
       final localArtworkDetails = magikify(singleTrack.pathToImage, false, false);
-      final imageDetails = <(String, int, bool, bool)?>{
-        localArtworkDetails,
-        magikify(ThumbnailManager.inst.imageUrlToCacheFile(id: singleVideoId, url: null, type: ThumbnailType.video, isTemp: true)?.path, true, true),
-        magikify(ThumbnailManager.inst.imageUrlToCacheFile(id: singleVideoId, url: null, type: ThumbnailType.video, isTemp: false)?.path, true, false),
-        magikify(ThumbnailManager.getPathToYTImage(singleVideoId), true, false),
-      }.whereType<(String, int, bool, bool)>().toList();
+      final imageDetailsFuture = await Future.wait(
+        [
+          localArtworkDetails,
+          magikify(ThumbnailManager.inst.imageUrlToCacheFile(id: singleVideoId, url: null, type: ThumbnailType.video, isTemp: true)?.path, true, true),
+          magikify(ThumbnailManager.inst.imageUrlToCacheFile(id: singleVideoId, url: null, type: ThumbnailType.video, isTemp: false)?.path, true, false),
+          magikify(await ThumbnailManager.getPathToYTImage(singleVideoId), true, false),
+        ],
+      );
+      final imageDetails = imageDetailsFuture.whereType<(String, int, bool, bool)>().toSet().toList();
 
       final lrcUtils = LrcSearchUtilsSelectable(kDummyExtendedTrack, singleTrack);
       final cachedLRCFile = lrcUtils.cachedLRCFile;
       final cachedTxtFile = lrcUtils.cachedTxtFile;
       final lyricsFiles = <(String, int, bool)>[];
-      if (cachedLRCFile.existsSync()) {
-        lyricsFiles.add((cachedLRCFile.path, cachedLRCFile.fileSizeSync() ?? 0, true));
+      if (await cachedLRCFile.exists()) {
+        lyricsFiles.add((cachedLRCFile.path, await cachedLRCFile.fileSize() ?? 0, true));
       }
-      if (cachedTxtFile.existsSync()) {
-        lyricsFiles.add((cachedTxtFile.path, cachedTxtFile.fileSizeSync() ?? 0, false));
+      if (await cachedTxtFile.exists()) {
+        lyricsFiles.add((cachedTxtFile.path, await cachedTxtFile.fileSize() ?? 0, false));
       }
 
       const YTUtils().showVideoClearDialog(
         ctx,
         singleVideoId,
-        afterDeleting: (pathsDeleted) {
-          final details = localArtworkDetails;
+        afterDeleting: (pathsDeleted) async {
+          final details = await localArtworkDetails;
           if (details != null && pathsDeleted[details.$1] != null) {
             // -- reduce artworks number manually if was deleted
             Indexer.inst.updateImageSizesInStorage(removedCount: 1, removedSize: details.$2);
