@@ -158,6 +158,15 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       },
       title: lang.REPEAT_MODE,
     ),
+    ShortcutKeyData(
+      key: LogicalKeyboardKey.keyS,
+      control: true,
+      shift: true,
+      callback: () {
+        Player.inst.shuffleTracks(settings.player.shuffleAllTracks.value);
+      },
+      title: lang.SHUFFLE,
+    ),
     // -----------------
     for (int i = 1; i <= 9; i++)
       ShortcutKeyData(
