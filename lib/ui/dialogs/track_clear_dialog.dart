@@ -27,7 +27,7 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
   int audiosTotalSize = 0;
   int lyricsTotalSize = 0;
   int imagesTotalSize = 0;
-  tracksPre.loop(
+  await tracksPre.loopAsync(
     (item) async {
       var tr = item.track;
       if (tracksMap[tr] == null) {

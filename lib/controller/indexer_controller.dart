@@ -797,7 +797,7 @@ class Indexer<T extends Track> {
     final tracksRealPaths = <String>[];
     final tracksMissing = <T>[];
     final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
-    tracks.loop((tr) async {
+    await tracks.loopAsync((tr) async {
       bool exists = false;
       try {
         exists = await File(tr.path).exists();
@@ -1334,7 +1334,11 @@ class Indexer<T extends Track> {
     final artistsSplitConfig = ArtistsSplitConfig.settings();
     final genresSplitConfig = GenresSplitConfig.settings();
     final generalSplitConfig = GeneralSplitConfig();
-    allMusic.loop((e) {
+
+    final int length = allMusic.length;
+    for (int i = 0; i < length; i++) {
+      var e = allMusic[i];
+
       final map = e.getMap;
       final album = e.album;
       final albumArtist = map['album_artist'] as String?;
@@ -1413,7 +1417,7 @@ class Indexer<T extends Track> {
       );
       tracks.add(trext);
       _backupMediaStoreIDS[trext.pathToImage] = (trext.asTrack(), e.id);
-    });
+    }
     return tracks;
   }
 

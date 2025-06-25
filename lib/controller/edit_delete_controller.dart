@@ -37,10 +37,10 @@ class EditDeleteController {
   }
 
   Future<void> deleteCachedAudios(List<Selectable> tracks) async {
-    tracks.loop((e) {
+    return tracks.loopAsync((e) async {
       var ytid = e.track.youtubeID;
       final audios = Player.inst.audioCacheMap[ytid];
-      audios?.loop((item) => item.file.delete());
+      await audios?.loopAsync((item) => item.file.delete());
       Player.inst.audioCacheMap.remove(ytid);
     });
   }

@@ -394,7 +394,7 @@ class TrackTile extends StatelessWidget {
                           index,
                           queueSource.toTracks(null, trackWithDate?.dateAdded.toDaysSince1970()),
                           queueSource,
-                          maximumItems: 1000,
+                          maximumItems: queueSource == QueueSource.allTracks ? 1000 : null,
                         );
                       }
                     }

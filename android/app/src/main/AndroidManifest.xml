@@ -25,7 +25,6 @@
         android:requestLegacyExternalStorage="true"
         android:supportsPictureInPicture="true"
         android:allowBackup="false"
-        android:enableOnBackInvokedCallback="true"
         android:extractNativeLibs="true"
         android:networkSecurityConfig="@xml/network_security_config"
     >

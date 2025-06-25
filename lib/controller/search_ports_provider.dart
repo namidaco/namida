@@ -11,10 +11,10 @@ class SearchPortsProvider with PortsProviderBase {
 
   final _ports = <MediaType, PortsComm?>{};
 
-  void disposeAll() {
+  void disposeAll() async {
     final ports = _ports.values.whereType<PortsComm>().toList();
     _ports.clear();
-    ports.loop(disposePort);
+    await ports.loopAsync(disposePort);
   }
 
   Future<void> closePorts(MediaType type) async {

@@ -214,6 +214,12 @@ extension ListieFutureUtils<T> on List<T> {
       yield await converter(e);
     }
   }
+
+  Future<void> loopAsync(FutureOr<dynamic> Function(T element) fn) async {
+    for (var i = 0; i < length; i++) {
+      await fn(this[i]);
+    }
+  }
 }
 
 extension IterableFutureUtils<T> on Iterable<T> {

@@ -244,7 +244,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
     required bool isPfp,
   }) async {
     final files = <(String, File?)>[];
-    imagesList.loop(
+    await imagesList.loopAsync(
       (item) async {
         File? cf = _getThumbFileForCache(item.url, temp: false);
         if (await cf?.exists() == false) cf = _getThumbFileForCache(item.url, temp: true);

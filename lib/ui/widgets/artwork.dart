@@ -50,7 +50,7 @@ class ArtworkWidget extends StatefulWidget {
   final AlignmentGeometry alignment;
 
   /// can help skip some checks as its already done by [YoutubeThumbnail].
-  final bool? isYTThumbnail;
+  final bool isYTThumbnail;
 
   const ArtworkWidget({
     required super.key,
@@ -81,7 +81,7 @@ class ArtworkWidget extends StatefulWidget {
     this.fallbackToFolderCover = true,
     this.fit = BoxFit.cover,
     this.alignment = Alignment.center,
-    this.isYTThumbnail,
+    this.isYTThumbnail = false,
   });
 
   static const kDefaultFadeMilliSeconds = 300;
@@ -135,7 +135,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       }
     }
 
-    Timer(Duration.zero, _extractArtwork);
+    if (widget.isYTThumbnail == false) {
+      if (_imagePath != _imagePathInitialValue) refreshState(() => _imagePath = _imagePathInitialValue);
+      Timer(Duration.zero, _extractArtwork);
+    }
   }
 
   void _extractArtwork() async {
