@@ -36,6 +36,35 @@
       "detail": ""
     },
     {
+      "type": "flutter",
+      "command": "flutter",
+      "args": [
+        "run",
+        "-d",
+        "windows",
+      ],
+      "group": {
+        "kind": "none",
+      },
+      "problemMatcher": [],
+      "label": "flutter run windows",
+      "detail": ""
+    },
+    {
+      "type": "dart",
+      "command": "dart",
+      "args": [
+        "run",
+        "inno_bundle:build",
+      ],
+      "group": {
+        "kind": "build",
+      },
+      "problemMatcher": [],
+      "label": "build flutter windows inno installer",
+      "detail": ""
+    },
+    {
       "type": "shell",
       "command": "powershell",
       "args": [
