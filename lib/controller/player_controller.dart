@@ -263,18 +263,20 @@ class Player {
     await _audioHandler.setPlayerVolume(value);
   }
 
-  void volumeUp() {
+  double volumeUp() {
     final val = _audioHandler.currentVolume.value;
     final newVal = (val + 0.05).withMaximum(1.0);
     setPlayerVolume(newVal);
     settings.player.save(volume: newVal);
+    return newVal;
   }
 
-  void volumeDown() {
+  double volumeDown() {
     final val = _audioHandler.currentVolume.value;
     final newVal = (val - 0.05).withMinimum(0.0);
     setPlayerVolume(newVal);
     settings.player.save(volume: newVal);
+    return newVal;
   }
 
   void refreshRxVariables() {

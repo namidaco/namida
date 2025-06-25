@@ -16,25 +16,31 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ShortcutKeyData(
       key: LogicalKeyboardKey.arrowLeft,
       callback: Player.inst.seekSecondsBackward,
-      title: "<- ${lang.SEEK_DURATION}",
+      title: "<- ${lang.SEEKBAR}",
     ),
     ShortcutKeyData(
       key: LogicalKeyboardKey.arrowRight,
       callback: Player.inst.seekSecondsForward,
-      title: "${lang.SEEK_DURATION} ->",
+      title: "${lang.SEEKBAR} ->",
     ),
     ShortcutKeyData(
       key: LogicalKeyboardKey.arrowUp,
       control: true,
       includeRepeats: true,
-      callback: Player.inst.volumeUp,
+      callback: () {
+        final newVol = Player.inst.volumeUp();
+        _showSnack(message: "${lang.VOLUME} ↑: ${newVol.roundDecimals(2)}");
+      },
       title: "${lang.VOLUME} ↑",
     ),
     ShortcutKeyData(
       key: LogicalKeyboardKey.arrowDown,
       control: true,
       includeRepeats: true,
-      callback: Player.inst.volumeDown,
+      callback: () {
+        final newVol = Player.inst.volumeDown();
+        _showSnack(message: "${lang.VOLUME} ↓: ${newVol.roundDecimals(2)}");
+      },
       title: "${lang.VOLUME} ↓",
     ),
     ShortcutKeyData(
@@ -150,22 +156,29 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: lang.SETTINGS,
     ),
     ShortcutKeyData(
+      key: LogicalKeyboardKey.keyS,
+      control: true,
+      shift: true,
+      callback: () {
+        final shuffleAll = settings.player.shuffleAllTracks.value;
+        Player.inst.shuffleTracks(shuffleAll);
+        _showSnack(
+          message: "${shuffleAll ? lang.SHUFFLE_ALL : lang.SHUFFLE_NEXT}: ${lang.DONE}",
+        );
+      },
+      title: lang.SHUFFLE,
+    ),
+    ShortcutKeyData(
       key: LogicalKeyboardKey.tab,
       control: true,
       callback: () {
         final e = settings.player.repeatMode.value.nextElement(RepeatMode.values);
         settings.player.save(repeatMode: e);
+        _showSnack(
+          message: "${lang.REPEAT_MODE}: ${e.buildText()}",
+        );
       },
       title: lang.REPEAT_MODE,
-    ),
-    ShortcutKeyData(
-      key: LogicalKeyboardKey.keyS,
-      control: true,
-      shift: true,
-      callback: () {
-        Player.inst.shuffleTracks(settings.player.shuffleAllTracks.value);
-      },
-      title: lang.SHUFFLE,
     ),
     // -----------------
     for (int i = 1; i <= 9; i++)
@@ -254,6 +267,16 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         final ytQueue = NamidaNavigator.inst.ytQueueSheetKey.currentState;
         if (ytQueue != null) callback(ytQueue);
       },
+    );
+  }
+
+  void _showSnack({required String message}) {
+    snackyy(
+      icon: Broken.flash_1,
+      title: lang.SHORTCUTS,
+      message: message,
+      borderColor: Colors.green.withValues(alpha: 0.6),
+      top: false,
     );
   }
 }

@@ -477,7 +477,16 @@ extension FFMPEGTagFieldUtilsC on String {
 }
 
 extension PlayerRepeatModeUtils on RepeatMode {
-  String toText() => _NamidaConverters.inst.getTitle(this);
+  String buildText() {
+    final repeat = settings.player.repeatMode.value;
+    String tooltip = repeat.toRawText();
+    if (repeat == RepeatMode.forNtimes) {
+      tooltip = tooltip.replaceFirst('_NUM_', '${Player.inst.numberOfRepeats.value}');
+    }
+    return tooltip;
+  }
+
+  String toRawText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 

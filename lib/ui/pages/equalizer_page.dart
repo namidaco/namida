@@ -56,7 +56,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
         ),
         _CuteSlider(
           key: pitchKey,
-          initialValue: settings.player.pitch.value,
+          valueListenable: settings.player.pitch,
           onChanged: (value) {
             Player.inst.setPlayerPitch(value);
             settings.player.save(pitch: value);
@@ -82,7 +82,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
         ),
         _CuteSlider(
           key: speedKey,
-          initialValue: settings.player.speed.value,
+          valueListenable: settings.player.speed,
           onChanged: (value) {
             Player.inst.setPlayerSpeed(value);
             settings.player.save(speed: value);
@@ -127,7 +127,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
             final child = _CuteSlider(
               key: volumeKey,
               max: 1.0,
-              initialValue: settings.player.volume.value,
+              valueListenable: settings.player.volume,
               onChanged: (value) {
                 Player.inst.setPlayerVolume(value);
                 settings.player.save(volume: value);
@@ -162,6 +162,9 @@ class EqualizerPageState extends State<EqualizerPage> {
   AndroidEqualizer get _equalizer => Player.inst.equalizer;
   AndroidLoudnessEnhancer get _loudnessEnhancer => Player.inst.loudnessEnhancer;
 
+  final _loudnessEnhancerTargetGainRx = 0.0.obs;
+  StreamSubscription<double>? _loudnessEnhancerTargetGainStreamSub;
+
   final _equalizerPresets = <String>[];
   final _activePreset = ''.obs;
   final _activePresetCustom = false.obs;
@@ -171,6 +174,9 @@ class EqualizerPageState extends State<EqualizerPage> {
   @override
   void initState() {
     _fillPresets();
+    _loudnessEnhancerTargetGainStreamSub = _loudnessEnhancer.targetGainStream.listen(
+      (event) => _loudnessEnhancerTargetGainRx.value = event,
+    );
     super.initState();
   }
 
@@ -178,6 +184,8 @@ class EqualizerPageState extends State<EqualizerPage> {
   void dispose() {
     _activePreset.close();
     _activePresetCustom.close();
+    _loudnessEnhancerTargetGainRx.close();
+    _loudnessEnhancerTargetGainStreamSub?.cancel();
     super.dispose();
   }
 
@@ -212,6 +220,20 @@ class EqualizerPageState extends State<EqualizerPage> {
   Widget build(BuildContext context) {
     const verticalInBetweenPaddingH = 18.0;
     const verticalInBetweenPadding = SizedBox(height: verticalInBetweenPaddingH);
+    final loudnessEnhancerSliderWidget = ObxO(
+      rx: settings.equalizer.uiTapToUpdate,
+      builder: (context, uiTapToUpdate) => _CuteSlider(
+        key: _loudnessKey,
+        valueListenable: _loudnessEnhancerTargetGainRx,
+        min: -1,
+        max: 1,
+        onChanged: (newVal) {
+          settings.equalizer.save(loudnessEnhancer: newVal);
+          _loudnessEnhancer.setTargetGain(newVal);
+        },
+        tapToUpdate: uiTapToUpdate,
+      ),
+    );
     return AnimatedThemeOrTheme(
       duration: const Duration(milliseconds: kThemeAnimationDurationMS),
       data: context.theme,
@@ -416,20 +438,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                     ),
                                   ),
                                 ),
-                                ObxO(
-                                  rx: settings.equalizer.uiTapToUpdate,
-                                  builder: (context, uiTapToUpdate) => _CuteSlider(
-                                    key: _loudnessKey,
-                                    initialValue: targetGain,
-                                    min: -1,
-                                    max: 1,
-                                    onChanged: (newVal) {
-                                      settings.equalizer.save(loudnessEnhancer: newVal);
-                                      _loudnessEnhancer.setTargetGain(newVal);
-                                    },
-                                    tapToUpdate: uiTapToUpdate,
-                                  ),
-                                ),
+                                loudnessEnhancerSliderWidget,
                               ],
                             );
                           },
@@ -563,10 +572,10 @@ class _SliderTextWidget extends StatelessWidget {
   }
 }
 
-class _CuteSlider extends StatefulWidget {
+class _CuteSlider<T> extends StatefulWidget {
   final double min;
   final double max;
-  final double initialValue;
+  final RxBaseCore<double> valueListenable;
   final void Function(double newValue) onChanged;
   final bool tapToUpdate;
 
@@ -574,7 +583,7 @@ class _CuteSlider extends StatefulWidget {
     required super.key,
     this.min = 0.0,
     this.max = 2.0,
-    required this.initialValue,
+    required this.valueListenable,
     required this.onChanged,
     required this.tapToUpdate,
   });
@@ -584,14 +593,31 @@ class _CuteSlider extends StatefulWidget {
 }
 
 class _CuteSliderState extends State<_CuteSlider> {
-  late double _currentVal = widget.initialValue;
+  late double _currentVal;
 
-  void _updateVal(double newVal) {
+  @override
+  void initState() {
+    _currentVal = widget.valueListenable.value;
+    widget.valueListenable.addListener(_valueListener);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget.valueListenable.removeListener(_valueListener);
+    super.dispose();
+  }
+
+  void _valueListener() {
+    _updateVal(widget.valueListenable.value, callOnChanged: false);
+  }
+
+  void _updateVal(double newVal, {bool callOnChanged = true}) {
     final finalVal = newVal.roundDecimals(4);
     if (finalVal != _currentVal) {
       setState(() {
         _currentVal = finalVal;
-        widget.onChanged(finalVal);
+        if (callOnChanged) widget.onChanged(finalVal);
       });
     }
   }

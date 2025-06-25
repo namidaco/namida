@@ -4564,11 +4564,7 @@ class RepeatModeIconButton extends StatelessWidget {
 
   String _buildTooltip() {
     final repeat = settings.player.repeatMode.value;
-    String tooltip = repeat.toText();
-    if (repeat == RepeatMode.forNtimes) {
-      tooltip = tooltip.replaceFirst('_NUM_', '${Player.inst.numberOfRepeats.value}');
-    }
-    return tooltip;
+    return repeat.buildText();
   }
 
   @override
