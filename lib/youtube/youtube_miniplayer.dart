@@ -435,7 +435,6 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                         },
                                                                         childrenDefault: () => YTUtils.getVideoCardMenuItemsForCurrentlyPlaying(
                                                                           queueSource: QueueSourceYoutubeID.playerQueue,
-                                                                          context: context,
                                                                           numberOfRepeats: _numberOfRepeats,
                                                                           videoId: currentId,
                                                                           videoTitle: videoTitle,

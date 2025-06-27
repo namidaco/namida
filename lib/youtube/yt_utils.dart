@@ -271,7 +271,6 @@ class YTUtils {
 
   static Future<List<NamidaPopupItem>> getVideoCardMenuItemsForCurrentlyPlaying({
     required QueueSourceYoutubeID queueSource,
-    required BuildContext context,
     required Rx<int> numberOfRepeats,
     required String videoId,
     required String? videoTitle,
@@ -338,7 +337,7 @@ class YTUtils {
         onChanged: (_) {},
       ),
       onTap: () {
-        const YTUtils().showVideoClearDialog(context, videoId);
+        const YTUtils().showVideoClearDialog(videoId);
       },
     );
 
@@ -625,8 +624,7 @@ class YTUtils {
             onChanged: (_) {},
           ),
           onTap: () {
-            final ctx = namida.context;
-            if (ctx != null) const YTUtils().showVideoClearDialog(ctx, videoId);
+            const YTUtils().showVideoClearDialog(videoId);
           },
         ),
       if (moreMenuChildren != null) ...moreMenuChildren,
@@ -802,7 +800,6 @@ class YTUtils {
   }
 
   void showVideoClearDialog(
-    BuildContext context,
     String videoId, {
     final void Function(Map<String, bool> pathsDeleted)? afterDeleting,
     List<NamidaClearDialogExpansionTile<dynamic>> Function(RxMap<String, bool> pathsToDelete, Rx<int> totalSizeToDelete, Rx<bool> allSelected)? extraTiles,

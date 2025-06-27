@@ -172,8 +172,7 @@ class Player {
     _audioHandler.onVideoError = (e, _) {
       if (e is PlatformException) {
         final itemId = currentVideo?.id ?? currentTrack?.track.youtubeID;
-        final ctx = namida.context;
-        final button = itemId != null && ctx != null ? (lang.CLEAR_VIDEO_CACHE, () => const YTUtils().showVideoClearDialog(ctx, itemId)) : null;
+        final button = itemId != null ? (lang.CLEAR_VIDEO_CACHE, () => const YTUtils().showVideoClearDialog(itemId)) : null;
         snackyy(message: e.details.toString().substring(0, 164), title: '${lang.ERROR}: ${e.message}', isError: true, top: false, button: button);
       }
     };

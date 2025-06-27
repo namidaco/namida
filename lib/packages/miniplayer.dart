@@ -109,7 +109,7 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final trackConfig = const NamidaMiniPlayerTrack().getMiniPlayerBase(context);
-    final ytConfig = _NamidaMiniPlayerYoutubeIDState().getMiniPlayerBase(context);
+    final ytConfig = NamidaMiniPlayerYoutubeIDState().getMiniPlayerBase(context);
 
     return NamidaMiniPlayerBase(
       trackTileConfigs: trackConfig.trackTileConfigs,
@@ -162,13 +162,13 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
 class NamidaMiniPlayerTrack extends StatelessWidget {
   const NamidaMiniPlayerTrack({super.key});
 
-  void _openMenu(TrackWithDate? trackWithDate, Track track) => NamidaDialogs.inst.showTrackDialog(
+  static void openMenu(TrackWithDate? trackWithDate, Track track) => NamidaDialogs.inst.showTrackDialog(
         track,
         source: QueueSource.playerQueue,
         heroTag: TrackTile.obtainHeroTag(trackWithDate, track, -1, true),
       );
 
-  MiniplayerInfoData<Track, SortType> _textBuilder(Playable playable) {
+  static MiniplayerInfoData<Track, SortType> textBuilder(Playable playable) {
     String firstLine = '';
     String secondLine = '';
 
@@ -195,7 +195,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       itemToLike: track,
       onLikeTap: (isLiked) async => PlaylistController.inst.favouriteButtonOnPressed(track),
       onShowAddToPlaylistDialog: () => showAddToPlaylistDialog([track]),
-      onMenuOpen: (_) => _openMenu(playable.trackWithDate, track),
+      onMenuOpen: (_) => openMenu(playable.trackWithDate, track),
       likedIcon: Broken.heart_tick,
       normalIcon: Broken.heart,
     );
@@ -238,7 +238,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       onAddItemsTap: (currentItem) => TracksAddOnTap().onAddTracksTap(context),
       topText: (currentItem) => (currentItem as Selectable).track.album,
       onTopTextTap: (currentItem) => NamidaOnTaps.inst.onAlbumTap((currentItem as Selectable).track.albumIdentifier),
-      onMenuOpen: (currentItem, _) => _openMenu((currentItem as Selectable).trackWithDate, currentItem.track),
+      onMenuOpen: (currentItem, _) => openMenu((currentItem as Selectable).trackWithDate, currentItem.track),
       focusedMenuOptions: (currentItem) => FocusedMenuOptions(
         onSearch: (item) {
           showSetYTLinkCommentDialog([(item as Selectable).track], CurrentColor.inst.miniplayerColor, autoOpenSearch: true);
@@ -366,7 +366,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         brMultiplier: brMultiplier,
         maxHeight: maxHeight,
       ),
-      textBuilder: _textBuilder,
+      textBuilder: textBuilder,
       canShowBuffering: (currentItem) => false,
     );
   }
@@ -381,14 +381,14 @@ class NamidaMiniPlayerYoutubeID extends StatefulWidget {
   const NamidaMiniPlayerYoutubeID({super.key});
 
   @override
-  State<NamidaMiniPlayerYoutubeID> createState() => _NamidaMiniPlayerYoutubeIDState();
+  State<NamidaMiniPlayerYoutubeID> createState() => NamidaMiniPlayerYoutubeIDState();
 }
 
-class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
-  _NamidaMiniPlayerYoutubeIDState();
+class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
+  NamidaMiniPlayerYoutubeIDState();
 
-  final _videoLikeManager = YtVideoLikeManager(page: YoutubeInfoController.current.currentVideoPage);
-  final _numberOfRepeats = 1.obs;
+  static final _videoLikeManager = YtVideoLikeManager(page: YoutubeInfoController.current.currentVideoPage);
+  static final _numberOfRepeats = 1.obs;
 
   @override
   void initState() {
@@ -403,7 +403,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     super.dispose();
   }
 
-  void _openMenu(BuildContext context, YoutubeID video, TapUpDetails details) async {
+  static void openMenu(BuildContext context, YoutubeID video, TapUpDetails details) async {
     final vidpage = await YoutubeInfoController.video.fetchVideoPageCache(video.id);
     final vidstreams = await YoutubeInfoController.video.fetchVideoStreamsCache(video.id);
     final videoTitle = vidpage?.videoInfo?.title ?? vidstreams?.info?.title;
@@ -411,7 +411,6 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     final popUpItems = await NamidaPopupWrapper(
       childrenDefault: () => YTUtils.getVideoCardMenuItemsForCurrentlyPlaying(
         queueSource: QueueSourceYoutubeID.playerQueue,
-        context: context,
         numberOfRepeats: _numberOfRepeats,
         videoId: video.id,
         videoTitle: videoTitle,
@@ -427,7 +426,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     );
   }
 
-  MiniplayerInfoData<String, YTSortType> _textBuilder(Playable playbale) {
+  static MiniplayerInfoData<String, YTSortType> textBuilder(BuildContext context, Playable playbale) {
     final video = playbale as YoutubeID;
     String firstLine = '';
     String secondLine = '';
@@ -446,7 +445,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
       itemToLike: video.id,
       onLikeTap: (isLiked) async => YoutubePlaylistController.inst.favouriteButtonOnPressed(video.id),
       onShowAddToPlaylistDialog: () => showAddToPlaylistSheet(ids: [video.id], idsNamesLookup: {}),
-      onMenuOpen: (d) => _openMenu(context, video, d),
+      onMenuOpen: (d) => openMenu(context, video, d),
       likedIcon: Broken.like_filled,
       normalIcon: Broken.like_1,
       ytLikeManager: _videoLikeManager,
@@ -497,7 +496,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
             await YoutubeInfoController.utils.getVideoChannelID((currentItem as YoutubeID).id);
         if (channelId != null) YTChannelSubpage(channelID: channelId, channel: pageChannel).navigate();
       },
-      onMenuOpen: (currentItem, d) => _openMenu(context, (currentItem as YoutubeID), d),
+      onMenuOpen: (currentItem, d) => openMenu(context, (currentItem as YoutubeID), d),
       focusedMenuOptions: (currentItem) => FocusedMenuOptions(
         onSearch: null,
         onOpen: (currentItem) => true,
@@ -628,7 +627,7 @@ class _NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         brMultiplier: brMultiplier,
         maxHeight: maxHeight,
       ),
-      textBuilder: (item) => _textBuilder(item),
+      textBuilder: (item) => textBuilder(context, item),
       canShowBuffering: (currentItem) => true,
     );
   }
