@@ -747,6 +747,8 @@ class NamidaFeaturesVisibility {
   static final onAudioQueryAvailable = _isAndroid;
   static final recieveSharingIntents = _isAndroid;
   static final changeApplicationBrightness = _isAndroid;
+  static final equalizerAvailable = _isAndroid;
+  static final loudnessEnhancerAvailable = _isAndroid;
 
   static final showDownloadNotifications = _isWindows;
   static final showVideoControlsOnHover = _isWindows;

@@ -220,7 +220,7 @@ class EqualizerPageState extends State<EqualizerPage> {
   Widget build(BuildContext context) {
     const verticalInBetweenPaddingH = 18.0;
     const verticalInBetweenPadding = SizedBox(height: verticalInBetweenPaddingH);
-    final loudnessEnhancerSliderWidget = ObxO(
+    late final loudnessEnhancerSliderWidget = ObxO(
       rx: settings.equalizer.uiTapToUpdate,
       builder: (context, uiTapToUpdate) => _CuteSlider(
         key: _loudnessKey,
@@ -271,180 +271,186 @@ class EqualizerPageState extends State<EqualizerPage> {
                             style: context.textTheme.displayMedium,
                           ),
                         ),
-                        NamidaIconButton(
-                          horizontalPadding: 8.0,
-                          tooltip: () => lang.TAP_TO_SEEK,
-                          icon: null,
-                          iconSize: 24.0,
-                          onPressed: () => settings.equalizer.save(uiTapToUpdate: !settings.equalizer.uiTapToUpdate.value),
-                          child: ObxO(
-                            rx: settings.equalizer.uiTapToUpdate,
-                            builder: (context, val) => StackedIcon(
-                              baseIcon: Broken.mouse_1,
-                              secondaryIcon: val ? Broken.tick_circle : Broken.close_circle,
-                              secondaryIconSize: 12.0,
-                              iconSize: 24.0,
+                        if (NamidaFeaturesVisibility.equalizerAvailable) ...[
+                          NamidaIconButton(
+                            horizontalPadding: 8.0,
+                            tooltip: () => lang.TAP_TO_SEEK,
+                            icon: null,
+                            iconSize: 24.0,
+                            onPressed: () => settings.equalizer.save(uiTapToUpdate: !settings.equalizer.uiTapToUpdate.value),
+                            child: ObxO(
+                              rx: settings.equalizer.uiTapToUpdate,
+                              builder: (context, val) => StackedIcon(
+                                baseIcon: Broken.mouse_1,
+                                secondaryIcon: val ? Broken.tick_circle : Broken.close_circle,
+                                secondaryIconSize: 12.0,
+                                iconSize: 24.0,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12.0),
+                          const SizedBox(width: 12.0),
+                        ],
                         const SizedBox(width: 8.0),
                       ],
                     ),
                     const SizedBox(height: 6.0),
-                    StreamBuilder<bool>(
-                      initialData: _equalizer.enabled,
-                      stream: _equalizer.enabledStream,
-                      builder: (context, snapshot) {
-                        final enabled = snapshot.data ?? false;
-                        return NamidaInkWell(
-                          onTap: () {
-                            settings.equalizer.save(equalizerEnabled: !_equalizer.enabled);
-                            _equalizer.setEnabled(!_equalizer.enabled);
-                          },
-                          padding: const EdgeInsets.symmetric(vertical: 12.0),
-                          child: _SliderTextWidget(
-                            icon: Broken.chart_3,
-                            title: lang.EQUALIZER,
-                            value: 0,
-                            displayValue: false,
-                            trailing: Row(
-                              children: [
-                                if (NamidaFeaturesVisibility.methodOpenSystemEqualizer)
-                                  NamidaIconButton(
-                                    horizontalPadding: 4.0,
-                                    tooltip: () => lang.OPEN_APP,
-                                    icon: Broken.export_2,
-                                    iconColor: context.defaultIconColor(),
-                                    iconSize: 20.0,
-                                    onPressed: () => NamidaChannel.inst.openSystemEqualizer(Player.inst.androidSessionId),
+                    if (NamidaFeaturesVisibility.equalizerAvailable) ...[
+                      StreamBuilder<bool>(
+                        initialData: _equalizer.enabled,
+                        stream: _equalizer.enabledStream,
+                        builder: (context, snapshot) {
+                          final enabled = snapshot.data ?? false;
+                          return NamidaInkWell(
+                            onTap: () {
+                              settings.equalizer.save(equalizerEnabled: !_equalizer.enabled);
+                              _equalizer.setEnabled(!_equalizer.enabled);
+                            },
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
+                            child: _SliderTextWidget(
+                              icon: Broken.chart_3,
+                              title: lang.EQUALIZER,
+                              value: 0,
+                              displayValue: false,
+                              trailing: Row(
+                                children: [
+                                  if (NamidaFeaturesVisibility.methodOpenSystemEqualizer)
+                                    NamidaIconButton(
+                                      horizontalPadding: 4.0,
+                                      tooltip: () => lang.OPEN_APP,
+                                      icon: Broken.export_2,
+                                      iconColor: context.defaultIconColor(),
+                                      iconSize: 20.0,
+                                      onPressed: () => NamidaChannel.inst.openSystemEqualizer(Player.inst.androidSessionId),
+                                    ),
+                                  const SizedBox(width: 12.0),
+                                  CustomSwitch(
+                                    active: enabled,
+                                    passedColor: null,
                                   ),
-                                const SizedBox(width: 12.0),
-                                CustomSwitch(
-                                  active: enabled,
-                                  passedColor: null,
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 6.0),
-                    EqualizerControls(
-                      equalizer: _equalizer,
-                      onGainSetCallback: _resetPreset,
-                      tapToUpdate: () => settings.equalizer.uiTapToUpdate.value,
-                    ),
-                    verticalInBetweenPadding,
-                    if (_equalizerPresets.isNotEmpty) ...[
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 8.0),
-                            Obx(
-                              (context) => NamidaInkWell(
-                                animationDurationMS: 200,
-                                borderRadius: 5.0,
-                                margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                                bgColor: _activePresetCustom.valueR
-                                    ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), context.theme.scaffoldBackgroundColor)
-                                    : context.theme.colorScheme.secondary.withValues(alpha: 0.15),
-                                onTap: _resetPreset,
-                                child: Text(
-                                  lang.CUSTOM,
-                                  style: context.textTheme.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13.5,
-                                    color: _activePresetCustom.valueR ? Colors.white.withValues(alpha: 0.7) : null,
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 6.0),
+                      EqualizerControls(
+                        equalizer: _equalizer,
+                        onGainSetCallback: _resetPreset,
+                        tapToUpdate: () => settings.equalizer.uiTapToUpdate.value,
+                      ),
+                      verticalInBetweenPadding,
+                      if (_equalizerPresets.isNotEmpty) ...[
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 8.0),
+                              Obx(
+                                (context) => NamidaInkWell(
+                                  animationDurationMS: 200,
+                                  borderRadius: 5.0,
+                                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                  bgColor: _activePresetCustom.valueR
+                                      ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), context.theme.scaffoldBackgroundColor)
+                                      : context.theme.colorScheme.secondary.withValues(alpha: 0.15),
+                                  onTap: _resetPreset,
+                                  child: Text(
+                                    lang.CUSTOM,
+                                    style: context.textTheme.displaySmall?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13.5,
+                                      color: _activePresetCustom.valueR ? Colors.white.withValues(alpha: 0.7) : null,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            ..._equalizerPresets.asMap().entries.map(
-                                  (e) => Obx(
-                                    (context) => NamidaInkWell(
-                                      animationDurationMS: 200,
-                                      borderRadius: 5.0,
-                                      margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                                      bgColor: _activePreset.valueR == e.value
-                                          ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), context.theme.scaffoldBackgroundColor)
-                                          : context.theme.colorScheme.secondary.withValues(alpha: 0.15),
-                                      onTap: () async {
-                                        _activePreset.value = e.value;
-                                        _activePresetCustom.value = false;
-                                        settings.equalizer.save(preset: e.key);
-                                        final newPreset = await _equalizer.setPreset(e.key);
-                                        if (newPreset != e.key) snackyy(message: lang.ERROR, top: false, isError: true);
-                                      },
-                                      child: Text(
-                                        e.value,
-                                        style: context.textTheme.displaySmall?.copyWith(
-                                          color: _activePreset.valueR == e.value ? Colors.white.withValues(alpha: 0.7) : null,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 13.5,
+                              ..._equalizerPresets.asMap().entries.map(
+                                    (e) => Obx(
+                                      (context) => NamidaInkWell(
+                                        animationDurationMS: 200,
+                                        borderRadius: 5.0,
+                                        margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                        bgColor: _activePreset.valueR == e.value
+                                            ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), context.theme.scaffoldBackgroundColor)
+                                            : context.theme.colorScheme.secondary.withValues(alpha: 0.15),
+                                        onTap: () async {
+                                          _activePreset.value = e.value;
+                                          _activePresetCustom.value = false;
+                                          settings.equalizer.save(preset: e.key);
+                                          final newPreset = await _equalizer.setPreset(e.key);
+                                          if (newPreset != e.key) snackyy(message: lang.ERROR, top: false, isError: true);
+                                        },
+                                        child: Text(
+                                          e.value,
+                                          style: context.textTheme.displaySmall?.copyWith(
+                                            color: _activePreset.valueR == e.value ? Colors.white.withValues(alpha: 0.7) : null,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 13.5,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            const SizedBox(width: 8.0),
-                          ],
+                              const SizedBox(width: 8.0),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12.0),
+                        const SizedBox(height: 12.0),
+                      ],
                     ],
-                    StreamBuilder<bool>(
-                      initialData: _loudnessEnhancer.enabled,
-                      stream: _loudnessEnhancer.enabledStream,
-                      builder: (context, snapshot) {
-                        final enabled = snapshot.data ?? false;
-                        return StreamBuilder<double>(
-                          initialData: _loudnessEnhancer.targetGain,
-                          stream: _loudnessEnhancer.targetGainStream,
-                          builder: (context, snapshot) {
-                            final targetGain = snapshot.data ?? 0.0;
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                NamidaInkWell(
-                                  onTap: () {
-                                    settings.equalizer.save(loudnessEnhancerEnabled: !_loudnessEnhancer.enabled);
-                                    _loudnessEnhancer.setEnabled(!_loudnessEnhancer.enabled);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 6.0),
-                                    child: _SliderTextWidget(
-                                      icon: targetGain > 0 ? Broken.volume_high : Broken.volume_low_1,
-                                      title: lang.LOUDNESS_ENHANCER,
-                                      value: targetGain,
-                                      min: -1,
-                                      max: 1,
-                                      onManualChange: (newVal) {
-                                        _loudnessKey.currentState?._updateValNoRound(newVal);
-                                      },
-                                      restoreDefault: () {
-                                        settings.equalizer.save(loudnessEnhancer: 0.0);
-                                        _loudnessEnhancer.setTargetGain(0.0);
-                                        _loudnessKey.currentState?._updateVal(0.0);
-                                      },
-                                      trailing: CustomSwitch(
-                                        active: enabled,
-                                        passedColor: null,
+                    if (NamidaFeaturesVisibility.loudnessEnhancerAvailable) ...[
+                      StreamBuilder<bool>(
+                        initialData: _loudnessEnhancer.enabled,
+                        stream: _loudnessEnhancer.enabledStream,
+                        builder: (context, snapshot) {
+                          final enabled = snapshot.data ?? false;
+                          return StreamBuilder<double>(
+                            initialData: _loudnessEnhancer.targetGain,
+                            stream: _loudnessEnhancer.targetGainStream,
+                            builder: (context, snapshot) {
+                              final targetGain = snapshot.data ?? 0.0;
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  NamidaInkWell(
+                                    onTap: () {
+                                      settings.equalizer.save(loudnessEnhancerEnabled: !_loudnessEnhancer.enabled);
+                                      _loudnessEnhancer.setEnabled(!_loudnessEnhancer.enabled);
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 6.0),
+                                      child: _SliderTextWidget(
+                                        icon: targetGain > 0 ? Broken.volume_high : Broken.volume_low_1,
+                                        title: lang.LOUDNESS_ENHANCER,
+                                        value: targetGain,
+                                        min: -1,
+                                        max: 1,
+                                        onManualChange: (newVal) {
+                                          _loudnessKey.currentState?._updateValNoRound(newVal);
+                                        },
+                                        restoreDefault: () {
+                                          settings.equalizer.save(loudnessEnhancer: 0.0);
+                                          _loudnessEnhancer.setTargetGain(0.0);
+                                          _loudnessKey.currentState?._updateVal(0.0);
+                                        },
+                                        trailing: CustomSwitch(
+                                          active: enabled,
+                                          passedColor: null,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                loudnessEnhancerSliderWidget,
-                              ],
-                            );
-                          },
-                        );
-                      },
-                    ),
+                                  loudnessEnhancerSliderWidget,
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
                     ObxO(
                       rx: settings.equalizer.uiTapToUpdate,
                       builder: (context, uiTapToUpdate) => EqualizerMainSlidersColumn(
