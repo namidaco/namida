@@ -77,6 +77,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
               settings.player.save(speed: 1.0);
               speedKey.currentState?._updateVal(1.0);
             },
+            useMaxToLimitPreciseValue: false,
             valToText: _SliderTextWidget.toXMultiplier,
           ),
         ),
@@ -476,6 +477,7 @@ class _SliderTextWidget extends StatelessWidget {
   final double value;
   final double min;
   final double max;
+  final bool useMaxToLimitPreciseValue;
   final VoidCallback? restoreDefault;
   final Widget? trailing;
   final bool displayValue;
@@ -488,6 +490,7 @@ class _SliderTextWidget extends StatelessWidget {
     required this.value,
     this.min = 0.0,
     this.max = 2.0,
+    this.useMaxToLimitPreciseValue = true,
     this.restoreDefault,
     this.trailing,
     this.displayValue = true,
@@ -511,7 +514,7 @@ class _SliderTextWidget extends StatelessWidget {
           }
           final doubleval = double.tryParse(text);
           if (doubleval == null) return lang.NAME_CONTAINS_BAD_CHARACTER;
-          if (doubleval < min || doubleval > max) return '$min | +$max';
+          if (doubleval < min || (useMaxToLimitPreciseValue && doubleval > max)) return '$min | +$max';
           return null;
         },
       ),
@@ -655,13 +658,18 @@ class _CuteSliderState extends State<_CuteSlider> {
           child: Slider.adaptive(
             min: widget.min,
             max: widget.max,
-            value: _currentVal,
+            value: _currentVal.withMaximum(widget.max), // cuz it can be more
             onChanged: _updateVal,
             divisions: 200,
             label: "${(_currentVal * 100).toStringAsFixed(0)}%",
             allowedInteraction: interaction,
           ),
         ),
+        if (_currentVal > widget.max)
+          Icon(
+            Broken.flash,
+            size: 16.0,
+          ),
         _getArrowIcon(
           icon: Broken.arrow_right_3,
           callback: () {
