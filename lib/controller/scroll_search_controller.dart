@@ -42,15 +42,25 @@ class ScrollSearchController {
 
   late final NamidaSearchBar searchBarWidget = NamidaSearchBar(searchBarKey: searchBarKey);
 
-  void animatePageController(LibraryTab tab) async {
-    if (tab == LibraryTab.search) {
-      MiniPlayerController.inst.snapToMini();
-      MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
-      final shouldShow = this.toggleSearchMenu();
+  void toggleSearch({bool forceOpen = false, bool instant = false}) async {
+    MiniPlayerController.inst.snapToMini();
+    MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
+    final shouldShow = this.toggleSearchMenu();
+    void openFn() => ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: shouldShow);
+    if (instant) {
+      openFn();
+    } else {
       await Future.delayed(const Duration(milliseconds: 100));
       SchedulerBinding.instance.addPostFrameCallback((_) {
-        ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: shouldShow);
+        openFn();
       });
+    }
+  }
+
+  void animatePageController(LibraryTab tab) async {
+    if (tab == LibraryTab.search) {
+      toggleSearch();
+
       return;
     }
 

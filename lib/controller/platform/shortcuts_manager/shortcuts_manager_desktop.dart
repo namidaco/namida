@@ -60,9 +60,16 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ShortcutKeyData(
       key: LogicalKeyboardKey.keyF,
       control: true,
-      callback: () => ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(
-        forceOpen: ScrollSearchController.inst.searchBarKey.currentState?.focusNode.hasPrimaryFocus != true,
-      ),
+      callback: () {
+        if (_isInSettingsPage()) {
+          NamidaSettingSearchBar.globalKey.currentState?.open();
+        } else {
+          ScrollSearchController.inst.toggleSearch(
+            forceOpen: ScrollSearchController.inst.searchBarKey.currentState?.focusNode.hasPrimaryFocus != true,
+            instant: true,
+          );
+        }
+      },
       title: lang.SEARCH,
     ),
     ShortcutKeyData(
@@ -147,7 +154,10 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       control: true,
       shift: true,
       callback: () {
-        const SettingsPage().navigate();
+        if (!_isInSettingsPage()) {
+          const SettingsPage().navigate();
+        }
+
         Timer(
           Duration(milliseconds: 100),
           () => NamidaSettingSearchBar.globalKey.currentState?.open(),
@@ -278,5 +288,11 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       borderColor: Colors.green.withValues(alpha: 0.6),
       top: false,
     );
+  }
+
+  bool _isInSettingsPage() {
+    final currentRouteType = NamidaNavigator.inst.currentRoute?.route;
+    final isInSettings = currentRouteType == RouteType.SETTINGS_page || currentRouteType == RouteType.SETTINGS_subpage;
+    return isInSettings;
   }
 }
