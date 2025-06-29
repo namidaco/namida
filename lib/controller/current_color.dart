@@ -541,7 +541,7 @@ class CurrentColor {
 
   void stopGeneratingColorPalettes() => isGeneratingAllColorPalettes.value = false;
 
-  static const _defaultUseIsolate = false;
+  static const _defaultUseIsolate = true;
 
   void _printie(
     dynamic message, {

@@ -387,13 +387,14 @@ class NamidaMiniPlayerYoutubeID extends StatefulWidget {
 class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
   NamidaMiniPlayerYoutubeIDState();
 
-  static final _videoLikeManager = YtVideoLikeManager(page: YoutubeInfoController.current.currentVideoPage);
+  static final _videoLikeManager = YtVideoLikeManager(pageRx: YoutubeInfoController.current.currentVideoPage);
   static final _numberOfRepeats = 1.obs;
 
   @override
   void initState() {
     super.initState();
     _videoLikeManager.init();
+    _numberOfRepeats.reInit();
   }
 
   @override

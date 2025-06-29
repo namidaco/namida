@@ -22,9 +22,9 @@ class YTVideoLikeParamters {
 }
 
 class YtVideoLikeManager {
-  final RxBaseCore<YoutiPieVideoPageResult?> page;
+  final RxBaseCore<YoutiPieVideoPageResult?> pageRx;
   YtVideoLikeManager({
-    required this.page,
+    required this.pageRx,
   });
 
   late final currentVideoLikeStatus = Rxn<LikeStatus>();
@@ -76,7 +76,7 @@ class YtVideoLikeManager {
   }
 
   Future<bool> _onChangeLikeStatus(YTVideoLikeParamters parameters) async {
-    final p = page.value;
+    final p = pageRx.value;
     if (p == null) return parameters.isActive;
 
     parameters.onStart();
@@ -96,16 +96,16 @@ class YtVideoLikeManager {
   }
 
   void _onPageChanged() {
-    currentVideoLikeStatus.value = page.value?.videoInfo?.engagement?.likeStatus;
+    currentVideoLikeStatus.value = pageRx.value?.videoInfo?.engagement?.likeStatus;
   }
 
   void init() {
     _onPageChanged(); // fill initial values
-    page.addListener(_onPageChanged);
+    pageRx.addListener(_onPageChanged);
   }
 
   void dispose() {
-    page.removeListener(_onPageChanged);
+    pageRx.removeListener(_onPageChanged);
     currentVideoLikeStatus.close();
   }
 }

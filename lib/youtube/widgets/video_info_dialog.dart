@@ -51,7 +51,7 @@ class VideoInfoDialog extends StatefulWidget {
 }
 
 class _VideoInfoDialogState extends State<VideoInfoDialog> {
-  late final _videoLikeManager = YtVideoLikeManager(page: _videoPageInfo);
+  late final _videoLikeManager = YtVideoLikeManager(pageRx: _videoPageInfo);
   final _videoPageInfo = Rxn<YoutiPieVideoPageResult?>();
   final _isLoadingInfo = false.obs;
   final _isLoadingThumbnail = false.obs;

@@ -997,6 +997,29 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   ),
                                   const SizedBox(width: 4.0),
 
+                                  // ==== Reset Brightness ====
+                                  ObxO(
+                                    rx: _currentBrigthnessDim,
+                                    builder: (context, brigthnessDim) => AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 200),
+                                      child: brigthnessDim < 1.0
+                                          ? NamidaIconButton(
+                                              key: const Key('brightnesseto_ok'),
+                                              tooltip: () => lang.RESET_BRIGHTNESS,
+                                              icon: Broken.sun_1,
+                                              iconColor: itemsColor.withValues(alpha: 0.8),
+                                              verticalPadding: 4.0,
+                                              horizontalPadding: 8.0,
+                                              iconSize: 18.0,
+                                              onPressed: () => _currentBrigthnessDim.value = 1.0,
+                                            )
+                                          : const SizedBox(
+                                              key: Key('brightnesseto_no'),
+                                            ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4.0),
+
                                   // ==== Toggle glow  ====
                                   if (widget.isFullScreen)
                                     Padding(
@@ -1038,28 +1061,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       ),
                                     ),
 
-                                  // ==== Reset Brightness ====
-                                  ObxO(
-                                    rx: _currentBrigthnessDim,
-                                    builder: (context, brigthnessDim) => AnimatedSwitcher(
-                                      duration: const Duration(milliseconds: 200),
-                                      child: brigthnessDim < 1.0
-                                          ? NamidaIconButton(
-                                              key: const Key('brightnesseto_ok'),
-                                              tooltip: () => lang.RESET_BRIGHTNESS,
-                                              icon: Broken.sun_1,
-                                              iconColor: itemsColor.withValues(alpha: 0.8),
-                                              verticalPadding: 4.0,
-                                              horizontalPadding: 8.0,
-                                              iconSize: 18.0,
-                                              onPressed: () => _currentBrigthnessDim.value = 1.0,
-                                            )
-                                          : const SizedBox(
-                                              key: Key('brightnesseto_no'),
-                                            ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4.0),
                                   // ===== Speed Chip =====
                                   NamidaPopupWrapper(
                                     onPop: _startTimer,

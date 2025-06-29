@@ -126,7 +126,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     _isTitleExpanded.value = false;
   }
 
-  final _videoLikeManager = YtVideoLikeManager(page: YoutubeInfoController.current.currentVideoPage);
+  final _videoLikeManager = YtVideoLikeManager(pageRx: YoutubeInfoController.current.currentVideoPage);
 
   @override
   void initState() {

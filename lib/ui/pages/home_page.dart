@@ -936,7 +936,7 @@ class _MixesCardState extends State<_MixesCard> {
               slivers: [
                 const SliverPadding(padding: EdgeInsets.only(top: kToolbarHeight)),
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   sliver: SliverToBoxAdapter(
                     child: thumbnailWidget,
                   ),

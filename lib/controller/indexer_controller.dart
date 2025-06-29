@@ -220,10 +220,11 @@ class Indexer<T extends Track> {
     if (startupBoost) {
       isIndexing.value = true;
       final completer = Completer<void>();
-      unawaited(_prepareTracksFile(completer).whenComplete(() => isIndexing.value = false));
+
+      unawaited(Future<void>.microtask(() => _prepareTracksFile(completer)).whenComplete(() => isIndexing.value = false));
       return await completer.future;
     } else {
-      return await _prepareTracksFile();
+      return await Future<void>.microtask(_prepareTracksFile);
     }
   }
 
