@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 
 import 'package:intl/intl.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -16,6 +17,7 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
+import 'package:namida/controller/platform/zip_manager/zip_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -353,6 +355,9 @@ class JsonToHistoryParser {
   }
 
   void _resetValues() {
+    isParsing.value = false;
+    isLoadingFile.value = false;
+
     totalJsonToParse.value = 0;
     parsedHistoryJson.value = 0;
     addedHistoryJsonToPlaylist.value = 0;
@@ -376,42 +381,27 @@ class JsonToHistoryParser {
     DateTime? oldestDate,
     DateTime? newestDate,
   }) async {
-    if (files.isEmpty) {
-      if (mainDirectory != null) {
-        final contents = await mainDirectory.listAllIsolate(recursive: true);
-        if (source == TrackSource.youtube || source == TrackSource.youtubeMusic) {
-          contents.loop(
-            (file) {
-              if (file is File && NamidaFileExtensionsWrapper.json.isPathValid(file.path)) {
-                final name = file.path.getFilename;
-                if (name.contains('watch-history')) files.add(file);
-              }
-            },
-          );
-        } else {
-          contents.loop(
-            (file) {
-              if (file is File && NamidaFileExtensionsWrapper.csv.isPathValid(file.path)) {
-                // folder shouldnt contain yt playlists/etc csv files tho, otherwise wer cooked
-                final name = file.path.getFilename;
-                if (name != 'subscriptions.csv') files.add(file);
-              }
-            },
-          );
-        }
-      }
-    }
-    if (files.isEmpty) {
-      snackyy(message: 'No related files were found in this directory.', isError: true);
-      return;
-    }
-
     _resetValues();
     isParsing.value = true;
     isLoadingFile.value = true;
     _currentOldestDate.value = oldestDate;
     _currentNewestDate.value = newestDate;
     showParsingProgressDialog();
+
+    Directory? tempZipMainDestination;
+
+    if (files.isEmpty) {
+      if (mainDirectory != null) {
+        tempZipMainDestination = await Directory.systemTemp.createTemp('namida_parser_');
+        files = await _filterFilesFromDir(mainDirectory, source, tempZipMainDestination);
+      }
+    }
+    if (files.isEmpty) {
+      snackyy(message: 'No related files were found in this directory.', isError: true);
+      _resetValues();
+      NamidaNavigator.inst.closeDialog();
+      return;
+    }
 
     // TODO: warning to backup history
 
@@ -486,6 +476,66 @@ class JsonToHistoryParser {
     _latestMissingMap.value = allMissingEntries;
     _latestMissingMapAddedStatus.clear();
     showMissingEntriesDialog();
+
+    if (tempZipMainDestination != null) {
+      tempZipMainDestination.delete(recursive: true);
+    }
+  }
+
+  Future<List<File>> _filterFilesFromDir(Directory mainDirectory, TrackSource source, Directory tempZipMainDestination) async {
+    final files = <File>[];
+
+    late final zipManager = ZipManager.platform();
+
+    Future<List<FileSystemEntity>> listDir(Directory dir) => dir.listAllIsolate(recursive: true);
+    FutureOr<void> executeFileEnsureZipExtracted(File file, void Function(File file) onMatch) async {
+      if (NamidaFileExtensionsWrapper.zip.isPathValid(file.path)) {
+        final destinationDir = Directory(FileParts.joinPath(tempZipMainDestination.path, file.path.getFilenameWOExt));
+        await zipManager.extractZip(zipFile: file, destinationDir: destinationDir);
+        final zipContents = await listDir(destinationDir);
+        for (final file in zipContents) {
+          if (file is File) {
+            onMatch(file);
+          }
+        }
+      } else {
+        onMatch(file);
+      }
+    }
+
+    final contents = await listDir(mainDirectory);
+
+    if (source == TrackSource.youtube || source == TrackSource.youtubeMusic) {
+      for (final file in contents) {
+        if (file is File) {
+          await executeFileEnsureZipExtracted(
+            file,
+            (file) {
+              if (NamidaFileExtensionsWrapper.json.isPathValid(file.path)) {
+                final name = file.path.getFilename;
+                if (name.contains('watch-history')) files.add(file);
+              }
+            },
+          );
+        }
+      }
+    } else {
+      for (final file in contents) {
+        if (file is File) {
+          await executeFileEnsureZipExtracted(
+            file,
+            (file) {
+              if (NamidaFileExtensionsWrapper.csv.isPathValid(file.path)) {
+                // folder shouldnt contain yt playlists/etc csv files tho, otherwise wer cooked
+                final name = file.path.getFilename;
+                if (name != 'subscriptions.csv') files.add(file);
+              }
+            },
+          );
+        }
+      }
+    }
+    return files;
   }
 
   Future<({List<int> historyDays, List<int> ytHistoryDays, Map<_MissingListenEntry, List<int>> missingEntries})?> _parseYTHistoryJsonAndAdd({
