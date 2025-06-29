@@ -354,7 +354,7 @@ class CurrentColor {
     _colorSchemeOfSubPages.value = colorWithAlpha;
   }
 
-  Color mixIntColors(List<Color> colors) {
+  static Color mixIntColors(List<Color> colors) {
     if (colors.isEmpty) return Colors.transparent;
     int red = 0;
     int green = 0;

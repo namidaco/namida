@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/core/extensions.dart';
 
 class NamidaColor {
@@ -40,4 +41,19 @@ class NamidaColor {
 
   @override
   int get hashCode => used.hashCode ^ mix.hashCode ^ palette.hashCode;
+}
+
+extension NamidaColorExtensions on List<NamidaColor> {
+  NamidaColor combine() {
+    final palettes = <Color>[];
+    for (final c in this) {
+      palettes.addAll(c.palette);
+    }
+    final mix = CurrentColor.mixIntColors(palettes);
+    return NamidaColor(
+      used: null,
+      mix: mix,
+      palette: palettes,
+    );
+  }
 }

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -14,7 +15,6 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/search_sort_controller.dart';
-import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -37,10 +37,12 @@ void showTrackAdvancedDialog({
   required QueueSource source,
   required List<(String, String)> albumsUniqued,
 }) async {
+  if (tracks.isEmpty) return;
   final isSingle = tracks.length == 1;
 
   final Map<TrackSource, int> sourcesMap = {};
   final tracksWithYTID = <Track, String>{};
+  final tracksForColorPaletteMap = <String, Track>{};
   tracks.loop((e) {
     final twd = e.trackWithDate;
     if (twd != null) {
@@ -49,11 +51,14 @@ void showTrackAdvancedDialog({
 
     final ytid = e.track.youtubeID;
     if (ytid.isNotEmpty) tracksWithYTID[e.track] ??= ytid;
+    tracksForColorPaletteMap[e.track.pathToImage] = e.track;
   });
+  // -- makes sense when group artworks by albums enabled, or whatever reason that makes tracks have same image path
+  final tracksForColorPalette = tracksForColorPaletteMap.values.toList();
+
   final willUpdateArtwork = false.obs;
 
-  final trackColor = await CurrentColor.inst.getTrackColors(tracks.first.track, delightnedAndAlpha: false);
-  final firstTrackExists = await File(tracks.first.track.path).exists();
+  final firstTrackExists = File(tracks.first.track.path).existsSync(); // sync is faster
 
   final reIndexedTracksSuccessful = 0.obs;
   final reIndexedTracksFailed = 0.obs;
@@ -296,57 +301,84 @@ void showTrackAdvancedDialog({
                 );
               },
             ),
-          if (isSingle || (albumsUniqued.length == 1 && settings.groupArtworksByAlbum.value))
-            CustomListTile(
-              passedColor: colorScheme,
-              title: lang.COLOR_PALETTE,
-              icon: Broken.color_swatch,
-              trailing: CircleAvatar(
-                backgroundColor: trackColor.used,
-                maxRadius: 14.0,
-              ),
-              onTap: () {
-                void onAction() {
-                  NamidaNavigator.inst.closeDialog(3);
-                }
-
-                _showTrackColorPaletteDialog(
-                  colorScheme: colorScheme,
-                  trackColor: trackColor,
-                  onFinalColor: (palette, color) async {
-                    await CurrentColor.inst.reExtractTrackColorPalette(
-                      track: tracks.first.track,
-                      imagePath: null,
-                      newNC: NamidaColor(used: color, mix: _mixColor(palette), palette: palette),
-                    );
-                    onAction();
-                  },
-                  onRestoreDefaults: () async {
-                    await CurrentColor.inst.reExtractTrackColorPalette(
-                      track: tracks.first.track,
-                      imagePath: tracks.first.track.pathToImage,
-                      newNC: null,
-                    );
-                    onAction();
-                  },
-                );
-              },
+          FutureBuilder(
+            future: Future.wait<NamidaColor>(
+              tracksForColorPalette.take(4).map(
+                    (e) => CurrentColor.inst.getTrackColors(e, delightnedAndAlpha: false, useIsolate: true),
+                  ),
             ),
+            builder: (context, snapshot) {
+              final trackColors = snapshot.data;
+              return CustomListTile(
+                passedColor: colorScheme,
+                title: lang.COLOR_PALETTE,
+                icon: Broken.color_swatch,
+                trailingRaw: AnimatedSwitcher(
+                  duration: Duration(milliseconds: 200),
+                  child: trackColors == null
+                      ? SizedBox(
+                          key: Key('color_not_visible'),
+                        )
+                      : Padding(
+                          key: Key('color_visible'),
+                          padding: const EdgeInsets.only(right: 12.0),
+                          child: CustomPaint(
+                            painter: _QuarterCirclePainter(
+                              colors: trackColors.map((e) => e.color).toList(),
+                              radius: 14.0,
+                            ),
+                          ),
+                        ),
+                ),
+                onTap: () {
+                  void onAction() {
+                    NamidaNavigator.inst.closeDialog(3);
+                  }
+
+                  _showTrackColorPaletteDialog(
+                    colorScheme: colorScheme,
+                    trackColor: trackColors?.combine(),
+                    onFinalColor: (palette, color) async {
+                      for (final track in tracksForColorPalette) {
+                        await CurrentColor.inst.reExtractTrackColorPalette(
+                          track: track,
+                          imagePath: null,
+                          newNC: NamidaColor(used: color, mix: _mixColor(palette), palette: palette),
+                        );
+                      }
+
+                      onAction();
+                    },
+                    onRestoreDefaults: () async {
+                      for (final track in tracksForColorPalette) {
+                        await CurrentColor.inst.reExtractTrackColorPalette(
+                          track: track,
+                          imagePath: track.pathToImage,
+                          newNC: null,
+                        );
+                      }
+                      onAction();
+                    },
+                  );
+                },
+              );
+            },
+          ),
         ],
       ),
     ),
   );
 }
 
-Color _mixColor(List<Color> colors) => CurrentColor.inst.mixIntColors(colors);
+Color _mixColor(List<Color> colors) => CurrentColor.mixIntColors(colors);
 
 void _showTrackColorPaletteDialog({
   required Color colorScheme,
-  required NamidaColor trackColor,
+  required NamidaColor? trackColor,
   required void Function(List<Color> palette, Color color) onFinalColor,
-  required void Function() onRestoreDefaults,
+  required void Function()? onRestoreDefaults,
 }) async {
-  final allPaletteColor = List<Color>.from(trackColor.palette).obs;
+  final allPaletteColor = List<Color>.from(trackColor?.palette ?? []).obs;
   final selectedColors = <Color>[].obs;
   final removedColors = <Color>[].obs;
   final didChangeOriginalPalette = false.obs;
@@ -371,7 +403,7 @@ void _showTrackColorPaletteDialog({
     );
   }
 
-  final finalColorToBeUsed = trackColor.color.obs;
+  final finalColorToBeUsed = (trackColor?.color).obs;
 
   Widget getText(String text, {TextStyle? style}) {
     return Text(text, style: style ?? namida.textTheme.displaySmall);
@@ -456,16 +488,26 @@ void _showTrackColorPaletteDialog({
       return CustomBlurryDialog(
         normalTitleStyle: true,
         title: lang.COLOR_PALETTE,
-        leftAction: NamidaIconButton(
-          tooltip: () => lang.RESTORE_DEFAULTS,
-          onPressed: onRestoreDefaults,
-          icon: Broken.refresh,
-        ),
+        leftAction: onRestoreDefaults == null
+            ? null
+            : NamidaIconButton(
+                tooltip: () => lang.RESTORE_DEFAULTS,
+                onPressed: onRestoreDefaults,
+                icon: Broken.refresh,
+              ),
         actions: [
           const CancelButton(),
-          NamidaButton(
-            text: lang.CONFIRM,
-            onPressed: () => onFinalColor(allPaletteColor.value, finalColorToBeUsed.value),
+          ObxO(
+            rx: finalColorToBeUsed,
+            builder: (context, finalColor) => NamidaButton(
+              enabled: finalColor != null,
+              text: lang.CONFIRM,
+              onPressed: () {
+                if (finalColor != null) {
+                  onFinalColor(allPaletteColor.value, finalColor);
+                }
+              },
+            ),
           ),
         ],
         child: Column(
@@ -503,28 +545,33 @@ void _showTrackColorPaletteDialog({
             getText(lang.PALETTE),
             const SizedBox(height: 8.0),
             Obx(
-              (context) => getPalettesWidget(
-                palette: allPaletteColor.valueR,
-                onColorTap: (color) => selectedColors.addOrRemove(color),
-                onColorLongPress: (color) {
-                  allPaletteColor.remove(color);
-                  selectedColors.remove(color);
-                  removedColors.add(color);
-                  didChangeOriginalPalette.value = true;
-                },
-                displayCheckMark: (color) => selectedColors.contains(color),
-                theme: theme,
-                additionalWidget: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: theme.shadowColor),
-                    shape: BoxShape.circle,
-                  ),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(100.0),
-                    onTap: showAddNewColorPaletteDialog,
-                    child: getColorWidget(
-                      theme.cardColor.withAlpha(200),
-                      const Icon(Broken.add),
+              (context) => ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: context.height * 0.4),
+                child: SingleChildScrollView(
+                  child: getPalettesWidget(
+                    palette: allPaletteColor.valueR,
+                    onColorTap: (color) => selectedColors.addOrRemove(color),
+                    onColorLongPress: (color) {
+                      allPaletteColor.remove(color);
+                      selectedColors.remove(color);
+                      removedColors.add(color);
+                      didChangeOriginalPalette.value = true;
+                    },
+                    displayCheckMark: (color) => selectedColors.contains(color),
+                    theme: theme,
+                    additionalWidget: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: theme.shadowColor),
+                        shape: BoxShape.circle,
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(100.0),
+                        onTap: showAddNewColorPaletteDialog,
+                        child: getColorWidget(
+                          theme.cardColor.withAlpha(200),
+                          const Icon(Broken.add),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -536,10 +583,11 @@ void _showTrackColorPaletteDialog({
                 spacing: 12.0,
                 runSpacing: 6.0,
                 children: [
-                  mixWidget(
-                    title: lang.PALETTE_MIX,
-                    colors: trackColor.palette,
-                  ),
+                  if (trackColor != null)
+                    mixWidget(
+                      title: lang.PALETTE_MIX,
+                      colors: trackColor.palette,
+                    ),
                   if (didChangeOriginalPalette.valueR)
                     mixWidget(
                       title: lang.PALETTE_NEW_MIX,
@@ -767,4 +815,40 @@ class _TracksSearchTemp with PortsProvider<Map> {
   }
 
   Future<void> dispose() async => await disposePort();
+}
+
+class _QuarterCirclePainter extends CustomPainter {
+  final double radius;
+  final List<Color> colors;
+
+  const _QuarterCirclePainter({
+    required this.colors,
+    required this.radius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Offset center = Offset(0, 0);
+    final Paint paint = Paint()..style = PaintingStyle.fill;
+
+    final int segments = colors.length;
+    final double sweep = 2 * math.pi / segments;
+    final double startAngle = -math.pi / 2;
+
+    final Rect arcRect = Rect.fromCircle(center: center, radius: radius);
+
+    for (int i = 0; i < segments; i++) {
+      paint.color = colors[i];
+      canvas.drawArc(
+        arcRect,
+        startAngle + i * sweep,
+        sweep,
+        true,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
