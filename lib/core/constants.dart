@@ -743,6 +743,7 @@ class NamidaFeaturesVisibility {
   static final methodSetCanEnterPip = _isAndroid;
   static final methodSetMusicAs = _isAndroid;
   static final methodOpenSystemEqualizer = _isAndroid;
+  static final methodOnNotificationTapAction = _isAndroid;
 
   static final onAudioQueryAvailable = _isAndroid;
   static final recieveSharingIntents = _isAndroid;

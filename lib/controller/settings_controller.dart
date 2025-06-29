@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -210,6 +211,7 @@ class _SettingsController with SettingsFileWriter {
   final displayThirdItemInEachRow = false.obs;
   final trackTileSeparator = '•'.obs;
   final displayFavouriteIconInListTile = true.obs;
+
   final editTagsKeepFileDates = true.obs;
   final downloadFilesWriteUploadDate = false.obs;
   final downloadFilesKeepCachedVersions = true.obs;
@@ -370,9 +372,27 @@ class _SettingsController with SettingsFileWriter {
     ];
   }
 
+  void _applyDefaultDesktopSettings() {
+    artworkCacheHeightMultiplier.value = 1.0;
+    enableBlurEffect.value = true;
+    enableGlowEffect.value = true;
+    enableMiniplayerParallaxEffect.value = true;
+    animatedTheme.value = true;
+    performanceMode.value = PerformanceMode.goodLooking;
+
+    waveformTotalBars.value = 100;
+    videosMaxCacheInMB.value = (24 * 1024); // 8GB
+    audiosMaxCacheInMB.value = (12 * 1024); // 4GB
+    imagesMaxCacheInMB.value = (2 * 1024); // 256 MB
+  }
+
   Future<void> prepareSettingsFile() async {
     final json = await prepareSettingsFile_();
     if (json is! Map) return;
+
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      _applyDefaultDesktopSettings();
+    }
 
     try {
       /// Assigning Values

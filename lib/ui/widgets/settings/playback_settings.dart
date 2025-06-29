@@ -336,21 +336,22 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
         ),
       ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.onNotificationTap,
-        child: Obx(
-          (context) => CustomListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.onNotificationTap),
-            title: lang.ON_NOTIFICATION_TAP,
-            trailingText: settings.onNotificationTapAction.valueR.toText(),
-            icon: Broken.card,
-            onTap: () {
-              final element = settings.onNotificationTapAction.value.nextElement(NotificationTapAction.values);
-              settings.save(onNotificationTapAction: element);
-            },
+      if (NamidaFeaturesVisibility.methodOnNotificationTapAction)
+        getItemWrapper(
+          key: _PlaybackSettingsKeys.onNotificationTap,
+          child: Obx(
+            (context) => CustomListTile(
+              bgColor: getBgColor(_PlaybackSettingsKeys.onNotificationTap),
+              title: lang.ON_NOTIFICATION_TAP,
+              trailingText: settings.onNotificationTapAction.valueR.toText(),
+              icon: Broken.card,
+              onTap: () {
+                final element = settings.onNotificationTapAction.value.nextElement(NotificationTapAction.values);
+                settings.save(onNotificationTapAction: element);
+              },
+            ),
           ),
         ),
-      ),
 
       getItemWrapper(
         key: _PlaybackSettingsKeys.dismissibleMiniplayer,
