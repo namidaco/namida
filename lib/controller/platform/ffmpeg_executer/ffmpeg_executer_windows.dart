@@ -90,13 +90,17 @@ class _FFmpegWindowsIsolateManager with PortsProvider<SendPort> {
       if (isFFprobe) {
         String? output;
         try {
-          final res = Process.runSync(ffprobeExePath, [
-            "-loglevel",
-            "quiet",
-            "-v",
-            "quiet",
-            ...args,
-          ]);
+          final res = Process.runSync(
+            ffprobeExePath,
+            [
+              "-loglevel",
+              "quiet",
+              "-v",
+              "quiet",
+              ...args,
+            ],
+            stdoutEncoding: utf8,
+          );
 
           if (res.exitCode == 0) {
             final stdout = res.stdout;
@@ -110,12 +114,16 @@ class _FFmpegWindowsIsolateManager with PortsProvider<SendPort> {
       } else {
         bool success = false;
         try {
-          final res = Process.runSync(ffmpegExePath, [
-            "-hide_banner",
-            "-loglevel",
-            "quiet",
-            ...args,
-          ]);
+          final res = Process.runSync(
+            ffmpegExePath,
+            [
+              "-hide_banner",
+              "-loglevel",
+              "quiet",
+              ...args,
+            ],
+            stdoutEncoding: utf8,
+          );
           final rc = res.exitCode;
           success = rc == 0;
         } catch (_) {}
