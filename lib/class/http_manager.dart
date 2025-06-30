@@ -4,10 +4,10 @@ import 'package:rhttp/rhttp.dart';
 class HttpMultiRequestManager {
   HttpMultiRequestManager._(this._mainClients, {required this.listsMaxItems});
 
-  Future<HttpMultiRequestManager> create() async {
+  static Future<HttpMultiRequestManager> create([int clientsCount = 1]) async {
     return HttpMultiRequestManager._(
-      List<RhttpClient>.filled(listsMaxItems, await RhttpClient.create()),
-      listsMaxItems: listsMaxItems,
+      List<RhttpClient>.filled(clientsCount, await RhttpClient.create()),
+      listsMaxItems: clientsCount,
     );
   }
 

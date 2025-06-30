@@ -9,6 +9,7 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
 
+import 'package:namida/class/http_manager.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -177,6 +178,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       'path': path,
       'tracks': playlist.tracks,
       'infoMap': _pathsM3ULookup,
+      'artworkUrl': _artworkUrlForM3uInfoMap[playlist.m3uPath ?? ''],
     });
   }
 
@@ -191,8 +193,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   }
 
   Future<List<Track>> readM3UFiles(Set<String> filesPaths) async {
+    if (filesPaths.isEmpty) return [];
     final params = _ParseM3UPlaylistFilesParams(
-      paths: filesPaths,
+      allm3uPaths: filesPaths,
       tracksDbInfo: AppPaths.TRACKS_DB_INFO,
       backupDirPath: AppDirs.M3UBackup,
     );
@@ -207,7 +210,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     final paths = resBoth.paths;
     final listy = <Track>[];
     for (final p in paths.entries) {
-      listy.addAll(p.value.$2);
+      listy.addAll(p.value.$3);
+      _ensureM3UArtUrlObtained(p.key, p.value.$1, p.value.$2);
     }
 
     return listy;
@@ -249,14 +253,28 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     if (addAsM3U) _addedM3UPlaylists = true;
 
     try {
-      final params = _ParseM3UPlaylistFilesParams(
-        paths: forPaths,
-        tracksDbInfo: AppPaths.TRACKS_DB_INFO,
-        backupDirPath: AppDirs.M3UBackup,
-      );
-      final resBoth = await _parseM3UPlaylistFiles.thready(params);
-      final paths = resBoth.paths;
-      final infoMap = resBoth.infoMap;
+      var allm3uPaths = <String>{};
+      if (forPaths.isEmpty) {
+        final dirsFilterer = DirsFileFilter(
+          directoriesToExclude: null,
+          extensions: NamidaFileExtensionsWrapper.m3u,
+          strictNoMedia: false,
+        );
+        final result = dirsFilterer.filterSync();
+        allm3uPaths = result.allPaths;
+      }
+
+      _ParseM3UPlaylistFilesResult? resBoth;
+      if (allm3uPaths.isNotEmpty) {
+        final params = _ParseM3UPlaylistFilesParams(
+          allm3uPaths: allm3uPaths,
+          tracksDbInfo: AppPaths.TRACKS_DB_INFO,
+          backupDirPath: AppDirs.M3UBackup,
+        );
+        resBoth = await _parseM3UPlaylistFiles.thready(params);
+      }
+      final paths = resBoth?.paths ?? {};
+      final infoMap = resBoth?.infoMap ?? {};
 
       // -- removing old m3u playlists (only if preparing all)
       if (forPaths.isEmpty) {
@@ -267,7 +285,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         try {
           final plName = e.key;
           final m3uPath = e.value.$1;
-          final trs = e.value.$2;
+          final trs = e.value.$3;
           final creationDate = (await File(m3uPath).stat()).creationDate.millisecondsSinceEpoch;
           this.addNewPlaylist(
             plName,
@@ -276,6 +294,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
             creationDate: creationDate,
             actionIfAlreadyExists: PlaylistAddDuplicateAction.deleteAndCreateNewPlaylist,
           );
+
+          _ensureM3UArtUrlObtained(plName, e.value.$1, e.value.$2);
         } catch (_) {}
       }
 
@@ -290,20 +310,63 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     return null;
   }
 
+  void _ensureM3UArtUrlObtained(String playlistName, String m3uPath, String? artUrl) async {
+    if (artUrl == null) return;
+    _artworkUrlForM3uInfoMap[m3uPath] = artUrl;
+
+    final artworkThatAlrExists = getArtworkFileForPlaylist(playlistName);
+    if (await artworkThatAlrExists.exists()) return;
+
+    HttpMultiRequestManager? httpManager;
+    try {
+      if (artUrl.startsWith('http')) {
+        httpManager ??= await HttpMultiRequestManager.create();
+        await httpManager.execute(
+          (requester) async {
+            try {
+              final response = await requester.getBytes(artUrl);
+              final responseBytes = response.body;
+              if (responseBytes.isNotEmpty) {
+                await setArtworkForPlaylist(
+                  playlistName,
+                  artworkFile: null,
+                  artworkBytes: responseBytes,
+                );
+              }
+            } catch (_) {}
+          },
+        );
+      } else {
+        File? imageFileToCopy;
+        if (await File(artUrl).exists()) {
+          imageFileToCopy = File(artUrl);
+        } else {
+          final fileParentDirectory = File(m3uPath).parent.path;
+          final pathNormalized = p.relative(p.join(fileParentDirectory, p.normalize(artUrl)));
+          if (await File(pathNormalized).exists()) {
+            imageFileToCopy = File(pathNormalized);
+          }
+        }
+        if (imageFileToCopy != null) {
+          await setArtworkForPlaylist(
+            playlistName,
+            artworkFile: imageFileToCopy,
+            artworkBytes: null,
+          );
+        }
+      }
+    } catch (_) {}
+
+    httpManager?.closeClients();
+  }
+
   /// saves each track m3u info for writing back
   var _pathsM3ULookup = <String, String?>{}; // {trackPath: EXTINFO}
 
+  final _artworkUrlForM3uInfoMap = <String, String?>{}; // {m3uPath: artUrl}
+
   static _ParseM3UPlaylistFilesResult _parseM3UPlaylistFiles(_ParseM3UPlaylistFilesParams params) {
-    Set<String>? allm3uPaths = params.paths;
-    if (allm3uPaths == null || allm3uPaths.isEmpty) {
-      final dirsFilterer = DirsFileFilter(
-        directoriesToExclude: null,
-        extensions: NamidaFileExtensionsWrapper.m3u,
-        strictNoMedia: false,
-      );
-      final result = dirsFilterer.filterSync();
-      allm3uPaths = result.allPaths;
-    }
+    final allm3uPaths = params.allm3uPaths;
 
     final backupDirPath = params.backupDirPath;
 
@@ -329,8 +392,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     bool pathExists(String path) => File(path).existsSync();
 
     final pathSep = Platform.pathSeparator;
+    late final albumartUrlRegex = RegExp(r'(?<=#EXTALBUMARTURL:\s*).+');
 
-    final all = <String, (String, List<Track>)>{};
+    final all = <String, (String, String?, List<Track>)>{};
     final infoMap = <String, String?>{};
     for (final path in allm3uPaths) {
       final file = File(path);
@@ -338,8 +402,13 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       final fileParentDirectory = file.path.getDirectoryPath;
       final fullTracks = <Track>[];
       String? latestInfo;
+      String? artUrl;
       for (String line in file.readAsLinesSync()) {
         if (line.startsWith("#")) {
+          if (artUrl == null && line.startsWith('#EXTALBUMARTURL')) {
+            artUrl = albumartUrlRegex.firstMatch(line)?[0];
+          }
+
           latestInfo = line;
         } else if (line.isNotEmpty) {
           if (line.startsWith('primary/')) {
@@ -370,14 +439,15 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         }
       }
       if (all[filename] == null) {
-        all[filename] = (path, fullTracks);
+        all[filename] = (path, artUrl, fullTracks);
       } else {
         // -- filename already exists
-        all[file.path.formatPath()] = (path, fullTracks);
+        all[file.path.formatPath()] = (path, artUrl, fullTracks);
       }
 
       latestInfo = null; // resetting info between each file looping
     }
+
     // -- copying newly found m3u files as a backup
     for (final m3u in all.entries) {
       final backupFile = File("$backupDirPath${m3u.key}.m3u");
@@ -396,13 +466,17 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     final path = params['path'] as String;
     final tracks = params['tracks'] as List<TrackWithDate>;
     final infoMap = params['infoMap'] as Map<String, String?>;
+    final artworkUrl = params['artworkUrl'] as String?;
     final relative = params['relative'] as bool? ?? true;
 
     final file = File(path);
-    file.deleteIfExistsSync();
-    file.createSync(recursive: true);
+    await file.deleteIfExists();
+    await file.create(recursive: true);
     final sink = file.openWrite(mode: FileMode.writeOnlyAppend);
-    sink.write('#EXTM3U\n');
+    sink.write('#EXTM3U\n\n');
+    if (artworkUrl != null) {
+      sink.write('#EXTALBUMARTURL:$artworkUrl\n\n');
+    }
     for (int i = 0; i < tracks.length; i++) {
       var trwd = tracks[i];
       final tr = trwd.track;
@@ -481,6 +555,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
             'path': m3uPath,
             'tracks': playlist.tracks,
             'infoMap': _pathsM3ULookup,
+            'artworkUrl': _artworkUrlForM3uInfoMap[playlist.m3uPath ?? ''],
           });
         });
       }
@@ -625,19 +700,19 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 }
 
 class _ParseM3UPlaylistFilesParams {
-  final Set<String>? paths;
+  final Set<String> allm3uPaths;
   final DbWrapperFileInfo tracksDbInfo; // used as a fallback lookup
   final String backupDirPath; // used as a backup for newly found m3u files.
 
   const _ParseM3UPlaylistFilesParams({
-    this.paths,
+    required this.allm3uPaths,
     required this.tracksDbInfo,
     required this.backupDirPath,
   });
 }
 
 class _ParseM3UPlaylistFilesResult {
-  final Map<String, (String, List<Track>)> paths;
+  final Map<String, (String, String?, List<Track>)> paths;
   final Map<String, String?> infoMap;
 
   const _ParseM3UPlaylistFilesResult({
