@@ -259,14 +259,14 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
 
     switch (type) {
       case _SortType.name:
-        sorterFnFiles((item) => _pathToName(item.path));
-        sorterFnFolder((item) => _pathToName(item.path));
+        sorterFnFiles((item) => _pathToName(item.path).toLowerCase());
+        sorterFnFolder((item) => _pathToName(item.path).toLowerCase());
       case _SortType.dateModified:
         sorterFnFiles((item) => _currentInfoFiles[item.path]?.modified ?? DateTime(0));
         sorterFnFolder((item) => _currentInfoDirs[item.path]?.modified ?? DateTime(0));
       case _SortType.type:
-        sorterFnFiles((item) => _pathToExtension(item.path));
-        sorterFnFolder((item) => _pathToExtension(item.path));
+        sorterFnFiles((item) => _pathToExtension(item.path).toLowerCase());
+        sorterFnFolder((item) => _pathToExtension(item.path).toLowerCase());
       case _SortType.size:
         sorterFnFiles((item) => _currentInfoFiles[item.path]?.size ?? 0);
         sorterFnFolder((item) => _currentInfoDirs[item.path]?.size ?? 0);
