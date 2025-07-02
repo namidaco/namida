@@ -105,7 +105,7 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme, {
                     canEditComment.value = true;
 
                     snackyy(
-                      message: 'Set to "${video.title}" by "${video.channelName ?? video.channel.title}"',
+                      message: 'Set to "${video.title}" by "${video.channelName ?? video.channel?.title}"',
                       top: false,
                       altDesign: true,
                       leftBarIndicatorColor: colorScheme,

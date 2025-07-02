@@ -109,52 +109,58 @@ class _AccountHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return ObxO(
       rx: YoutubeAccountController.current.activeAccountChannel,
-      builder: (context, acc) => acc == null
-          ? const SizedBox()
-          : Padding(
-              padding: const EdgeInsets.only(top: 24.0, bottom: 12.0),
-              child: Row(
-                children: [
-                  const SizedBox(width: 24.0),
-                  YoutubeThumbnail(
-                    type: ThumbnailType.channel,
-                    key: Key(acc.id),
-                    width: 54.0,
-                    forceSquared: false,
-                    isImportantInCache: true,
-                    customUrl: acc.thumbnails.pick()?.url,
-                    isCircle: true,
-                  ),
-                  const SizedBox(width: 12.0),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          acc.title,
-                          style: context.textTheme.displayMedium,
-                        ),
-                        if (acc.handler.isNotEmpty) const SizedBox(height: 2.0),
-                        if (acc.handler.isNotEmpty)
-                          Text(
-                            acc.handler,
-                            style: context.textTheme.displaySmall,
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12.0),
-                  IconButton.filledTonal(
-                    onPressed: const YoutubeAccountManagePage().navigate,
-                    icon: const Icon(
-                      Broken.edit,
-                    ),
-                  ),
-                  const SizedBox(width: 18.0),
-                ],
+      builder: (context, acc) {
+        if (acc == null) return const SizedBox();
+        final title = acc.title;
+        final handler = acc.handler;
+        final showTitle = title != null && title.isNotEmpty;
+        final showHandler = handler.isNotEmpty;
+        return Padding(
+          padding: const EdgeInsets.only(top: 24.0, bottom: 12.0),
+          child: Row(
+            children: [
+              const SizedBox(width: 24.0),
+              YoutubeThumbnail(
+                type: ThumbnailType.channel,
+                key: Key(acc.id),
+                width: 54.0,
+                forceSquared: false,
+                isImportantInCache: true,
+                customUrl: acc.thumbnails.pick()?.url,
+                isCircle: true,
               ),
-            ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showTitle)
+                      Text(
+                        title,
+                        style: context.textTheme.displayMedium,
+                      ),
+                    if (showTitle || showHandler) const SizedBox(height: 2.0),
+                    if (showHandler)
+                      Text(
+                        acc.handler,
+                        style: context.textTheme.displaySmall,
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12.0),
+              IconButton.filledTonal(
+                onPressed: const YoutubeAccountManagePage().navigate,
+                icon: const Icon(
+                  Broken.edit,
+                ),
+              ),
+              const SizedBox(width: 18.0),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -476,7 +476,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                                   ),
                                                   const SizedBox(width: 2.0),
                                                   _VideoIdToChannelNameWidget(
-                                                    channelName: info?.channelName ?? info?.channel.title,
+                                                    channelName: info?.channelName ?? info?.channel?.title,
                                                     videoId: id,
                                                     style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0 * _hmultiplier),
                                                   ),

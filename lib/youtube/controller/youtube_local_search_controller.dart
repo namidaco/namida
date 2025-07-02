@@ -492,8 +492,8 @@ class _StreamResultInfoWrapper {
   });
 
   factory _StreamResultInfoWrapper.fromInfo(StreamInfoItem info) {
-    String? channelTitle = info.channel.title;
-    if (channelTitle.isEmpty) channelTitle = null;
+    String? channelTitle = info.channel?.title;
+    if (channelTitle?.isEmpty ?? true) channelTitle = null;
 
     return _StreamResultInfoWrapper(
       titleCleaned: info.title.cleanUpForComparison,

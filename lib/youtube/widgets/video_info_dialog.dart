@@ -116,10 +116,10 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
         videoTitle = title ?? '?';
       }(),
       () async {
-        channelTitle = info?.channel.title ?? await YoutubeInfoController.utils.getVideoChannelName(videoId);
+        channelTitle = info?.channel?.title ?? await YoutubeInfoController.utils.getVideoChannelName(videoId);
       }(),
       () async {
-        channelId = info?.channel.id ?? await YoutubeInfoController.utils.getVideoChannelID(videoId);
+        channelId = info?.channel?.id ?? await YoutubeInfoController.utils.getVideoChannelID(videoId);
       }(),
       () async {
         dateMS = (info?.publishedAt.accurateDate ?? (await YoutubeInfoController.utils.getVideoReleaseDate(videoId)))?.millisecondsSinceEpoch;

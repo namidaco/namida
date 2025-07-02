@@ -376,7 +376,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
     if (infoFinal != null) {
       _infoFinal = infoFinal;
       _videoTitle = _infoFinal?.title;
-      _videoChannel = _infoFinal?.channelName?.nullifyEmpty() ?? _infoFinal?.channel.title.nullifyEmpty();
+      _videoChannel = _infoFinal?.channelName?.nullifyEmpty() ?? _infoFinal?.channel?.title?.nullifyEmpty();
       _duration = infoFinal.durSeconds?.secondsLabel;
       return;
     }
@@ -394,7 +394,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
       () {
         _infoFinal = newInfo;
         _videoTitle = _infoFinal?.title;
-        _videoChannel = _infoFinal?.channelName?.nullifyEmpty() ?? _infoFinal?.channel.title.nullifyEmpty();
+        _videoChannel = _infoFinal?.channelName?.nullifyEmpty() ?? _infoFinal?.channel?.title?.nullifyEmpty();
         _duration = newInfo?.durSeconds?.secondsLabel;
       },
     );
@@ -623,7 +623,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
         totalLength: widget.downloadTotalLength,
         streamInfoItem: info,
         videoId: videoId,
-        channelID: _infoVideoFinal?.channelId ?? info?.channelId ?? info?.channel.id,
+        channelID: _infoVideoFinal?.channelId ?? info?.channelId ?? info?.channel?.id,
         playlistID: configs.playlistID,
         idsNamesLookup: {videoId: _infoVideoFinal?.title},
         playlistName: configs.playlistName,
@@ -705,7 +705,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
                     totalLength: widget.downloadTotalLength,
                     streamInfoItem: info,
                     videoId: videoId,
-                    channelID: _infoVideoFinal?.channelId ?? info?.channelId ?? info?.channel.id,
+                    channelID: _infoVideoFinal?.channelId ?? info?.channelId ?? info?.channel?.id,
                     playlistID: configs.playlistID,
                     idsNamesLookup: {videoId: videoTitle},
                     playlistName: configs.playlistName,
@@ -755,12 +755,5 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
     }
 
     return finalChild;
-  }
-}
-
-extension _StringChecker on String {
-  String? nullifyEmpty() {
-    if (isEmpty) return null;
-    return this;
   }
 }

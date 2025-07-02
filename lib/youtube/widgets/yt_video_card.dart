@@ -69,7 +69,7 @@ class YoutubeVideoCard extends StatelessWidget {
       playlistId: playlistIndexAndCount?.playlistId,
       streamInfoItem: video,
       videoId: videoId,
-      channelID: video.channel.id,
+      channelID: video.channel?.id,
       playlistID: playlistID,
       idsNamesLookup: {videoId: video.title},
       playlistName: playlist?.basicInfo.title ?? '',
@@ -112,13 +112,9 @@ class YoutubeVideoCard extends StatelessWidget {
           if (uploadDateAgo != null) uploadDateAgo,
         ].join(' - '),
         displaythirdLineText: showThirdLine,
-        thirdLineText: dateInsteadOfChannel
-            ? video.badges?.join(' - ') ?? ''
-            : video.channel.title.isNotEmpty
-                ? video.channel.title
-                : video.channelName ?? '',
+        thirdLineText: dateInsteadOfChannel ? video.badges?.join(' - ') ?? '' : video.channelName ?? '',
         displayChannelThumbnail: !dateInsteadOfChannel,
-        channelThumbnailUrl: video.channel.thumbnails.pick()?.url ?? YoutubeInfoController.utils.getVideoChannelThumbnailsSync(videoId, checkFromStorage: false)?.pick()?.url,
+        channelThumbnailUrl: video.channel?.thumbnails.pick()?.url ?? YoutubeInfoController.utils.getVideoChannelThumbnailsSync(videoId, checkFromStorage: false)?.pick()?.url,
         onTap: onTap ??
             () async {
               _VideoCardUtils.onVideoTap(

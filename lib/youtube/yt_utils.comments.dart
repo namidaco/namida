@@ -214,8 +214,8 @@ class _YTUtilsCommentActions {
       return null;
     }
 
-    String author = activeChannel.title;
-    if (author.isEmpty) author = activeChannel.handler;
+    String? author = activeChannel.title;
+    if (author?.isEmpty ?? true) author = activeChannel.handler;
     return author;
   }
 

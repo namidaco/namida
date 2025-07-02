@@ -110,7 +110,7 @@ class _YoutubeInfoUtils {
     if (name != null || checkFromStorage == false) return name;
     return _tempInfoChannelTitle[videoId] ??= getStreamInfoSync(videoId)?.channelName?.nullifyEmpty() ??
         _getVideoStreamResultSync(videoId)?.info?.channelName?.nullifyEmpty() ?? //
-        _getVideoPageResultSync(videoId)?.channelInfo?.title.nullifyEmpty() ?? //
+        _getVideoPageResultSync(videoId)?.channelInfo?.title?.nullifyEmpty() ?? //
         _getMissingInfoSync(videoId)?.channelName?.nullifyEmpty();
   }
 
@@ -125,9 +125,9 @@ class _YoutubeInfoUtils {
   }
 
   List<YoutiPieThumbnail>? getVideoChannelThumbnailsSync(String videoId, {bool checkFromStorage = true}) {
-    var thumbnails = tempVideoInfosFromStreams[videoId]?.channel.thumbnails;
+    var thumbnails = tempVideoInfosFromStreams[videoId]?.channel?.thumbnails;
     if ((thumbnails != null && thumbnails.isNotEmpty) || checkFromStorage == false) return thumbnails;
-    return getStreamInfoSync(videoId)?.channel.thumbnails ?? _getVideoPageResultSync(videoId)?.channelInfo?.thumbnails;
+    return getStreamInfoSync(videoId)?.channel?.thumbnails ?? _getVideoPageResultSync(videoId)?.channelInfo?.thumbnails;
   }
 
   /// Doesn't check from storage. u must call [getVideoReleaseDate] first to ensure that this returns data.
@@ -192,7 +192,7 @@ class _YoutubeInfoUtils {
     if (name != null || checkFromStorage == false) return name;
     return _tempInfoChannelTitle[videoId] ??= (await getStreamInfo(videoId))?.channelName?.nullifyEmpty() ??
         (await _getVideoStreamResult(videoId))?.info?.channelName?.nullifyEmpty() ?? //
-        (await _getVideoPageResult(videoId))?.channelInfo?.title.nullifyEmpty() ?? //
+        (await _getVideoPageResult(videoId))?.channelInfo?.title?.nullifyEmpty() ?? //
         (await _getMissingInfo(videoId))?.channelName?.nullifyEmpty();
   }
 
@@ -234,11 +234,6 @@ class _YoutubeInfoUtils {
 }
 
 extension _StringChecker on String {
-  String? nullifyEmpty() {
-    if (isEmpty) return null;
-    return this;
-  }
-
   String? nullifyTitle([void Function()? onMissingInfo]) {
     if (isEmpty) return null;
     if (isYTTitleFaulty()) {

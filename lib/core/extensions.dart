@@ -825,6 +825,11 @@ extension StringPathUtils on String {
     }
     return extension;
   }
+
+  String? nullifyEmpty() {
+    if (isEmpty) return null;
+    return this;
+  }
 }
 
 extension ColorExtensions on Color {

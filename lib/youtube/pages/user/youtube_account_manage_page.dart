@@ -125,7 +125,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
     String bodyText;
     void Function() singOutFn;
     if (active) {
-      bodyText = '${lang.SIGN_OUT_FROM_NAME.replaceFirst('_NAME_', channel.title.addDQuotation())}?';
+      bodyText = '${lang.SIGN_OUT_FROM_NAME.replaceFirst('_NAME_', channel.title?.addDQuotation() ?? '')}?';
       singOutFn = YoutubeAccountController.setAccountAnonymous;
     } else {
       bodyText = '${lang.REMOVE}: "${channel.title}"?';
@@ -209,7 +209,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                                 final active = currentChannel?.id == acc.id;
                                 return CustomListTile(
                                   verticalPadding: acc.handler.isEmpty ? 6.0 : 0.0,
-                                  title: acc.title,
+                                  title: acc.title ?? '',
                                   subtitle: acc.handler,
                                   bgColor: active ? accountColorActive : accountColorNonActive,
                                   borderR: 14.0,

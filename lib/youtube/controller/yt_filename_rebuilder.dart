@@ -106,9 +106,9 @@ class _YtFilenameRebuilder {
       'none' => '',
       'id' || 'video_id' => videoId,
       'url' || 'video_url' => YTUrlUtils.buildVideoUrl(videoId),
-      'video_title' || 'fulltitle' => pageResult?.videoInfo?.title ?? videoItem?.title ?? streams?.info?.title,
+      'video_title' || 'fulltitle' => pageResult?.videoInfo?.title.nullifyEmpty() ?? videoItem?.title.nullifyEmpty() ?? streams?.info?.title.nullifyEmpty(),
       'title' => () {
-          final fulltitle = pageResult?.videoInfo?.title ?? videoItem?.title ?? streams?.info?.title;
+          final fulltitle = pageResult?.videoInfo?.title.nullifyEmpty() ?? videoItem?.title.nullifyEmpty() ?? streams?.info?.title.nullifyEmpty();
           final splitted = fulltitle?.splitArtistAndTitle();
 
           if (fallbackExtractInfoFromDescription) {
@@ -116,11 +116,11 @@ class _YtFilenameRebuilder {
             if (possibleExtracted != null) return possibleExtracted;
           }
 
-          return splitted?.$2?.keepFeatKeywordsOnly() ?? streams?.info?.title ?? fulltitle;
+          return splitted?.$2?.keepFeatKeywordsOnly().nullifyEmpty() ?? streams?.info?.title.nullifyEmpty() ?? fulltitle?.nullifyEmpty();
         }(),
       'artist' => () {
           // tries extracting artist from video title, or else uses channel name
-          final fulltitle = pageResult?.videoInfo?.title ?? videoItem?.title ?? streams?.info?.title;
+          final fulltitle = pageResult?.videoInfo?.title.nullifyEmpty() ?? videoItem?.title.nullifyEmpty() ?? streams?.info?.title.nullifyEmpty();
 
           if (fulltitle != null) {
             final splitted = fulltitle.splitArtistAndTitle();
@@ -135,25 +135,25 @@ class _YtFilenameRebuilder {
             if (possibleExtracted != null) return possibleExtracted;
           }
 
-          final fullChannelName = pageResult?.channelInfo?.title ?? videoItem?.channel.title ?? streams?.info?.channelName;
+          final fullChannelName = pageResult?.channelInfo?.title?.nullifyEmpty() ?? videoItem?.channel?.title?.nullifyEmpty() ?? streams?.info?.channelName?.nullifyEmpty();
           return fullChannelName == null ? null : _removeTopicKeyword(fullChannelName);
         }(),
       'genre' => () {
-          final fulltitle = pageResult?.videoInfo?.title ?? videoItem?.title ?? streams?.info?.title;
+          final fulltitle = pageResult?.videoInfo?.title.nullifyEmpty() ?? videoItem?.title.nullifyEmpty() ?? streams?.info?.title.nullifyEmpty();
           if (fulltitle != null && fulltitle.contains(RegExp('nightcore', caseSensitive: false))) {
             return 'Nightcore';
           }
           return null;
         }(),
-      'ext' => videoStream?.codecInfo.container ?? audioStream?.codecInfo.container ?? 'mp4',
-      'channel_fulltitle' => pageResult?.channelInfo?.title ?? videoItem?.channel.title ?? streams?.info?.channelName,
+      'ext' => videoStream?.codecInfo.container.nullifyEmpty() ?? audioStream?.codecInfo.container.nullifyEmpty() ?? 'mp4',
+      'channel_fulltitle' => pageResult?.channelInfo?.title?.nullifyEmpty() ?? videoItem?.channel?.title?.nullifyEmpty() ?? streams?.info?.channelName?.nullifyEmpty(),
       'uploader' || 'channel' => () {
-          final fullChannelName = pageResult?.channelInfo?.title ?? videoItem?.channel.title ?? streams?.info?.channelName;
+          final fullChannelName = pageResult?.channelInfo?.title?.nullifyEmpty() ?? videoItem?.channel?.title?.nullifyEmpty() ?? streams?.info?.channelName?.nullifyEmpty();
           return fullChannelName == null ? null : _removeTopicKeyword(fullChannelName);
         }(),
-      'uploader_id' || 'channel_id' => pageResult?.channelInfo?.id ?? videoItem?.channel.id ?? streams?.info?.channelId,
+      'uploader_id' || 'channel_id' => pageResult?.channelInfo?.id.nullifyEmpty() ?? videoItem?.channel?.id.nullifyEmpty() ?? streams?.info?.channelId?.nullifyEmpty(),
       'uploader_url' || 'channel_url' => () {
-          final id = pageResult?.channelInfo?.id ?? videoItem?.channel.id ?? streams?.info?.channelId;
+          final id = pageResult?.channelInfo?.id.nullifyEmpty() ?? videoItem?.channel?.id.nullifyEmpty() ?? streams?.info?.channelId?.nullifyEmpty();
           return id == null ? null : YTUrlUtils.buildChannelUrl(id);
         }(),
       'timestamp' => (streams?.info?.publishDate.accurateDate ??
@@ -166,9 +166,11 @@ class _YtFilenameRebuilder {
           final date = streams?.info?.publishDate.accurateDate ?? streams?.info?.uploadDate.accurateDate ?? videoItem?.publishedAt.accurateDate;
           return date == null ? null : DateFormat('yyyyMMdd').format(date.toLocal());
         }(),
-      'view_count' =>
-        streams?.info?.viewsCount?.toString() ?? pageResult?.videoInfo?.viewsCount?.toString() ?? pageResult?.videoInfo?.viewsText ?? videoItem?.viewsCount?.toString(),
-      'like_count' => pageResult?.videoInfo?.engagement?.likesCount?.toString() ?? pageResult?.videoInfo?.engagement?.likesCountText,
+      'view_count' => streams?.info?.viewsCount?.toString() ??
+          pageResult?.videoInfo?.viewsCount?.toString() ??
+          pageResult?.videoInfo?.viewsText?.nullifyEmpty() ??
+          videoItem?.viewsCount?.toString(),
+      'like_count' => pageResult?.videoInfo?.engagement?.likesCount?.toString() ?? pageResult?.videoInfo?.engagement?.likesCountText?.nullifyEmpty(),
       'description' => _getDescription(streams, pageResult, videoItem),
       'duration' => (videoStream?.duration?.inSeconds ?? audioStream?.duration?.inSeconds ?? streams?.info?.durSeconds ?? videoItem?.durSeconds)?.toString(),
       'duration_string' => () {
@@ -198,7 +200,7 @@ class _YtFilenameRebuilder {
     if (parts != null && parts.isNotEmpty) {
       return _formatDescription(parts);
     }
-    return pageResult?.videoInfo?.description?.rawText ?? streams?.info?.availableDescription ?? videoItem?.availableDescription;
+    return pageResult?.videoInfo?.description?.rawText?.nullifyEmpty() ?? streams?.info?.availableDescription?.nullifyEmpty() ?? videoItem?.availableDescription?.nullifyEmpty();
   }
 
   T? _extractArtistTitleFromDescriptionIfNecessary<T>(

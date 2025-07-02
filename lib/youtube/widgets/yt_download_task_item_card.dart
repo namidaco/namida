@@ -415,7 +415,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
         playlistId: item.playlistId,
         streamInfoItem: infoFinal,
         videoId: videoId,
-        channelID: infoFinal?.channelId ?? infoFinal?.channel.id,
+        channelID: infoFinal?.channelId ?? infoFinal?.channel?.id,
         playlistID: null,
         idsNamesLookup: {videoId: infoFinal?.title},
         playlistName: '',
