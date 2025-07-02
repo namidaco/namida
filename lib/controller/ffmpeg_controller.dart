@@ -426,6 +426,10 @@ class NamidaFFMPEG {
       videoPath,
       '-i',
       audioPath,
+      '-map',
+      '0:v:0',
+      '-map',
+      '1:a:0', // map to ensure audio only is merged (in case file extension was mp4 etc)
       '-c',
       'copy',
       if (override) '-y',

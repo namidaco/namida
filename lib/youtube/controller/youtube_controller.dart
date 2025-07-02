@@ -143,15 +143,15 @@ class YoutubeController {
       } catch (_) {}
     }
     if (renameCacheFiles) {
-      final aFile = File(_getTempAudioPath(groupName: groupName, fullFilename: oldFilename));
-      final vFile = File(_getTempVideoPath(groupName: groupName, fullFilename: oldFilename));
+      final aFile = File(_getTempAudioPath(groupName: groupName, fullFilename: oldFilename, audioStream: config.audioStream));
+      final vFile = File(_getTempVideoPath(groupName: groupName, fullFilename: oldFilename, videoStream: config.videoStream));
 
       if (await aFile.exists()) {
-        final newPath = _getTempAudioPath(groupName: groupName, fullFilename: newFilename);
+        final newPath = _getTempAudioPath(groupName: groupName, fullFilename: newFilename, audioStream: config.audioStream);
         await aFile.rename(newPath);
       }
       if (await vFile.exists()) {
-        final newPath = _getTempVideoPath(groupName: groupName, fullFilename: newFilename);
+        final newPath = _getTempVideoPath(groupName: groupName, fullFilename: newFilename, videoStream: config.videoStream);
         await vFile.rename(newPath);
       }
     }
@@ -772,12 +772,14 @@ class YoutubeController {
   String _getTempAudioPath({
     required DownloadTaskGroupName groupName,
     required String fullFilename,
+    required AudioStream? audioStream,
     Directory? saveDir,
   }) {
     return _getTempDownloadPath(
       groupName: groupName.groupName,
       fullFilename: fullFilename,
       prefix: '.tempa_',
+      extension: audioStream?.codecInfo.container,
       saveDir: saveDir,
     );
   }
@@ -785,12 +787,14 @@ class YoutubeController {
   String _getTempVideoPath({
     required DownloadTaskGroupName groupName,
     required String fullFilename,
+    required VideoStream? videoStream,
     Directory? saveDir,
   }) {
     return _getTempDownloadPath(
       groupName: groupName.groupName,
       fullFilename: fullFilename,
       prefix: '.tempv_',
+      extension: videoStream?.codecInfo.container,
       saveDir: saveDir,
     );
   }
@@ -800,10 +804,13 @@ class YoutubeController {
     required String groupName,
     required String fullFilename,
     required String prefix,
+    required String? extension,
     Directory? saveDir,
   }) {
     final saveDirPath = saveDir?.path ?? FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName);
-    return FileParts.joinPath(saveDirPath, "$prefix$fullFilename");
+    String filenameFinal = "$prefix$fullFilename";
+    if (extension != null && !filenameFinal.endsWith(extension)) filenameFinal = "$filenameFinal.$extension";
+    return FileParts.joinPath(saveDirPath, filenameFinal);
   }
 
   static final filenameBuilder = _YtFilenameRebuilder();
@@ -943,6 +950,7 @@ class YoutubeController {
               destinationFilePath: _getTempVideoPath(
                 groupName: groupName,
                 fullFilename: finalFilenameTemp,
+                videoStream: videoStream,
                 saveDir: saveDirectory,
               ),
               onInitialFileSize: (initialFileSize) {
@@ -999,6 +1007,7 @@ class YoutubeController {
               destinationFilePath: _getTempAudioPath(
                 groupName: groupName,
                 fullFilename: finalFilenameTemp,
+                audioStream: audioStream,
                 saveDir: saveDirectory,
               ),
               onInitialFileSize: (initialFileSize) {
