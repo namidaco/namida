@@ -409,7 +409,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
             artUrl = albumartUrlRegex.firstMatch(line)?[0];
           }
 
-          latestInfo = line;
+          latestInfo = line; // could be a comment, would get overriden by the next #EXTINF anyways
         } else if (line.isNotEmpty) {
           if (line.startsWith('primary/')) {
             line = line.replaceFirst('primary/', '');
@@ -463,27 +463,57 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   }
 
   static Future<void> _saveM3UPlaylistToFile(Map params) async {
-    final path = params['path'] as String;
+    final mainPath = params['path'] as String;
     final tracks = params['tracks'] as List<TrackWithDate>;
     final infoMap = params['infoMap'] as Map<String, String?>;
     final artworkUrl = params['artworkUrl'] as String?;
     final relative = params['relative'] as bool? ?? true;
 
-    final file = File(path);
-    await file.deleteIfExists();
-    await file.create(recursive: true);
-    final sink = file.openWrite(mode: FileMode.writeOnlyAppend);
-    sink.write('#EXTM3U\n\n');
-    if (artworkUrl != null) {
-      sink.write('#EXTALBUMARTURL:$artworkUrl\n\n');
+    String findCommonPath(List<TrackWithDate> tracks) {
+      if (tracks.isEmpty) return '';
+
+      String res = "";
+      final firstPath = tracks[0].track.path;
+      for (int i = 0; i < firstPath.length; i++) {
+        for (var twd in tracks) {
+          var s = twd.track.path;
+          if (i >= s.length || firstPath[i] != s[i]) {
+            return res;
+          }
+        }
+        res += firstPath[i];
+      }
+      return res;
     }
+
+    final commonParent = findCommonPath(tracks);
+    final commonParentIsGood = RegExp(r'[^\s]').hasMatch(commonParent); // ensure has any char
+
+    final file = File(mainPath);
+
+    file.deleteIfExistsSync();
+    file.createSync(recursive: true);
+    final sink = file.openWrite(mode: FileMode.writeOnlyAppend);
+    sink.writeln('#EXTM3U');
+    sink.writeln();
+    if (artworkUrl != null) {
+      sink.writeln('#EXTALBUMARTURL:$artworkUrl');
+      sink.writeln();
+    }
+    if (commonParentIsGood) {
+      sink.writeln('# resolved against `$commonParent`');
+      sink.writeln('# this file should be put in `$commonParent` or a folder with similar structure');
+      sink.writeln();
+    }
+    final shouldDoRelative = relative && commonParentIsGood;
     for (int i = 0; i < tracks.length; i++) {
       var trwd = tracks[i];
       final tr = trwd.track;
       final trext = tr.track.toTrackExt();
       final infoLine = infoMap[tr.path] ?? '#EXTINF:${trext.durationMS / 1000},${trext.originalArtist} - ${trext.title}';
-      final pathLine = relative ? tr.path.replaceFirst(path.getDirectoryPath, '') : tr.path;
-      sink.write("$infoLine\n$pathLine\n");
+      final pathLine = shouldDoRelative ? p.relative(tr.path, from: commonParent) : tr.path;
+      sink.writeln(infoLine);
+      sink.writeln(pathLine);
     }
 
     await sink.flush();
