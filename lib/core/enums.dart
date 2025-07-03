@@ -516,3 +516,9 @@ enum InternalPlayerType {
     );
   }
 }
+
+enum VibrationType {
+  none,
+  vibration,
+  haptic_feedback,
+}

@@ -507,6 +507,11 @@ extension TrackSearchFilterUtils on TrackSearchFilter {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension VibrationTypeUtils on VibrationType {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
+}
+
 extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
   String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
@@ -1471,6 +1476,11 @@ class _NamidaConverters {
         TrackSearchFilter.comment: lang.COMMENT,
         TrackSearchFilter.year: lang.YEAR,
       },
+      VibrationType: {
+        VibrationType.none: lang.NONE,
+        VibrationType.vibration: lang.VIBRATION,
+        VibrationType.haptic_feedback: lang.HAPTIC_FEEDBACK,
+      },
       SetMusicAsAction: {
         SetMusicAsAction.ringtone: lang.RINGTONE,
         SetMusicAsAction.notification: lang.NOTIFICATION,
@@ -1613,6 +1623,11 @@ class _NamidaConverters {
         OnYoutubeLinkOpenAction.playLast: Broken.play_cricle,
         OnYoutubeLinkOpenAction.addToPlaylist: Broken.music_library_2,
         OnYoutubeLinkOpenAction.alwaysAsk: Broken.message_question,
+      },
+      VibrationType: {
+        VibrationType.none: Broken.slash,
+        VibrationType.vibration: Broken.alarm,
+        VibrationType.haptic_feedback: Broken.wind_2,
       },
       PerformanceMode: {
         PerformanceMode.highPerformance: Broken.activity,

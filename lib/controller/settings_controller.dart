@@ -170,7 +170,6 @@ class _SettingsController with SettingsFileWriter {
   final swipeableDrawer = true.obs;
   final dismissibleMiniplayer = false.obs;
   final enableClipboardMonitoring = false.obs;
-  final hapticFeedbackOverVibration = false.obs;
   final artworkGestureDoubleTapLRC = true.obs;
   final previousButtonReplays = false.obs;
   final refreshOnStartup = false.obs;
@@ -224,6 +223,7 @@ class _SettingsController with SettingsFileWriter {
   final onNotificationTapAction = NotificationTapAction.openApp.obs;
   final performanceMode = PerformanceMode.balanced.obs;
   final floatingActionButton = FABType.none.obs;
+  final vibrationType = VibrationType.vibration.obs;
 
   final trackItem = {
     TrackTilePosition.row1Item1: TrackTileItem.title,
@@ -526,7 +526,6 @@ class _SettingsController with SettingsFileWriter {
       swipeableDrawer.value = json['swipeableDrawer'] ?? swipeableDrawer.value;
       dismissibleMiniplayer.value = json['dismissibleMiniplayer'] ?? dismissibleMiniplayer.value;
       enableClipboardMonitoring.value = json['enableClipboardMonitoring'] ?? enableClipboardMonitoring.value;
-      hapticFeedbackOverVibration.value = json['hapticFeedbackOverVibration'] ?? hapticFeedbackOverVibration.value;
       artworkGestureDoubleTapLRC.value = json['artworkGestureDoubleTapLRC'] ?? artworkGestureDoubleTapLRC.value;
       previousButtonReplays.value = json['previousButtonReplays'] ?? previousButtonReplays.value;
       refreshOnStartup.value = json['refreshOnStartup'] ?? refreshOnStartup.value;
@@ -571,6 +570,7 @@ class _SettingsController with SettingsFileWriter {
       onNotificationTapAction.value = NotificationTapAction.values.getEnum(json['onNotificationTapAction']) ?? onNotificationTapAction.value;
       performanceMode.value = PerformanceMode.values.getEnum(json['performanceMode']) ?? performanceMode.value;
       floatingActionButton.value = FABType.values.getEnum(json['floatingActionButton']) ?? floatingActionButton.value;
+      vibrationType.value = VibrationType.values.getEnum(json['vibrationType']) ?? vibrationType.value;
 
       trackItem.value = getEnumMap_(
             json['trackItem'],
@@ -727,7 +727,6 @@ class _SettingsController with SettingsFileWriter {
         'swipeableDrawer': swipeableDrawer.value,
         'dismissibleMiniplayer': dismissibleMiniplayer.value,
         'enableClipboardMonitoring': enableClipboardMonitoring.value,
-        'hapticFeedbackOverVibration': hapticFeedbackOverVibration.value,
         'artworkGestureDoubleTapLRC': artworkGestureDoubleTapLRC.value,
         'previousButtonReplays': previousButtonReplays.value,
         'refreshOnStartup': refreshOnStartup.value,
@@ -741,6 +740,7 @@ class _SettingsController with SettingsFileWriter {
         'onNotificationTapAction': onNotificationTapAction.value.name,
         'performanceMode': performanceMode.value.name,
         'floatingActionButton': floatingActionButton.value.name,
+        'vibrationType': vibrationType.value.name,
         'mostPlayedTimeRange': mostPlayedTimeRange.value.name,
         'mostPlayedCustomDateRange': mostPlayedCustomDateRange.value.toJson(),
         'mostPlayedCustomisStartOfDay': mostPlayedCustomisStartOfDay.value,
@@ -900,7 +900,6 @@ class _SettingsController with SettingsFileWriter {
     bool? swipeableDrawer,
     bool? dismissibleMiniplayer,
     bool? enableClipboardMonitoring,
-    bool? hapticFeedbackOverVibration,
     bool? artworkGestureDoubleTapLRC,
     bool? previousButtonReplays,
     bool? refreshOnStartup,
@@ -914,6 +913,7 @@ class _SettingsController with SettingsFileWriter {
     NotificationTapAction? onNotificationTapAction,
     PerformanceMode? performanceMode,
     FABType? floatingActionButton,
+    VibrationType? vibrationType,
     MostPlayedTimeRange? mostPlayedTimeRange,
     DateRange? mostPlayedCustomDateRange,
     bool? mostPlayedCustomisStartOfDay,
@@ -1112,7 +1112,6 @@ class _SettingsController with SettingsFileWriter {
     if (swipeableDrawer != null) this.swipeableDrawer.value = swipeableDrawer;
     if (dismissibleMiniplayer != null) this.dismissibleMiniplayer.value = dismissibleMiniplayer;
     if (enableClipboardMonitoring != null) this.enableClipboardMonitoring.value = enableClipboardMonitoring;
-    if (hapticFeedbackOverVibration != null) this.hapticFeedbackOverVibration.value = hapticFeedbackOverVibration;
     if (artworkGestureDoubleTapLRC != null) this.artworkGestureDoubleTapLRC.value = artworkGestureDoubleTapLRC;
     if (previousButtonReplays != null) this.previousButtonReplays.value = previousButtonReplays;
     if (refreshOnStartup != null) this.refreshOnStartup.value = refreshOnStartup;
@@ -1134,6 +1133,7 @@ class _SettingsController with SettingsFileWriter {
     if (performanceMode != null) this.performanceMode.value = performanceMode;
 
     if (floatingActionButton != null) this.floatingActionButton.value = floatingActionButton;
+    if (vibrationType != null) this.vibrationType.value = vibrationType;
     if (mostPlayedTimeRange != null) this.mostPlayedTimeRange.value = mostPlayedTimeRange;
     if (mostPlayedCustomDateRange != null) this.mostPlayedCustomDateRange.value = mostPlayedCustomDateRange;
     if (mostPlayedCustomisStartOfDay != null) this.mostPlayedCustomisStartOfDay.value = mostPlayedCustomisStartOfDay;

@@ -3,19 +3,27 @@ import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/enums.dart';
 
 class VibratorController {
   const VibratorController._();
 
   static final _intNormal = _VibratorInterfaceNormal._();
   static final _intHaptic = _VibratorInterfaceHapticFeedback._();
-  static _VibratorInterface get _interface => settings.hapticFeedbackOverVibration.value ? _intHaptic : _intNormal;
 
-  static Future<void> verylight() => _interface.verylight();
-  static Future<void> light() => _interface.light();
-  static Future<void> medium() => _interface.medium();
-  static Future<void> high() => _interface.high();
-  static Future<void> veryhigh() => _interface.veryhigh();
+  static _VibratorInterface? get _interface {
+    return switch (settings.vibrationType.value) {
+      VibrationType.none => null,
+      VibrationType.vibration => _intNormal,
+      VibrationType.haptic_feedback => _intHaptic,
+    };
+  }
+
+  static Future<void>? verylight() => _interface?.verylight();
+  static Future<void>? light() => _interface?.light();
+  static Future<void>? medium() => _interface?.medium();
+  static Future<void>? high() => _interface?.high();
+  static Future<void>? veryhigh() => _interface?.veryhigh();
 }
 
 class _VibratorInterfaceNormal extends _VibratorInterface {

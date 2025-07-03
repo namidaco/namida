@@ -35,7 +35,7 @@ enum _ExtraSettingsKeys {
   swipeToOpenDrawer,
   alwaysExpandedSearchbar,
   enableClipboardMonitoring,
-  hapticFeedbackOverVibration,
+  vibrationType,
   extractAllPalettes,
 }
 
@@ -62,7 +62,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         _ExtraSettingsKeys.swipeToOpenDrawer: [lang.SWIPE_TO_OPEN_DRAWER],
         _ExtraSettingsKeys.alwaysExpandedSearchbar: [lang.ALWAYS_EXPANDED_SEARCHBAR],
         _ExtraSettingsKeys.enableClipboardMonitoring: [lang.ENABLE_CLIPBOARD_MONITORING, lang.ENABLE_CLIPBOARD_MONITORING_SUBTITLE],
-        _ExtraSettingsKeys.hapticFeedbackOverVibration: [lang.HAPTIC_FEEDBACK_INSTEAD_OF_VIBRATION],
+        _ExtraSettingsKeys.vibrationType: [lang.VIBRATION_TYPE, lang.VIBRATION, lang.HAPTIC_FEEDBACK],
         _ExtraSettingsKeys.extractAllPalettes: [lang.EXTRACT_ALL_COLOR_PALETTES],
       };
 
@@ -436,20 +436,54 @@ class ExtrasSettings extends SettingSubpageProvider {
             ),
           ),
           getItemWrapper(
-            key: _ExtraSettingsKeys.hapticFeedbackOverVibration,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.hapticFeedbackOverVibration),
-                leading: const StackedIcon(
-                  baseIcon: Broken.alarm,
-                  secondaryIcon: Broken.wind_2,
-                  secondaryIconSize: 13.0,
+            key: _ExtraSettingsKeys.vibrationType,
+            child: CustomListTile(
+              bgColor: getBgColor(_ExtraSettingsKeys.vibrationType),
+              leading: const StackedIcon(
+                baseIcon: Broken.alarm,
+                secondaryIcon: Broken.wind_2,
+                secondaryIconSize: 13.0,
+              ),
+              title: lang.VIBRATION_TYPE,
+              trailing: NamidaPopupWrapper(
+                children: () => [
+                  ...VibrationType.values.map(
+                    (e) => ObxO(
+                      rx: settings.vibrationType,
+                      builder: (context, vibrationType) => NamidaInkWell(
+                        margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                        borderRadius: 6.0,
+                        bgColor: vibrationType == e ? context.theme.cardColor : null,
+                        child: Row(
+                          children: [
+                            Icon(
+                              e.toIcon(),
+                              size: 16.0,
+                            ),
+                            const SizedBox(width: 6.0),
+                            Text(
+                              e.toText(),
+                              style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          settings.save(vibrationType: e);
+                          NamidaNavigator.inst.popMenu();
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+                child: ObxO(
+                  rx: settings.vibrationType,
+                  builder: (context, vibrationType) => Text(
+                    vibrationType.toText(),
+                    style: context.textTheme.displaySmall,
+                    textAlign: TextAlign.end,
+                  ),
                 ),
-                title: lang.HAPTIC_FEEDBACK_INSTEAD_OF_VIBRATION,
-                value: settings.hapticFeedbackOverVibration.valueR,
-                onChanged: (isTrue) {
-                  settings.save(hapticFeedbackOverVibration: !isTrue);
-                },
               ),
             ),
           ),

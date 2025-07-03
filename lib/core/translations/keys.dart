@@ -289,7 +289,7 @@ abstract class LanguageKeys {
   String get GROUP => _getKey('GROUP');
   String get GROUP_ARTWORKS_BY_ALBUM => _getKey('GROUP_ARTWORKS_BY_ALBUM');
   String get GUIDE => _getKey('GUIDE');
-  String get HAPTIC_FEEDBACK_INSTEAD_OF_VIBRATION => _getKey('HAPTIC_FEEDBACK_INSTEAD_OF_VIBRATION');
+  String get HAPTIC_FEEDBACK => _getKey('HAPTIC_FEEDBACK');
   String get HEIGHT_OF_ALBUM_TILE => _getKey('HEIGHT_OF_ALBUM_TILE');
   String get HEIGHT_OF_TRACK_TILE => _getKey('HEIGHT_OF_TRACK_TILE');
   String get HIGH_MATCHES => _getKey('HIGH_MATCHES');
@@ -725,6 +725,8 @@ abstract class LanguageKeys {
   String get USE_PITCH_BLACK_SUBTITLE => _getKey('USE_PITCH_BLACK_SUBTITLE');
   String get VALUE_BETWEEN_50_200 => _getKey('VALUE_BETWEEN_50_200');
   String get VALUE => _getKey('VALUE');
+  String get VIBRATION => _getKey('VIBRATION');
+  String get VIBRATION_TYPE => _getKey('VIBRATION_TYPE');
   String get VIDEOS => _getKey('VIDEOS');
   String get VIDEO_CACHE_FILE => _getKey('VIDEO_CACHE_FILE');
   String get VIDEO_CACHE_FILES => _getKey('VIDEO_CACHE_FILES');
