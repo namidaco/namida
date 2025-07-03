@@ -346,14 +346,21 @@ class YoutubeController {
   }
 
   File? doesIDHasFileDownloaded(String id) {
-    for (final e in youtubeDownloadTasksMap.value.entries) {
-      for (final config in e.value.values) {
-        final groupName = e.key;
-        if (config.id.videoId == id) {
-          final file = downloadedFilesMap.value[groupName]?[config.filename];
-          if (file != null) {
-            return file;
-          }
+    for (final groupName in youtubeDownloadTasksMap.value.keys) {
+      final f = doesIDHasFileDownloadedInGroup(id, groupName);
+      if (f != null) return f;
+    }
+    return null;
+  }
+
+  File? doesIDHasFileDownloadedInGroup(String id, DownloadTaskGroupName groupName) {
+    final groupWithConfigs = youtubeDownloadTasksMap.value[groupName];
+    if (groupWithConfigs == null) return null;
+    for (final config in groupWithConfigs.values) {
+      if (config.id.videoId == id) {
+        final file = downloadedFilesMap.value[groupName]?[config.filename];
+        if (file != null) {
+          return file;
         }
       }
     }

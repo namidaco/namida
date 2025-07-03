@@ -252,7 +252,7 @@ extension YoutubePlaylistShare on YoutubePlaylist {
 
 extension PlaylistBasicInfoExt on PlaylistBasicInfo {
   /// Videos are accessible through [YoutiPiePlaylistResult.items] getter.
-  Future<bool> fetchAllPlaylistStreams({
+  Future<YoutiPieFetchAllResType> fetchAllPlaylistStreams({
     required bool showProgressSheet,
     required YoutiPiePlaylistResultBase playlist,
     VoidCallback? onStart,
@@ -267,7 +267,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       },
       details: executeDetails,
     );
-    if (fetchAllRes == null) return true; // no continuation left
+    if (fetchAllRes == null) return YoutiPieFetchAllResType.alreadyDone; // no continuation left
 
     controller?.call(fetchAllRes);
 
@@ -283,60 +283,66 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
           final rootContext = nampack.rootNavigatorKey.currentContext;
           if (rootContext != null) {
             popSheet = Navigator.of(rootContext, rootNavigator: true).maybePop;
+            void onSheetClose() {
+              popSheet = null;
+              if (fetchAllRes.isExecuting) {
+                // cancel if closed manually
+                fetchAllRes.cancel();
+              }
+            }
 
-            NamidaNavigator.inst.showSheet(
-              isDismissible: false,
-              builder: (context, bottomPadding, maxWidth, maxHeight) {
-                final iconSize = maxWidth * 0.5;
-                final iconColor = context.theme.colorScheme.onSurface.withValues(alpha: 0.6);
-                return _DisposableWidget(
-                  onDispose: fetchAllRes.cancel,
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Obx(
-                          (context) {
-                            final totalC = totalCount.valueR;
-                            return AnimatedSwitcher(
-                              key: const Key('circle_switch'),
-                              duration: switchAnimationDurHalf,
-                              child: totalC == null || currentCount.valueR < totalC
-                                  ? ThreeArchedCircle(
-                                      size: iconSize,
-                                      color: iconColor,
-                                    )
-                                  : Icon(
-                                      key: const Key('tick_switch'),
-                                      Broken.tick_circle,
-                                      size: iconSize,
-                                      color: iconColor,
-                                    ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 12.0),
-                        Text(
-                          '${lang.FETCHING}...',
-                          style: context.textTheme.displayLarge,
-                        ),
-                        const SizedBox(height: 8.0),
-                        Obx(
-                          (context) {
-                            final totalC = totalCount.valueR;
-                            return Text(
-                              '${currentCount.valueR.formatDecimal()}/${totalC == null ? '?' : totalC.formatDecimal()}',
-                              style: context.textTheme.displayLarge,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
+            NamidaNavigator.inst
+                .showSheet(
+                  isDismissible: false,
+                  builder: (context, bottomPadding, maxWidth, maxHeight) {
+                    final iconSize = maxWidth * 0.5;
+                    final iconColor = context.theme.colorScheme.onSurface.withValues(alpha: 0.6);
+                    return Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Obx(
+                            (context) {
+                              final totalC = totalCount.valueR;
+                              return AnimatedSwitcher(
+                                key: const Key('circle_switch'),
+                                duration: switchAnimationDurHalf,
+                                child: totalC == null || currentCount.valueR < totalC
+                                    ? ThreeArchedCircle(
+                                        size: iconSize,
+                                        color: iconColor,
+                                      )
+                                    : Icon(
+                                        key: const Key('tick_switch'),
+                                        Broken.tick_circle,
+                                        size: iconSize,
+                                        color: iconColor,
+                                      ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 12.0),
+                          Text(
+                            '${lang.FETCHING}...',
+                            style: context.textTheme.displayLarge,
+                          ),
+                          const SizedBox(height: 8.0),
+                          Obx(
+                            (context) {
+                              final totalC = totalCount.valueR;
+                              return Text(
+                                '${currentCount.valueR.formatDecimal()}/${totalC == null ? '?' : totalC.formatDecimal()}',
+                                style: context.textTheme.displayLarge,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                )
+                .whenComplete(onSheetClose);
           }
         },
       );
@@ -344,7 +350,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
 
     onStart?.call();
 
-    await fetchAllRes.result;
+    final fetchRes = await fetchAllRes.result;
 
     onEnd?.call();
 
@@ -360,7 +366,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       },
     );
 
-    return true;
+    return fetchRes;
   }
 
   Future<List<YoutubeID>> fetchAllPlaylistAsYTIDs({
@@ -368,8 +374,18 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     required YoutiPiePlaylistResultBase playlistToFetch,
   }) async {
     final playlist = this;
-    final didFetch = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch, executeDetails: ExecuteDetails.forceRequest());
-    if (!didFetch) snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
+    final fetchRes = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch, executeDetails: ExecuteDetails.forceRequest());
+
+    switch (fetchRes) {
+      case YoutiPieFetchAllResType.success || YoutiPieFetchAllResType.alreadyDone:
+        break;
+      case YoutiPieFetchAllResType.fail || YoutiPieFetchAllResType.inProgress:
+        snackyy(title: lang.ERROR, message: 'error fetching playlist videos: $fetchRes');
+        break; // still show the page
+      case YoutiPieFetchAllResType.alreadyCanceled:
+        return [];
+    }
+
     final plId = PlaylistID(id: this.id);
     return playlistToFetch.items
         .map(
@@ -465,10 +481,15 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
           title: lang.ADD_AS_A_NEW_PLAYLIST,
           subtitle: playlistNameToAddAs,
           onTap: () async {
-            final didFetch = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch);
-            if (!didFetch) {
-              snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
-              return;
+            final fetchRes = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch);
+            switch (fetchRes) {
+              case YoutiPieFetchAllResType.success || YoutiPieFetchAllResType.alreadyDone:
+                break;
+              case YoutiPieFetchAllResType.fail || YoutiPieFetchAllResType.inProgress:
+                snackyy(title: lang.ERROR, message: 'error fetching playlist videos: $fetchRes');
+                return;
+              case YoutiPieFetchAllResType.alreadyCanceled:
+                return;
             }
             YoutubePlaylistController.inst.addNewPlaylist(
               playlistNameToAddAs,
@@ -480,10 +501,15 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         icon: Broken.music_playlist,
         title: lang.ADD_TO_PLAYLIST,
         onTap: () async {
-          final didFetch = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch);
-          if (!didFetch) {
-            snackyy(title: lang.ERROR, message: 'error fetching playlist videos');
-            return;
+          final fetchRes = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch);
+          switch (fetchRes) {
+            case YoutiPieFetchAllResType.success || YoutiPieFetchAllResType.alreadyDone:
+              break;
+            case YoutiPieFetchAllResType.fail || YoutiPieFetchAllResType.inProgress:
+              snackyy(title: lang.ERROR, message: 'error fetching playlist videos: $fetchRes');
+              return;
+            case YoutiPieFetchAllResType.alreadyCanceled:
+              return;
           }
 
           final ids = <String>[];
@@ -609,24 +635,4 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       ),
     ];
   }
-}
-
-class _DisposableWidget extends StatefulWidget {
-  final Widget child;
-  final void Function() onDispose;
-  const _DisposableWidget({required this.child, required this.onDispose});
-
-  @override
-  State<_DisposableWidget> createState() => __DisposableWidgetState();
-}
-
-class __DisposableWidgetState extends State<_DisposableWidget> {
-  @override
-  void dispose() {
-    widget.onDispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
 }

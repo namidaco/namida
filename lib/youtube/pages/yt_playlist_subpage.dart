@@ -704,6 +704,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                         tooltip: () => lang.SHUFFLE,
                                         onPressed: () async {
                                           final videos = await _getAllPlaylistVideos();
+                                          if (videos.isEmpty) return;
                                           Player.inst.playOrPause(0, videos, QueueSourceYoutubeID.playlistHosted, shuffle: true);
                                         },
                                       ),
@@ -713,6 +714,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                         tooltip: () => lang.PLAY_LAST,
                                         onPressed: () async {
                                           final videos = await _getAllPlaylistVideos();
+                                          if (videos.isEmpty) return;
                                           Player.inst.addToQueue(videos, insertNext: false);
                                         },
                                       ),
@@ -720,10 +722,10 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                         iconColor: context.defaultIconColor(bgColor),
                                         icon: Broken.import,
                                         onPressed: () async {
-                                          final infoLookup = <String, StreamInfoItem>{};
-                                          playlist.items.loop((e) => infoLookup[e.id] = e);
-
                                           final videos = await _getAllPlaylistVideos();
+                                          if (videos.isEmpty) return;
+                                          final infoLookup = <String, StreamInfoItem>{};
+                                          _playlist.items.loop((e) => infoLookup[e.id] = e);
                                           YTPlaylistDownloadPage(
                                             ids: videos,
                                             playlistName: playlist.basicInfo.title,

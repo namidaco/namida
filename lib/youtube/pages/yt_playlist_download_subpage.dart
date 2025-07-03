@@ -56,25 +56,34 @@ class YTPlaylistDownloadPage extends StatefulWidget with NamidaRouteWidget {
 class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   final _selectedList = <String>[].obs; // sometimes a yt playlist can have duplicates (yt bug) so a Set wont be useful.
   final _configMap = <String, YoutubeItemDownloadConfig>{}.obs;
-  final _groupName = ''.obs;
+  final _groupName = DownloadTaskGroupName(groupName: '').obs;
 
   final _folderController = GlobalKey<YTDownloadOptionFolderListTileState>();
 
   bool useCachedVersionsIfAvailable = true;
   final preferredQuality = (settings.youtubeVideoQualities.value.firstOrNull ?? kStockVideoQualities.first).obs;
 
+  bool _didManuallyEditSelection = false;
+
   void _onItemTap(String id) => _selectedList.addOrRemove(id);
+
+  void _onGroupNameChanged() {
+    if (!_didManuallyEditSelection) {
+      _addAllYTIDsToSelectedExceptAlrDownloaded();
+    }
+  }
 
   @override
   void initState() {
-    _groupName.value = widget.playlistName.emptyIfHasDefaultPlaylistName();
-    _addAllYTIDsToSelected();
+    _groupName.addListener(_onGroupNameChanged);
+    _groupName.value = DownloadTaskGroupName(groupName: widget.playlistName.emptyIfHasDefaultPlaylistName());
     onRenameAllTasks(settings.youtube.downloadFilenameBuilder.value); // needed to provide initial data specially original indices
     super.initState();
   }
 
   @override
   void dispose() {
+    _groupName.removeListener(_onGroupNameChanged);
     _selectedList.close();
     _configMap.close();
     _groupName.close();
@@ -84,7 +93,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 
   void onRenameAllTasks(String? defaultFilename) {
     final timeNow = DateTime.now();
-    final group = DownloadTaskGroupName(groupName: _groupName.value);
+    final group = _groupName.value;
     widget.ids
         .mapIndexed((ytid, originalIndex) => _configMap.value[ytid.id] = _getDummyDownloadConfig(ytid.id, originalIndex, group, defaultFilename: defaultFilename, timeNow: timeNow))
         .toList();
@@ -123,6 +132,12 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 
   void _addAllYTIDsToSelected() {
     _selectedList.assignAll(widget.ids.map((e) => e.id));
+    _didManuallyEditSelection = false;
+  }
+
+  void _addAllYTIDsToSelectedExceptAlrDownloaded() {
+    _selectedList.assignAll(widget.ids.map((e) => e.id).where((id) => YoutubeController.inst.doesIDHasFileDownloadedInGroup(id, _groupName.value) == null));
+    _didManuallyEditSelection = false;
   }
 
   Future<void> _onEditIconTap({
@@ -200,9 +215,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               maxTrailingWidth: context.width * 0.2,
               visualDensity: visualDensity,
               playlistName: widget.playlistName.translatePlaylistName(),
-              initialFolder: _groupName.value,
+              initialFolder: _groupName.value.groupName,
               onDownloadGroupNameChanged: (newGroupName) {
-                _groupName.value = newGroupName;
+                _groupName.value = DownloadTaskGroupName(groupName: newGroupName);
                 _folderController.currentState?.onGroupNameChanged(newGroupName);
               },
               onDownloadFolderAdded: (newFolderName) {
@@ -287,6 +302,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   Widget build(BuildContext context) {
     final thumHeight = _hmultiplier * Dimensions.youtubeThumbnailHeight;
     final thumWidth = thumHeight * 16 / 9;
+    const cardBorderRadiusRaw = 12.0;
     return BackgroundWrapper(
       child: Stack(
         children: [
@@ -307,7 +323,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         onPressed: () {
                           YTUtils.showFilenameBuilderOutputSheet(
                             showEditTags: true,
-                            groupName: _groupName.value,
+                            groupName: _groupName.value.groupName,
                             onChanged: (text) => onRenameAllTasks(text),
                           );
                         },
@@ -316,9 +332,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         tooltip: () => lang.INVERT_SELECTION,
                         icon: Broken.recovery_convert,
                         onPressed: () {
-                          widget.ids.loop((e) {
-                            _selectedList.addOrRemove(e.id);
-                          });
+                          widget.ids.loop((e) => _onItemTap(e.id));
+                          _didManuallyEditSelection = true;
                         },
                       ),
                       Obx(
@@ -351,10 +366,10 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                 visualDensity: VisualDensity.compact,
                 trailingPadding: 12.0,
                 playlistName: widget.playlistName.translatePlaylistName(),
-                initialFolder: _groupName.value,
+                initialFolder: _groupName.value.groupName,
                 subtitle: (value) => FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, value),
                 onDownloadGroupNameChanged: (newGroupName) {
-                  _groupName.value = newGroupName;
+                  _groupName.value = DownloadTaskGroupName(groupName: newGroupName);
                 },
               ),
               ObxO(
@@ -402,12 +417,12 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                             (context) {
                               final isSelected = _selectedList.contains(id);
                               final filename = _configMap[id]?.filenameR;
-                              final fileExists = filename == null ? false : FileParts.join(AppDirs.YOUTUBE_DOWNLOADS, _groupName.valueR, filename.filename).existsSync();
+                              final fileExists = filename == null ? false : YoutubeController.inst.doesIDHasFileDownloadedInGroup(id, _groupName.valueR) != null;
                               return NamidaInkWell(
                                 animationDurationMS: 200,
                                 height: Dimensions.youtubeCardItemHeight * _hmultiplier,
                                 margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: Dimensions.youtubeCardItemVerticalPadding * _hmultiplier),
-                                borderRadius: 12.0,
+                                borderRadius: cardBorderRadiusRaw,
                                 bgColor: context.theme.cardColor.withValues(alpha: 0.3),
                                 decoration: isSelected
                                     ? BoxDecoration(
@@ -416,7 +431,10 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                         width: 2.0,
                                       ))
                                     : const BoxDecoration(),
-                                onTap: () => _onItemTap(id),
+                                onTap: () {
+                                  _onItemTap(id);
+                                  _didManuallyEditSelection = true;
+                                },
                                 onLongPress: () {
                                   if (_selectedList.isEmpty) return;
                                   int? latestIndex;
@@ -435,6 +453,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                   } else {
                                     _onItemTap(id);
                                   }
+                                  _didManuallyEditSelection = true;
                                 },
                                 child: Stack(
                                   children: [
@@ -499,7 +518,10 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                             borderRadius: BorderRadius.circular(4.0.multipliedRadius),
                                           ),
                                           value: isSelected,
-                                          onChanged: (value) => _onItemTap(id),
+                                          onChanged: (value) {
+                                            _onItemTap(id);
+                                            _didManuallyEditSelection = true;
+                                          },
                                         ),
                                         const SizedBox(width: 8.0),
                                       ],
@@ -509,7 +531,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                       child: NamidaBlurryContainer(
                                         borderRadius: BorderRadius.only(
                                           bottomLeft: Radius.circular(6.0.multipliedRadius),
-                                          topRight: Radius.circular(6.0.multipliedRadius),
+                                          topRight: Radius.circular(cardBorderRadiusRaw.multipliedRadius),
                                         ),
                                         padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
                                         child: Text(
@@ -569,7 +591,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         if (_selectedList.isEmpty) return;
                         if (!await requestManageStoragePermission()) return;
                         final timeNow = DateTime.now();
-                        final group = DownloadTaskGroupName(groupName: _groupName.value);
+                        final group = _groupName.value;
                         final itemsConfig = _selectedList.value
                             .map(
                               (id) =>
