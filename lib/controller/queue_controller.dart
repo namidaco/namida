@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -264,21 +266,26 @@ class QueueController {
     await File('${AppDirs.QUEUES}${queue.date}.json').writeAsJson(queue.toJson());
   }
 
+  final _queueFnLimiter = FunctionExecuteLimiter(
+    considerRapid: const Duration(seconds: 2),
+    executeAfter: const Duration(seconds: 2),
+    considerRapidAfterNExecutions: 1,
+  );
   Future<void> _saveLatestQueueToStorage(List<Playable> items) async {
-    final queueObjects = items
-        .map((e) => {
-              'p': e.toJson(),
-              't': _LatestQueueSaver._typesMapLookup[e.runtimeType],
-            })
-        .toList();
-
-    try {
-      final file = await File(AppPaths.LATEST_QUEUE).create(recursive: true);
-      const encoder = JsonEncoder();
-      await file.writeAsString(encoder.convert(queueObjects));
-    } catch (e) {
-      printy(e, isError: true);
-    }
+    return _queueFnLimiter.executeFuture(() async {
+      try {
+        final file = await File(AppPaths.LATEST_QUEUE).create(recursive: true);
+        var encoder = JsonEncoder(
+          (e) => {
+            'p': (e as Playable).toJson(),
+            't': _LatestQueueSaver._typesMapLookup[e.runtimeType],
+          },
+        );
+        await file.writeAsString(encoder.convert(items));
+      } catch (e) {
+        printy(e, isError: true);
+      }
+    });
   }
 
   Future<void> _deleteQueueFromStorage(Queue queue) async {
