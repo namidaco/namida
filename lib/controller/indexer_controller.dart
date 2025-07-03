@@ -1669,6 +1669,11 @@ class _IndexerIsolateExecuter {
       ),
     );
 
+    // -- so that sorting works, the Indexer here is local to this isolate only
+    Indexer.inst.allTracksMappedByPath = allTracksMappedByPath;
+    Indexer.inst.tracksInfoList.value = tracksInfoList;
+    Indexer.inst.allTracksMappedByYTID = allTracksMappedByYTID;
+
     final libraryGroup = LibraryGroup();
     libraryGroup.fillAll(
       tracksInfoList,

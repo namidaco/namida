@@ -623,29 +623,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
             ),
           ),
         ),
-        if (fullscreen)
-          Positioned(
-            bottom: 8.0,
-            right: 0.0,
-            child: Container(
-              clipBehavior: Clip.antiAlias,
-              padding: const EdgeInsets.all(4.0),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 8.0,
-                    color: context.theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
-                  ),
-                ],
-              ),
-              child: NamidaIconButton(
-                icon: Broken.maximize_3,
-                iconSize: 24.0,
-                onPressed: toggleFullscreen,
-              ),
-            ),
-          ),
       ],
     );
 
@@ -660,16 +637,49 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
             constraints: BoxConstraints(
               maxHeight: widget.maxHeight != null ? widget.maxHeight! * 0.95 : double.infinity,
             ),
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: _lrcOpacityDurationMS),
-              opacity: _isCurrentLineEmpty ? 0.0 : 1.0,
-              child: FadeIgnoreTransition(
-                opacity: mpAnimation,
-                child: OverflowBox(
-                  maxWidth: Dimensions.inst.miniplayerMaxWidth - pagePaddingHorizontal * 2, // keep the text steady while animating mp
-                  child: Padding(padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal), child: middleLyricsStackWidget),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: _lrcOpacityDurationMS),
+                    opacity: _isCurrentLineEmpty ? 0.0 : 1.0,
+                    child: FadeIgnoreTransition(
+                      opacity: mpAnimation,
+                      child: OverflowBox(
+                        maxWidth: Dimensions.inst.miniplayerMaxWidth - pagePaddingHorizontal * 2, // keep the text steady while animating mp
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
+                          child: middleLyricsStackWidget,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                if (fullscreen)
+                  Positioned(
+                    bottom: 8.0,
+                    right: 0.0,
+                    child: Container(
+                      clipBehavior: Clip.antiAlias,
+                      padding: const EdgeInsets.all(4.0),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            blurRadius: 8.0,
+                            color: context.theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+                          ),
+                        ],
+                      ),
+                      child: NamidaIconButton(
+                        icon: Broken.maximize_3,
+                        iconSize: 24.0,
+                        onPressed: toggleFullscreen,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),

@@ -971,6 +971,7 @@ class _MixesCardState extends State<_MixesCard> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 6.0),
                         NamidaInkWell(
                           onTap: () {
                             Player.inst.playOrPause(

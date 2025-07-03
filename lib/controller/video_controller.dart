@@ -316,6 +316,7 @@ class VideoController {
 
       currentVideo.value = nv;
       currentPossibleLocalVideos.value = [nv];
+      await playVideoCurrent(video: nv, track: track);
       return nv;
     }
 

@@ -579,19 +579,21 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     Future<Duration?> setPls() async {
       if (!await File(tr.path).exists()) throw PathNotFoundException(tr.path, const OSError(), 'Track file not found or couldn\'t be accessed.');
-      final videoOptions = initialVideo == null
-          ? isVideo
-              ? VideoSourceOptions(
-                  source: AudioVideoSource.file(item.path),
-                  loop: false,
-                  videoOnly: true,
-                )
-              : null
-          : VideoSourceOptions(
-              source: AudioVideoSource.file(initialVideo.path),
-              loop: VideoController.inst.canLoopVideo(initialVideo, duration?.inMilliseconds ?? tr.durationMS),
-              videoOnly: false,
-            );
+      final videoOptions = !settings.enableVideoPlayback.value
+          ? null
+          : initialVideo == null
+              ? isVideo
+                  ? VideoSourceOptions(
+                      source: AudioVideoSource.file(item.path),
+                      loop: false,
+                      videoOnly: true,
+                    )
+                  : null
+              : VideoSourceOptions(
+                  source: AudioVideoSource.file(initialVideo.path),
+                  loop: VideoController.inst.canLoopVideo(initialVideo, duration?.inMilliseconds ?? tr.durationMS),
+                  videoOnly: false,
+                );
       final dur = await setSource(
         tr.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
         item: pi,

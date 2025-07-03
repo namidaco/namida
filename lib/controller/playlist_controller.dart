@@ -260,7 +260,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           extensions: NamidaFileExtensionsWrapper.m3u,
           strictNoMedia: false,
         );
-        final result = dirsFilterer.filterSync();
+        final result = await dirsFilterer.filter();
         allm3uPaths = result.allPaths;
       }
 
