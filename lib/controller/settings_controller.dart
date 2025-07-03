@@ -170,6 +170,7 @@ class _SettingsController with SettingsFileWriter {
   final swipeableDrawer = true.obs;
   final dismissibleMiniplayer = false.obs;
   final enableClipboardMonitoring = false.obs;
+  final hapticFeedbackOverVibration = false.obs;
   final artworkGestureDoubleTapLRC = true.obs;
   final previousButtonReplays = false.obs;
   final refreshOnStartup = false.obs;
@@ -525,6 +526,7 @@ class _SettingsController with SettingsFileWriter {
       swipeableDrawer.value = json['swipeableDrawer'] ?? swipeableDrawer.value;
       dismissibleMiniplayer.value = json['dismissibleMiniplayer'] ?? dismissibleMiniplayer.value;
       enableClipboardMonitoring.value = json['enableClipboardMonitoring'] ?? enableClipboardMonitoring.value;
+      hapticFeedbackOverVibration.value = json['hapticFeedbackOverVibration'] ?? hapticFeedbackOverVibration.value;
       artworkGestureDoubleTapLRC.value = json['artworkGestureDoubleTapLRC'] ?? artworkGestureDoubleTapLRC.value;
       previousButtonReplays.value = json['previousButtonReplays'] ?? previousButtonReplays.value;
       refreshOnStartup.value = json['refreshOnStartup'] ?? refreshOnStartup.value;
@@ -725,6 +727,7 @@ class _SettingsController with SettingsFileWriter {
         'swipeableDrawer': swipeableDrawer.value,
         'dismissibleMiniplayer': dismissibleMiniplayer.value,
         'enableClipboardMonitoring': enableClipboardMonitoring.value,
+        'hapticFeedbackOverVibration': hapticFeedbackOverVibration.value,
         'artworkGestureDoubleTapLRC': artworkGestureDoubleTapLRC.value,
         'previousButtonReplays': previousButtonReplays.value,
         'refreshOnStartup': refreshOnStartup.value,
@@ -897,6 +900,7 @@ class _SettingsController with SettingsFileWriter {
     bool? swipeableDrawer,
     bool? dismissibleMiniplayer,
     bool? enableClipboardMonitoring,
+    bool? hapticFeedbackOverVibration,
     bool? artworkGestureDoubleTapLRC,
     bool? previousButtonReplays,
     bool? refreshOnStartup,
@@ -1108,6 +1112,7 @@ class _SettingsController with SettingsFileWriter {
     if (swipeableDrawer != null) this.swipeableDrawer.value = swipeableDrawer;
     if (dismissibleMiniplayer != null) this.dismissibleMiniplayer.value = dismissibleMiniplayer;
     if (enableClipboardMonitoring != null) this.enableClipboardMonitoring.value = enableClipboardMonitoring;
+    if (hapticFeedbackOverVibration != null) this.hapticFeedbackOverVibration.value = hapticFeedbackOverVibration;
     if (artworkGestureDoubleTapLRC != null) this.artworkGestureDoubleTapLRC.value = artworkGestureDoubleTapLRC;
     if (previousButtonReplays != null) this.previousButtonReplays.value = previousButtonReplays;
     if (refreshOnStartup != null) this.refreshOnStartup.value = refreshOnStartup;

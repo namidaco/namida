@@ -289,6 +289,7 @@ abstract class LanguageKeys {
   String get GROUP => _getKey('GROUP');
   String get GROUP_ARTWORKS_BY_ALBUM => _getKey('GROUP_ARTWORKS_BY_ALBUM');
   String get GUIDE => _getKey('GUIDE');
+  String get HAPTIC_FEEDBACK_INSTEAD_OF_VIBRATION => _getKey('HAPTIC_FEEDBACK_INSTEAD_OF_VIBRATION');
   String get HEIGHT_OF_ALBUM_TILE => _getKey('HEIGHT_OF_ALBUM_TILE');
   String get HEIGHT_OF_TRACK_TILE => _getKey('HEIGHT_OF_TRACK_TILE');
   String get HIGH_MATCHES => _getKey('HIGH_MATCHES');

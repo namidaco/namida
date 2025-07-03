@@ -35,6 +35,7 @@ enum _ExtraSettingsKeys {
   swipeToOpenDrawer,
   alwaysExpandedSearchbar,
   enableClipboardMonitoring,
+  hapticFeedbackOverVibration,
   extractAllPalettes,
 }
 
@@ -61,6 +62,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         _ExtraSettingsKeys.swipeToOpenDrawer: [lang.SWIPE_TO_OPEN_DRAWER],
         _ExtraSettingsKeys.alwaysExpandedSearchbar: [lang.ALWAYS_EXPANDED_SEARCHBAR],
         _ExtraSettingsKeys.enableClipboardMonitoring: [lang.ENABLE_CLIPBOARD_MONITORING, lang.ENABLE_CLIPBOARD_MONITORING_SUBTITLE],
+        _ExtraSettingsKeys.hapticFeedbackOverVibration: [lang.HAPTIC_FEEDBACK_INSTEAD_OF_VIBRATION],
         _ExtraSettingsKeys.extractAllPalettes: [lang.EXTRACT_ALL_COLOR_PALETTES],
       };
 
@@ -429,6 +431,24 @@ class ExtrasSettings extends SettingSubpageProvider {
                 value: settings.enableClipboardMonitoring.valueR,
                 onChanged: (isTrue) {
                   settings.save(enableClipboardMonitoring: !isTrue);
+                },
+              ),
+            ),
+          ),
+          getItemWrapper(
+            key: _ExtraSettingsKeys.hapticFeedbackOverVibration,
+            child: Obx(
+              (context) => CustomSwitchListTile(
+                bgColor: getBgColor(_ExtraSettingsKeys.hapticFeedbackOverVibration),
+                leading: const StackedIcon(
+                  baseIcon: Broken.alarm,
+                  secondaryIcon: Broken.wind_2,
+                  secondaryIconSize: 13.0,
+                ),
+                title: lang.HAPTIC_FEEDBACK_INSTEAD_OF_VIBRATION,
+                value: settings.hapticFeedbackOverVibration.valueR,
+                onChanged: (isTrue) {
+                  settings.save(hapticFeedbackOverVibration: !isTrue);
                 },
               ),
             ),
