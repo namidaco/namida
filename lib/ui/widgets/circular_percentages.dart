@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
@@ -42,6 +43,24 @@ class ParsingJsonPercentage extends StatelessWidget {
                 percentage: JsonToHistoryParser.inst.parsedHistoryJson.valueR / JsonToHistoryParser.inst.totalJsonToParse.valueR,
                 size: size,
               ),
+            )
+          : const SizedBox(),
+    );
+  }
+}
+
+class VideosExtractingPercentage extends StatelessWidget {
+  final double size;
+  const VideosExtractingPercentage({super.key, this.size = 48.0});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) => VideoController.inst.videosCountExtractingTotal.valueR > 0
+          ? NamidaCircularPercentage(
+              heroTag: 'extractingvideosper',
+              percentage: VideoController.inst.videosCountExtractingProgress.valueR / VideoController.inst.videosCountExtractingTotal.valueR,
+              size: size,
             )
           : const SizedBox(),
     );

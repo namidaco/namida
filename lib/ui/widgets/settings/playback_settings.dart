@@ -18,6 +18,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -839,6 +840,10 @@ class PlaybackSettings extends SettingSubpageProvider {
       title: lang.PLAYBACK_SETTING,
       subtitle: isInDialog ? null : lang.PLAYBACK_SETTING_SUBTITLE,
       icon: Broken.play_cricle,
+      trailing: const SizedBox(
+        height: 48.0,
+        child: VideosExtractingPercentage(),
+      ),
       child: isInDialog
           ? SizedBox(
               height: context.height * 0.7,

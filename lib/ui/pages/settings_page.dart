@@ -140,6 +140,7 @@ class CollapsedSettingTiles extends StatelessWidget {
           subtitle: lang.PLAYBACK_SETTING_SUBTITLE,
           icon: Broken.play_cricle,
           page: () => const PlaybackSettings(),
+          trailing: const VideosExtractingPercentage(size: 32.0),
         ),
         CustomCollapsedListTile(
           title: lang.CUSTOMIZATIONS,

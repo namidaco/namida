@@ -168,6 +168,9 @@ class VideoController {
     );
   }
 
+  final videosCountExtractingProgress = 0.obs;
+  final videosCountExtractingTotal = 0.obs;
+
   final currentBrigthnessDim = 1.0.obs;
 
   final videoControlsKey = GlobalKey<NamidaVideoControlsState>();
@@ -705,9 +708,13 @@ class VideoController {
 
     printy('videos details => cached: ${_videoCacheIDMap.length} | new/updated: ${shouldBeReExtracted.length} | removed: $removedIdsCount');
 
+    videosCountExtractingProgress.value = 0;
+    videosCountExtractingTotal.value = shouldBeReExtracted.values.fold(0, (previousValue, element) => previousValue + element.length);
+
     for (final newEntry in shouldBeReExtracted.entries) {
       final newId = newEntry.key;
       for (final statAndPath in newEntry.value) {
+        videosCountExtractingProgress.value++;
         final nv = await _extractNVFromCacheVideo(
           stats: statAndPath.$1,
           id: newId,
@@ -717,6 +724,9 @@ class VideoController {
       }
       _saveCachedVideos(newId); // will write the map value and delete if required
     }
+
+    videosCountExtractingProgress.value = 0;
+    videosCountExtractingTotal.value = 0;
   }
 
   /// - Loops the currently existing files

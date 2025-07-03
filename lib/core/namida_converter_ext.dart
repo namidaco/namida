@@ -934,6 +934,9 @@ extension RouteUtils on NamidaRoute {
       // -- Indexer Icon
       _getAnimatedCrossFade(child: const IndexingPercentage(size: 30.0), shouldShow: shouldShowProgressPercentage),
 
+      // -- Videos Icon
+      _getAnimatedCrossFade(child: const VideosExtractingPercentage(size: 30.0), shouldShow: shouldShowProgressPercentage),
+
       _getAnimatedCrossFade(
         child: NamidaAppBarIcon(
           icon: Broken.activity,
