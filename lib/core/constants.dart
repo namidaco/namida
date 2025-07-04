@@ -115,12 +115,12 @@ abstract class NamidaLinkRegex {
   static const all = '($url|$duration|$phoneNumber|$email)';
 
   static final youtubeLinkRegex = RegExp(
-    r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w\-]+)(?:\S+)?',
+    r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/(?:watch\?v=|embed/|v/|shorts/)|youtu\.be/)([\w\-]{11})(?:\S+)?',
     caseSensitive: false,
   );
 
   static final youtubeIdRegex = RegExp(
-    r'((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?',
+    r'(?:youtube\.com/(?:watch\?v=|embed/|v/|shorts/)|youtu\.be/)([\w\-]{11})',
     caseSensitive: false,
   );
 
@@ -205,7 +205,7 @@ class NamidaLinkUtils {
     if (link == null || link.isEmpty) return null;
 
     try {
-      final possibleId = NamidaLinkRegex.youtubeIdRegex.firstMatch(link)?.group(5);
+      final possibleId = NamidaLinkRegex.youtubeIdRegex.firstMatch(link)?.group(1);
       if (possibleId == null || possibleId.length != 11) return '';
       return possibleId;
     } catch (_) {}
