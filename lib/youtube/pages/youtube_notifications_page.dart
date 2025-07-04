@@ -6,8 +6,10 @@ import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/youtube/pages/youtube_main_page_fetcher_acc_base.dart';
+import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_notification_card.dart';
 
 class YoutubeNotificationsPage extends StatelessWidget {
@@ -20,7 +22,11 @@ class YoutubeNotificationsPage extends StatelessWidget {
     const thumbnailWidth = multiplier * Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
 
-    return YoutubeMainPageFetcherAccBase<YoutiPieNotificationResult, StreamInfoItemNotification>(
+    return VideoTilePropertiesProvider(
+      configs: const VideoTilePropertiesConfigs(
+        queueSource: QueueSourceYoutubeID.notificationsHosted,
+      ),
+      builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieNotificationResult, StreamInfoItemNotification>(
         operation: YoutiPieOperation.fetchNotifications,
         transparentShimmer: true,
         title: lang.NOTIFICATIONS,
@@ -33,6 +39,7 @@ class YoutubeNotificationsPage extends StatelessWidget {
         ),
         itemBuilder: (notification, index, list) {
           return YoutubeVideoCardNotification(
+            properties: properties,
             key: Key(notification.notificationId),
             notification: notification,
             thumbnailWidth: thumbnailWidth,
@@ -41,6 +48,8 @@ class YoutubeNotificationsPage extends StatelessWidget {
             mainList: () => list,
             index: index,
           );
-        });
+        },
+      ),
+    );
   }
 }

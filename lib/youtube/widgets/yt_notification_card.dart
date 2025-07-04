@@ -8,6 +8,7 @@ import 'package:youtipie/class/result_wrapper/notification_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_notification.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -18,11 +19,15 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
+import 'package:namida/youtube/widgets/video_info_dialog.dart';
+import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class YoutubeVideoCardNotification extends StatefulWidget {
+  final VideoTileProperties properties;
   final StreamInfoItemNotification notification;
   final YoutiPieNotificationResult Function() mainList;
   final int index;
@@ -33,6 +38,7 @@ class YoutubeVideoCardNotification extends StatefulWidget {
 
   const YoutubeVideoCardNotification({
     super.key,
+    required this.properties,
     required this.notification,
     required this.mainList,
     required this.index,
@@ -236,7 +242,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
       ],
     );
 
-    return Padding(
+    final finalChild = Padding(
       padding: const EdgeInsets.symmetric(vertical: verticalPadding * 0.5, horizontal: 8.0),
       child: NamidaPopupWrapper(
         openOnTap: false,
@@ -266,6 +272,23 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
         ),
       ),
     );
+
+    final properties = widget.properties;
+    if (properties.configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
+      var videoId = widget.notification.id;
+      final plItem = YoutubeID(id: videoId, playlistID: null);
+      return SwipeQueueAddTile(
+        item: plItem,
+        dismissibleKey: plItem,
+        allowSwipeLeft: properties.allowSwipeLeft,
+        allowSwipeRight: properties.allowSwipeRight,
+        onAddToPlaylist: (item) => showAddToPlaylistSheet(ids: [videoId], idsNamesLookup: {videoId: firstLine}),
+        onOpenInfo: (_) => NamidaNavigator.inst.navigateDialog(dialog: VideoInfoDialog(videoId: videoId)),
+        child: finalChild,
+      );
+    }
+
+    return finalChild;
   }
 }
 
