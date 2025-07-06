@@ -512,6 +512,10 @@ extension VibrationTypeUtils on VibrationType {
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
+extension ReplayGainTypeUtils on ReplayGainType {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
 extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
   String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
@@ -1480,6 +1484,12 @@ class _NamidaConverters {
         VibrationType.none: lang.NONE,
         VibrationType.vibration: lang.VIBRATION,
         VibrationType.haptic_feedback: lang.HAPTIC_FEEDBACK,
+      },
+      ReplayGainType: {
+        ReplayGainType.off: lang.NONE,
+        ReplayGainType.platform_default: lang.DEFAULT,
+        ReplayGainType.loudness_enhancer: lang.LOUDNESS_ENHANCER,
+        ReplayGainType.volume: lang.VOLUME,
       },
       SetMusicAsAction: {
         SetMusicAsAction.ringtone: lang.RINGTONE,

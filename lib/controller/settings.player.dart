@@ -34,7 +34,7 @@ class _PlayerSettings with SettingsFileWriter {
   final displayRemainingDurInsteadOfTotal = false.obs;
   final killAfterDismissingApp = KillAppMode.ifNotPlaying.obs;
   final lockscreenArtwork = true.obs;
-  final replayGain = true.obs;
+  final replayGainType = ReplayGainType.platform_default.obs;
 
   final onInterrupted = <InterruptionType, InterruptionAction>{
     InterruptionType.shouldPause: InterruptionAction.pause,
@@ -71,7 +71,7 @@ class _PlayerSettings with SettingsFileWriter {
     RepeatMode? repeatMode,
     KillAppMode? killAfterDismissingApp,
     bool? lockscreenArtwork,
-    bool? replayGain,
+    ReplayGainType? replayGainType,
   }) {
     if (enableVolumeFadeOnPlayPause != null) this.enableVolumeFadeOnPlayPause.value = enableVolumeFadeOnPlayPause;
     if (infiniyQueueOnNextPrevious != null) this.infiniyQueueOnNextPrevious.value = infiniyQueueOnNextPrevious;
@@ -101,7 +101,7 @@ class _PlayerSettings with SettingsFileWriter {
     if (repeatMode != null) this.repeatMode.value = repeatMode;
     if (killAfterDismissingApp != null) this.killAfterDismissingApp.value = killAfterDismissingApp;
     if (lockscreenArtwork != null) this.lockscreenArtwork.value = lockscreenArtwork;
-    if (replayGain != null) this.replayGain.value = replayGain;
+    if (replayGainType != null) this.replayGainType.value = replayGainType;
     _writeToStorage();
   }
 
@@ -118,7 +118,7 @@ class _PlayerSettings with SettingsFileWriter {
     playOnNextPrev.value = false;
     jumpToFirstTrackAfterFinishingQueue.value = false;
     killAfterDismissingApp.value = KillAppMode.never;
-    replayGain.value = true;
+    replayGainType.value = ReplayGainType.volume;
   }
 
   Future<void> prepareSettingsFile() async {
@@ -154,7 +154,11 @@ class _PlayerSettings with SettingsFileWriter {
       displayRemainingDurInsteadOfTotal.value = json['displayRemainingDurInsteadOfTotal'] ?? displayRemainingDurInsteadOfTotal.value;
       killAfterDismissingApp.value = KillAppMode.values.getEnum(json['killAfterDismissingApp']) ?? killAfterDismissingApp.value;
       lockscreenArtwork.value = json['lockscreenArtwork'] ?? lockscreenArtwork.value;
-      replayGain.value = json['replayGain'] ?? replayGain.value;
+      replayGainType.value = ReplayGainType.values.getEnum(json['replayGainType']) ?? replayGainType.value;
+      // -- backwards compatibility
+      if (json['replayGain'] is bool) {
+        replayGainType.value = json['replayGain'] == true ? ReplayGainType.getPlatformDefault() : ReplayGainType.off;
+      }
       onInterrupted.value = getEnumMap_(
             json['onInterrupted'],
             InterruptionType.values,
@@ -196,7 +200,7 @@ class _PlayerSettings with SettingsFileWriter {
         'repeatMode': repeatMode.value.name,
         'killAfterDismissingApp': killAfterDismissingApp.value.name,
         'lockscreenArtwork': lockscreenArtwork.value,
-        'replayGain': replayGain.value,
+        'replayGainType': replayGainType.value.name,
         'infiniyQueueOnNextPrevious': infiniyQueueOnNextPrevious.value,
         'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
         'onInterrupted': onInterrupted.map((key, value) => MapEntry(key.name, value.name)),

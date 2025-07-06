@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 class ReplayGainData {
   final double? trackGain, albumGain;
   final double? trackPeak, albumPeak;
+
   const ReplayGainData({
     required this.trackGain,
     required this.trackPeak,
@@ -10,14 +12,19 @@ class ReplayGainData {
     required this.albumPeak,
   });
 
-  double? calculateGainAsVolume({double withRespectiveVolume = 0.75}) {
-    final gainFinal = trackGain ?? albumGain;
+  static const double kDefaultFallbackVolume = 1.0;
+  static final double kMaxPlatformVolume = Platform.isAndroid || Platform.isIOS ? 1.0 : 1.3; // mpv is up to 130% (without distortion i think).
+
+  double? get gainToUse => trackGain ?? albumGain;
+
+  double? calculateGainAsVolume({double withRespectiveVolume = kDefaultFallbackVolume}) {
+    final gainFinal = gainToUse;
     if (gainFinal == null) return null;
     return convertGainToVolume(gain: gainFinal, withRespectiveVolume: withRespectiveVolume);
   }
 
-  static double? convertGainToVolume({required double gain, double withRespectiveVolume = 0.75}) {
-    final gainLinear = math.pow(10, gain / 20).clamp(0.1, 1.0);
+  static double? convertGainToVolume({required double gain, double withRespectiveVolume = kDefaultFallbackVolume}) {
+    final gainLinear = math.pow(10, gain / 20).clamp(0.1, kMaxPlatformVolume);
     return gainLinear * withRespectiveVolume;
   }
 

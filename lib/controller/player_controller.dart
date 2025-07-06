@@ -70,8 +70,9 @@ class Player {
   RxBaseCore<VideoInfoData?> get videoPlayerInfo => _audioHandler.videoPlayerInfo;
 
   AndroidEqualizer get equalizer => _audioHandler.equalizer;
-  AndroidLoudnessEnhancer get loudnessEnhancer => _audioHandler.loudnessEnhancer;
+  AndroidLoudnessEnhancerExtended get loudnessEnhancer => _audioHandler.loudnessEnhancer;
   int? get androidSessionId => _audioHandler.androidSessionId;
+  Rx<double> get replayGainLinearVolume => _audioHandler.replayGainLinearVolume;
 
   // RxBaseCore<VideoInfo?> get currentVideoInfo => _audioHandler.currentVideoInfo;
   // RxBaseCore<YoutubeChannel?> get currentChannelInfo => _audioHandler.currentChannelInfo;
@@ -222,8 +223,8 @@ class Player {
         });
       }
     }
-    _audioHandler.loudnessEnhancer.setTargetGain(eq.loudnessEnhancer);
-    _audioHandler.loudnessEnhancer.setEnabled(eq.loudnessEnhancerEnabled);
+    _audioHandler.loudnessEnhancer.setTargetGainUser(eq.loudnessEnhancer);
+    _audioHandler.loudnessEnhancer.setEnabledUser(eq.loudnessEnhancerEnabled);
   }
 
   void onVolumeChangeAddListener(String key, void Function(double musicVolume) fn) {
@@ -259,7 +260,12 @@ class Player {
   }
 
   Future<void> setPlayerVolume(double value) async {
-    await _audioHandler.setPlayerVolume(value);
+    await _audioHandler.setPlayerVolume(replayGainLinearVolume.value * value);
+  }
+
+  Future<void> setReplayGainLinearVolume(double vol) async {
+    this.replayGainLinearVolume.value = vol;
+    await this.setVolume(settings.player.volume.value); // refresh volume
   }
 
   double volumeUp() {
@@ -307,7 +313,7 @@ class Player {
   }
 
   Future<void> setVolume(double volume) async {
-    await _audioHandler.setVolume(volume);
+    await _audioHandler.setVolume(replayGainLinearVolume.value * volume);
   }
 
   void invokeQueueModifyLock() {

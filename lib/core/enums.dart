@@ -1,6 +1,7 @@
 // ignore_for_file: constant_identifier_names
 
 import 'package:namida/controller/platform/base.dart';
+import 'package:namida/core/constants.dart';
 
 export 'package:basic_audio_handler/basic_audio_handler.dart' show RepeatMode, InterruptionType, InterruptionAction;
 
@@ -521,4 +522,30 @@ enum VibrationType {
   none,
   vibration,
   haptic_feedback,
+}
+
+enum ReplayGainType {
+  off(false),
+  platform_default(false),
+  loudness_enhancer(true),
+  volume(true);
+
+  final bool _isValidMode;
+  const ReplayGainType(this._isValidMode);
+
+  static ReplayGainType getPlatformDefault() => NamidaFeaturesVisibility.loudnessEnhancerAvailable ? loudness_enhancer : volume;
+
+  bool get isLoudnessEnhancerEnabled => this == loudness_enhancer || (this == platform_default && getPlatformDefault() == loudness_enhancer);
+  bool get isVolumeEnabled => this == volume || (this == platform_default && getPlatformDefault() == volume);
+
+  bool get isAnyEnabled => this != off;
+
+  static List<ReplayGainType> get valuesForPlatform {
+    var newList = List<ReplayGainType>.from(ReplayGainType.values);
+    if (!NamidaFeaturesVisibility.loudnessEnhancerAvailable) newList.remove(ReplayGainType.loudness_enhancer);
+    if (newList.where((element) => element._isValidMode).length <= 1) {
+      newList.remove(ReplayGainType.platform_default);
+    }
+    return newList;
+  }
 }

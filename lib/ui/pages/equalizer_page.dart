@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:just_audio/just_audio.dart';
 
+import 'package:namida/base/audio_handler.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
@@ -19,6 +20,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/playback_settings.dart';
 
 class EqualizerMainSlidersColumn extends StatelessWidget {
   final double verticalInBetweenPadding;
@@ -36,6 +38,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
     final pitchKey = GlobalKey<_CuteSliderState>();
     final speedKey = GlobalKey<_CuteSliderState>();
     final volumeKey = GlobalKey<_CuteSliderState>();
+
     return Column(
       children: [
         verticalPadding,
@@ -91,61 +94,37 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
           tapToUpdate: tapToUpdate,
         ),
         verticalPadding,
-        ObxO(
-          rx: settings.player.replayGain,
-          builder: (context, replayGainEnabled) {
-            final child = Obx(
-              (context) => _SliderTextWidget(
-                icon: settings.player.volume.valueR > 0 ? Broken.volume_up : Broken.volume_slash,
-                title: lang.VOLUME,
-                value: settings.player.volume.valueR,
-                max: 1.0,
-                onManualChange: (value) {
-                  volumeKey.currentState?._updateValNoRound(value);
-                },
-                restoreDefault: () {
-                  Player.inst.setPlayerVolume(1.0);
-                  settings.player.save(volume: 1.0);
-                  volumeKey.currentState?._updateVal(1.0);
-                },
-              ),
+        Obx(
+          (context) {
+            final normalVolume = settings.player.volume.valueR;
+            final replayGainLinear = Player.inst.replayGainLinearVolume.valueR;
+            final replayGainText = replayGainLinear == 1.0 ? '' : ' (N: ${_SliderTextWidget.toPercentage(normalVolume * replayGainLinear)})';
+            return _SliderTextWidget(
+              icon: normalVolume > 0 ? Broken.volume_up : Broken.volume_slash,
+              title: lang.VOLUME,
+              value: normalVolume,
+              max: 1.0,
+              valToText: (val) => '${_SliderTextWidget.toPercentage(val)}$replayGainText',
+              onManualChange: (value) {
+                volumeKey.currentState?._updateValNoRound(value);
+              },
+              restoreDefault: () {
+                Player.inst.setPlayerVolume(1.0);
+                settings.player.save(volume: 1.0);
+                volumeKey.currentState?._updateVal(1.0);
+              },
             );
-            return replayGainEnabled
-                ? NamidaTooltip(
-                    triggerMode: TooltipTriggerMode.tap,
-                    message: () => lang.NORMALIZE_AUDIO,
-                    child: AnimatedEnabled(
-                      enabled: !replayGainEnabled,
-                      child: child,
-                    ),
-                  )
-                : child;
           },
         ),
-        ObxO(
-          rx: settings.player.replayGain,
-          builder: (context, replayGainEnabled) {
-            final child = _CuteSlider(
-              key: volumeKey,
-              max: 1.0,
-              valueListenable: settings.player.volume,
-              onChanged: (value) {
-                Player.inst.setPlayerVolume(value);
-                settings.player.save(volume: value);
-              },
-              tapToUpdate: tapToUpdate,
-            );
-            return replayGainEnabled
-                ? NamidaTooltip(
-                    triggerMode: TooltipTriggerMode.tap,
-                    message: () => lang.NORMALIZE_AUDIO,
-                    child: AnimatedEnabled(
-                      enabled: !replayGainEnabled,
-                      child: child,
-                    ),
-                  )
-                : child;
+        _CuteSlider(
+          key: volumeKey,
+          max: 1.0,
+          valueListenable: settings.player.volume,
+          onChanged: (value) {
+            Player.inst.setPlayerVolume(value);
+            settings.player.save(volume: value);
           },
+          tapToUpdate: tapToUpdate,
         ),
       ],
     );
@@ -161,10 +140,7 @@ class EqualizerPage extends StatefulWidget {
 
 class EqualizerPageState extends State<EqualizerPage> {
   AndroidEqualizer get _equalizer => Player.inst.equalizer;
-  AndroidLoudnessEnhancer get _loudnessEnhancer => Player.inst.loudnessEnhancer;
-
-  final _loudnessEnhancerTargetGainRx = 0.0.obs;
-  StreamSubscription<double>? _loudnessEnhancerTargetGainStreamSub;
+  AndroidLoudnessEnhancerExtended get _loudnessEnhancer => Player.inst.loudnessEnhancer;
 
   final _equalizerPresets = <String>[];
   final _activePreset = ''.obs;
@@ -175,9 +151,6 @@ class EqualizerPageState extends State<EqualizerPage> {
   @override
   void initState() {
     _fillPresets();
-    _loudnessEnhancerTargetGainStreamSub = _loudnessEnhancer.targetGainStream.listen(
-      (event) => _loudnessEnhancerTargetGainRx.value = event,
-    );
     super.initState();
   }
 
@@ -185,8 +158,6 @@ class EqualizerPageState extends State<EqualizerPage> {
   void dispose() {
     _activePreset.close();
     _activePresetCustom.close();
-    _loudnessEnhancerTargetGainRx.close();
-    _loudnessEnhancerTargetGainStreamSub?.cancel();
     super.dispose();
   }
 
@@ -225,12 +196,13 @@ class EqualizerPageState extends State<EqualizerPage> {
       rx: settings.equalizer.uiTapToUpdate,
       builder: (context, uiTapToUpdate) => _CuteSlider(
         key: _loudnessKey,
-        valueListenable: _loudnessEnhancerTargetGainRx,
-        min: -1,
-        max: 1,
+        valueListenable: _loudnessEnhancer.targetGainUser,
+        min: AndroidLoudnessEnhancerExtended.kMinGain,
+        max: AndroidLoudnessEnhancerExtended.kMaxGain,
+        valToText: _SliderTextWidget.toDecibelMultiplier,
         onChanged: (newVal) {
           settings.equalizer.save(loudnessEnhancer: newVal);
-          _loudnessEnhancer.setTargetGain(newVal);
+          _loudnessEnhancer.setTargetGainUser(newVal);
         },
         tapToUpdate: uiTapToUpdate,
       ),
@@ -402,39 +374,45 @@ class EqualizerPageState extends State<EqualizerPage> {
                         const SizedBox(height: 12.0),
                       ],
                     ],
+                    const PlaybackSettings().getNormalizeAudioWidget(),
+                    NamidaContainerDivider(
+                      margin: EdgeInsets.symmetric(
+                        horizontal: 12.0,
+                        vertical: verticalInBetweenPaddingH / 2,
+                      ),
+                    ),
                     if (NamidaFeaturesVisibility.loudnessEnhancerAvailable) ...[
-                      StreamBuilder<bool>(
-                        initialData: _loudnessEnhancer.enabled,
-                        stream: _loudnessEnhancer.enabledStream,
-                        builder: (context, snapshot) {
-                          final enabled = snapshot.data ?? false;
-                          return StreamBuilder<double>(
-                            initialData: _loudnessEnhancer.targetGain,
-                            stream: _loudnessEnhancer.targetGainStream,
-                            builder: (context, snapshot) {
-                              final targetGain = snapshot.data ?? 0.0;
+                      ObxO(
+                        rx: _loudnessEnhancer.enabledUser,
+                        builder: (context, enabled) => ObxO(
+                          rx: _loudnessEnhancer.targetGainUser,
+                          builder: (context, targetGainUser) => ObxO(
+                            rx: _loudnessEnhancer.targetGainTrack,
+                            builder: (context, targetGainTrack) {
+                              final replayGainText = targetGainTrack == 0.0 ? '' : ' (N: ${_SliderTextWidget.toDecibelMultiplier(_loudnessEnhancer.getActualGain)})';
                               return Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   NamidaInkWell(
                                     onTap: () {
-                                      settings.equalizer.save(loudnessEnhancerEnabled: !_loudnessEnhancer.enabled);
-                                      _loudnessEnhancer.setEnabled(!_loudnessEnhancer.enabled);
+                                      settings.equalizer.save(loudnessEnhancerEnabled: !_loudnessEnhancer.enabledUser.value);
+                                      _loudnessEnhancer.setEnabledUser(!_loudnessEnhancer.enabledUser.value);
                                     },
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(vertical: 6.0),
                                       child: _SliderTextWidget(
-                                        icon: targetGain > 0 ? Broken.volume_high : Broken.volume_low_1,
-                                        title: lang.LOUDNESS_ENHANCER,
-                                        value: targetGain,
-                                        min: -1,
-                                        max: 1,
+                                        icon: targetGainUser > 0 ? Broken.volume_high : Broken.volume_low_1,
+                                        title: '${lang.LOUDNESS_ENHANCER} (PreAmp)',
+                                        value: targetGainUser,
+                                        min: AndroidLoudnessEnhancerExtended.kMinGain,
+                                        max: AndroidLoudnessEnhancerExtended.kMaxGain,
+                                        valToText: (val) => '${_SliderTextWidget.toDecibelMultiplier(val)}$replayGainText',
                                         onManualChange: (newVal) {
                                           _loudnessKey.currentState?._updateValNoRound(newVal);
                                         },
                                         restoreDefault: () {
                                           settings.equalizer.save(loudnessEnhancer: 0.0);
-                                          _loudnessEnhancer.setTargetGain(0.0);
+                                          _loudnessEnhancer.setTargetGainUser(0.0);
                                           _loudnessKey.currentState?._updateVal(0.0);
                                         },
                                         trailing: CustomSwitch(
@@ -448,8 +426,8 @@ class EqualizerPageState extends State<EqualizerPage> {
                                 ],
                               );
                             },
-                          );
-                        },
+                          ),
+                        ),
                       ),
                     ],
                     ObxO(
@@ -498,8 +476,10 @@ class _SliderTextWidget extends StatelessWidget {
     this.onManualChange,
   });
 
-  static String toPercentage(double val) => "${(val * 100).roundDecimals(4)}%";
+  static String toPercentageInt(double val) => "${(val * 100).toStringAsFixed(0)}%";
+  static String toPercentage(double val) => "${(val * 100).roundDecimals(2)}%";
   static String toXMultiplier(double val) => "${val.toStringAsFixed(2)}x";
+  static String toDecibelMultiplier(double val) => "${val.toStringAsFixed(1)}dB";
 
   void _showPreciseValueConfig({required double initial, required void Function(double val) onChanged}) {
     showNamidaBottomSheetWithTextField(
@@ -551,14 +531,14 @@ class _SliderTextWidget extends StatelessWidget {
                 Flexible(
                   child: Text(
                     title,
-                    style: context.textTheme.displayLarge,
+                    style: context.textTheme.displayLarge?.copyWith(fontSize: 16.0),
                   ),
                 ),
                 const SizedBox(width: 8.0),
                 if (displayValue)
                   Text(
                     valToText(value),
-                    style: context.textTheme.displayMedium,
+                    style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5),
                   ),
               ],
             ),
@@ -586,6 +566,7 @@ class _CuteSlider<T> extends StatefulWidget {
   final double max;
   final RxBaseCore<double> valueListenable;
   final void Function(double newValue) onChanged;
+  final String Function(double val) valToText;
   final bool tapToUpdate;
 
   const _CuteSlider({
@@ -594,6 +575,7 @@ class _CuteSlider<T> extends StatefulWidget {
     this.max = 2.0,
     required this.valueListenable,
     required this.onChanged,
+    this.valToText = _SliderTextWidget.toPercentageInt,
     required this.tapToUpdate,
   });
 
@@ -661,7 +643,7 @@ class _CuteSliderState extends State<_CuteSlider> {
             value: _currentVal.withMaximum(widget.max), // cuz it can be more
             onChanged: _updateVal,
             divisions: 200,
-            label: "${(_currentVal * 100).toStringAsFixed(0)}%",
+            label: widget.valToText(_currentVal),
             allowedInteraction: interaction,
           ),
         ),

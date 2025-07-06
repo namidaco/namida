@@ -56,12 +56,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   AudioPipeline? get audioPipeline => AudioPipeline(
         androidAudioEffects: [
           equalizer,
-          loudnessEnhancer,
+          loudnessEnhancer._loudnessEnhancer,
         ],
       );
 
   late final equalizer = AndroidEqualizer();
-  late final loudnessEnhancer = AndroidLoudnessEnhancer();
+  late final loudnessEnhancer = AndroidLoudnessEnhancerExtended();
 
   bool get _willPlayWhenReady => playWhenReady.value;
 
@@ -532,9 +532,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, Function skipItem) async {
     final tr = item.track;
     videoPlayerInfo.value = null;
-    if (settings.player.replayGain.value) {
-      final vol = item.track.toTrackExt().gainData?.calculateGainAsVolume();
-      _userPlayerVolume = vol ?? 0.75; // save in memory only
+    final replayGainType = settings.player.replayGainType.value;
+    if (replayGainType.isAnyEnabled) {
+      final gainData = item.track.toTrackExt().gainData;
+      if (replayGainType.isLoudnessEnhancerEnabled) {
+        final gainToUse = gainData?.gainToUse;
+        if (gainToUse != null) loudnessEnhancer.setTargetGainTrack(gainToUse);
+      } else if (replayGainType.isVolumeEnabled) {
+        final vol = gainData?.calculateGainAsVolume();
+        replayGainLinearVolume.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
+      }
     }
     final isVideo = item is Video;
     Lyrics.inst.resetLyrics();
@@ -1060,10 +1067,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     VideoStreamsResult? streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(item.id);
 
     void setReplayGainIfRequired() {
-      if (settings.player.replayGain.value && streamsResult != null) {
+      final replayGainType = settings.player.replayGainType.value;
+      if (replayGainType.isAnyEnabled && streamsResult != null) {
         final loudnessDb = streamsResult.loudnessDBData?.loudnessDb;
+
+        if (replayGainType.isLoudnessEnhancerEnabled) {
+          if (loudnessDb != null) loudnessEnhancer.setTargetGainTrack(-loudnessDb.toDouble());
+        } else if (replayGainType.isVolumeEnabled) {
         final vol = loudnessDb == null ? null : ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
-        _userPlayerVolume = vol ?? 0.75; // save in memory only
+          replayGainLinearVolume.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
+        }
       }
     }
 
@@ -1772,12 +1785,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   PlayerConfig get defaultPlayerConfig => PlayerConfig(
         skipSilence: settings.player.skipSilenceEnabled.value && currentItem.value is! YoutubeID,
         speed: settings.player.speed.value,
-        volume: _userPlayerVolume,
+        volume: _userPlayerVolume * replayGainLinearVolume.value,
         pitch: settings.player.pitch.value,
       );
 
+  final replayGainLinearVolume = 1.0.obs;
+
   double get _userPlayerVolume => settings.player.volume.value;
-  set _userPlayerVolume(double val) => settings.player.volume.value = val;
 
   @override
   bool get enableCrossFade => settings.player.enableCrossFade.value && currentItem.value is! YoutubeID;
@@ -2253,5 +2267,45 @@ class _NextSeekCachedFileData {
   File? getFileIfPlaying(String currentVideoId) {
     if (currentVideoId == videoId) return cacheFile;
     return null;
+  }
+}
+
+class AndroidLoudnessEnhancerExtended {
+  final _loudnessEnhancer = AndroidLoudnessEnhancer();
+
+  static const kMaxGain = 12.0;
+  static const kMinGain = -12.0;
+
+  final targetGainUser = 0.0.obs;
+  final targetGainTrack = 0.0.obs;
+
+  final enabledUser = false.obs;
+  bool get _enabledTrackValue => settings.player.replayGainType.value.isLoudnessEnhancerEnabled;
+
+  double get getActualGain => (enabledUser.value ? targetGainUser.value : 0) + (_enabledTrackValue ? targetGainTrack.value : 0.0);
+  bool get getActualEnabled => enabledUser.value || _enabledTrackValue;
+
+  void setTargetGainUser(double gain) {
+    targetGainUser.value = gain;
+    _refreshGain();
+  }
+
+  void setTargetGainTrack(double gain) {
+    targetGainTrack.value = gain;
+    _refreshGain();
+  }
+
+  void setEnabledUser(bool enabled) {
+    enabledUser.value = enabled;
+    refreshEnabled();
+    _refreshGain();
+  }
+
+  void _refreshGain() {
+    _loudnessEnhancer.setTargetGain(getActualGain);
+  }
+
+  void refreshEnabled() {
+    _loudnessEnhancer.setEnabled(getActualEnabled);
   }
 }

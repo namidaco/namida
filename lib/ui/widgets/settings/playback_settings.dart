@@ -84,6 +84,84 @@ class PlaybackSettings extends SettingSubpageProvider {
         _PlaybackSettingsKeys.countListenAfter: [lang.MIN_VALUE_TO_COUNT_TRACK_LISTEN],
       };
 
+  Widget getNormalizeAudioWidget() {
+    return getItemWrapper(
+      key: _PlaybackSettingsKeys.replayGain,
+      child: CustomListTile(
+        bgColor: getBgColor(_PlaybackSettingsKeys.replayGain),
+        leading: const StackedIcon(
+          baseIcon: Broken.airpods,
+          secondaryIcon: Broken.voice_cricle,
+        ),
+        title: lang.NORMALIZE_AUDIO,
+        subtitle: lang.NORMALIZE_AUDIO_SUBTITLE,
+        trailing: NamidaPopupWrapper(
+          children: () => [
+            ...ReplayGainType.valuesForPlatform.map(
+              (e) => ObxO(
+                rx: settings.player.replayGainType,
+                builder: (context, replayGainType) => NamidaInkWell(
+                  margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                  borderRadius: 6.0,
+                  bgColor: replayGainType == e ? context.theme.cardColor : null,
+                  child: Text(
+                    e.toText(),
+                    style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                  ),
+                  onTap: () async {
+                    NamidaNavigator.inst.popMenu();
+
+                    settings.player.save(replayGainType: e);
+
+                    // -- safer to disable all first
+                    Player.inst.loudnessEnhancer.setTargetGainTrack(0);
+                    Player.inst.loudnessEnhancer.refreshEnabled();
+                    Player.inst.setReplayGainLinearVolume(1.0);
+
+                    if (e.isAnyEnabled) {
+                      double? vol;
+                      final currentItem = Player.inst.currentItem.value;
+                      if (currentItem is Track) {
+                        final gainData = currentItem.toTrackExt().gainData;
+                        if (e.isLoudnessEnhancerEnabled) {
+                          final gainToUse = gainData?.gainToUse;
+                          if (gainToUse != null) Player.inst.loudnessEnhancer.setTargetGainTrack(gainToUse);
+                        } else if (e.isVolumeEnabled) {
+                          vol = gainData?.calculateGainAsVolume();
+                        }
+                      } else if (currentItem is YoutubeID) {
+                        final streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(currentItem.id);
+                        final loudnessDb = streamsResult?.loudnessDBData?.loudnessDb;
+                        if (loudnessDb != null) {
+                          if (e.isLoudnessEnhancerEnabled) {
+                            Player.inst.loudnessEnhancer.setTargetGainTrack(-loudnessDb.toDouble());
+                          } else if (e.isVolumeEnabled) {
+                            vol = ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
+                          }
+                        }
+                      }
+                      vol ??= ReplayGainData.kDefaultFallbackVolume;
+                      Player.inst.setReplayGainLinearVolume(vol);
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+          child: ObxO(
+            rx: settings.player.replayGainType,
+            builder: (context, replayGainType) => Text(
+              "${replayGainType.toText()}${replayGainType == ReplayGainType.platform_default ? '\n(${ReplayGainType.getPlatformDefault().toText()})' : ''}",
+              style: context.textTheme.displayMedium, 
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final children = <Widget>[
@@ -367,40 +445,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
         ),
       ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.replayGain,
-        child: ObxO(
-          rx: settings.player.replayGain,
-          builder: (context, replayGain) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.replayGain),
-            leading: const StackedIcon(
-              baseIcon: Broken.airpods,
-              secondaryIcon: Broken.voice_cricle,
-            ),
-            title: lang.NORMALIZE_AUDIO,
-            subtitle: lang.NORMALIZE_AUDIO_SUBTITLE,
-            onChanged: (value) async {
-              final willBeTrue = !value;
-              settings.player.save(replayGain: !value);
-              if (willBeTrue) {
-                double? vol;
-                final currentItem = Player.inst.currentItem.value;
-                if (currentItem is Track) {
-                  vol = currentItem.toTrackExt().gainData?.calculateGainAsVolume();
-                } else if (currentItem is YoutubeID) {
-                  final streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(currentItem.id);
-                  final loudnessDb = streamsResult?.loudnessDBData?.loudnessDb;
-                  if (loudnessDb != null) vol = ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
-                }
-                vol ??= 0.75;
-                settings.player.volume.value = vol;
-                await Player.inst.setVolume(vol);
-              }
-            },
-            value: replayGain,
-          ),
-        ),
-      ),
+      getNormalizeAudioWidget(),
       getItemWrapper(
         key: _PlaybackSettingsKeys.skipSilence,
         child: ObxO(
