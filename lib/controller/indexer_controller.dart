@@ -888,10 +888,7 @@ class Indexer<T extends Track> {
       }
     }
     _addTheseTracksToAlbumGenreArtistEtc(finalNewOldTracks);
-
-    Player.inst.refreshRxVariables();
-    Player.inst.refreshNotification();
-    SearchSortController.inst.sortMedia(MediaType.track);
+    _sortAndRefreshTracks();
     tracksInfoList.refresh();
     final globalSearchText = ScrollSearchController.inst.searchTextEditingController.text;
     if (globalSearchText.isNotEmpty) SearchSortController.inst.searchAll(globalSearchText);
@@ -957,7 +954,7 @@ class Indexer<T extends Track> {
     Player.inst.refreshNotification();
     SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
     SearchSortController.inst.sortMedia(MediaType.track);
-    _createDefaultNamidaArtworkIfRequired();
+    this.mainMapsGroup.refreshAll();
   }
 
   void _clearLists() {
@@ -1103,6 +1100,7 @@ class Indexer<T extends Track> {
     printy("FINAL: ${tracksInfoList.length}");
 
     _sortAndRefreshTracks();
+    _createDefaultNamidaArtworkIfRequired();
     TrackTileManager.onTrackItemPropChange();
   }
 
@@ -1326,7 +1324,7 @@ class Indexer<T extends Track> {
   }
 
   Future<List<TrackExtended>> _fetchMediaStoreTracks() async {
-    if (!NamidaFeaturesVisibility.onAudioQueryAvailable) return [];
+    if (!_defaultUseMediaStore) return [];
     final allMusic = await _audioQuery.querySongs();
     // -- folders selected will be ignored when [_defaultUseMediaStore] is enabled.
     allMusic.retainWhere((element) =>

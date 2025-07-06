@@ -129,6 +129,7 @@ Future<void> showDownloadVideoBottomSheet({
   }
 
   if (initialItemConfig != null) {
+    // -- yeah filename can stay encoded, but thats good as to not make confusion with other playlist items
     updatefilenameOutput(customName: initialItemConfig.filename.filename);
     updateTagsMap(initialItemConfig.ffmpegTags);
     videoOutputFilenameWasUserEdited = true;

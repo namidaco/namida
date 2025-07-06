@@ -46,7 +46,7 @@ class CustomMPVPlayer implements AVPlayer {
   final _playerProcessingStateStreamController = StreamController<ProcessingState>();
 
   final _videoInfoStreamController = StreamController<_VideoDetails>();
-  _VideoDetails? _videoInfo;
+  // _VideoDetails? _videoInfo;
 
   int? _dimensionResolver(num? v1, num? v2) {
     if (v1 != null && v1 > 0) return v1.toInt();
@@ -55,8 +55,12 @@ class CustomMPVPlayer implements AVPlayer {
   }
 
   void _updateVideoInfo(_VideoDetails newInfo) {
-    if (_videoInfo == newInfo) return;
-    _videoInfo = newInfo;
+    // -- we are not the one to decide not to tell about new data,
+    // -- the main info can be set to null, and not broadcasting (even the same previous info) can cause the main info
+    // -- to stay in null state. it's a common scenario as usually the texture id is reused.
+    // if (_videoInfo == newInfo) return; // ALWAYS BROADCAST
+    // _videoInfo = newInfo;
+
     _videoInfoStreamController.add(newInfo);
   }
 
@@ -330,4 +334,7 @@ class _VideoDetails {
   bool operator ==(Object other) {
     return other is _VideoDetails && height == other.height && width == other.width && textureId == other.textureId;
   }
+
+  @override
+  String toString() => '_VideoDetails(width: $width, height: $height, textureId: $textureId)';
 }

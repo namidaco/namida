@@ -1074,7 +1074,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         if (replayGainType.isLoudnessEnhancerEnabled) {
           if (loudnessDb != null) loudnessEnhancer.setTargetGainTrack(-loudnessDb.toDouble());
         } else if (replayGainType.isVolumeEnabled) {
-        final vol = loudnessDb == null ? null : ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
+          final vol = loudnessDb == null ? null : ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
           replayGainLinearVolume.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
         }
       }
@@ -1261,8 +1261,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
 
         if (forceRequest) {
-          streamsResult = await YoutubeInfoController.video.fetchVideoStreams(item.id).catchError((_) {
-            snackyy(message: 'Error getting streams', top: false, isError: true);
+          streamsResult = await YoutubeInfoController.video.fetchVideoStreams(item.id).catchError((e) {
+            snackyy(message: 'Error getting streams: $e', top: false, isError: true);
             return null;
           });
           setReplayGainIfRequired();
@@ -1374,6 +1374,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
           _isCurrentAudioFromCache = cachedAudioSet != null;
 
+          // -- setting audio
           final prefferedAudioStream = YoutubeController.inst.getPreferredAudioStream(audiostreams);
           bool isAudioStreamRequiredBetterThanCachedSet = cachedAudioSet == null
               ? true
@@ -1397,6 +1398,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             }
           }
 
+          // -- setting video
           if (!_isAudioOnlyPlayback &&
               videoStreams.isNotEmpty &&
               ConnectivityController.inst.dataSaverMode.canFetchNetworkVideoStreamShortContent(await YoutubeInfoController.utils.isShortContent(item.id))) {
@@ -1425,25 +1427,25 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                 }
               }
             }
+          }
 
-            if (finalAudioSource == null && finalVideoSource == null) {
-              if (!okaySetFromCache()) snackyy(title: lang.ERROR, message: 'Failed to get audio/video source', top: false, isError: true);
-              return;
-            }
+          if (finalAudioSource == null && finalVideoSource == null) {
+            if (!okaySetFromCache()) snackyy(title: lang.ERROR, message: 'Failed to get audio/video source', top: false, isError: true);
+            return;
+          }
 
-            if (finalAudioSource != null || finalVideoSource != null) {
-              heyIhandledPlaying = false;
+          if (finalAudioSource != null || finalVideoSource != null) {
+            heyIhandledPlaying = false;
 
-              finalAudioSource ??= cachedAudioSet != null ? AudioVideoSource.file(cachedAudioSet.file.path) : null;
-              finalVideoSource ??= cachedVideoSet != null && !_isAudioOnlyPlayback ? AudioVideoSource.file(cachedVideoSet.path) : null;
+            finalAudioSource ??= cachedAudioSet != null ? AudioVideoSource.file(cachedAudioSet.file.path) : null;
+            finalVideoSource ??= cachedVideoSet != null && !_isAudioOnlyPlayback ? AudioVideoSource.file(cachedVideoSet.path) : null;
 
-              if (finalVideoSource != null) {
-                videoSourceOptions = VideoSourceOptions(
-                  source: finalVideoSource,
-                  loop: false,
-                  videoOnly: false,
-                );
-              }
+            if (finalVideoSource != null) {
+              videoSourceOptions = VideoSourceOptions(
+                source: finalVideoSource,
+                loop: false,
+                videoOnly: false,
+              );
             }
           }
         }

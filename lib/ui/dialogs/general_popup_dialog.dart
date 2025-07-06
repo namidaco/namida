@@ -757,6 +757,7 @@ Future<void> showGeneralPopupDialog(
           ),
         )
       : null;
+
   final Widget? removeQueueTile = queue != null
       ? ObxO(
           rx: colorDelightened,
@@ -798,6 +799,32 @@ Future<void> showGeneralPopupDialog(
         final theme = AppThemes.inst.getAppTheme(colorDelightened, null, false);
         final iconColor = Color.alphaBlend(colorDelightened.withAlpha(120), theme.textTheme.displayMedium!.color!);
         double horizontalMargin = Dimensions.calculateDialogHorizontalMargin(context, 34.0);
+
+        final openInYtViewWidget = availableYoutubeIDs.isNotEmpty
+            ? SmallListTile(
+                color: colorDelightened,
+                compact: true,
+                title: lang.OPEN_IN_YOUTUBE_VIEW,
+                icon: Broken.video,
+                onTap: () {
+                  NamidaNavigator.inst.closeDialog();
+                  Player.inst.playOrPause(0, availableYoutubeIDs, QueueSource.others, gentlePlay: true);
+                },
+                trailing: isSingle && firstVideoChannelId != null
+                    ? IconButton(
+                        tooltip: lang.GO_TO_CHANNEL,
+                        icon: Icon(
+                          Broken.user,
+                          size: 20.0,
+                          color: iconColor,
+                        ),
+                        iconSize: 20.0,
+                        onPressed: YTChannelSubpage(channelID: firstVideoChannelId).navigate,
+                      )
+                    : null,
+              )
+            : null;
+
         return AnimatedThemeOrTheme(
           data: theme,
           child: Dialog(
@@ -1059,10 +1086,11 @@ Future<void> showGeneralPopupDialog(
                                     ),
                                   ),
                               ],
-                              if (advancedStuffListTile != null) advancedStuffListTile,
+                              if (openInYtViewWidget != null) openInYtViewWidget,
                               if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
                               if (playlistUtilsRow != null) playlistUtilsRow,
                               if (removeQueueTile != null) removeQueueTile,
+                              if (advancedStuffListTile != null) advancedStuffListTile,
                               const SizedBox(height: 8.0),
                             ],
                           )
@@ -1322,29 +1350,7 @@ Future<void> showGeneralPopupDialog(
                               // --- Advanced dialog
                               if (advancedStuffListTile != null) advancedStuffListTile,
 
-                              if (availableYoutubeIDs.isNotEmpty)
-                                SmallListTile(
-                                  color: colorDelightened,
-                                  compact: true,
-                                  title: lang.OPEN_IN_YOUTUBE_VIEW,
-                                  icon: Broken.video,
-                                  onTap: () {
-                                    NamidaNavigator.inst.closeDialog();
-                                    Player.inst.playOrPause(0, availableYoutubeIDs, QueueSource.others, gentlePlay: true);
-                                  },
-                                  trailing: isSingle && firstVideoChannelId != null
-                                      ? IconButton(
-                                          tooltip: lang.GO_TO_CHANNEL,
-                                          icon: Icon(
-                                            Broken.user,
-                                            size: 20.0,
-                                            color: iconColor,
-                                          ),
-                                          iconSize: 20.0,
-                                          onPressed: YTChannelSubpage(channelID: firstVideoChannelId).navigate,
-                                        )
-                                      : null,
-                                ),
+                              if (openInYtViewWidget != null) openInYtViewWidget,
 
                               if (removeQueueTile != null) removeQueueTile,
 
