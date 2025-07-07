@@ -414,7 +414,8 @@ class NamidaSearchBar extends StatelessWidget {
         fontSize: 17.0,
         height: height * 1.1,
       ),
-      searchBoxColour: context.isDarkMode ? context.theme.cardColor.withAlpha(200) : Color.alphaBlend(context.theme.cardColor.withAlpha(245), context.theme.colorScheme.onSurface),
+      searchBoxColour:
+          context.isDarkMode ? context.theme.cardColor.withAlpha(200) : Color.alphaBlend(context.theme.cardColor.withAlpha(200), context.theme.colorScheme.onSurface.withAlpha(40)),
       enteredTextStyle: context.theme.textTheme.displayMedium,
       cursorColour: context.theme.colorScheme.onSurface,
       buttonBorderColour: Colors.black45,

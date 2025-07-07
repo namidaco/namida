@@ -66,7 +66,8 @@ class CurrentColor {
 
   Color? _deviceWallpaperColorAccent;
 
-  final isGeneratingAllColorPalettes = false.obs;
+  final allColorPalettesGeneratingProgress = 0.obs;
+  final allColorPalettesGeneratingTotal = 0.obs;
 
   void refreshhh() {
     _namidaColor.refresh();
@@ -529,17 +530,28 @@ class CurrentColor {
   Future<void> generateAllColorPalettes() async {
     await Directory(AppDirs.PALETTES).create();
 
-    isGeneratingAllColorPalettes.value = true;
     final alltracks = allTracksInLibrary;
-    for (int i = 0; i < alltracks.length; i++) {
-      if (!isGeneratingAllColorPalettes.value) break; // stops extracting
-      await getTrackColors(alltracks[i], useIsolate: true, forceReCheck: true);
+
+    allColorPalettesGeneratingProgress.value = 0;
+    allColorPalettesGeneratingTotal.value = alltracks.length;
+
+    try {
+      for (int i = 0; i < alltracks.length; i++) {
+        if (allColorPalettesGeneratingTotal.value == -1) {
+          break; // stops extracting
+        }
+        allColorPalettesGeneratingProgress.value++;
+        await getTrackColors(alltracks[i], useIsolate: true, forceReCheck: true);
+      }
+    } catch (_) {
+      // concurrent modifiation maybe
     }
 
-    isGeneratingAllColorPalettes.value = false;
+    allColorPalettesGeneratingProgress.value = 0;
+    allColorPalettesGeneratingTotal.value = 0;
   }
 
-  void stopGeneratingColorPalettes() => isGeneratingAllColorPalettes.value = false;
+  void stopGeneratingColorPalettes() => allColorPalettesGeneratingTotal.value = -1;
 
   static const _defaultUseIsolate = true;
 

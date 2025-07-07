@@ -489,56 +489,62 @@ class ExtrasSettings extends SettingSubpageProvider {
           ),
           getItemWrapper(
             key: _ExtraSettingsKeys.extractAllPalettes,
-            child: CustomListTile(
-              bgColor: getBgColor(_ExtraSettingsKeys.extractAllPalettes),
-              icon: Broken.colorfilter,
-              title: lang.EXTRACT_ALL_COLOR_PALETTES,
-              trailing: CurrentColor.inst.isGeneratingAllColorPalettes.valueR ? const LoadingIndicator() : null,
-              // trailing: Obx(
-              //   (context) => Column(
-              //     children: [
-              //       Text("${Indexer.inst.colorPalettesInStorage.valueR}/${Indexer.inst.artworksInStorage.valueR}"),
-              //       if (CurrentColor.inst.isGeneratingAllColorPalettes.valueR) const LoadingIndicator(),
-              //     ],
-              //   ),
-              // ),
-              onTap: () async {
-                if (CurrentColor.inst.isGeneratingAllColorPalettes.value) {
-                  NamidaNavigator.inst.navigateDialog(
-                    dialog: CustomBlurryDialog(
-                      title: lang.NOTE,
-                      bodyText: lang.FORCE_STOP_COLOR_PALETTE_GENERATION,
-                      actions: [
-                        const CancelButton(),
-                        NamidaButton(
-                          text: lang.STOP,
-                          onPressed: () {
-                            CurrentColor.inst.stopGeneratingColorPalettes();
-                            NamidaNavigator.inst.closeDialog();
-                          },
+            child: Obx(
+              (context) {
+                final genProgress = CurrentColor.inst.allColorPalettesGeneratingProgress.valueR;
+                final genTotal = CurrentColor.inst.allColorPalettesGeneratingTotal.valueR;
+                final isGenerating = genTotal > 0;
+                return CustomListTile(
+                  bgColor: getBgColor(_ExtraSettingsKeys.extractAllPalettes),
+                  icon: Broken.colorfilter,
+                  title: lang.EXTRACT_ALL_COLOR_PALETTES,
+                  trailing: isGenerating
+                      ? Column(
+                          children: [
+                            Text("$genProgress/$genTotal"),
+                            if (isGenerating) const LoadingIndicator(),
+                          ],
+                        )
+                      : null,
+                  onTap: () async {
+                    if (CurrentColor.inst.allColorPalettesGeneratingTotal.value > 0) {
+                      NamidaNavigator.inst.navigateDialog(
+                        dialog: CustomBlurryDialog(
+                          title: lang.NOTE,
+                          bodyText: lang.FORCE_STOP_COLOR_PALETTE_GENERATION,
+                          actions: [
+                            const CancelButton(),
+                            NamidaButton(
+                              text: lang.STOP,
+                              onPressed: () {
+                                CurrentColor.inst.stopGeneratingColorPalettes();
+                                NamidaNavigator.inst.closeDialog();
+                              },
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                } else {
-                  NamidaNavigator.inst.navigateDialog(
-                    dialog: CustomBlurryDialog(
-                      title: lang.NOTE,
-                      bodyText: lang.EXTRACT_ALL_COLOR_PALETTES_SUBTITLE
-                          .replaceFirst('_REMAINING_COLOR_PALETTES_', '' /* '${allTracksInLibrary.length - Indexer.inst.colorPalettesInStorage.value}' */),
-                      actions: [
-                        const CancelButton(),
-                        NamidaButton(
-                          text: lang.EXTRACT,
-                          onPressed: () {
-                            CurrentColor.inst.generateAllColorPalettes();
-                            NamidaNavigator.inst.closeDialog();
-                          },
+                      );
+                    } else {
+                      NamidaNavigator.inst.navigateDialog(
+                        dialog: CustomBlurryDialog(
+                          title: lang.NOTE,
+                          bodyText: lang.EXTRACT_ALL_COLOR_PALETTES_SUBTITLE
+                              .replaceFirst('_REMAINING_COLOR_PALETTES_', '' /* '${allTracksInLibrary.length - Indexer.inst.colorPalettesInStorage.value}' */),
+                          actions: [
+                            const CancelButton(),
+                            NamidaButton(
+                              text: lang.EXTRACT,
+                              onPressed: () {
+                                CurrentColor.inst.generateAllColorPalettes();
+                                NamidaNavigator.inst.closeDialog();
+                              },
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                }
+                      );
+                    }
+                  },
+                );
               },
             ),
           ),

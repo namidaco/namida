@@ -9,12 +9,20 @@ class VibratorController {
   const VibratorController._();
 
   static final _intNormal = _VibratorInterfaceNormal._();
-  static final _intHaptic = _VibratorInterfaceHapticFeedback._();
+  static final _intHaptic = VibratorInterfaceHapticFeedback._();
 
   static _VibratorInterface? get _interface {
     return switch (settings.vibrationType.value) {
       VibrationType.none => null,
       VibrationType.vibration => _intNormal,
+      VibrationType.haptic_feedback => _intHaptic,
+    };
+  }
+
+  static VibratorInterfaceHapticFeedback? get interfaceHapticOrNull {
+    return switch (settings.vibrationType.value) {
+      VibrationType.none => null,
+      VibrationType.vibration => null,
       VibrationType.haptic_feedback => _intHaptic,
     };
   }
@@ -47,8 +55,8 @@ class _VibratorInterfaceNormal extends _VibratorInterface {
   }
 }
 
-class _VibratorInterfaceHapticFeedback extends _VibratorInterface {
-  const _VibratorInterfaceHapticFeedback._();
+class VibratorInterfaceHapticFeedback extends _VibratorInterface {
+  const VibratorInterfaceHapticFeedback._();
 
   @override
   Future<void> verylight() => HapticFeedback.lightImpact();

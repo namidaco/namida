@@ -747,7 +747,15 @@ extension ExecuteDelayedUtils<T> on T Function() {
   }
 
   Future<T> executeAfterDelay({int durationMS = 2000}) async {
-    return await executeDelayed(Duration(milliseconds: durationMS));
+    return await this.executeDelayed(Duration(milliseconds: durationMS));
+  }
+
+  T? ignoreError() {
+    try {
+      return this();
+    } catch (_) {
+      return null;
+    }
   }
 }
 

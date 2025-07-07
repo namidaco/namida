@@ -281,11 +281,12 @@ void showTrackAdvancedDialog({
                       actions: [
                         const CancelButton(),
                         NamidaButton(
-                            text: lang.CONFIRM,
-                            onPressed: () async {
-                              await HistoryController.inst.replaceAllTracksInsideHistory(trackWillBeReplaced, newTrack);
-                              NamidaNavigator.inst.closeDialog(3);
-                            })
+                          text: lang.CONFIRM,
+                          onPressed: () async {
+                            await HistoryController.inst.replaceAllTracksInsideHistory(trackWillBeReplaced, newTrack);
+                            NamidaNavigator.inst.closeDialog(3);
+                          },
+                        )
                       ],
                       bodyText: lang.HISTORY_LISTENS_REPLACE_WARNING
                           .replaceFirst('_LISTENS_COUNT_', listens.length.formatDecimal())
@@ -310,6 +311,7 @@ void showTrackAdvancedDialog({
             builder: (context, snapshot) {
               final trackColors = snapshot.data;
               return CustomListTile(
+                enabled: snapshot.connectionState == ConnectionState.done,
                 passedColor: colorScheme,
                 title: lang.COLOR_PALETTE,
                 icon: Broken.color_swatch,
@@ -332,13 +334,14 @@ void showTrackAdvancedDialog({
                 ),
                 onTap: () {
                   void onAction() {
-                    NamidaNavigator.inst.closeDialog(3);
+                    NamidaNavigator.inst.closeAllDialogs(); // close all dialogs cuz dialog color should update
                   }
 
                   _showTrackColorPaletteDialog(
                     colorScheme: colorScheme,
                     trackColor: trackColors?.combine(),
                     onFinalColor: (palette, color) async {
+                      onAction();
                       for (final track in tracksForColorPalette) {
                         await CurrentColor.inst.reExtractTrackColorPalette(
                           track: track,
@@ -346,10 +349,9 @@ void showTrackAdvancedDialog({
                           newNC: NamidaColor(used: color, mix: _mixColor(palette), palette: palette),
                         );
                       }
-
-                      onAction();
                     },
                     onRestoreDefaults: () async {
+                      onAction();
                       for (final track in tracksForColorPalette) {
                         await CurrentColor.inst.reExtractTrackColorPalette(
                           track: track,
@@ -357,7 +359,6 @@ void showTrackAdvancedDialog({
                           newNC: null,
                         );
                       }
-                      onAction();
                     },
                   );
                 },

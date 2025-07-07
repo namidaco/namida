@@ -333,7 +333,7 @@ class Indexer<T extends Track> {
   /// & sorts all media.
   Future<void> _afterIndexing() async {
     final mediaSorters = {for (final e in MediaType.values) e: SearchSortController.inst.getMediaTracksSortingComparables(e)};
-    this.mainMapsGroup.fillAll(tracksInfoList.value, (tr) => tr.toTrackExt());
+    this.mainMapsGroup.fillAll(tracksInfoList.value, (tr) => tr.toTrackExt(), settings.albumIdentifiers.value);
     await this.mainMapsGroup.sortAll(mediaSorters, settings.mediaItemsTrackSortingReverse.value, tracksInfoList.value);
     this.mainMapsGroup.refreshAll();
     FoldersController.tracks.onMapChanged(mainMapFolders.value);
@@ -1209,6 +1209,7 @@ class Indexer<T extends Track> {
         _createSplitConfig(),
         mediaSorters,
         mediaSortersReverse,
+        settings.albumIdentifiers.value,
         tracksRecievePort.sendPort,
       ]).then(
         (libraryGroup) async {
@@ -1599,7 +1600,8 @@ class _IndexerIsolateExecuter {
     final splitconfig = paramsList[2] as SplitArtistGenreConfigsWrapper;
     final mediaItemsTrackSorters = paramsList[3] as Map<MediaType, List<Comparable<dynamic> Function(Track)>>;
     final mediaItemsTrackSortingReverse = paramsList[4] as Map<MediaType, bool>;
-    final tracksInitPort = paramsList[5] as SendPort;
+    final albumIdentifiers = paramsList[5] as List<AlbumIdentifier>;
+    final tracksInitPort = paramsList[6] as SendPort;
 
     NamicoDBWrapper.initialize();
     late final tracksDBManager = DBWrapper.openFromInfoSync(
@@ -1676,6 +1678,7 @@ class _IndexerIsolateExecuter {
     libraryGroup.fillAll(
       tracksInfoList,
       (tr) => allTracksMappedByPath[tr.path] ?? kDummyExtendedTrack.copyWith(title: tr.path.getFilenameWOExt, path: tr.path),
+      albumIdentifiers,
     );
 
     libraryGroup.sortAllSync(

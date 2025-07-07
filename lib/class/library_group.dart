@@ -19,7 +19,7 @@ class LibraryGroup<T extends Track> {
   final mainMapFolders = <Folder, List<T>>{}.obs;
   final mainMapFoldersVideos = <VideoFolder, List<Video>>{}.obs;
 
-  void fillAll(List<T> allTracks, TrackExtended Function(T tr) trackToExtended) {
+  void fillAll(List<T> allTracks, TrackExtended Function(T tr) trackToExtended, List<AlbumIdentifier> albumIdentifier) {
     final mainMapAlbums = this.mainMapAlbums.value;
     final mainMapArtists = this.mainMapArtists.value;
     final mainMapAlbumArtists = this.mainMapAlbumArtists.value;
@@ -41,7 +41,7 @@ class LibraryGroup<T extends Track> {
         final trExt = trackToExtended(tr);
 
         // -- Assigning Albums
-        mainMapAlbums.addForce(trExt.albumIdentifier, tr);
+        mainMapAlbums.addForce(trExt.getAlbumIdentifier(albumIdentifier), tr);
 
         // -- Assigning Artists
         trExt.artistsList.loop((artist) {

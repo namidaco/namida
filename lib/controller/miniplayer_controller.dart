@@ -4,13 +4,13 @@ import 'dart:ui';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -480,7 +480,7 @@ class MiniPlayerController {
       duration: const Duration(milliseconds: 300),
     );
     bounceUp = false;
-    if (haptic && (_prevOffset - _offset).abs() > _actuationOffset) HapticFeedback.lightImpact();
+    if (haptic && (_prevOffset - _offset).abs() > _actuationOffset) VibratorController.interfaceHapticOrNull?.verylight();
   }
 
   Future<void> snapToPrev() async {
@@ -490,7 +490,7 @@ class MiniPlayerController {
       // await sAnim.animateTo(-1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
       sAnim.animateTo(0.0, duration: Duration.zero);
 
-      if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
+      if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) VibratorController.interfaceHapticOrNull?.verylight();
       Player.inst.previous();
     }
   }
@@ -498,7 +498,7 @@ class MiniPlayerController {
   void _snapToCurrent() {
     _sOffset = 0;
     sAnim.animateTo(0.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
-    if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
+    if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) VibratorController.interfaceHapticOrNull?.verylight();
   }
 
   Future<void> snapToNext() async {
@@ -508,7 +508,7 @@ class MiniPlayerController {
       // await sAnim.animateTo(1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
       sAnim.animateTo(0.0, duration: Duration.zero);
 
-      if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) HapticFeedback.lightImpact();
+      if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) VibratorController.interfaceHapticOrNull?.verylight();
       Player.inst.next();
     }
   }

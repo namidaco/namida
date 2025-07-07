@@ -89,8 +89,8 @@ void _mainAppInitialization() async {
 
     await Future.wait(
       [
-        WindowController.instance?.init(),
-        SMTCController.instance?.init(),
+        WindowController.instance?.init().ignoreError(),
+        SMTCController.instance?.init().ignoreError(),
         HomeWidgetController.instance?.init(),
       ].whereType(),
     );
@@ -183,7 +183,7 @@ void _mainAppInitialization() async {
   YoutubeInfoController.initialize(ytInfoInitSyncItemsCompleter);
 
   if (InternalPlayerType.platformDefault.shouldInitializeMPV) {
-    mk.MediaKit.ensureInitialized();
+    mk.MediaKit.ensureInitialized.ignoreError();
   }
 
   await Future.wait([
@@ -193,9 +193,9 @@ void _mainAppInitialization() async {
     PlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
     YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
     YoutubeSubscriptionsController.inst.loadSubscriptionsFileAsync(),
-    ConnectivityController.inst.initialize(),
+    ConnectivityController.inst.initialize().ignoreError(),
     FlutterDisplayMode.setHighRefreshRate().ignoreError(),
-    NamidaNavigator.setSystemUIImmersiveMode(false),
+    NamidaNavigator.setSystemUIImmersiveMode(false).ignoreError(),
     Rhttp.init().ignoreError().then((_) async {
       final client = await RhttpCompatibleClient.create();
       return HttpCacheManager.init(config: _HttpCacheCustomCacheConfig._(client));
@@ -203,7 +203,7 @@ void _mainAppInitialization() async {
     ytInfoInitSyncItemsCompleter.future,
   ]);
 
-  NamidaNavigator.setDefaultSystemUIOverlayStyle();
+  NamidaNavigator.setDefaultSystemUIOverlayStyle.ignoreError();
   ScrollSearchController.inst.initialize();
 
   runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));

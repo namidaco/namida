@@ -265,11 +265,6 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                         playlist.tracks.length.displayVideoKeyword,
                                         style: theme.textTheme.displaySmall,
                                       ),
-                                      const SizedBox(height: 2.0),
-                                      Text(
-                                        'bajsnajsnaksnjanksjnskajsnkajsnkanjanksjna kjsnjka sjkasnjkanskjankjsnaskjnsjk',
-                                        style: theme.textTheme.displaySmall,
-                                      ),
                                       if (playlist.comment != '') ...[
                                         const SizedBox(height: 2.0),
                                         Text(
