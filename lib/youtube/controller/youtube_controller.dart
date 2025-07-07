@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
@@ -15,7 +17,7 @@ import 'package:youtipie/class/videos/video_result.dart';
 import 'package:youtipie/class/youtipie_description/youtipie_description.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/core/url_utils.dart';
-import 'package:youtipie/youtipie.dart';
+import 'package:youtipie/youtipie.dart' hide ExecuteDelayedMinUtils, logger;
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/file_parts.dart';
@@ -23,6 +25,7 @@ import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -580,7 +583,7 @@ class YoutubeController {
       final completer = _completersVAI[config]!;
       if (!completer.isCompleted) {
         // pls dont try to refactor this
-        YoutubeInfoController.video.fetchVideoStreams(videoID.videoId, forceRequest: true).catchError((_) => null).then((value) => _completersVAI[config]?.complete(value));
+        YoutubeInfoController.video.fetchVideoStreams(videoID.videoId, forceRequest: true).catchError((_) => null).then((value) => _completersVAI[config]?.completeIfWasnt(value));
       }
 
       if (isFetchingData.value[videoID] == null) {
@@ -806,7 +809,6 @@ class YoutubeController {
     );
   }
 
-  /// [directoryPath] must NOT end with `/`
   String _getTempDownloadPath({
     required String groupName,
     required String fullFilename,
@@ -917,13 +919,9 @@ class YoutubeController {
         required int targetSize,
         int allowanceBytes = 1024,
       }) async {
-        try {
-          final fileStats = await file.stat();
-          final ok = fileStats.size >= targetSize - allowanceBytes; // it can be bigger cuz metadata and artwork may be added later
-          return ok;
-        } catch (_) {
-          return false;
-        }
+        final fileSize = await file.fileSize();
+        final ok = fileSize! >= targetSize - allowanceBytes; // it can be bigger cuz metadata and artwork may be added later
+        return ok;
       }
 
       File? videoFile;
@@ -937,6 +935,8 @@ class YoutubeController {
       if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
 
       try {
+        _DownloadErrorDescriptionsWrapper? downloadErrorDescription;
+
         // --------- Downloading Choosen Video.
         if (videoStream != null) {
           final filecache = await videoStream.getCachedFile(id.videoId);
@@ -985,6 +985,14 @@ class YoutubeController {
               await videoFile.copy(videoStream.cachePath(id.videoId));
             }
           } else {
+            downloadErrorDescription = _DownloadErrorDescriptionsWrapper.createOrAdd(
+              downloadErrorDescription,
+              _DownloadErrorDescription.nonQualifiedFileSize(
+                await videoFile.fileSize(),
+                videoStream.sizeInBytes,
+              ),
+            );
+
             skipAudio = true;
             videoFile = null;
           }
@@ -1042,6 +1050,13 @@ class YoutubeController {
               await audioFile.copy(audioStream.cachePath(id.videoId));
             }
           } else {
+            downloadErrorDescription = _DownloadErrorDescriptionsWrapper.createOrAdd(
+              downloadErrorDescription,
+              _DownloadErrorDescription.nonQualifiedFileSize(
+                await audioFile.fileSize(),
+                audioStream.sizeInBytes,
+              ),
+            );
             audioFile = null;
           }
         }
@@ -1068,8 +1083,26 @@ class YoutubeController {
               if (isVideoFileCached == false) videoFile.tryDeleting(),
               if (isAudioFileCached == false) audioFile.tryDeleting(),
             ]); // deleting temp files since they got merged
+          } else {
+            downloadErrorDescription = _DownloadErrorDescriptionsWrapper.createOrAdd(
+              downloadErrorDescription,
+              _DownloadErrorDescription.mergeError(
+                videoPath: videoFile.path,
+                audioPath: audioFile.path,
+                outputPath: "$output.mp4",
+              ),
+            );
           }
-          if (await File(output).exists()) df = File(output);
+          if (await File(output).exists()) {
+            df = File(output);
+          } else {
+            downloadErrorDescription = _DownloadErrorDescriptionsWrapper.createOrAdd(
+              downloadErrorDescription,
+              _DownloadErrorDescription.fileDoesNotExistAfterMerge(
+                output: output,
+              ),
+            );
+          }
         } else {
           // -- renaming files, or copying if cached
           Future<void> renameOrCopy({required File file, required String path, required bool isCachedVersion}) async {
@@ -1094,7 +1127,25 @@ class YoutubeController {
                 isCachedVersion: isAudioFileCached,
               ),
           ]);
-          if (await File(output).exists()) df = File(output);
+          if (await File(output).exists()) {
+            df = File(output);
+          } else {
+            downloadErrorDescription = _DownloadErrorDescriptionsWrapper.createOrAdd(
+              downloadErrorDescription,
+              _DownloadErrorDescription.fileDoesNotExistAfterRenameOrCopy(
+                vfile: videoFile,
+                vpath: output,
+                visCachedVersion: isVideoFileCached,
+                afile: audioFile,
+                apath: output,
+                aisCachedVersion: isAudioFileCached,
+              ),
+            );
+          }
+        }
+
+        if (downloadErrorDescription != null && downloadErrorDescription.exceptions.isNotEmpty) {
+          throw downloadErrorDescription;
         }
       } on _UserCanceledException catch (_) {
       } catch (e, st) {
@@ -1369,6 +1420,14 @@ class _YTDownloadManager with PortsProvider<SendPort> {
             file.createSync(recursive: true);
             final fileStream = file.openWrite(mode: FileMode.writeOnlyAppend);
 
+            Future<void> onRequestFinish({bool cancel = false}) async {
+              final req = cancelTokensMap.remove(filePath);
+              if (cancel) await req?.cancel().ignoreError();
+
+              await fileStream.flush().ignoreError();
+              await fileStream.close().ignoreError(); // closing file.
+            }
+
             try {
               final cancelToken = cancelTokensMap[filePath]!; // always non null tho
               final headers = {'range': 'bytes=$downloadStartRange-'};
@@ -1397,19 +1456,15 @@ class _YTDownloadManager with PortsProvider<SendPort> {
                   movedException = e;
                 }
               }
+              await onRequestFinish(); // flush and close first to avoid issues
               return sendPort.send(MapEntry(filePath, movedException));
             } on RhttpCancelException catch (_) {
               // client force closed
+              await onRequestFinish(cancel: true);
               return sendPort.send(MapEntry(filePath, null));
-            } finally {
-              try {
-                final req = cancelTokensMap.remove(filePath);
-                await req?.cancel();
-              } catch (_) {}
-              try {
-                await fileStream.flush();
-                await fileStream.close(); // closing file.
-              } catch (_) {}
+            } catch (_) {
+              await onRequestFinish(cancel: true);
+              rethrow;
             }
           } catch (e) {
             return sendPort.send(MapEntry(filePath, e)); // general error
@@ -1631,4 +1686,81 @@ extension _RxMapUtils<MK, K, V> on Map<MK, RxMap<K, V>> {
 
 class _UserCanceledException implements Exception {
   const _UserCanceledException();
+}
+
+class _DownloadErrorDescriptionsWrapper implements Exception {
+  _DownloadErrorDescriptionsWrapper._();
+
+  final exceptions = <_DownloadErrorDescription>[];
+
+  void add(_DownloadErrorDescription error) {
+    exceptions.add(error);
+  }
+
+  static _DownloadErrorDescriptionsWrapper createOrAdd(_DownloadErrorDescriptionsWrapper? original, _DownloadErrorDescription error) {
+    original ??= _DownloadErrorDescriptionsWrapper._();
+    original.add(error);
+    return original;
+  }
+
+  @override
+  String toString() {
+    return exceptions.map((e) => e.toString()).join('\n\n');
+  }
+}
+
+class _DownloadErrorDescription implements Exception {
+  final _DownloadErrorType type;
+  final String message;
+  const _DownloadErrorDescription._(this.type, this.message);
+
+  factory _DownloadErrorDescription.nonQualifiedFileSize(int? size, int requiredSize) {
+    final msg = 'size: $size | requiredSize $requiredSize | diff ${requiredSize - (size ?? 0)}';
+    return _DownloadErrorDescription._(
+      _DownloadErrorType.non_qualified_file_size,
+      msg,
+    );
+  }
+
+  factory _DownloadErrorDescription.mergeError({required String videoPath, required String audioPath, required String outputPath}) {
+    final msg = 'videoPath: $videoPath | audioPath: $audioPath | outputPath: $outputPath';
+    return _DownloadErrorDescription._(
+      _DownloadErrorType.merge_error,
+      msg,
+    );
+  }
+
+  factory _DownloadErrorDescription.fileDoesNotExistAfterMerge({required String output}) {
+    final msg = 'output: $output';
+    return _DownloadErrorDescription._(
+      _DownloadErrorType.file_does_not_exist_after_merge,
+      msg,
+    );
+  }
+  factory _DownloadErrorDescription.fileDoesNotExistAfterRenameOrCopy({
+    required File? vfile,
+    required String vpath,
+    required bool visCachedVersion,
+    required File? afile,
+    required String apath,
+    required bool aisCachedVersion,
+  }) {
+    final vmsg = 'vfile: $vfile | vpath $vpath | visCachedVersion $visCachedVersion';
+    final amsg = 'afile: $afile | apath $apath | aisCachedVersion $aisCachedVersion';
+    final msg = '$vmsg\n$amsg';
+    return _DownloadErrorDescription._(
+      _DownloadErrorType.file_does_not_exist_after_rename_or_copy,
+      msg,
+    );
+  }
+
+  @override
+  String toString() => 'type: ${type.name}\nmessage: $message';
+}
+
+enum _DownloadErrorType {
+  non_qualified_file_size,
+  merge_error,
+  file_does_not_exist_after_merge,
+  file_does_not_exist_after_rename_or_copy,
 }
