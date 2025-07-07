@@ -100,7 +100,7 @@ void _mainAppInitialization() async {
     // GestureBinding.instance.resamplingEnabled = true; // for 120hz displays, should make scrolling smoother.
 
     /// Getting Device info
-    NamidaDeviceInfo.fetchAndroidInfo();
+    NamidaDeviceInfo.fetchDeviceInfo();
     NamidaDeviceInfo.fetchPackageInfo().then((value) {
       // -- in case full path was updated before fetching version
       logger.updateLoggerPath();

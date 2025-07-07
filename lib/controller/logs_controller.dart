@@ -11,13 +11,12 @@ import 'package:namida/core/extensions.dart';
 final logger = _Log();
 
 class _Log {
-  late Logger logger = updateLogger(Level.all);
+  static Logger _logger = _createLogger(Level.all);
 
-  void updateLoggerPath() => updateLogger(Level.all);
-
-  Logger updateLogger(Level? level) {
+  static Logger _createLogger(Level? level) {
     final filter = kDebugMode ? DevelopmentFilter() : ProductionFilter();
-    return logger = Logger(
+    final logsFile = File(AppPaths.LOGS);
+    return _logger = Logger(
       level: level,
       filter: filter,
       printer: PrettyPrinter(
@@ -26,8 +25,15 @@ class _Log {
         methodCount: 48,
         errorMethodCount: 48,
       ),
-      output: _FileOutput(file: File(AppPaths.LOGS)),
+      output: _FileOutput(file: logsFile),
     );
+  }
+
+  void updateLoggerPath() => updateLogger(Level.all);
+
+  Logger updateLogger(Level? level) {
+    _logger.close();
+    return _createLogger(level);
   }
 
   void error(
@@ -36,7 +42,7 @@ class _Log {
     StackTrace? st,
   }) {
     printo('$e => $message\n=> $st', isError: true);
-    logger.e(message, error: e, stackTrace: st);
+    _logger.e(message, error: e, stackTrace: st);
   }
 }
 
@@ -44,57 +50,78 @@ class _FileOutput extends LogOutput {
   _FileOutput({required this.file});
   final File file;
 
-  late final IOSink _sink;
+  IOSink? _sink;
 
   @override
   Future<void> init() async {
     try {
       await file.create();
-      _sink = file.openWrite(mode: FileMode.writeOnlyAppend);
+      final sink = _sink = file.openWrite(mode: FileMode.writeOnlyAppend);
       if (await file.length() <= 2) {
-        _sink.write(await _getDeviceInfo());
-        _sink.write("\n===============================\n");
-        await _sink.flush();
+        sink.write(await _getDeviceInfo());
+        sink.write("\n===============================\n");
+        await sink.flush();
       }
     } catch (_) {}
     return await super.init();
   }
 
-  void _writeMainFile(OutputEvent event) async {
+  Future<void> _writeMainFile(OutputEvent event) async {
     // -- chronological logs
     try {
+      final sink = _sink;
+      if (sink == null) return;
       final length = event.lines.length;
       for (int i = 0; i < length; i++) {
-        _sink.write("\n${event.lines[i]}");
+        sink.write("\n${event.lines[i]}");
       }
-      _sink.write("\n-------------------------------");
-      await _sink.flush();
+      sink.write("\n-------------------------------");
+      await sink.flush();
     } catch (_) {}
   }
 
   @override
-  void output(OutputEvent event) async {
+  void output(OutputEvent event) {
     _writeMainFile(event);
   }
 
   @override
   Future<void> destroy() async {
-    await _sink.flush();
-    await _sink.close();
+    await _sink?.flush().ignoreError();
+    await _sink?.close().ignoreError();
   }
 
   Future<String> _getDeviceInfo() async {
-    final android = await NamidaDeviceInfo.androidInfoCompleter.future;
+    final device = await NamidaDeviceInfo.deviceInfoCompleter.future;
     final package = await NamidaDeviceInfo.packageInfoCompleter.future;
-    final androidMap = android.data;
+    final deviceMap = device.data;
     final packageMap = package.data;
-    androidMap.remove('supported32BitAbis');
-    androidMap.remove('supported64BitAbis');
-    androidMap.remove('systemFeatures');
 
-    const encoder = JsonEncoder.withIndent("  ");
+    // -- android
+    deviceMap.remove('supported32BitAbis');
+    deviceMap.remove('supported64BitAbis');
+    deviceMap.remove('systemFeatures');
+    // -----------
+
+    // -- windows
+    deviceMap.remove('digitalProductId');
+    // -----------
+
+    final encoder = JsonEncoder.withIndent(
+      "  ",
+      (object) {
+        if (object is DateTime) {
+          return object.toString();
+        }
+        try {
+          return object.toJson();
+        } catch (_) {
+          return object.toString();
+        }
+      },
+    );
     final infoMap = {
-      'android': androidMap,
+      'device': deviceMap,
       'package': packageMap,
     };
     return encoder.convert(infoMap);

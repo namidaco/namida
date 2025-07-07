@@ -30,27 +30,27 @@ class NamidaDeviceInfo {
 
   static String? _deviceId;
 
-  static final androidInfoCompleter = Completer<AndroidDeviceInfo>();
+  static final deviceInfoCompleter = Completer<BaseDeviceInfo>();
   static final packageInfoCompleter = Completer<PackageInfo>();
 
-  static AndroidDeviceInfo? androidInfo;
+  static BaseDeviceInfo? deviceInfo;
   static PackageInfo? packageInfo;
 
   static VersionWrapper? version;
   static String? buildType;
 
-  static bool _fetchedAndroidInfo = false;
+  static bool _fetchedDeviceInfo = false;
   static bool _fetchedPackageInfo = false;
 
-  static Future<void> fetchAndroidInfo() async {
-    if (_fetchedAndroidInfo) return;
-    _fetchedAndroidInfo = true;
+  static Future<void> fetchDeviceInfo() async {
+    if (_fetchedDeviceInfo) return;
+    _fetchedDeviceInfo = true;
     try {
-      final res = await DeviceInfoPlugin().androidInfo;
-      androidInfo = res;
-      androidInfoCompleter.complete(res);
+      final res = await DeviceInfoPlugin().deviceInfo;
+      deviceInfo = res;
+      deviceInfoCompleter.complete(res);
     } catch (_) {
-      _fetchedAndroidInfo = false;
+      _fetchedDeviceInfo = false;
     }
   }
 
