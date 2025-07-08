@@ -1,5 +1,129 @@
 # Namida Changelog
 
+## 08/07/2025
+# v5.2.6
+
+### 🎉 New Features:
+   - be06693: redesign for widescreen support (landscape & desktop) and better library items scaling ref landscape #202 #457 #275 #255 desktop #14
+   - 6a9731c: very cool side navbar for widescreen
+   - 50e24ba: advanced sorting for tracks
+   - 3d3d0ad: allow ignoring fetching lyrics if embedded lyrics started with "IGNORE"
+   - de3612b: miniplayer is now optimized for all screen sizes & landscape - glad i made it out safe and sane.. ts was a nightmare
+   - afed5ea: separated disc sections in album tracks page (when first sort is disc number)
+   - da6b07e: update icon in appbar (shows latest version with changelog)
+   - 77f0429: a button to select cached files that has a copy in local library - while choosing cached audios/videos to delete
+   - 87de5e6: auto count per row based on screen size for grid layouts
+   - 4385f6f: glow/ambient behind video option in fullscreen
+   - 62cc47e: support EXTALBUMARTURL in m3u playlists ref #536
+   - aa3dfd3: vibration modes (none, vibration, haptic feedback)
+
+### 🛠️ Bug fixes & Improvements:
+
+- fix:
+   - 96c1652: empty queue view in miniplayer
+   - abf1f6a: media session be tweaking since v4.9.8 ref #351, #531
+   - 7146f15: not removing duplicates when playing yt history day
+   - ea711a3: slight fade when restructuring queue (playing same item in another queue)
+   - 860afe8: shorts not being hidden properly ref #548
+   - acddf58: settings search not hiding after pressing a library tab
+   - 5ca7bbb: ensure thumbnail file has no illegal characters
+   - a59aab5: bottom search icon causing search menu and search bar not syncing
+   - 3110aea: yt mp back button not respecting inner states
+   - 3771b1f: long press for yt miniplayer action buttons
+   - 21dae50: items visibilty decision in dialog
+   - ad0204c: player sometimes not stopping while switching yt/local queues
+   - 764c6a3: sorting in file browser now ignores letter case
+   - 1cb2974: downloaded audio+video containing audio only
+   - 238cf59: cool fixes ref #604
+   - 46b9f45: smol fixes
+   - 97f7cfb: smol fixes
+
+- core:
+   - 313904e: internal player improvements - https//github.com/MSOB7YY/just_audio/commit/1447b03eb494bb74c8d93fd165ec3478831b83aa (catch texture exception to prevent crashing & update media/ffmpeg extension versions to 1.5.1)
+   - 20e1ca7: use `package:http_cache_stream` for cache & streaming - this allows using any player with disk caching, required for windows support with different player
+   - 83d86b2: folders navigation system rewrite - finally works as intended and for both platforms ^^ (4th rewrite btw)
+   - 6777590: refactor backup path resolving mechanism to support cross platform backups - and fix issues discovered along the way
+   - 2b8004a: rework replay gain to use loudness enhancer by default - can be set to (none, default, loudness enhancer, volume)
+   - 6547859: better yt download error handling & reporting
+
+- chore:  
+   - 53b3299: confirm before dislike
+   - 0a14e1a: final cleanup & tweaks - center plain lyrics text - improve history jumping - fix wrong "play when ready" after removing item from queue - fix yt miniplayer wrong padding - others
+   - bfe604a: use wallpaper accent or primary color instead of secondary scheme
+   - 082d1e0: prevent accidental queue swipe up when performing home scween gesture
+   - 7297467: tweaks for widescreen
+   - ab2425b: more tweaks & fixes for widescreen
+   - 60ec024: hide endcard after `200 ms` of pressing (not instantly)
+   - 54e3a53: better artwork cache mechanism with better hero effect
+   - c89052c: better count per row mechanism (with long press grid icon to show options)
+   - fc7dffc: ui tweaks and fixes - better artwork fit in yt player - (windows) prevent display video by mistake in some case - proper width for theme modes container - disable button while removing sources from history - text overflow for bottom nav bar - (windows) better hit test for mouse region in some widgets
+   - 7a25216: more responsive ui tweaks and fixes
+   - 41b5b48: always apply my settings at startup rip my cached vids
+   - e89e40c: more responsive ui tweaks
+   - c9a8563: change default artwork cache from `0.8` to `0.9`
+   - 077e0cd: display yt thumbnail icon only after image fetching fails
+   - 16ccc99: allow unlimited queue length in all places (except pressing track tile in tracks page)
+   - d4e401e: update packages/cleanup/fixes/etc
+   - 2ee7e71: put empty mixes at end if found
+   - 2dd584c: widescreen ui for channel subpage
+   - bb8701b: auto fetch qualities when opening menu in local miniplayer
+   - 286dcf1: ensure backup location exists before doing backup-related operations
+   - cecea94: better immersive mode decisions
+   - a6076e0: update edit multiple tracks logic to "disable" dismissed tracks instead of "removing" them
+   - a67d7f1: final cleanup - fix ffmpeg windows logic not reporting failed executions - adjust RepaintBoundary here and there - more refinements for widescreen (subpages info box & channel subpage & dialogs) - replace `BackdropFilter` with `ImageFiltered` in many places (means performance goes brrr for blur effect) - don't clip glow so it looks cooler - tweak artwork glow to be enabled in more places - small design rework for mix dialog - prevent pull to refresh while dismissing track tile/etc and vice versa - add friction effect to fade dismissible widgets (swipe tile to action) - miniplayer performance improvement - other fixes/tweaks
+   - 5df5bbf: dynamic page color for album/artist pages now follow "auto coloring" settings
+   - bd531a5: album card design tweak (smaller font size & transparent button based on size)
+   - 129a4ba: ui updates & optimize blur performance
+   - 0444ed0: play live videos
+   - 127bf19: dont limit speed in volume control page ref #605
+   - 4b41293: display title/artist in lyrics fullscreen page
+   - f89c4b5: allow editing multiple color palettes at once
+   - faaadaf: detect takeouts inside zip files when importing history
+   - d679d3e: minor changes
+   - 0508dd5: tracks path inside m3u now have better relative path - obtained by finding common parent for all tracks, then removing it from each path
+   - 5997fc5: percentage circle for cache videos info re-extraction
+   - 663b136: better and more helpful playlist download page - fix not loading all videos before opening page - better error message - now displays which videos are already downloaded properly - automatically selects non-downloaded videos when opening/updating group name (unless changed selection manually)
+   - 793658e: swipe actions now apply to yt notification card
+   - a3adeb4: better download sheet loading shimmer handling
+   - bd8fb5e: final adjustments
+   - b424109: improve swipe up on video to enter fullscreen mechanism for yt miniplayer
+   - 788c07f: improve stuff in fullscreen video (adjust image size/safe area/consistent padding/hide system volume/etc)
+   - 84fb7bf: improve miniplayer items dimensions
+   - 0d8d116: improve lrc view logic and boost its blur performance
+   - 7721d19: improve account login ref #504, #559
+   - 7ffd3ef: improve channel info resolving
+   - 86384a6: improve yt link and id matching - now catches any smell yt related woof woof
+   - 80b14fd: some ui updates/fixes
+   - 38edc19: ui fixes/updates
+   - 7fc6a4a: more adjusments & fixes
+   - be1323e: small ui fixes
+   - d35bb93: small tweaks ref #512
+   - 13e30b4: minor tweaks
+   - 801e846: some fixes and tweaks
+   - d05b37e: minor fixes/changes 
+   - 956ca5b: ui fixes and tweaks
+   - 0a81442: more ui tweaks and fixes
+
+- perf:
+   - dede8e6: optimize loading circle opacity performance
+   - 6a8746c: hide yt mp content when queue is fully expanded
+   - b5f5208: use `packagerhttp` for network requests
+   - 797351a: more efficient and reliable extracting paths key
+   - 6db31c0: refactor `num.clamp` to deticated extensions
+   - b8f1fc9: improve yt offline search speed (drastically)
+   - b3b1333: slight improvement for yt thumbnail widget
+   - 719e953: remove hero fade transition - this might cause slight image flicker while opening dialogs/pages but we will see later, currently it seems expensive
+   - 22281ce: slight performance imp for miniplayer
+   - 5041a6b: improve video endcards performance
+   - 6c05699: major ui performance optimizations (miniplayers/glow effect/opacity everywhere)
+   - 4612cac: optimize app blur when opening dialogs
+   - 7c94afb: optimize yt miniplayer animation
+   - 109d815: slight improvement for miniplayer animation - by not killing appbar & navbar when miniplayer is expanded
+   - 5db0a8b: improve player color updates
+   - 4c1b405: major performance optimization across app and startup time reduction
+   - 1c403cf: improve latest queue saving
+
+
 ## 07/03/2025
 # v5.0.4
 
