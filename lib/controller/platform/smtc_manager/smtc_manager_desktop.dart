@@ -1,9 +1,9 @@
 part of 'smtc_manager.dart';
 
 class _SMTCManagerWindows extends NamidaSMTCManager {
-  static const appId = "94dba250-1e0f-11f0-846e-a101934a6b13";
+  static const appId = "94dba250-1e0f-11f0-846e-a101934a6b13"; // same as the one for inno setup in pubspec.yaml
 
-  late SMTCWindows smtc;
+  SMTCWindows? smtc;
 
   @override
   Future<void> init() async {
@@ -23,7 +23,7 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
         ),
       );
 
-      smtc.buttonPressStream.listen((event) {
+      smtc?.buttonPressStream.listen((event) {
         switch (event) {
           case PressedButton.play:
             Player.inst.togglePlayPause();
@@ -46,34 +46,36 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
           case PressedButton.channelDown:
         }
       });
-    } catch (_) {}
+    } catch (e, st) {
+      logger.error('Failed to initialize SMTCWindows', e: e, st: st);
+    }
   }
 
   bool _isEnabled = true;
 
   void _ensureEnabled() {
     if (_isEnabled) return;
-    smtc.enableSmtc();
+    smtc?.enableSmtc();
   }
 
   @override
   void onPlay() {
     _ensureEnabled();
-    smtc.setPlaybackStatus(PlaybackStatus.playing);
+    smtc?.setPlaybackStatus(PlaybackStatus.playing);
   }
 
   @override
   void onPause() {
     _ensureEnabled();
-    smtc.setPlaybackStatus(PlaybackStatus.paused);
+    smtc?.setPlaybackStatus(PlaybackStatus.paused);
   }
 
   @override
   void onStop() {
     if (_isEnabled == false) return;
     _isEnabled = false;
-    smtc.setPlaybackStatus(PlaybackStatus.stopped);
-    smtc.disableSmtc();
+    smtc?.setPlaybackStatus(PlaybackStatus.stopped);
+    smtc?.disableSmtc();
   }
 
   @override
@@ -86,13 +88,13 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
       albumArtist: null,
       thumbnail: mediaItem.artUri?.toFilePath_(),
     );
-    smtc.updateMetadata(metadata);
+    smtc?.updateMetadata(metadata);
   }
 
   @override
   void updateTimeline(PlaybackTimeline timeline) {
     _ensureEnabled();
-    smtc.updateTimeline(timeline);
+    smtc?.updateTimeline(timeline);
   }
 }
 

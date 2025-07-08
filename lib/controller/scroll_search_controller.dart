@@ -34,7 +34,7 @@ class ScrollSearchController {
   ScrollController scrollController = ScrollController();
   final Map<LibraryTab, double> scrollPositionsMap = {};
 
-  final Map<LibraryTab, TextEditingController> textSearchControllers = {};
+  final Map<LibraryTab, TextEditingController> _textSearchControllers = {};
 
   final FocusNode focusNode = FocusNode();
 
@@ -176,14 +176,14 @@ class ScrollSearchController {
     if (globalSearchState != null && isGlobalSearchMenuShown.value) {
       globalSearchState.focusNode.requestFocus();
     } else {
-      FocusManager.instance.primaryFocus?.requestFocus(focusNode);
+      focusNode.requestFocus();
     }
   }
 
   void switchSearchBoxVisibilty(LibraryTab libraryTab) {
-    textSearchControllers[libraryTab] ??= TextEditingController();
+    _textSearchControllers[libraryTab] ??= TextEditingController();
 
-    if (textSearchControllers[libraryTab]!.text == '') {
+    if (_textSearchControllers[libraryTab]!.text == '') {
       final isCurrentyVisible = isSearchBoxVisibleMap[libraryTab]!.value;
       if (isCurrentyVisible) {
         _closeTextController(libraryTab);
@@ -196,14 +196,14 @@ class ScrollSearchController {
   }
 
   void _closeTextController(LibraryTab libraryTab) {
-    textSearchControllers[libraryTab]?.dispose();
-    textSearchControllers.remove(libraryTab);
+    _textSearchControllers[libraryTab]?.dispose();
+    _textSearchControllers.remove(libraryTab);
     unfocusKeyboard();
     isSearchBoxVisibleMap[libraryTab]!.value = false;
   }
 
   void _openTextController(LibraryTab libraryTab) {
-    textSearchControllers[libraryTab] ??= TextEditingController();
+    _textSearchControllers[libraryTab] ??= TextEditingController();
     focusKeyboard();
   }
 
@@ -216,7 +216,7 @@ class ScrollSearchController {
 
 extension LibraryTabStuff on LibraryTab {
   ScrollController get scrollController => ScrollSearchController.inst.scrollController;
-  TextEditingController? get textSearchController => ScrollSearchController.inst.textSearchControllers[this];
+  TextEditingController? get textSearchController => ScrollSearchController.inst._textSearchControllers[this];
   double get scrollPosition => ScrollSearchController.inst.getScrollPosition(this);
   RxBaseCore<bool> get isBarVisible => ScrollSearchController.inst.getIsBarVisible(this);
   RxBaseCore<bool> get isSearchBoxVisible => ScrollSearchController.inst.getIsSearchBoxVisible(this);
