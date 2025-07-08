@@ -311,7 +311,9 @@ void showTrackAdvancedDialog({
             builder: (context, snapshot) {
               final trackColors = snapshot.data;
               return CustomListTile(
-                enabled: snapshot.connectionState == ConnectionState.done,
+                enabled: tracksForColorPalette.length == 1
+                    ? true // bcz most likely already obtained
+                    : snapshot.connectionState == ConnectionState.done,
                 passedColor: colorScheme,
                 title: lang.COLOR_PALETTE,
                 icon: Broken.color_swatch,
