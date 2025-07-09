@@ -65,7 +65,7 @@ class ThemeSetting extends SettingSubpageProvider {
     }
   }
 
-  Widget getThemeTile() {
+  Widget getThemeTile({double? maxWidth}) {
     return getItemWrapper(
       key: _ThemeSettingsKeys.themeMode,
       child: CustomListTile(
@@ -73,7 +73,7 @@ class ThemeSetting extends SettingSubpageProvider {
         icon: Broken.brush_4,
         title: lang.THEME_MODE,
         trailingRaw: ToggleThemeModeContainer(
-          maxWidth: (Dimensions.inst.availableAppContentWidth * 0.4).withMaximum(248.0),
+          maxWidth: ((maxWidth ?? Dimensions.inst.availableAppContentWidth) * 0.4).withMaximum(248.0),
         ),
       ),
     );

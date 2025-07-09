@@ -7,6 +7,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -115,6 +116,8 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final maxWidth = context.width; // use context as dimensions might not be initialized yet
+
     const indexer = IndexerSettings();
     final useMediaStore = indexer.getMediaStoreWidget();
     final includeVideosWidget = indexer.getIncludeVideosWidget();
@@ -123,7 +126,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     final groupArtworksByAlbum = indexer.getGroupArtworksByAlbumWidget();
 
     const theme = ThemeSetting();
-    final themeTile = theme.getThemeTile();
+    final themeTile = theme.getThemeTile(maxWidth: maxWidth);
     final languageTile = theme.getLanguageTile(context);
 
     const extras = ExtrasSettings();
@@ -211,62 +214,66 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                           ),
                           child: Row(
                             children: [
-                              Expanded(
-                                child: NamidaInkWell(
-                                  animationDurationMS: 100,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      width: 1.5,
-                                      color: didGrantStoragePermission
-                                          ? Colors.green.withValues(alpha: 0.3)
-                                          : didDenyStoragePermission
-                                              ? Colors.red.withValues(alpha: 0.3)
-                                              : Colors.transparent,
+                              if (!NamidaFeaturesVisibility.isStoragePermissionNotRequired)
+                                Expanded(
+                                  child: NamidaInkWell(
+                                    animationDurationMS: 100,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        width: 1.5,
+                                        color: didGrantStoragePermission
+                                            ? Colors.green.withValues(alpha: 0.3)
+                                            : didDenyStoragePermission
+                                                ? Colors.red.withValues(alpha: 0.3)
+                                                : Colors.transparent,
+                                      ),
+                                    ),
+                                    onTap: _requestPermission,
+                                    borderRadius: didGrantStoragePermission ? 8.0 : 16.0,
+                                    bgColor: context.theme.cardColor,
+                                    margin: const EdgeInsets.all(12.0),
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            lang.GRANT_STORAGE_PERMISSION,
+                                            style: context.textTheme.displayMedium,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12.0),
+                                        NamidaCheckMark(
+                                          size: 16.0,
+                                          active: didGrantStoragePermission,
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  onTap: _requestPermission,
-                                  borderRadius: didGrantStoragePermission ? 8.0 : 16.0,
-                                  bgColor: context.theme.cardColor,
-                                  margin: const EdgeInsets.all(12.0),
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          lang.GRANT_STORAGE_PERMISSION,
-                                          style: context.textTheme.displayMedium,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12.0),
-                                      NamidaCheckMark(
-                                        size: 16.0,
-                                        active: didGrantStoragePermission,
-                                      ),
-                                    ],
-                                  ),
                                 ),
-                              ),
-                              AnimatedOpacity(
-                                duration: const Duration(milliseconds: 400),
-                                opacity: didGrantStoragePermission ? 1.0 : 0.5,
-                                child: NamidaInkWell(
-                                  width: Dimensions.inst.availableAppContentWidth * 0.2,
-                                  onTap: () async {
-                                    await _requestPermission();
-                                    if (BackupController.inst.isRestoringBackup.value) {
-                                      snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
-                                      return;
-                                    }
-                                    _navigateToNamida();
-                                  },
-                                  borderRadius: 8.0,
-                                  bgColor: context.theme.cardColor,
-                                  margin: const EdgeInsets.all(12.0),
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: const Icon(
-                                    Broken.arrow_right,
-                                    size: 24.0,
+                              Flexible(
+                                fit: NamidaFeaturesVisibility.isStoragePermissionNotRequired ? FlexFit.tight : FlexFit.loose,
+                                child: AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 400),
+                                  opacity: didGrantStoragePermission ? 1.0 : 0.5,
+                                  child: NamidaInkWell(
+                                    width: NamidaFeaturesVisibility.isStoragePermissionNotRequired ? null : maxWidth * 0.2,
+                                    onTap: () async {
+                                      await _requestPermission();
+                                      if (BackupController.inst.isRestoringBackup.value) {
+                                        snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+                                        return;
+                                      }
+                                      _navigateToNamida();
+                                    },
+                                    borderRadius: 8.0,
+                                    bgColor: context.theme.cardColor,
+                                    margin: const EdgeInsets.all(12.0),
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: const Icon(
+                                      Broken.arrow_right,
+                                      size: 24.0,
+                                    ),
                                   ),
                                 ),
                               ),

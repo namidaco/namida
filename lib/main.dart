@@ -154,6 +154,13 @@ void _mainAppInitialization() async {
     // -- creating directories
     await Future.wait(AppDirs.values.map((p) => Directory(p).create(recursive: true)));
 
+    if (NamidaFeaturesVisibility.isStoragePermissionNotRequired) {
+      if (!shouldShowOnBoarding) {
+        final settingsExist = await File(AppPaths.SETTINGS).exists().ignoreError() ?? false;
+        shouldShowOnBoarding = !settingsExist;
+      }
+    }
+
     await settings.prepareAllSettings();
 
     if (settings.directoriesToScan.value.isEmpty) {
