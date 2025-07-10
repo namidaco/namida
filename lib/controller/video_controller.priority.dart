@@ -26,19 +26,20 @@ class VideosPriorityManager {
 
   final _videosPriorityMap = <String, CacheVideoPriority>{};
 
-  static Map<String, CacheVideoPriority> loadEverythingSync(DbWrapperFileInfo fileInfo) {
+  static Future<Map<String, CacheVideoPriority>> loadEverythingSync(DbWrapperFileInfo fileInfo) async {
     NamicoDBWrapper.initialize();
     final values = CacheVideoPriority.values;
-    final db = DBWrapper.openFromInfoSync(
+    final db = await DBWrapper.openFromInfoSyncTry(
       fileInfo: fileInfo,
       config: _dbConfig.copyWith(autoDisposeTimerDuration: null),
     );
+
     var videosPriorityMap = <String, CacheVideoPriority>{};
-    db.loadEverythingKeyed((key, map) {
+    db?.loadEverythingKeyed((key, map) {
       final int valueIndex = map[_priorityKey];
       videosPriorityMap[key] = values[valueIndex];
     });
-    db.close();
+    db?.close();
     return videosPriorityMap;
   }
 

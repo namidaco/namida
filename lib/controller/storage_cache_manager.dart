@@ -653,11 +653,11 @@ class _VideoTrimmer {
     return await _trimExcessVideoCacheIsolate.thready(paramters);
   }
 
-  static int _trimExcessVideoCacheIsolate(_TrimDirParam params) {
+  static Future<int> _trimExcessVideoCacheIsolate(_TrimDirParam params) async {
     final maxBytes = params.maxBytes;
     final dirPath = params.dirPath;
     final dirPathTemp = params.extraDirPath!;
-    final priorityMap = VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
+    final priorityMap = await VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
 
     final videos = Directory(dirPath).listSyncSafe();
     final videosTemp = Directory(dirPathTemp).listSyncSafe();
@@ -709,10 +709,10 @@ class _AudioTrimmer {
     return await _trimExcessAudioCacheIsolate.thready(paramters);
   }
 
-  static int _trimExcessAudioCacheIsolate(_TrimDirParam params) {
+  static Future<int> _trimExcessAudioCacheIsolate(_TrimDirParam params) async {
     final maxBytes = params.maxBytes;
     final dirPath = params.dirPath;
-    final priorityMap = VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
+    final priorityMap = await VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
 
     final audios = Directory(dirPath).listSyncSafe();
     _Trimmer._sortFiles(audios, priorityMap);
@@ -758,11 +758,11 @@ class _ImageTrimmer {
     return await _trimExcessImageCacheIsolate.thready(paramters);
   }
 
-  static int _trimExcessImageCacheIsolate(_TrimDirParam params) {
+  static Future<int> _trimExcessImageCacheIsolate(_TrimDirParam params) async {
     final maxBytes = params.maxBytes;
     final dirPath = params.dirPath;
     final dirPathChannel = params.extraDirPath!;
-    final priorityMap = VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
+    final priorityMap = await VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
 
     final imagesVideos = Directory(dirPath).listSyncSafe();
     final imagesChannels = Directory(dirPathChannel).listSyncSafe();
@@ -788,9 +788,9 @@ class _ImageTrimmer {
     return await _trimExcessImageCacheTempIsolate.thready(params);
   }
 
-  static void _trimExcessImageCacheTempIsolate(_TrimDirParam params) {
+  static Future<void> _trimExcessImageCacheTempIsolate(_TrimDirParam params) async {
     final dirPath = params.dirPath;
-    final priorityMap = VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
+    final priorityMap = await VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
 
     final imagesPre = Directory(dirPath).listSyncSafe();
     int excess = imagesPre.length - 2000; // keeping it at max 2000 good files.

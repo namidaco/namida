@@ -44,6 +44,8 @@ class _Log {
     printo('$e => $message\n=> $st', isError: true);
     _logger.e(message, error: e, stackTrace: st);
   }
+
+  void report(Object? e, StackTrace? st) => error('', e: e, st: st);
 }
 
 class _FileOutput extends LogOutput {

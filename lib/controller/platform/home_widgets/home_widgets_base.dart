@@ -9,7 +9,7 @@ abstract class HomeWidgets {
     );
   }
 
-  FutureOr<bool?> init();
+  Future<bool?> init();
   Future<void> updateIsPlaying(bool isPlaying);
   Future<void> updateIsFavourite(bool isFavourite);
   Future<void> updateAll(String title, String? message, Uri? imageFileUri, bool isPlaying, bool isFavourite);

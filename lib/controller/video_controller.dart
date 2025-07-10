@@ -653,10 +653,10 @@ class VideoController {
   }
 
   Future<void> initialize() async {
-    await Future.wait([
+    await [
       _fetchAndCheckCacheVideos(), // --> should think about a way to flank around scanning lots of cache videos if info not found (ex: after backup)
       _fetchAndCheckLocalVideos(), // this will get paths only and disables extracting whole local videos on startup
-    ]);
+    ].executeAllAndSilentReportErrors();
 
     if (Player.inst.videoPlayerInfo.value?.isInitialized != true) await updateCurrentVideo(Player.inst.currentTrack?.track);
   }
@@ -832,12 +832,12 @@ extension _GlobalPaintBounds on BuildContext {
 class _VideoControllerIsolateFunctions {
   const _VideoControllerIsolateFunctions();
 
-  static Map<String, NamidaVideo> _readLocalVideosDb(List params) {
+  static Future<Map<String, NamidaVideo>> _readLocalVideosDb(List params) async {
     final oldJsonFilePath = params[0] as String;
     final dbFileInfo = params[1] as DbWrapperFileInfo;
     final oldJsonFile = File(oldJsonFilePath);
     NamicoDBWrapper.initialize();
-    final db = DBWrapper.openFromInfoSync(
+    final db = await DBWrapper.openFromInfoSyncTry(
       fileInfo: dbFileInfo,
       config: const DBConfig(
         createIfNotExist: true,
@@ -852,7 +852,7 @@ class _VideoControllerIsolateFunctions {
         if (localVideosInfoFile != null) {
           for (final map in localVideosInfoFile) {
             final path = map['path'] as String?;
-            if (path != null) db.put(path, map);
+            if (path != null) db?.put(path, map);
           }
         }
         oldJsonFile.deleteSync();
@@ -860,21 +860,21 @@ class _VideoControllerIsolateFunctions {
     }
 
     final localVids = <String, NamidaVideo>{};
-    db.loadEverything(
+    db?.loadEverything(
       (e) {
         final nv = NamidaVideo.fromJson(e);
         localVids[nv.path] = nv;
       },
     );
-    db.close();
+    db?.close();
     return localVids;
   }
 
-  static _VideoControllerIsolateResult _fetchAndCheckCachedVideosMainIsolate(_VideoControllerIsolateRequest params) {
+  static Future<_VideoControllerIsolateResult> _fetchAndCheckCachedVideosMainIsolate(_VideoControllerIsolateRequest params) async {
     final oldJsonFile = File(params.oldJsonFilePath);
     final dbFileInfo = params.dbFileInfo;
     NamicoDBWrapper.initialize();
-    final db = DBWrapper.openFromInfoSync(
+    final db = await DBWrapper.openFromInfoSyncTry(
       fileInfo: dbFileInfo,
       config: const DBConfig(
         createIfNotExist: true,
@@ -897,7 +897,7 @@ class _VideoControllerIsolateFunctions {
             }
           }
           for (final e in videosInMap.entries) {
-            db.put(e.key, e.value);
+            db?.put(e.key, e.value);
           }
         }
         oldJsonFile.deleteSync();
@@ -908,7 +908,7 @@ class _VideoControllerIsolateFunctions {
     final newIdsMap = <String, List<(FileStat, String)>>{};
     final shouldBeRemovedIds = <String>{};
 
-    db.loadEverythingKeyed(
+    db?.loadEverythingKeyed(
       (id, value) {
         for (final videoJson in value.values) {
           final v = NamidaVideo.fromJson(videoJson);
@@ -933,9 +933,9 @@ class _VideoControllerIsolateFunctions {
     );
 
     final shouldBeRemovedIdsList = shouldBeRemovedIds.toList();
-    if (shouldBeRemovedIdsList.isNotEmpty) db.deleteBulk(shouldBeRemovedIdsList);
+    if (shouldBeRemovedIdsList.isNotEmpty) db?.deleteBulk(shouldBeRemovedIdsList);
 
-    db.close();
+    db?.close();
 
     final newFiles = _checkForNewVideosInCacheIsolate(params.cacheDirPath, validMap);
     newIdsMap.addAll(newFiles);

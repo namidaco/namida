@@ -87,13 +87,12 @@ void _mainAppInitialization() async {
       shouldShowOnBoarding = true;
     }
 
-    await Future.wait(
-      [
-        WindowController.instance?.init().ignoreError(),
-        SMTCController.instance?.init().ignoreError(),
-        HomeWidgetController.instance?.init(),
-      ].whereType(),
-    );
+    await [
+      WindowController.instance?.init().catchError(logger.report),
+      SMTCController.instance?.init().catchError(logger.report),
+      HomeWidgetController.instance?.init(),
+    ].executeAllAndSilentReportErrors();
+
     ShortcutsController.instance?.init();
 
     // -- x this makes some issues with GestureDetector
@@ -133,13 +132,13 @@ void _mainAppInitialization() async {
       AppDirs.ROOT_DIR = path ?? '';
     }
 
-    await Future.wait([
+    await [
       NamidaChannel.inst.getPlatformSdk().then((sdk) => NamidaDeviceInfo.sdkVersion = sdk),
       fetchAppData(),
       fetchRootDir(),
       NamidaStorage.inst.getStorageDirectories().then((value) => paths = value),
       NamidaStorage.inst.getStorageDirectoriesAppCache().then((value) => AppDirs.APP_CACHE = value.firstOrNull ?? ''),
-    ]);
+    ].executeAllAndSilentReportErrors();
 
     if (paths.isEmpty) {
       final fallback = NamidaStorage.inst.defaultFallbackStoragePath;
@@ -152,7 +151,7 @@ void _mainAppInitialization() async {
     _cleanOldLogsSync.thready([AppDirs.LOGS_DIRECTORY, AppPaths.getLogsSuffix()]);
 
     // -- creating directories
-    await Future.wait(AppDirs.values.map((p) => Directory(p).create(recursive: true)));
+    await AppDirs.values.map((p) => Directory(p).create(recursive: true)).executeAllAndSilentReportErrors();
 
     if (NamidaFeaturesVisibility.isStoragePermissionNotRequired) {
       if (!shouldShowOnBoarding) {
@@ -172,96 +171,101 @@ void _mainAppInitialization() async {
       ]);
     }
   } catch (e, st) {
-    logger.error(e, st: st);
+    logger.error('_mainAppInitialization', e: e, st: st);
   }
 
-  WindowController.instance?.restorePosition(); // -- requires settings
+  try {
+    WindowController.instance?.restorePosition(); // -- requires settings
 
-  final ytInfoInitSyncItemsCompleter = Completer<void>();
+    final ytInfoInitSyncItemsCompleter = Completer<void>();
 
-  /// even tho we don't really need to wait for queue, it's better as to
-  /// minimize startup lag as this changes some app-level vars like color scheme
-  FutureOr<void> prepareLatestQueue() {
-    if (!shouldShowOnBoarding) {
-      return ytInfoInitSyncItemsCompleter.future.whenComplete(QueueController.inst.prepareLatestQueueAsync);
+    /// even tho we don't really need to wait for queue, it's better as to
+    /// minimize startup lag as this changes some app-level vars like color scheme
+    FutureOr<void> prepareLatestQueue() {
+      if (!shouldShowOnBoarding) {
+        return ytInfoInitSyncItemsCompleter.future.whenComplete(QueueController.inst.prepareLatestQueueAsync);
+      }
     }
+
+    YoutubeInfoController.initialize(ytInfoInitSyncItemsCompleter);
+
+    if (InternalPlayerType.platformDefault.shouldInitializeMPV) {
+      mk.MediaKit.ensureInitialized.ignoreError();
+    }
+
+    await [
+      if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(startupBoost: true),
+      Language.initialize(),
+      Player.inst.initializePlayer().whenComplete(prepareLatestQueue),
+      PlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
+      YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
+      YoutubeSubscriptionsController.inst.loadSubscriptionsFileAsync(),
+      ConnectivityController.inst.initialize(),
+      FlutterDisplayMode.setHighRefreshRate().ignoreError(), // ignore cuz whatever
+      NamidaNavigator.setSystemUIImmersiveMode(false),
+      Rhttp.init().then((_) => RhttpCompatibleClient.create().then((client) => HttpCacheManager.init(config: _HttpCacheCustomCacheConfig._(client)))),
+      ytInfoInitSyncItemsCompleter.future,
+    ].executeAllAndSilentReportErrors();
+
+    NamidaNavigator.setDefaultSystemUIOverlayStyle.ignoreError();
+    ScrollSearchController.inst.initialize();
+  } catch (e, st) {
+    logger.error('_mainAppInitialization 2', e: e, st: st);
   }
-
-  YoutubeInfoController.initialize(ytInfoInitSyncItemsCompleter);
-
-  if (InternalPlayerType.platformDefault.shouldInitializeMPV) {
-    mk.MediaKit.ensureInitialized.ignoreError();
-  }
-
-  await Future.wait([
-    if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(startupBoost: true),
-    Language.initialize(),
-    Player.inst.initializePlayer().ignoreError().whenComplete(prepareLatestQueue),
-    PlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
-    YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
-    YoutubeSubscriptionsController.inst.loadSubscriptionsFileAsync(),
-    ConnectivityController.inst.initialize().ignoreError(),
-    FlutterDisplayMode.setHighRefreshRate().ignoreError(),
-    NamidaNavigator.setSystemUIImmersiveMode(false).ignoreError(),
-    Rhttp.init().ignoreError().then((_) async {
-      final client = await RhttpCompatibleClient.create();
-      return HttpCacheManager.init(config: _HttpCacheCustomCacheConfig._(client));
-    }).ignoreError(),
-    ytInfoInitSyncItemsCompleter.future,
-  ]);
-
-  NamidaNavigator.setDefaultSystemUIOverlayStyle.ignoreError();
-  ScrollSearchController.inst.initialize();
 
   runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));
 }
 
 Future<void> _mainInitialization(bool shouldShowOnBoarding) async {
-  _initializeIntenties();
-  _initLifeCycle();
+  try {
+    _initializeIntenties();
+    _initLifeCycle();
 
-  YoutubeAccountController.initialize();
+    YoutubeAccountController.initialize();
 
-  await [
-    YoutubeInfoController.utils.fillBackupInfoMap(), // for history videos info.
+    await [
+      YoutubeInfoController.utils.fillBackupInfoMap(), // for history videos info.
 
-    HistoryController.inst.prepareHistoryFile().then((_) => Indexer.inst.sortMediaTracksAndSubListsAfterHistoryPrepared()), //
-    YoutubeHistoryController.inst.prepareHistoryFile(),
+      HistoryController.inst.prepareHistoryFile().then((_) => Indexer.inst.sortMediaTracksAndSubListsAfterHistoryPrepared()), //
+      YoutubeHistoryController.inst.prepareHistoryFile(),
 
-    PlaylistController.inst.prepareAllPlaylists(),
-    YoutubePlaylistController.inst.prepareAllPlaylists(),
+      PlaylistController.inst.prepareAllPlaylists(),
+      YoutubePlaylistController.inst.prepareAllPlaylists(),
 
-    VideoController.inst.initialize(),
-    YoutubeController.inst.loadDownloadTasksInfoFileAsync(),
+      VideoController.inst.initialize(),
+      YoutubeController.inst.loadDownloadTasksInfoFileAsync(),
 
-    NotificationManager.init(),
-    FlutterVolumeController.updateShowSystemUI(false),
-    NamidaChannel.inst.setCanEnterPip(settings.enablePip.value),
-  ].wait;
+      NotificationManager.init(),
+      FlutterVolumeController.updateShowSystemUI(false),
+      NamidaChannel.inst.setCanEnterPip(settings.enablePip.value),
+    ].executeAllAndSilentReportErrors();
 
-  await [
-    QueueController.inst.prepareAllQueuesFile(),
+    await [
+      QueueController.inst.prepareAllQueuesFile(),
 
-    if (!shouldShowOnBoarding)
-      if (settings.refreshOnStartup.value)
-        Indexer.inst.refreshLibraryAndCheckForDiff(allowDeletion: false, showFinishedSnackbar: false)
-      else
-        Indexer.inst.getAudioFiles() // main reason is to refresh fallback covers
-  ].wait;
+      if (!shouldShowOnBoarding)
+        if (settings.refreshOnStartup.value)
+          Indexer.inst.refreshLibraryAndCheckForDiff(allowDeletion: false, showFinishedSnackbar: false)
+        else
+          Indexer.inst.getAudioFiles() // main reason is to refresh fallback covers
+    ].executeAllAndSilentReportErrors();
 
-  // CurrentColor.inst.initialize(); // --> !can block?
+    // CurrentColor.inst.initialize(); // --> !can block?
 
-  if (!shouldShowOnBoarding) await BackupController.inst.checkForAutoBackup(); // --> !can block
-  const StorageCacheManager().trimExtraFiles();
-  VersionController.inst.ensureInitialized();
-  _clearIntentCachedFiles(); // clearing files cached by intents
-  // CurrentColor.inst.generateAllColorPalettes();
+    if (!shouldShowOnBoarding) await BackupController.inst.checkForAutoBackup(); // --> !can block
+    const StorageCacheManager().trimExtraFiles();
+    VersionController.inst.ensureInitialized();
+    _clearIntentCachedFiles(); // clearing files cached by intents
+    // CurrentColor.inst.generateAllColorPalettes();
+  } catch (e, st) {
+    logger.error('_mainInitialization', e: e, st: st);
+  }
 }
 
 void _cleanOldLogsSync(List params) {
   String dirPath = params[0];
   String? fileSuffix = params[1];
-  Directory(dirPath).listSync().loop((e) {
+  Directory(dirPath).listSyncSafe().loop((e) {
     if (e is File) {
       final filename = e.path.getFilename;
       if (filename.startsWith('logs_') && fileSuffix != null && !filename.endsWith("$fileSuffix.txt")) {

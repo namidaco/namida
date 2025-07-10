@@ -365,7 +365,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
   final _artworkUrlForM3uInfoMap = <String, String?>{}; // {m3uPath: artUrl}
 
-  static _ParseM3UPlaylistFilesResult _parseM3UPlaylistFiles(_ParseM3UPlaylistFilesParams params) {
+  static Future<_ParseM3UPlaylistFilesResult> _parseM3UPlaylistFiles(_ParseM3UPlaylistFilesParams params) async {
     final allm3uPaths = params.allm3uPaths;
 
     final backupDirPath = params.backupDirPath;
@@ -373,17 +373,17 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     DBWrapperSync? tracksDBManager;
     final libraryTracksPaths = <String>[];
 
-    void loadTracksDb() {
+    Future<void> loadTracksDb() async {
       try {
         NamicoDBWrapper.initialize();
-        tracksDBManager = DBWrapper.openFromInfoSync(
+        tracksDBManager = await DBWrapper.openFromInfoSyncTry(
           fileInfo: params.tracksDbInfo,
           config: DBConfig(
             createIfNotExist: true,
             autoDisposeTimerDuration: null, // we close manually
           ),
         );
-        tracksDBManager!.loadAllKeys(libraryTracksPaths.add);
+        tracksDBManager?.loadAllKeys(libraryTracksPaths.add);
       } finally {
         tracksDBManager?.close();
       }
@@ -426,7 +426,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           }
 
           if (!fileExists) {
-            if (tracksDBManager == null) loadTracksDb();
+            if (tracksDBManager == null) await loadTracksDb();
             final maybePath = libraryTracksPaths.firstWhereEff((path) => path.endsWith(line)); // no idea, trying to get from library
             if (maybePath != null) {
               fullPath = maybePath;

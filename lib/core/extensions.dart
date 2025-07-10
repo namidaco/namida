@@ -11,6 +11,7 @@ import 'package:dart_extensions/dart_extensions.dart';
 import 'package:lrc/lrc.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -516,6 +517,22 @@ extension CloseDialogIfTrueFuture on FutureOr<bool> {
   void closeDialog([int count = 1]) async {
     final res = await this;
     res.executeIfTrue(() => NamidaNavigator.inst.closeDialog(count));
+  }
+}
+
+extension FutureIterabletUtils on Iterable<Future<void>> {
+  Future<void> executeAllAndSilentReportErrors() async {
+    await Future.wait(this.map((e) => e.catchError(logger.report)));
+  }
+}
+
+extension FutureIterableNullUtils on Iterable<Future<void>?> {
+  Future<void> executeAllAndSilentReportErrors() async {
+    final newList = <Future<dynamic>>[];
+    for (final f in this) {
+      if (f != null) newList.add(f.catchError(logger.report));
+    }
+    await Future.wait(newList);
   }
 }
 

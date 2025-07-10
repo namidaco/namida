@@ -2,13 +2,13 @@ part of 'home_widgets.dart';
 
 class _HomeWidgetsMobile extends HomeWidgets {
   @override
-  FutureOr<bool?> init() {
+  Future<bool?> init() {
     if (Platform.isIOS) {
       try {
         return HomeWidget.setAppGroupId('NAMIDA_ID');
       } on MissingPluginException catch (_) {}
     }
-    return null;
+    return Future.value(null);
   }
 
   @override

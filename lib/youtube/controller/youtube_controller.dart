@@ -135,7 +135,7 @@ class YoutubeController {
 
     // ignore: invalid_use_of_protected_member
     config.rename(newFilename);
-    final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(groupName.groupName);
+    final downloadTasksGroupDB = await _downloadTasksMainDBManager.getDB(groupName.groupName);
     await downloadTasksGroupDB.put(config.filename.key, config.toJson());
 
     final directory = Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
@@ -493,7 +493,7 @@ class YoutubeController {
     bool keepInListIfRemoved = false,
     bool allInGroupName = false,
   }) async {
-    final downloadTasksGroupDB = _downloadTasksMainDBManager.getDB(
+    final downloadTasksGroupDB = await _downloadTasksMainDBManager.getDB(
       groupName.groupName,
       config: const DBConfig(createIfNotExist: true),
     );
@@ -1497,7 +1497,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
 }
 
 class _IsolateFunctions {
-  static _DownloadTaskInitWrapper loadDownloadTasksInfoFileSync(_DownloadTasksLoadParams params) {
+  static Future<_DownloadTaskInitWrapper> loadDownloadTasksInfoFileSync(_DownloadTasksLoadParams params) async {
     NamicoDBWrapper.initialize();
 
     late final downloadTasksMainDBManager = DBWrapperMainSync(params.tasksDatabasesPath);
@@ -1521,90 +1521,86 @@ class _IsolateFunctions {
     }
 
     // -- migrating old .json files to .db
-    oldJsonFiles.loop(
-      (file) {
-        final group = fileToGroupName(file);
+    for (final file in oldJsonFiles) {
+      final group = fileToGroupName(file);
 
-        try {
-          final res = file.readAsJsonSync(ensureExists: false) as Map<String, dynamic>?;
-          if (res != null) {
-            final downloadTasksGroupDB = downloadTasksMainDBManager.getDB(
-              group.groupName,
-              config: const DBConfig(createIfNotExist: true, autoDisposeTimerDuration: null),
-            );
-            for (final r in res.entries) {
-              downloadTasksGroupDB.put(r.key, r.value);
-            }
-            final downloadTasksGroupDBFile = downloadTasksGroupDB.fileInfo.file;
-            final dbWasJustCreated = newDBFiles.firstWhereEff((f) => f.path == downloadTasksGroupDBFile.path) == null;
-            if (dbWasJustCreated) newDBFiles.add(downloadTasksGroupDBFile);
-            try {
-              final originalFileDates = file.statSync();
-              downloadTasksGroupDBFile.setLastModifiedSync(originalFileDates.modified);
-              downloadTasksGroupDBFile.setLastAccessedSync(originalFileDates.accessed);
-            } catch (_) {}
+      try {
+        final res = file.readAsJsonSync(ensureExists: false) as Map<String, dynamic>?;
+        if (res != null) {
+          final downloadTasksGroupDB = await downloadTasksMainDBManager.getDB(
+            group.groupName,
+            config: const DBConfig(createIfNotExist: true, autoDisposeTimerDuration: null),
+          );
+          for (final r in res.entries) {
+            downloadTasksGroupDB.put(r.key, r.value);
           }
-        } catch (_) {}
+          final downloadTasksGroupDBFile = downloadTasksGroupDB.fileInfo.file;
+          final dbWasJustCreated = newDBFiles.firstWhereEff((f) => f.path == downloadTasksGroupDBFile.path) == null;
+          if (dbWasJustCreated) newDBFiles.add(downloadTasksGroupDBFile);
+          try {
+            final originalFileDates = file.statSync();
+            downloadTasksGroupDBFile.setLastModifiedSync(originalFileDates.modified);
+            downloadTasksGroupDBFile.setLastAccessedSync(originalFileDates.accessed);
+          } catch (_) {}
+        }
+      } catch (_) {}
 
-        try {
-          file.deleteSync();
-        } catch (_) {}
-      },
-    );
+      try {
+        file.deleteSync();
+      } catch (_) {}
+    }
 
     bool hadEmptyGroups = false;
     final dbsThatHadError = <DownloadTaskGroupName, bool>{};
 
-    newDBFiles.loop(
-      (dbFile) {
-        final group = fileToGroupName(dbFile);
+    for (final dbFile in newDBFiles) {
+      final group = fileToGroupName(dbFile);
 
-        if (youtubeDownloadTasksMap[group] == null) {
-          final fileModified = dbFile.statSync().modified;
-          youtubeDownloadTasksMap[group] = {};
-          downloadedFilesMap[group] = {};
-          if (fileModified != DateTime(1970)) {
-            latestEditedGroupDownloadTask[group] ??= fileModified.millisecondsSinceEpoch;
-          }
+      if (youtubeDownloadTasksMap[group] == null) {
+        final fileModified = dbFile.statSync().modified;
+        youtubeDownloadTasksMap[group] = {};
+        downloadedFilesMap[group] = {};
+        if (fileModified != DateTime(1970)) {
+          latestEditedGroupDownloadTask[group] ??= fileModified.millisecondsSinceEpoch;
         }
+      }
 
-        try {
-          final downloadTasksGroupDB = downloadTasksMainDBManager.getDB(group.groupName, config: const DBConfig(autoDisposeTimerDuration: null));
-          downloadTasksGroupDB.loadEverything((itemMap) {
-            final ytitem = YoutubeItemDownloadConfig.fromJson(itemMap);
-            final saveDirPath = FileParts.joinPath(params.downloadLocation, group.groupName);
-            final file = FileParts.join(saveDirPath, ytitem.filename.filename);
-            final fileExists = file.existsSync();
-            final itemFileName = ytitem.filename;
-            youtubeDownloadTasksMap[group]![itemFileName] = ytitem;
-            downloadedFilesMap[group]![itemFileName] = fileExists ? file : null;
-            if (!fileExists) {
-              final aFile = FileParts.join(saveDirPath, ".tempa_${itemFileName.filename}");
-              final vFile = FileParts.join(saveDirPath, ".tempv_${itemFileName.filename}");
-              if (aFile.existsSync()) {
-                downloadsAudioProgressMap[ytitem.id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
-                downloadsAudioProgressMap[ytitem.id]!.value[itemFileName] = DownloadProgress(
-                  progress: aFile.fileSizeSync() ?? 0,
-                  totalProgress: 0,
-                );
-              }
-              if (vFile.existsSync()) {
-                downloadsVideoProgressMap[ytitem.id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
-                downloadsVideoProgressMap[ytitem.id]!.value[itemFileName] = DownloadProgress(
-                  progress: vFile.fileSizeSync() ?? 0,
-                  totalProgress: 0,
-                );
-              }
+      try {
+        final downloadTasksGroupDB = await downloadTasksMainDBManager.getDB(group.groupName, config: const DBConfig(autoDisposeTimerDuration: null));
+        downloadTasksGroupDB.loadEverything((itemMap) {
+          final ytitem = YoutubeItemDownloadConfig.fromJson(itemMap);
+          final saveDirPath = FileParts.joinPath(params.downloadLocation, group.groupName);
+          final file = FileParts.join(saveDirPath, ytitem.filename.filename);
+          final fileExists = file.existsSync();
+          final itemFileName = ytitem.filename;
+          youtubeDownloadTasksMap[group]![itemFileName] = ytitem;
+          downloadedFilesMap[group]![itemFileName] = fileExists ? file : null;
+          if (!fileExists) {
+            final aFile = FileParts.join(saveDirPath, ".tempa_${itemFileName.filename}");
+            final vFile = FileParts.join(saveDirPath, ".tempv_${itemFileName.filename}");
+            if (aFile.existsSync()) {
+              downloadsAudioProgressMap[ytitem.id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
+              downloadsAudioProgressMap[ytitem.id]!.value[itemFileName] = DownloadProgress(
+                progress: aFile.fileSizeSync() ?? 0,
+                totalProgress: 0,
+              );
             }
-          });
-        } catch (_) {
-          dbsThatHadError[group] = true;
-        }
-        if (!hadEmptyGroups && (youtubeDownloadTasksMap[group]?.isEmpty ?? true)) {
-          hadEmptyGroups = true;
-        }
-      },
-    );
+            if (vFile.existsSync()) {
+              downloadsVideoProgressMap[ytitem.id] ??= <DownloadTaskFilename, DownloadProgress>{}.obs;
+              downloadsVideoProgressMap[ytitem.id]!.value[itemFileName] = DownloadProgress(
+                progress: vFile.fileSizeSync() ?? 0,
+                totalProgress: 0,
+              );
+            }
+          }
+        });
+      } catch (_) {
+        dbsThatHadError[group] = true;
+      }
+      if (!hadEmptyGroups && (youtubeDownloadTasksMap[group]?.isEmpty ?? true)) {
+        hadEmptyGroups = true;
+      }
+    }
 
     // we loop again to give a chance for duplicated groups, if any.
     if (hadEmptyGroups) {

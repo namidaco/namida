@@ -1543,12 +1543,12 @@ extension _OrderedInsert<T> on List<T> {
 
 class _IndexerIsolateExecuter {
   /// reading stats db containing track rating etc.
-  static Map<Track, TrackStats> _readTrackStatsDataSync(List paramsList) {
+  static Future<Map<Track, TrackStats>> _readTrackStatsDataSync(List paramsList) async {
     final statsDbInfo = paramsList[0] as DbWrapperFileInfo;
     final oldJsonFilePath = paramsList[1] as String;
 
     NamicoDBWrapper.initialize();
-    late final statsDBManager = DBWrapper.openFromInfoSync(
+    final statsDBManager = await DBWrapper.openFromInfoSyncTry(
       fileInfo: statsDbInfo,
       config: const DBConfig(
         createIfNotExist: true,
@@ -1559,7 +1559,7 @@ class _IndexerIsolateExecuter {
     final trackStatsMap = <Track, TrackStats>{};
 
     try {
-      statsDBManager.loadEverythingKeyed(
+      statsDBManager?.loadEverythingKeyed(
         (key, value) {
           final track = Track.fromJson(key, isVideo: value['v'] == true);
           final stats = TrackStats.fromJsonWithoutTrack(track, value);
@@ -1580,7 +1580,7 @@ class _IndexerIsolateExecuter {
                 final jsonDetails = trst.toJsonWithoutTrack();
                 if (jsonDetails != null) {
                   trackStatsMap[trst.track] = trst;
-                  statsDBManager.put(trst.track.path, trst.toJsonWithoutTrack());
+                  statsDBManager?.put(trst.track.path, trst.toJsonWithoutTrack());
                 }
               }
             } catch (_) {}
@@ -1589,12 +1589,12 @@ class _IndexerIsolateExecuter {
         statsJsonFile.deleteSync();
       }
     } catch (_) {}
-    statsDBManager.close();
+    statsDBManager?.close();
     return trackStatsMap;
   }
 
   /// Reading actual tracks db.
-  static LibraryGroup<Track> _readTracksDataSync(List paramsList) {
+  static Future<LibraryGroup<Track>> _readTracksDataSync(List paramsList) async {
     final tracksDbInfo = paramsList[0] as DbWrapperFileInfo;
     final oldJsonFilePath = paramsList[1] as String;
     final splitconfig = paramsList[2] as SplitArtistGenreConfigsWrapper;
@@ -1604,20 +1604,19 @@ class _IndexerIsolateExecuter {
     final tracksInitPort = paramsList[6] as SendPort;
 
     NamicoDBWrapper.initialize();
-    late final tracksDBManager = DBWrapper.openFromInfoSync(
+    final tracksDBManager = await DBWrapper.openFromInfoSyncTry(
       fileInfo: tracksDbInfo,
       config: DBConfig(
         createIfNotExist: true,
         autoDisposeTimerDuration: null, // we close manually
       ),
     );
-
     final allTracksMappedByPath = <String, TrackExtended>{};
     final tracksInfoList = <Track>[];
     var allTracksMappedByYTID = <String, List<Track>>{};
 
     try {
-      tracksDBManager.loadEverythingKeyed(
+      tracksDBManager!.loadEverythingKeyed(
         (path, item) {
           final trExt = TrackExtended.fromJson(
             path,
@@ -1659,7 +1658,7 @@ class _IndexerIsolateExecuter {
         tracksJsonFile.deleteSync();
       }
     } catch (_) {}
-    tracksDBManager.close();
+    tracksDBManager?.close();
 
     tracksInitPort.send(
       _TracksLoadResult(
