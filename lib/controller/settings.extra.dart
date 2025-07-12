@@ -50,8 +50,9 @@ class _ExtraSettings with SettingsFileWriter {
 
       lastPlayedIndex = json['lastPlayedIndex'] ?? lastPlayedIndex;
       ytAddToPlaylistsTabIndex = json['ytAddToPlaylistsTabIndex'] ?? ytAddToPlaylistsTabIndex;
-    } catch (e) {
+    } catch (e, st) {
       printy(e, isError: true);
+      logger.report(e, st);
     }
   }
 

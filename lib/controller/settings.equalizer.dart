@@ -51,8 +51,9 @@ class EqualizerSettings with SettingsFileWriter {
       loudnessEnhancerEnabled = json["loudnessEnhancerEnabled"] ?? loudnessEnhancerEnabled;
       loudnessEnhancer = json["loudnessEnhancer"] ?? loudnessEnhancer;
       uiTapToUpdate.value = json["uiTapToUpdate"] ?? uiTapToUpdate.value;
-    } catch (e) {
+    } catch (e, st) {
       printy(e, isError: true);
+      logger.report(e, st);
     }
   }
 

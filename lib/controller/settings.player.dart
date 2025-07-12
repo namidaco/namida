@@ -167,8 +167,9 @@ class _PlayerSettings with SettingsFileWriter {
             InterruptionAction.doNothing,
           ) ??
           onInterrupted.map((key, value) => MapEntry(key, value));
-    } catch (e) {
+    } catch (e, st) {
       printy(e, isError: true);
+      logger.report(e, st);
     }
   }
 

@@ -187,7 +187,7 @@ void _mainAppInitialization() async {
       }
     }
 
-    YoutubeInfoController.initialize(ytInfoInitSyncItemsCompleter);
+    YoutubeInfoController.initialize(ytInfoInitSyncItemsCompleter).catchError(logger.report);
 
     if (InternalPlayerType.platformDefault.shouldInitializeMPV) {
       mk.MediaKit.ensureInitialized.ignoreError();

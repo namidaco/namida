@@ -172,8 +172,9 @@ class _YoutubeSettings with SettingsFileWriter {
       whiteVideoBGInLightMode = json['whiteVideoBGInLightMode'] ?? whiteVideoBGInLightMode;
       enableDimInLightMode = json['enableDimInLightMode'] ?? enableDimInLightMode;
       allowExperimentalCodecs = json['allowExperimentalCodecs'] ?? allowExperimentalCodecs;
-    } catch (e) {
+    } catch (e, st) {
       printy(e, isError: true);
+      logger.report(e, st);
     }
   }
 

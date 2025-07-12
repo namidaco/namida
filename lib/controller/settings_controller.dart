@@ -10,6 +10,7 @@ import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue_insertion.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -619,8 +620,9 @@ class _SettingsController with SettingsFileWriter {
       }
 
       canAskForBatteryOptimizations = json['canAskForBatteryOptimizations'] ?? canAskForBatteryOptimizations;
-    } catch (e) {
+    } catch (e, st) {
       printy(e, isError: true);
+      logger.report(e, st);
     }
   }
 

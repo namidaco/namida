@@ -25,10 +25,10 @@ import 'package:youtipie/class/videos/video_result.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/http.dart';
 import 'package:youtipie/youtipie.dart' hide logger;
-import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -79,17 +79,22 @@ class YoutubeInfoController {
       return;
     }
     YoutiPie.setLogs(_YTReportingLog());
-    final accountCompleter = Completer<void>();
-    YoutiPie.initialize(
-      dataDirectory: AppDirs.YOUTIPIE_CACHE,
-      sensitiveDataDirectory: AppDirs.YOUTIPIE_DATA,
-      checkJSPlayer: false, // we properly check for jsplayer with each streams request if needed,
-      checkHasConnectionCallback: () => ConnectivityController.inst.hasConnection,
-      syncItemsCompleter: syncItemsCompleter,
-      accountCompleter: accountCompleter,
-    );
-    await accountCompleter.future;
-    history.init(AppDirs.YOUTIPIE_CACHE);
+    try {
+      final accountCompleter = Completer<void>();
+      YoutiPie.initialize(
+        dataDirectory: AppDirs.YOUTIPIE_CACHE,
+        sensitiveDataDirectory: AppDirs.YOUTIPIE_DATA,
+        checkJSPlayer: false, // we properly check for jsplayer with each streams request if needed,
+        checkHasConnectionCallback: () => ConnectivityController.inst.hasConnection,
+        syncItemsCompleter: syncItemsCompleter,
+        accountCompleter: accountCompleter,
+      );
+      await accountCompleter.future;
+      history.init(AppDirs.YOUTIPIE_CACHE);
+    } catch (e, st) {
+      syncItemsCompleter.completeErrorIfWasnt(e, st);
+      logger.error('YoutiPie.initialize', e: e, st: st);
+    }
 
     YoutubeAccountController.current.addOnAccountChanged(() {
       current.resetAll();

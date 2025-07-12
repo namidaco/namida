@@ -21,8 +21,9 @@ class _TutorialSettings with SettingsFileWriter {
 
     try {
       lyricsLongPressFullScreen = json['llpfs'] ?? lyricsLongPressFullScreen;
-    } catch (e) {
+    } catch (e, st) {
       printy(e, isError: true);
+      logger.report(e, st);
     }
   }
 
