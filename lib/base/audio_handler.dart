@@ -493,6 +493,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   Future<void> onItemPlay(Q item, int index, Function skipItem) async {
     _currentItemDuration.value = null;
+    currentState.value = ProcessingState.loading;
     if (settings.enablePartyModeColorSwap.value) CurrentColor.inst.switchColorPalettes(item: item);
     await _fnLimiter.executeFuture(
       () async {
