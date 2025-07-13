@@ -717,7 +717,7 @@ class EqualizerControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const incremental = 0.005;
+    const incremental = 0.01;
     return StreamBuilder<AndroidEqualizerParameters>(
       stream: equalizer.parametersStream,
       builder: (context, snapshot) {
@@ -767,7 +767,7 @@ class EqualizerControls extends StatelessWidget {
                                     const SizedBox(height: 8.0),
                                     FittedBox(
                                       child: Text(
-                                        "${band.gain > 0 ? '+' : ''}${(band.gain * 20).toStringAsFixed(2)}",
+                                        "${band.gain > 0 ? '+' : ''}${(band.gain).toStringAsFixed(2)}",
                                         style: context.textTheme.displayMedium,
                                       ),
                                     ),
