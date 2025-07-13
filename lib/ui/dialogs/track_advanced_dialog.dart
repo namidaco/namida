@@ -348,7 +348,10 @@ void showTrackAdvancedDialog({
                         await CurrentColor.inst.reExtractTrackColorPalette(
                           track: track,
                           imagePath: null,
-                          newNC: NamidaColor(used: color, mix: _mixColor(palette), palette: palette),
+                          newNC: NamidaColor.create(
+                            used: color,
+                            palette: palette,
+                          ),
                         );
                       }
                     },
@@ -373,8 +376,6 @@ void showTrackAdvancedDialog({
   );
 }
 
-Color _mixColor(List<Color> colors) => CurrentColor.mixIntColors(colors);
-
 void _showTrackColorPaletteDialog({
   required Color colorScheme,
   required NamidaColor? trackColor,
@@ -385,6 +386,17 @@ void _showTrackColorPaletteDialog({
   final selectedColors = <Color>[].obs;
   final removedColors = <Color>[].obs;
   final didChangeOriginalPalette = false.obs;
+
+  final defaultMixes = trackColor == null
+      ? null
+      : [
+          trackColor.palette,
+          trackColor.palette.takeFew(),
+          trackColor.palette.getRandomSample(10),
+          trackColor.palette.getRandomSample(10),
+          trackColor.palette.getRandomSample(10),
+          trackColor.palette.getRandomSample(10),
+        ];
 
   void showAddNewColorPaletteDialog() {
     Color? color;
@@ -418,12 +430,22 @@ void _showTrackColorPaletteDialog({
         child: child,
       );
 
-  Widget mixWidget({required String title, required List<Color> colors}) {
-    final mix = _mixColor(colors);
+  Widget mixWidget({
+    required String title,
+    required List<Iterable<Color>> allMixes,
+  }) {
     return Row(
       children: [
         getText('$title  '),
-        TapDetector(onTap: () => finalColorToBeUsed.value = mix, child: getColorWidget(mix)),
+        ...allMixes.map(
+          (colors) {
+            final mixExtra = NamidaColor.mixIntColors(colors);
+            return TapDetector(
+              onTap: () => finalColorToBeUsed.value = mixExtra,
+              child: getColorWidget(mixExtra),
+            );
+          },
+        ).addSeparators(separator: const SizedBox(width: 4.0)),
       ],
     );
   }
@@ -586,20 +608,20 @@ void _showTrackColorPaletteDialog({
                 spacing: 12.0,
                 runSpacing: 6.0,
                 children: [
-                  if (trackColor != null)
+                  if (defaultMixes != null)
                     mixWidget(
                       title: lang.PALETTE_MIX,
-                      colors: trackColor.palette,
+                      allMixes: defaultMixes,
                     ),
                   if (didChangeOriginalPalette.valueR)
                     mixWidget(
                       title: lang.PALETTE_NEW_MIX,
-                      colors: allPaletteColor.valueR,
+                      allMixes: [allPaletteColor.valueR],
                     ),
                   if (selectedColors.isNotEmpty)
                     mixWidget(
                       title: lang.PALETTE_SELECTED_MIX,
-                      colors: selectedColors.valueR,
+                      allMixes: [selectedColors.valueR],
                     ),
                 ],
               ),

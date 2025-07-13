@@ -221,7 +221,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         useIsolate: true,
         paletteSaveDirectory: Directory(AppDirs.YT_PALETTES),
       );
-      imageColors = c ?? NamidaColor(used: null, mix: playerStaticColor, palette: [playerStaticColor]);
+      imageColors = c ?? NamidaColor.single(playerStaticColor);
       widget.onColorReady?.call(c);
       if (mounted) setState(() => smallBoxDynamicColor = c?.color);
     }

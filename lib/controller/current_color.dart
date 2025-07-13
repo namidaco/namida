@@ -47,11 +47,7 @@ class CurrentColor {
 
   final _namidaColor = Rxn<NamidaColor>();
 
-  NamidaColor get _defaultNamidaColor => NamidaColor(
-        used: playerStaticColor,
-        mix: playerStaticColor,
-        palette: [playerStaticColor],
-      );
+  NamidaColor get _defaultNamidaColor => NamidaColor.single(playerStaticColor);
 
   final _colorSchemeOfSubPages = Rxn<Color>();
 
@@ -114,29 +110,21 @@ class CurrentColor {
   void updateColorAfterThemeModeChange() {
     if (settings.autoColor.value) {
       final nc = _namidaColor.value ?? _defaultNamidaColor;
-      _namidaColor.set(NamidaColor(
-        used: nc.color.withAlpha(colorAlpha),
-        mix: nc.mix,
+      _namidaColor.value = NamidaColor(
+        used: nc.used?.withAlpha(colorAlpha),
+        // mix: nc.mix,
+        mix2: nc.mix2,
         palette: nc.palette,
-      ));
+      );
     } else {
       final nc = playerStaticColor.lighter;
-      _namidaColor.set(NamidaColor(
-        used: nc,
-        mix: nc,
-        palette: [nc],
-      ));
+      _namidaColor.value = NamidaColor.single(nc);
     }
-    _namidaColor.refresh();
   }
 
   void updatePlayerColorFromColor(Color color, [bool customAlpha = true]) async {
     final colorWithAlpha = customAlpha ? color.withAlpha(colorAlpha) : color;
-    _namidaColor.value = NamidaColor(
-      used: colorWithAlpha,
-      mix: colorWithAlpha,
-      palette: [colorWithAlpha],
-    );
+    _namidaColor.value = NamidaColor.single(colorWithAlpha);
   }
 
   Future<void> refreshColorsAfterResumeApp() async {
@@ -168,11 +156,7 @@ class CurrentColor {
     final accentColor = await _getDeviceWallpaperColorAccent(forceCheck: forceCheck);
     if (accentColor != null) {
       final colorWithAlpha = customAlpha ? accentColor.withAlpha(colorAlpha) : accentColor;
-      return NamidaColor(
-        used: colorWithAlpha,
-        mix: colorWithAlpha,
-        palette: [colorWithAlpha],
-      );
+      return NamidaColor.single(colorWithAlpha);
     }
     return null;
   }
@@ -265,16 +249,13 @@ class CurrentColor {
     if (nc == null || _checkDummyColor(nc)) {
       // the value is null or dummy color, fetching with current [playerStaticColor].
       final c = fallbackToPlayerStaticColor ? playerStaticColor : currentColorScheme;
-      return NamidaColor(
-        used: c.lighter,
-        mix: c.lighter,
-        palette: [c.lighter],
-      );
+      return NamidaColor.single(c.lighter);
     } else {
       // the value is a normal color
       return NamidaColor(
         used: delightnedAndAlpha ? nc.used?.withAlpha(colorAlpha).delightned : nc.used,
-        mix: delightnedAndAlpha ? nc.mix.withAlpha(colorAlpha).delightned : nc.mix,
+        // mix: delightnedAndAlpha ? nc.mix.withAlpha(colorAlpha).delightned : nc.mix,
+        mix2: delightnedAndAlpha ? nc.mix2.withAlpha(colorAlpha).delightned : nc.mix2,
         palette: nc.palette,
       );
     }
@@ -355,26 +336,6 @@ class CurrentColor {
     _colorSchemeOfSubPages.value = colorWithAlpha;
   }
 
-  static Color mixIntColors(List<Color> colors) {
-    if (colors.isEmpty) return Colors.transparent;
-    int red = 0;
-    int green = 0;
-    int blue = 0;
-
-    for (int i = 0; i < colors.length; i++) {
-      var colorvalue = colors[i].intValue;
-      red += (colorvalue >> 16) & 0xFF;
-      green += (colorvalue >> 8) & 0xFF;
-      blue += colorvalue & 0xFF;
-    }
-
-    red ~/= colors.length;
-    green ~/= colors.length;
-    blue ~/= colors.length;
-
-    return Color.fromARGB(255, red, green, blue);
-  }
-
   Future<NamidaColor?> extractPaletteFromImage(
     String imagePath, {
     Track? track,
@@ -411,7 +372,7 @@ class CurrentColor {
     try {
       pcolors.addAll(await _colorGenerationTasks.add(() async => await _extractPaletteGenerator(imagePath, useIsolate: useIsolate)));
     } catch (_) {}
-    final nc = NamidaColor(used: null, mix: mixIntColors(pcolors), palette: pcolors.toList());
+    final nc = NamidaColor.create(palette: pcolors);
     await paletteFile.writeAsJson(nc.toJson()); // writing the file bothways, to prevent reduntant re-extraction.
     // Indexer.inst.updateColorPalettesSizeInStorage(newPalettePath: paletteFile.path);
     _printie("Color Extracted From Image (${pcolors.length})");
