@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
-import 'package:jiffy/jiffy.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:youtipie/class/channels/channel_about_link.dart';
@@ -34,6 +33,7 @@ import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';

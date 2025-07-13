@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:jiffy/jiffy.dart';
+import 'package:intl/intl.dart';
 import 'package:paged_vertical_calendar/paged_vertical_calendar.dart';
 
 import 'package:namida/class/track.dart';
@@ -10,6 +10,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -132,8 +133,8 @@ void showListensDialog({
                               final monthListens = datesMapByMonth[monthDate]?.length ?? 0;
                               final monthListensText = monthListens > 0 ? ' ($monthListens)' : '';
                               final dots = (monthListens / 5).ceil();
-                              final monthsDateJiffy = Jiffy.parseFromDateTime(monthDate);
-                              final monthsAgo = monthsDateJiffy.fromNow();
+                              final monthsDateFormatted = DateFormat('MMMM yyyy').format(monthDate);
+                              final monthsAgo = TimeAgoController.dateFromNow(monthDate);
                               return Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Column(
@@ -156,7 +157,7 @@ void showListensDialog({
                                       ),
                                     ),
                                     Text(
-                                      monthsDateJiffy.format(pattern: 'MMMM yyyy'),
+                                      monthsDateFormatted,
                                       style: theme.textTheme.titleLarge,
                                     ),
                                     Text(
@@ -199,7 +200,7 @@ void showListensDialog({
                             key: ValueKey(i),
                             borderRadius: 14.0,
                             title: t.dateAndClockFormattedOriginal,
-                            subtitle: Jiffy.parseFromMillisecondsSinceEpoch(t).fromNow(),
+                            subtitle: TimeAgoController.dateMSSEFromNow(t),
                             leading: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
                               decoration: BoxDecoration(

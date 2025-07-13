@@ -16,7 +16,6 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:history_manager/history_manager.dart';
-import 'package:jiffy/jiffy.dart';
 import 'package:like_button/like_button.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
@@ -34,6 +33,7 @@ import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.d
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/version_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -5516,7 +5516,7 @@ class NamidaUpdateButton extends StatelessWidget {
       String buildDateText = '';
       final buildDate = version?.buildDate;
       if (buildDate != null) {
-        buildDateText = ' (${Jiffy.parseFromDateTime(buildDate).fromNow(withPrefixAndSuffix: true)})';
+        buildDateText = ' (${TimeAgoController.dateFromNow(buildDate, long: true)})';
       }
       return buildDateText;
     }

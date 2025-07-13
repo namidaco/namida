@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:jiffy/jiffy.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:photo_view/photo_view.dart';
 
@@ -17,6 +16,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -144,8 +144,7 @@ Future<void> showTrackInfoDialog(
   String releasedFromNow = '';
   final parsed = trackExt == null ? null : DateTime.tryParse(trackExt.year.toString());
   if (parsed != null) {
-    final fromNow = Jiffy.parseFromDateTime(parsed);
-    releasedFromNow = fromNow.fromNow();
+    releasedFromNow = TimeAgoController.dateFromNow(parsed);
   }
 
   final trackPathDetailTilesSection = <TrackInfoListTile>[

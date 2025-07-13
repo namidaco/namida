@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 5.2.71-beta+250712119
+version: 5.2.72-beta+250713190
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
@@ -59,7 +59,9 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/flutter_sharing_intent
   queue: ^3.1.0+2
-  jiffy: ^6.2.1
+  jiffy: 
+    git:
+      url: https://github.com/MSOB7YY/jiffy
   playlist_manager:
     git:
       url: https://github.com/namidaco/playlist_manager

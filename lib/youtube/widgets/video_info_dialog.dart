@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:jiffy/jiffy.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
@@ -15,6 +14,7 @@ import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -236,7 +236,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
     final descriptionWidget = description == null || description.isEmpty ? null : NamidaSelectableAutoLinkText(text: description);
 
     final dateText = dateMS?.dateAndClockFormattedOriginal;
-    final dateAgo = dateMS == null ? '' : "\n(${Jiffy.parseFromMillisecondsSinceEpoch(dateMS!).fromNow()})";
+    final dateAgo = dateMS == null ? '' : "\n(${TimeAgoController.dateMSSEFromNow(dateMS!)})";
 
     final theme = AppThemes.inst.getAppTheme(_themeColor);
     final headerIconColor = theme.colorScheme.primary;

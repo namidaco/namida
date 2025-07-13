@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:jiffy/jiffy.dart';
 import 'package:youtipie/class/comments/comment_info_item.dart';
 import 'package:youtipie/class/comments/comment_info_item_base.dart';
 import 'package:youtipie/class/result_wrapper/comment_reply_result.dart';
@@ -12,6 +11,7 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -220,7 +220,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
     final isArtist = comment?.author?.isArtist ?? false;
 
     final uploadedFromDate = comment?.publishedAt.date;
-    String? uploadedFromText = uploadedFromDate == null ? null : Jiffy.parseFromDateTime(uploadedFromDate).fromNow();
+    String? uploadedFromText = uploadedFromDate == null ? null : TimeAgoController.dateFromNow(uploadedFromDate);
     uploadedFromText ??= comment?.publishedTimeText;
 
     final commentContent = comment?.content;
@@ -532,7 +532,7 @@ class YTCommentCardCompact extends StatelessWidget {
     final author = comment?.author?.displayName;
 
     final uploadedFromDate = comment?.publishedAt.date;
-    String? uploadedFromText = uploadedFromDate == null ? null : Jiffy.parseFromDateTime(uploadedFromDate).fromNow();
+    String? uploadedFromText = uploadedFromDate == null ? null : TimeAgoController.dateFromNow(uploadedFromDate);
     uploadedFromText ??= comment?.publishedTimeText;
 
     final commentTextParsed = comment?.content.rawText;

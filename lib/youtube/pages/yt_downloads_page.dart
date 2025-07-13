@@ -2,10 +2,9 @@
 
 import 'package:flutter/material.dart';
 
-import 'package:jiffy/jiffy.dart';
-
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -332,7 +331,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                   (groupName, index) {
                                     final list = YoutubeController.inst.youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
                                     final lastEditedMSSE = YoutubeController.inst.latestEditedGroupDownloadTask[groupName] ?? 0;
-                                    final lastEditedAgo = lastEditedMSSE == 0 ? null : Jiffy.parseFromMillisecondsSinceEpoch(lastEditedMSSE).fromNow();
+                                    final lastEditedAgo = lastEditedMSSE == 0 ? null : TimeAgoController.dateMSSEFromNow(lastEditedMSSE);
 
                                     final headerWidget = LayoutWidthProvider(
                                       builder: (context, maxWidth) => NamidaInkWell(

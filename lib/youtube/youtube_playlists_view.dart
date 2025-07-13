@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:jiffy/jiffy.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
@@ -10,6 +9,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -347,7 +347,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                     title: favouritesPlaylist.value.name.translatePlaylistName(),
                     subtitle: favouritesPlaylist.value.creationDate.dateFormattedOriginal,
                     displaythirdLineText: true,
-                    thirdLineText: Jiffy.parseFromMillisecondsSinceEpoch(favouritesPlaylist.value.modifiedDate).fromNow(),
+                    thirdLineText: TimeAgoController.dateMSSEFromNow(favouritesPlaylist.value.modifiedDate),
                     displayChannelThumbnail: false,
                     channelThumbnailUrl: '',
                     thumbnailHeight: playlistThumbnailHeight,
@@ -400,7 +400,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                       title: playlist.name,
                       subtitle: playlist.creationDate.dateFormattedOriginal,
                       displaythirdLineText: true,
-                      thirdLineText: Jiffy.parseFromMillisecondsSinceEpoch(playlist.modifiedDate).fromNow(),
+                      thirdLineText: TimeAgoController.dateMSSEFromNow(playlist.modifiedDate),
                       displayChannelThumbnail: false,
                       channelThumbnailUrl: '',
                       thumbnailHeight: playlistThumbnailHeight,

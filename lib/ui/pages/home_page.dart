@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:history_manager/history_manager.dart';
-import 'package:jiffy/jiffy.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/base/pull_to_refresh.dart';
@@ -18,6 +17,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -440,9 +440,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                   onTap: NamidaOnTaps.inst.onHistoryPlaylistTap,
                                   topRightText: (track) {
                                     if (track?.trackWithDate == null) return null;
-                                    return Jiffy.parseFromMillisecondsSinceEpoch(track!.trackWithDate!.dateAdded).fromNow(
-                                      withPrefixAndSuffix: false,
-                                    );
+                                    return TimeAgoController.dateMSSEFromNow(track!.trackWithDate!.dateAdded, long: false);
                                   },
                                 );
 
@@ -536,7 +534,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                   topRightText: (track) {
                                     if (track == null) return null;
                                     final creationDate = track.track.dateAdded;
-                                    if (creationDate > _lowestDateMSSEToDisplay) return Jiffy.parseFromMillisecondsSinceEpoch(creationDate).fromNow(withPrefixAndSuffix: false);
+                                    if (creationDate > _lowestDateMSSEToDisplay) return TimeAgoController.dateMSSEFromNow(creationDate, long: false);
                                     return null;
                                   },
                                 );
@@ -1473,7 +1471,7 @@ class RecentlyAddedTracksPage extends StatelessWidget with NamidaRouteWidget {
         thirdLineText: (track) {
           final creationDate = track.track.dateAdded;
           if (creationDate > _lowestDateMSSEToDisplay) {
-            final ago = Jiffy.parseFromMillisecondsSinceEpoch(creationDate).fromNow(withPrefixAndSuffix: true);
+            final ago = TimeAgoController.dateMSSEFromNow(creationDate, long: true);
             return "${creationDate.dateAndClockFormattedOriginal} (~$ago)";
           }
           return '';

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:jiffy/jiffy.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
@@ -15,6 +14,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -481,7 +481,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
     String? dateText;
     if (configs.displayTimeAgo) {
       final watchMS = videoWatch?.dateMSNull;
-      if (watchMS != null) dateText = widget.minimalCard ? Jiffy.parseFromMillisecondsSinceEpoch(watchMS).fromNow() : watchMS.dateAndClockFormattedOriginal;
+      if (watchMS != null) dateText = widget.minimalCard ? TimeAgoController.dateMSSEFromNow(watchMS) : watchMS.dateAndClockFormattedOriginal;
     }
 
     Widget? draggingThumbWidget;

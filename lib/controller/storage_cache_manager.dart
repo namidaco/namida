@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:checkmark/checkmark.dart';
-import 'package:jiffy/jiffy.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
 import 'package:namida/class/file_parts.dart';
@@ -14,6 +13,7 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -385,7 +385,7 @@ class StorageCacheManager {
                           String? lastPlayedTimeText;
                           if (currentSort.value == _CacheSorting.accessTime || currentSort.value == _CacheSorting.recommended) {
                             final accessTime = accessTimeMap[itemToPath(item)];
-                            if (accessTime != null) lastPlayedTimeText = Jiffy.parseFromMillisecondsSinceEpoch(accessTime).fromNow();
+                            if (accessTime != null) lastPlayedTimeText = TimeAgoController.dateMSSEFromNow(accessTime);
                           }
                           final isSelected = toDelete.contains(item);
                           return NamidaInkWell(

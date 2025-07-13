@@ -351,7 +351,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                       if (availableTill == null) {
                                         endTimeLeftText = '?';
                                       } else {
-                                        endTimeLeftText = Jiffy.parseFromDateTime(availableTill).fromNow(withPrefixAndSuffix: false);
+                                        endTimeLeftText = TimeAgoController.dateFromNow(availableTill, long: false);
                                       }
                                       return Text(
                                         " - $endTimeLeftText",

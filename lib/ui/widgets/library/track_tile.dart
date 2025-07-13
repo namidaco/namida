@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:jiffy/jiffy.dart';
-
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
@@ -11,6 +9,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -756,7 +755,7 @@ class TrackTileManager {
     TrackTileItem.latestListenDate: (track) {
       final date = HistoryController.inst.topTracksMapListens.value[track.asTrack()]?.lastOrNull;
       if (date == null) return '';
-      return Jiffy.parseFromDateTime(date.milliSecondsSinceEpoch).fromNow();
+      return TimeAgoController.dateFromNow(date.milliSecondsSinceEpoch);
     },
     TrackTileItem.firstListenDate: (track) {
       final firstListenDateMS = HistoryController.inst.topTracksMapListens.value[track.asTrack()]?.firstOrNull;

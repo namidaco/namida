@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:jiffy/jiffy.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/result_wrapper/notification_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_notification.dart';
@@ -10,6 +9,7 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -138,7 +138,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
     final thumbnailHeight = this.widget.thumbnailHeight;
 
     DateTime? publishedDate = widget.notification.publishedAt.date;
-    final uploadDateAgo = publishedDate == null ? null : Jiffy.parseFromDateTime(publishedDate).fromNow();
+    final uploadDateAgo = publishedDate == null ? null : TimeAgoController.dateFromNow(publishedDate);
 
     String firstLine;
     String secondLine;
