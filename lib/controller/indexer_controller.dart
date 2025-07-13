@@ -218,13 +218,11 @@ class Indexer<T extends Track> {
 
   Future<void> prepareTracksFile({bool startupBoost = false}) async {
     if (startupBoost) {
-      isIndexing.value = true;
       final completer = Completer<void>();
-
-      unawaited(Future<void>.microtask(() => _prepareTracksFile(completer)).whenComplete(() => isIndexing.value = false));
+      unawaited(_prepareTracksFile(completer));
       return await completer.future;
     } else {
-      return await Future<void>.microtask(_prepareTracksFile);
+      return await _prepareTracksFile();
     }
   }
 
@@ -233,13 +231,16 @@ class Indexer<T extends Track> {
 
     final tracksDBPath = AppPaths.TRACKS_DB_INFO.file.path;
     if (await File(tracksDBPath).existsAndValid((4 + 12) * 1024) || await File(AppPaths.TRACKS_OLD).existsAndValid()) {
+      isIndexing.value = true;
       // -- only block load if the track file exists..
       await _readTrackData(completer);
       await sortMediaTracksAndSubListsAfterHistoryPrepared();
       await _sortAll();
+      isIndexing.value = false;
     } else {
       // -- otherwise it get into normally and start indexing.
       await File(tracksDBPath).create();
+      completer?.completeIfWasnt();
       refreshLibraryAndCheckForDiff(forceReIndex: true, useMediaStore: _defaultUseMediaStore);
     }
   }
@@ -1182,22 +1183,24 @@ class Indexer<T extends Track> {
     }
 
     final tracksRecievePort = ReceivePort();
-    final tracksRecieveCompleter = Completer<void>();
-    completer?.complete(tracksRecieveCompleter.future);
 
-    tracksRecievePort.first.then(
-      (value) {
+    Future<void> handleRecieveTracks() async {
+      try {
+        final value = await tracksRecievePort.first;
         value as _TracksLoadResult;
         allTracksMappedByPath = value.allTracksMappedByPath;
         allTracksMappedByYTID = value.allTracksMappedByYTID as Map<String, List<T>>;
         tracksInfoList.value = value.tracksInfoList as List<T>;
         this.sortMediaTracksSubLists([MediaType.track]);
-
+        completer?.completeIfWasnt();
+      } catch (e, st) {
+        completer?.completeErrorIfWasnt(e, st);
+      } finally {
         tracksRecievePort.close();
-      },
-    ).whenComplete(tracksRecieveCompleter.complete);
+      }
+    }
 
-    await Future.wait([
+    await [
       _IndexerIsolateExecuter._readTrackStatsDataSync.thready([AppPaths.TRACKS_STATS_DB_INFO, AppPaths.TRACKS_STATS_OLD]).then(
         (res) {
           trackStatsMap.value = res;
@@ -1224,8 +1227,8 @@ class Indexer<T extends Track> {
           SearchSortController.inst.disposeResources(); // -- vip to refresh filtering
         },
       ),
-      tracksRecieveCompleter.future,
-    ]);
+      handleRecieveTracks(),
+    ].executeAllAndSilentReportErrors();
 
     printy("All Tracks Length From File: ${tracksInfoList.length}");
   }
