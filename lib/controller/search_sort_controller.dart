@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:isolate';
+import 'dart:math' as math;
 
 import 'package:intl/intl.dart';
 
@@ -128,7 +129,7 @@ class SearchSortController {
     }
   }
 
-  Comparable Function(Track e)? getTracksSortingComparables(SortType type) {
+  Comparable Function(Track e) getTracksSortingComparables(SortType type) {
     return switch (type) {
       SortType.title => (e) => e.title.toLowerCase(),
       SortType.album => (e) => e.album.toLowerCase(),
@@ -150,7 +151,7 @@ class SearchSortController {
       SortType.mostPlayed => (e) => HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0,
       SortType.latestPlayed => (e) => HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0,
       SortType.firstListen => (e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? 0,
-      SortType.shuffle => null,
+      SortType.shuffle => (e) => math.Random().nextInt(3) - 1,
     };
   }
 
@@ -159,7 +160,7 @@ class SearchSortController {
     final l = <Comparable Function(Track e)>[];
     sorts.loop((e) {
       final sorter = getTracksSortingComparables(e);
-      if (sorter != null) l.add(sorter);
+      l.add(sorter);
     });
     return l;
   }

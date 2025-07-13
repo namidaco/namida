@@ -671,10 +671,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         comparables.add(comparable);
       } else {
         final comparable = SearchSortController.inst.getTracksSortingComparables(s);
-        if (comparable != null) {
-          Comparable<dynamic> comparabletwd(TrackWithDate twd) => comparable(twd.track);
-          comparables.add(comparabletwd);
-        }
+        Comparable<dynamic> comparabletwd(TrackWithDate twd) => comparable(twd.track);
+        comparables.add(comparabletwd);
       }
     }
 
