@@ -90,6 +90,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       WakelockController.inst.updatePlayPauseStatus(ye);
       _refreshPlatformStatusDependersIsPlaying(ye);
     });
+    final smtc = SMTCController.instance;
+    if (smtc != null) {
+      void listener() => smtc.updateTimeline(currentPositionMS.value, currentItemDuration.value?.inMilliseconds);
+      currentPositionMS.addListener(listener);
+      currentItemDuration.addListener(listener);
+    }
   }
 
   Future<void> updateAudioCacheMap() async {

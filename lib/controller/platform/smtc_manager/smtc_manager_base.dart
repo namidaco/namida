@@ -17,5 +17,5 @@ abstract class NamidaSMTCManager {
   void onStop();
 
   void updateMetadata(MediaItem mediaItem);
-  void updateTimeline(PlaybackTimeline timeline);
+  void updateTimeline(int positionMS, int? durationMS);
 }

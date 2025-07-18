@@ -92,9 +92,15 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
   }
 
   @override
-  void updateTimeline(PlaybackTimeline timeline) {
+  void updateTimeline(int positionMS, int? durationMS) {
     _ensureEnabled();
-    smtc?.updateTimeline(timeline);
+    smtc?.updateTimeline(
+      PlaybackTimeline(
+        startTimeMs: 0,
+        endTimeMs: durationMS ?? 0,
+        positionMs: positionMS,
+      ),
+    );
   }
 }
 
