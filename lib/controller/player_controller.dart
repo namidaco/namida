@@ -269,7 +269,7 @@ class Player {
   }
 
   double volumeUp() {
-    final val = _audioHandler.currentVolume.value;
+    final val = settings.player.volume.value;
     final newVal = (val + 0.05).withMaximum(1.0);
     setPlayerVolume(newVal);
     settings.player.save(volume: newVal);
@@ -277,7 +277,7 @@ class Player {
   }
 
   double volumeDown() {
-    final val = _audioHandler.currentVolume.value;
+    final val = settings.player.volume.value;
     final newVal = (val - 0.05).withMinimum(0.0);
     setPlayerVolume(newVal);
     settings.player.save(volume: newVal);
