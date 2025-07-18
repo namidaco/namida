@@ -393,6 +393,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
     final pathSep = Platform.pathSeparator;
     late final albumartUrlRegex = RegExp(r'(?<=#EXTALBUMARTURL:\s*).+');
+    final pathSepRegex = RegExp(r'[\\/]');
 
     final all = <String, (String, String?, List<Track>)>{};
     final infoMap = <String, String?>{};
@@ -418,24 +419,35 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           String fullPath = line; // maybe is absolute path
           bool fileExists = false;
 
+          fullPath = fullPath.replaceAll(pathSepRegex, pathSep);
+
           if (pathExists(fullPath)) fileExists = true;
 
           if (!fileExists) {
-            fullPath = p.relative(p.join(fileParentDirectory, p.normalize(line))); // maybe was relative
+            fullPath = p.relative(p.join(fileParentDirectory, p.normalize(fullPath))); // maybe was relative
             if (pathExists(fullPath)) fileExists = true;
           }
 
           if (!fileExists) {
             if (tracksDBManager == null) await loadTracksDb();
-            final maybePath = libraryTracksPaths.firstWhereEff((path) => path.endsWith(line)); // no idea, trying to get from library
+            final maybePath = libraryTracksPaths.firstWhereEff((path) => path.endsWith(fullPath)); // no idea, trying to get from library
             if (maybePath != null) {
               fullPath = maybePath;
               // if (pathExists(fullPath)) fileExists = true; // no further checks
             }
           }
-          final fullPathFinal = fullPath.startsWith(pathSep) ? fullPath : '$pathSep$fullPath';
-          fullTracks.add(Track.orVideo(fullPathFinal));
-          infoMap[fullPathFinal] = latestInfo;
+          if (Platform.isWindows) {
+            if (fullPath.startsWith(pathSep)) {
+              fullPath = fullPath.substring(1);
+            }
+          } else {
+            if (!fullPath.startsWith(pathSep)) {
+              fullPath = '$pathSep$fullPath';
+            }
+          }
+          fullTracks.add(Track.orVideo(fullPath));
+          infoMap[fullPath] = latestInfo;
+          latestInfo = null; // resetting info between each line loop
         }
       }
       if (all[filename] == null) {
