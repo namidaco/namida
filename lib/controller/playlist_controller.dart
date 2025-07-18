@@ -262,6 +262,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         );
         final result = await dirsFilterer.filter();
         allm3uPaths = result.allPaths;
+      } else {
+        allm3uPaths.addAll(forPaths);
       }
 
       _ParseM3UPlaylistFilesResult? resBoth;
