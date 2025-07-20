@@ -34,7 +34,7 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
           case PressedButton.previous:
             Player.inst.previous();
           case PressedButton.stop:
-            Player.inst.dispose();
+            Player.inst.pause().whenComplete(Player.inst.dispose);
           case PressedButton.fastForward:
             Player.inst.seekSecondsForward();
           case PressedButton.rewind:

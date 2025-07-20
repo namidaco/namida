@@ -7,6 +7,7 @@ import 'package:http_cache_stream/http_cache_stream.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:windows_taskbar/windows_taskbar.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
@@ -28,6 +29,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -90,11 +92,28 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       WakelockController.inst.updatePlayPauseStatus(ye);
       _refreshPlatformStatusDependersIsPlaying(ye);
     });
+
     final smtc = SMTCController.instance;
     if (smtc != null) {
-      void listener() => smtc.updateTimeline(currentPositionMS.value, currentItemDuration.value?.inMilliseconds);
+      void listener() {
+        final positionMS = currentPositionMS.value;
+        final durationMS = currentItemDuration.value?.inMilliseconds;
+        smtc.updateTimeline(positionMS, durationMS);
+      }
+
       currentPositionMS.addListener(listener);
       currentItemDuration.addListener(listener);
+    }
+
+    if (Platform.isWindows) {
+      void taskbarListener() {
+        final positionMS = currentPositionMS.value;
+        final durationMS = currentItemDuration.value?.inMilliseconds;
+        WindowsTaskbar.setProgress(positionMS, durationMS ?? 1);
+      }
+
+      currentPositionMS.addListener(taskbarListener);
+      currentItemDuration.addListener(taskbarListener);
     }
   }
 
@@ -267,6 +286,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   void _refreshPlatformStatusDependersIsPlaying(bool isPlaying) {
     SMTCController.instance?.onPlayPause(isPlaying);
     HomeWidgetController.instance?.updateIsPlaying(isPlaying);
+    _refreshWindowsTaskbar(isPlaying, null);
   }
 
   void _refreshPlatformStatusDependers(MediaItem media, bool isPlaying, bool isFavourite) {
@@ -278,6 +298,86 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       isPlaying,
       isFavourite,
     );
+    _refreshWindowsTaskbar(isPlaying, isFavourite);
+  }
+
+  void _refreshWindowsTaskbar(bool isPlaying, bool? isFavourite) async {
+    if (Platform.isWindows) {
+      ThumbnailToolbarAssetIcon getIco(String name) => ThumbnailToolbarAssetIcon('assets\\icons\\media_ico\\$name.ico');
+
+      isFavourite ??= currentItem.value?._execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: (finalItem) => finalItem.isFavourite);
+      void onFavOrUnfavPress() {
+        final current = currentItem.value;
+        if (current != null) {
+          onNotificationFavouriteButtonPressed(current);
+        }
+      }
+
+      final repeat = settings.player.repeatMode.value;
+      final repeatText = repeat.buildText();
+      final repeatIcoName = switch (repeat) {
+        RepeatMode.none => 'repeate-music',
+        RepeatMode.one => 'repeate-one',
+        RepeatMode.forNtimes => 'status',
+        RepeatMode.all => 'repeat',
+      };
+      void onRepeatPress() {
+        final e = settings.player.repeatMode.value.nextElement(RepeatMode.values);
+        settings.player.save(repeatMode: e);
+        _refreshWindowsTaskbar(_willPlayWhenReady, null);
+      }
+
+      try {
+        await WindowsTaskbar.setThumbnailToolbar(
+          [
+            if (isFavourite == true)
+              ThumbnailToolbarButton(
+                getIco('favorited'),
+                lang.REMOVE_FROM_FAVOURITES,
+                onFavOrUnfavPress,
+              )
+            else if (isFavourite == false)
+              ThumbnailToolbarButton(
+                getIco('favorite'),
+                lang.ADD_TO_FAVOURITES,
+                onFavOrUnfavPress,
+              ),
+            ThumbnailToolbarButton(
+              getIco(repeatIcoName),
+              repeatText,
+              onRepeatPress,
+            ),
+            ThumbnailToolbarButton(
+              getIco('previous'),
+              lang.PREVIOUS,
+              Player.inst.previous,
+            ),
+            isPlaying
+                ? ThumbnailToolbarButton(
+                    getIco('pause'),
+                    lang.PAUSE,
+                    Player.inst.pause,
+                  )
+                : ThumbnailToolbarButton(
+                    getIco('play'),
+                    lang.PLAY,
+                    Player.inst.play,
+                  ),
+            ThumbnailToolbarButton(
+              getIco('next'),
+              lang.NEXT,
+              Player.inst.next,
+            ),
+            ThumbnailToolbarButton(
+              getIco('stop'),
+              lang.STOP,
+              () => Player.inst.pause().whenComplete(Player.inst.dispose),
+              mode: ThumbnailToolbarButtonMode.dismissionClick,
+            ),
+          ],
+        );
+      } catch (_) {}
+    }
   }
 
   // =================================================================================
