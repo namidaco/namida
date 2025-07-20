@@ -12,13 +12,16 @@ class _TagsExtractorAndroid extends TagsExtractor {
   int _logsSetRetries = 5;
   @override
   Future<void> updateLogsPath() async {
+    final logsParentDir = File(AppPaths.LOGS_TAGGER).parent;
+    if (!await logsParentDir.exists()) return;
+
     _logsSetTimer?.cancel();
     _logsSetRetries = 5;
     _logsSetTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       try {
         await _channel.invokeMethod("setLogFile", {"path": AppPaths.LOGS_TAGGER});
         timer.cancel();
-      } catch (e) {
+      } catch (_) {
         _logsSetRetries--;
       }
       if (_logsSetRetries <= 0) timer.cancel();

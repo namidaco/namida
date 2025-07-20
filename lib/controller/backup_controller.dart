@@ -58,7 +58,7 @@ class BackupController {
     if (interval <= 0) return;
 
     if (!await requestManageStoragePermission(request: false, showError: false)) {
-      snackyy(title: "${lang.ERROR}: ${lang.AUTOMATIC_BACKUP}", message: lang.STORAGE_PERMISSION_DENIED, isError: true);
+      snackyy(title: "${lang.ERROR}: ${lang.BACKUP_AND_RESTORE} - ${lang.AUTOMATIC_BACKUP}", message: lang.STORAGE_PERMISSION_DENIED, isError: true);
       return;
     }
 

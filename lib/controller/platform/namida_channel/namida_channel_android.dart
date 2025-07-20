@@ -7,18 +7,14 @@ class _NamidaChannelAndroid extends NamidaChannel {
   late final MethodChannel _channel;
   late final EventChannel _channelEvent;
 
+  StreamSubscription? _streamSub;
+
   _NamidaChannelAndroid._init() {
     _channel = const MethodChannel('namida');
     _channelEvent = const EventChannel('namida_events');
 
-    _streamSub?.cancel();
-    _streamSub = _channelEvent.receiveBroadcastStream().map((event) => event as bool).listen((message) {
-      isInPip.value = message;
-    });
     _initLiseners();
   }
-
-  StreamSubscription? _streamSub;
 
   @override
   Future<void> updatePipRatio({int? width, int? height}) async {
@@ -69,6 +65,15 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   void _initLiseners() {
+    _streamSub?.cancel();
+    try {
+      _streamSub = _channelEvent.receiveBroadcastStream().map((event) => event as bool).listen((message) {
+        isInPip.value = message;
+      });
+    } catch (_) {
+      // -- not initialized properly, can happen sometimes on newer android versions
+    }
+
     _channel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'onResume':

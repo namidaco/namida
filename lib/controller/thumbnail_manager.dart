@@ -312,11 +312,11 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     final p = {
       'urls': urls,
       'id': id,
-      'forceRequest': forceRequest,
+      if (forceRequest) 'forceRequest': forceRequest,
       'isImportantInCache': isImportantInCache,
       'isTemp': isTemp,
       'destinationFile': destinationFile,
-      'symlinkId': symlinkId,
+      if (symlinkId != null) 'symlinkId': symlinkId,
     };
     if (!isInitialized) await initialize();
     await sendPort(p);

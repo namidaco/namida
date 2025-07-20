@@ -100,6 +100,7 @@ class YtVideoLikeManager {
   }
 
   void init() {
+    currentVideoLikeStatus.reInit();
     _onPageChanged(); // fill initial values
     pageRx.addListener(_onPageChanged);
   }
