@@ -11,6 +11,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate, PlaylistItemWithDate {
@@ -67,5 +68,45 @@ extension YoutubeIDUtils on YoutubeID {
 extension YoutubeIDSUtils on List<YoutubeID> {
   Future<void> shareVideos() async {
     await SharePlus.instance.share(ShareParams(text: map((e) => "${YTUrlUtils.buildVideoUrl(e.id)} - ${e.dateAddedMS.dateAndClockFormattedOriginal}\n").join()));
+  }
+
+  int getTotalListenCount() {
+    int total = 0;
+    final int length = this.length;
+    for (int i = 0; i < length; i++) {
+      final video = this[i];
+      final e = video.id;
+      final c = YoutubeHistoryController.inst.topTracksMapListens.value[e]?.length ?? 0;
+      total += c;
+    }
+    return total;
+  }
+
+  int? getFirstListen() {
+    int? generalFirstListen;
+    final int length = this.length;
+    for (int i = 0; i < length; i++) {
+      final video = this[i];
+      final e = video.id;
+      final firstListen = YoutubeHistoryController.inst.topTracksMapListens.value[e]?.firstOrNull;
+      if (firstListen != null && (generalFirstListen == null || firstListen < generalFirstListen)) {
+        generalFirstListen = firstListen;
+      }
+    }
+    return generalFirstListen;
+  }
+
+  int? getLatestListen() {
+    int? generalLastListen;
+    final int length = this.length;
+    for (int i = 0; i < length; i++) {
+      final video = this[i];
+      final e = video.id;
+      final lastListen = YoutubeHistoryController.inst.topTracksMapListens.value[e]?.lastOrNull;
+      if (lastListen != null && (generalLastListen == null || lastListen > generalLastListen)) {
+        generalLastListen = lastListen;
+      }
+    }
+    return generalLastListen;
   }
 }

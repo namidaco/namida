@@ -366,12 +366,10 @@ class Indexer<T extends Track> {
   }
 
   List<MediaType> _getMediaTypeSortThatDependOnHistory() {
-    bool dependsOnHistory(SortType type) => type == SortType.mostPlayed || type == SortType.latestPlayed || type == SortType.firstListen;
-
     final requiredToSort = <MediaType>[];
     for (final e in settings.mediaItemsTrackSorting.entries) {
       for (final sort in e.value) {
-        if (dependsOnHistory(sort)) {
+        if (sort.requiresHistory) {
           requiredToSort.add(e.key);
           break;
         }
@@ -385,6 +383,21 @@ class Indexer<T extends Track> {
     if (HistoryController.inst.isHistoryLoaded && this.mainMapsGroup.didFill) {
       final requiredToSort = _getMediaTypeSortThatDependOnHistory();
       await sortMediaTracksSubLists(requiredToSort);
+
+      for (final e in MediaType.values) {
+        final sortRequiresHistory = switch (e) {
+          MediaType.track => settings.mediaItemsTrackSorting.value[MediaType.track]?.firstOrNull?.requiresHistory ?? false,
+          MediaType.album => settings.albumSort.value.requiresHistory,
+          MediaType.artist => settings.artistSort.value.requiresHistory,
+          MediaType.albumArtist => settings.artistSort.value.requiresHistory,
+          MediaType.composer => settings.artistSort.value.requiresHistory,
+          MediaType.genre => settings.genreSort.value.requiresHistory,
+          MediaType.playlist => settings.playlistSort.value.requiresHistory,
+          MediaType.folder => false,
+          MediaType.folderVideo => false,
+        };
+        if (sortRequiresHistory) SearchSortController.inst.sortMedia(e);
+      }
     }
   }
 

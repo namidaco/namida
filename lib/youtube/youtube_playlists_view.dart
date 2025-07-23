@@ -225,6 +225,9 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                                       GroupSortType.creationDate,
                                       GroupSortType.modifiedDate,
                                       GroupSortType.numberOfTracks,
+                                      GroupSortType.playCount,
+                                      GroupSortType.firstListen,
+                                      GroupSortType.latestPlayed,
                                       GroupSortType.shuffle,
                                     ].map(
                                       (e) => ObxO(
@@ -371,57 +374,83 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
             const SliverToBoxAdapter(
               child: NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0)),
             ),
-          Obx(
-            (context) {
-              final playlistsMap = YoutubePlaylistController.inst.playlistsMap.valueR;
-              final playlistsNames = playlistsMap.keys.toList();
-              return SliverFixedExtentList.builder(
-                itemExtent: playlistsItemExtent,
-                itemCount: playlistsNames.length,
-                itemBuilder: (context, index) {
-                  final name = playlistsNames[index];
-                  final playlist = playlistsMap[name]!;
-                  bool? allIdsExist;
-                  if (idsToAdd.isNotEmpty) {
-                    allIdsExist = idsToAdd.every((idToAdd) => playlist.tracks.firstWhereEff((e) => e.id == idToAdd) != null);
-                  }
+          ObxO(
+            rx: settings.ytPlaylistSort,
+            builder: (context, sort) {
+              final sortTextIsUseless = sort == GroupSortType.title ||
+                  sort == GroupSortType.numberOfTracks ||
+                  sort == GroupSortType.duration ||
+                  sort == GroupSortType.modifiedDate ||
+                  sort == GroupSortType.creationDate;
+              final extraTextResolver = sortTextIsUseless ? null : YoutubePlaylistController.inst.getGroupSortExtraTextResolverPlaylist(sort);
 
-                  return NamidaPopupWrapper(
-                    childrenDefault: displayMenu ? () => getMenuItems(context, playlist, QueueSourceYoutubeID.playlist) : null,
-                    openOnTap: false,
-                    child: YoutubeCard(
-                      thumbnailType: ThumbnailType.playlist,
-                      isImageImportantInCache: true,
-                      extractColor: true,
-                      thumbnailWidthPercentage: 0.75,
-                      videoId: playlist.tracks.firstOrNull?.id,
-                      thumbnailUrl: null,
-                      shimmerEnabled: false,
-                      title: playlist.name,
-                      subtitle: playlist.creationDate.dateFormattedOriginal,
-                      displaythirdLineText: true,
-                      thirdLineText: TimeAgoController.dateMSSEFromNow(playlist.modifiedDate),
-                      displayChannelThumbnail: false,
-                      channelThumbnailUrl: '',
-                      thumbnailHeight: playlistThumbnailHeight,
-                      thumbnailWidth: playlistThumbnailWidth,
-                      onTap: () {
+              return ObxPrefer(
+                enabled: sort.requiresHistory,
+                rx: YoutubeHistoryController.inst.topTracksMapListens,
+                builder: (context, _) => Obx(
+                  (context) {
+                    final playlistsMap = YoutubePlaylistController.inst.playlistsMap.valueR;
+                    final playlistsNames = playlistsMap.keys.toList();
+                    return SliverFixedExtentList.builder(
+                      itemExtent: playlistsItemExtent,
+                      itemCount: playlistsNames.length,
+                      itemBuilder: (context, index) {
+                        final name = playlistsNames[index];
+                        final playlist = playlistsMap[name]!;
+                        bool? allIdsExist;
                         if (idsToAdd.isNotEmpty) {
-                          _onAddToPlaylist(playlist: playlist, allIdsExist: allIdsExist == true, allowAddingEverything: true);
-                        } else {
-                          YTNormalPlaylistSubpage(
-                            playlistName: playlist.name,
-                            queueSource: QueueSourceYoutubeID.playlist,
-                          ).navigate();
+                          allIdsExist = idsToAdd.every((idToAdd) => playlist.tracks.firstWhereEff((e) => e.id == idToAdd) != null);
                         }
+
+                        final extraText = extraTextResolver?.call(playlist);
+
+                        final creationDateText = playlist.creationDate.dateFormattedOriginal;
+                        final subtitle = extraText != null && extraText.isNotEmpty
+                            ? [
+                                creationDateText,
+                                extraText,
+                              ].join(' • ')
+                            : creationDateText;
+
+                        return NamidaPopupWrapper(
+                          childrenDefault: displayMenu ? () => getMenuItems(context, playlist, QueueSourceYoutubeID.playlist) : null,
+                          openOnTap: false,
+                          child: YoutubeCard(
+                            thumbnailType: ThumbnailType.playlist,
+                            isImageImportantInCache: true,
+                            extractColor: true,
+                            thumbnailWidthPercentage: 0.75,
+                            videoId: playlist.tracks.firstOrNull?.id,
+                            thumbnailUrl: null,
+                            shimmerEnabled: false,
+                            title: playlist.name,
+                            subtitle: subtitle,
+                            displaythirdLineText: true,
+                            thirdLineText: TimeAgoController.dateMSSEFromNow(playlist.modifiedDate),
+                            displayChannelThumbnail: false,
+                            channelThumbnailUrl: '',
+                            thumbnailHeight: playlistThumbnailHeight,
+                            thumbnailWidth: playlistThumbnailWidth,
+                            onTap: () {
+                              if (idsToAdd.isNotEmpty) {
+                                _onAddToPlaylist(playlist: playlist, allIdsExist: allIdsExist == true, allowAddingEverything: true);
+                              } else {
+                                YTNormalPlaylistSubpage(
+                                  playlistName: playlist.name,
+                                  queueSource: QueueSourceYoutubeID.playlist,
+                                ).navigate();
+                              }
+                            },
+                            smallBoxText: playlist.tracks.length.formatDecimal(),
+                            smallBoxIcon: Broken.play_cricle,
+                            checkmarkStatus: allIdsExist,
+                            menuChildrenDefault: displayMenu ? () => getMenuItems(context, playlist, QueueSourceYoutubeID.playlist) : null,
+                          ),
+                        );
                       },
-                      smallBoxText: playlist.tracks.length.formatDecimal(),
-                      smallBoxIcon: Broken.play_cricle,
-                      checkmarkStatus: allIdsExist,
-                      menuChildrenDefault: displayMenu ? () => getMenuItems(context, playlist, QueueSourceYoutubeID.playlist) : null,
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               );
             },
           ),

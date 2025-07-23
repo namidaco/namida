@@ -13,11 +13,13 @@ import 'package:namida/ui/widgets/network_artwork.dart';
 class AlbumTile extends StatelessWidget {
   final String identifier;
   final List<Track> album;
+  final String? extraText;
 
   const AlbumTile({
     super.key,
     required this.identifier,
     required this.album,
+    this.extraText,
   });
 
   @override
@@ -26,6 +28,8 @@ class AlbumTile extends StatelessWidget {
     final albumTileHeight = settings.albumListTileHeight.value;
     final finalYear = album.year.yearFormatted;
     final hero = 'album_$identifier';
+
+    final secondLine = extraText ?? album.albumArtist;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: Dimensions.tileBottomMargin)),
@@ -81,11 +85,11 @@ class AlbumTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (album.albumArtist != '')
+                      if (secondLine.isNotEmpty)
                         NamidaHero(
                           tag: 'line2_$hero',
                           child: Text(
-                            album.albumArtist,
+                            secondLine,
                             style: context.textTheme.displaySmall,
                             overflow: TextOverflow.ellipsis,
                           ),

@@ -41,6 +41,7 @@ class ArtistCard extends StatelessWidget {
           final imageSize = constraints.maxWidth - 12.0;
           final remainingVerticalSpace = constraints.maxHeight - imageSize;
           double getFontSize(double m) => (remainingVerticalSpace * m).withMaximum(13.0);
+          final bottomCenterTextSize = getFontSize(0.5).withMaximum(imageSize * 0.12);
           return Stack(
             alignment: Alignment.topCenter,
             children: [
@@ -73,13 +74,23 @@ class ArtistCard extends StatelessWidget {
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           color: context.theme.scaffoldBackgroundColor,
-                          shape: BoxShape.circle,
+                          borderRadius: BorderRadius.circular(99.0.multipliedRadius),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.all(6.0),
-                          child: Text(
-                            bottomCenterText!,
-                            style: context.textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.5)),
+                          padding: const EdgeInsets.all(5.0),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: bottomCenterTextSize,
+                              minWidth: bottomCenterTextSize.withMaximum(imageSize),
+                              maxWidth: imageSize,
+                            ),
+                            child: Text(
+                              bottomCenterText!,
+                              style: context.textTheme.displaySmall?.copyWith(fontSize: bottomCenterTextSize),
+                              textAlign: TextAlign.center,
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
+                            ),
                           ),
                         ),
                       ),

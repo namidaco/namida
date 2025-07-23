@@ -40,11 +40,17 @@ class AlbumCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final finalYear = album.year.yearFormatted;
-    final shouldDisplayTopRightDate = topRightText != null || (settings.albumCardTopRightDate.value && finalYear != '');
-    final shouldDisplayNormalDate = topRightText == null && !settings.albumCardTopRightDate.value && finalYear != '';
+    final topRightText = this.topRightText ?? finalYear;
+    final shouldDisplayTopRightDate = topRightText.isNotEmpty || (settings.albumCardTopRightDate.value && finalYear != '');
+    final shouldDisplayNormalDate = topRightText.isEmpty && !settings.albumCardTopRightDate.value && finalYear != '';
     final shouldDisplayAlbumArtist = album.albumArtist != '';
 
     final hero = 'album_$identifier$additionalHeroTag';
+
+    final secondLine = [
+      if (shouldDisplayNormalDate) finalYear,
+      if (shouldDisplayAlbumArtist) album.albumArtist,
+    ].join(' - ');
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
@@ -107,7 +113,7 @@ class AlbumCard extends StatelessWidget {
                                       child: FittedBox(
                                         fit: BoxFit.fitWidth,
                                         child: Text(
-                                          topRightText ?? finalYear,
+                                          topRightText,
                                           style: context.textTheme.displaySmall?.copyWith(
                                             fontSize: getFontSize(0.18),
                                             fontWeight: FontWeight.bold,
@@ -167,21 +173,18 @@ class AlbumCard extends StatelessWidget {
                                 overflow: TextOverflow.fade,
                               ),
                             ),
-                            if (!settings.albumCardTopRightDate.value || album.albumArtist != '') ...[
-                              if (shouldDisplayNormalDate || shouldDisplayAlbumArtist)
+                            if (secondLine.isNotEmpty)
+                              if (!settings.albumCardTopRightDate.value || secondLine != topRightText) ...[
                                 NamidaHero(
                                   tag: 'line2_$hero',
                                   child: Text(
-                                    [
-                                      if (shouldDisplayNormalDate) finalYear,
-                                      if (shouldDisplayAlbumArtist) album.albumArtist.overflow,
-                                    ].join(' - '),
+                                    secondLine,
                                     style: context.textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
                                     softWrap: false,
                                     overflow: TextOverflow.fade,
                                   ),
                                 ),
-                            ],
+                              ],
                             NamidaHero(
                               tag: 'line3_$hero',
                               child: Text(

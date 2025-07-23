@@ -3,6 +3,7 @@ import 'dart:isolate';
 import 'dart:math' as math;
 
 import 'package:intl/intl.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/folder.dart';
@@ -164,6 +165,54 @@ class SearchSortController {
     });
     return l;
   }
+
+  String Function(List<Track> tracks)? getGroupSortExtraTextResolver(GroupSortType sort, {GeneralPlaylist? playlist}) => switch (sort) {
+        GroupSortType.album => (tracks) => tracks.album,
+        GroupSortType.artistsList => (tracks) => tracks.first.originalArtist,
+        GroupSortType.composer => (tracks) => tracks.first.composer,
+        GroupSortType.albumArtist => (tracks) => tracks.albumArtist,
+        GroupSortType.label => (tracks) => tracks[0].label,
+        GroupSortType.genresList => (tracks) => tracks[0].originalGenre,
+        GroupSortType.numberOfTracks => (tracks) => tracks.length.toString(),
+        GroupSortType.duration => (tracks) => tracks.totalDurationFormatted,
+        GroupSortType.albumsCount => (tracks) => tracks.toUniqueAlbums().length.toString(),
+        GroupSortType.year => (tracks) => tracks.year.yearFormatted,
+        GroupSortType.dateModified => (tracks) => tracks[0].dateModified.dateFormatted,
+        GroupSortType.playCount => (tracks) => tracks.getTotalListenCount().toString(),
+        GroupSortType.firstListen => (tracks) => tracks.getFirstListen()?.dateFormattedOriginal ?? '',
+        GroupSortType.latestPlayed => (tracks) => tracks.getLatestListen()?.dateFormattedOriginal ?? '',
+
+        // -- playlists
+        GroupSortType.title => (tracks) => playlist?.name ?? '',
+        GroupSortType.creationDate => (tracks) => playlist?.creationDate.dateFormatted ?? '',
+        GroupSortType.modifiedDate => (tracks) => playlist?.modifiedDate.dateFormatted ?? '',
+        // ----
+        GroupSortType.shuffle => null,
+      };
+
+  String Function(LocalPlaylist playlist)? getGroupSortExtraTextResolverPlaylist(GroupSortType sort) => switch (sort) {
+        GroupSortType.album => (p) => p.tracks.first.track.album,
+        GroupSortType.artistsList => (p) => p.tracks.first.track.originalArtist,
+        GroupSortType.composer => (p) => p.tracks.first.track.composer,
+        GroupSortType.albumArtist => (p) => p.tracks.first.track.albumArtist,
+        GroupSortType.label => (p) => p.tracks[0].track.label,
+        GroupSortType.genresList => (p) => p.tracks[0].track.originalGenre,
+        GroupSortType.numberOfTracks => (p) => p.tracks.length.toString(),
+        GroupSortType.duration => (p) => p.tracks.totalDurationFormatted,
+        GroupSortType.albumsCount => (p) => p.tracks.toTracks().toUniqueAlbums().length.toString(),
+        GroupSortType.year => (p) => p.tracks.first.track.year.yearFormatted,
+        GroupSortType.dateModified => (p) => p.tracks[0].track.dateModified.dateFormatted,
+        GroupSortType.playCount => (p) => p.tracks.getTotalListenCount().toString(),
+        GroupSortType.firstListen => (p) => p.tracks.getFirstListen()?.dateFormattedOriginal ?? '',
+        GroupSortType.latestPlayed => (p) => p.tracks.getLatestListen()?.dateFormattedOriginal ?? '',
+
+        // -- playlists
+        GroupSortType.title => (playlist) => playlist.name,
+        GroupSortType.creationDate => (playlist) => playlist.creationDate.dateFormatted,
+        GroupSortType.modifiedDate => (playlist) => playlist.modifiedDate.dateFormatted,
+        // ----
+        GroupSortType.shuffle => null,
+      };
 
   bool? _preparedResources;
   Future<void> prepareResources() async {
@@ -834,7 +883,7 @@ class SearchSortController {
         list.shuffle();
         break;
       case SortType.mostPlayed:
-        sortThis((e) => HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0);
+        sortThis((e) => -(HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0));
         break;
       case SortType.latestPlayed:
         sortThis((e) => HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0);
@@ -895,7 +944,16 @@ class SearchSortController {
         sortThis((e) => e.value.totalDurationInMS);
         break;
       case GroupSortType.numberOfTracks:
-        sortThis((e) => e.value.length);
+        sortThis((e) => -e.value.length);
+        break;
+      case GroupSortType.playCount:
+        sortThis((e) => -e.value.getTotalListenCount());
+        break;
+      case GroupSortType.firstListen:
+        sortThis((e) => e.value.getFirstListen() ?? DateTime(99999).millisecondsSinceEpoch);
+        break;
+      case GroupSortType.latestPlayed:
+        sortThis((e) => -(e.value.getLatestListen() ?? 0));
         break;
       case GroupSortType.shuffle:
         albumsList.shuffle();
@@ -960,7 +1018,16 @@ class SearchSortController {
         sortThis((e) => e.value.totalDurationInMS);
         break;
       case GroupSortType.numberOfTracks:
-        sortThis((e) => e.value.length);
+        sortThis((e) => -e.value.length);
+        break;
+      case GroupSortType.playCount:
+        sortThis((e) => -e.value.getTotalListenCount());
+        break;
+      case GroupSortType.firstListen:
+        sortThis((e) => e.value.getFirstListen() ?? DateTime(99999).millisecondsSinceEpoch);
+        break;
+      case GroupSortType.latestPlayed:
+        sortThis((e) => -(e.value.getLatestListen() ?? 0));
         break;
       case GroupSortType.shuffle:
         artistsList.shuffle();
@@ -1010,7 +1077,16 @@ class SearchSortController {
         sortThis((e) => e.value.totalDurationInMS);
         break;
       case GroupSortType.numberOfTracks:
-        sortThis((e) => e.value.length);
+        sortThis((e) => -e.value.length);
+        break;
+      case GroupSortType.playCount:
+        sortThis((e) => -e.value.getTotalListenCount());
+        break;
+      case GroupSortType.firstListen:
+        sortThis((e) => e.value.getFirstListen() ?? DateTime(99999).millisecondsSinceEpoch);
+        break;
+      case GroupSortType.latestPlayed:
+        sortThis((e) => -(e.value.getLatestListen() ?? 0));
         break;
       case GroupSortType.shuffle:
         genresList.shuffle();
@@ -1047,7 +1123,16 @@ class SearchSortController {
         sortThis((p) => p.value.tracks.totalDurationInMS);
         break;
       case GroupSortType.numberOfTracks:
-        sortThis((p) => p.value.tracks.length);
+        sortThis((p) => -p.value.tracks.length);
+        break;
+      case GroupSortType.playCount:
+        sortThis((e) => -e.value.tracks.getTotalListenCount());
+        break;
+      case GroupSortType.firstListen:
+        sortThis((e) => e.value.tracks.getFirstListen() ?? DateTime(99999).millisecondsSinceEpoch);
+        break;
+      case GroupSortType.latestPlayed:
+        sortThis((e) => -(e.value.tracks.getLatestListen() ?? 0));
         break;
       case GroupSortType.shuffle:
         playlistList.shuffle();

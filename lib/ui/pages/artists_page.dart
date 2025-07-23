@@ -4,6 +4,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -101,6 +102,16 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                 final artistType = customType ?? artistTypeSettings;
                 final artistTypeText = artistType.toText();
                 final artistLeftText = finalArtists.length.displayKeyword(artistTypeText, artistTypeText);
+
+                final sort = settings.artistSort.valueR;
+                final sortReverse = settings.artistSortReversed.valueR;
+
+                final sortTextIsUseless = sort == GroupSortType.artistsList ||
+                    sort == GroupSortType.albumsCount ||
+                    (sort == GroupSortType.numberOfTracks && countPerRowResolved == 1) ||
+                    sort == GroupSortType.duration;
+                final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolver(sort);
+
                 return Column(
                   children: [
                     ExpandableBox(
@@ -140,9 +151,9 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                       onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.artists),
                       onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.artists),
                       sortByMenuWidget: SortByMenu(
-                        title: settings.artistSort.valueR.toText(),
+                        title: sort.toText(),
                         popupMenuChild: () => const SortByMenuArtists(),
-                        isCurrentlyReversed: settings.artistSortReversed.valueR,
+                        isCurrentlyReversed: sortReverse,
                         onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !settings.artistSortReversed.value),
                       ),
                       textField: () => CustomTextFiled(
@@ -153,52 +164,62 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                     ),
                     if (countPerRowResolved == 1)
                       Expanded(
-                        child: ListView.builder(
-                          controller: scrollController,
-                          itemCount: finalArtists.length,
-                          padding: kBottomPaddingInsets,
-                          itemExtent: 65.0 + 2.0 * 9,
-                          itemBuilder: (BuildContext context, int i) {
-                            final artist = finalArtists[i];
-                            final tracks = artist.getArtistTracksFor(artistType);
-                            return AnimatingTile(
-                              position: i,
-                              shouldAnimate: _shouldAnimate,
-                              child: ArtistTile(
-                                tracks: tracks,
-                                name: artist,
-                                albums: tracks.toUniqueAlbums(),
-                                type: artistType,
-                              ),
-                            );
-                          },
+                        child: ObxPrefer(
+                          enabled: sort.requiresHistory,
+                          rx: HistoryController.inst.topTracksMapListens,
+                          builder: (context, _) => ListView.builder(
+                            controller: scrollController,
+                            itemCount: finalArtists.length,
+                            padding: kBottomPaddingInsets,
+                            itemExtent: 65.0 + 2.0 * 9,
+                            itemBuilder: (BuildContext context, int i) {
+                              final artist = finalArtists[i];
+                              final tracks = artist.getArtistTracksFor(artistType);
+                              return AnimatingTile(
+                                position: i,
+                                shouldAnimate: _shouldAnimate,
+                                child: ArtistTile(
+                                  tracks: tracks,
+                                  name: artist,
+                                  albums: tracks.toUniqueAlbums(),
+                                  type: artistType,
+                                  extraText: extraTextResolver?.call(tracks),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     if (countPerRowResolved > 1)
                       Expanded(
-                        child: GridView.builder(
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: countPerRowResolved,
-                            childAspectRatio: 0.88,
-                            mainAxisSpacing: 8.0,
+                        child: ObxPrefer(
+                          enabled: sort.requiresHistory,
+                          rx: HistoryController.inst.topTracksMapListens,
+                          builder: (context, _) => GridView.builder(
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: countPerRowResolved,
+                              childAspectRatio: 0.88,
+                              mainAxisSpacing: 8.0,
+                            ),
+                            controller: scrollController,
+                            itemCount: finalArtists.length,
+                            padding: kBottomPaddingInsets,
+                            itemBuilder: (BuildContext context, int i) {
+                              final artist = finalArtists[i];
+                              final tracks = artist.getArtistTracksFor(artistType);
+                              return AnimatingGrid(
+                                columnCount: finalArtists.length,
+                                position: i,
+                                shouldAnimate: _shouldAnimate,
+                                child: ArtistCard(
+                                  name: artist,
+                                  artist: tracks,
+                                  type: artistType,
+                                  bottomCenterText: extraTextResolver?.call(tracks),
+                                ),
+                              );
+                            },
                           ),
-                          controller: scrollController,
-                          itemCount: finalArtists.length,
-                          padding: kBottomPaddingInsets,
-                          itemBuilder: (BuildContext context, int i) {
-                            final artist = finalArtists[i];
-                            final tracks = artist.getArtistTracksFor(artistType);
-                            return AnimatingGrid(
-                              columnCount: finalArtists.length,
-                              position: i,
-                              shouldAnimate: _shouldAnimate,
-                              child: ArtistCard(
-                                name: artist,
-                                artist: tracks,
-                                type: artistType,
-                              ),
-                            );
-                          },
                         ),
                       ),
                   ],

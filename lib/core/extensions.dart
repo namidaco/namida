@@ -11,6 +11,7 @@ import 'package:dart_extensions/dart_extensions.dart';
 import 'package:lrc/lrc.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -59,9 +60,86 @@ extension TracksWithDatesUtils on List<TrackWithDate> {
   String get totalDurationFormatted {
     return (totalDurationInMS ~/ 1000).secondsFormatted;
   }
+
+  int getTotalListenCount() {
+    int total = 0;
+    final int length = this.length;
+    for (int i = 0; i < length; i++) {
+      final twd = this[i];
+      final e = twd.track;
+      final c = HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0;
+      total += c;
+    }
+    return total;
+  }
+
+  int? getFirstListen() {
+    int? generalFirstListen;
+    final int length = this.length;
+    for (int i = 0; i < length; i++) {
+      final twd = this[i];
+      final e = twd.track;
+      final firstListen = HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull;
+      if (firstListen != null && (generalFirstListen == null || firstListen < generalFirstListen)) {
+        generalFirstListen = firstListen;
+      }
+    }
+    return generalFirstListen;
+  }
+
+  int? getLatestListen() {
+    int? generalLastListen;
+    final int length = this.length;
+    for (int i = 0; i < length; i++) {
+      final twd = this[i];
+      final e = twd.track;
+      final lastListen = HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull;
+      if (lastListen != null && (generalLastListen == null || lastListen > generalLastListen)) {
+        generalLastListen = lastListen;
+      }
+    }
+    return generalLastListen;
+  }
 }
 
 extension TracksUtils on List<Track> {
+  int getTotalListenCount() {
+    int total = 0;
+    final int length = this.length;
+    for (int i = 0; i < length; i++) {
+      final e = this[i];
+      final c = HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0;
+      total += c;
+    }
+    return total;
+  }
+
+  int? getFirstListen() {
+    int? generalFirstListen;
+    final int length = this.length;
+    for (int i = 0; i < length; i++) {
+      final e = this[i];
+      final firstListen = HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull;
+      if (firstListen != null && (generalFirstListen == null || firstListen < generalFirstListen)) {
+        generalFirstListen = firstListen;
+      }
+    }
+    return generalFirstListen;
+  }
+
+  int? getLatestListen() {
+    int? generalLastListen;
+    final int length = this.length;
+    for (int i = 0; i < length; i++) {
+      final e = this[i];
+      final lastListen = HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull;
+      if (lastListen != null && (generalLastListen == null || lastListen > generalLastListen)) {
+        generalLastListen = lastListen;
+      }
+    }
+    return generalLastListen;
+  }
+
   Set<String> toUniqueAlbums() {
     final tracks = this;
     final albums = <String>{};

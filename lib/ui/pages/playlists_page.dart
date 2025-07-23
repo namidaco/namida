@@ -467,79 +467,110 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                               child: NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0)),
                             ),
                           ObxO(
-                            rx: PlaylistController.inst.playlistsMap,
-                            builder: (context, playlistsMap) => ObxO(
-                              rx: SearchSortController.inst.playlistSearchList,
-                              builder: (context, playlistSearchList) => countPerRowResolved == 1
-                                  ? SliverFixedExtentList.builder(
-                                      itemCount: playlistSearchList.length,
-                                      itemExtent: Dimensions.playlistTileItemExtent,
-                                      itemBuilder: (context, i) {
-                                        final key = playlistSearchList[i];
-                                        final playlist = playlistsMap[key]!;
+                            rx: settings.playlistSort,
+                            builder: (context, sort) {
+                              final sortTextIsUseless = sort == GroupSortType.title || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
+                              final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolverPlaylist(sort);
 
-                                        bool? allTracksExist;
-                                        if (tracksToAdd != null && tracksToAdd.isNotEmpty) {
-                                          allTracksExist = tracksToAdd.every((trackToAdd) => playlist.tracks.firstWhereEff((e) => e.track == trackToAdd) != null);
-                                        }
+                              return ObxPrefer(
+                                enabled: sort.requiresHistory,
+                                rx: HistoryController.inst.topTracksMapListens,
+                                builder: (context, _) => ObxO(
+                                  rx: PlaylistController.inst.playlistsMap,
+                                  builder: (context, playlistsMap) => ObxO(
+                                    rx: SearchSortController.inst.playlistSearchList,
+                                    builder: (context, playlistSearchList) => countPerRowResolved == 1
+                                        ? SliverFixedExtentList.builder(
+                                            itemCount: playlistSearchList.length,
+                                            itemExtent: Dimensions.playlistTileItemExtent,
+                                            itemBuilder: (context, i) {
+                                              final key = playlistSearchList[i];
+                                              final playlist = playlistsMap[key]!;
 
-                                        return AnimatingTile(
-                                          position: i,
-                                          shouldAnimate: _shouldAnimate,
-                                          child: PlaylistTile(
-                                            enableHero: enableHero,
-                                            playlistName: key,
-                                            onTap: tracksToAdd != null
-                                                ? () {
-                                                    _onAddToPlaylist(playlist: playlist, allTracksExist: allTracksExist == true, allowAddingEverything: true);
-                                                  }
-                                                : () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
-                                            checkmarkStatus: allTracksExist,
-                                          ),
-                                        );
-                                      },
-                                    )
-                                  : countPerRowResolved > 1
-                                      ? SliverGrid.builder(
-                                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: countPerRowResolved,
-                                            childAspectRatio: 0.8,
-                                            mainAxisSpacing: 8.0,
-                                          ),
-                                          itemCount: playlistSearchList.length,
-                                          itemBuilder: (context, i) {
-                                            final key = playlistSearchList[i];
-                                            final playlist = playlistsMap[key]!;
-                                            return AnimatingGrid(
-                                              columnCount: playlistSearchList.length,
-                                              position: i,
-                                              shouldAnimate: _shouldAnimate,
-                                              child: MultiArtworkCard(
-                                                enableHero: enableHero,
-                                                heroTag: 'playlist_${playlist.name}',
-                                                tracks: playlist.tracks.toTracks(),
-                                                name: playlist.name.translatePlaylistName(),
-                                                countPerRow: widget.countPerRow,
-                                                showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
-                                                onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
-                                                artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
-                                                widgetsInStack: [
-                                                  if (playlist.m3uPath != null)
-                                                    Positioned(
-                                                      bottom: 8.0,
-                                                      right: 8.0,
-                                                      child: NamidaTooltip(
-                                                        message: () => "${lang.M3U_PLAYLIST}\n${playlist.m3uPath?.formatPath()}",
-                                                        child: const Icon(Broken.music_filter, size: 18.0),
-                                                      ),
+                                              bool? allTracksExist;
+                                              if (tracksToAdd != null && tracksToAdd.isNotEmpty) {
+                                                allTracksExist = tracksToAdd.every((trackToAdd) => playlist.tracks.firstWhereEff((e) => e.track == trackToAdd) != null);
+                                              }
+
+                                              final extraText = extraTextResolver?.call(playlist);
+                                              return AnimatingTile(
+                                                position: i,
+                                                shouldAnimate: _shouldAnimate,
+                                                child: PlaylistTile(
+                                                  enableHero: enableHero,
+                                                  playlistName: key,
+                                                  onTap: tracksToAdd != null
+                                                      ? () {
+                                                          _onAddToPlaylist(playlist: playlist, allTracksExist: allTracksExist == true, allowAddingEverything: true);
+                                                        }
+                                                      : () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
+                                                  checkmarkStatus: allTracksExist,
+                                                  extraText: extraText, // dont fallback to prevent confusion
+                                                ),
+                                              );
+                                            },
+                                          )
+                                        : countPerRowResolved > 1
+                                            ? SliverGrid.builder(
+                                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: countPerRowResolved,
+                                                  childAspectRatio: 0.8,
+                                                  mainAxisSpacing: 8.0,
+                                                ),
+                                                itemCount: playlistSearchList.length,
+                                                itemBuilder: (context, i) {
+                                                  final key = playlistSearchList[i];
+                                                  final playlist = playlistsMap[key]!;
+                                                  final extraText = extraTextResolver?.call(playlist);
+                                                  return AnimatingGrid(
+                                                    columnCount: playlistSearchList.length,
+                                                    position: i,
+                                                    shouldAnimate: _shouldAnimate,
+                                                    child: MultiArtworkCard(
+                                                      enableHero: enableHero,
+                                                      heroTag: 'playlist_${playlist.name}',
+                                                      tracks: playlist.tracks.toTracks(),
+                                                      name: playlist.name.translatePlaylistName(),
+                                                      countPerRow: widget.countPerRow,
+                                                      showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
+                                                      onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
+                                                      artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
+                                                      widgetsInStack: [
+                                                        if (playlist.m3uPath != null)
+                                                          Positioned(
+                                                            bottom: 8.0,
+                                                            right: 8.0,
+                                                            child: NamidaTooltip(
+                                                              message: () => "${lang.M3U_PLAYLIST}\n${playlist.m3uPath?.formatPath()}",
+                                                              child: const Icon(Broken.music_filter, size: 18.0),
+                                                            ),
+                                                          ),
+                                                        if (extraText != null && extraText.isNotEmpty)
+                                                          Positioned(
+                                                            top: 0,
+                                                            right: 0,
+                                                            child: NamidaBlurryContainer(
+                                                              child: Text(
+                                                                extraText,
+                                                                style: context.textTheme.displaySmall?.copyWith(
+                                                                  fontSize: 12.0,
+                                                                  fontWeight: FontWeight.bold,
+                                                                ),
+                                                                softWrap: false,
+                                                                overflow: TextOverflow.fade,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                      ],
                                                     ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        )
-                                      : SizedBox(),
-                            ),
+                                                  );
+                                                },
+                                              )
+                                            : const SizedBox(),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                           if (!isInsideDialog) kBottomPaddingWidgetSliver,
                         ],

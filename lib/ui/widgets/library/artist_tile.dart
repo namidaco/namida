@@ -15,6 +15,7 @@ class ArtistTile extends StatelessWidget {
   final List<Track> tracks;
   final Set<String> albums;
   final MediaType type;
+  final String? extraText;
 
   const ArtistTile({
     super.key,
@@ -22,6 +23,7 @@ class ArtistTile extends StatelessWidget {
     required this.tracks,
     required this.albums,
     required this.type,
+    this.extraText,
   });
 
   @override
@@ -83,6 +85,12 @@ class ArtistTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (extraText != null && extraText!.isNotEmpty)
+                        Text(
+                          extraText!,
+                          style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                     ],
                   ),
                 ),

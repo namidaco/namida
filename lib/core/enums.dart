@@ -26,7 +26,9 @@ enum SortType {
   shuffle,
   mostPlayed,
   latestPlayed,
-  firstListen,
+  firstListen;
+
+  bool get requiresHistory => this == SortType.mostPlayed || this == SortType.latestPlayed || this == SortType.firstListen;
 }
 
 enum GroupSortType {
@@ -41,10 +43,15 @@ enum GroupSortType {
   label,
   duration,
   numberOfTracks,
+  playCount,
+  latestPlayed,
+  firstListen,
   albumsCount,
   creationDate,
   modifiedDate,
-  shuffle,
+  shuffle;
+
+  bool get requiresHistory => this == GroupSortType.playCount || this == GroupSortType.latestPlayed || this == GroupSortType.firstListen;
 }
 
 enum TrackTilePosition {

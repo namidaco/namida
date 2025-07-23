@@ -16,6 +16,7 @@ class PlaylistTile extends StatelessWidget {
   final void Function()? onTap;
   final bool enableHero;
   final bool? checkmarkStatus;
+  final String? extraText;
 
   const PlaylistTile({
     super.key,
@@ -23,6 +24,7 @@ class PlaylistTile extends StatelessWidget {
     this.onTap,
     this.enableHero = true,
     required this.checkmarkStatus,
+    this.extraText,
   });
 
   @override
@@ -74,7 +76,10 @@ class PlaylistTile extends StatelessWidget {
                             enabled: enableHero,
                             tag: 'line2_$hero',
                             child: Text(
-                              [tracksRaw.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
+                              [
+                                tracksRaw.displayTrackKeyword,
+                                if (extraText?.isNotEmpty == true) extraText,
+                              ].join(' • '),
                               style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7),
                               overflow: TextOverflow.ellipsis,
                             ),
