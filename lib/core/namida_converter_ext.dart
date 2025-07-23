@@ -516,6 +516,11 @@ extension ReplayGainTypeUtils on ReplayGainType {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
+extension LibraryImageSourceUtils on LibraryImageSource {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+  IconData toIcon() => _NamidaConverters.inst.getIcon(this);
+}
+
 extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
   String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
@@ -1491,6 +1496,10 @@ class _NamidaConverters {
         ReplayGainType.loudness_enhancer: lang.LOUDNESS_ENHANCER,
         ReplayGainType.volume: lang.VOLUME,
       },
+      LibraryImageSource: {
+        LibraryImageSource.local: lang.LOCAL,
+        LibraryImageSource.lastfm: 'last.fm',
+      },
       SetMusicAsAction: {
         SetMusicAsAction.ringtone: lang.RINGTONE,
         SetMusicAsAction.notification: lang.NOTIFICATION,
@@ -1658,6 +1667,10 @@ class _NamidaConverters {
         YTHomePages.playlists: Broken.music_library_2,
         YTHomePages.userplaylists: Broken.music_dashboard,
         YTHomePages.downloads: Broken.import,
+      },
+      LibraryImageSource: {
+        LibraryImageSource.local: Broken.music_library_2,
+        LibraryImageSource.lastfm: Broken.cloud,
       },
     };
 

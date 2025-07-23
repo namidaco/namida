@@ -293,6 +293,16 @@ class _SettingsController with SettingsFileWriter {
     MediaType.folderVideo: false,
   }.obs;
 
+  final imageSourceAlbum = <LibraryImageSource>[
+    LibraryImageSource.lastfm,
+    LibraryImageSource.local,
+  ].obs;
+
+  final imageSourceArtist = <LibraryImageSource>[
+    LibraryImageSource.lastfm,
+    LibraryImageSource.local,
+  ].obs;
+
   double fontScaleLRC = 1.0;
   double fontScaleLRCFull = 1.0;
 
@@ -593,7 +603,14 @@ class _SettingsController with SettingsFileWriter {
           MediaType.values.getEnum(e.key) ?? MediaType.track: (e.value as List?)?.map((v) => SortType.values.getEnum(v) ?? SortType.title).toList() ?? <SortType>[SortType.year]
       };
       final mediaItemsTrackSortingReverseInStorage = json["mediaItemsTrackSortingReverse"] as Map? ?? {};
+
       mediaItemsTrackSortingReverse.value = {for (final e in mediaItemsTrackSortingReverseInStorage.entries) MediaType.values.getEnum(e.key) ?? MediaType.track: e.value};
+
+      final imageSourceAlbumFromStorage = json['imageSourceAlbum'];
+      if (imageSourceAlbumFromStorage is List) imageSourceAlbum.value = imageSourceAlbumFromStorage.map((e) => LibraryImageSource.values.getEnum(e)).toListy();
+
+      final imageSourceArtistFromStorage = json['imageSourceArtist'];
+      if (imageSourceArtistFromStorage is List) imageSourceArtist.value = imageSourceArtistFromStorage.map((e) => LibraryImageSource.values.getEnum(e)).toListy();
 
       // -- backward compatability
       if (json['tracksSort'] != null) {
@@ -769,6 +786,8 @@ class _SettingsController with SettingsFileWriter {
         'queueInsertion': queueInsertion.value.map((key, value) => MapEntry(key.name, value.toJson())),
         'mediaItemsTrackSorting': mediaItemsTrackSorting.value.map((key, value) => MapEntry(key.name, value.map((e) => e.name).toList())),
         'mediaItemsTrackSortingReverse': mediaItemsTrackSortingReverse.value.map((key, value) => MapEntry(key.name, value)),
+        'imageSourceAlbum': imageSourceAlbum.value.map((e) => e.name).toList(),
+        'imageSourceArtist': imageSourceArtist.value.map((e) => e.name).toList(),
 
         'fontScaleLRC': fontScaleLRC,
         'fontScaleLRCFull': fontScaleLRCFull,
@@ -1153,16 +1172,20 @@ class _SettingsController with SettingsFileWriter {
   }
 
   void insertInList(
-    index, {
+    int index, {
     LibraryTab? libraryTab1,
     String? youtubeVideoQualities1,
     TagField? tagFieldsToEdit1,
     HomePageItems? homePageItem1,
+    LibraryImageSource? imageSourceAlbum1,
+    LibraryImageSource? imageSourceArtist1,
   }) {
     if (libraryTab1 != null) libraryTabs.insert(index, libraryTab1);
     if (homePageItem1 != null) homePageItems.insert(index, homePageItem1);
     if (youtubeVideoQualities1 != null) youtubeVideoQualities.insertSafe(index, youtubeVideoQualities1);
     if (tagFieldsToEdit1 != null) tagFieldsToEdit.insertSafe(index, tagFieldsToEdit1);
+    if (imageSourceAlbum1 != null) imageSourceAlbum.insertSafe(index, imageSourceAlbum1);
+    if (imageSourceArtist1 != null) imageSourceArtist.insertSafe(index, imageSourceArtist1);
 
     _writeToStorage();
   }
@@ -1193,6 +1216,8 @@ class _SettingsController with SettingsFileWriter {
     List<AppPathsBackupEnum>? youtubeVideoQualitiesAll,
     TagField? tagFieldsToEdit1,
     List<TagField>? tagFieldsToEditAll,
+    LibraryImageSource? imageSourceAlbum1,
+    LibraryImageSource? imageSourceArtist1,
   }) {
     if (trackArtistsSeparator != null) trackArtistsSeparators.remove(trackArtistsSeparator);
     if (trackGenresSeparator != null) trackGenresSeparators.remove(trackGenresSeparator);
@@ -1221,6 +1246,9 @@ class _SettingsController with SettingsFileWriter {
     if (youtubeVideoQualitiesAll != null) youtubeVideoQualitiesAll.loop((t) => youtubeVideoQualities.remove(t));
     if (tagFieldsToEdit1 != null) tagFieldsToEdit.remove(tagFieldsToEdit1);
     if (tagFieldsToEditAll != null) tagFieldsToEditAll.loop((t) => tagFieldsToEdit.remove(t));
+
+    if (imageSourceAlbum1 != null) imageSourceAlbum.remove(imageSourceAlbum1);
+    if (imageSourceArtist1 != null) imageSourceArtist.remove(imageSourceArtist1);
 
     _writeToStorage();
   }

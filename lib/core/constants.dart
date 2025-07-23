@@ -259,6 +259,8 @@ enum AppPathsBackupEnum {
   PLAYLISTS_ARTWORKS(true),
   QUEUES(true),
   ARTWORKS(true),
+  ARTWORKS_ARTISTS(true),
+  ARTWORKS_ALBUMS(true),
   PALETTES(true),
   VIDEOS_CACHE(true),
   AUDIOS_CACHE(true),
@@ -314,6 +316,8 @@ enum AppPathsBackupEnum {
       AppPathsBackupEnum.PLAYLISTS_ARTWORKS => AppDirs.PLAYLISTS_ARTWORKS,
       AppPathsBackupEnum.QUEUES => AppDirs.QUEUES,
       AppPathsBackupEnum.ARTWORKS => AppDirs.ARTWORKS,
+      AppPathsBackupEnum.ARTWORKS_ARTISTS => AppDirs.ARTWORKS_ARTISTS,
+      AppPathsBackupEnum.ARTWORKS_ALBUMS => AppDirs.ARTWORKS_ALBUMS,
       AppPathsBackupEnum.PALETTES => AppDirs.PALETTES,
       AppPathsBackupEnum.VIDEOS_CACHE => AppDirs.VIDEOS_CACHE,
       AppPathsBackupEnum.AUDIOS_CACHE => AppDirs.AUDIOS_CACHE,
@@ -409,6 +413,8 @@ class AppPathsBackupEnumCategories {
 
   static List<AppPathsBackupEnum> artworks = [
     AppPathsBackupEnum.ARTWORKS,
+    AppPathsBackupEnum.ARTWORKS_ARTISTS,
+    AppPathsBackupEnum.ARTWORKS_ALBUMS,
   ];
 
   static List<AppPathsBackupEnum> thumbnails = [
@@ -497,6 +503,8 @@ class AppDirs {
   static final PLAYLISTS_ARTWORKS = _join(USER_DATA, 'Playlists Artworks');
   static final QUEUES = _join(USER_DATA, 'Queues');
   static final ARTWORKS = _join(USER_DATA, 'Artworks'); // extracted audio artworks
+  static final ARTWORKS_ARTISTS = _join(USER_DATA, 'Artworks Artists');
+  static final ARTWORKS_ALBUMS = _join(USER_DATA, 'Artworks Albums');
   static final PALETTES = _join(USER_DATA, 'Palettes');
   static final VIDEOS_CACHE = _join(USER_DATA, 'Videos');
   static final AUDIOS_CACHE = _join(USER_DATA, 'Audios');
@@ -539,6 +547,8 @@ class AppDirs {
     PLAYLISTS_ARTWORKS,
     QUEUES,
     ARTWORKS,
+    ARTWORKS_ARTISTS,
+    ARTWORKS_ALBUMS,
     PALETTES,
     VIDEOS_CACHE,
     VIDEOS_CACHE_TEMP,

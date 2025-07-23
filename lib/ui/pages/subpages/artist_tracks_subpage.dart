@@ -9,9 +9,9 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 
 class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
   @override
@@ -101,12 +101,13 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2.0),
                   child: ContainerWithBorder(
-                    child: ArtworkWidget(
+                    child: NetworkArtwork.orLocal(
                       key: Key(tracks.pathToImage),
+                      info: NetworkArtworkInfo.artist(name),
+                      path: tracks.pathToImage,
                       track: tracks.trackOfImage,
                       thumbnailSize: size,
                       fit: BoxFit.fitHeight,
-                      path: tracks.pathToImage,
                       forceSquared: true,
                       isCircle: true,
                       blur: 12.0,

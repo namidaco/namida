@@ -7,8 +7,8 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
-import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 
 class ArtistTile extends StatelessWidget {
   final String name;
@@ -44,11 +44,12 @@ class ArtistTile extends StatelessWidget {
                 NamidaHero(
                   tag: hero,
                   child: ContainerWithBorder(
-                    child: ArtworkWidget(
+                    child: NetworkArtwork.orLocal(
                       key: Key(tracks.pathToImage),
-                      track: tracks.trackOfImage,
-                      thumbnailSize: Dimensions.artistThumbnailSize,
                       path: tracks.pathToImage,
+                      track: tracks.trackOfImage,
+                      info: NetworkArtworkInfo.artist(name),
+                      thumbnailSize: Dimensions.artistThumbnailSize,
                       borderRadius: 0,
                       forceSquared: true,
                       blur: 6.0,

@@ -15,6 +15,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 
 part 'album_identifier_wrapper.dart';
 
@@ -496,15 +497,8 @@ extension TrackExtUtils on TrackExtended {
     return "${isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS}$identifier.png";
   }
 
-  String get albumIdentifier => getAlbumIdentifier(settings.albumIdentifiers.value);
-
-  String getAlbumIdentifier(List<AlbumIdentifier> identifiers) {
-    final idWrapper = albumIdentifierWrapper;
-    final n = identifiers.contains(AlbumIdentifier.albumName) ? idWrapper?.album ?? '' : '';
-    final aa = identifiers.contains(AlbumIdentifier.albumArtist) ? idWrapper?.albumArtist ?? '' : '';
-    final y = identifiers.contains(AlbumIdentifier.year) ? idWrapper?.year ?? '' : '';
-    return "$n$aa$y";
-  }
+  String get albumIdentifier => albumIdentifierWrapper?.resolved() ?? '';
+  String getAlbumIdentifier(List<AlbumIdentifier> identifiers) => albumIdentifierWrapper?.resolve(identifiers) ?? '';
 
   String get youtubeLink {
     var comment = this.comment;
@@ -794,6 +788,8 @@ extension TrackUtils on Track {
   String get audioInfoFormatted => toTrackExt().audioInfoFormatted;
   String? get gainDataFormatted => toTrackExt().gainDataFormatted;
   String get audioInfoFormattedCompact => toTrackExt().audioInfoFormattedCompact;
+
+  AlbumIdentifierWrapper? get albumIdentifierWrapper => toTrackExtOrNull()?.albumIdentifierWrapper;
 
   String get albumIdentifier => toTrackExt().albumIdentifier;
   String getAlbumIdentifier(List<AlbumIdentifier> identifiers) => toTrackExt().getAlbumIdentifier(identifiers);

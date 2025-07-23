@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
+import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -31,6 +33,9 @@ enum _ExtraSettingsKeys {
   searchCleanup,
   prioritizeEmbeddedLyrics,
   lyricsSource,
+  imageSource,
+  imageSourceAlbum,
+  imageSourceArtist,
   immersiveMode,
   swipeToOpenDrawer,
   alwaysExpandedSearchbar,
@@ -58,6 +63,9 @@ class ExtrasSettings extends SettingSubpageProvider {
         _ExtraSettingsKeys.searchCleanup: [lang.ENABLE_SEARCH_CLEANUP, lang.ENABLE_SEARCH_CLEANUP_SUBTITLE],
         _ExtraSettingsKeys.prioritizeEmbeddedLyrics: [lang.PRIORITIZE_EMBEDDED_LYRICS],
         _ExtraSettingsKeys.lyricsSource: [lang.LYRICS_SOURCE],
+        _ExtraSettingsKeys.imageSource: [lang.IMAGE_SOURCE, lang.ALBUM, lang.ALBUMS],
+        _ExtraSettingsKeys.imageSourceAlbum: [lang.IMAGE_SOURCE, lang.ALBUM, lang.ALBUMS],
+        _ExtraSettingsKeys.imageSourceArtist: [lang.IMAGE_SOURCE, lang.ARTIST, lang.ARTISTS],
         _ExtraSettingsKeys.immersiveMode: [lang.IMMERSIVE_MODE, lang.IMMERSIVE_MODE_SUBTITLE],
         _ExtraSettingsKeys.swipeToOpenDrawer: [lang.SWIPE_TO_OPEN_DRAWER],
         _ExtraSettingsKeys.alwaysExpandedSearchbar: [lang.ALWAYS_EXPANDED_SEARCHBAR],
@@ -65,6 +73,82 @@ class ExtrasSettings extends SettingSubpageProvider {
         _ExtraSettingsKeys.vibrationType: [lang.VIBRATION_TYPE, lang.VIBRATION, lang.HAPTIC_FEEDBACK],
         _ExtraSettingsKeys.extractAllPalettes: [lang.EXTRACT_ALL_COLOR_PALETTES],
       };
+
+  Widget _getImageSourceTile({
+    required _ExtraSettingsKeys key,
+    required String title,
+    required IconData icon,
+    required RxList<LibraryImageSource> settingsKey,
+    required Function(LibraryImageSource sources) onAdd,
+    required Function(LibraryImageSource sources) onRemove,
+  }) =>
+      getItemWrapper(
+        key: key,
+        child: ObxO(
+          rx: settingsKey,
+          builder: (context, sources) => CustomListTile(
+            bgColor: getBgColor(key),
+            title: title,
+            icon: icon,
+            borderR: 16.0,
+            subtitle: LibraryImageSource.values.where((element) => sources.contains(element)).map((e) => e.toText()).join(', '), // to be sorted
+            visualDensity: VisualDensity(horizontal: -4.0, vertical: -4.0),
+            onTap: () {
+              void tileOnTap(LibraryImageSource source, {bool removeIfExists = true}) {
+                final alreadyExist = settingsKey.value.contains(source);
+                if (alreadyExist) {
+                  if (removeIfExists) {
+                    if (settingsKey.value.length <= 1) {
+                      showMinimumItemsSnack(1);
+                    } else {
+                      onRemove(source);
+                    }
+                  }
+                } else {
+                  onAdd(source);
+                }
+              }
+
+              NamidaNavigator.inst.navigateDialog(
+                dialog: CustomBlurryDialog(
+                  title: title,
+                  actions: [
+                    IconButton(
+                      onPressed: () {
+                        for (final s in LibraryImageSource.values) {
+                          tileOnTap(s, removeIfExists: false);
+                        }
+                      },
+                      icon: const Icon(Broken.refresh),
+                    ),
+                    const DoneButton(),
+                  ],
+                  child: ObxO(
+                    rx: settingsKey,
+                    builder: (context, imageSources) => ListView(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      children: [
+                        ...LibraryImageSource.values.map(
+                          (e) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: ListTileWithCheckMark(
+                              active: imageSources.contains(e),
+                              icon: e.toIcon(),
+                              title: e.toText(),
+                              onTap: () => tileOnTap(e),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -323,7 +407,6 @@ class ExtrasSettings extends SettingSubpageProvider {
             child: Obx(
               (context) => CustomListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.lyricsSource),
-                enabled: settings.enableLyrics.valueR,
                 title: lang.LYRICS_SOURCE,
                 leading: const StackedIcon(
                   baseIcon: Broken.mobile_programming,
@@ -348,9 +431,27 @@ class ExtrasSettings extends SettingSubpageProvider {
                           padding: EdgeInsets.zero,
                           shrinkWrap: true,
                           children: [
+                            ObxO(
+                              rx: settings.enableLyrics,
+                              builder: (context, enableLyrics) => CustomSwitchListTile(
+                                icon: Broken.document,
+                                title: lang.LYRICS,
+                                value: enableLyrics,
+                                onChanged: (isTrue) {
+                                  settings.save(enableLyrics: !isTrue);
+                                  final currentItem = Player.inst.currentItem.value;
+                                  if (currentItem != null) {
+                                    Lyrics.inst.updateLyrics(currentItem);
+                                  }
+                                },
+                              ),
+                            ),
+                            const NamidaContainerDivider(
+                              margin: EdgeInsets.symmetric(vertical: 4.0),
+                            ),
                             ...LyricsSource.values.map(
                               (e) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12.0),
+                                padding: const EdgeInsets.symmetric(vertical: 3.0),
                                 child: ListTileWithCheckMark(
                                   active: lyricsSource == e,
                                   title: e.toText(),
@@ -367,6 +468,43 @@ class ExtrasSettings extends SettingSubpageProvider {
               ),
             ),
           ),
+
+          getItemWrapper(
+            key: _ExtraSettingsKeys.imageSource,
+            child: NamidaExpansionTile(
+              bgColor: getBgColor(_ExtraSettingsKeys.imageSource),
+              bigahh: true,
+              normalRightPadding: true,
+              initiallyExpanded: false,
+              leading: const StackedIcon(
+                baseIcon: Broken.image,
+                secondaryIcon: Broken.cpu,
+                secondaryIconSize: 13.0,
+              ),
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+              iconColor: context.defaultIconColor(),
+              titleText: lang.IMAGE_SOURCE,
+              children: [
+                _getImageSourceTile(
+                  key: _ExtraSettingsKeys.imageSourceAlbum,
+                  settingsKey: settings.imageSourceAlbum,
+                  title: lang.ALBUMS,
+                  icon: LibraryTab.albums.toIcon(),
+                  onAdd: (s) => settings.insertInList(0, imageSourceAlbum1: s),
+                  onRemove: (s) => settings.removeFromList(imageSourceAlbum1: s),
+                ),
+                _getImageSourceTile(
+                  key: _ExtraSettingsKeys.imageSourceArtist,
+                  settingsKey: settings.imageSourceArtist,
+                  title: lang.ARTISTS,
+                  icon: LibraryTab.artists.toIcon(),
+                  onAdd: (s) => settings.insertInList(0, imageSourceArtist1: s),
+                  onRemove: (s) => settings.removeFromList(imageSourceArtist1: s),
+                ),
+              ],
+            ),
+          ),
+
           if (NamidaFeaturesVisibility.showToggleImmersiveMode)
             getItemWrapper(
               key: _ExtraSettingsKeys.immersiveMode,
@@ -487,6 +625,7 @@ class ExtrasSettings extends SettingSubpageProvider {
               ),
             ),
           ),
+
           getItemWrapper(
             key: _ExtraSettingsKeys.extractAllPalettes,
             child: Obx(

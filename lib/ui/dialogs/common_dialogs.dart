@@ -18,6 +18,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 
 class NamidaDialogs {
   static NamidaDialogs get inst => _instance;
@@ -67,6 +68,7 @@ class NamidaDialogs {
       forceSingleArtwork: true,
       heroTag: 'album_$albumIdentifier',
       albumToAddFrom: (tracks.album, albumIdentifier),
+      networkArtworkInfo: NetworkArtworkInfo.album(albumIdentifier, artists.firstOrNull),
     );
   }
 
@@ -84,6 +86,7 @@ class NamidaDialogs {
       heroTag: 'artist_$name',
       isCircle: true,
       artistToAddFrom: name,
+      networkArtworkInfo: NetworkArtworkInfo.artist(name),
     );
   }
 

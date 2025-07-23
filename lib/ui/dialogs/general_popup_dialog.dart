@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import 'package:rhttp/rhttp.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:namida/class/file_parts.dart';
@@ -34,14 +35,15 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
+import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
-import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -52,6 +54,8 @@ Future<void> showGeneralPopupDialog(
   String title,
   String subtitle,
   QueueSource source, {
+  NetworkArtworkInfo? networkArtworkInfo,
+  CustomArtworkManager? customArtworkManager,
   void Function()? onTopBarTap,
   String? playlistName,
   List<TrackWithDate> tracksWithDates = const <TrackWithDate>[],
@@ -137,6 +141,11 @@ Future<void> showGeneralPopupDialog(
 
   bool shoulShowPlaylistUtils() => comingFromPlaylistMenu && tracks.length > 1 && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
   bool shoulShowRemoveFromPlaylist() => !comingFromPlaylistMenu && tracksWithDates.isNotEmpty && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
+
+  customArtworkManager ??= networkArtworkInfo?.toManager();
+  if (customArtworkManager == null && playlistName != null && shoulShowPlaylistUtils()) {
+    customArtworkManager = CustomArtworkManager.playlist(playlistName);
+  }
 
   Widget bigIcon(IconData icon, String Function() tooltipMessage, void Function()? onTap, {String subtitle = '', Widget? iconWidget}) {
     return NamidaInkWell(
@@ -779,7 +788,8 @@ Future<void> showGeneralPopupDialog(
 
   if (hasHeaderTap && trailingIcon == null) trailingIcon = Broken.arrow_right_3;
 
-  final artworkFile = playlistName == null ? null : PlaylistController.inst.getArtworkFileForPlaylist(playlistName);
+  final artworkFile = customArtworkManager?.getArtworkFile();
+  final artworkFileGood = artworkFile != null && artworkFile.existsSync();
 
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
@@ -843,6 +853,7 @@ Future<void> showGeneralPopupDialog(
                           ? showTrackInfoDialog(
                               tracks.first,
                               false,
+                              networkArtworkInfo: networkArtworkInfo,
                               comingFromQueue: comingFromQueue,
                               index: index,
                               colorScheme: colorDelightened,
@@ -856,17 +867,19 @@ Future<void> showGeneralPopupDialog(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const SizedBox(width: 16.0),
-                            if (forceSingleArtwork! && artworkFile == null)
+                            if (forceSingleArtwork! || artworkFileGood)
                               NamidaHero(
                                 tag: heroTag,
-                                child: ArtworkWidget(
+                                child: NetworkArtwork.orLocal(
                                   key: Key(tracks.pathToImage),
                                   fadeMilliSeconds: 0,
                                   track: tracks.trackOfImage,
-                                  path: tracks.pathToImage,
+                                  path: artworkFileGood ? artworkFile.path : tracks.pathToImage,
+                                  info: networkArtworkInfo,
                                   thumbnailSize: 60,
                                   forceSquared: forceSquared,
                                   borderRadius: isCircle ? 200 : 8.0,
+                                  isCircle: isCircle,
                                 ),
                               )
                             else
@@ -924,65 +937,9 @@ Future<void> showGeneralPopupDialog(
                               ),
                             ),
                             const SizedBox(width: 16.0),
-                            if (shoulShowPlaylistUtils()) ...[
-                              NamidaIconButton(
-                                icon: Broken.gallery_edit,
-                                onPressed: () async {
-                                  if (playlistName == null) return;
-                                  final alreadySetArtworkPossible = PlaylistController.inst.getArtworkFileForPlaylist(playlistName);
-                                  final alreadySetArtwork = await alreadySetArtworkPossible.exists() ? alreadySetArtworkPossible : null;
-
-                                  void showSnackInfo(bool success) {
-                                    if (success) {
-                                      snackyy(icon: Broken.gallery_edit, message: lang.SUCCEEDED, borderColor: Colors.green);
-                                    } else {
-                                      snackyy(icon: Broken.gallery_edit, message: lang.FAILED, borderColor: Colors.red);
-                                    }
-                                  }
-
-                                  Future<void> onEdit() async {
-                                    final artworkFile = await NamidaFileBrowser.pickFile(memeType: NamidaStorageFileMemeType.image);
-                                    if (artworkFile != null) {
-                                      final didSet = await PlaylistController.inst.setArtworkForPlaylist(playlistName, artworkFile: artworkFile, artworkBytes: null);
-                                      showSnackInfo(didSet);
-                                    }
-                                  }
-
-                                  Future<void> onDelete() async {
-                                    final didDelete = await PlaylistController.inst.setArtworkForPlaylist(playlistName, artworkFile: null, artworkBytes: null);
-                                    showSnackInfo(didDelete);
-                                  }
-
-                                  if (alreadySetArtwork != null) {
-                                    NamidaNavigator.inst.navigateDialog(
-                                      dialog: CustomBlurryDialog(
-                                        title: lang.CONFIGURE,
-                                        bodyText: lang.CHOOSE,
-                                        actions: [
-                                          NamidaButton(
-                                            text: lang.DELETE.toUpperCase(),
-                                            style: ButtonStyle(
-                                              foregroundColor: WidgetStatePropertyAll(Colors.red),
-                                            ),
-                                            onPressed: () async {
-                                              await onDelete();
-                                              NamidaNavigator.inst.closeDialog();
-                                            },
-                                          ),
-                                          NamidaButton(
-                                            text: lang.EDIT.toUpperCase(),
-                                            onPressed: () async {
-                                              await onEdit();
-                                              NamidaNavigator.inst.closeDialog();
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  } else {
-                                    await onEdit();
-                                  }
-                                },
+                            if (customArtworkManager != null) ...[
+                              _ArtworkManager(
+                                customArtworkManager: customArtworkManager,
                               ),
                               const SizedBox(width: 16.0),
                             ] else ...[
@@ -1605,6 +1562,192 @@ class _SmallUnderlinedChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ArtworkManager extends StatelessWidget {
+  final CustomArtworkManager customArtworkManager;
+  const _ArtworkManager({required this.customArtworkManager});
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaIconButton(
+      icon: Broken.gallery_edit,
+      onPressed: () async {
+        final alreadySetArtworkPossible = customArtworkManager.getArtworkFile();
+        final alreadySetArtwork = await alreadySetArtworkPossible.exists() ? alreadySetArtworkPossible : null;
+
+        void showSnackInfo([dynamic error]) {
+          if (error == null) {
+            snackyy(icon: Broken.gallery_edit, message: lang.SUCCEEDED, borderColor: Colors.green);
+          } else {
+            snackyy(icon: Broken.gallery_edit, message: "${lang.FAILED}:$error", borderColor: Colors.red);
+          }
+        }
+
+        Future<void> onEdit() async {
+          final artworkFile = await NamidaFileBrowser.pickFile(memeType: NamidaStorageFileMemeType.image);
+          if (artworkFile != null) {
+            try {
+              await customArtworkManager.setArtworkFile(artworkFile, null);
+              showSnackInfo();
+            } catch (e) {
+              showSnackInfo(e);
+            }
+          }
+        }
+
+        Future<void> onDelete() async {
+          try {
+            await customArtworkManager.setArtworkFile(null, null);
+            showSnackInfo();
+          } catch (e) {
+            showSnackInfo(e);
+          }
+        }
+
+        final fetchPossibleArtworksFn = customArtworkManager.fetchPossibleArtworks;
+        if (alreadySetArtwork != null || fetchPossibleArtworksFn != null) {
+          final possibleArtworks = Rxn<List<String>>();
+          CancelToken? cancelToken;
+          final possibleArtworksLoading = false.obs;
+
+          if (fetchPossibleArtworksFn != null) {
+            possibleArtworksLoading.value = true;
+            cancelToken = CancelToken();
+            fetchPossibleArtworksFn(cancelToken).catchError((_) => null).then(
+              (value) {
+                possibleArtworks.value = value;
+                possibleArtworksLoading.value = false;
+              },
+            );
+          }
+
+          NamidaNavigator.inst.navigateDialog(
+            onDisposing: () {
+              cancelToken?.cancel();
+              possibleArtworks.close();
+              possibleArtworksLoading.close();
+            },
+            dialog: CustomBlurryDialog(
+              title: lang.CONFIGURE,
+              actions: [
+                NamidaButton(
+                  text: lang.DELETE.toUpperCase(),
+                  style: ButtonStyle(
+                    foregroundColor: WidgetStatePropertyAll(Colors.red),
+                  ),
+                  onPressed: () async {
+                    await onDelete();
+                    NamidaNavigator.inst.closeDialog();
+                  },
+                ),
+                NamidaButton(
+                  text: lang.PICK_FROM_STORAGE.toUpperCase(),
+                  onPressed: () async {
+                    await onEdit();
+                    NamidaNavigator.inst.closeDialog();
+                  },
+                ),
+              ],
+              child: ObxO(
+                rx: possibleArtworks,
+                builder: (context, urls) {
+                  final extraCountText = fetchPossibleArtworksFn == null ? '' : " (${urls?.length ?? 0})";
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Text(
+                          lang.CHOOSE + extraCountText,
+                          style: context.textTheme.displayMedium,
+                        ),
+                      ),
+                      ObxO(
+                        rx: possibleArtworksLoading,
+                        builder: (context, loading) => SizedBox(
+                          height: fetchPossibleArtworksFn == null ? null : context.height * 0.4,
+                          width: context.width,
+                          child: loading
+                              ? Center(
+                                  child: ThreeArchedCircle(
+                                    color: context.theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                    size: 32.0,
+                                  ),
+                                )
+                              : fetchPossibleArtworksFn == null
+                                  ? null
+                                  : urls == null || urls.isEmpty
+                                      ? Icon(
+                                          Broken.emoji_sad,
+                                          size: 48.0,
+                                        )
+                                      : Expanded(
+                                          child: GridView.builder(
+                                            shrinkWrap: true,
+                                            cacheExtent: context.height * 3,
+                                            itemCount: urls.length,
+                                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount: 3,
+                                              mainAxisSpacing: 6.0,
+                                              crossAxisSpacing: 4.0,
+                                            ),
+                                            itemBuilder: (context, index) {
+                                              final url = urls[index];
+                                              return BorderRadiusClip(
+                                                borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                                                child: FutureBuilder(
+                                                  future: Rhttp.getBytes(url),
+                                                  builder: (context, snapshot) {
+                                                    final bytes = snapshot.data?.body;
+                                                    return AnimatedSwitcher(
+                                                      layoutBuilder: (currentChild, previousChildren) {
+                                                        return Stack(
+                                                          alignment: Alignment.center,
+                                                          children: <Widget>[
+                                                            ...previousChildren,
+                                                            if (currentChild != null) Positioned.fill(child: currentChild),
+                                                          ],
+                                                        );
+                                                      },
+                                                      duration: Duration(milliseconds: 200),
+                                                      child: bytes == null
+                                                          ? ColoredBox(
+                                                              color: context.theme.cardColor,
+                                                            )
+                                                          : TapDetector(
+                                                              onTap: () async {
+                                                                NamidaNavigator.inst.closeDialog();
+                                                                try {
+                                                                  await customArtworkManager.setArtworkFile(null, bytes);
+                                                                  showSnackInfo();
+                                                                } catch (e) {
+                                                                  showSnackInfo(e);
+                                                                }
+                                                              },
+                                                              child: Image.memory(bytes),
+                                                            ),
+                                                    );
+                                                  },
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          );
+        } else {
+          await onEdit();
+        }
+      },
     );
   }
 }

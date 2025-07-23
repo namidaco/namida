@@ -7,8 +7,8 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
-import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 
 class AlbumTile extends StatelessWidget {
   final String identifier;
@@ -56,11 +56,12 @@ class AlbumTile extends StatelessWidget {
                   height: albumThumbnailSize,
                   child: NamidaHero(
                     tag: hero,
-                    child: ArtworkWidget(
+                    child: NetworkArtwork.orLocal(
                       key: Key(album.pathToImage),
                       track: album.trackOfImage,
                       thumbnailSize: albumThumbnailSize,
                       path: album.pathToImage,
+                      info: NetworkArtworkInfo.albumAutoArtist(identifier),
                       disableBlurBgSizeShrink: true,
                       forceSquared: settings.forceSquaredAlbumThumbnail.value,
                     ),

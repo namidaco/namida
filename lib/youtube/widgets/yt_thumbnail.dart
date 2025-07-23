@@ -17,18 +17,14 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 enum ThumbnailType {
-  video,
-  playlist,
-  channel,
-  other,
-}
+  video(Broken.video),
+  playlist(Broken.music_library_2),
+  channel(Broken.user),
+  other(null);
 
-const _typeToIcon = {
-  ThumbnailType.video: Broken.video,
-  ThumbnailType.playlist: Broken.music_library_2,
-  ThumbnailType.channel: Broken.user,
-  ThumbnailType.other: null,
-};
+  final IconData? icon;
+  const ThumbnailType(this.icon);
+}
 
 class YoutubeThumbnail extends StatefulWidget {
   final String? videoId;
@@ -252,7 +248,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         width: widget.width,
         thumbnailSize: widget.width,
         boxShadow: widget.boxShadow,
-        icon: _typeToIcon[widget.type] ?? Broken.musicnote,
+        icon: widget.type.icon ?? Broken.musicnote,
         iconSize: widget.iconSize ?? widget.width * 0.3,
         forceSquared: widget.forceSquared,
         // cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.2,
@@ -271,7 +267,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         displayIcon: true,
         fit: widget.fit,
         alignment: widget.alignment,
-        isYTThumbnail: true,
+        isNetworkThumbnail: true,
       ),
     );
   }

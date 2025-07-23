@@ -39,7 +39,7 @@ class ArtworkWidget extends StatefulWidget {
   final bool forceDummyArtwork;
   final Color? bgcolor;
   final Widget? child;
-  final List<Widget> onTopWidgets;
+  final List<Widget>? onTopWidgets;
   final List<BoxShadow>? boxShadow;
   final bool? enableGlow;
   final bool displayIcon;
@@ -50,7 +50,7 @@ class ArtworkWidget extends StatefulWidget {
   final AlignmentGeometry alignment;
 
   /// can help skip some checks as its already done by [YoutubeThumbnail].
-  final bool isYTThumbnail;
+  final bool isNetworkThumbnail;
 
   const ArtworkWidget({
     required super.key,
@@ -73,7 +73,7 @@ class ArtworkWidget extends StatefulWidget {
     this.iconSize,
     this.staggered = false,
     this.boxShadow,
-    this.onTopWidgets = const <Widget>[],
+    this.onTopWidgets,
     this.enableGlow,
     this.displayIcon = true,
     this.icon,
@@ -81,7 +81,7 @@ class ArtworkWidget extends StatefulWidget {
     this.fallbackToFolderCover = true,
     this.fit = BoxFit.cover,
     this.alignment = Alignment.center,
-    this.isYTThumbnail = false,
+    this.isNetworkThumbnail = false,
   });
 
   static const kDefaultFadeMilliSeconds = 300;
@@ -115,7 +115,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     _imagePath = widget.path; // to prevent flashing/etc
 
-    if (widget.isYTThumbnail == false) {
+    if (widget.isNetworkThumbnail == false) {
       _initValues();
     }
   }
@@ -135,7 +135,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       }
     }
 
-    if (widget.isYTThumbnail == false) {
+    if (widget.isNetworkThumbnail == false) {
       if (_imagePath != _imagePathInitialValue) refreshState(() => _imagePath = _imagePathInitialValue);
       Timer(Duration.zero, _extractArtwork);
     }
@@ -218,7 +218,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
               alignment: Alignment.center,
               children: [
                 icon,
-                ...widget.onTopWidgets,
+                ...?widget.onTopWidgets,
               ],
             )
           : icon,
@@ -228,14 +228,16 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   @override
   Widget build(BuildContext context) {
     final bytes = this.bytes;
-    final key = Key("${widget.path}_${bytes?.length}");
+    final key = Key("${widget.key}${_imagePath}_${bytes?.length}");
     final isValidBytes = bytes is Uint8List ? bytes.isNotEmpty : false;
     final goodImagePath = _imagePath?.isNotEmpty == true;
     final canDisplayImage = goodImagePath || isValidBytes;
-    final thereMightBeImageSoon = _imagePath == _imagePathInitialValue && !widget.forceDummyArtwork;
-
+    final thereMightBeImageSoon = (_imagePath == _imagePathInitialValue || (bytes != null && bytes.isEmpty)) && !widget.forceDummyArtwork;
     final boxWidth = widget.width ?? widget.thumbnailSize;
     final boxHeight = widget.height ?? widget.thumbnailSize;
+
+    final dropShadowEnabled = widget.enableGlow ?? (settings.enableGlowEffect.value && widget.blur != 0.0);
+    final sizePercentage = widget.disableBlurBgSizeShrink || !dropShadowEnabled ? 1.0 : DropShadow.defaultSizePercentage;
 
     // -- dont display stock widget if image can be obtained.
     if (thereMightBeImageSoon) {
@@ -244,14 +246,20 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
         width: widget.staggered ? null : boxWidth,
         height: widget.staggered ? null : boxHeight,
       );
-      return widget.onTopWidgets.isEmpty
+      final child = widget.onTopWidgets?.isEmpty ?? true
           ? box
           : Stack(
               alignment: Alignment.center,
               children: [
                 box,
-                ...widget.onTopWidgets,
+                ...?widget.onTopWidgets,
               ],
+            );
+      return sizePercentage == 1.0
+          ? child
+          : Transform.scale(
+              scale: sizePercentage,
+              child: child,
             );
     }
 
@@ -269,26 +277,26 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     final borderR = widget.isCircle || settings.borderRadiusMultiplier.value == 0 ? null : BorderRadius.circular(widget.borderRadius.multipliedRadius);
     final shape = widget.isCircle ? BoxShape.circle : BoxShape.rectangle;
-    return !canDisplayImage || widget.forceDummyArtwork
-        ? _getStockWidget(
-            key: key,
-            boxWidth: boxWidth,
-            boxHeight: boxHeight,
-            borderRadius: borderR,
-            shape: shape,
-            stackWithOnTopWidgets: true,
-            bgc: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
-          )
-        : SizedBox(
-            key: key,
-            width: widget.staggered ? null : boxWidth,
-            height: widget.staggered ? null : boxHeight,
-            child: Align(
-              child: _DropShadowWrapper(
-                enabled: widget.enableGlow ?? (settings.enableGlowEffect.value && widget.blur != 0.0),
-                blur: widget.blur,
-                sizePercentage: widget.disableBlurBgSizeShrink ? 1.0 : DropShadow.defaultSizePercentage,
-                child: Container(
+    return SizedBox(
+      key: key,
+      width: widget.staggered ? null : boxWidth,
+      height: widget.staggered ? null : boxHeight,
+      child: Align(
+        child: _DropShadowWrapper(
+          enabled: dropShadowEnabled,
+          blur: widget.blur,
+          sizePercentage: sizePercentage,
+          child: !canDisplayImage || widget.forceDummyArtwork
+              ? _getStockWidget(
+                  key: key,
+                  boxWidth: boxWidth,
+                  boxHeight: boxHeight,
+                  borderRadius: borderR,
+                  shape: shape,
+                  stackWithOnTopWidgets: true,
+                  bgc: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
+                )
+              : Container(
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     borderRadius: borderR,
@@ -359,13 +367,13 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                             );
                           },
                         ),
-                      ...widget.onTopWidgets
+                      ...?widget.onTopWidgets
                     ],
                   ),
                 ),
-              ),
-            ),
-          );
+        ),
+      ),
+    );
   }
 }
 

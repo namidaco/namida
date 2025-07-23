@@ -25,12 +25,13 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
-import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 
 Future<void> showTrackInfoDialog(
   Track track,
   bool enableBlur, {
+  NetworkArtworkInfo? networkArtworkInfo,
   bool comingFromQueue = false,
   int? index,
   Color? colorScheme,
@@ -211,11 +212,12 @@ Future<void> showTrackInfoDialog(
               builder: (context, maxWidth) {
                 final artwork = NamidaHero(
                   tag: heroTag,
-                  child: ArtworkWidget(
+                  child: NetworkArtwork.orLocal(
                     key: Key(track.pathToImage),
                     fadeMilliSeconds: 0,
                     track: track,
                     path: track.pathToImage,
+                    info: networkArtworkInfo,
                     thumbnailSize: maxWidth * 0.5,
                     forceSquared: settings.forceSquaredTrackThumbnail.value,
                     compressed: false,

@@ -632,6 +632,8 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
   final mainDirs = {
     AppDirs.ARTWORKS,
     AppDirs.THUMBNAILS,
+    AppDirs.ARTWORKS_ARTISTS,
+    AppDirs.ARTWORKS_ALBUMS,
     AppDirs.YT_THUMBNAILS,
     AppDirs.YT_THUMBNAILS_CHANNELS,
   };
@@ -1058,7 +1060,7 @@ class _CompressImagesListTile extends StatelessWidget {
     if (NamidaFFMPEG.inst.currentOperations[OperationType.imageCompress]?.value.currentFilePath != null) return; // return if currently compressing.
     final compPerc = 50.obs;
     final keepOriginalFileDates = true.obs;
-    final initialDirectories = [AppDirs.ARTWORKS, AppDirs.THUMBNAILS, AppDirs.YT_THUMBNAILS].obs;
+    final initialDirectories = [AppDirs.ARTWORKS, AppDirs.THUMBNAILS, AppDirs.ARTWORKS_ARTISTS, AppDirs.ARTWORKS_ALBUMS, AppDirs.YT_THUMBNAILS].obs;
     final dirsToCompress = <String>[].obs;
 
     NamidaNavigator.inst.navigateDialog(

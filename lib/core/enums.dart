@@ -549,3 +549,10 @@ enum ReplayGainType {
     return newList;
   }
 }
+
+enum LibraryImageSource {
+  local,
+  lastfm;
+
+  bool get isNetwork => this == lastfm;
+}

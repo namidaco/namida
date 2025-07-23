@@ -303,6 +303,7 @@ abstract class LanguageKeys {
   String get IF_NOT_PLAYING => _getKey('IF_NOT_PLAYING');
   String get IGNORES => _getKey('IGNORES');
   String get IGNORE_BATTERY_OPTIMIZATIONS_SUBTITLE => _getKey('IGNORE_BATTERY_OPTIMIZATIONS_SUBTITLE');
+  String get IMAGE_SOURCE => _getKey('IMAGE_SOURCE');
   String get IMMERSIVE_MODE => _getKey('IMMERSIVE_MODE');
   String get IMMERSIVE_MODE_SUBTITLE => _getKey('IMMERSIVE_MODE_SUBTITLE');
   String get IMPORT => _getKey('IMPORT');

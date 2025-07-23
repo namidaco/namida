@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:checkmark/checkmark.dart';
 
@@ -240,11 +241,11 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
   }
 
   FTags? tags;
-  FArtwork? artwork;
+  Uint8List? artworkBytes = Uint8List.fromList([]);
 
   final infoFull = await NamidaTaggerController.inst.extractMetadata(trackPath: track.path, isVideo: track is Video, saveArtworkToCache: false);
   tags = infoFull.tags;
-  artwork = tags.artwork;
+  artworkBytes = tags.artwork.bytes;
   if (infoFull.hasError) {
     final errorsMapLine = infoFull.errorsMap.isEmpty ? '' : "\n${infoFull.errorsMap}";
     snackyy(
@@ -537,7 +538,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                           fadeMilliSeconds: 0,
                                           icon: track is Video ? Broken.video : Broken.musicnote,
                                           thumbnailSize: maxWidth * 0.36,
-                                          bytes: currentImagePath.valueR != '' ? null : artwork?.bytes,
+                                          bytes: currentImagePath.valueR != '' ? null : artworkBytes,
                                           path: currentImagePath.valueR != '' ? currentImagePath.valueR : null,
                                           onTopWidgets: [
                                             Positioned(

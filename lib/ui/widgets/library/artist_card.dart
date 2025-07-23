@@ -6,8 +6,8 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
-import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 
 class ArtistCard extends StatelessWidget {
   final String name;
@@ -51,11 +51,12 @@ class ArtistCard extends StatelessWidget {
                   NamidaHero(
                     tag: hero,
                     child: ContainerWithBorder(
-                      child: ArtworkWidget(
+                      child: NetworkArtwork.orLocal(
                         key: Key(artist.pathToImage),
+                        info: NetworkArtworkInfo.artist(name),
+                        path: artist.pathToImage,
                         track: artist.trackOfImage,
                         thumbnailSize: imageSize,
-                        path: artist.pathToImage,
                         borderRadius: 0.0,
                         forceSquared: true,
                         blur: 8.0,

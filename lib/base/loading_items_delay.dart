@@ -17,19 +17,23 @@ mixin LoadingItemsDelayMixin<T extends StatefulWidget> on State<T> {
     if (!shouldDelayLoading) return true;
     if (itemsLoadingdelayMS == 0) return false;
 
-    _loadingDelayCompleter = Completer<bool>();
-    _loadingDelayTimer = Timer(Duration(milliseconds: delayMS ?? itemsLoadingdelayMS), () {
-      _loadingDelayCompleter?.completeIfWasnt(mounted);
+    _loadingDelayCompleter ??= Completer<bool>();
+    _loadingDelayTimer ??= Timer(Duration(milliseconds: delayMS ?? itemsLoadingdelayMS), () {
+      _fillResults(mounted);
     });
     return await _loadingDelayCompleter?.future ?? false;
   }
 
-  @override
-  void dispose() {
+  void _fillResults(bool canLoad) {
     _loadingDelayTimer?.cancel();
     _loadingDelayTimer = null;
-    _loadingDelayCompleter?.completeIfWasnt(false);
+    _loadingDelayCompleter?.completeIfWasnt(canLoad);
     _loadingDelayCompleter = null;
+  }
+
+  @override
+  void dispose() {
+    _fillResults(false);
     super.dispose();
   }
 }
