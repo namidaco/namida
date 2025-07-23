@@ -876,7 +876,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
         onTapUp: (details) => _isPointerDown.value = false,
         onVerticalDragEnd: (_) {
           _isPointerDown.value = false;
-          if (widget.value.abs() <= 0.05) {
+          if (widget.value.abs() <= 0.4) {
             // -- clamp if near center
             widget.onChanged(0);
             VibratorController.high();

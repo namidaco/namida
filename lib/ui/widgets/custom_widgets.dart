@@ -72,9 +72,10 @@ class NamidaReordererableListener extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
     return ReorderableDelayedDragStartListener(
       index: index,
-      delay: Duration(milliseconds: durationMs),
+      delay: isDesktop ? Duration.zero : Duration(milliseconds: durationMs),
       child: child,
     );
   }
@@ -642,6 +643,7 @@ class CustomBlurryDialog extends StatelessWidget {
                         child: SizedBox(
                           width: context.width - horizontalInset,
                           child: Wrap(
+                            runSpacing: 8.0,
                             alignment: leftAction == null ? WrapAlignment.end : WrapAlignment.spaceBetween,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
@@ -5799,5 +5801,17 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
           )
           .toList(),
     );
+  }
+}
+
+class ObxPrefer<T> extends StatelessWidget {
+  final RxBaseCore<T> rx;
+  final Widget Function(BuildContext context, T? value) builder;
+  final bool enabled;
+  const ObxPrefer({required this.rx, required this.builder, required this.enabled, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return enabled ? ObxO(rx: rx, builder: builder) : builder(context, null);
   }
 }
