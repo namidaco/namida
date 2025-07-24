@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
-import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
 import 'package:http_cache_stream/http_cache_stream.dart';
 import 'package:media_kit/media_kit.dart' as mk;
@@ -19,6 +18,7 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rhttp/rhttp.dart';
+import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
@@ -337,101 +337,17 @@ Future<void> _clearIntentCachedFiles() async {
 }
 
 void _initializeIntenties() {
-  void showErrorPlayingFileSnackbar({String? error}) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final errorMessage = error != null ? '($error)' : '';
-      snackyy(title: lang.ERROR, message: '${lang.COULDNT_PLAY_FILE} $errorMessage');
-    });
-  }
-
-  void playFiles(List<SharedFile> files) {
-    // -- deep links
-    if (files.length == 1) {
-      final linkRaw = files.first.value;
-      if (linkRaw != null) {
-        final link = linkRaw.replaceAll(r'\', '');
-        if (link.startsWith('app://patreonauth.msob7y.namida')) {
-          final link = linkRaw.replaceAll(r'\', '');
-          YoutubeAccountController.membership.redirectUrlCompleter?.completeIfWasnt(link);
-          return;
-        }
-      }
-    }
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      if (files.isNotEmpty) {
-        final paths = <String>[];
-        final m3uPaths = <String>{};
-        files.loop((f) {
-          final realPath = f.realPath;
-          if (realPath != null) {
-            final path = realPath.replaceAll(r'\', '');
-            if (NamidaFileExtensionsWrapper.m3u.isPathValid(path)) {
-              m3uPaths.add(path);
-            } else {
-              paths.add(path);
-            }
-          } else {
-            f.value?.split('\n').loop((e) {
-              e.split('https://').loop((line) {
-                if (line.isNotEmpty) paths.add("https://$line");
-              });
-            });
-          }
-        });
-
-        if (m3uPaths.isNotEmpty) {
-          final allTracks = await PlaylistController.inst.readM3UFiles(m3uPaths);
-          final err = await playExternalFiles(allTracks.map((e) => e.path));
-          if (err != null) showErrorPlayingFileSnackbar(error: err);
-        } else if (paths.isNotEmpty) {
-          final youtubeIds = paths.map((e) {
-            final id = e.getYoutubeID;
-            return id == '' ? null : id;
-          }).whereType<String>();
-          final ytPlaylistsIds = paths.map((e) {
-            final matchPlId = e.isEmpty ? null : NamidaLinkUtils.extractPlaylistId(e);
-            return matchPlId;
-          }).whereType<String>();
-          if (youtubeIds.isNotEmpty) {
-            settings.youtube.onYoutubeLinkOpen.value.execute(youtubeIds);
-          } else if (ytPlaylistsIds.isNotEmpty) {
-            for (final plid in ytPlaylistsIds) {
-              YTHostedPlaylistSubpage.fromId(playlistId: plid, userPlaylist: null).navigate();
-            }
-          } else {
-            final existing = paths.where((element) => File(element).existsSync()); // this for sussy links
-            final err = await playExternalFiles(existing);
-            if (err != null) showErrorPlayingFileSnackbar(error: err);
-          }
-        }
-      }
-    });
-  }
-
   if (NamidaFeaturesVisibility.recieveSharingIntents) {
     // -- Recieving Initial Android Shared Intent.
-    FlutterSharingIntent.instance.getInitialSharing().then(playFiles);
+    FlutterSharingIntent.instance.getInitialSharing().then(
+          (items) => _NamidaReceiveIntentManager.executeReceivedItems(items, (f) => f.value, (f) => f.realPath),
+        );
 
     // -- Listening to Android Shared Intents.
     FlutterSharingIntent.instance.getMediaStream().listen(
-          playFiles,
-          onError: (err) => showErrorPlayingFileSnackbar(error: err.toString()),
+          (items) => _NamidaReceiveIntentManager.executeReceivedItems(items, (f) => f.value, (f) => f.realPath),
+          onError: (err) => _NamidaReceiveIntentManager.showErrorPlayingFileSnackbar(error: err.toString()),
         );
-  }
-}
-
-/// returns [true] if played successfully.
-Future<String?> playExternalFiles(Iterable<String> paths) async {
-  try {
-    final trs = await Indexer.inst.convertPathsToTracksAndAddToLists(paths);
-    if (trs.isNotEmpty) {
-      await Player.inst.playOrPause(0, trs, QueueSource.externalFile);
-      return null;
-    } else {
-      return 'Empty List';
-    }
-  } catch (e) {
-    return e.toString();
   }
 }
 
@@ -562,7 +478,7 @@ class _NamidaState extends State<Namida> {
   Widget build(BuildContext context) {
     final shouldAddEdgeAbsorbers = Platform.isAndroid || Platform.isIOS;
     final mainPageWrapper = MainPageWrapper(shouldShowOnBoarding: widget.shouldShowOnBoarding);
-    return Directionality(
+    Widget finalApp = Directionality(
       textDirection: TextDirection.ltr,
       child: ObxO(
         rx: NamidaChannel.inst.isInPip,
@@ -658,6 +574,11 @@ class _NamidaState extends State<Namida> {
         ),
       ),
     );
+    return NamidaFeaturesVisibility.recieveDragAndDrop
+        ? _NamidaDropRegion(
+            child: finalApp,
+          )
+        : finalApp;
   }
 }
 
@@ -689,5 +610,145 @@ class ScrollBehaviorModified extends ScrollBehavior {
       case TargetPlatform.windows:
         return const ClampingScrollPhysicsModified();
     }
+  }
+}
+
+class _NamidaReceiveIntentManager {
+  static void executeReceivedItems<T>(List<T> files, String? Function(T f) valueCallback, String? Function(T f) realPathCallback) {
+    // -- deep links
+    if (files.length == 1) {
+      final linkRaw = valueCallback(files.first);
+      if (linkRaw != null) {
+        final link = Platform.isAndroid ? linkRaw.replaceAll(r'\', '') : linkRaw;
+        if (link.startsWith('app://patreonauth.msob7y.namida')) {
+          final link = Platform.isAndroid ? linkRaw.replaceAll(r'\', '') : linkRaw;
+          YoutubeAccountController.membership.redirectUrlCompleter?.completeIfWasnt(link);
+          return;
+        }
+      }
+    }
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      if (files.isNotEmpty) {
+        final paths = <String>[];
+        final m3uPaths = <String>{};
+        files.loop((f) {
+          final realPath = realPathCallback(f);
+          if (realPath != null) {
+            final path = Platform.isAndroid ? realPath.replaceAll(r'\', '') : realPath;
+            if (NamidaFileExtensionsWrapper.m3u.isPathValid(path)) {
+              m3uPaths.add(path);
+            } else {
+              paths.add(path);
+            }
+          } else {
+            valueCallback(f)?.split('\n').loop((e) {
+              e.split('https://').loop((line) {
+                if (line.isNotEmpty) paths.add("https://$line");
+              });
+            });
+          }
+        });
+
+        if (m3uPaths.isNotEmpty) {
+          final allTracks = await PlaylistController.inst.readM3UFiles(m3uPaths);
+          final err = await _extractAndPlayExternalFiles(allTracks.map((e) => e.path));
+          if (err != null) showErrorPlayingFileSnackbar(error: err);
+        } else if (paths.isNotEmpty) {
+          final youtubeIds = paths.map((e) {
+            final id = e.getYoutubeID;
+            return id == '' ? null : id;
+          }).whereType<String>();
+          final ytPlaylistsIds = paths.map((e) {
+            final matchPlId = e.isEmpty ? null : NamidaLinkUtils.extractPlaylistId(e);
+            return matchPlId;
+          }).whereType<String>();
+          if (youtubeIds.isNotEmpty) {
+            settings.youtube.onYoutubeLinkOpen.value.execute(youtubeIds);
+          } else if (ytPlaylistsIds.isNotEmpty) {
+            for (final plid in ytPlaylistsIds) {
+              YTHostedPlaylistSubpage.fromId(playlistId: plid, userPlaylist: null).navigate();
+            }
+          } else {
+            final existing = paths.where((element) => File(element).existsSync()); // this for sussy links
+            final err = await _extractAndPlayExternalFiles(existing);
+            if (err != null) showErrorPlayingFileSnackbar(error: err);
+          }
+        }
+      }
+    });
+  }
+
+  static Future<String?> _extractAndPlayExternalFiles(Iterable<String> paths) async {
+    try {
+      final trs = await Indexer.inst.convertPathsToTracksAndAddToLists(paths);
+      if (trs.isNotEmpty) {
+        await Player.inst.playOrPause(0, trs, QueueSource.externalFile);
+        return null;
+      } else {
+        return 'Empty List (original ${paths.length} | extracted: ${trs.length})';
+      }
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  static void showErrorPlayingFileSnackbar({String? error}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final errorMessage = error != null ? '($error)' : '';
+      snackyy(title: lang.ERROR, message: '${lang.COULDNT_PLAY_FILE} $errorMessage');
+    });
+  }
+}
+
+class _NamidaDropRegion extends StatelessWidget {
+  final Widget child;
+  const _NamidaDropRegion({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return DropRegion(
+      formats: Formats.standardFormats,
+      hitTestBehavior: HitTestBehavior.opaque,
+      onDropOver: (event) {
+        final item = event.session.items.first;
+        if (item.canProvide(Formats.plainText)) {
+          return DropOperation.link;
+        }
+        if (item.canProvide(Formats.fileUri) || event.session.allowedOperations.contains(DropOperation.copy)) {
+          return DropOperation.copy;
+        }
+
+        return DropOperation.none;
+      },
+      onPerformDrop: (event) async {
+        final finalData = <String>[];
+        for (final item in event.session.items) {
+          final reader = item.dataReader;
+          if (reader == null) continue;
+          if (reader.canProvide(Formats.plainText)) {
+            reader.getValue<String>(
+              Formats.plainText,
+              (value) {
+                if (value != null) {
+                  finalData.add(value);
+                }
+              },
+            );
+          }
+          if (reader.canProvide(Formats.fileUri)) {
+            reader.getValue(
+              Formats.fileUri,
+              (value) {
+                if (value != null) {
+                  finalData.add(value.toFilePath());
+                }
+              },
+            );
+          }
+        }
+        _NamidaReceiveIntentManager.executeReceivedItems(finalData, (f) => f, (f) => f);
+      },
+      child: child,
+    );
   }
 }
