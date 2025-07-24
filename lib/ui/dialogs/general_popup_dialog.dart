@@ -142,6 +142,12 @@ Future<void> showGeneralPopupDialog(
   bool shoulShowPlaylistUtils() => comingFromPlaylistMenu && tracks.length > 1 && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
   bool shoulShowRemoveFromPlaylist() => !comingFromPlaylistMenu && tracksWithDates.isNotEmpty && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
 
+  if (networkArtworkInfo != null) {
+    // -- nullify if network not allowed
+    final isNetworkAllowed = networkArtworkInfo.settingsKey.value.any((element) => element.isNetwork);
+    if (!isNetworkAllowed) networkArtworkInfo = null;
+  }
+
   customArtworkManager ??= networkArtworkInfo?.toManager();
   if (customArtworkManager == null && playlistName != null && shoulShowPlaylistUtils()) {
     customArtworkManager = CustomArtworkManager.playlist(playlistName);
@@ -789,7 +795,7 @@ Future<void> showGeneralPopupDialog(
   if (hasHeaderTap && trailingIcon == null) trailingIcon = Broken.arrow_right_3;
 
   final artworkFile = customArtworkManager?.getArtworkFile();
-  final artworkFileGood = artworkFile != null && artworkFile.existsSync();
+  final artworkFileGood = artworkFile != null && artworkFile.existsSync() && (artworkFile.fileSizeSync() ?? 0) > 0;
 
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
@@ -875,7 +881,7 @@ Future<void> showGeneralPopupDialog(
                                   fadeMilliSeconds: 0,
                                   track: tracks.trackOfImage,
                                   path: artworkFileGood ? artworkFile.path : tracks.pathToImage,
-                                  info: networkArtworkInfo,
+                                  info: artworkFileGood ? networkArtworkInfo : null,
                                   thumbnailSize: 60,
                                   forceSquared: forceSquared,
                                   borderRadius: isCircle ? 200 : 8.0,
@@ -1576,7 +1582,8 @@ class _ArtworkManager extends StatelessWidget {
       icon: Broken.gallery_edit,
       onPressed: () async {
         final alreadySetArtworkPossible = customArtworkManager.getArtworkFile();
-        final alreadySetArtwork = await alreadySetArtworkPossible.exists() ? alreadySetArtworkPossible : null;
+        final alreadySetArtworkGood = await alreadySetArtworkPossible.exists() && ((await alreadySetArtworkPossible.fileSize() ?? 0) > 0);
+        final alreadySetArtworkExisting = alreadySetArtworkGood ? alreadySetArtworkPossible : null;
 
         void showSnackInfo([dynamic error]) {
           if (error == null) {
@@ -1608,7 +1615,7 @@ class _ArtworkManager extends StatelessWidget {
         }
 
         final fetchPossibleArtworksFn = customArtworkManager.fetchPossibleArtworks;
-        if (alreadySetArtwork != null || fetchPossibleArtworksFn != null) {
+        if (alreadySetArtworkExisting != null || fetchPossibleArtworksFn != null) {
           final possibleArtworks = Rxn<List<String>>();
           CancelToken? cancelToken;
           final possibleArtworksLoading = false.obs;
@@ -1684,57 +1691,55 @@ class _ArtworkManager extends StatelessWidget {
                                           Broken.emoji_sad,
                                           size: 48.0,
                                         )
-                                      : Expanded(
-                                          child: GridView.builder(
-                                            shrinkWrap: true,
-                                            cacheExtent: context.height * 3,
-                                            itemCount: urls.length,
-                                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: 3,
-                                              mainAxisSpacing: 6.0,
-                                              crossAxisSpacing: 4.0,
-                                            ),
-                                            itemBuilder: (context, index) {
-                                              final url = urls[index];
-                                              return BorderRadiusClip(
-                                                borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                                                child: FutureBuilder(
-                                                  future: Rhttp.getBytes(url),
-                                                  builder: (context, snapshot) {
-                                                    final bytes = snapshot.data?.body;
-                                                    return AnimatedSwitcher(
-                                                      layoutBuilder: (currentChild, previousChildren) {
-                                                        return Stack(
-                                                          alignment: Alignment.center,
-                                                          children: <Widget>[
-                                                            ...previousChildren,
-                                                            if (currentChild != null) Positioned.fill(child: currentChild),
-                                                          ],
-                                                        );
-                                                      },
-                                                      duration: Duration(milliseconds: 200),
-                                                      child: bytes == null
-                                                          ? ColoredBox(
-                                                              color: context.theme.cardColor,
-                                                            )
-                                                          : TapDetector(
-                                                              onTap: () async {
-                                                                NamidaNavigator.inst.closeDialog();
-                                                                try {
-                                                                  await customArtworkManager.setArtworkFile(null, bytes);
-                                                                  showSnackInfo();
-                                                                } catch (e) {
-                                                                  showSnackInfo(e);
-                                                                }
-                                                              },
-                                                              child: Image.memory(bytes),
-                                                            ),
-                                                    );
-                                                  },
-                                                ),
-                                              );
-                                            },
+                                      : GridView.builder(
+                                          shrinkWrap: true,
+                                          cacheExtent: context.height * 3,
+                                          itemCount: urls.length,
+                                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 3,
+                                            mainAxisSpacing: 6.0,
+                                            crossAxisSpacing: 4.0,
                                           ),
+                                          itemBuilder: (context, index) {
+                                            final url = urls[index];
+                                            return BorderRadiusClip(
+                                              borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                                              child: FutureBuilder(
+                                                future: Rhttp.getBytes(url),
+                                                builder: (context, snapshot) {
+                                                  final bytes = snapshot.data?.body;
+                                                  return AnimatedSwitcher(
+                                                    layoutBuilder: (currentChild, previousChildren) {
+                                                      return Stack(
+                                                        alignment: Alignment.center,
+                                                        children: <Widget>[
+                                                          ...previousChildren,
+                                                          if (currentChild != null) Positioned.fill(child: currentChild),
+                                                        ],
+                                                      );
+                                                    },
+                                                    duration: Duration(milliseconds: 200),
+                                                    child: bytes == null
+                                                        ? ColoredBox(
+                                                            color: context.theme.cardColor,
+                                                          )
+                                                        : TapDetector(
+                                                            onTap: () async {
+                                                              NamidaNavigator.inst.closeDialog();
+                                                              try {
+                                                                await customArtworkManager.setArtworkFile(null, bytes);
+                                                                showSnackInfo();
+                                                              } catch (e) {
+                                                                showSnackInfo(e);
+                                                              }
+                                                            },
+                                                            child: Image.memory(bytes),
+                                                          ),
+                                                  );
+                                                },
+                                              ),
+                                            );
+                                          },
                                         ),
                         ),
                       ),
