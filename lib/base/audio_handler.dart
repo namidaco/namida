@@ -639,17 +639,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, Function skipItem) async {
     final tr = item.track;
     videoPlayerInfo.value = null;
-    final replayGainType = settings.player.replayGainType.value;
-    if (replayGainType.isAnyEnabled) {
-      final gainData = item.track.toTrackExt().gainData;
-      if (replayGainType.isLoudnessEnhancerEnabled) {
-        final gainToUse = gainData?.gainToUse;
-        if (gainToUse != null) loudnessEnhancer.setTargetGainTrack(gainToUse);
-      } else if (replayGainType.isVolumeEnabled) {
-        final vol = gainData?.calculateGainAsVolume();
-        replayGainLinearVolume.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
-      }
-    }
     final isVideo = item is Video;
     Lyrics.inst.resetLyrics();
     WaveformController.inst.resetWaveform();
@@ -772,6 +761,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (checkInterrupted()) return;
 
+    final replayGainType = settings.player.replayGainType.value;
+    if (replayGainType.isAnyEnabled) {
+      final gainData = item.track.toTrackExt().gainData;
+      if (replayGainType.isLoudnessEnhancerEnabled) {
+        final gainToUse = gainData?.gainToUse;
+        if (gainToUse != null) await loudnessEnhancer.setTargetGainTrack(gainToUse);
+      } else if (replayGainType.isVolumeEnabled) {
+        final vol = gainData?.calculateGainAsVolume();
+        replayGainLinearVolume.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
+      }
+    }
+
     if (initialVideo == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false);
 
     // -- to fix a bug where [headset buttons/android next gesture] sometimes don't get detected.
@@ -879,7 +880,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               )
             : await setVideoSource(
                 source: videoOptions.source,
-              ).then((value) async => await seek(positionToRestore));
+              ).then((value) => positionToRestore > Duration.zero ? seek(positionToRestore) : null);
 
         refreshNotification();
       }
@@ -1173,22 +1174,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     VideoStreamsResult? streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(item.id);
 
-    void setReplayGainIfRequired() {
-      final replayGainType = settings.player.replayGainType.value;
-      if (replayGainType.isAnyEnabled && streamsResult != null) {
-        final loudnessDb = streamsResult.loudnessDBData?.loudnessDb;
-
-        if (replayGainType.isLoudnessEnhancerEnabled) {
-          if (loudnessDb != null) loudnessEnhancer.setTargetGainTrack(-loudnessDb.toDouble());
-        } else if (replayGainType.isVolumeEnabled) {
-          final vol = loudnessDb == null ? null : ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
-          replayGainLinearVolume.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
-        }
-      }
-    }
-
-    setReplayGainIfRequired();
-
     YoutubeInfoController.current.currentYTStreams.value = streamsResult;
     final hadCachedVideoPageCompleter = Completer<bool>()..complete(YoutubeInfoController.current.updateVideoPageCache(item.id));
     final hadCachedCommentsCompleter = Completer<bool>()..complete(YoutubeInfoController.current.updateCurrentCommentsCache(item.id));
@@ -1335,6 +1320,22 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     currentCachedAudio.value = playedFromCacheDetails.audio;
     currentCachedVideo.value = playedFromCacheDetails.video;
+
+    void setReplayGainIfRequired() {
+      final replayGainType = settings.player.replayGainType.value;
+      if (replayGainType.isAnyEnabled && streamsResult != null) {
+        final loudnessDb = streamsResult.loudnessDBData?.loudnessDb;
+
+        if (replayGainType.isLoudnessEnhancerEnabled) {
+          if (loudnessDb != null) loudnessEnhancer.setTargetGainTrack(-loudnessDb.toDouble());
+        } else if (replayGainType.isVolumeEnabled) {
+          final vol = loudnessDb == null ? null : ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
+          replayGainLinearVolume.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
+        }
+      }
+    }
+
+    setReplayGainIfRequired();
 
     generateWaveform();
 
@@ -2041,7 +2042,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           // <=======>
 
           await plsSeek();
-          if (_willPlayWhenReady) onPlayRaw();
+          if (_willPlayWhenReady) onPlayRaw(attemptFixVolume: false);
         } else {
           await plsSeek();
         }
@@ -2150,7 +2151,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     );
     if (initialPosition == null && initialPositionFallback != null && duration != null) {
       final p = await initialPositionFallback(duration);
-      if (p != null) seek(p);
+      if (p != null && p > Duration.zero) seek(p);
     }
     return duration;
   }
@@ -2394,27 +2395,27 @@ class AndroidLoudnessEnhancerExtended {
   double get getActualGain => (enabledUser.value ? targetGainUser.value : 0) + (_enabledTrackValue ? targetGainTrack.value : 0.0);
   bool get getActualEnabled => enabledUser.value || _enabledTrackValue;
 
-  void setTargetGainUser(double gain) {
+  Future<void> setTargetGainUser(double gain) {
     targetGainUser.value = gain;
-    _refreshGain();
+    return _refreshGain();
   }
 
-  void setTargetGainTrack(double gain) {
+  Future<void> setTargetGainTrack(double gain) {
     targetGainTrack.value = gain;
-    _refreshGain();
+    return _refreshGain();
   }
 
-  void setEnabledUser(bool enabled) {
+  Future<void> setEnabledUser(bool enabled) {
     enabledUser.value = enabled;
     refreshEnabled();
-    _refreshGain();
+    return _refreshGain();
   }
 
-  void _refreshGain() {
-    _loudnessEnhancer.setTargetGain(getActualGain);
+  Future<void> _refreshGain() {
+    return _loudnessEnhancer.setTargetGain(getActualGain);
   }
 
-  void refreshEnabled() {
-    _loudnessEnhancer.setEnabled(getActualEnabled);
+  Future<void> refreshEnabled() {
+    return _loudnessEnhancer.setEnabled(getActualEnabled);
   }
 }
