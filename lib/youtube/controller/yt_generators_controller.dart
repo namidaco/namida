@@ -98,7 +98,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
       'databasesDir': AppDirs.YOUTIPIE_CACHE,
       'sensitiveDataDir': AppDirs.YOUTIPIE_DATA,
       'statsDir': AppDirs.YT_STATS,
-      'mostplayedPlaylist': YoutubeHistoryController.inst.topTracksMapListens.keys,
+      'mostplayedPlaylist': YoutubeHistoryController.inst.topTracksMapListens.value.keysSortedByValue,
       'favouritesPlaylist': YoutubePlaylistController.inst.favouritesPlaylist.value.tracks,
       'playlists': playlists,
       'sendPort': port,

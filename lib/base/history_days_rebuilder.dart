@@ -122,7 +122,7 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
   }
 
   Widget? listenOrderWidget(ItemWithDate watch, S subitem, TextStyle? smallTextStyle, {double topRightRadius = 0.0}) {
-    final listens = historyManager.topTracksMapListens[subitem];
+    final listens = historyManager.topTracksMapListens.value[subitem];
     Widget? topRightWidget;
     if (listens != null) {
       final listensLength = listens.length;

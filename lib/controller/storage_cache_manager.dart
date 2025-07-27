@@ -180,7 +180,7 @@ class StorageCacheManager {
           localCount += HistoryController.inst.topTracksMapListens.value[t]?.length ?? 0;
         }
       }
-      ytCount = YoutubeHistoryController.inst.topTracksMapListens[id]?.length ?? 0;
+      ytCount = YoutubeHistoryController.inst.topTracksMapListens.value[id]?.length ?? 0;
       return localCount + ytCount;
     }
 

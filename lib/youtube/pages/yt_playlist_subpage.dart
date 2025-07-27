@@ -81,7 +81,7 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
           builder: (context, listensMap) {
             final videos = <String>[];
             final ytIds = <YoutubeID>[];
-            for (final e in listensMap.keys) {
+            for (final e in listensMap.keysSortedByValue) {
               videos.add(e);
               ytIds.add(
                 YoutubeID(

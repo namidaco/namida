@@ -52,9 +52,9 @@ class YTLocalSearchController with PortsProvider<Map> {
   void _sortStreams(List<StreamInfoItem> streams) {
     switch (_sortType) {
       case YTLocalSearchSortType.mostPlayed:
-        streams.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens[e.id]?.length ?? 0);
+        streams.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.length ?? 0);
       case YTLocalSearchSortType.latestPlayed:
-        streams.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens[e.id]?.lastOrNull ?? 0);
+        streams.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.lastOrNull ?? 0);
     }
   }
 

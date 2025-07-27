@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
@@ -150,7 +151,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                 builder: (context, currentMostPlayedTimeRange) => ObxO(
                   rx: YoutubeHistoryController.inst.currentTopTracksMapListensReactive(currentMostPlayedTimeRange),
                   builder: (context, listensMap) {
-                    final videos = listensMap.keys
+                    final videos = listensMap.keysSortedByValue
                         .map((e) => YoutubeID(
                               id: e,
                               playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
@@ -475,7 +476,7 @@ class _HorizontalSliverList extends StatelessWidget {
   final EdgeInsets padding;
   final bool displayTimeAgo;
   final bool displayShimmer;
-  final Map<String, List<int>>? listensMap;
+  final ListensSortedMap<String>? listensMap;
 
   const _HorizontalSliverList({
     required this.queueSource,

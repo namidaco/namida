@@ -198,7 +198,7 @@ class ThumbnailManager {
 
     bool isTemp = true;
     if (useHighQualityIfEnoughListens) {
-      final listens = YoutubeHistoryController.inst.topTracksMapListens[videoId]?.length ?? 0;
+      final listens = YoutubeHistoryController.inst.topTracksMapListens.value[videoId]?.length ?? 0;
       if (listens >= 10) isTemp = false; // fetch full res if listens >= 10
     }
     final bool lowerResYTID = isTemp;

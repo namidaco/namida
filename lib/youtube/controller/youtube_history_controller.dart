@@ -78,22 +78,10 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
       }
     }
 
-    // -- Sorting dates
-    for (final entry in tempMapTopItems.values) {
-      entry.sort();
-    }
+    final topItems = ListensSortedMap<String>();
+    topItems.assignAll(tempMapTopItems);
+    topItems.sortAllInternalLists();
 
-    final sortedEntries = tempMapTopItems.entries.toList()
-      ..sort((a, b) {
-        final compare = b.value.length.compareTo(a.value.length);
-        if (compare == 0) {
-          final lastListenB = b.value.lastOrNull ?? 0;
-          final lastListenA = a.value.lastOrNull ?? 0;
-          return lastListenB.compareTo(lastListenA);
-        }
-        return compare;
-      });
-    final topItems = Map.fromEntries(sortedEntries);
     return HistoryPrepareInfo(
       historyMap: map,
       topItems: topItems,

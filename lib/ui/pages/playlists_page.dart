@@ -383,7 +383,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                 icon: Broken.award,
                                                 title: lang.MOST_PLAYED,
                                                 displayLoadingIndicator: HistoryController.inst.isLoadingHistoryR,
-                                                text: HistoryController.inst.topTracksMapListens.length.formatDecimal(),
+                                                text: HistoryController.inst.topTracksMapListens.valueR.length.formatDecimal(),
                                                 onTap: () => NamidaOnTaps.inst.onMostPlayedPlaylistTap(),
                                               ),
                                             ),

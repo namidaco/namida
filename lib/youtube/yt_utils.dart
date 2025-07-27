@@ -97,7 +97,7 @@ class YTUtils {
     double? fontMultiplier,
   }) {
     iconsColor ??= context.theme.iconTheme.color;
-    final listens = overrideListens.isNotEmpty ? overrideListens : YoutubeHistoryController.inst.topTracksMapListens[videoId] ?? [];
+    final listens = overrideListens.isNotEmpty ? overrideListens : YoutubeHistoryController.inst.topTracksMapListens.value[videoId] ?? [];
     return [
       if (listens.isNotEmpty)
         Material(

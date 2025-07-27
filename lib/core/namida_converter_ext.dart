@@ -724,7 +724,7 @@ extension QueueInsertionTypeToQI on QueueInsertionType {
         if (this == QueueInsertionType.algorithm) {
           // already sorted by repeated times inside [NamidaGenerator.generateRecommendedTrack].
         } else {
-          videos.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens[e.id]?.length ?? 0);
+          videos.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.length ?? 0);
         }
       case InsertionSortingType.random:
         videos.shuffle();

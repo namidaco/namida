@@ -292,7 +292,7 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
           builder: (context, currentMostPlayedTimeRange) => ObxO(
             rx: HistoryController.inst.currentTopTracksMapListensReactive(currentMostPlayedTimeRange),
             builder: (context, listensMap) {
-              final tracks = listensMap.keys.toList();
+              final tracks = listensMap.keysSortedByValue.toList();
               return MostPlayedItemsPage(
                 itemExtent: Dimensions.inst.trackTileItemExtent,
                 historyController: HistoryController.inst,

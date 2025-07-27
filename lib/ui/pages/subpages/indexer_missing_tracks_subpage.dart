@@ -146,7 +146,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
       }
 
       // -- history first to be sorted & has no duplicates
-      for (final track in HistoryController.inst.topTracksMapListens.keys) {
+      for (final track in HistoryController.inst.topTracksMapListens.value.keysSortedByValue) {
         allTracks[track.path] = true;
       }
       addTracksCountToStep(_LoadingProgress.findingHistoryTracks);
