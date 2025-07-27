@@ -855,7 +855,7 @@ class IndexerSettings extends SettingSubpageProvider {
                     borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(100), width: 2.0),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+                    borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                     borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(100), width: 1.0),
                   ),
                   hintText: lang.VALUE,

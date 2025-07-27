@@ -154,6 +154,11 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
   - in addition to normal repeat modes (all, none, one), this one lets you repeat the track for number of times before playing the next track.
 - Extract feat. & ft. artist
   - u won't miss the featured artists in the title, they'll have their own entry inside artists tab.
+- Dive into your memories
+  - Find out ur long partners u forgot about, "lost memories" allows u to meet tracks you listened to around this time, but n years ago
+  - The "Most Played" page also allows you to specify time range, showing ur most beloved tracks at that time
+  - The "Recommended" tracks addition in queue lets you add tracks you usually listened to with the current one 
+  - The "Similar Release Date" tracks addition in queue lets you add tracks released around the same time as the current one 
 - <p>CAN IMPORT YOUTUBE HISTORY <img src="some stuff/ong.png" width=16 height=16/></p>
 - <p>LASTFM TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/></p>
 - you gonna find decent amount of options/customizations in the settings and inside dialogs so make sure to check them out.

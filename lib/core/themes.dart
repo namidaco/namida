@@ -135,6 +135,9 @@ class AppThemes {
           light ? const Color.fromARGB(200, 55, 55, 55) : const Color.fromARGB(255, 228, 228, 228),
         ),
       ),
+      inputDecorationTheme: InputDecorationTheme(
+        contentPadding: Platform.isWindows ? const EdgeInsetsDirectional.fromSTEB(12.0, 18.0, 12.0, 18.0) : null,
+      ),
       textButtonTheme: TextButtonThemeData(
         style: Platform.isWindows
             ? const ButtonStyle(
