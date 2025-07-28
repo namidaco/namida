@@ -225,7 +225,7 @@ class YoutubeSettings extends SettingSubpageProvider {
               builder: (context, showVideoEndcards) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.showVideoEndcards),
                 icon: Broken.card_tick,
-                title: '${lang.SHOW_VIDEO_ENDCARDS} (${lang.BETA})', // beta cuz its available only in some clients like web & web_music
+                title: lang.SHOW_VIDEO_ENDCARDS,
                 value: showVideoEndcards,
                 onChanged: (isTrue) => settings.youtube.save(showVideoEndcards: !isTrue),
               ),
@@ -507,7 +507,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                   builder: (context, downloadNotifications) => CustomListTile(
                     bgColor: getBgColor(_YoutubeSettingKeys.downloadNotifications),
                     icon: Broken.notification_bing,
-                    title: lang.NOTIFICATIONS,
+                    title: '${lang.DOWNLOADS} -> ${lang.NOTIFICATIONS}',
                     trailingText: downloadNotifications.toText(),
                   ),
                 ),

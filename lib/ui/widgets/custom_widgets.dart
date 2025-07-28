@@ -3857,6 +3857,7 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
 
 class NamidaPopupItem {
   final IconData icon;
+  final IconData? secondaryIcon;
   final String title;
   final Widget Function(TextStyle? style)? titleBuilder;
   final String subtitle;
@@ -3868,6 +3869,7 @@ class NamidaPopupItem {
 
   const NamidaPopupItem({
     required this.icon,
+    this.secondaryIcon,
     required this.title,
     this.titleBuilder,
     this.subtitle = '',
@@ -3933,17 +3935,26 @@ class NamidaPopupWrapper extends StatelessWidget {
             final titleStyle = context.textTheme.displayMedium?.copyWith(color: e.enabled ? null : context.textTheme.displayMedium?.color?.withValues(alpha: 0.4));
             Widget popupItem = Row(
               children: [
-                Icon(
-                  e.icon,
-                  size: 20.0,
-                  shadows: [
-                    Shadow(
-                      blurRadius: 2.0,
-                      color: Color(0x10202020),
-                    ),
-                  ],
-                  color: context.theme.iconTheme.color?.withValues(alpha: 0.8),
-                ),
+                e.secondaryIcon != null
+                    ? StackedIcon(
+                        baseIcon: e.icon,
+                        iconSize: 20.0,
+                        secondaryIcon: e.secondaryIcon,
+                        baseIconColor: context.theme.iconTheme.color?.withValues(alpha: 0.8),
+                        secondaryIconColor: context.theme.iconTheme.color?.withValues(alpha: 0.8),
+                        secondaryIconSize: 11.0,
+                      )
+                    : Icon(
+                        e.icon,
+                        size: 20.0,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 2.0,
+                            color: Color(0x10202020),
+                          ),
+                        ],
+                        color: context.theme.iconTheme.color?.withValues(alpha: 0.8),
+                      ),
                 const SizedBox(width: 6.0),
                 Expanded(
                   child: Column(
@@ -3964,6 +3975,7 @@ class NamidaPopupWrapper extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (e.trailing != null) SizedBox(width: 6.0),
                 if (e.trailing != null) e.trailing!,
               ],
             );

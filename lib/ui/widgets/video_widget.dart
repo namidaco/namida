@@ -774,11 +774,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final secondaryButtonSize = 30.0.withMaximum(maxWidth * 0.06);
     final secondaryButtonPadding = EdgeInsets.all(10.0.withMaximum(maxWidth * 0.025));
 
-    bool showEndcards = settings.youtube.showVideoEndcards.value && _canShowControls;
-    String? channelOverlayUrl = widget.isFullScreen && settings.youtube.showChannelWatermarkFullscreen.value && _canShowControls //
-        ? YoutubeInfoController.current.currentYTStreams.value?.overlay?.overlays.pick()?.url
-        : null;
-
     Widget videoControlsWidget = Listener(
       onPointerDown: (event) {
         _pointerDownedOnRight = event.position.dx > maxWidth / 2;
@@ -882,16 +877,21 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                         child: finalVideoWidget,
                       ),
                     ),
-                    if (showEndcards)
-                      ConstrainedBox(
-                        constraints: videoBoxMaxConstraints,
-                        child: ObxO(
-                          rx: _isEndCardsVisible,
-                          builder: (context, endcardsvisible) => _YTVideoEndcards(
-                            visible: endcardsvisible,
-                            inFullScreen: widget.isFullScreen,
-                          ),
-                        ),
+                    if (_canShowControls)
+                      ObxO(
+                        rx: settings.youtube.showVideoEndcards,
+                        builder: (context, userEnabledVideoEndCards) => !userEnabledVideoEndCards
+                            ? const SizedBox()
+                            : ConstrainedBox(
+                                constraints: videoBoxMaxConstraints,
+                                child: ObxO(
+                                  rx: _isEndCardsVisible,
+                                  builder: (context, endcardsvisible) => _YTVideoEndcards(
+                                    visible: endcardsvisible,
+                                    inFullScreen: widget.isFullScreen,
+                                  ),
+                                ),
+                              ),
                       ),
                   ],
                 ),
@@ -1019,47 +1019,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     ),
                                   ),
                                   const SizedBox(width: 4.0),
-
-                                  // ==== Toggle glow  ====
-                                  if (widget.isFullScreen)
-                                    Padding(
-                                      padding: const EdgeInsets.all(4.0),
-                                      child: NamidaBgBlurClipped(
-                                        blur: 3.0,
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                        ),
-                                        child: NamidaTooltip(
-                                          message: () => lang.ENABLE_GLOW_EFFECT,
-                                          child: NamidaInkWell(
-                                            borderRadius: 0,
-                                            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-                                            onTap: () {
-                                              _startTimer();
-                                              toggleGlowBehindVideo();
-                                            },
-                                            child: ObxO(
-                                              rx: settings.enableGlowBehindVideo,
-                                              builder: (context, enabled) => enabled
-                                                  ? StackedIcon(
-                                                      baseIcon: Broken.drop,
-                                                      iconSize: 16.0,
-                                                      baseIconColor: itemsColor,
-                                                      secondaryIcon: Broken.tick_circle,
-                                                      secondaryIconColor: itemsColor,
-                                                      secondaryIconSize: 9.0,
-                                                    )
-                                                  : Icon(
-                                                      Broken.drop,
-                                                      size: 16.0,
-                                                      color: itemsColor,
-                                                    ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
 
                                   // ===== Speed Chip =====
                                   NamidaPopupWrapper(
@@ -1495,6 +1454,82 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       ),
                                     ),
                                   ),
+
+                                  if (widget.isFullScreen)
+                                    NamidaPopupWrapper(
+                                      openOnTap: true,
+                                      onPop: _startTimer,
+                                      onTap: () {
+                                        _resetTimer();
+                                        setControlsVisibily(true);
+                                      },
+                                      childrenDefault: () => [
+                                        NamidaPopupItem(
+                                          icon: Broken.sun_1,
+                                          secondaryIcon: Broken.drop,
+                                          title: lang.ENABLE_GLOW_EFFECT,
+                                          onTap: toggleGlowBehindVideo,
+                                          trailing: ObxO(
+                                            rx: settings.enableGlowBehindVideo,
+                                            builder: (context, active) => CustomSwitch(
+                                              active: active,
+                                              width: 37.0,
+                                              height: 20.0,
+                                            ),
+                                          ),
+                                        ),
+                                        if (!widget.isLocal)
+                                          NamidaPopupItem(
+                                            icon: Broken.card_tick,
+                                            title: lang.SHOW_VIDEO_ENDCARDS,
+                                            onTap: () => settings.youtube.save(showVideoEndcards: !settings.youtube.showVideoEndcards.value),
+                                            trailing: ObxO(
+                                              rx: settings.youtube.showVideoEndcards,
+                                              builder: (context, active) => CustomSwitch(
+                                                active: active,
+                                                width: 37.0,
+                                                height: 20.0,
+                                              ),
+                                            ),
+                                          ),
+                                        if (!widget.isLocal)
+                                          NamidaPopupItem(
+                                            icon: Broken.profile_circle,
+                                            secondaryIcon: Broken.drop,
+                                            title: lang.SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN,
+                                            onTap: () => settings.youtube.save(showChannelWatermarkFullscreen: !settings.youtube.showChannelWatermarkFullscreen.value),
+                                            trailing: ObxO(
+                                              rx: settings.youtube.showChannelWatermarkFullscreen,
+                                              builder: (context, active) => CustomSwitch(
+                                                active: active,
+                                                width: 37.0,
+                                                height: 20.0,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(4.0),
+                                        child: NamidaBgBlurClipped(
+                                          blur: 3.0,
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                          ),
+                                          child: NamidaTooltip(
+                                            message: () => lang.CONFIGURE,
+                                            child: Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+                                              child: Icon(
+                                                Broken.setting_4,
+                                                size: 16.0,
+                                                color: itemsColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
@@ -1925,17 +1960,24 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                           ),
                         ),
                       ],
-                      if (channelOverlayUrl != null)
-                        Positioned(
-                          right: 12.0,
-                          bottom: 12.0,
-                          child: Padding(
-                            padding: safeAreaPadding,
-                            child: _YTChannelOverlayThumbnail(
-                              channelOverlayUrl: channelOverlayUrl,
-                              ignoreTouches: _isVisible,
-                            ),
-                          ),
+
+                      if (widget.isFullScreen && _canShowControls)
+                        ObxO(
+                          rx: settings.youtube.showChannelWatermarkFullscreen,
+                          builder: (context, showChannelWatermarkFullscreen) {
+                            if (!showChannelWatermarkFullscreen) return const SizedBox();
+
+                            return Positioned(
+                              right: 12.0,
+                              bottom: 12.0,
+                              child: Padding(
+                                padding: safeAreaPadding,
+                                child: _YTChannelOverlayThumbnail(
+                                  ignoreTouches: _isVisible,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                     ],
                   ),
@@ -2071,9 +2113,8 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
 }
 
 class _YTChannelOverlayThumbnail extends StatefulWidget {
-  final String channelOverlayUrl;
   final bool ignoreTouches;
-  const _YTChannelOverlayThumbnail({required this.channelOverlayUrl, required this.ignoreTouches});
+  const _YTChannelOverlayThumbnail({required this.ignoreTouches});
 
   @override
   State<_YTChannelOverlayThumbnail> createState() => __YTChannelOverlayThumbnailState();
@@ -2082,9 +2123,32 @@ class _YTChannelOverlayThumbnail extends StatefulWidget {
 class __YTChannelOverlayThumbnailState extends State<_YTChannelOverlayThumbnail> {
   bool _isHighlighted = false;
 
+  String? _channelOverlayUrl;
+
+  @override
+  void initState() {
+    _updateChannelOverlayUrl();
+    YoutubeInfoController.current.currentYTStreams.addListener(_updateChannelOverlayUrl);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    YoutubeInfoController.current.currentYTStreams.removeListener(_updateChannelOverlayUrl);
+    super.dispose();
+  }
+
+  void _updateChannelOverlayUrl() {
+    refreshState(
+      () {
+        _channelOverlayUrl = YoutubeInfoController.current.currentYTStreams.value?.overlay?.overlays.pick()?.url;
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final channelOverlayUrl = widget.channelOverlayUrl;
+    final channelOverlayUrl = _channelOverlayUrl;
     return IgnorePointer(
       ignoring: widget.ignoreTouches,
       child: TapDetector(
@@ -2111,6 +2175,7 @@ class __YTChannelOverlayThumbnailState extends State<_YTChannelOverlayThumbnail>
             borderRadius: 0,
             type: ThumbnailType.channel,
             customUrl: channelOverlayUrl,
+            displayFallbackIcon: false,
           ),
         ),
       ),
