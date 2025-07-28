@@ -586,32 +586,39 @@ class ExtrasSettings extends SettingSubpageProvider {
               trailing: NamidaPopupWrapper(
                 children: () => [
                   ...VibrationType.values.map(
-                    (e) => ObxO(
-                      rx: settings.vibrationType,
-                      builder: (context, vibrationType) => NamidaInkWell(
-                        margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                        borderRadius: 6.0,
-                        bgColor: vibrationType == e ? context.theme.cardColor : null,
-                        child: Row(
-                          children: [
-                            Icon(
-                              e.toIcon(),
-                              size: 16.0,
+                    (e) {
+                      void onTap() {
+                        settings.save(vibrationType: e);
+                        NamidaNavigator.inst.popMenu();
+                      }
+
+                      return MapEntry(
+                        onTap,
+                        ObxO(
+                          rx: settings.vibrationType,
+                          builder: (context, vibrationType) => NamidaInkWell(
+                            margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                            borderRadius: 6.0,
+                            bgColor: vibrationType == e ? context.theme.cardColor : null,
+                            onTap: onTap,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  e.toIcon(),
+                                  size: 16.0,
+                                ),
+                                const SizedBox(width: 6.0),
+                                Text(
+                                  e.toText(),
+                                  style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 6.0),
-                            Text(
-                              e.toText(),
-                              style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                            ),
-                          ],
+                          ),
                         ),
-                        onTap: () {
-                          settings.save(vibrationType: e);
-                          NamidaNavigator.inst.popMenu();
-                        },
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ],
                 child: ObxO(

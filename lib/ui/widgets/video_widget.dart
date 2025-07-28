@@ -1069,59 +1069,63 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       setControlsVisibily(true);
                                     },
                                     children: () => [
-                                      ...settings.player.speeds.map((speed) {
-                                        return ObxO(
-                                          rx: Player.inst.currentSpeed,
-                                          builder: (context, selectedSpeed) {
-                                            final isSelected = selectedSpeed == speed;
-                                            return NamidaInkWell(
-                                              onTap: () {
-                                                _startTimer();
-                                                Navigator.of(context).pop();
-                                                if (!isSelected) {
-                                                  Player.inst.setPlayerSpeed(speed);
-                                                  settings.player.save(speed: speed);
-                                                }
-                                              },
-                                              decoration: const BoxDecoration(),
-                                              borderRadius: 6.0,
-                                              bgColor: isSelected ? CurrentColor.inst.miniplayerColor.withAlpha(100) : null,
-                                              margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                                              padding: const EdgeInsets.all(6.0),
-                                              child: Row(
-                                                children: [
-                                                  const Icon(Broken.play_cricle, size: 20.0),
-                                                  const SizedBox(width: 12.0),
-                                                  Text(
-                                                    "${speed}x",
-                                                    style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                                      ...settings.player.speeds.map((speed) => MapEntry(
+                                            null,
+                                            ObxO(
+                                              rx: Player.inst.currentSpeed,
+                                              builder: (context, selectedSpeed) {
+                                                final isSelected = selectedSpeed == speed;
+                                                return NamidaInkWell(
+                                                  onTap: () {
+                                                    _startTimer();
+                                                    final isSelected = Player.inst.currentSpeed.value == speed;
+                                                    if (!isSelected) {
+                                                      Player.inst.setPlayerSpeed(speed);
+                                                      settings.player.save(speed: speed);
+                                                    }
+                                                  },
+                                                  decoration: const BoxDecoration(),
+                                                  borderRadius: 6.0,
+                                                  bgColor: isSelected ? CurrentColor.inst.miniplayerColor.withAlpha(100) : null,
+                                                  margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                                                  padding: const EdgeInsets.all(6.0),
+                                                  child: Row(
+                                                    children: [
+                                                      const Icon(Broken.play_cricle, size: 20.0),
+                                                      const SizedBox(width: 12.0),
+                                                      Text(
+                                                        "${speed}x",
+                                                        style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                                                      ),
+                                                    ],
                                                   ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        );
-                                      }),
-                                      NamidaInkWell(
-                                        onTap: () {
-                                          _startTimer();
-                                          Navigator.of(context).pop();
-                                          NamidaNavigator.inst.navigateDialog(dialog: const _SpeedsEditorDialog());
-                                        },
-                                        decoration: const BoxDecoration(),
-                                        borderRadius: 6.0,
-                                        bgColor: null,
-                                        margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                                        padding: const EdgeInsets.all(6.0),
-                                        child: Row(
-                                          children: [
-                                            const Icon(Broken.add_circle, size: 20.0),
-                                            const SizedBox(width: 12.0),
-                                            Text(
-                                              lang.ADD,
-                                              style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                                                );
+                                              },
                                             ),
-                                          ],
+                                          )),
+                                      MapEntry(
+                                        null,
+                                        NamidaInkWell(
+                                          onTap: () {
+                                            _startTimer();
+                                            Navigator.of(context).pop();
+                                            NamidaNavigator.inst.navigateDialog(dialog: const _SpeedsEditorDialog());
+                                          },
+                                          decoration: const BoxDecoration(),
+                                          borderRadius: 6.0,
+                                          bgColor: null,
+                                          margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                                          padding: const EdgeInsets.all(6.0),
+                                          child: Row(
+                                            children: [
+                                              const Icon(Broken.add_circle, size: 20.0),
+                                              const SizedBox(width: 12.0),
+                                              Text(
+                                                lang.ADD,
+                                                style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -1186,37 +1190,40 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           },
                                           children: () => streamsMap.values
                                               .map(
-                                                (element) => Obx(
-                                                  (context) {
-                                                    bool isSelected = false;
-                                                    final audioTrack = element.audioTrack;
-                                                    final langCode = audioTrack?.langCode;
-                                                    if (langCode != null) {
-                                                      if (langCode == Player.inst.currentCachedAudio.valueR?.langaugeCode) {
-                                                        isSelected = true;
-                                                      } else if (langCode == Player.inst.currentAudioStream.valueR?.audioTrack?.langCode) {
-                                                        isSelected = true;
-                                                      }
-                                                    }
-                                                    final id = Player.inst.currentVideoR?.id;
-                                                    return _getQualityChip(
-                                                      title: audioTrack?.displayName ?? '?',
-                                                      subtitle: " • ${audioTrack?.langCode ?? 0}",
-                                                      onPlay: (isSelected) {
-                                                        if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized == true) {
-                                                          Player.inst.onItemPlayYoutubeIDSetAudio(
-                                                            stream: element,
-                                                            mainStreams: streams,
-                                                            cachedFile: null,
-                                                            useCache: true,
-                                                            videoId: Player.inst.currentVideo?.id ?? '',
-                                                          );
+                                                (element) => MapEntry(
+                                                  null,
+                                                  Obx(
+                                                    (context) {
+                                                      bool isSelected = false;
+                                                      final audioTrack = element.audioTrack;
+                                                      final langCode = audioTrack?.langCode;
+                                                      if (langCode != null) {
+                                                        if (langCode == Player.inst.currentCachedAudio.valueR?.langaugeCode) {
+                                                          isSelected = true;
+                                                        } else if (langCode == Player.inst.currentAudioStream.valueR?.audioTrack?.langCode) {
+                                                          isSelected = true;
                                                         }
-                                                      },
-                                                      selected: isSelected,
-                                                      isCached: element.getCachedFileSync(id) != null,
-                                                    );
-                                                  },
+                                                      }
+                                                      final id = Player.inst.currentVideoR?.id;
+                                                      return _getQualityChip(
+                                                        title: audioTrack?.displayName ?? '?',
+                                                        subtitle: " • ${audioTrack?.langCode ?? 0}",
+                                                        onPlay: (isSelected) {
+                                                          if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized == true) {
+                                                            Player.inst.onItemPlayYoutubeIDSetAudio(
+                                                              stream: element,
+                                                              mainStreams: streams,
+                                                              cachedFile: null,
+                                                              useCache: true,
+                                                              videoId: Player.inst.currentVideo?.id ?? '',
+                                                            );
+                                                          }
+                                                        },
+                                                        selected: isSelected,
+                                                        isCached: element.getCachedFileSync(id) != null,
+                                                      );
+                                                    },
+                                                  ),
                                                 ),
                                               )
                                               .toList(),
@@ -1286,120 +1293,129 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         );
                                       }
                                       return [
-                                        Obx(
-                                          (context) => _getQualityChip(
-                                            title: lang.AUDIO_ONLY,
-                                            onPlay: (isSelected) {
-                                              Player.inst.setAudioOnlyPlayback(true);
-                                              VideoController.inst.currentVideo.value = null;
-                                              settings.save(enableVideoPlayback: false);
-                                            },
-                                            selected: (widget.isLocal ? VideoController.inst.currentVideo.valueR == null : settings.youtube.isAudioOnlyMode.valueR),
-                                            isCached: false,
-                                            icon: Broken.musicnote,
+                                        MapEntry(
+                                          null,
+                                          Obx(
+                                            (context) => _getQualityChip(
+                                              title: lang.AUDIO_ONLY,
+                                              onPlay: (isSelected) {
+                                                Player.inst.setAudioOnlyPlayback(true);
+                                                VideoController.inst.currentVideo.value = null;
+                                                settings.save(enableVideoPlayback: false);
+                                              },
+                                              selected: (widget.isLocal ? VideoController.inst.currentVideo.valueR == null : settings.youtube.isAudioOnlyMode.valueR),
+                                              isCached: false,
+                                              icon: Broken.musicnote,
+                                            ),
                                           ),
                                         ),
                                         ...cachedQualities.map(
-                                          (element) => Obx(
-                                            (context) => _getQualityChip(
-                                              title: '${element.resolution}p${element.framerateText()}',
-                                              subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
-                                              onPlay: (isSelected) {
-                                                // sometimes video is not initialized so we need the second check
-                                                if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized != true) {
-                                                  Player.inst.onItemPlayYoutubeIDSetQuality(
-                                                    mainStreams: streams,
-                                                    stream: null,
-                                                    cachedFile: File(element.path),
-                                                    videoItem: element,
-                                                    useCache: true,
-                                                    videoId: Player.inst.currentVideo?.id ?? '',
-                                                  );
-                                                  if (widget.isLocal) {
-                                                    VideoController.inst.currentVideo.value = element;
-                                                    settings.save(enableVideoPlayback: true);
+                                          (element) => MapEntry(
+                                            null,
+                                            Obx(
+                                              (context) => _getQualityChip(
+                                                title: '${element.resolution}p${element.framerateText()}',
+                                                subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
+                                                onPlay: (isSelected) {
+                                                  // sometimes video is not initialized so we need the second check
+                                                  if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized != true) {
+                                                    Player.inst.onItemPlayYoutubeIDSetQuality(
+                                                      mainStreams: streams,
+                                                      stream: null,
+                                                      cachedFile: File(element.path),
+                                                      videoItem: element,
+                                                      useCache: true,
+                                                      videoId: Player.inst.currentVideo?.id ?? '',
+                                                    );
+                                                    if (widget.isLocal) {
+                                                      VideoController.inst.currentVideo.value = element;
+                                                      settings.save(enableVideoPlayback: true);
+                                                    }
                                                   }
-                                                }
-                                              },
-                                              selected: widget.isLocal
-                                                  ? VideoController.inst.currentVideo.valueR?.path == element.path
-                                                  : settings.youtube.isAudioOnlyMode.valueR
-                                                      ? false
-                                                      : Player.inst.currentCachedVideo.valueR?.path == element.path,
-                                              isCached: true,
+                                                },
+                                                selected: widget.isLocal
+                                                    ? VideoController.inst.currentVideo.valueR?.path == element.path
+                                                    : settings.youtube.isAudioOnlyMode.valueR
+                                                        ? false
+                                                        : Player.inst.currentCachedVideo.valueR?.path == element.path,
+                                                isCached: true,
+                                              ),
                                             ),
                                           ),
                                         ),
                                         ...?ytQualities?.map((element) {
-                                          return Obx(
-                                            (context) {
-                                              if (widget.isLocal) {
-                                                final id = Player.inst.currentVideoR?.id;
-                                                final selectedVideo = VideoController.inst.currentVideo.valueR;
-                                                final isSelected = element.height == selectedVideo?.height && element.bitrate == selectedVideo?.bitrate;
+                                          return MapEntry(
+                                            null,
+                                            Obx(
+                                              (context) {
+                                                if (widget.isLocal) {
+                                                  final id = Player.inst.currentVideoR?.id;
+                                                  final selectedVideo = VideoController.inst.currentVideo.valueR;
+                                                  final isSelected = element.height == selectedVideo?.height && element.bitrate == selectedVideo?.bitrate;
 
-                                                var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
-                                                var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
+                                                  var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
+                                                  var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
 
-                                                return _getQualityChip(
-                                                  title: element.qualityLabel,
-                                                  subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
-                                                  thirdLine: "${element.bitrateText()}$codecIdentifierText",
-                                                  onPlay: (isSelected) {
-                                                    if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized != true) {
-                                                      Player.inst.onItemPlayYoutubeIDSetQuality(
-                                                        mainStreams: streams,
-                                                        stream: element,
-                                                        cachedFile: null,
-                                                        useCache: true,
-                                                        videoId: id ?? '',
-                                                      );
-                                                    }
-                                                  },
-                                                  selected: isSelected,
-                                                  isCached: isSelected,
-                                                );
-                                              } else {
-                                                final id = Player.inst.currentVideoR?.id;
-                                                final cachedFile = id == null ? null : element.getCachedFileSync(id);
-                                                bool isSelected = false;
-                                                if (settings.youtube.isAudioOnlyMode.valueR) {
-                                                  isSelected = false;
+                                                  return _getQualityChip(
+                                                    title: element.qualityLabel,
+                                                    subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
+                                                    thirdLine: "${element.bitrateText()}$codecIdentifierText",
+                                                    onPlay: (isSelected) {
+                                                      if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized != true) {
+                                                        Player.inst.onItemPlayYoutubeIDSetQuality(
+                                                          mainStreams: streams,
+                                                          stream: element,
+                                                          cachedFile: null,
+                                                          useCache: true,
+                                                          videoId: id ?? '',
+                                                        );
+                                                      }
+                                                    },
+                                                    selected: isSelected,
+                                                    isCached: isSelected,
+                                                  );
                                                 } else {
-                                                  final currentVS = Player.inst.currentVideoStream.valueR;
-                                                  if (currentVS != null) {
-                                                    isSelected = element.itag == currentVS.itag;
+                                                  final id = Player.inst.currentVideoR?.id;
+                                                  final cachedFile = id == null ? null : element.getCachedFileSync(id);
+                                                  bool isSelected = false;
+                                                  if (settings.youtube.isAudioOnlyMode.valueR) {
+                                                    isSelected = false;
                                                   } else {
-                                                    final currentCachedV = Player.inst.currentCachedVideo.valueR;
-                                                    if (currentCachedV != null && cachedFile != null) {
-                                                      isSelected = cachedFile.path == currentCachedV.path;
+                                                    final currentVS = Player.inst.currentVideoStream.valueR;
+                                                    if (currentVS != null) {
+                                                      isSelected = element.itag == currentVS.itag;
+                                                    } else {
+                                                      final currentCachedV = Player.inst.currentCachedVideo.valueR;
+                                                      if (currentCachedV != null && cachedFile != null) {
+                                                        isSelected = cachedFile.path == currentCachedV.path;
+                                                      }
                                                     }
                                                   }
+
+                                                  var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
+                                                  var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
+
+                                                  return _getQualityChip(
+                                                    title: element.qualityLabel,
+                                                    subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
+                                                    thirdLine: "${element.bitrateText()}$codecIdentifierText",
+                                                    onPlay: (isSelected) {
+                                                      if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized != true) {
+                                                        Player.inst.onItemPlayYoutubeIDSetQuality(
+                                                          mainStreams: streams,
+                                                          stream: element,
+                                                          cachedFile: cachedFile,
+                                                          useCache: true,
+                                                          videoId: id ?? '',
+                                                        );
+                                                      }
+                                                    },
+                                                    selected: isSelected,
+                                                    isCached: cachedFile != null,
+                                                  );
                                                 }
-
-                                                var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
-                                                var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
-
-                                                return _getQualityChip(
-                                                  title: element.qualityLabel,
-                                                  subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
-                                                  thirdLine: "${element.bitrateText()}$codecIdentifierText",
-                                                  onPlay: (isSelected) {
-                                                    if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized != true) {
-                                                      Player.inst.onItemPlayYoutubeIDSetQuality(
-                                                        mainStreams: streams,
-                                                        stream: element,
-                                                        cachedFile: cachedFile,
-                                                        useCache: true,
-                                                        videoId: id ?? '',
-                                                      );
-                                                    }
-                                                  },
-                                                  selected: isSelected,
-                                                  isCached: cachedFile != null,
-                                                );
-                                              }
-                                            },
+                                              },
+                                            ),
                                           );
                                         }),
                                       ];
@@ -2170,24 +2186,26 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
     }
   }
 
-  List<Widget> _getCustomChildrenVideo(EndScreenItemVideo e) {
+  List<MapEntry<VoidCallback?, Widget>> _getCustomChildrenVideo(EndScreenItemVideo e) {
     final videoId = e.videoId;
     String? title = e.title;
     String? subtitle = e.viewsCount?.formatDecimalShort() ?? e.viewsCountText;
 
+    final onTap = videoId == null
+        ? null
+        : () {
+            NamidaNavigator.inst.navigateDialog(
+              dialog: VideoInfoDialog(
+                videoId: videoId,
+              ),
+            );
+          };
+
     return [
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-        child: TapDetector(
-          onTap: videoId == null
-              ? null
-              : () {
-                  NamidaNavigator.inst.navigateDialog(
-                    dialog: VideoInfoDialog(
-                      videoId: videoId,
-                    ),
-                  );
-                },
+      MapEntry(
+        onTap,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -2224,7 +2242,10 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
           ),
         ),
       ),
-      const NamidaContainerDivider(),
+      MapEntry(
+        null,
+        const NamidaContainerDivider(),
+      ),
     ];
   }
 

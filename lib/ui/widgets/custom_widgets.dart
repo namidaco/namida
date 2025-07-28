@@ -3881,7 +3881,7 @@ class NamidaPopupItem {
 
 class NamidaPopupWrapper extends StatelessWidget {
   final Widget child;
-  final FutureOr<List<Widget>> Function()? children;
+  final FutureOr<List<MapEntry<VoidCallback?, Widget>>> Function()? children;
   final FutureOr<List<NamidaPopupItem>> Function()? childrenDefault;
   final bool childrenAfterChildrenDefault;
   final VoidCallback? onTap;
@@ -3908,13 +3908,18 @@ class NamidaPopupWrapper extends StatelessWidget {
     NamidaNavigator.inst.popMenu(handleClosing: handleClosing);
   }
 
-  Iterable<PopupMenuItem> _mapChildren(List<Widget> children) {
+  Iterable<PopupMenuItemExtended> _mapChildren(List<MapEntry<VoidCallback?, Widget>> children) {
     return children.map(
-      (e) => PopupMenuItem(
-        onTap: null,
+      (e) => PopupMenuItemExtended(
+        onTap: e.key,
         height: 12.0, // this minimum. widget will expand if needed
         padding: EdgeInsets.zero,
-        child: e,
+        child: e.key == null
+            ? e.value
+            : IgnorePointer(
+                ignoring: true, // to keep showing click mouse/etc
+                child: e.value,
+              ),
       ),
     );
   }
@@ -4023,6 +4028,32 @@ class NamidaPopupWrapper extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class PopupMenuItemExtended<T> extends PopupMenuItem<T> {
+  const PopupMenuItemExtended({
+    super.key,
+    super.value,
+    super.onTap,
+    super.enabled = true,
+    super.height = kMinInteractiveDimension,
+    super.padding,
+    super.textStyle,
+    super.labelTextStyle,
+    super.mouseCursor,
+    required super.child,
+  });
+
+  @override
+  PopupMenuItemStateExtended<T, PopupMenuItemExtended<T>> createState() => PopupMenuItemStateExtended<T, PopupMenuItemExtended<T>>();
+}
+
+class PopupMenuItemStateExtended<T, W extends PopupMenuItem<T>> extends PopupMenuItemState<T, W> {
+  @override
+  @protected
+  void handleTap() {
+    widget.onTap?.call();
   }
 }
 
@@ -5342,26 +5373,32 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
         ? NamidaPopupWrapper(
             childrenAfterChildrenDefault: false,
             children: () => [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Broken.info_circle,
-                      size: 14.0,
-                    ),
-                    const SizedBox(width: 6.0),
-                    Text(
-                      lang.PRIORITY,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.displaySmall,
-                    ),
-                  ],
+              MapEntry(
+                null,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Broken.info_circle,
+                        size: 14.0,
+                      ),
+                      const SizedBox(width: 6.0),
+                      Text(
+                        lang.PRIORITY,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.displaySmall,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const NamidaContainerDivider(),
+              MapEntry(
+                null,
+                const NamidaContainerDivider(),
+              ),
             ],
             childrenDefault: () => CacheVideoPriority.values
                 .map(
