@@ -778,7 +778,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     // -- to fix a bug where [headset buttons/android next gesture] sometimes don't get detected.
     if (playWhenReady.value) onPlayRaw(attemptFixVolume: false);
 
-    startSleepAfterMinCount();
     startCounterToAListen(pi);
     increaseListenTime(LibraryCategory.localTracks);
     Lyrics.inst.updateLyrics(tr);
@@ -1238,7 +1237,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       heyIhandledPlaying = true;
 
       if (!wasPlayingFromCache) {
-        startSleepAfterMinCount();
         startCounterToAListen(pi);
         increaseListenTime(LibraryCategory.youtube);
         Lyrics.inst.updateLyrics(item);

@@ -298,14 +298,12 @@ class Player {
     int? sleepAfterMin,
     int? sleepAfterItems,
   }) {
-    final oldConfig = sleepTimerConfig.value;
-    final newConfig = SleepTimerConfig(
-      enableSleepAfterItems: enableSleepAfterItems ?? oldConfig.enableSleepAfterItems,
-      enableSleepAfterMins: enableSleepAfterMins ?? oldConfig.enableSleepAfterMins,
-      sleepAfterMin: sleepAfterMin ?? oldConfig.sleepAfterMin,
-      sleepAfterItems: sleepAfterItems ?? oldConfig.sleepAfterItems,
+    _audioHandler.updateSleepTimerValues(
+      enableSleepAfterItems: enableSleepAfterItems,
+      enableSleepAfterMins: enableSleepAfterMins,
+      sleepAfterMin: sleepAfterMin,
+      sleepAfterItems: sleepAfterItems,
     );
-    _audioHandler.sleepTimerConfig.value = newConfig;
   }
 
   void resetSleepAfterTimer() {
