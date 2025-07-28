@@ -821,6 +821,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                 max: 120,
                 initValue: valInSet,
                 onValueChanged: (val) => settings.player.save(minTrackDurationToRestoreLastPosInMinutes: val),
+                extraValue: true,
                 text: valInSet == 0
                     ? lang.ALWAYS_RESTORE
                     : valInSet <= -1

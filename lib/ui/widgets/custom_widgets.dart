@@ -20,7 +20,6 @@ import 'package:like_button/like_button.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
-import 'package:wheel_slider/wheel_slider.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
@@ -1475,7 +1474,7 @@ class ContainerWithBorder extends StatelessWidget {
   }
 }
 
-class NamidaWheelSlider extends StatelessWidget {
+class NamidaWheelSlider extends StatefulWidget {
   final double width;
   final double perspective;
   final int max;
@@ -1486,7 +1485,6 @@ class NamidaWheelSlider extends StatelessWidget {
   final bool extraValue;
   final double itemSize;
   final double squeeze;
-  final bool isInfinite;
   final String? text;
   final String? topText;
   final double? textPadding;
@@ -1503,7 +1501,6 @@ class NamidaWheelSlider extends StatelessWidget {
     required this.max,
     this.stepper = 1,
     this.multiplier = 1,
-    this.isInfinite = false,
     required this.onValueChanged,
     this.text,
     this.topText,
@@ -1515,42 +1512,108 @@ class NamidaWheelSlider extends StatelessWidget {
         assert(min < max, 'min should be less than max');
 
   @override
+  State<NamidaWheelSlider> createState() => _NamidaWheelSliderState();
+}
+
+class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
+  late final _controller = FixedExtentScrollController(initialItem: (widget.initValue / widget.stepper / widget.multiplier).round());
+
+  static bool _isMultipleOfFive(int n) => n % 5 == 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final totalCount = ((widget.max - widget.min) / widget.stepper).round() + (widget.extraValue ? 1 : 0);
+
     return SizedBox(
-      width: width,
+      width: widget.width,
       child: Column(
         children: [
-          if (topText != null) ...[
+          if (widget.topText != null) ...[
             Text(
-              topText!,
+              widget.topText!,
               style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            SizedBox(height: topTextPadding),
+            SizedBox(
+              height: widget.topTextPadding,
+            ),
           ],
-          WheelSlider(
-            perspective: perspective,
-            totalCount: ((max - min) / stepper).round() + (extraValue ? 1 : 0),
-            initValue: (initValue / stepper / multiplier).round(),
-            itemSize: itemSize,
-            squeeze: squeeze,
-            isInfinite: isInfinite,
-            lineColor: context.theme.iconTheme.color,
-            pointerColor: context.theme.listTileTheme.textColor!,
-            pointerHeight: 38.0,
-            horizontalListHeight: 38.0,
-            onValueChanged: (val) {
-              val as int;
-              int finalValue = (val * stepper * multiplier + min);
-              if ((extraValue && finalValue > max)) finalValue = -1;
-              onValueChanged(finalValue);
-            },
-            hapticFeedbackType: HapticFeedbackType.lightImpact,
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                height: 38.0,
+                child: RotatedBox(
+                  quarterTurns: 3,
+                  child: ListWheelScrollView.useDelegate(
+                    controller: _controller,
+                    childDelegate: ListWheelChildBuilderDelegate(
+                      childCount: totalCount + 1,
+                      builder: (context, index) {
+                        final multipleOfFive = _isMultipleOfFive(index);
+                        return Align(
+                          alignment: Alignment.center,
+                          child: SizedBox(
+                            width: multipleOfFive ? 35.0 : 20.0,
+                            height: 1.5,
+                            child: SizedBox(
+                              width: multipleOfFive ? 35.0 : 20.0,
+                              height: 1.5,
+                              child: ColoredBox(
+                                color: context.theme.iconTheme.color!,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    onSelectedItemChanged: (val) {
+                      int finalValue = (val * widget.stepper * widget.multiplier + widget.min);
+                      if ((widget.extraValue && finalValue > widget.max)) finalValue = -1;
+                      widget.onValueChanged(finalValue);
+                      HapticFeedback.lightImpact();
+                    },
+                    perspective: widget.perspective,
+                    squeeze: widget.squeeze,
+                    useMagnifier: true,
+                    itemExtent: widget.itemSize,
+                  ),
+                ),
+              ),
+              IgnorePointer(
+                ignoring: true,
+                child: SizedBox(
+                  height: 38.0,
+                  width: 2.5,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4.0.multipliedRadius),
+                      color: context.theme.listTileTheme.textColor!,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          if (text != null) ...[
-            SizedBox(height: textPadding),
-            FittedBox(child: Text(text!, style: TextStyle(color: context.textTheme.displaySmall?.color))),
+          if (widget.text != null) ...[
+            SizedBox(
+              height: widget.textPadding,
+            ),
+            FittedBox(
+              child: Text(
+                widget.text!,
+                style: TextStyle(
+                  color: context.textTheme.displaySmall?.color,
+                ),
+              ),
+            ),
           ]
         ],
       ),

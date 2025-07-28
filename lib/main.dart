@@ -596,6 +596,9 @@ class ScrollBehaviorModified extends ScrollBehavior {
   const ScrollBehaviorModified();
 
   @override
+  Set<PointerDeviceKind> get dragDevices => PointerDeviceKind.values.toSet();
+
+  @override
   Widget buildScrollbar(BuildContext context, Widget child, ScrollableDetails details) => child;
 
   @override
