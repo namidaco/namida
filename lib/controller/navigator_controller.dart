@@ -99,8 +99,10 @@ class NamidaNavigator {
 
   void popAllMenus() {
     if (_openedNumbersManager._currentMenusNumber == 0) return;
-    _rootNav.currentState?.popUntil((r) => r.isFirst);
-    _openedNumbersManager.resetMenus();
+    while (_openedNumbersManager._currentMenusNumber > 0) {
+      _openedNumbersManager.decrementMenus();
+      popRoot();
+    }
   }
 
   void toggleDrawer() {
@@ -778,12 +780,6 @@ class _OpenedNumbersManager {
 
   void decrementMenus() {
     _currentMenusNumber--;
-    // _reEvaluate();
-    if (kDebugMode) _printMenus();
-  }
-
-  void resetMenus() {
-    _currentMenusNumber = 0;
     // _reEvaluate();
     if (kDebugMode) _printMenus();
   }

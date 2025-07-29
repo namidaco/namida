@@ -1331,7 +1331,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
     required int downloadStartRange,
     required void Function(int downloadedBytesLength) downloadingStream,
   }) async {
-    if (url == null || url.host.isEmpty) return false;
+    if (url == null || url.host.isEmpty) return Exception('Host Empty. url: ${url.toString()}');
 
     final filePath = file.path;
     if (_downloadCompleters[filePath] != null) return _downloadCompleters[filePath]!.future;
@@ -1353,14 +1353,14 @@ class _YTDownloadManager with PortsProvider<SendPort> {
     if (!isInitialized) await initialize();
     await sendPort(p);
     final res = await _downloadCompleters[filePath]?.future;
-    _onFileFinish(filePath, null);
+    _onFileFinish(filePath, res);
     return res;
   }
 
   Future<void> stopDownload({required File? file}) async {
     if (file == null) return;
     final filePath = file.path;
-    _onFileFinish(filePath, null);
+    _onFileFinish(filePath, const _UserCanceledException());
     final p = {
       'files': [file],
       'stop': true
@@ -1370,7 +1370,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
 
   Future<void> stopDownloads({required List<File> files}) async {
     if (files.isEmpty) return;
-    files.loop((e) => _onFileFinish(e.path, null));
+    files.loop((e) => _onFileFinish(e.path, const _UserCanceledException()));
     final p = {'files': files, 'stop': true};
     await sendPort(p);
   }
@@ -1461,7 +1461,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
             } on RhttpCancelException catch (_) {
               // client force closed
               await onRequestFinish(cancel: true);
-              return sendPort.send(MapEntry(filePath, null));
+              return sendPort.send(MapEntry(filePath, const _UserCanceledException()));
             } catch (_) {
               await onRequestFinish(cancel: true);
               rethrow;

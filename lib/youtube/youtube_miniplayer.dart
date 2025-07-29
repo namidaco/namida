@@ -1302,7 +1302,10 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                     displayBottomBGLayer: !enableBottomNavBar,
                                     onDismiss: dismissibleMiniplayer ? Player.inst.clearQueue : null,
                                     onDismissing: (dismissPercentage) {
-                                      Player.inst.setPlayerVolume(dismissPercentage.clampDouble(0.0, settings.player.volume.value));
+                                      if (Player.inst.isPlaying.value) {
+                                        final maxVolume = settings.player.volume.value;
+                                        Player.inst.setPlayerVolume((dismissPercentage * maxVolume).clampDouble(0.0, maxVolume));
+                                      }
                                     },
                                     onHeightChange: (percentage) {
                                       MiniPlayerController.inst.animateMiniplayer(percentage);
