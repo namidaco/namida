@@ -108,6 +108,23 @@ class NamidaMainActivity : FlutterActivity() {
           result.success(openSystemEqualizer(call.argument<Int?>("sessionId")))
         }
 
+        "openNamidaSync" -> {
+          val backupPath = call.argument<String>("backupPath")
+          val musicFolders = call.argument<String>("musicFolders")
+          try {
+              val intent = Intent()
+              intent.setClassName("com.sanskar.namidasync", "com.sanskar.namidasync.MainActivity")
+              intent.action = Intent.ACTION_MAIN
+              intent.putExtra("backupPath", backupPath)
+              intent.putExtra("musicFolders", musicFolders)
+              intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+              startActivity(intent)
+              result.success(true)
+          } catch (e: Exception) {
+              result.error("LAUNCH_FAILED", "Could not launch Namida Sync: ${e.message}", null)
+          }
+        }
+
         else -> result.notImplemented()
       }
     }

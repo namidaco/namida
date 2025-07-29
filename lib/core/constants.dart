@@ -586,6 +586,8 @@ class AppSocial {
   static const GITHUB_RELEASES_BETA = '$GITHUB_SNAPSHOTS/releases/';
   static const EMAIL = 'namida.coo@gmail.com';
   static const TRANSLATION_REPO = 'https://github.com/namidaco/namida-translations';
+
+  static const NAMIDA_SYNC_GITHUB_RELEASE = 'https://github.com/010101-sans/namida_sync/releases';
 }
 
 class LibraryCategory {
@@ -676,6 +678,8 @@ class NamidaFileExtensionsWrapper {
   static const zip = NamidaFileExtensionsWrapper._(_zipExtensions);
   static const compressed = NamidaFileExtensionsWrapper._({..._zipExtensions, 'tar', 'gz', 'bz2', 'xz', 'cab', 'iso', 'jar'});
   static const lrcOrTxt = NamidaFileExtensionsWrapper._({'lrc', 'txt', 'LRC', 'TXT'});
+
+  static const exe = NamidaFileExtensionsWrapper._({'exe', 'EXE'});
 }
 
 const kDefaultLang = NamidaLanguage(

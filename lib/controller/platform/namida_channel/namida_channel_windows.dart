@@ -38,4 +38,10 @@ class _NamidaChannelWindows extends NamidaChannel {
     // -- unsupported
     return false;
   }
+
+  @override
+  Future<bool> openNamidaSync(String backupFolder, String musicFoldersJoined) async {
+    // -- unsupported natively
+    return false;
+  }
 }

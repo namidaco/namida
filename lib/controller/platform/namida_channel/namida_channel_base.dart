@@ -24,8 +24,10 @@ abstract class NamidaChannel {
 
   Future<bool> openSystemEqualizer(int? sessionId);
 
-  final _onResume = < FutureOr<void> Function()>[];
-  final _onSuspending = < FutureOr<void> Function()>[];
+  Future<bool> openNamidaSync(String backupFolder, String musicFoldersJoined);
+
+  final _onResume = <FutureOr<void> Function()>[];
+  final _onSuspending = <FutureOr<void> Function()>[];
   final _onDestroy = <FutureOr<void> Function()>[];
 
   void addOnDestroy(FutureOr<void> Function() fn) {
@@ -36,9 +38,9 @@ abstract class NamidaChannel {
     _onResume.add(fn);
   }
 
-  void addOnSuspending( FutureOr<void> Function() fn) {
-    _onSuspending.add(fn); 
-  } 
+  void addOnSuspending(FutureOr<void> Function() fn) {
+    _onSuspending.add(fn);
+  }
 
   void removeOnDestroy(FutureOr<void> Function() fn) {
     _onDestroy.remove(fn);

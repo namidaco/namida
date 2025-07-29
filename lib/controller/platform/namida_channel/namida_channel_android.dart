@@ -64,6 +64,23 @@ class _NamidaChannelAndroid extends NamidaChannel {
     return res ?? false;
   }
 
+  @override
+  Future<bool> openNamidaSync(String backupFolder, String musicFoldersJoined) async {
+    try {
+      final res = await _channel.invokeMethod(
+        'openNamidaSync',
+        {
+          'backupPath': backupFolder,
+          'musicFolders': musicFoldersJoined,
+        },
+      );
+      return res ?? false;
+    } on PlatformException catch (_) {
+      // -- package doesn't exist
+      return false;
+    }
+  }
+
   void _initLiseners() {
     _streamSub?.cancel();
     try {
