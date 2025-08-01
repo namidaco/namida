@@ -52,12 +52,12 @@ Future<void> showTrackInfoDialog(
   onColorsObtained(colorScheme ?? CurrentColor.inst.color);
 
   if (colorScheme == null) {
-    final colorSync = CurrentColor.inst.getTrackDelightnedColorSync(track);
+    final colorSync = CurrentColor.inst.getTrackDelightnedColorSync(track, networkArtworkInfo);
     if (colorSync != null) {
       onColorsObtained(colorSync);
     } else {
       CurrentColor.inst
-          .getTrackDelightnedColor(track, useIsolate: true)
+          .getTrackDelightnedColor(track, networkArtworkInfo, useIsolate: true)
           .executeWithMinDelay(
             delayMS: NamidaNavigator.kDefaultDialogDurationMS,
           )
@@ -273,7 +273,7 @@ Future<void> showTrackInfoDialog(
                                             loadingBuilder: (context, event) => artwork,
                                             backgroundDecoration: const BoxDecoration(color: Colors.transparent),
                                             filterQuality: FilterQuality.high,
-                                            imageProvider: FileImage(File(track.pathToImage)),
+                                            imageProvider: FileImage(File(networkArtworkInfo?.toArtworkLocation().path ?? track.pathToImage)),
                                           ),
                                         ),
                                       ),

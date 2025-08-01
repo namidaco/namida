@@ -111,12 +111,12 @@ Future<void> showGeneralPopupDialog(
   onColorsObtained(CurrentColor.inst.color);
 
   if (extractColor && trackToExtractColorFrom != null) {
-    final colorSync = CurrentColor.inst.getTrackDelightnedColorSync(trackToExtractColorFrom);
+    final colorSync = CurrentColor.inst.getTrackDelightnedColorSync(trackToExtractColorFrom, networkArtworkInfo);
     if (colorSync != null) {
       onColorsObtained(colorSync);
     } else {
       CurrentColor.inst
-          .getTrackDelightnedColor(trackToExtractColorFrom, useIsolate: true)
+          .getTrackDelightnedColor(trackToExtractColorFrom, networkArtworkInfo, useIsolate: true)
           .executeWithMinDelay(
             delayMS: NamidaNavigator.kDefaultDialogDurationMS,
           )
@@ -709,6 +709,7 @@ Future<void> showGeneralPopupDialog(
               cancelSkipTimer();
               showTrackAdvancedDialog(
                 tracks: tracksWithDates.isNotEmpty ? tracksWithDates : tracks,
+                networkArtworkInfo: networkArtworkInfo,
                 colorScheme: colorDelightened,
                 source: source,
                 albumsUniqued: availableAlbums,

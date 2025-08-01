@@ -215,11 +215,6 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
     return path;
   }
 
-  File? _getCachedArtworkExisting() {
-    final file = this._cachedFilePath;
-    return file.existsSync() ? file : null;
-  }
-
   Future<String?> _fetchNetworkArtworkUrlLastFm(NetworkArtworkInfo info) async {
     if (!ConnectivityController.inst.hasConnection) return null;
 
@@ -257,7 +252,7 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
 
     Uint8List newBytes;
 
-    final isDummyOrStarImage = url.isEmpty || url.endsWith('2a96cbd8b46e442fc41c2b86b821562f.jpg');
+    final isDummyOrStarImage = url.isEmpty || url.endsWith('2a96cbd8b46e442fc41c2b86b821562f.jpg') || url.endsWith('c6f59c1e5e7240a4c0d427abd71f3dbb.jpg');
     if (isDummyOrStarImage) {
       newBytes = Uint8List.fromList([]); // write empty bytes
     } else {
@@ -276,7 +271,7 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
   Future<void> _getThumbnail() async {
     if (_requestCompleters.containsKey(widget.info)) return;
 
-    final cachedFile = _getCachedArtworkExisting();
+    final cachedFile = widget.info.toArtworkIfExists();
     imagePath = cachedFile?.path;
     imagePath ??= ArtworkWidget.kImagePathInitialValue;
 
@@ -341,6 +336,7 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
         icon: widget.info.icon ?? Broken.musicnote,
         iconSize: widget.iconSize ?? widget.thumbnailSize * 0.3,
         forceSquared: widget.forceSquared,
+        staggered: widget.staggered,
         // cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.2,
         onTopWidgets: widget.onTopWidgets,
 
@@ -486,6 +482,19 @@ sealed class NetworkArtworkInfo {
 
   RxList<LibraryImageSource> get settingsKey;
   File toArtworkLocation();
+  File? toArtworkIfExists() {
+    final file = toArtworkLocation();
+    return file.existsSync() ? file : null;
+  }
+
+  File? toArtworkIfExistsAndEnabled() {
+    final isNetworkAllowed = settingsKey.value.any((element) => element.isNetwork);
+    if (isNetworkAllowed) {
+      return toArtworkIfExists();
+    }
+    return null;
+  }
+
   CustomArtworkManager toManager() {
     return CustomArtworkManager(
       getArtworkFile: () => toArtworkLocation(),

@@ -912,7 +912,7 @@ class _MixesCardState extends State<_MixesCard> {
     super.initState();
     final track = _track ??= widget.tracks.trackOfImage;
     if (track != null) {
-      _cardColor = CurrentColor.inst.getTrackColorsSync(track)?.color;
+      _cardColor = CurrentColor.inst.getTrackColorsSync(track, networkArtworkInfo: null)?.color;
       if (_cardColor == null) {
         Future.delayed(const Duration(milliseconds: 500)).then((_) => _extractColor(track));
       }
@@ -1060,7 +1060,7 @@ class _MixesCardState extends State<_MixesCard> {
 
   void _extractColor(Track track) {
     if (_cardColor == null) {
-      CurrentColor.inst.getTrackColors(track, useIsolate: true).then((value) {
+      CurrentColor.inst.getTrackColors(track, networkArtworkInfo: null, useIsolate: true).then((value) {
         if (mounted) setState(() => _cardColor = value.color);
       });
     }
@@ -1276,7 +1276,7 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
     if (!await canStartLoadingItems()) return;
 
     if (_cardColor == null) {
-      CurrentColor.inst.getTrackColors(track, useIsolate: true).then((value) {
+      CurrentColor.inst.getTrackColors(track, networkArtworkInfo: null, useIsolate: true).then((value) {
         if (mounted) setState(() => _cardColor = value.color);
       });
     }
@@ -1287,7 +1287,7 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
     super.initState();
     final track = widget.track;
     if (track != null) {
-      _cardColor = CurrentColor.inst.getTrackColorsSync(track)?.color;
+      _cardColor = CurrentColor.inst.getTrackColorsSync(track, networkArtworkInfo: null)?.color;
       if (_cardColor == null) {
         Future.delayed(const Duration(milliseconds: 500)).then((_) => _extractColor(track));
       }

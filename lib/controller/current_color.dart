@@ -22,6 +22,7 @@ import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -164,7 +165,7 @@ class CurrentColor {
   void updatePlayerColorFromTrack(Selectable? track, int? index, {bool updateIndexOnly = false}) async {
     if (!updateIndexOnly && track != null) {
       _updatePlayerColorFromItem(
-        getColorPalette: () async => await getTrackColors(track.track),
+        getColorPalette: () async => await getTrackColors(track.track, networkArtworkInfo: null),
         stillPlaying: () => track.track == Player.inst.currentTrack?.track,
       );
     }
@@ -263,11 +264,12 @@ class CurrentColor {
 
   NamidaColor? getTrackColorsSync(
     Track track, {
+    required NetworkArtworkInfo? networkArtworkInfo,
     bool fallbackToPlayerStaticColor = true,
     bool delightnedAndAlpha = true,
     bool useIsolate = _defaultUseIsolate,
   }) {
-    final filename = settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename;
+    final filename = networkArtworkInfo?.toArtworkIfExistsAndEnabled()?.path ?? (settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename);
 
     final valInMap = _colorsMap[filename];
 
@@ -283,23 +285,27 @@ class CurrentColor {
 
   Future<NamidaColor> getTrackColors(
     Track track, {
+    required NetworkArtworkInfo? networkArtworkInfo,
     bool fallbackToPlayerStaticColor = true,
     bool delightnedAndAlpha = true,
     bool useIsolate = _defaultUseIsolate,
     bool forceReCheck = false,
   }) async {
     if (!forceReCheck) {
-      final cached = getTrackColorsSync(track);
+      final cached = getTrackColorsSync(track, networkArtworkInfo: networkArtworkInfo);
+
       if (cached != null) return cached;
     }
 
+    final networkArtwork = networkArtworkInfo?.toArtworkIfExistsAndEnabled()?.path;
+
     NamidaColor? nc = await extractPaletteFromImage(
-      track.pathToImage,
+      networkArtwork ?? track.pathToImage,
       track: track,
       useIsolate: useIsolate,
     );
 
-    final filename = settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename;
+    final filename = networkArtwork ?? (settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename);
 
     final finalnc = _maybeDelightned(
       nc,
@@ -311,9 +317,11 @@ class CurrentColor {
   }
 
   /// Equivalent to calling [getTrackColors] with [delightnedAndAlpha == true]
-  Future<Color> getTrackDelightnedColor(Track track, {bool fallbackToPlayerStaticColor = false, bool useIsolate = _defaultUseIsolate}) async {
+  Future<Color> getTrackDelightnedColor(Track track, NetworkArtworkInfo? networkArtworkInfo,
+      {bool fallbackToPlayerStaticColor = false, bool useIsolate = _defaultUseIsolate}) async {
     final nc = await getTrackColors(
       track,
+      networkArtworkInfo: networkArtworkInfo,
       fallbackToPlayerStaticColor: fallbackToPlayerStaticColor,
       delightnedAndAlpha: true,
       useIsolate: useIsolate,
@@ -321,9 +329,10 @@ class CurrentColor {
     return nc.color;
   }
 
-  Color? getTrackDelightnedColorSync(Track track, {bool fallbackToPlayerStaticColor = false, bool useIsolate = _defaultUseIsolate}) {
+  Color? getTrackDelightnedColorSync(Track track, NetworkArtworkInfo? networkArtworkInfo, {bool fallbackToPlayerStaticColor = false, bool useIsolate = _defaultUseIsolate}) {
     final nc = getTrackColorsSync(
       track,
+      networkArtworkInfo: networkArtworkInfo,
       fallbackToPlayerStaticColor: fallbackToPlayerStaticColor,
       delightnedAndAlpha: true,
       useIsolate: useIsolate,
@@ -502,7 +511,7 @@ class CurrentColor {
           break; // stops extracting
         }
         allColorPalettesGeneratingProgress.value++;
-        await getTrackColors(alltracks[i], useIsolate: true, forceReCheck: true);
+        await getTrackColors(alltracks[i], networkArtworkInfo: null, useIsolate: true, forceReCheck: true);
       }
     } catch (_) {
       // concurrent modifiation maybe

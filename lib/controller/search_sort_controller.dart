@@ -166,18 +166,18 @@ class SearchSortController {
     return l;
   }
 
-  String Function(List<Track> tracks)? getGroupSortExtraTextResolver(GroupSortType sort, {GeneralPlaylist? playlist}) => switch (sort) {
+  String? Function(List<Track> tracks)? getGroupSortExtraTextResolver(GroupSortType sort, {GeneralPlaylist? playlist}) => switch (sort) {
         GroupSortType.album => (tracks) => tracks.album,
-        GroupSortType.artistsList => (tracks) => tracks.first.originalArtist,
-        GroupSortType.composer => (tracks) => tracks.first.composer,
+        GroupSortType.artistsList => (tracks) => tracks.firstOrNull?.originalArtist,
+        GroupSortType.composer => (tracks) => tracks.firstOrNull?.composer,
         GroupSortType.albumArtist => (tracks) => tracks.albumArtist,
-        GroupSortType.label => (tracks) => tracks[0].label,
-        GroupSortType.genresList => (tracks) => tracks[0].originalGenre,
+        GroupSortType.label => (tracks) => tracks.firstOrNull?.label,
+        GroupSortType.genresList => (tracks) => tracks.firstOrNull?.originalGenre,
         GroupSortType.numberOfTracks => (tracks) => tracks.length.toString(),
         GroupSortType.duration => (tracks) => tracks.totalDurationFormatted,
         GroupSortType.albumsCount => (tracks) => tracks.toUniqueAlbums().length.toString(),
         GroupSortType.year => (tracks) => tracks.year.yearFormatted,
-        GroupSortType.dateModified => (tracks) => tracks[0].dateModified.dateFormatted,
+        GroupSortType.dateModified => (tracks) => tracks.firstOrNull?.dateModified.dateFormatted,
         GroupSortType.playCount => (tracks) => tracks.getTotalListenCount().toString(),
         GroupSortType.firstListen => (tracks) => tracks.getFirstListen()?.dateFormattedOriginal ?? '',
         GroupSortType.latestPlayed => (tracks) => tracks.getLatestListen()?.dateFormattedOriginal ?? '',
@@ -190,21 +190,21 @@ class SearchSortController {
         GroupSortType.shuffle => null,
       };
 
-  String Function(LocalPlaylist playlist)? getGroupSortExtraTextResolverPlaylist(GroupSortType sort) => switch (sort) {
-        GroupSortType.album => (p) => p.tracks.first.track.album,
-        GroupSortType.artistsList => (p) => p.tracks.first.track.originalArtist,
-        GroupSortType.composer => (p) => p.tracks.first.track.composer,
-        GroupSortType.albumArtist => (p) => p.tracks.first.track.albumArtist,
-        GroupSortType.label => (p) => p.tracks[0].track.label,
-        GroupSortType.genresList => (p) => p.tracks[0].track.originalGenre,
+  String? Function(LocalPlaylist playlist)? getGroupSortExtraTextResolverPlaylist(GroupSortType sort) => switch (sort) {
+        GroupSortType.album => (p) => p.tracks.firstOrNull?.track.album,
+        GroupSortType.artistsList => (p) => p.tracks.firstOrNull?.track.originalArtist,
+        GroupSortType.composer => (p) => p.tracks.firstOrNull?.track.composer,
+        GroupSortType.albumArtist => (p) => p.tracks.firstOrNull?.track.albumArtist,
+        GroupSortType.label => (p) => p.tracks.firstOrNull?.track.label,
+        GroupSortType.genresList => (p) => p.tracks.firstOrNull?.track.originalGenre,
         GroupSortType.numberOfTracks => (p) => p.tracks.length.toString(),
         GroupSortType.duration => (p) => p.tracks.totalDurationFormatted,
         GroupSortType.albumsCount => (p) => p.tracks.toTracks().toUniqueAlbums().length.toString(),
-        GroupSortType.year => (p) => p.tracks.first.track.year.yearFormatted,
-        GroupSortType.dateModified => (p) => p.tracks[0].track.dateModified.dateFormatted,
+        GroupSortType.year => (p) => p.tracks.firstOrNull?.track.year.yearFormatted,
+        GroupSortType.dateModified => (p) => p.tracks.firstOrNull?.track.dateModified.dateFormatted,
         GroupSortType.playCount => (p) => p.tracks.getTotalListenCount().toString(),
-        GroupSortType.firstListen => (p) => p.tracks.getFirstListen()?.dateFormattedOriginal ?? '',
-        GroupSortType.latestPlayed => (p) => p.tracks.getLatestListen()?.dateFormattedOriginal ?? '',
+        GroupSortType.firstListen => (p) => p.tracks.getFirstListen()?.dateFormattedOriginal,
+        GroupSortType.latestPlayed => (p) => p.tracks.getLatestListen()?.dateFormattedOriginal,
 
         // -- playlists
         GroupSortType.title => (playlist) => playlist.name,

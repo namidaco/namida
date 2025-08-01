@@ -23,8 +23,8 @@ void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Co
   showListensDialog(
     datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : HistoryController.inst.topTracksMapListens.value[track] ?? [],
     colorScheme: colorScheme,
-    colorSchemeFunction: () => CurrentColor.inst.getTrackDelightnedColor(track, useIsolate: true),
-    colorSchemeFunctionSync: () => CurrentColor.inst.getTrackDelightnedColorSync(track, useIsolate: true),
+    colorSchemeFunction: () => CurrentColor.inst.getTrackDelightnedColor(track, null, useIsolate: true),
+    colorSchemeFunctionSync: () => CurrentColor.inst.getTrackDelightnedColorSync(track, null, useIsolate: true),
     onListenTap: (listen) => NamidaOnTaps.inst.onHistoryPlaylistTap(initialListen: listen),
   );
 }

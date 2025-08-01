@@ -54,6 +54,7 @@ import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
@@ -820,6 +821,16 @@ extension RouteUtils on NamidaRoute {
     return null;
   }
 
+  NetworkArtworkInfo? get getNetworkArtworkInfo {
+    final name = this.name;
+    if (name == null) return null;
+    if (route == RouteType.SUBPAGE_albumTracks) return NetworkArtworkInfo.albumAutoArtist(name);
+    if (route == RouteType.SUBPAGE_artistTracks) return NetworkArtworkInfo.artist(name);
+    if (route == RouteType.SUBPAGE_albumArtistTracks) return NetworkArtworkInfo.artist(name);
+    if (route == RouteType.SUBPAGE_composerTracks) return NetworkArtworkInfo.artist(name);
+    return null;
+  }
+
   /// Currently Supports only [RouteType.SUBPAGE_albumTracks], [RouteType.SUBPAGE_artistTracks],
   /// [RouteType.SUBPAGE_albumArtistTracks] & [RouteType.SUBPAGE_composerTracks].
   Future<void> updateColorScheme() async {
@@ -828,8 +839,9 @@ extension RouteUtils on NamidaRoute {
 
     Color? color;
     final trackToExtractFrom = trackOfColor;
-    if (trackToExtractFrom != null) {
-      color = await CurrentColor.inst.getTrackDelightnedColor(trackToExtractFrom, useIsolate: true);
+    final networkArtworkInfo = getNetworkArtworkInfo;
+    if (trackToExtractFrom != null || networkArtworkInfo != null) {
+      color = await CurrentColor.inst.getTrackDelightnedColor(trackToExtractFrom ?? kDummyTrack, networkArtworkInfo, useIsolate: true);
     }
     CurrentColor.inst.updateCurrentColorSchemeOfSubPages(color);
   }

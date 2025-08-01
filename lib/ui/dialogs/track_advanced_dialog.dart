@@ -28,11 +28,13 @@ import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 
 void showTrackAdvancedDialog({
   required List<Selectable> tracks,
+  required NetworkArtworkInfo? networkArtworkInfo,
   required Color colorScheme,
   required QueueSource source,
   required List<(String, String)> albumsUniqued,
@@ -304,9 +306,13 @@ void showTrackAdvancedDialog({
             ),
           FutureBuilder(
             future: Future.wait<NamidaColor>(
-              tracksForColorPalette.take(4).map(
-                    (e) => CurrentColor.inst.getTrackColors(e, delightnedAndAlpha: false, useIsolate: true),
-                  ),
+              networkArtworkInfo != null
+                  ? [
+                      CurrentColor.inst.getTrackColors(kDummyTrack, networkArtworkInfo: networkArtworkInfo, delightnedAndAlpha: false, useIsolate: true),
+                    ]
+                  : tracksForColorPalette.take(4).map(
+                        (e) => CurrentColor.inst.getTrackColors(e, networkArtworkInfo: null, delightnedAndAlpha: false, useIsolate: true),
+                      ),
             ),
             builder: (context, snapshot) {
               final trackColors = snapshot.data;

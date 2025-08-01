@@ -6,7 +6,6 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -79,32 +78,38 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                           maxWidth: maxWidth,
                           title: name,
                           source: QueueSource.album,
-                          subtitle: [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
+                          subtitle: [
+                            tracks.displayTrackKeyword,
+                            tracks.totalDurationFormatted,
+                          ].join(' - '),
                           thirdLineText: tracks.albumArtist,
                           heroTag: 'album_$albumIdentifier',
-                          imageBuilder: (size) => Dimensions.inst.shouldAlbumBeSquared(context) // non reactive
-                              ? MultiArtworkContainer(
-                                  size: size,
-                                  heroTag: 'album_$albumIdentifier',
-                                  tracks: [tracks.trackOfImage ?? kDummyTrack],
-                                )
-                              : Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 12.0),
-                                  padding: const EdgeInsets.all(3.0),
-                                  child: NamidaHero(
-                                    tag: 'album_$albumIdentifier',
-                                    child: NetworkArtwork.orLocal(
-                                      key: Key(tracks.pathToImage),
-                                      path: tracks.pathToImage,
-                                      track: tracks.trackOfImage,
-                                      info: NetworkArtworkInfo.albumAutoArtist(albumIdentifier),
-                                      thumbnailSize: size,
-                                      forceSquared: false,
-                                      compressed: false,
-                                      borderRadius: 12.0,
+                          imageBuilder: (size) {
+                            final artwork = NetworkArtwork.orLocal(
+                              key: Key(tracks.pathToImage),
+                              path: tracks.pathToImage,
+                              track: tracks.trackOfImage,
+                              info: NetworkArtworkInfo.albumAutoArtist(albumIdentifier),
+                              thumbnailSize: size,
+                              forceSquared: false,
+                              compressed: false,
+                              borderRadius: 12.0,
+                            );
+                            return Dimensions.inst.shouldAlbumBeSquared(context) // non reactive
+                                ? MultiArtworkContainer(
+                                    size: size,
+                                    heroTag: 'album_$albumIdentifier',
+                                    child: artwork,
+                                  )
+                                : Container(
+                                    margin: const EdgeInsets.symmetric(horizontal: 12.0),
+                                    padding: const EdgeInsets.all(3.0),
+                                    child: NamidaHero(
+                                      tag: 'album_$albumIdentifier',
+                                      child: artwork,
                                     ),
-                                  ),
-                                ),
+                                  );
+                          },
                           tracksFn: () => tracks,
                         ),
                         slivers: [

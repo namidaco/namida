@@ -532,19 +532,22 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                     if (lrc == null) {
                       final text = Lyrics.inst.currentLyricsText.valueR;
                       if (!_checkIfTextEmpty(text)) {
-                        return SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                          controller: Lyrics.inst.textScrollController,
-                          child: Column(
-                            children: [
-                              SizedBox(height: _paddingVertical),
-                              Text(
-                                text,
-                                style: plainLyricsTextStyle,
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: _paddingVertical),
-                            ],
+                        return Align(
+                          // -- Align vip to center widget
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                            controller: Lyrics.inst.textScrollController,
+                            child: Column(
+                              children: [
+                                SizedBox(height: _paddingVertical),
+                                Text(
+                                  text,
+                                  style: plainLyricsTextStyle,
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: _paddingVertical),
+                              ],
+                            ),
                           ),
                         );
                       }

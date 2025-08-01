@@ -227,12 +227,12 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
   onColorsObtained(colorScheme ?? CurrentColor.inst.color);
 
   if (colorScheme == null) {
-    final colorSync = CurrentColor.inst.getTrackDelightnedColorSync(track);
+    final colorSync = CurrentColor.inst.getTrackDelightnedColorSync(track, null);
     if (colorSync != null) {
       onColorsObtained(colorSync);
     } else {
       CurrentColor.inst
-          .getTrackDelightnedColor(track, useIsolate: true)
+          .getTrackDelightnedColor(track, null, useIsolate: true)
           .executeWithMinDelay(
             delayMS: NamidaNavigator.kDefaultDialogDurationMS,
           )
