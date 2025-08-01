@@ -107,9 +107,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     if (Platform.isWindows) {
       void taskbarListener() {
-        final positionMS = currentPositionMS.value;
         final durationMS = currentItemDuration.value?.inMilliseconds;
-        WindowsTaskbar.setProgress(positionMS, durationMS ?? 1);
+        if (durationMS != null && durationMS > 0) {
+          final positionMS = currentPositionMS.value;
+          WindowsTaskbar.setProgress(positionMS, durationMS);
+        } else {
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.paused);
+        }
       }
 
       currentPositionMS.addListener(taskbarListener);
@@ -328,52 +332,64 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       }
 
       try {
-        await WindowsTaskbar.setThumbnailToolbar(
+        String? title = mediaItem.value?.displayTitle ?? mediaItem.value?.title;
+        if (title == null || title.isEmpty) {
+          title = 'Namida';
+        } else {
+          title = '$title • Namida';
+        }
+        await Future.wait(
           [
-            if (isFavourite == true)
-              ThumbnailToolbarButton(
-                getIco('favorited'),
-                lang.REMOVE_FROM_FAVOURITES,
-                onFavOrUnfavPress,
-              )
-            else if (isFavourite == false)
-              ThumbnailToolbarButton(
-                getIco('favorite'),
-                lang.ADD_TO_FAVOURITES,
-                onFavOrUnfavPress,
-              ),
-            ThumbnailToolbarButton(
-              getIco(repeatIcoName),
-              repeatText,
-              onRepeatPress,
-            ),
-            ThumbnailToolbarButton(
-              getIco('previous'),
-              lang.PREVIOUS,
-              Player.inst.previous,
-            ),
-            isPlaying
-                ? ThumbnailToolbarButton(
-                    getIco('pause'),
-                    lang.PAUSE,
-                    Player.inst.pause,
-                  )
-                : ThumbnailToolbarButton(
-                    getIco('play'),
-                    lang.PLAY,
-                    Player.inst.play,
+            WindowsTaskbar.setWindowTitle(title),
+            if (currentItem.value != null) // idk it just breaks if set after disposing
+              WindowsTaskbar.setThumbnailToolbar(
+                [
+                  if (isFavourite == true)
+                    ThumbnailToolbarButton(
+                      getIco('favorited'),
+                      lang.REMOVE_FROM_FAVOURITES,
+                      onFavOrUnfavPress,
+                    )
+                  else if (isFavourite == false)
+                    ThumbnailToolbarButton(
+                      getIco('favorite'),
+                      lang.ADD_TO_FAVOURITES,
+                      onFavOrUnfavPress,
+                    ),
+                  ThumbnailToolbarButton(
+                    getIco(repeatIcoName),
+                    repeatText,
+                    onRepeatPress,
                   ),
-            ThumbnailToolbarButton(
-              getIco('next'),
-              lang.NEXT,
-              Player.inst.next,
-            ),
-            ThumbnailToolbarButton(
-              getIco('stop'),
-              lang.STOP,
-              () => Player.inst.pause().whenComplete(Player.inst.dispose),
-              mode: ThumbnailToolbarButtonMode.dismissionClick,
-            ),
+                  ThumbnailToolbarButton(
+                    getIco('previous'),
+                    lang.PREVIOUS,
+                    Player.inst.previous,
+                  ),
+                  isPlaying
+                      ? ThumbnailToolbarButton(
+                          getIco('pause'),
+                          lang.PAUSE,
+                          Player.inst.pause,
+                        )
+                      : ThumbnailToolbarButton(
+                          getIco('play'),
+                          lang.PLAY,
+                          Player.inst.play,
+                        ),
+                  ThumbnailToolbarButton(
+                    getIco('next'),
+                    lang.NEXT,
+                    Player.inst.next,
+                  ),
+                  ThumbnailToolbarButton(
+                    getIco('stop'),
+                    lang.STOP,
+                    () => Player.inst.pause().whenComplete(Player.inst.dispose),
+                    mode: ThumbnailToolbarButtonMode.dismissionClick,
+                  ),
+                ],
+              ),
           ],
         );
       } catch (_) {}
@@ -2070,11 +2086,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<void> onDispose() async {
+    mediaItem.add(null);
     await [
       super.onDispose(),
       if (Platform.isAndroid) AudioService.forceStop(),
     ].execute();
     SMTCController.instance?.onStop();
+    _refreshWindowsTaskbar(false, null);
   }
 
   Timer? _headsetButtonClickTimer;
