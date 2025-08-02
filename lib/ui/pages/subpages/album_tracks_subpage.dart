@@ -85,17 +85,19 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                           thirdLineText: tracks.albumArtist,
                           heroTag: 'album_$albumIdentifier',
                           imageBuilder: (size) {
+                            final squared = Dimensions.inst.shouldAlbumBeSquared(context);
                             final artwork = NetworkArtwork.orLocal(
                               key: Key(tracks.pathToImage),
                               path: tracks.pathToImage,
                               track: tracks.trackOfImage,
                               info: NetworkArtworkInfo.albumAutoArtist(albumIdentifier),
                               thumbnailSize: size,
-                              forceSquared: false,
+                              forceSquared: squared,
                               compressed: false,
                               borderRadius: 12.0,
+                              staggered: false, // -- keep false
                             );
-                            return Dimensions.inst.shouldAlbumBeSquared(context) // non reactive
+                            return squared
                                 ? MultiArtworkContainer(
                                     size: size,
                                     heroTag: 'album_$albumIdentifier',

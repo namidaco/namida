@@ -1318,7 +1318,7 @@ Future<void> showGeneralPopupDialog(
 
                               if (removeQueueTile != null) removeQueueTile,
 
-                              if (Player.inst.currentItem.value is Selectable && Player.inst.latestInsertedIndex != Player.inst.currentIndex.value)
+                              if (Player.inst.currentItem.value is Selectable && Player.inst.latestInsertedIndex > Player.inst.currentIndex.value)
                                 () {
                                   final playAfterTrack = (Player.inst.currentQueue.value[Player.inst.latestInsertedIndex] as Selectable).track;
                                   return SmallListTile(

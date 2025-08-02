@@ -633,7 +633,7 @@ class YTUtils {
 
   static Future<({YoutubeID video, int diff, String name})?> getPlayerAfterVideo() async {
     final player = Player.inst;
-    if (player.currentItem.value is YoutubeID && player.latestInsertedIndex != player.currentIndex.value) {
+    if (player.currentItem.value is YoutubeID && player.latestInsertedIndex > player.currentIndex.value) {
       try {
         final playAfterVideo = player.currentQueue.value[player.latestInsertedIndex] as YoutubeID;
         final diff = player.latestInsertedIndex - player.currentIndex.value;

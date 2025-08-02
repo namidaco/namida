@@ -96,7 +96,12 @@ class Dimensions {
   bool shouldAlbumBeSquared(BuildContext context) {
     final countPerRow = settings.mediaGridCounts.value.get(LibraryTab.albums);
     final albumGridCount = countPerRow.resolve(context);
-    return (albumGridCount > 1 && !settings.useAlbumStaggeredGridView.value) || (albumGridCount == 1 && settings.forceSquaredAlbumThumbnail.value);
+    if (albumGridCount == 1) {
+      return settings.forceSquaredAlbumThumbnail.value;
+    } else if (albumGridCount > 1) {
+      return !settings.useAlbumStaggeredGridView.value;
+    }
+    return false;
   }
 
   static const tileBottomMargin = 4.0;

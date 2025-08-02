@@ -149,9 +149,9 @@ class SearchSortController {
       SortType.sampleRate => (e) => e.sampleRate,
       SortType.size => (e) => e.size,
       SortType.rating => (e) => e.effectiveRating,
-      SortType.mostPlayed => (e) => HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0,
-      SortType.latestPlayed => (e) => HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0,
-      SortType.firstListen => (e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? 0,
+      SortType.mostPlayed => (e) => -(HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0),
+      SortType.latestPlayed => (e) => -(HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0),
+      SortType.firstListen => (e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? DateTime(99999).millisecondsSinceEpoch,
       SortType.shuffle => (e) => math.Random().nextInt(3) - 1,
     };
   }

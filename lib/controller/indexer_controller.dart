@@ -349,6 +349,7 @@ class Indexer<T extends Track> {
     final mediaItemsTrackSortingReverse = settings.mediaItemsTrackSortingReverse.value;
     await this.mainMapsGroup.sortAll(sorters, mediaItemsTrackSortingReverse, tracksInfoList.value);
     _refreshMediaTracksSubListsAfterSort(sorters.keys); // -- vip vro
+    this.mainMapsGroup.refreshAll(); // to refresh sublists as well
   }
 
   void _refreshMediaTracksSubListsAfterSort(Iterable<MediaType> sortedMedias) {

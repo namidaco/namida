@@ -87,8 +87,8 @@ void _mainAppInitialization() async {
     }
 
     await [
-      WindowController.instance?.init().catchError(logger.report),
-      SMTCController.instance?.init().catchError(logger.report),
+      WindowController.instance?.init(),
+      SMTCController.instance?.init(),
       HomeWidgetController.instance?.init(),
     ].executeAllAndSilentReportErrors();
 
