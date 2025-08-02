@@ -34,6 +34,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   final YoutiPieOperation operation;
   final String title;
   final CacheDetails<W> cacheReader;
+  final Future<W?> Function(CacheDetails<W> reader)? cacheReadFn;
   final Future<W?> Function(ExecuteDetails details) networkFetcher;
   final bool isSortable;
   final Widget dummyCard;
@@ -61,6 +62,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
     required this.operation,
     required this.title,
     required this.cacheReader,
+    this.cacheReadFn,
     required this.networkFetcher,
     this.isSortable = false,
     required this.dummyCard,
@@ -144,7 +146,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
       }
     }
 
-    final cachedFeed = await widget.cacheReader.read();
+    final cachedFeed = await widget.cacheReadFn?.call(widget.cacheReader) ?? await widget.cacheReader.read().ignoreError();
     if (cachedFeed != null) {
       _currentFeed.value = cachedFeed;
       _lastFetchWasCached.value = true;
