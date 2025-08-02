@@ -259,6 +259,7 @@ Animating Thumbnail        |  Recommends & Listens
 ### Special Thanks:
 
 > - [@MSOB7YY](https://github.com/MSOB7YY) for their youtube client, which powers youtube section.
+> - [@010101-sans](https://github.com/010101-sans) for creating [namida_sync](https://github.com/010101-sans/namida_sync), which makes syncing namida backups/files between android/windows easier.
 > - [@cameralis](https://github.com/cameralis) for their awesome miniplayer physics.
 > - [@alexmercerind](https://github.com/alexmercerind) for helping me out a lot.
 > - [@lusaxweb](https://github.com/lusaxweb) for their awesome Iconsax icon pack.
