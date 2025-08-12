@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -39,9 +40,7 @@ class EditDeleteController {
   Future<void> deleteCachedAudios(List<Selectable> tracks) async {
     return tracks.loopAsync((e) async {
       var ytid = e.track.youtubeID;
-      final audios = Player.inst.audioCacheMap[ytid];
-      await audios?.loopAsync((item) => item.file.delete());
-      Player.inst.audioCacheMap.remove(ytid);
+      await AudioCacheController.inst.deleteAudioCache(ytid);
     });
   }
 
@@ -236,7 +235,7 @@ extension HasCachedFiles on List<Selectable> {
       final tr = this[i];
       var vidId = tr.track.youtubeID;
       if (vidId.isNotEmpty) {
-        final cachedAudios = Player.inst.audioCacheMap[vidId];
+        final cachedAudios = AudioCacheController.inst.audioCacheMap[vidId];
         if (cachedAudios != null) return true;
       }
     }

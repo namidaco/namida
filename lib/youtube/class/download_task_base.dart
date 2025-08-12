@@ -2,24 +2,25 @@ class DownloadTaskFilename {
   static final RegExp cleanupFilenameRegex = RegExp(r'[*#\$|/\\!^:"\?%]', caseSensitive: false);
   static String cleanupFilename(String filename) => filename.replaceAll(DownloadTaskFilename.cleanupFilenameRegex, '_');
 
-  String filename;
-  late String key;
-  late int _uniqueKey;
+  static int _numberKey = 0;
 
-  DownloadTaskFilename.create({
+  String filename;
+  final String key;
+
+  static DownloadTaskFilename create({
     required String initialFilename,
-  }) : filename = initialFilename {
-    _uniqueKey = hashCode ^ DateTime.now().microsecondsSinceEpoch.hashCode;
-    key = _uniqueKey.toString();
-  }
+  }) =>
+      DownloadTaskFilename._(
+        filename: initialFilename,
+        key: _createKey(),
+      );
 
   DownloadTaskFilename._({
     required this.filename,
     required String? key,
-  }) {
-    this._uniqueKey = (key == null ? null : int.tryParse(key)) ?? (hashCode ^ DateTime.now().microsecondsSinceEpoch);
-    this.key = _uniqueKey.toString();
-  }
+  }) : this.key = key ?? _createKey();
+
+  static String _createKey() => ((_numberKey++).hashCode ^ DateTime.now().microsecondsSinceEpoch.hashCode).toString();
 
   @override
   String toString() => filename;
@@ -44,6 +45,14 @@ class DownloadTaskFilename {
       key: null,
     );
   }
+
+  @override
+  bool operator ==(other) {
+    return other is DownloadTaskFilename && filename == other.filename && key == other.key;
+  }
+
+  @override
+  int get hashCode => filename.hashCode ^ key.hashCode;
 }
 
 class DownloadTaskVideoId {

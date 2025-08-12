@@ -21,6 +21,7 @@ import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -85,7 +86,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   NamidaAudioVideoHandler() {
-    updateAudioCacheMap();
+    AudioCacheController.inst.updateAudioCacheMap();
     playWhenReady.addListener(() {
       final ye = playWhenReady.value;
       CurrentColor.inst.switchColorPalettes(playWhenReady: ye);
@@ -112,7 +113,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           final positionMS = currentPositionMS.value;
           WindowsTaskbar.setProgress(positionMS, durationMS);
         } else {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.paused);
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.normal);
         }
       }
 
@@ -120,13 +121,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       currentItemDuration.addListener(taskbarListener);
     }
   }
-
-  Future<void> updateAudioCacheMap() async {
-    final map = await _getAllAudiosInCache.thready(AppDirs.AUDIOS_CACHE);
-    audioCacheMap = map;
-  }
-
-  var audioCacheMap = <String, List<AudioCacheDetails>>{};
 
   final currentVideoStream = Rxn<VideoStream>();
   final currentAudioStream = Rxn<AudioStream>();
@@ -1100,8 +1094,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final prevAudioLangName = prevAudioStream?.audioTrack?.displayName ?? currentCachedAudio.value?.langaugeName;
 
     // -- Adding recently cached audio to cache map, to be displayed on cards.
-    audioCacheMap[videoId]?.removeWhere((element) => element.file == audioCacheFile); // removing previous same entries
-    audioCacheMap.addForce(
+    AudioCacheController.inst.removeFromCacheMap(videoId, audioCacheFile.path); // removing previous same entries
+    AudioCacheController.inst.addToCacheMap(
         videoId,
         AudioCacheDetails(
           youtubeId: videoId,
@@ -1319,8 +1313,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       whatToAwait: playerStoppingSeikoo?.future,
       positionToRestore: initialPosition,
       initialPositionFallback: (duration) async => initialPosition = await _getItemInitialPosition(pi, duration),
-      possibleAudioFiles: audioCacheMap[item.id] ?? [],
-      possibleLocalFiles: Indexer.inst.allTracksMappedByYTID[item.id] ?? [],
     );
 
     duration ??= playedFromCacheDetails.duration;
@@ -1616,8 +1608,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             whatToAwait: playerStoppingSeikoo?.future,
             positionToRestore: positionToRestore,
             initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
-            possibleAudioFiles: audioCacheMap[item.id] ?? [],
-            possibleLocalFiles: Indexer.inst.allTracksMappedByYTID[item.id] ?? [],
           );
           _isCurrentAudioFromCache = playedFromCacheDetails.audio != null;
           duration ??= playedFromCacheDetails.duration;
@@ -1664,8 +1654,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required Future<void>? whatToAwait,
     required Duration? positionToRestore,
     required FutureOr<Duration?> Function(Duration duration) initialPositionFallback,
-    required List<AudioCacheDetails> possibleAudioFiles,
-    required List<Track> possibleLocalFiles,
   }) async {
     // ------ Getting Video ------
     final allCachedVideos = await VideoController.inst.getNVFromIDSorted(item.id);
@@ -1674,27 +1662,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final cachedVideo = await allCachedVideos.firstWhereEffAsync((e) => File(e.path).exists());
 
     // ------ Getting Audio ------
-    final audioFiles = possibleAudioFiles.isNotEmpty
-        ? possibleAudioFiles
-        : await _getCachedAudiosForID.thready({
-            "dirPath": AppDirs.AUDIOS_CACHE,
-            "id": item.id,
-          });
-    final finalAudioFiles = audioFiles..sortByReverseAlt((e) => e.bitrate ?? 0, (e) => e.file.fileSizeSync() ?? 0);
-    AudioCacheDetails? cachedAudio = await finalAudioFiles.firstWhereEffAsync((e) => e.file.exists());
-
-    if (cachedAudio == null) {
-      final localTrack = await possibleLocalFiles.firstWhereEffAsync((e) => File(e.path).exists());
-      if (localTrack != null) {
-        cachedAudio = AudioCacheDetails(
-          youtubeId: item.id,
-          bitrate: localTrack.bitrate,
-          langaugeCode: null,
-          langaugeName: null,
-          file: File(localTrack.path),
-        );
-      }
-    }
+    final cachedAudio = await AudioCacheController.inst.getCachedAudioForId(item.id);
 
     const nullResult = (audio: null, video: null, duration: null);
 
@@ -1754,68 +1722,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       return (audio: null, video: cachedVideo, duration: null);
     }
     return nullResult;
-  }
-
-  /// TODO: improve using PortsProvider
-  static List<AudioCacheDetails> _getCachedAudiosForID(Map map) {
-    final dirPath = map["dirPath"] as String;
-    final id = map["id"] as String;
-
-    final newFiles = <AudioCacheDetails>[];
-
-    final allFiles = Directory(dirPath).listSyncSafe();
-    final allLength = allFiles.length;
-    for (int i = 0; i < allLength; i++) {
-      final fe = allFiles[i];
-      final filename = fe.path.getFilename;
-      final goodID = filename.startsWith(id);
-      final isGood = fe is File && goodID && !filename.endsWith('.part') && !filename.endsWith('.mime') && !filename.endsWith('.metadata');
-
-      if (isGood) {
-        try {
-          final details = _parseAudioCacheDetailsFromFile(fe);
-          newFiles.add(details);
-          break; // since its not likely to find other audios
-        } catch (_) {}
-      }
-    }
-    return newFiles;
-  }
-
-  static Map<String, List<AudioCacheDetails>> _getAllAudiosInCache(String dirPath) {
-    final newFiles = <String, List<AudioCacheDetails>>{};
-
-    final files = Directory(dirPath).listSyncSafe();
-    final filesL = files.length;
-    for (int i = 0; i < filesL; i++) {
-      var fe = files[i];
-      final filename = fe.path.getFilename;
-      final isGood = fe is File && !filename.endsWith('.part') && !filename.endsWith('.mime') && !filename.endsWith('.metadata');
-
-      if (isGood) {
-        try {
-          final details = _parseAudioCacheDetailsFromFile(fe);
-          newFiles.addForce(details.youtubeId, details);
-        } catch (_) {}
-      }
-    }
-    return newFiles;
-  }
-
-  static AudioCacheDetails _parseAudioCacheDetailsFromFile(File file) {
-    final filenamewe = file.path.getFilenameWOExt;
-    final id = filenamewe.substring(0, 11); // 'Wd_gr91dgDa_23393.m4a' -> 'Wd_gr91dgDa'
-    final languagesAndBitrate = filenamewe.substring(12, filenamewe.length - 1).split('_');
-    final languageCode = languagesAndBitrate.length >= 2 ? languagesAndBitrate[0] : null;
-    final languageName = languagesAndBitrate.length >= 3 ? languagesAndBitrate[1] : null;
-    final bitrateText = filenamewe.splitLast('_');
-    return AudioCacheDetails(
-      file: file,
-      bitrate: int.tryParse(bitrateText),
-      langaugeCode: languageCode,
-      langaugeName: languageName,
-      youtubeId: id,
-    );
   }
 
   @override

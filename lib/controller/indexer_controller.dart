@@ -747,16 +747,15 @@ class Indexer<T extends Track> {
     );
   }
 
-  void _addTrackToLists(TrackExtended trackExt, bool checkForDuplicates, FArtwork? artwork) {
+  void _addTrackToLists(TrackExtended trackExt, FArtwork? artwork) {
     final tr = trackExt.asTrack() as T;
+    final skipAddingToTrackList = allTracksMappedByPath.containsKey(tr.path);
     allTracksMappedByPath[tr.path] = trackExt;
     unawaited(_tracksDBManager.put(tr.path, trackExt.toJsonWithoutPath()));
     allTracksMappedByYTID.addForce(trackExt.youtubeID, tr);
     _currentFileNamesMap[trackExt.path.getFilename] = true;
-    if (checkForDuplicates) {
-      tracksInfoList.addNoDuplicates(tr);
-      SearchSortController.inst.trackSearchList.addNoDuplicates(tr);
-    } else {
+
+    if (!skipAddingToTrackList) {
       tracksInfoList.add(tr);
       SearchSortController.inst.trackSearchList.add(tr);
     }
@@ -861,7 +860,7 @@ class Indexer<T extends Track> {
         // _removeThisTrackFromAlbumGenreArtistEtc(tr);
         if (trext != null) {
           finalNewOldTracks[trext] = oldTr;
-          _addTrackToLists(trext, true, item.tags.artwork);
+          _addTrackToLists(trext, item.tags.artwork);
         }
         onProgress(true);
       }
@@ -909,6 +908,39 @@ class Indexer<T extends Track> {
     if (globalSearchText.isNotEmpty) SearchSortController.inst.searchAll(globalSearchText);
   }
 
+  Future<T?> convertPathToTracksAndAddToListsSingle(String trackPath) async {
+    final infoInLib = allTracksMappedByPath[trackPath];
+    if (infoInLib != null) {
+      return infoInLib.asTrack() as T;
+    }
+
+    final splitConfig = _createSplitConfig();
+
+    Future<TrackExtended?> extractFunction(FAudioModel item) => _convertTagToTrack(
+          trackPath: item.tags.path,
+          trackInfo: item,
+          tryExtractingFromFilename: true,
+          onMinDurTrigger: () => null,
+          onMinSizeTrigger: () => null,
+          onError: (_) => null,
+          splittersConfigs: splitConfig,
+        );
+
+    final model = await NamidaTaggerController.inst.extractMetadata(
+      trackPath: trackPath,
+      isVideo: trackPath.isVideo(),
+    );
+    final trext = await extractFunction(model);
+    if (trext != null) {
+      _addTrackToLists(trext, model.tags.artwork);
+      _addTheseTracksToAlbumGenreArtistEtc({trext: null});
+      // _sortAndRefreshTracks();
+      return trext.asTrack() as T;
+    }
+
+    return null;
+  }
+
   Future<List<T>> convertPathsToTracksAndAddToLists(Iterable<String> tracksPathPre) async {
     final finalTracks = <T>[];
     final tracksToExtract = <String>[];
@@ -951,7 +983,7 @@ class Indexer<T extends Track> {
         finalTracks.add(obj as T);
         final trext = await extractFunction(item);
         if (trext != null) {
-          _addTrackToLists(trext, true, item.tags.artwork);
+          _addTrackToLists(trext, item.tags.artwork);
           finalNewOldTracks[trext] = null;
         }
       }
@@ -1029,7 +1061,7 @@ class Indexer<T extends Track> {
       _clearTracksDBAndReOpen();
       allTracksMappedByYTID.clear();
       _currentFileNamesMap.clear();
-      trs.loop((e) => _addTrackToLists(e, false, null));
+      trs.loop((e) => _addTrackToLists(e, null));
     } else {
       NamidaTaggerController.inst.currentPathsBeingExtracted.clear();
       final audioFilesWithoutDuplicates = <String>[];
@@ -1080,7 +1112,7 @@ class Indexer<T extends Track> {
 
         await for (final item in stream) {
           final trext = await extractFunction(item);
-          if (trext != null) _addTrackToLists(trext, false, item.tags.artwork);
+          if (trext != null) _addTrackToLists(trext, item.tags.artwork);
         }
       }
 

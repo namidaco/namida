@@ -22,6 +22,7 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -144,7 +145,7 @@ class YTUtils {
             Broken.audio_square,
             size: 15.0,
             color: iconsColor?.withValues(
-              alpha: Player.inst.audioCacheMap[videoId]?.isNotEmpty == true || Indexer.inst.allTracksMappedByYTID[videoId]?.isNotEmpty == true ? 0.6 : 0.1,
+              alpha: AudioCacheController.inst.audioCacheMap[videoId]?.isNotEmpty == true || Indexer.inst.allTracksMappedByYTID[videoId]?.isNotEmpty == true ? 0.6 : 0.1,
             ),
           ),
         ),
@@ -686,6 +687,7 @@ class YTUtils {
       playlistInfo = plInfo?.info;
     }
     final videoPage = await YoutubeInfoController.video.fetchVideoPage(id).catchError((_) => null);
+    final streamInfo = await YoutubeInfoController.utils.buildOrUseVideoStreamInfo(id, streams);
 
     final infoMap = <String, String?>{};
 
@@ -694,7 +696,7 @@ class YTUtils {
         final userText = ib.value;
         if (userText != null) {
           infoMap[ib.key] = YoutubeController.filenameBuilder
-                  .rebuildFilenameWithDecodedParams(userText, id, streams, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength) ??
+                  .rebuildFilenameWithDecodedParams(userText, id, streamInfo, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength) ??
               userText;
         }
       }
@@ -704,7 +706,7 @@ class YTUtils {
     for (final di in defaultInfoSett.entries) {
       final defaultText = di.value;
       infoMap[di.key] ??= YoutubeController.filenameBuilder
-              .rebuildFilenameWithDecodedParams(defaultText, id, streams, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength) ??
+              .rebuildFilenameWithDecodedParams(defaultText, id, streamInfo, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength) ??
           defaultText;
     }
 
@@ -712,7 +714,7 @@ class YTUtils {
     for (final di in defaultInfo.entries) {
       final defaultText = di.value;
       infoMap[di.key] ??= YoutubeController.filenameBuilder
-              .rebuildFilenameWithDecodedParams(defaultText, id, streams, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength) ??
+              .rebuildFilenameWithDecodedParams(defaultText, id, streamInfo, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength) ??
           '';
     }
 
@@ -815,7 +817,7 @@ class YTUtils {
 
     final extraTilesBuilt = extraTiles?.call(pathsToDelete, totalSizeToDelete, allSelected);
     final videosCached = await VideoController.inst.getNVFromID(videoId);
-    final audiosCached = await Player.inst.audioCacheMap[videoId]?.whereAsync((element) => element.file.exists()).toList() ?? [];
+    final audiosCached = await AudioCacheController.inst.audioCacheMap[videoId]?.whereAsync((element) => element.file.exists()).toList() ?? [];
 
     final fileSizeLookup = <String, int>{};
     final fileTypeLookup = <String, int>{};
@@ -875,7 +877,7 @@ class YTUtils {
         if (type == 1) {
           VideoController.inst.removeNVFromCacheMap(videoId, path);
         } else if (type == 0) {
-          Player.inst.audioCacheMap[videoId]?.removeWhere((element) => element.file.path == path);
+          AudioCacheController.inst.removeFromCacheMap(videoId, path);
         }
       }
     }

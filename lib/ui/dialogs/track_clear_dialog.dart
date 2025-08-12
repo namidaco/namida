@@ -5,11 +5,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -33,7 +33,7 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
         tracksMap[tr] = true;
         var ytId = tr.youtubeID;
         (await VideoController.inst.getNVFromID(tr.youtubeID)).loop((item) => videosTotalSize += item.sizeInBytes);
-        Player.inst.audioCacheMap[ytId]?.loop((item) async => audiosTotalSize += await item.file.fileSize() ?? 0);
+        AudioCacheController.inst.audioCacheMap[ytId]?.loop((item) async => audiosTotalSize += await item.file.fileSize() ?? 0);
 
         final artworkFile = File(tr.pathToImage);
         if (await artworkFile.exists()) imagesTotalSize += await artworkFile.fileSize() ?? 0;

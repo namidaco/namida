@@ -12,10 +12,13 @@ import 'package:rhttp/rhttp.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
+import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
+import 'package:youtipie/class/videos/video_playability.dart';
 import 'package:youtipie/class/videos/video_result.dart';
 import 'package:youtipie/class/youtipie_description/youtipie_description.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
+import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart' hide ExecuteDelayedMinUtils, logger;
 
@@ -23,6 +26,7 @@ import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
@@ -30,7 +34,9 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -739,7 +745,7 @@ class YoutubeController {
       // -- adding to library, if audio or audio+video downloaded
       if (addAudioToLocalLibrary && config.audioStream != null) {
         if (downloadedFile != null && await File(downloadedFile.path).exists()) {
-          Indexer.inst.convertPathsToTracksAndAddToLists([downloadedFile.path]);
+          Indexer.inst.convertPathToTracksAndAddToListsSingle(downloadedFile.path);
         }
       }
 
@@ -848,6 +854,13 @@ class YoutubeController {
   }) async {
     if (id.videoId.isEmpty) return null;
 
+    VideoStreamInfo? streamInfo = streams?.info;
+    try {
+      streamInfo = await YoutubeInfoController.utils.buildOrUseVideoStreamInfo(config.id.videoId, streams);
+      pageResult ??= await YoutubeInfoController.video.fetchVideoPage(config.id.videoId);
+      streams ??= await YoutubeInfoController.video.fetchVideoStreams(config.id.videoId);
+    } catch (_) {}
+
     final finalFilenameWrapper = config.filename;
     String finalFilenameTemp = finalFilenameWrapper.filename;
     bool requiresRenaming = false;
@@ -858,7 +871,7 @@ class YoutubeController {
     }
 
     final finalFilenameTempRebuilt = filenameBuilder.rebuildFilenameWithDecodedParams(
-        finalFilenameTemp, id.videoId, streams, pageResult, config.streamInfoItem, playlistInfo, videoStream, audioStream, config.originalIndex, config.totalLength);
+        finalFilenameTemp, id.videoId, streamInfo, pageResult, config.streamInfoItem, playlistInfo, videoStream, audioStream, config.originalIndex, config.totalLength);
     if (finalFilenameTempRebuilt != null && finalFilenameTempRebuilt.isNotEmpty) {
       finalFilenameTemp = finalFilenameTempRebuilt;
       requiresRenaming = true;
@@ -885,57 +898,101 @@ class YoutubeController {
       );
     }
 
-    if (isDownloading.value[id] == null) {
-      isDownloading.value[id] = <DownloadTaskFilename, bool>{}.obs;
-      isDownloading.refresh();
-    }
-    isDownloading.value[id]![config.filename] = true;
-
-    _startNotificationTimer();
-
-    saveDirectory ??= Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
-    await saveDirectory.create(recursive: true);
-
     File? df;
-    final file = FileParts.join(saveDirectory.path, finalFilenameTemp);
-    final fileAlreadyDownloaded = await file.exists();
-
-    if (fileAlreadyDownloaded) {
-      if (deleteOldFile) {
-        try {
-          await file.delete();
-          onOldFileDeleted?.call(file);
-        } catch (_) {}
-      } else {
-        df = file;
-      }
-    }
-
-    if (df == null) {
-      // -- only download if file wasnt downloaded before
-
-      Future<bool> fileSizeQualified({
-        required File file,
-        required int targetSize,
-        int allowanceBytes = 1024,
-      }) async {
-        final fileSize = await file.fileSize();
-        final ok = fileSize! >= targetSize - allowanceBytes; // it can be bigger cuz metadata and artwork may be added later
-        return ok;
-      }
-
+    try {
       File? videoFile;
       File? audioFile;
 
       bool isVideoFileCached = false;
       bool isAudioFileCached = false;
 
-      bool skipAudio = false; // if video fails or stopped
+      _DownloadErrorDescriptionsWrapper? downloadErrorDescription;
 
-      if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
+      if (isDownloading.value[id] == null) {
+        isDownloading.value[id] = <DownloadTaskFilename, bool>{}.obs;
+        isDownloading.refresh();
+      }
+      isDownloading.value[id]![config.filename] = true;
 
-      try {
-        _DownloadErrorDescriptionsWrapper? downloadErrorDescription;
+      saveDirectory ??= Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
+      await saveDirectory.create(recursive: true);
+
+      if (streams != null && streams.playability.status != VideoPlayabiltyStatus.ok) {
+        final missingStreams = config.fetchMissingVideo != false && config.fetchMissingAudio == false
+            ? streams.videoStreams.isEmpty && streams.mixedStreams.isEmpty
+            : streams.audioStreams.isEmpty && streams.mixedStreams.isEmpty;
+        if (missingStreams) {
+          final info = {
+            'info': streamInfo?.toMap(),
+            'page': pageResult?.toMap(),
+            'streams': streams.toMap()..remove('info'),
+          };
+          final infoFile = FileParts.join(saveDirectory.path, "${finalFilenameWrapper.filename}.json");
+          await infoFile.writeAsJson(info);
+
+          useCachedVersionsIfAvailable = true;
+          final audioExisting = await AudioCacheController.inst.getCachedAudioForId(config.id.videoId);
+
+          if (audioExisting != null) {
+            audioFile = audioExisting.file;
+            isAudioFileCached = true;
+          }
+
+          final allCachedVideos = await VideoController.inst.getNVFromIDSorted(config.id.videoId);
+          final videoExisting = await allCachedVideos.firstWhereEffAsync((e) => File(e.path).exists());
+          if (videoExisting != null) {
+            videoFile = File(videoExisting.path);
+            isVideoFileCached = true;
+          }
+
+          VideoController.inst.videosPriorityManager.setVideoPriority(config.id.videoId, CacheVideoPriority.VIP);
+
+          downloadErrorDescription = _DownloadErrorDescriptionsWrapper.createOrAdd(
+            downloadErrorDescription,
+            _DownloadErrorDescription.videoIsNotAvailable(
+              playabilty: streams.playability,
+              videoId: streams.videoId,
+              videoTitle: streams.info?.title ?? pageResult?.videoInfo?.title ?? '?',
+              infoFile: infoFile,
+              cachedAudio: audioFile,
+              cachedVideo: videoFile,
+            ),
+          );
+        }
+      }
+
+      _startNotificationTimer();
+
+      final file = FileParts.join(saveDirectory.path, finalFilenameTemp);
+      final fileAlreadyDownloaded = await file.exists();
+
+      if (fileAlreadyDownloaded) {
+        if (deleteOldFile) {
+          try {
+            await file.delete();
+            onOldFileDeleted?.call(file);
+          } catch (_) {}
+        } else {
+          df = file;
+        }
+      }
+
+      if (df == null) {
+        // -- only download if file wasnt downloaded before
+
+        Future<bool> fileSizeQualified({
+          required File file,
+          required int targetSize,
+          int allowanceBytes = 1024,
+        }) async {
+          final fileSize = await file.fileSize();
+          final ok = fileSize! >= targetSize - allowanceBytes; // it can be bigger cuz metadata and artwork may be added later
+          return ok;
+        }
+
+        bool skipAudio = false; // if video fails or stopped
+
+        if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
 
         // --------- Downloading Choosen Video.
         if (videoStream != null) {
@@ -1114,13 +1171,13 @@ class YoutubeController {
           }
 
           await Future.wait([
-            if (videoFile != null && videoStream != null)
+            if (videoFile != null /* && videoStream != null */)
               renameOrCopy(
                 file: videoFile,
                 path: output,
                 isCachedVersion: isVideoFileCached,
               ),
-            if (audioFile != null && audioStream != null)
+            if (audioFile != null /* && audioStream != null */) // stream not really needed, especially for unavailable videos
               renameOrCopy(
                 file: audioFile,
                 path: output,
@@ -1147,12 +1204,12 @@ class YoutubeController {
         if (downloadErrorDescription != null && downloadErrorDescription.exceptions.isNotEmpty) {
           throw downloadErrorDescription;
         }
-      } on _UserCanceledException catch (_) {
-      } catch (e, st) {
-        printy('Error Downloading YT Video: $e', isError: true);
-        snackyy(title: 'Error Downloading', message: e.toString(), isError: true);
-        logger.error('YoutubeController.downloadYoutubeVideoRaw: Error Downloading', e: e, st: st);
       }
+    } on _UserCanceledException catch (_) {
+    } catch (e, st) {
+      printy('Error Downloading YT Video: $e', isError: true);
+      snackyy(title: 'Error Downloading', message: e.toString(), isError: true);
+      logger.error('YoutubeController.downloadYoutubeVideoRaw: Error Downloading', e: e, st: st);
     }
 
     isDownloading[id]![finalFilenameWrapper] = false;
@@ -1695,6 +1752,11 @@ class _DownloadErrorDescriptionsWrapper implements Exception {
 
   static _DownloadErrorDescriptionsWrapper createOrAdd(_DownloadErrorDescriptionsWrapper? original, _DownloadErrorDescription error) {
     original ??= _DownloadErrorDescriptionsWrapper._();
+    if (error.type == _DownloadErrorType.file_does_not_exist_after_rename_or_copy || error.type == _DownloadErrorType.non_qualified_file_size) {
+      if (original.exceptions.any((element) => element.type == _DownloadErrorType.video_is_not_available)) {
+        return original; // dont add these errors if video not available
+      }
+    }
     original.add(error);
     return original;
   }
@@ -1733,6 +1795,26 @@ class _DownloadErrorDescription implements Exception {
       msg,
     );
   }
+
+  factory _DownloadErrorDescription.videoIsNotAvailable({
+    required String videoId,
+    required String videoTitle,
+    required VideoPlayabilty playabilty,
+    required File infoFile,
+    required File? cachedAudio,
+    required File? cachedVideo,
+  }) {
+    final extraReasons = [playabilty.reason, ...?playabilty.messages].whereType<String>();
+    final extraReasonsText = extraReasons.isEmpty ? '' : ' | ${extraReasons.join(' | ')}';
+    String msg = 'playability: ${playabilty.status.name}$extraReasonsText\n$videoId - $videoTitle\nvideo info is saved to ${infoFile.path}';
+    if (cachedAudio != null) msg = '$msg\ncached audio was found and will be used instead';
+    if (cachedVideo != null) msg = '$msg\ncached video was found and will be used instead';
+    return _DownloadErrorDescription._(
+      _DownloadErrorType.video_is_not_available,
+      msg,
+    );
+  }
+
   factory _DownloadErrorDescription.fileDoesNotExistAfterRenameOrCopy({
     required File? vfile,
     required String vpath,
@@ -1755,6 +1837,7 @@ class _DownloadErrorDescription implements Exception {
 }
 
 enum _DownloadErrorType {
+  video_is_not_available,
   non_qualified_file_size,
   merge_error,
   file_does_not_exist_after_merge,

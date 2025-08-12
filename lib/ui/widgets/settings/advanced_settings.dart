@@ -5,13 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -803,7 +803,7 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
       trailingText: totalSize == -1 ? '?' : totalSize.fileSizeFormatted,
       onTap: () {
         final allaudios = <AudioCacheDetails>[];
-        for (final acFiles in Player.inst.audioCacheMap.values) {
+        for (final acFiles in AudioCacheController.inst.audioCacheMap.values) {
           acFiles.loop((e) => allaudios.add(e));
         }
 
@@ -833,7 +833,7 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
                     audio.file.tryDeleting(),
                     File('${audio.file.path}.metadata').tryDeleting(),
                   ].wait;
-                  Player.inst.audioCacheMap[audio.youtubeId]?.removeWhere((element) => element.file.path == audio.file.path);
+                  AudioCacheController.inst.removeFromCacheMap(audio.youtubeId, audio.file.path);
                 }
                 _fillSizes();
               },
@@ -844,7 +844,7 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
           },
           onDeleteEVERYTHING: () async {
             await cacheManager.deleteAllAudios();
-            Player.inst.audioCacheMap.clear();
+            AudioCacheController.inst.clearAll();
             if (mounted) setState(() => totalSize = 0);
           },
         );

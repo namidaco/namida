@@ -86,7 +86,7 @@ Future<void> showDownloadVideoBottomSheet({
   updateTagsMap(settings.youtube.initialDefaultMetadataTags);
 
   bool videoOutputFilenameWasUserEdited = false;
-  void updatefilenameOutput({String customName = ''}) {
+  void updatefilenameOutput({String customName = ''}) async {
     if (videoOutputFilenameWasUserEdited) return;
 
     if (customName != '') {
@@ -96,10 +96,11 @@ Future<void> showDownloadVideoBottomSheet({
 
     final filenameBuilderInSetting = settings.youtube.downloadFilenameBuilder.value;
     if (filenameBuilderInSetting.isNotEmpty) {
+      final streamInfo = await YoutubeInfoController.utils.buildOrUseVideoStreamInfo(videoId, streamResultRx.value);
       final finalFilenameTempRebuilt = YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
         filenameBuilderInSetting,
         videoId,
-        streamResultRx.value,
+        streamInfo,
         null,
         streamInfoItem,
         playlistInfo,

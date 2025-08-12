@@ -40,8 +40,6 @@ class Player {
 
   late NamidaAudioVideoHandler<Playable> _audioHandler;
 
-  Map<String, List<AudioCacheDetails>> get audioCacheMap => _audioHandler.audioCacheMap;
-
   RxBaseCore<bool> get playWhenReady => _audioHandler.playWhenReady;
 
   Selectable? get currentTrack {

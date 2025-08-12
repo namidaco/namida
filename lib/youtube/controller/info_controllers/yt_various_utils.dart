@@ -41,6 +41,21 @@ class _YoutubeInfoUtils {
     return map;
   }
 
+  Future<VideoStreamInfo> buildOrUseVideoStreamInfo(String videoId, VideoStreamsResult? streams) async {
+    VideoStreamInfo? streamInfo = streams?.info;
+    final streamInfoCache = await YoutubeInfoController.utils.buildVideoStreamInfoFromCache(videoId);
+    if (streamInfo == null) {
+      streamInfo = streamInfoCache;
+    } else {
+      streamInfo = VideoStreamInfo.merge(
+        videoId,
+        streamInfoCache,
+        streamInfo,
+      );
+    }
+    return streamInfo;
+  }
+
   Future<VideoStreamInfo> buildVideoStreamInfoFromCache(String videoId) async {
     final info = await (
       getVideoName(videoId),
