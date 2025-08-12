@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_rx_value_getter_outside_obx
+// ignore_for_file: avoid_rx_value_getter_outside_obx, constant_identifier_names
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
@@ -40,7 +40,7 @@ class JsonToHistoryParser {
   final totalJsonToParse = 0.obs;
   final addedHistoryJsonToPlaylist = 0.obs;
   final isParsing = false.obs;
-  final isLoadingFile = false.obs;
+  final _loadingFileProgress = 0.0.obs;
   final _updatingYoutubeStatsDirectoryProgress = 0.obs;
   final _updatingYoutubeStatsDirectoryTotal = 0.obs;
   final Rx<TrackSource> currentParsingSource = TrackSource.local.obs;
@@ -97,7 +97,12 @@ class JsonToHistoryParser {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Obx((context) => getTextWidget('${lang.LOADING_FILE}... ${isLoadingFile.valueR ? '' : lang.DONE}')),
+              ObxO(
+                rx: _loadingFileProgress,
+                builder: (context, loadingProgress) => getTextWidget(
+                  '${lang.LOADING_FILE}... ${loadingProgress < 1 ? '${(loadingProgress * 100).toStringAsFixed(1)}%' : lang.DONE}',
+                ),
+              ),
               const SizedBox(height: 10.0),
               Obx((context) => getTextWidget('$_parsedProgressR ${lang.PARSED}')),
               const SizedBox(height: 10.0),
@@ -356,7 +361,7 @@ class JsonToHistoryParser {
 
   void _resetValues() {
     isParsing.value = false;
-    isLoadingFile.value = false;
+    _loadingFileProgress.value = 0.0;
 
     totalJsonToParse.value = 0;
     parsedHistoryJson.value = 0;
@@ -383,7 +388,6 @@ class JsonToHistoryParser {
   }) async {
     _resetValues();
     isParsing.value = true;
-    isLoadingFile.value = true;
     _currentOldestDate.value = oldestDate;
     _currentNewestDate.value = newestDate;
     showParsingProgressDialog();
@@ -393,9 +397,16 @@ class JsonToHistoryParser {
     if (files.isEmpty) {
       if (mainDirectory != null) {
         tempZipMainDestination = await Directory.systemTemp.createTemp('namida_parser_');
-        files = await _filterFilesFromDir(mainDirectory, source, tempZipMainDestination);
+        files = await _filterFilesFromDir(
+          mainDirectory,
+          source,
+          tempZipMainDestination,
+          (progress, total) => _loadingFileProgress.value = (progress / total) * 0.9,
+        );
       }
     }
+    _loadingFileProgress.value = 1.0 * 0.9; // final 1.0 if after actual json parsing
+
     if (files.isEmpty) {
       snackyy(message: 'No related files were found in this directory.', isError: true);
       _resetValues();
@@ -482,18 +493,18 @@ class JsonToHistoryParser {
     }
   }
 
-  Future<List<File>> _filterFilesFromDir(Directory mainDirectory, TrackSource source, Directory tempZipMainDestination) async {
+  Future<List<File>> _filterFilesFromDir(Directory mainDirectory, TrackSource source, Directory tempZipMainDestination, void Function(int progress, int total) onProgress) async {
     final files = <File>[];
 
     late final zipManager = ZipManager.platform();
 
-    Future<List<FileSystemEntity>> listDir(Directory dir) => dir.listAllIsolate(recursive: true);
+    Stream<FileSystemEntity> listDir(Directory dir) => dir.list(recursive: true, followLinks: false);
     FutureOr<void> executeFileEnsureZipExtracted(File file, void Function(File file) onMatch) async {
       if (NamidaFileExtensionsWrapper.zip.isPathValid(file.path)) {
         final destinationDir = Directory(FileParts.joinPath(tempZipMainDestination.path, file.path.getFilenameWOExt));
         await zipManager.extractZip(zipFile: file, destinationDir: destinationDir);
-        final zipContents = await listDir(destinationDir);
-        for (final file in zipContents) {
+        final zipContents = listDir(destinationDir);
+        await for (final file in zipContents) {
           if (file is File) {
             onMatch(file);
           }
@@ -503,10 +514,16 @@ class JsonToHistoryParser {
       }
     }
 
-    final contents = await listDir(mainDirectory);
+    final contents = await mainDirectory.listAllIsolate(recursive: true, followLinks: false);
+
+    int progress = 0;
+    final int total = contents.length;
+    if (total == 0) return [];
 
     if (source == TrackSource.youtube || source == TrackSource.youtubeMusic) {
       for (final file in contents) {
+        progress++;
+        onProgress(progress, total);
         if (file is File) {
           await executeFileEnsureZipExtracted(
             file,
@@ -521,6 +538,8 @@ class JsonToHistoryParser {
       }
     } else {
       for (final file in contents) {
+        progress++;
+        onProgress(progress, total);
         if (file is File) {
           await executeFileEnsureZipExtracted(
             file,
@@ -586,10 +605,15 @@ class JsonToHistoryParser {
 
     StreamSubscription? portLoadingProgressSub;
     portLoadingProgressSub = portLoadingProgress.listen((message) {
-      totalJsonToParse.value = message as int;
-      isLoadingFile.value = false;
-      portLoadingProgress.close();
-      portLoadingProgressSub?.cancel();
+      message as int;
+      final shouldClosePort = !message.isNegative;
+      message = message.abs();
+      totalJsonToParse.value = message;
+      _loadingFileProgress.value = 1.0;
+      if (shouldClosePort) {
+        portLoadingProgress.close();
+        portLoadingProgressSub?.cancel();
+      }
     });
     HistoryController.inst.setIdleStatus(true);
     YoutubeHistoryController.inst.setIdleStatus(true);
@@ -688,16 +712,17 @@ class JsonToHistoryParser {
   }
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
-  static ({
-    Map<String, YoutubeVideoHistory>? affectedIds,
-    List<int> daysToSaveLocal,
-    List<int> daysToSaveYT,
-    int addedLocalHistoryCount,
-    int addedYTHistoryCount,
-    SplayTreeMap<int, List<TrackWithDate>> localHistory,
-    SplayTreeMap<int, List<YoutubeID>> ytHistory,
-    Map<_MissingListenEntry, List<int>> missingEntries,
-  })? _parseYTHistoryJsonAndAddIsolate(Map params) {
+  static Future<
+      ({
+        Map<String, YoutubeVideoHistory>? affectedIds,
+        List<int> daysToSaveLocal,
+        List<int> daysToSaveYT,
+        int addedLocalHistoryCount,
+        int addedYTHistoryCount,
+        SplayTreeMap<int, List<TrackWithDate>> localHistory,
+        SplayTreeMap<int, List<YoutubeID>> ytHistory,
+        Map<_MissingListenEntry, List<int>> missingEntries,
+      })?> _parseYTHistoryJsonAndAddIsolate(Map params) async {
     final allTracks = params['tracks'] as List<Map>;
     final files = params['files'] as List<File>;
     final isMatchingTypeLink = params['isMatchingTypeLink'] as bool;
@@ -731,18 +756,11 @@ class JsonToHistoryParser {
       });
     }
 
-    final jsonResponse = <dynamic>[];
-    files.loop(
-      (file) {
-        try {
-          final res = file.readAsJsonSync() as List?;
-          if (res != null) jsonResponse.addAll(res);
-        } catch (_) {}
-      },
-    );
-
-    portLoadingProgress.send(jsonResponse.length); // 1
-    if (jsonResponse.isEmpty) return null;
+    int jsonResponseTotal = 0;
+    for (final file in files) {
+      jsonResponseTotal += await JsonToHistoryParser._countJsonObjectsInList(file);
+    }
+    portLoadingProgress.send(jsonResponseTotal); // 1
 
     final mapOfAffectedIds = <String, YoutubeVideoHistory>{};
     final missingEntries = <_MissingListenEntry, List<int>>{};
@@ -750,101 +768,107 @@ class JsonToHistoryParser {
     int totalAdded = 0;
     final daysToSaveLocal = <int>[];
     final daysToSaveYT = <int>[];
-    final l = jsonResponse.length - 1;
     const chunkSize = 20;
-    for (int i = 0; i <= l; i++) {
-      totalParsed++;
+    for (final file in files) {
+      List? list = jsonDecode(file.readAsStringSync()) as List?;
+      if (list == null) continue;
 
-      try {
-        final p = jsonResponse[i];
-        final link = utf8.decode((p['titleUrl']).toString().codeUnits);
-        final id = link.length >= 11 ? link.substring(link.length - 11) : link;
-        final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
+      for (int i = 0; i < list.length; i++) {
+        totalParsed++;
+        try {
+          final p = list[i];
+          final link = utf8.decode((p['titleUrl']).toString().codeUnits);
+          final id = link.length >= 11 ? link.substring(link.length - 11) : link;
+          final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
 
-        /// matching in real time, each object.
-        final yth = YoutubeVideoHistory(
-          id: id,
-          title: (p['title'] as String).replaceFirst('Watched ', ''),
-          channel: z.isNotEmpty ? z.first['name'] : '',
-          channelUrl: z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
-          watches: [
-            YTWatch(
-              dateMSNull: YoutubeImportController.parseDate(p['time'] ?? '')?.millisecondsSinceEpoch,
-              isYTMusic: p['header'] == "YouTube Music",
-            )
-          ],
-        );
-        // -- updating affected ids map, used to update youtube stats
-        if (mapOfAffectedIds[id] != null) {
-          mapOfAffectedIds[id] = YoutubeVideoHistory.merge(current: mapOfAffectedIds[id], newRes: yth);
-          mapOfAffectedIds[id]!.watches.addAllNoDuplicates(yth.watches.map((e) => YTWatch(dateMSNull: e.dateMSNull, isYTMusic: e.isYTMusic)));
-        } else {
-          mapOfAffectedIds[id] = yth;
-        }
-        // ---------------------------------------------------------
-        // -- local history --
-        final tracks = _matchYTVHToNamidaHistory(
-          vh: yth,
-          matchYT: matchYT,
-          matchYTMusic: matchYTMusic,
-          oldestDay: oldestDay,
-          newestDay: newestDay,
-          matchAll: matchAll,
-          tracksIdsMap: tracksIdsMap,
-          matchByTitleAndArtistIfNotFoundInMap: isMatchingTypeTitleAndArtist,
-          onMissingEntries: (e) => e.loop((e) => missingEntries.addForce(e, e.dateMSSE)),
-          allTracks: allTracks,
-          artistsSplitConfig: artistsSplitConfig,
-        );
-        totalAdded += tracks.length;
-        tracks.loop((item) {
-          final day = item.dateAdded.toDaysSince1970();
-          final tracks = localHistory[day] ??= [];
-          if (!tracks.contains(item)) {
-            daysToSaveLocal.add(day);
-            tracks.add(item);
-            addedLocalHistoryCount++;
+          /// matching in real time, each object.
+          final yth = YoutubeVideoHistory(
+            id: id,
+            title: (p['title'] as String).replaceFirst('Watched ', ''),
+            channel: z.isNotEmpty ? z.first['name'] : '',
+            channelUrl: z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
+            watches: [
+              YTWatch(
+                dateMSNull: YoutubeImportController.parseDate(p['time'] ?? '')?.millisecondsSinceEpoch,
+                isYTMusic: p['header'] == "YouTube Music",
+              )
+            ],
+          );
+          // -- updating affected ids map, used to update youtube stats
+          if (mapOfAffectedIds[id] != null) {
+            mapOfAffectedIds[id] = YoutubeVideoHistory.merge(current: mapOfAffectedIds[id], newRes: yth);
+            mapOfAffectedIds[id]!.watches.addAllNoDuplicates(yth.watches.map((e) => YTWatch(dateMSNull: e.dateMSNull, isYTMusic: e.isYTMusic)));
+          } else {
+            mapOfAffectedIds[id] = yth;
           }
-        });
-
-        // -- youtube history --
-        yth.watches.loop((w) {
-          final canAdd = _canSafelyAddToYTHistory(
-            watch: w,
+          // ---------------------------------------------------------
+          // -- local history --
+          final tracks = _matchYTVHToNamidaHistory(
+            vh: yth,
             matchYT: matchYT,
             matchYTMusic: matchYTMusic,
-            newestDay: newestDay,
             oldestDay: oldestDay,
+            newestDay: newestDay,
+            matchAll: matchAll,
+            tracksIdsMap: tracksIdsMap,
+            matchByTitleAndArtistIfNotFoundInMap: isMatchingTypeTitleAndArtist,
+            onMissingEntries: (e) => e.loop((e) => missingEntries.addForce(e, e.dateMSSE)),
+            allTracks: allTracks,
+            artistsSplitConfig: artistsSplitConfig,
           );
-          if (canAdd) {
-            final ytid = YoutubeID(
-              id: yth.id,
-              watchNull: w,
-              playlistID: null,
-            );
-            final day = ytid.dateAddedMS.toDaysSince1970();
-            final videos = ytHistory[day] ??= [];
-            if (!videos.contains(ytid)) {
-              daysToSaveYT.add(day);
-              videos.add(ytid);
-              addedYTHistoryCount++;
+          totalAdded += tracks.length;
+          tracks.loop((item) {
+            final day = item.dateAdded.toDaysSince1970();
+            final tracks = localHistory[day] ??= [];
+            if (!tracks.contains(item)) {
+              daysToSaveLocal.add(day);
+              tracks.add(item);
+              addedLocalHistoryCount++;
             }
-          }
-        });
+          });
 
-        if (totalParsed >= chunkSize) {
-          portProgressParsed.send(totalParsed);
-          totalParsed = 0;
+          // -- youtube history --
+          yth.watches.loop((w) {
+            final canAdd = _canSafelyAddToYTHistory(
+              watch: w,
+              matchYT: matchYT,
+              matchYTMusic: matchYTMusic,
+              newestDay: newestDay,
+              oldestDay: oldestDay,
+            );
+            if (canAdd) {
+              final ytid = YoutubeID(
+                id: yth.id,
+                watchNull: w,
+                playlistID: null,
+              );
+              final day = ytid.dateAddedMS.toDaysSince1970();
+              final videos = ytHistory[day] ??= [];
+              if (!videos.contains(ytid)) {
+                daysToSaveYT.add(day);
+                videos.add(ytid);
+                addedYTHistoryCount++;
+              }
+            }
+          });
+
+          if (totalParsed >= chunkSize) {
+            portProgressParsed.send(totalParsed);
+            totalParsed = 0;
+          }
+          if (totalAdded >= chunkSize) {
+            portProgressAdded.send(totalAdded);
+            totalAdded = 0;
+          }
+        } catch (e) {
+          printo(e, isError: true);
+          continue;
         }
-        if (totalAdded >= chunkSize) {
-          portProgressAdded.send(totalAdded);
-          totalAdded = 0;
-        }
-      } catch (e) {
-        printo(e, isError: true);
-        continue;
       }
+      list = null;
     }
+    // jsonResponsesList.clear();
+
     portProgressParsed.send(totalParsed);
     portProgressAdded.send(totalAdded);
 
@@ -1004,10 +1028,15 @@ class JsonToHistoryParser {
     };
     StreamSubscription? portLoadingProgressSub;
     portLoadingProgressSub = portLoadingProgress.listen((message) {
-      totalJsonToParse.value = message as int;
-      isLoadingFile.value = false;
-      portLoadingProgress.close();
-      portLoadingProgressSub?.cancel();
+      message as int;
+      final shouldClosePort = !message.isNegative;
+      message = message.abs();
+      totalJsonToParse.value = message;
+      _loadingFileProgress.value = 1.0;
+      if (shouldClosePort) {
+        portLoadingProgress.close();
+        portLoadingProgressSub?.cancel();
+      }
     });
 
     HistoryController.inst.setIdleStatus(true);
@@ -1036,12 +1065,13 @@ class JsonToHistoryParser {
   }
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
-  static ({
-    List<int> daysToSaveLocal,
-    int addedHistoryCount,
-    SplayTreeMap<int, List<TrackWithDate>> localHistory,
-    Map<_MissingListenEntry, List<int>> missingEntries,
-  })? _addLastFmSourceIsolate(Map params) {
+  static Future<
+      ({
+        List<int> daysToSaveLocal,
+        int addedHistoryCount,
+        SplayTreeMap<int, List<TrackWithDate>> localHistory,
+        Map<_MissingListenEntry, List<int>> missingEntries,
+      })?> _addLastFmSourceIsolate(Map params) async {
     final allTracks = params['tracks'] as List<Map>;
     final oldestDay = params['oldestDay'] as int?;
     final newestDay = params['newestDay'] as int?;
@@ -1057,18 +1087,12 @@ class JsonToHistoryParser {
     final portProgressAdded = params['portProgressAdded'] as SendPort;
     final portLoadingProgress = params['portLoadingProgress'] as SendPort;
 
-    final lines = <String>[];
-    files.loop(
-      (file) {
-        try {
-          final res = file.readAsLinesSync();
-          lines.addAll(res);
-        } catch (_) {}
-      },
-    );
+    int linesCount = 0;
+    for (final file in files) {
+      linesCount += await JsonToHistoryParser._countLinesInFile(file);
+    }
 
-    portLoadingProgress.send(lines.length);
-    if (lines.isEmpty) return null;
+    portLoadingProgress.send(linesCount);
 
     final missingEntries = <_MissingListenEntry, List<int>>{};
     int totalParsed = 0;
@@ -1078,92 +1102,96 @@ class JsonToHistoryParser {
 
     // used for cases where date couldnt be parsed, so it uses this one as a reference
     int? lastDate;
-    final linesLength = lines.length;
-    for (int i = 0; i < linesLength; i++) {
-      final line = lines[i];
+    for (final file in files) {
+      final lines = file.readAsLinesSync();
+      final linesLength = lines.length;
 
-      totalParsed++;
+      for (int i = 0; i < linesLength; i++) {
+        final line = lines[i];
 
-      /// artist, album, title, (dd MMM yyyy HH:mm);
-      try {
-        final pieces = line.split(',');
+        totalParsed++;
 
-        // success means: date == trueDate && lastDate is updated.
-        // failure means: date == lastDate - 30 seconds || date == 0
-        // this is used for cases where date couldn't be parsed, so it'll add the track with (date == lastDate - 30 seconds)
-        int date = 0;
+        /// artist, album, title, (dd MMM yyyy HH:mm);
         try {
-          date = DateFormat('dd MMM yyyy HH:mm').parseLoose(pieces.last).millisecondsSinceEpoch;
-        } catch (e) {
-          if (lastDate != null) {
-            date = lastDate - 30000;
-          }
-        }
-        lastDate = date;
+          final pieces = line.split(',');
 
-        // -- skips if the date is not inside date range specified.
-        if (oldestDay != null && newestDay != null) {
-          final watchAsDSE = date.toDaysSince1970();
-          if (watchAsDSE < oldestDay || watchAsDSE > newestDay) continue;
-        }
-
-        /// matching has to meet 2 conditons:
-        /// [csv artist] contains [track.artistsList.first]
-        /// [csv title] contains [track.title], anything after ( or [ is ignored.
-        final tracks = allTracks.firstWhereOrAllWhere(
-          matchAll,
-          (trMap) {
-            final title = trMap['title'] as String;
-            final originalArtist = trMap['artist'] as String;
-            final artistsList = Indexer.splitArtist(
-              title: title,
-              originalArtist: originalArtist,
-              config: artistsSplitConfig,
-            );
-            final matchingArtist = artistsList.isNotEmpty && pieces[0].cleanUpForComparison.contains(artistsList.first.cleanUpForComparison);
-            final matchingTitle = pieces[2].cleanUpForComparison.contains(title.splitFirst('(').splitFirst('[').cleanUpForComparison);
-            return matchingArtist && matchingTitle;
-          },
-        );
-        totalAdded += tracks.length;
-        if (tracks.isNotEmpty) {
-          for (final trMap in tracks) {
-            final twd = TrackWithDate(
-              dateAdded: date,
-              track: Track.decide(trMap['path'] ?? '', trMap['v']),
-              source: TrackSource.lastfm,
-            );
-            final day = twd.dateAdded.toDaysSince1970();
-            final tracks = localHistory[day] ??= [];
-            if (!tracks.contains(twd)) {
-              daysToSaveLocal.add(day);
-              tracks.add(twd);
-              addedHistoryCount++;
+          // success means: date == trueDate && lastDate is updated.
+          // failure means: date == lastDate - 30 seconds || date == 0
+          // this is used for cases where date couldn't be parsed, so it'll add the track with (date == lastDate - 30 seconds)
+          int date = 0;
+          try {
+            date = DateFormat('dd MMM yyyy HH:mm').parseLoose(pieces.last).millisecondsSinceEpoch;
+          } catch (e) {
+            if (lastDate != null) {
+              date = lastDate - 30000;
             }
           }
-        } else {
-          final me = _MissingListenEntry(
-            youtubeID: null,
-            dateMSSE: date,
-            source: TrackSource.lastfm,
-            artistOrChannel: pieces[0],
-            title: pieces[2],
-          );
-          missingEntries.addForce(me, me.dateMSSE);
-        }
+          lastDate = date;
 
-        /// updates progress every [chunkSize] lines, calling on every loop affects benchmarks heavily.
-        if (totalParsed >= chunkSize) {
-          portProgressParsed.send(totalParsed);
-          totalParsed = 0;
+          // -- skips if the date is not inside date range specified.
+          if (oldestDay != null && newestDay != null) {
+            final watchAsDSE = date.toDaysSince1970();
+            if (watchAsDSE < oldestDay || watchAsDSE > newestDay) continue;
+          }
+
+          /// matching has to meet 2 conditons:
+          /// [csv artist] contains [track.artistsList.first]
+          /// [csv title] contains [track.title], anything after ( or [ is ignored.
+          final tracks = allTracks.firstWhereOrAllWhere(
+            matchAll,
+            (trMap) {
+              final title = trMap['title'] as String;
+              final originalArtist = trMap['artist'] as String;
+              final artistsList = Indexer.splitArtist(
+                title: title,
+                originalArtist: originalArtist,
+                config: artistsSplitConfig,
+              );
+              final matchingArtist = artistsList.isNotEmpty && pieces[0].cleanUpForComparison.contains(artistsList.first.cleanUpForComparison);
+              final matchingTitle = pieces[2].cleanUpForComparison.contains(title.splitFirst('(').splitFirst('[').cleanUpForComparison);
+              return matchingArtist && matchingTitle;
+            },
+          );
+          totalAdded += tracks.length;
+          if (tracks.isNotEmpty) {
+            for (final trMap in tracks) {
+              final twd = TrackWithDate(
+                dateAdded: date,
+                track: Track.decide(trMap['path'] ?? '', trMap['v']),
+                source: TrackSource.lastfm,
+              );
+              final day = twd.dateAdded.toDaysSince1970();
+              final tracks = localHistory[day] ??= [];
+              if (!tracks.contains(twd)) {
+                daysToSaveLocal.add(day);
+                tracks.add(twd);
+                addedHistoryCount++;
+              }
+            }
+          } else {
+            final me = _MissingListenEntry(
+              youtubeID: null,
+              dateMSSE: date,
+              source: TrackSource.lastfm,
+              artistOrChannel: pieces[0],
+              title: pieces[2],
+            );
+            missingEntries.addForce(me, me.dateMSSE);
+          }
+
+          /// updates progress every [chunkSize] lines, calling on every loop affects benchmarks heavily.
+          if (totalParsed >= chunkSize) {
+            portProgressParsed.send(totalParsed);
+            totalParsed = 0;
+          }
+          if (totalAdded >= chunkSize) {
+            portProgressAdded.send(totalAdded);
+            totalAdded = 0;
+          }
+        } catch (e) {
+          printo(e, isError: true);
+          continue;
         }
-        if (totalAdded >= chunkSize) {
-          portProgressAdded.send(totalAdded);
-          totalAdded = 0;
-        }
-      } catch (e) {
-        printo(e, isError: true);
-        continue;
       }
     }
     // normally the loop automatically adds every [chunkSize] tracks, this one is to ensure adding any tracks left.
@@ -1245,6 +1273,60 @@ class JsonToHistoryParser {
       file.writeAsJsonSync(videosMapInStorage.values.toList());
       progressPort.send(updatedIds.length);
     }
+  }
+
+  static Future<int> _countLinesInFile(File file) async {
+    var count = 0;
+    var prevByte = 0;
+    const LF = 10;
+    const CR = 13;
+
+    await for (final chunk in file.openRead()) {
+      for (final byte in chunk) {
+        if (byte != CR) {
+          if (byte == LF) {
+            if (prevByte != CR) count++;
+          }
+          prevByte = byte;
+          continue;
+        }
+        count++;
+        prevByte = byte;
+      }
+    }
+
+    if (prevByte != LF && prevByte != CR && (file.fileSizeSync() ?? 0) > 0) {
+      count++;
+    }
+    return count;
+  }
+
+  static Future<int> _countJsonObjectsInList(File file) async {
+    int count = 0;
+    int depth = 0;
+    bool inString = false;
+    bool escape = false;
+
+    await for (final chunk in file.openRead()) {
+      for (final b in chunk) {
+        if (escape) {
+          escape = false;
+          continue;
+        }
+        if (b == 0x5C) {
+          escape = true;
+          continue;
+        } // '\'
+        if (b == 0x22) {
+          inString = !inString;
+          continue;
+        } // '"'
+        if (inString) continue;
+        if (b == 0x7B) depth++; // '{'
+        if (b == 0x7D && --depth == 0) count++; // '}'
+      }
+    }
+    return count;
   }
 }
 
