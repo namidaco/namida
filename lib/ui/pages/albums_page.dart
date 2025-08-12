@@ -92,8 +92,11 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                     settings.albumListTileHeight.valueR;
 
                     final sort = settings.albumSort.valueR;
-                    final sortTextIsUseless =
-                        sort == GroupSortType.album || sort == GroupSortType.albumArtist || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
+                    final sortTextIsUseless = sort == GroupSortType.album ||
+                        sort == GroupSortType.year ||
+                        sort == GroupSortType.albumArtist ||
+                        sort == GroupSortType.numberOfTracks ||
+                        sort == GroupSortType.duration;
 
                     final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolver(sort);
 
@@ -143,7 +146,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                           identifier: albumId,
                                           album: tracks,
                                           staggered: true,
-                                          topRightText: extraTextResolver?.call(tracks),
+                                          extraInfo: extraTextResolver?.call(tracks),
                                         ),
                                       );
                                     },
@@ -170,7 +173,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                           identifier: albumId,
                                           album: tracks,
                                           staggered: false,
-                                          topRightText: extraTextResolver?.call(tracks),
+                                          extraInfo: extraTextResolver?.call(tracks),
                                         ),
                                       );
                                     },

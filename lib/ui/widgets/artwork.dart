@@ -17,6 +17,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class ArtworkWidget extends StatefulWidget {
@@ -49,8 +50,8 @@ class ArtworkWidget extends StatefulWidget {
   final BoxFit fit;
   final AlignmentGeometry alignment;
 
-  /// can help skip some checks as its already done by [YoutubeThumbnail].
-  final bool isNetworkThumbnail;
+  /// can help skip some checks as its already done by [YoutubeThumbnail] or [NetworkArtwork].
+  final bool extractInternally;
 
   const ArtworkWidget({
     required super.key,
@@ -81,7 +82,7 @@ class ArtworkWidget extends StatefulWidget {
     this.fallbackToFolderCover = true,
     this.fit = BoxFit.cover,
     this.alignment = Alignment.center,
-    this.isNetworkThumbnail = false,
+    this.extractInternally = true,
   });
 
   static const kDefaultFadeMilliSeconds = 300;
@@ -115,7 +116,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     _imagePath = widget.path; // to prevent flashing/etc
 
-    if (widget.isNetworkThumbnail == false) {
+    if (widget.extractInternally) {
       _initValues();
     }
   }
@@ -135,7 +136,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       }
     }
 
-    if (widget.isNetworkThumbnail == false) {
+    if (widget.extractInternally) {
       if (_imagePath != _imagePathInitialValue) refreshState(() => _imagePath = _imagePathInitialValue);
       Timer(Duration.zero, _extractArtwork);
     }

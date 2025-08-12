@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -37,6 +36,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
@@ -139,7 +139,7 @@ Future<void> showGeneralPopupDialog(
   final numberOfRepeats = 1.obso;
   final isLoadingFilesToShare = false.obso;
 
-  bool shoulShowPlaylistUtils() => comingFromPlaylistMenu && tracks.length > 1 && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
+  bool shoulShowPlaylistUtils() => comingFromPlaylistMenu && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
   bool shoulShowRemoveFromPlaylist() => !comingFromPlaylistMenu && tracksWithDates.isNotEmpty && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
 
   if (networkArtworkInfo != null) {
@@ -1356,7 +1356,7 @@ Future<void> showGeneralPopupDialog(
 
                               /// Track Utils
                               /// todo: support for multiple tracks editing
-                              if (isSingle)
+                              if (isSingle && playlistUtilsRow == null)
                                 Row(
                                   children: [
                                     const SizedBox(width: 24.0),

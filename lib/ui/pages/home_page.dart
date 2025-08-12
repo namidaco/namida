@@ -740,7 +740,8 @@ class _AlbumsList extends StatelessWidget {
             identifier: albumId ?? '',
             album: albumId?.getAlbumTracks() ?? [],
             staggered: false,
-            topRightText: listens == null ? null : "${listens!(albumId)}",
+            extraInfo: listens == null ? null : "${listens!(albumId)}",
+            forceExtraInfoAtTopRight: true,
             additionalHeroTag: "$title$index",
           );
         },

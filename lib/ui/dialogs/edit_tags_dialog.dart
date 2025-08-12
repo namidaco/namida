@@ -535,6 +535,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                       Obx(
                                         (context) => ArtworkWidget(
                                           key: Key(currentImagePath.valueR),
+                                          extractInternally: false,
                                           fadeMilliSeconds: 0,
                                           icon: track is Video ? Broken.video : Broken.musicnote,
                                           thumbnailSize: maxWidth * 0.36,
@@ -1055,6 +1056,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                         (context) => currentImagePath.valueR != ''
                                             ? ArtworkWidget(
                                                 key: Key(currentImagePath.valueR),
+                                                extractInternally: false,
                                                 fadeMilliSeconds: 0,
                                                 thumbnailSize: maxWidth * 0.36,
                                                 path: currentImagePath.valueR,

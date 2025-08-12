@@ -449,9 +449,11 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
             child: Obx(
               (context) => ColoredBox(
                 color: Color.alphaBlend(
+                  // -- careful with making the result non-opaque, it will cause the foreground to dim as well (no idea how :/)
                   CurrentColor.inst.miniplayerColor.withValues(alpha: 0.2),
-                  context.isDarkMode ? Colors.black.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.5),
+                  context.isDarkMode ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
                 ),
+                child: widget.videoOrImage,
               ),
             ),
           )
@@ -649,13 +651,18 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                     opacity: _isCurrentLineEmpty ? 0.0 : 1.0,
                     child: FadeIgnoreTransition(
                       opacity: mpAnimation,
-                      child: OverflowBox(
-                        maxWidth: Dimensions.inst.miniplayerMaxWidth - pagePaddingHorizontal * 2, // keep the text steady while animating mp
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
-                          child: middleLyricsStackWidget,
-                        ),
-                      ),
+                      child: fullscreen
+                          ? Padding(
+                              padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
+                              child: middleLyricsStackWidget,
+                            )
+                          : OverflowBox(
+                              maxWidth: Dimensions.inst.miniplayerMaxWidth - pagePaddingHorizontal * 2, // keep the text steady while animating mp
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
+                                child: middleLyricsStackWidget,
+                              ),
+                            ),
                     ),
                   ),
                 ),

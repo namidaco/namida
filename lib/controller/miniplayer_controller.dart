@@ -415,9 +415,10 @@ class MiniPlayerController {
   Future<void> setImmersiveMode(bool? enabled, {bool? isWidescreen}) async {
     if (NamidaNavigator.inst.isInFullScreen) return;
     if ((enabled ?? _immersiveModeEnabled) && ((isWidescreen ?? Dimensions.inst.miniplayerIsWideScreen) || _isLocalMiniplayerOnlyExpanded())) {
-      return await NamidaNavigator.setSystemUIImmersiveMode(true);
+      await NamidaNavigator.setSystemUIImmersiveMode(true);
     } else {
-      return await NamidaNavigator.setSystemUIImmersiveMode(false);
+      await NamidaNavigator.setSystemUIImmersiveMode(false);
+      NamidaNavigator.setDefaultSystemUIOverlayStyle();
     }
   }
 

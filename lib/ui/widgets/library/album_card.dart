@@ -19,7 +19,8 @@ class AlbumCard extends StatelessWidget {
   final bool staggered;
   final bool compact;
   final bool displayIcon;
-  final String? topRightText;
+  final String? extraInfo;
+  final bool forceExtraInfoAtTopRight;
   final String additionalHeroTag;
   final HomePageItems? homepageItem;
   final bool dummyCard;
@@ -31,7 +32,8 @@ class AlbumCard extends StatelessWidget {
     required this.staggered,
     this.compact = false,
     this.displayIcon = true,
-    this.topRightText,
+    this.extraInfo,
+    this.forceExtraInfoAtTopRight = false,
     this.additionalHeroTag = '',
     this.homepageItem,
     this.dummyCard = false,
@@ -40,17 +42,25 @@ class AlbumCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final finalYear = album.year.yearFormatted;
-    final topRightText = this.topRightText ?? finalYear;
-    final shouldDisplayTopRightDate = topRightText.isNotEmpty || (settings.albumCardTopRightDate.value && finalYear != '');
-    final shouldDisplayNormalDate = topRightText.isEmpty && !settings.albumCardTopRightDate.value && finalYear != '';
-    final shouldDisplayAlbumArtist = album.albumArtist != '';
 
     final hero = 'album_$identifier$additionalHeroTag';
 
-    final secondLine = [
-      if (shouldDisplayNormalDate) finalYear,
-      if (shouldDisplayAlbumArtist) album.albumArtist,
-    ].join(' - ');
+    String? topRightLine;
+    String? secondLine;
+    if (forceExtraInfoAtTopRight) {
+      topRightLine = extraInfo;
+    } else if (settings.albumCardTopRightDate.value) {
+      secondLine = extraInfo;
+      topRightLine = finalYear;
+      if (secondLine == topRightLine) secondLine = null;
+    } else {
+      topRightLine = null;
+      secondLine = [
+        if (extraInfo != null) extraInfo,
+        if (finalYear.isNotEmpty && finalYear != extraInfo) finalYear,
+        if (album.albumArtist.isNotEmpty && album.albumArtist != extraInfo) album.albumArtist,
+      ].join(' • ');
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
@@ -100,31 +110,30 @@ class AlbumCard extends StatelessWidget {
                       displayIcon: displayIcon,
                       forceSquared: !staggered,
                       staggered: staggered,
-                      onTopWidgets: dummyCard
+                      onTopWidgets: dummyCard || (topRightLine == null || topRightLine.isEmpty)
                           ? null
                           : [
-                              if (shouldDisplayTopRightDate)
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: NamidaBlurryContainer(
-                                    child: ConstrainedBox(
-                                      constraints: BoxConstraints(maxWidth: imageSize * 0.8),
-                                      child: FittedBox(
-                                        fit: BoxFit.fitWidth,
-                                        child: Text(
-                                          topRightText,
-                                          style: context.textTheme.displaySmall?.copyWith(
-                                            fontSize: getFontSize(0.18),
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          softWrap: false,
-                                          overflow: TextOverflow.fade,
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: NamidaBlurryContainer(
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(maxWidth: imageSize * 0.8),
+                                    child: FittedBox(
+                                      fit: BoxFit.fitWidth,
+                                      child: Text(
+                                        topRightLine,
+                                        style: context.textTheme.displaySmall?.copyWith(
+                                          fontSize: getFontSize(0.18),
+                                          fontWeight: FontWeight.bold,
                                         ),
+                                        softWrap: false,
+                                        overflow: TextOverflow.fade,
                                       ),
                                     ),
                                   ),
                                 ),
+                              ),
                               Positioned(
                                 bottom: 2.0 + itemImagePercentageMultiplier,
                                 right: 2.0 + itemImagePercentageMultiplier,
@@ -173,18 +182,16 @@ class AlbumCard extends StatelessWidget {
                                 overflow: TextOverflow.fade,
                               ),
                             ),
-                            if (secondLine.isNotEmpty)
-                              if (!settings.albumCardTopRightDate.value || secondLine != topRightText) ...[
-                                NamidaHero(
-                                  tag: 'line2_$hero',
-                                  child: Text(
-                                    secondLine,
-                                    style: context.textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
-                                    softWrap: false,
-                                    overflow: TextOverflow.fade,
-                                  ),
+                            if (secondLine != null && secondLine.isNotEmpty)
+                              NamidaHero(
+                                tag: 'line2_$hero',
+                                child: Text(
+                                  secondLine,
+                                  style: context.textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
+                                  softWrap: false,
+                                  overflow: TextOverflow.fade,
                                 ),
-                              ],
+                              ),
                             NamidaHero(
                               tag: 'line3_$hero',
                               child: Text(

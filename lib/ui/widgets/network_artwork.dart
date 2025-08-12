@@ -343,7 +343,7 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
         displayIcon: widget.displayIcon,
         fit: widget.fit,
         alignment: widget.alignment,
-        isNetworkThumbnail: true,
+        extractInternally: false,
       ),
     );
   }

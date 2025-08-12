@@ -355,7 +355,10 @@ class SearchSortController {
         final isTemp = r.$2;
         final fetchedQuery = r.$3;
         if (isTemp) {
-          if (fetchedQuery == lastSearchText) _searchMapTemp[type]?.value = r.$1;
+          if (fetchedQuery == lastSearchText) {
+            _searchMapTemp[type]?.value = r.$1;
+            sortMedia(type);
+          }
         } else {
           final typeNomalize = type == MediaType.albumArtist || type == MediaType.composer ? MediaType.artist : type;
           if (fetchedQuery == typeNomalize.toLibraryTab().textSearchController?.text) _searchMap[typeNomalize]?.value = r.$1;
