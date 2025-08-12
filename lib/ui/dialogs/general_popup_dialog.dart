@@ -474,27 +474,10 @@ Future<void> showGeneralPopupDialog(
     cancelSkipTimer();
 
     NamidaNavigator.inst.closeDialog();
+
     final pl = PlaylistController.inst.getPlaylist(playlistName!);
     if (pl == null) return;
-
-    Uint8List? artworkBytes;
-    final artworkFile = PlaylistController.inst.getArtworkFileForPlaylist(playlistName);
-    if (await artworkFile.exists()) {
-      try {
-        artworkBytes = await artworkFile.readAsBytes();
-      } catch (_) {}
-    }
-
-    await PlaylistController.inst.removePlaylist(pl);
-    snackyy(
-      title: lang.UNDO_CHANGES,
-      message: lang.UNDO_CHANGES_DELETED_PLAYLIST,
-      displayDuration: SnackDisplayDuration.long,
-      button: (
-        lang.UNDO,
-        () async => await PlaylistController.inst.reAddPlaylist(pl, pl.modifiedDate, artworkBytes: artworkBytes),
-      ),
-    );
+    await NamidaDialogs.inst.showDeletePlaylistDialog(pl, withUndo: true);
   }
 
   Future<void> removePlaylistDuplicates() async {

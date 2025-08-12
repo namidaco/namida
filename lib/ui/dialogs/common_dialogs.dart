@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/folder.dart';
@@ -15,6 +18,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -169,23 +173,83 @@ class NamidaDialogs {
     }
   }
 
-  void showDeletePlaylistDialog(LocalPlaylist playlist) {
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
-        title: lang.WARNING,
-        bodyText: '${lang.DELETE_PLAYLIST}: "${playlist.name}"?',
-        actions: [
-          const CancelButton(),
-          NamidaButton(
-            text: lang.DELETE.toUpperCase(),
-            onPressed: () {
-              PlaylistController.inst.removePlaylist(playlist);
-              NamidaNavigator.inst.closeDialog();
-            },
-          )
-        ],
-      ),
-    );
+  Future<void> showDeletePlaylistDialog(LocalPlaylist playlist, {bool withUndo = false}) async {
+    final m3uPath = playlist.m3uPath;
+    if (withUndo && m3uPath == null) {
+      Uint8List? artworkBytes;
+      final artworkFile = PlaylistController.inst.getArtworkFileForPlaylist(playlist.name);
+      if (await artworkFile.exists()) {
+        try {
+          artworkBytes = await artworkFile.readAsBytes();
+        } catch (_) {}
+      }
+
+      await PlaylistController.inst.removePlaylist(playlist);
+      snackyy(
+        title: lang.UNDO_CHANGES,
+        message: lang.UNDO_CHANGES_DELETED_PLAYLIST,
+        displayDuration: SnackDisplayDuration.long,
+        button: (
+          lang.UNDO,
+          () async => await PlaylistController.inst.reAddPlaylist(playlist, playlist.modifiedDate, artworkBytes: artworkBytes),
+        ),
+      );
+    } else {
+      final alsoDeleteM3uRx = true.obs;
+      NamidaNavigator.inst.navigateDialog(
+        onDisposing: () {
+          alsoDeleteM3uRx.close();
+        },
+        dialogBuilder: (theme) => CustomBlurryDialog(
+          isWarning: true,
+          normalTitleStyle: true,
+          actions: [
+            const CancelButton(),
+            ObxO(
+              rx: alsoDeleteM3uRx,
+              builder: (context, deletem3u) => NamidaButton(
+                text: lang.DELETE.toUpperCase(),
+                style: deletem3u
+                    ? ButtonStyle(
+                        foregroundColor: WidgetStatePropertyAll(Colors.red),
+                      )
+                    : null,
+                onPressed: () async {
+                  await PlaylistController.inst.removePlaylist(playlist);
+                  if (alsoDeleteM3uRx.value && m3uPath != null) await File(m3uPath).deleteIfExists();
+                  NamidaNavigator.inst.closeDialog();
+                },
+              ),
+            )
+          ],
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${lang.DELETE_PLAYLIST}: "${playlist.name}"?',
+                  style: theme.textTheme.displayMedium,
+                ),
+                SizedBox(height: 12.0),
+                ObxO(
+                  rx: alsoDeleteM3uRx,
+                  builder: (context, deletem3u) => ListTileWithCheckMark(
+                    dense: true,
+                    icon: Broken.broom,
+                    title: "${lang.DELETE}: ${lang.M3U_PLAYLIST}",
+                    subtitle: m3uPath ?? '',
+                    active: deletem3u,
+                    onTap: alsoDeleteM3uRx.toggle,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> showQueueDialog(int date) async {
