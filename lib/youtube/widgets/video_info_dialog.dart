@@ -54,6 +54,7 @@ class VideoInfoDialog extends StatefulWidget {
 class _VideoInfoDialogState extends State<VideoInfoDialog> {
   late final _videoLikeManager = YtVideoLikeManager(pageRx: _videoPageInfo);
   final _videoPageInfo = Rxn<YoutiPieVideoPageResult?>();
+  final _videoPageInfoLoading = Rx<bool>(false);
   final _isLoadingInfo = false.obs;
   final _isLoadingThumbnail = false.obs;
   Color? _themeColor;
@@ -80,6 +81,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
   void dispose() {
     _videoLikeManager.dispose();
     _videoPageInfo.close();
+    _videoPageInfoLoading.close();
     _isLoadingInfo.close();
     _isLoadingThumbnail.close();
     super.dispose();
@@ -150,9 +152,22 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
     if ((videoTitle != null && !videoTitle!.startsWith(YTUrlUtils.buildVideoUrl(videoId))) && //
         channelTitle != null &&
         dateMS != null) {
+      _refreshPageInfoViewsLikesForce();
       return;
     }
     return _fillMissingInfoForce();
+  }
+
+  Future<void> _refreshPageInfoViewsLikesForce() async {
+    _videoPageInfoLoading.value = true;
+    YoutubeInfoController.video.fetchVideoPage(videoId, details: ExecuteDetails.forceRequest()).catchError((_) => null).then((page) async {
+      page ??= await YoutubeInfoController.video.fetchVideoPageCache(videoId);
+
+      _videoPageInfoLoading.value = false;
+      refreshState(() {
+        _videoPageInfo.value = page;
+      });
+    });
   }
 
   Future<void> _fillMissingInfoForce() async {
@@ -165,17 +180,12 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
     _isLoadingInfo.value = true;
     refreshState();
 
+    _refreshPageInfoViewsLikesForce();
+
     final didRefreshWithLiveInfo = await _fillLiveInfo(videoId);
     if (didRefreshWithLiveInfo) {
       _videoIsMissingOriginalInfo = false;
       refreshState();
-      if (_videoPageInfo.value == null) {
-        YoutubeInfoController.video.fetchVideoPage(videoId, details: ExecuteDetails.forceRequest()).then((page) {
-          refreshState(() {
-            _videoPageInfo.value = page;
-          });
-        });
-      }
       return;
     } else {
       // also dont check new missing info if cached version was set
@@ -299,60 +309,77 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 child: ObxO(
-                  rx: _videoPageInfo,
-                  builder: (context, videoPageInfo) {
-                    final viewsCountText =
-                        (videoPageInfo?.videoInfo?.viewsCount)?.formatDecimalShort() ?? videoPageInfo?.videoInfo?.viewCountTextShort ?? videoPageInfo?.videoInfo?.viewCountTextLong;
-                    return Text(
-                      viewsCountText ?? '?',
-                      style: theme.textTheme.displaySmall,
-                    );
-                  },
+                  rx: _videoPageInfoLoading,
+                  builder: (context, videoPageInfoLoading) => ShimmerWrapper(
+                    transparent: true,
+                    fadeDurationMS: 0,
+                    shimmerEnabled: videoPageInfoLoading,
+                    child: ObxO(
+                      rx: _videoPageInfo,
+                      builder: (context, videoPageInfo) {
+                        final viewsCountText = (videoPageInfo?.videoInfo?.viewsCount)?.formatDecimalShort() ??
+                            videoPageInfo?.videoInfo?.viewCountTextShort ??
+                            videoPageInfo?.videoInfo?.viewCountTextLong;
+                        return Text(
+                          viewsCountText ?? '?',
+                          style: theme.textTheme.displaySmall,
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 6.0),
               ObxO(
-                rx: _videoPageInfo,
-                builder: (context, videoPageInfo) => ObxO(
-                  rx: _videoLikeManager.currentVideoLikeStatus,
-                  builder: (context, currentLikeStatus) {
-                    final isUserLiked = currentLikeStatus == LikeStatus.liked;
-                    final likesCount = videoPageInfo?.videoInfo?.engagement?.likesCount;
-                    final videoLikeCount = likesCount == null && !isUserLiked ? null : (isUserLiked ? 1 : 0) + (likesCount ?? 0);
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        NamidaLoadingSwitcher(
-                          size: 18.0,
-                          builder: (loadingController) => NamidaRawLikeButton(
-                            isLiked: isUserLiked,
-                            likedIcon: Broken.like_filled,
-                            normalIcon: Broken.like_1,
-                            enabledColor: headerIconColor,
-                            disabledColor: headerIconColor,
-                            size: 18.0,
-                            onTap: (isLiked) {
-                              return _videoLikeManager.onLikeClicked(
-                                YTVideoLikeParamters(
-                                  isActive: isLiked,
-                                  action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
-                                  onStart: loadingController.startLoading,
-                                  onEnd: loadingController.stopLoading,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: Text(
-                            videoLikeCount?.formatDecimalShort() ?? '?',
-                            style: theme.textTheme.displaySmall,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                rx: _videoPageInfoLoading,
+                builder: (context, videoPageInfoLoading) => ShimmerWrapper(
+                  transparent: true,
+                  fadeDurationMS: 0,
+                  shimmerEnabled: videoPageInfoLoading,
+                  child: ObxO(
+                    rx: _videoPageInfo,
+                    builder: (context, videoPageInfo) => ObxO(
+                      rx: _videoLikeManager.currentVideoLikeStatus,
+                      builder: (context, currentLikeStatus) {
+                        final isUserLiked = currentLikeStatus == LikeStatus.liked;
+                        final likesCount = videoPageInfo?.videoInfo?.engagement?.likesCount;
+                        final videoLikeCount = likesCount == null && !isUserLiked ? null : (isUserLiked ? 1 : 0) + (likesCount ?? 0);
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            NamidaLoadingSwitcher(
+                              size: 18.0,
+                              builder: (loadingController) => NamidaRawLikeButton(
+                                isLiked: isUserLiked,
+                                likedIcon: Broken.like_filled,
+                                normalIcon: Broken.like_1,
+                                enabledColor: headerIconColor,
+                                disabledColor: headerIconColor,
+                                size: 18.0,
+                                onTap: (isLiked) {
+                                  return _videoLikeManager.onLikeClicked(
+                                    YTVideoLikeParamters(
+                                      isActive: isLiked,
+                                      action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
+                                      onStart: loadingController.startLoading,
+                                      onEnd: loadingController.stopLoading,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: Text(
+                                videoLikeCount?.formatDecimalShort() ?? '?',
+                                style: theme.textTheme.displaySmall,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 6.0),
