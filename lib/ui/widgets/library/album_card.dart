@@ -42,6 +42,7 @@ class AlbumCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final finalYear = album.year.yearFormatted;
+    final albumArtist = album.albumArtist;
 
     final hero = 'album_$identifier$additionalHeroTag';
 
@@ -50,7 +51,12 @@ class AlbumCard extends StatelessWidget {
     if (forceExtraInfoAtTopRight) {
       topRightLine = extraInfo;
     } else if (settings.albumCardTopRightDate.value) {
-      secondLine = extraInfo;
+      secondLine = albumArtist != extraInfo
+          ? [
+              if (extraInfo != null) extraInfo,
+              if (albumArtist.isNotEmpty) albumArtist,
+            ].join(' • ')
+          : extraInfo;
       topRightLine = finalYear;
       if (secondLine == topRightLine) secondLine = null;
     } else {
@@ -58,7 +64,7 @@ class AlbumCard extends StatelessWidget {
       secondLine = [
         if (extraInfo != null) extraInfo,
         if (finalYear.isNotEmpty && finalYear != extraInfo) finalYear,
-        if (album.albumArtist.isNotEmpty && album.albumArtist != extraInfo) album.albumArtist,
+        if (albumArtist.isNotEmpty && albumArtist != extraInfo) albumArtist,
       ].join(' • ');
     }
 
