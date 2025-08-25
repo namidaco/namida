@@ -369,12 +369,14 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
         ],
       ),
     );
+
     final positionTextChild = TapDetector(
-      onTap: () => Player.inst.seekSecondsBackward(),
+      behavior: HitTestBehavior.translucent,
+      onTap: Player.inst.seekSecondsBackward,
       child: LongPressDetector(
         onLongPress: () => Player.inst.seek(Duration.zero),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: EdgeInsets.symmetric(horizontal: 12.0.spaceX),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -414,6 +416,32 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
         ),
       ),
     );
+
+    final positionDurationSeekerBoxesRowChild = Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        TapDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: Player.inst.seekSecondsBackward,
+          child: LongPressDetector(
+            onLongPress: () => Player.inst.seek(Duration.zero),
+            child: SizedBox(
+              width: 54.0.spaceX,
+              height: 48.0.spaceY,
+            ),
+          ),
+        ),
+        TapDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: Player.inst.seekSecondsForward,
+          child: SizedBox(
+            width: 54.0.spaceX,
+            height: 48.0.spaceY,
+          ),
+        ),
+      ],
+    );
+
     final buttonsRowChild = Row(
       mainAxisAlignment: MainAxisAlignment.end,
       mainAxisSize: MainAxisSize.max,
@@ -653,9 +681,10 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                 children: [
                   positionTextChild,
                   TapDetector(
-                    onTap: () => Player.inst.seekSecondsForward(),
+                    behavior: HitTestBehavior.translucent,
+                    onTap: Player.inst.seekSecondsForward,
                     child: Padding(
-                      padding: EdgeInsets.all(12.0.space),
+                      padding: EdgeInsets.symmetric(horizontal: 12.0.spaceX),
                       child: NamidaHero(
                         tag: 'MINIPLAYER_DURATION',
                         child: Obx(
@@ -1167,6 +1196,13 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                     child: Padding(
                                       padding: EdgeInsets.symmetric(horizontal: (24.0.spaceX * (16.0.spaceX * icp + 1))),
                                       child: positionDurationRowChild,
+                                    ),
+                                  ),
+                                  FadeIgnoreTransition(
+                                    opacity: fastOpacityAnimation,
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: (24.0.spaceX * (16.0.spaceX * icp + 1))),
+                                      child: positionDurationSeekerBoxesRowChild,
                                     ),
                                   ),
                                   Padding(
