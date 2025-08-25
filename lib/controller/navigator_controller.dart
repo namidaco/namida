@@ -465,6 +465,23 @@ class NamidaNavigator {
     );
   }
 
+  Future<void> back({bool waitForAnimation = false}) async {
+    if (this.isInFullScreen) {
+      NamidaNavigator.inst.exitFullScreen();
+      return;
+    }
+
+    if (_openedNumbersManager._currentMenusNumber > 0) {
+      this.popMenu();
+    } else if (_openedNumbersManager._currentSheetNumber > 0) {
+      _rootNav.currentState?.pop();
+    } else if (_openedNumbersManager._currentDialogNumber > 0) {
+      closeDialog();
+    } else {
+      popPage();
+    }
+  }
+
   Future<void> popPage({bool waitForAnimation = false}) async {
     if (innerDrawerKey.currentState?.isOpened == true) {
       innerDrawerKey.currentState?.close();

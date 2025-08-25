@@ -217,13 +217,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ),
     ShortcutKeyData(
       key: LogicalKeyboardKey.escape,
-      callback: () {
-        if (NamidaNavigator.inst.isInFullScreen) {
-          NamidaNavigator.inst.exitFullScreen();
-        } else {
-          NamidaNavigator.inst.popPage();
-        }
-      },
+      callback: NamidaNavigator.inst.back,
       title: lang.EXIT,
     ),
   ];
