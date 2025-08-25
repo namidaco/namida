@@ -410,6 +410,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                               case HomePageItems.mixes:
                                 return SliverToBoxAdapter(
                                   child: _HorizontalList(
+                                    homepageItem: element,
                                     title: lang.MIXES,
                                     icon: Broken.scanning,
                                     height: 186.0 + 12.0,
@@ -641,6 +642,7 @@ class _TracksList extends StatelessWidget {
       final queue = listWithListens?.firstOrNull == null ? <Track>[] : listWithListens!.map((e) => e!.key);
       return SliverToBoxAdapter(
         child: _HorizontalList(
+          homepageItem: homepageItem,
           controller: controller,
           title: title,
           icon: icon,
@@ -672,6 +674,7 @@ class _TracksList extends StatelessWidget {
       final queue = listy.firstOrNull == null ? <Track>[] : finalList.cast<Selectable>();
       return SliverToBoxAdapter(
         child: _HorizontalList(
+            homepageItem: homepageItem,
             title: title,
             icon: icon,
             leading: leading,
@@ -722,6 +725,7 @@ class _AlbumsList extends StatelessWidget {
     final itemCount = albums.length;
     return SliverToBoxAdapter(
       child: _HorizontalList(
+        homepageItem: homepageItem,
         title: title,
         leading: StackedIcon(
           baseIcon: mainIcon,
@@ -773,6 +777,7 @@ class _ArtistsList extends StatelessWidget {
     final itemCount = artists.length;
     return SliverToBoxAdapter(
       child: _HorizontalList(
+        homepageItem: homepageItem,
         title: title,
         leading: StackedIcon(
           baseIcon: mainIcon,
@@ -799,6 +804,7 @@ class _ArtistsList extends StatelessWidget {
 }
 
 class _HorizontalList extends StatelessWidget {
+  final HomePageItems homepageItem;
   final String title;
   final String? subtitle;
   final IconData? icon;
@@ -814,6 +820,7 @@ class _HorizontalList extends StatelessWidget {
   final ScrollController? controller;
 
   const _HorizontalList({
+    required this.homepageItem,
     required this.title,
     this.subtitle,
     this.icon,
@@ -866,14 +873,39 @@ class _HorizontalList extends StatelessWidget {
         SizedBox(
           height: height,
           width: context.width,
-          child: ListView.builder(
-            controller: controller,
-            itemExtent: itemExtent,
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
-            scrollDirection: Axis.horizontal,
-            itemCount: itemCount,
-            itemBuilder: itemBuilder,
-          ),
+          child: itemCount == 0
+              ? Center(
+                  child: SingleChildScrollView(
+                    controller: controller,
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                    scrollDirection: Axis.horizontal,
+                    child: NamidaInkWell(
+                      borderRadius: 10.0,
+                      bgColor: context.theme.cardColor.withValues(alpha: 0.5),
+                      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                      child: Text(
+                        switch (homepageItem) {
+                          HomePageItems.mixes => '',
+                          HomePageItems.recentListens || HomePageItems.topRecentListens => lang.NO_TRACKS_IN_HISTORY,
+                          HomePageItems.lostMemories => lang.NO_TRACKS_FOUND_BETWEEN_DATES,
+                          HomePageItems.recentlyAdded => lang.NO_TRACKS_FOUND,
+                          HomePageItems.recentAlbums || HomePageItems.recentArtists => "${lang.NONE}: ${lang.NO_TRACKS_IN_HISTORY}",
+                          HomePageItems.topRecentAlbums || HomePageItems.topRecentArtists => "${lang.NONE}: ${lang.NO_TRACKS_IN_HISTORY}",
+                        },
+                        style: context.textTheme.displayMedium,
+                        softWrap: false,
+                      ),
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  controller: controller,
+                  itemExtent: itemExtent,
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: itemCount,
+                  itemBuilder: itemBuilder,
+                ),
         ),
       ],
     );
