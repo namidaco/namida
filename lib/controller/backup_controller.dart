@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:intl/intl.dart';
@@ -57,8 +58,33 @@ class BackupController {
     final interval = _defaultAutoBackupInterval;
     if (interval <= 0) return;
 
+    Completer<bool>? permissionCompleter;
     if (!await requestManageStoragePermission(request: false, showError: false)) {
-      snackyy(title: "${lang.ERROR}: ${lang.BACKUP_AND_RESTORE} - ${lang.AUTOMATIC_BACKUP}", message: lang.STORAGE_PERMISSION_DENIED, isError: true);
+      permissionCompleter = Completer<bool>();
+      Completer<void>? reqCompleter;
+      final sc = snackyy(
+        title: "${lang.ERROR}: ${lang.BACKUP_AND_RESTORE} - ${lang.AUTOMATIC_BACKUP}",
+        message: lang.STORAGE_PERMISSION_DENIED,
+        isError: true,
+        button: (
+          lang.MANAGE,
+          () async {
+            reqCompleter = Completer<void>();
+            final granted = await requestManageStoragePermission();
+            permissionCompleter?.completeIfWasnt(granted);
+            reqCompleter?.completeIfWasnt();
+          },
+        ),
+      );
+      sc.future.whenComplete(
+        () async {
+          await reqCompleter?.future;
+          permissionCompleter?.completeIfWasnt(false);
+        },
+      );
+    }
+
+    if (permissionCompleter != null && await permissionCompleter.future != true) {
       return;
     }
 

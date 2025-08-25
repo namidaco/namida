@@ -575,7 +575,7 @@ enum SnackDisplayDuration {
   const SnackDisplayDuration(this.milliseconds);
 }
 
-SnackbarController? snackyy({
+SnackbarController snackyy({
   IconData? icon,
   String title = '',
   required String message,
@@ -613,7 +613,7 @@ SnackbarController? snackyy({
   //   margin = EdgeInsets.zero;
   // }
 
-  SnackbarController? snackbarController;
+  late SnackbarController snackbarController;
 
   final EdgeInsets paddingInsets;
   if (button != null) {
@@ -681,7 +681,7 @@ SnackbarController? snackyy({
                   if (alreadyTappedButton) return;
                   alreadyTappedButton = true;
                   button.$2();
-                  snackbarController?.close();
+                  snackbarController.close();
                 },
                 child: NamidaButtonText(
                   button.$1,
