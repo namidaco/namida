@@ -207,6 +207,9 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   bool get sortAfterPreparing => false;
 
   @override
+  bool get addTracksAtBeginning => settings.playlistAddTracksAtBeginningYT.value;
+
+  @override
   Future<Map<String, YoutubePlaylist>> prepareAllPlaylistsFunction() async {
     final params = _ReadPlaylistFilesParams(
       path: playlistsDirectory,

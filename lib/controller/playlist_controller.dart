@@ -628,6 +628,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   bool get sortAfterPreparing => true;
 
   @override
+  bool get addTracksAtBeginning => settings.playlistAddTracksAtBeginning.value;
+
+  @override
   String get EMPTY_NAME => lang.PLEASE_ENTER_A_NAME;
 
   @override

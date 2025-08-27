@@ -91,6 +91,16 @@ void showAddToPlaylistSheet({
                   mainAxisSize: MainAxisSize.max,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    ObxO(
+                      rx: settings.playlistAddTracksAtBeginningYT,
+                      builder: (context, atBeginning) => CustomSwitchListTile(
+                        visualDensity: VisualDensity.compact,
+                        icon: Broken.arrow_square_up,
+                        title: lang.ADD_TRACKS_AT_THE_BEGINNING,
+                        value: atBeginning,
+                        onChanged: (val) => settings.save(playlistAddTracksAtBeginningYT: !val),
+                      ),
+                    ),
                     Expanded(
                       child: YoutubePlaylistsView(idsToAdd: ids, displayMenu: false),
                     ),

@@ -190,6 +190,9 @@ class _SettingsController with SettingsFileWriter {
     TagField.lyrics,
   ].obs;
 
+  final playlistAddTracksAtBeginning = false.obs;
+  final playlistAddTracksAtBeginningYT = false.obs;
+
   final wakelockMode = WakelockMode.expandedAndVideo.obs;
 
   final localVideoMatchingType = LocalVideoMatchingType.auto.obs;
@@ -548,6 +551,8 @@ class _SettingsController with SettingsFileWriter {
         tagFieldsToEdit.value = tagFieldsToEditStorage.map((e) => TagField.values.getEnum(e as String)).toListy<TagField>();
       }
 
+      playlistAddTracksAtBeginning.value = json['playlistAddTracksAtBeginning'] ?? playlistAddTracksAtBeginning.value;
+      playlistAddTracksAtBeginningYT.value = json['playlistAddTracksAtBeginningYT'] ?? playlistAddTracksAtBeginningYT.value;
       wakelockMode.value = WakelockMode.values.getEnum(json['wakelockMode']) ?? wakelockMode.value;
 
       localVideoMatchingType.value = LocalVideoMatchingType.values.getEnum(json['localVideoMatchingType']) ?? localVideoMatchingType.value;
@@ -752,6 +757,8 @@ class _SettingsController with SettingsFileWriter {
         'alwaysExpandedSearchbar': alwaysExpandedSearchbar.value,
         'mixedQueue': mixedQueue.value,
         'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.name),
+        'playlistAddTracksAtBeginning': playlistAddTracksAtBeginning.value,
+        'playlistAddTracksAtBeginningYT': playlistAddTracksAtBeginningYT.value,
         'wakelockMode': wakelockMode.value.name,
         'localVideoMatchingType': localVideoMatchingType.value.name,
         'localVideoMatchingCheckSameDir': localVideoMatchingCheckSameDir.value,
@@ -927,6 +934,8 @@ class _SettingsController with SettingsFileWriter {
     bool? alwaysExpandedSearchbar,
     bool? mixedQueue,
     List<TagField>? tagFieldsToEdit,
+    bool? playlistAddTracksAtBeginning,
+    bool? playlistAddTracksAtBeginningYT,
     WakelockMode? wakelockMode,
     LocalVideoMatchingType? localVideoMatchingType,
     bool? localVideoMatchingCheckSameDir,
@@ -1145,6 +1154,8 @@ class _SettingsController with SettingsFileWriter {
         }
       });
     }
+    if (playlistAddTracksAtBeginning != null) this.playlistAddTracksAtBeginning.value = playlistAddTracksAtBeginning;
+    if (playlistAddTracksAtBeginningYT != null) this.playlistAddTracksAtBeginningYT.value = playlistAddTracksAtBeginningYT;
     if (wakelockMode != null) this.wakelockMode.value = wakelockMode;
     if (localVideoMatchingType != null) this.localVideoMatchingType.value = localVideoMatchingType;
     if (localVideoMatchingCheckSameDir != null) this.localVideoMatchingCheckSameDir.value = localVideoMatchingCheckSameDir;

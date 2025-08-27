@@ -26,6 +26,7 @@ abstract class LanguageKeys {
   String get ADD => _getKey('ADD');
   String get ADDED => _getKey('ADDED');
   String get ADD_ONLY_MISSING => _getKey('ADD_ONLY_MISSING');
+  String get ADD_TRACKS_AT_THE_BEGINNING => _getKey('ADD_TRACKS_AT_THE_BEGINNING');
   String get ADVANCED_SETTINGS_SUBTITLE => _getKey('ADVANCED_SETTINGS_SUBTITLE');
   String get ADVANCED_SETTINGS => _getKey('ADVANCED_SETTINGS');
   String get ADVANCED => _getKey('ADVANCED');

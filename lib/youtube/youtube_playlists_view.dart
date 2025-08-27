@@ -121,8 +121,8 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
       child: (sc) => CustomScrollView(
         controller: sc,
         slivers: [
-          const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
           if (!isMinimalView) ...[
+            const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
             Obx(
               (context) {
                 final history = YoutubeHistoryController.inst.historyMap.valueR;
