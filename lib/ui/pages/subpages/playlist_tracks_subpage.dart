@@ -536,7 +536,10 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
                   maxWidth: maxWidth,
                   source: playlist.toQueueSource(),
                   title: playlist.name.translatePlaylistName(),
-                  subtitle: [tracks.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' - '),
+                  subtitle: "${[
+                    tracks.displayTrackKeyword,
+                    tracks.totalDurationFormatted,
+                  ].join(' - ')}\n${playlist.creationDate.dateFormatted}",
                   thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
                   heroTag: 'playlist_${playlist.name}',
                   imageBuilder: (size) => MultiArtworkContainer(
