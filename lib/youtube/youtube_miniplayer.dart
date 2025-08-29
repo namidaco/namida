@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'package:share_plus/share_plus.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
@@ -946,7 +947,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                     child: ShimmerWrapper(
                                                                       transparent: false,
                                                                       shimmerEnabled: shimmerEnabled,
-                                                                      child: ListView.builder(
+                                                                      child: SuperListView.builder(
                                                                         padding: EdgeInsets.zero,
                                                                         key: Key("${currentId}_feedlist_shimmer"),
                                                                         physics: const NeverScrollableScrollPhysics(),
@@ -1082,7 +1083,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                         child: ShimmerWrapper(
                                                                           transparent: false,
                                                                           shimmerEnabled: true,
-                                                                          child: ListView.builder(
+                                                                          child: SuperListView.builder(
                                                                             padding: EdgeInsets.zero,
                                                                             // key: Key(currentId),
                                                                             physics: const NeverScrollableScrollPhysics(),
@@ -1103,7 +1104,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                         rx: YoutubeInfoController.current.currentComments,
                                                                         builder: (context, comments) => comments == null
                                                                             ? const SliverToBoxAdapter()
-                                                                            : SliverList.builder(
+                                                                            : SuperSliverList.builder(
                                                                                 key: Key("${currentId}_comments"),
                                                                                 itemCount: comments.length,
                                                                                 itemBuilder: (context, i) {

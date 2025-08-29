@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/channels/channel_page_result.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
@@ -432,7 +433,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                         child: isLoadingInitialStreams
                             ? ShimmerWrapper(
                                 shimmerEnabled: true,
-                                child: ListView.builder(
+                                child: SuperListView.builder(
                                   controller: _uploadsScrollController,
                                   padding: EdgeInsets.zero,
                                   itemCount: 15,

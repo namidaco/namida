@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/comments/comment_info_item.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/comment_reply_result.dart';
@@ -252,7 +253,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                                   child: ShimmerWrapper(
                                     transparent: false,
                                     shimmerEnabled: true,
-                                    child: ListView.builder(
+                                    child: SuperListView.builder(
                                       padding: EdgeInsets.zero,
                                       physics: const NeverScrollableScrollPhysics(),
                                       itemCount: repliesCount?.withMaximum(20) ?? 10,
@@ -273,7 +274,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                                 rx: _currentReplies,
                                 builder: (context, replies) {
                                   if (replies == null) return const SliverToBoxAdapter();
-                                  return SliverList.builder(
+                                  return SuperSliverList.builder(
                                     itemCount: replies.length,
                                     itemBuilder: (context, i) {
                                       final reply = replies.items[i];

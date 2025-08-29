@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -539,7 +540,7 @@ class _HorizontalSliverList extends StatelessWidget {
               child: displayShimmer
                   ? ShimmerWrapper(
                       shimmerEnabled: true,
-                      child: ListView.builder(
+                      child: SuperListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 6.0),
                         scrollDirection: Axis.horizontal,
                         itemCount: 10,
@@ -553,7 +554,7 @@ class _HorizontalSliverList extends StatelessWidget {
                         },
                       ),
                     )
-                  : ListView.builder(
+                  : SuperListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 6.0),
                       scrollDirection: Axis.horizontal,
                       itemCount: finalVideos.length + 1,

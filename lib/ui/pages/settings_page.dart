@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
+
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -51,7 +53,7 @@ class SettingsPage extends StatelessWidget with NamidaRouteWidget {
           ),
           settings.useSettingCollapsedTiles.value
               ? const CollapsedSettingTiles()
-              : ListView(
+              : SuperListView(
                   padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.getSettingsHorizontalMargin(context)),
                   children: [
                     const ThemeSetting(),
@@ -119,7 +121,7 @@ class CollapsedSettingTiles extends StatelessWidget {
   Widget build(BuildContext context) {
     Localizations.localeOf(context);
     final double horizontalMargin = 0.5 * Dimensions.inst.getSettingsHorizontalMargin(context);
-    return ListView(
+    return SuperListView(
       padding: EdgeInsets.symmetric(horizontal: 8.0 + horizontalMargin),
       children: [
         CustomCollapsedListTile(

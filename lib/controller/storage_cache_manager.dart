@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:checkmark/checkmark.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
@@ -373,7 +374,7 @@ class StorageCacheManager {
                     rx: allFiles,
                     builder: (context, allFiles) => ObxO(
                       rx: itemsToDelete,
-                      builder: (context, toDelete) => ListView.builder(
+                      builder: (context, toDelete) => SuperListView.builder(
                         controller: sc,
                         padding: EdgeInsets.zero,
                         itemCount: allFiles.length,

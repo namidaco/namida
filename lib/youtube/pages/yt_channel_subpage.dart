@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/channels/channel_about_link.dart';
 import 'package:youtipie/class/channels/channel_home_section.dart';
 import 'package:youtipie/class/channels/channel_info.dart';

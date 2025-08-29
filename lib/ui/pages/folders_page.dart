@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
+
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
@@ -138,7 +140,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                       slivers: [
                                         ObxO(
                                           rx: foldersController.currentFolderslist,
-                                          builder: (context, currentFolderslist) => SliverList.builder(
+                                          builder: (context, currentFolderslist) => SuperSliverList.builder(
                                             itemCount: currentFolderslist.length,
                                             itemBuilder: (context, i) {
                                               final folder = currentFolderslist[i];
@@ -221,7 +223,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                             rx: _foldersMap,
                                             builder: (context, mainMapFolders) {
                                               final mainMapFoldersKeys = _foldersMap.keys.toList();
-                                              return SliverList.builder(
+                                              return SuperSliverList.builder(
                                                 itemCount: mainMapFoldersKeys.length,
                                                 itemBuilder: (context, i) {
                                                   final folder = mainMapFoldersKeys[i];

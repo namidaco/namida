@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/channels/channel_info.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/search_result.dart';
@@ -208,7 +209,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               shimmerEnabled: true,
                               child: SizedBox(
                                 height: horizontalListHeight,
-                                child: ListView.builder(
+                                child: SuperListView.builder(
                                   shrinkWrap: true,
                                   padding: const EdgeInsets.symmetric(horizontal: 6.0),
                                   scrollDirection: Axis.horizontal,
@@ -362,7 +363,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                           rx: settings.youtube.ytVisibleMixes,
                                           builder: (context, visibleMixes) {
                                             final isMixesVisible = visibleMixes[YTVisibleMixesPlaces.search] ?? true;
-                                            return SliverList.builder(
+                                            return SuperSliverList.builder(
                                               itemCount: searchResult.length,
                                               itemBuilder: (context, index) {
                                                 final chunk = searchResult.items[index];

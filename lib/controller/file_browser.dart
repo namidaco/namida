@@ -5,6 +5,7 @@ import 'dart:isolate';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -1236,7 +1237,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                     child: CustomScrollView(
                                       controller: _scrollController,
                                       slivers: [
-                                        SliverList.builder(
+                                        SuperSliverList.builder(
                                           itemCount: _currentFolders.length,
                                           itemBuilder: (context, index) {
                                             final folder = _currentFolders[index];
@@ -1267,7 +1268,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                               margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
                                             ),
                                           ),
-                                        SliverList.builder(
+                                        SuperSliverList.builder(
                                           itemCount: _currentFiles.length,
                                           itemBuilder: (context, index) {
                                             final file = _currentFiles[index];

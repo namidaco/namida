@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
+
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/video.dart';
@@ -1092,7 +1094,7 @@ class _CompressImagesListTile extends StatelessWidget {
         child: Column(
           children: [
             Obx(
-              (context) => ListView(
+              (context) => SuperListView(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 children: [

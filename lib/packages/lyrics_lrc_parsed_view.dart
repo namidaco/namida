@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:lrc/lrc.dart';
-import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -61,8 +61,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     NamidaNavigator.inst.popRoot();
   }
 
-  late final ItemScrollController controller;
-  late final ItemPositionsListener positionListener;
+  late final ListController _listController;
+  late final ScrollController _scrollController;
 
   late final double _paddingVertical = widget.isFullScreenView ? 32 * 12.0 : 12 * 12.0;
   int _currentIndex = -1;
@@ -86,8 +86,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   @override
   void initState() {
     super.initState();
-    controller = ItemScrollController();
-    positionListener = ItemPositionsListener.create();
+    _listController = ListController();
+    _scrollController = ScrollController();
     final lrc = Lyrics.inst.currentLyricsLRC.value;
     final txt = Lyrics.inst.currentLyricsText.value;
     fillLists(lrc, txt);
@@ -185,7 +185,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   }
 
   void _updateHighlightedLine(int durMS, {bool forceAnimate = false, bool jump = false}) {
-    final lrcDur = lyrics.lastWhereEff((e) => e.timestamp.inMilliseconds <= durMS);
+    final lrcDur = lyrics.lastWhereEff((e) => e.timestamp.inMilliseconds <= durMS + 1);
+    if (_latestUpdatedLine.value == lrcDur?.timestamp) return;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _latestUpdatedLine.value = lrcDur?.timestamp;
 
@@ -200,20 +202,22 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         }
       }
 
-      if ((_canAnimateScroll || forceAnimate) && controller.isAttached) {
+      if ((_canAnimateScroll || forceAnimate) && _listController.isAttached) {
         if (newIndex < 0) newIndex = 0;
         if (_currentIndex == newIndex) return;
         _currentIndex = newIndex;
         jump
-            ? controller.jumpTo(
+            ? _listController.jumpToItem(
+                scrollController: _scrollController,
                 alignment: 0.4,
                 index: newIndex,
               )
-            : controller.scrollTo(
+            : _listController.animateToItem(
+                scrollController: _scrollController,
                 alignment: 0.4,
                 index: newIndex,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
+                duration: (d) => const Duration(milliseconds: 300),
+                curve: (d) => Curves.easeOut,
               );
         try {
           _currentLine = lyrics[newIndex].lyrics;
@@ -559,9 +563,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                     final color = CurrentColor.inst.miniplayerColor;
                     return ObxO(
                       rx: _latestUpdatedLine,
-                      builder: (context, highlightedTimeStamp) => ScrollablePositionedList.builder(
+                      builder: (context, highlightedTimeStamp) => SuperListView.builder(
                         padding: EdgeInsets.symmetric(vertical: _paddingVertical),
-                        itemScrollController: controller,
+                        controller: _scrollController,
+                        listController: _listController,
                         itemCount: lyrics.length,
                         itemBuilder: (context, index) {
                           final lrc = lyrics[index];

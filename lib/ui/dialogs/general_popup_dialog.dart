@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:rhttp/rhttp.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
@@ -325,7 +326,7 @@ Future<void> showGeneralPopupDialog(
         ],
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: namida.height * 0.6),
-          child: ListView(
+          child: SuperListView(
             padding: const EdgeInsets.symmetric(horizontal: 6.0),
             shrinkWrap: true,
             children: [

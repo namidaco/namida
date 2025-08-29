@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
+
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/utils.dart';
@@ -21,7 +23,7 @@ class SettingsSearchPage extends StatelessWidget {
                 ...keys.map(
                   (key) {
                     final res = SettingsSearchController.inst.searchResults[key] ?? [];
-                    return SliverList.builder(
+                    return SuperSliverList.builder(
                       itemCount: res.length + 1,
                       itemBuilder: (context, indexPre) {
                         if (indexPre == 0) {

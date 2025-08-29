@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/replay_gain_data.dart';
@@ -207,7 +208,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   ],
                   child: ObxO(
                     rx: settings.videoPlaybackSource,
-                    builder: (context, videoPlaybackSource) => ListView(
+                    builder: (context, videoPlaybackSource) => SuperListView(
                       padding: EdgeInsets.zero,
                       shrinkWrap: true,
                       children: [
@@ -282,7 +283,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                           height: namida.height * 0.4,
                           child: ObxO(
                             rx: settings.youtubeVideoQualities,
-                            builder: (context, youtubeVideoQualities) => ListView(
+                            builder: (context, youtubeVideoQualities) => SuperListView(
                               padding: EdgeInsets.zero,
                               children: [
                                 ...kStockVideoQualities.asMap().entries.map(
@@ -901,7 +902,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           ? SizedBox(
               height: context.height * 0.7,
               width: context.width,
-              child: ListView(
+              child: SuperListView(
                 padding: EdgeInsets.zero,
                 children: children,
               ),

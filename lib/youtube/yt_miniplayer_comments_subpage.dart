@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/core/enum.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
@@ -104,7 +105,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                                   child: ShimmerWrapper(
                                     transparent: false,
                                     shimmerEnabled: true,
-                                    child: ListView.builder(
+                                    child: SuperListView.builder(
                                       padding: EdgeInsets.zero,
                                       physics: const NeverScrollableScrollPhysics(),
                                       itemCount: 10,
@@ -125,7 +126,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                                 rx: YoutubeInfoController.current.currentComments,
                                 builder: (context, comments) {
                                   if (comments == null) return const SliverToBoxAdapter();
-                                  return SliverList.builder(
+                                  return SuperSliverList.builder(
                                     itemCount: comments.length,
                                     itemBuilder: (context, i) {
                                       final comment = comments.items[i];

@@ -9,6 +9,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'package:playlist_manager/class/favourite_playlist.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/core/enum.dart';
@@ -758,7 +759,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                               final availableVideos = focusedMenuOptions.localVideos.valueR;
                               final ytVideos = focusedMenuOptions.streams.valueR?.videoStreams
                                   .withoutWebmIfNeccessaryOrExperimentalCodecs(allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs);
-                              return ListView(
+                              return SuperListView(
                                 padding: const EdgeInsets.symmetric(vertical: 12.0),
                                 children: [
                                   if (currentId == null || currentId.isEmpty)

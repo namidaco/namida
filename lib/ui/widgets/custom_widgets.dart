@@ -20,6 +20,7 @@ import 'package:like_button/like_button.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
@@ -2070,8 +2071,8 @@ class SubpageInfoContainer extends StatelessWidget {
                   child: Text(
                     subtitle,
                     overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    style: context.textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.3, 10.0, 24.0)),
+                    maxLines: 2,
+                    style: context.textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28, 10.0, 24.0)),
                   ),
                 ),
               ),
@@ -2965,7 +2966,7 @@ class NamidaListView extends StatelessWidget {
                 itemBuilder: itemBuilder,
                 itemCount: itemCount,
               )
-            : SliverList.builder(
+            : SuperSliverList.builder(
                 itemBuilder: itemBuilder,
                 itemCount: itemCount,
               );
@@ -5772,7 +5773,7 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
       builder: (context, releasesAfterCurrent) => releasesAfterCurrent == null
           ? ShimmerWrapper(
               shimmerEnabled: true,
-              child: ListView.builder(
+              child: SuperListView.builder(
                 padding: EdgeInsets.zero,
                 itemCount: 3,
                 itemBuilder: (context, index) {
@@ -5786,7 +5787,7 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
                 },
               ),
             )
-          : ListView.builder(
+          : SuperListView.builder(
               padding: EdgeInsets.zero,
               itemCount: releasesAfterCurrent.length,
               itemBuilder: (context, index) {
@@ -5852,7 +5853,7 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
+    return SuperListView(
       shrinkWrap: true,
       children: organizedMap.entries
           .map(

@@ -221,7 +221,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                         ? SliverToBoxAdapter(
                             child: ShimmerWrapper(
                               shimmerEnabled: true,
-                              child: ListView.builder(
+                              child: SuperListView.builder(
                                 shrinkWrap: true,
                                 primary: false,
                                 physics: const NeverScrollableScrollPhysics(),

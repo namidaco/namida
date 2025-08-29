@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import 'package:just_audio/just_audio.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/split_config.dart';
@@ -230,7 +231,7 @@ Future<void> showTrackInfoDialog(
                     rx: settings.showUnknownFieldsInTrackInfoDialog,
                     builder: (context, _) => CustomScrollView(
                       slivers: [
-                        SliverList(
+                        SuperSliverList(
                           delegate: SliverChildListDelegate(
                             [
                               const SizedBox(height: 12.0),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
+
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -249,7 +251,7 @@ class NamidaDrawer extends StatelessWidget {
       child: Column(
         children: [
           Expanded(
-            child: ListView(
+            child: SuperListView(
               children: [
                 NamidaLogoContainer(
                   afterTap: NamidaNavigator.inst.toggleDrawer,

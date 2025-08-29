@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:playlist_manager/core/enum.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/playlist_for_video.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item_user.dart';
 import 'package:youtipie/core/enum.dart';
@@ -457,7 +458,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                       padding: EdgeInsets.only(top: 12.0),
                     ),
                     if (createdPlaylists != null)
-                      SliverList.builder(
+                      SuperSliverList.builder(
                         itemCount: createdPlaylists.length,
                         itemBuilder: (context, index) {
                           return _itemBuilder(context, createdPlaylists[index]);
@@ -468,7 +469,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                             child: ShimmerWrapper(
                               transparent: false,
                               shimmerEnabled: true,
-                              child: ListView.builder(
+                              child: SuperListView.builder(
                                 padding: EdgeInsets.zero,
                                 physics: const NeverScrollableScrollPhysics(),
                                 itemCount: 10,
@@ -484,7 +485,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                               ),
                             ),
                           )
-                        : SliverList.builder(
+                        : SuperSliverList.builder(
                             itemCount: allPlaylists.length,
                             itemBuilder: (context, index) {
                               return _itemBuilder(context, allPlaylists[index]);

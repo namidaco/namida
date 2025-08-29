@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/core/http.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
@@ -726,7 +727,7 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
       width: context.width,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: context.height * 0.6),
-        child: ListView(
+        child: SuperListView(
           padding: EdgeInsets.zero,
           shrinkWrap: true,
           children: [

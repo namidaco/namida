@@ -10,6 +10,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/src/ast.dart' as md;
 import 'package:rhttp/rhttp.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/class/version_wrapper.dart';
@@ -86,7 +87,7 @@ class _AboutPageState extends State<AboutPage> {
     return BackgroundWrapper(
       child: ObxO(
         rx: VersionController.inst.latestVersion,
-        builder: (context, latestVersion) => ListView(
+        builder: (context, latestVersion) => SuperListView(
           padding: kBottomPaddingInsets.add(EdgeInsets.symmetric(horizontal: horizontalMargin)),
           children: [
             SizedBox(height: topPadding),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/cache_details.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/items_sort.dart';
@@ -406,7 +407,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
               return errorMessage != null
                   ? Padding(
                       padding: pagePadding,
-                      child: ListView(
+                      child: SuperListView(
                         shrinkWrap: true,
                         children: [
                           if (widget.pageHeader != null) widget.pageHeader!,
@@ -462,7 +463,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                                           child: ShimmerWrapper(
                                             transparent: widget.transparentShimmer,
                                             shimmerEnabled: true,
-                                            child: ListView.builder(
+                                            child: SuperListView.builder(
                                               scrollDirection: widget.isHorizontal ? Axis.horizontal : Axis.vertical,
                                               padding: EdgeInsets.zero,
                                               physics: const NeverScrollableScrollPhysics(),

@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
+
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -106,7 +108,7 @@ Future<void> showVideoDownloadOptionsSheet({
               },
             ),
           Expanded(
-            child: ListView(
+            child: SuperListView(
               children: [
                 if (showSpecificFileOptions) ...[
                   Obx(

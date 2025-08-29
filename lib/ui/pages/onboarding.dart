@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
+
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -171,7 +173,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                           child: Stack(
                             alignment: Alignment.bottomCenter,
                             children: [
-                              ListView(
+                              SuperListView(
                                 controller: c,
                                 padding: EdgeInsets.zero,
                                 children: [

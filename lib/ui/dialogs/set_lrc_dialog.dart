@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:lrc/lrc.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
@@ -382,7 +383,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                       size: 48.0,
                     );
                   }
-                  return ListView.builder(
+                  return SuperListView.builder(
                     padding: EdgeInsets.zero,
                     itemCount: both.length,
                     itemBuilder: (context, index) {

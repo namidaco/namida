@@ -169,7 +169,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                         ? SliverToBoxAdapter(
                             child: ShimmerWrapper(
                               shimmerEnabled: true,
-                              child: ListView.builder(
+                              child: SuperListView.builder(
                                 shrinkWrap: true,
                                 primary: false,
                                 physics: const NeverScrollableScrollPhysics(),

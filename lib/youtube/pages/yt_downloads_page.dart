@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
+
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
@@ -442,7 +444,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                           ? const SliverToBoxAdapter()
                                           : SliverPadding(
                                               padding: const EdgeInsets.only(bottom: 8.0, top: 2.0),
-                                              sliver: SliverList.builder(
+                                              sliver: SuperSliverList.builder(
                                                 itemCount: list.length,
                                                 itemBuilder: (context, index) {
                                                   return YTDownloadTaskItemCard(
@@ -470,7 +472,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                   rx: _downloadTasksTempList,
                                   builder: (context, downloadTasksTempList) {
                                     final videos = downloadTasksTempList.map((e) => e.$2).toList();
-                                    return SliverList.builder(
+                                    return SuperSliverList.builder(
                                       itemCount: downloadTasksTempList.length,
                                       itemBuilder: (context, index) {
                                         final groupNameAndItem = downloadTasksTempList[index];

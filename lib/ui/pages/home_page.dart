@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:history_manager/history_manager.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/base/pull_to_refresh.dart';
@@ -318,7 +319,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                 if (subList.isNotEmpty)
                   Expanded(
                     flex: subList.length,
-                    child: ListView.builder(
+                    child: SuperListView.builder(
                       padding: EdgeInsets.zero,
                       itemCount: subList.length,
                       itemBuilder: (context, index) {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
+
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
@@ -125,7 +127,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                   ],
                   child: ObxO(
                     rx: settingsKey,
-                    builder: (context, imageSources) => ListView(
+                    builder: (context, imageSources) => SuperListView(
                       padding: EdgeInsets.zero,
                       shrinkWrap: true,
                       children: [
@@ -427,7 +429,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                       ],
                       child: ObxO(
                         rx: settings.lyricsSource,
-                        builder: (context, lyricsSource) => ListView(
+                        builder: (context, lyricsSource) => SuperListView(
                           padding: EdgeInsets.zero,
                           shrinkWrap: true,
                           children: [
@@ -782,7 +784,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                         if (subList.isNotEmpty)
                           Expanded(
                             flex: subList.length,
-                            child: ListView.builder(
+                            child: SuperListView.builder(
                               padding: EdgeInsets.zero,
                               itemCount: subList.length,
                               itemBuilder: (context, index) {
