@@ -583,6 +583,7 @@ abstract class LanguageKeys {
   String get REVERSE_ORDER => _getKey('REVERSE_ORDER');
   String get RINGTONE => _getKey('RINGTONE');
   String get SAME_DIRECTORY_ONLY => _getKey('SAME_DIRECTORY_ONLY');
+  String get SAMPLE => _getKey('SAMPLE');
   String get SAMPLE_RATE => _getKey('SAMPLE_RATE');
   String get SAVE => _getKey('SAVE');
   String get SAVED_IN => _getKey('SAVED_IN');
@@ -637,6 +638,10 @@ abstract class LanguageKeys {
   String get SIGN_IN_YOU_NEED_ACCOUNT_TO_VIEW_PAGE => _getKey('SIGN_IN_YOU_NEED_ACCOUNT_TO_VIEW_PAGE');
   String get SIGN_OUT => _getKey('SIGN_OUT');
   String get SIGN_OUT_FROM_NAME => _getKey('SIGN_OUT_FROM_NAME');
+  String get SIMILAR_DISCOVER_DATE => _getKey('SIMILAR_DISCOVER_DATE');
+  String get SIMILAR_DISCOVER_DATE_SUBTITLE => _getKey('SIMILAR_DISCOVER_DATE_SUBTITLE');
+  String get SIMILAR_TIME_RANGE => _getKey('SIMILAR_TIME_RANGE');
+  String get SIMILAR_TIME_RANGE_SUBTITLE => _getKey('SIMILAR_TIME_RANGE_SUBTITLE');
   String get SIZE => _getKey('SIZE');
   String get SKIP_SILENCE => _getKey('SKIP_SILENCE');
   String get SKIP => _getKey('SKIP');

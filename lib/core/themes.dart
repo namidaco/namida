@@ -155,6 +155,7 @@ class AppThemes {
       ),
       dividerColor: light ? const Color.fromARGB(100, 100, 100, 100) : const Color.fromARGB(200, 50, 50, 50),
       tooltipTheme: TooltipThemeData(
+        margin: EdgeInsets.symmetric(horizontal: 24.0),
         decoration: BoxDecoration(
           color: light
               ? Color.alphaBlend(getMainColorWithAlpha(30), const Color.fromARGB(255, 242, 242, 242))

@@ -159,14 +159,16 @@ class _PlayerSettings with SettingsFileWriter {
       if (json['replayGain'] is bool) {
         replayGainType.value = json['replayGain'] == true ? ReplayGainType.getPlatformDefault() : ReplayGainType.off;
       }
-      onInterrupted.value = getEnumMap_(
-            json['onInterrupted'],
-            InterruptionType.values,
-            InterruptionType.unknown,
-            InterruptionAction.values,
-            InterruptionAction.doNothing,
-          ) ??
-          onInterrupted.map((key, value) => MapEntry(key, value));
+      onInterrupted
+        ..value.addAll(getEnumMap_(
+              json['onInterrupted'],
+              InterruptionType.values,
+              InterruptionType.unknown,
+              InterruptionAction.values,
+              InterruptionAction.doNothing,
+            ) ??
+            onInterrupted.map((key, value) => MapEntry(key, value)))
+        ..refresh();
     } catch (e, st) {
       printy(e, isError: true);
       logger.report(e, st);

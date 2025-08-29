@@ -253,6 +253,8 @@ class _SettingsController with SettingsFileWriter {
     QueueInsertionType.rating: const QueueInsertion(numberOfTracks: 20, insertNext: false, sortBy: InsertionSortingType.rating),
     QueueInsertionType.sameReleaseDate: const QueueInsertion(numberOfTracks: 30, insertNext: true, sortBy: InsertionSortingType.listenCount),
     QueueInsertionType.algorithm: const QueueInsertion(numberOfTracks: 20, insertNext: true, sortBy: InsertionSortingType.none),
+    QueueInsertionType.algorithmDiscoverDate: const QueueInsertion(numberOfTracks: 20, insertNext: true, sortBy: InsertionSortingType.listenCount),
+    QueueInsertionType.algorithmTimeRange: const QueueInsertion(numberOfTracks: 20, insertNext: true, sortBy: InsertionSortingType.none),
     QueueInsertionType.mix: const QueueInsertion(numberOfTracks: 0, insertNext: true, sortBy: InsertionSortingType.none),
   }.obs;
 
@@ -588,19 +590,23 @@ class _SettingsController with SettingsFileWriter {
       floatingActionButton.value = FABType.values.getEnum(json['floatingActionButton']) ?? floatingActionButton.value;
       vibrationType.value = VibrationType.values.getEnum(json['vibrationType']) ?? vibrationType.value;
 
-      trackItem.value = getEnumMap_(
-            json['trackItem'],
-            TrackTilePosition.values,
-            TrackTilePosition.rightItem3,
-            TrackTileItem.values,
-            TrackTileItem.none,
-          ) ??
-          trackItem.value.map((key, value) => MapEntry(key, value));
+      trackItem
+        ..value.addAll(getEnumMap_(
+              json['trackItem'],
+              TrackTilePosition.values,
+              TrackTilePosition.rightItem3,
+              TrackTileItem.values,
+              TrackTileItem.none,
+            ) ??
+            trackItem.value.map((key, value) => MapEntry(key, value)))
+        ..refresh();
 
-      queueInsertion.value = ((json["queueInsertion"] as Map?)?.map(
-            (key, value) => MapEntry(QueueInsertionType.values.getEnum(key) ?? QueueInsertionType.moreAlbum, QueueInsertion.fromJson(value)),
-          )) ??
-          queueInsertion.value.map((key, value) => MapEntry(key, value));
+      queueInsertion
+        ..value.addAll(((json["queueInsertion"] as Map?)?.map(
+              (key, value) => MapEntry(QueueInsertionType.values.getEnum(key) ?? QueueInsertionType.moreAlbum, QueueInsertion.fromJson(value)),
+            )) ??
+            queueInsertion.value.map((key, value) => MapEntry(key, value)))
+        ..refresh();
 
       final mediaItemsTrackSortingInStorage = json["mediaItemsTrackSorting"] as Map? ?? {};
       mediaItemsTrackSorting.value = {

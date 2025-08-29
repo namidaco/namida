@@ -27,6 +27,16 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
 
   late final _operationsCompleter = <_GenerateOperation, Completer<Iterable<String>>>{};
 
+  Iterable<YoutubeID> generateRecommendedSimilarDiscoverDate(YoutubeID video) {
+    final strings = super.generateRecommendedSimilarDiscoverDateFor(video.id, (current) => current.id);
+    return strings.map((e) => YoutubeID(id: e, playlistID: null));
+  }
+
+  Iterable<YoutubeID> generateRecommendedSimilarTimeRange(YoutubeID video) {
+    final strings = super.generateRecommendedSimilarTimeRangeFor(video.id, (current) => current.id);
+    return strings.map((e) => YoutubeID(id: e, playlistID: null));
+  }
+
   Iterable<YoutubeID> generateRecommendedVideos(YoutubeID video) {
     final strings = super.generateRecommendedItemsFor(video.id, (current) => current.id);
     return strings.map((e) => YoutubeID(id: e, playlistID: null));

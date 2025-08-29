@@ -322,7 +322,23 @@ enum QueueInsertionType {
   rating,
   sameReleaseDate,
   algorithm,
-  mix,
+  algorithmDiscoverDate,
+  algorithmTimeRange,
+  mix;
+
+  int? get recommendedSampleCount => switch (this) {
+        QueueInsertionType.algorithm => 10,
+        QueueInsertionType.algorithmDiscoverDate => 2,
+        QueueInsertionType.algorithmTimeRange => null,
+        _ => null,
+      };
+
+  int? get recommendedSampleDaysCount => switch (this) {
+        QueueInsertionType.algorithm => null,
+        QueueInsertionType.algorithmDiscoverDate => 28,
+        QueueInsertionType.algorithmTimeRange => 7,
+        _ => null,
+      };
 }
 
 enum InsertionSortingType {

@@ -28,6 +28,14 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
     return NamidaGeneratorBase.getRandomItems(allTracksInLibrary, exclude: exclude, min: min, max: max);
   }
 
+  Iterable<Track> generateRecommendedSimilarDiscoverDate(Track track) {
+    return super.generateRecommendedSimilarDiscoverDateFor(track, (current) => current.track);
+  }
+
+  Iterable<Track> generateRecommendedSimilarTimeRange(Track track) {
+    return super.generateRecommendedSimilarTimeRangeFor(track, (current) => current.track);
+  }
+
   Iterable<Track> generateRecommendedTrack(Track track) {
     return super.generateRecommendedItemsFor(track, (current) => current.track);
   }
