@@ -449,10 +449,8 @@ class _NamidaState extends State<Namida> {
                 child: Obx(
                   (context) {
                     final mode = settings.themeMode.valueR;
-                    final useDarkTheme = mode == ThemeMode.dark || (mode == ThemeMode.system && platformBrightness == Brightness.dark);
-                    final isLight = !useDarkTheme;
+                    final isLight = mode.isLight(platformBrightness);
                     final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
-                    NamidaNavigator.inst.setSystemUIOverlayStyleCustom(isLight);
                     return Theme(
                       data: theme,
                       child: widget,
@@ -472,6 +470,16 @@ class _NamidaState extends State<Namida> {
       Duration.zero,
       () => _mainInitialization(widget.shouldShowOnBoarding),
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshSystemBarsColors());
+    settings.themeMode.addListener(_refreshSystemBarsColors);
+  }
+
+  void _refreshSystemBarsColors() {
+    final mode = settings.themeMode.value;
+    final platformBrightness = MediaQuery.platformBrightnessOf(context);
+    final isLight = mode.isLight(platformBrightness);
+    NamidaNavigator.inst.setSystemUIOverlayStyleCustom(isLight);
   }
 
   @override

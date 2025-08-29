@@ -961,3 +961,12 @@ extension ClamperExtDouble on double {
     return x;
   }
 }
+
+extension ThemeModeExtensions on ThemeMode {
+  bool isLight(Brightness? platformBrightness) {
+    final mode = this;
+    final useDarkTheme = mode == ThemeMode.dark || (mode == ThemeMode.system && platformBrightness == Brightness.dark);
+    final isLight = !useDarkTheme;
+    return isLight;
+  }
+}
