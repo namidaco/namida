@@ -244,8 +244,11 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     if (thereMightBeImageSoon) {
       final box = SizedBox(
         key: key,
-        width: widget.staggered ? null : boxWidth,
-        height: widget.staggered ? null : boxHeight,
+        width: boxWidth,
+        height: boxHeight,
+        // -- below will cause fallback square to not exist, making staggered image look bad before loading and once loaded (jumps)
+        // width: widget.staggered ? null : boxWidth,
+        // height: widget.staggered ? null : boxHeight,
       );
       final child = widget.onTopWidgets?.isEmpty ?? true
           ? box
