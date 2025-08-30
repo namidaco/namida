@@ -35,6 +35,7 @@ enum _ExtraSettingsKeys {
   searchCleanup,
   prioritizeEmbeddedLyrics,
   lyricsSource,
+  stretchLyricsDuration,
   imageSource,
   imageSourceAlbum,
   imageSourceArtist,
@@ -65,6 +66,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         _ExtraSettingsKeys.searchCleanup: [lang.ENABLE_SEARCH_CLEANUP, lang.ENABLE_SEARCH_CLEANUP_SUBTITLE],
         _ExtraSettingsKeys.prioritizeEmbeddedLyrics: [lang.PRIORITIZE_EMBEDDED_LYRICS],
         _ExtraSettingsKeys.lyricsSource: [lang.LYRICS_SOURCE],
+        _ExtraSettingsKeys.stretchLyricsDuration: [lang.STRETCH_LYRICS_DURATION],
         _ExtraSettingsKeys.imageSource: [lang.IMAGE_SOURCE, lang.ALBUM, lang.ALBUMS],
         _ExtraSettingsKeys.imageSourceAlbum: [lang.IMAGE_SOURCE, lang.ALBUM, lang.ALBUMS],
         _ExtraSettingsKeys.imageSourceArtist: [lang.IMAGE_SOURCE, lang.ARTIST, lang.ARTISTS],
@@ -467,6 +469,20 @@ class ExtrasSettings extends SettingSubpageProvider {
                     ),
                   );
                 },
+              ),
+            ),
+          ),
+          getItemWrapper(
+            key: _ExtraSettingsKeys.stretchLyricsDuration,
+            child: ObxO(
+              rx: settings.stretchLyricsDuration,
+              builder: (context, stretch) => CustomSwitchListTile(
+                bgColor: getBgColor(_ExtraSettingsKeys.stretchLyricsDuration),
+                icon: Broken.arrange_square,
+                title: lang.STRETCH_LYRICS_DURATION,
+                subtitle: 'spedup/slowed/nightcore',
+                value: stretch,
+                onChanged: (val) => settings.save(stretchLyricsDuration: !val),
               ),
             ),
           ),

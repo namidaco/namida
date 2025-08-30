@@ -190,6 +190,8 @@ class _SettingsController with SettingsFileWriter {
     TagField.lyrics,
   ].obs;
 
+  final stretchLyricsDuration = true.obs;
+
   final playlistAddTracksAtBeginning = false.obs;
   final playlistAddTracksAtBeginningYT = false.obs;
 
@@ -553,6 +555,7 @@ class _SettingsController with SettingsFileWriter {
         tagFieldsToEdit.value = tagFieldsToEditStorage.map((e) => TagField.values.getEnum(e as String)).toListy<TagField>();
       }
 
+      stretchLyricsDuration.value = json['stretchLyricsDuration'] ?? stretchLyricsDuration.value;
       playlistAddTracksAtBeginning.value = json['playlistAddTracksAtBeginning'] ?? playlistAddTracksAtBeginning.value;
       playlistAddTracksAtBeginningYT.value = json['playlistAddTracksAtBeginningYT'] ?? playlistAddTracksAtBeginningYT.value;
       wakelockMode.value = WakelockMode.values.getEnum(json['wakelockMode']) ?? wakelockMode.value;
@@ -763,6 +766,7 @@ class _SettingsController with SettingsFileWriter {
         'alwaysExpandedSearchbar': alwaysExpandedSearchbar.value,
         'mixedQueue': mixedQueue.value,
         'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.name),
+        'stretchLyricsDuration': stretchLyricsDuration.value,
         'playlistAddTracksAtBeginning': playlistAddTracksAtBeginning.value,
         'playlistAddTracksAtBeginningYT': playlistAddTracksAtBeginningYT.value,
         'wakelockMode': wakelockMode.value.name,
@@ -940,6 +944,7 @@ class _SettingsController with SettingsFileWriter {
     bool? alwaysExpandedSearchbar,
     bool? mixedQueue,
     List<TagField>? tagFieldsToEdit,
+    bool? stretchLyricsDuration,
     bool? playlistAddTracksAtBeginning,
     bool? playlistAddTracksAtBeginningYT,
     WakelockMode? wakelockMode,
@@ -1160,6 +1165,7 @@ class _SettingsController with SettingsFileWriter {
         }
       });
     }
+    if (stretchLyricsDuration != null) this.stretchLyricsDuration.value = stretchLyricsDuration;
     if (playlistAddTracksAtBeginning != null) this.playlistAddTracksAtBeginning.value = playlistAddTracksAtBeginning;
     if (playlistAddTracksAtBeginningYT != null) this.playlistAddTracksAtBeginningYT.value = playlistAddTracksAtBeginningYT;
     if (wakelockMode != null) this.wakelockMode.value = wakelockMode;

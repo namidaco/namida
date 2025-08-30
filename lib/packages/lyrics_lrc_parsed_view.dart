@@ -130,32 +130,34 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     } else {
       _updateIsCurrentLineEmpty(_updateOpacityForEmptyLines ? _checkIfTextEmpty(lrc.lyrics.firstOrNull?.lyrics ?? '') : false);
     }
-    // -- calculating timestamps multiplier, useful for spedup/nightcore
+    // -- calculating timestamps multiplier, useful for spedup/slowed/nightcore
     final llength = lrc.length ?? '';
     double cal = 0;
-    if (llength != '') {
-      final parts = llength.split(RegExp(r'[:.]'));
-      try {
-        String? hundreds;
-        if (parts.length >= 3) {
-          // -- converting whatever here to 6-digit microseconds
-          hundreds = parts[2];
-          var zerosToAdd = 6 - hundreds.length;
-          while (zerosToAdd > 0) {
-            hundreds = '${hundreds!}0';
-            zerosToAdd--;
+    if (settings.stretchLyricsDuration.value) {
+      if (llength != '') {
+        final parts = llength.split(RegExp(r'[:.]'));
+        try {
+          String? hundreds;
+          if (parts.length >= 3) {
+            // -- converting whatever here to 6-digit microseconds
+            hundreds = parts[2];
+            var zerosToAdd = 6 - hundreds.length;
+            while (zerosToAdd > 0) {
+              hundreds = '${hundreds!}0';
+              zerosToAdd--;
+            }
           }
-        }
 
-        final lyricsDuration = Duration(
-          minutes: int.parse(parts[0]),
-          seconds: int.parse(parts[1]),
-          microseconds: hundreds == null ? 0 : int.tryParse(hundreds) ?? 0,
-        );
-        final totalDurMS = _itemDurationUpdater();
-        final totalDurMicro = totalDurMS * 1000;
-        cal = totalDurMicro / lyricsDuration.inMicroseconds;
-      } catch (_) {}
+          final lyricsDuration = Duration(
+            minutes: int.parse(parts[0]),
+            seconds: int.parse(parts[1]),
+            microseconds: hundreds == null ? 0 : int.tryParse(hundreds) ?? 0,
+          );
+          final totalDurMS = _itemDurationUpdater();
+          final totalDurMicro = totalDurMS * 1000;
+          cal = totalDurMicro / lyricsDuration.inMicroseconds;
+        } catch (_) {}
+      }
     }
 
     highlightTimestampsMap.clear();
