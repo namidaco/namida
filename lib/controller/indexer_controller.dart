@@ -293,6 +293,11 @@ class Indexer<T extends Track> {
     tracksInfoList.refresh();
   }
 
+  void resortAllAfterIgnoreCommonPrefixChange() async {
+    await _afterIndexing();
+    tracksInfoList.refresh();
+  }
+
   Future<void> refreshLibraryAndCheckForDiff({
     Set<String>? currentFiles,
     bool forceReIndex = false,

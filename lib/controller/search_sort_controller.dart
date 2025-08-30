@@ -131,20 +131,29 @@ class SearchSortController {
   }
 
   Comparable Function(Track e) getTracksSortingComparables(SortType type) {
+    final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
+    String Function(Track e) encasuplateSortCanIgnorePrefix(TrackSearchFilter filter, String Function(Track e) comparable) {
+      if (ignoreCommonPrefix.contains(filter)) {
+        return (e) => comparable(e).ignoreCommonPrefixes();
+      } else {
+        return comparable;
+      }
+    }
+
     return switch (type) {
-      SortType.title => (e) => e.title.toLowerCase(),
-      SortType.album => (e) => e.album.toLowerCase(),
-      SortType.albumArtist => (e) => e.albumArtist.toLowerCase(),
+      SortType.title => encasuplateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => e.title.toLowerCase()),
+      SortType.album => encasuplateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => e.album.toLowerCase()),
+      SortType.albumArtist => encasuplateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.albumArtist.toLowerCase()),
       SortType.year => (e) => e.yearPreferyyyyMMdd,
-      SortType.artistsList => (e) => e.artistsList.join().toLowerCase(),
-      SortType.genresList => (e) => e.genresList.join().toLowerCase(),
+      SortType.artistsList => encasuplateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.artistsList.join().toLowerCase()),
+      SortType.genresList => encasuplateSortCanIgnorePrefix(TrackSearchFilter.genre, (e) => e.genresList.join().toLowerCase()),
       SortType.dateAdded => (e) => e.dateAdded,
       SortType.dateModified => (e) => e.dateModified,
       SortType.bitrate => (e) => e.bitrate,
-      SortType.composer => (e) => e.composer.toLowerCase(),
+      SortType.composer => encasuplateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.composer.toLowerCase()),
       SortType.trackNo => (e) => e.trackNo,
       SortType.discNo => (e) => e.discNo,
-      SortType.filename => (e) => e.filename.toLowerCase(),
+      SortType.filename => encasuplateSortCanIgnorePrefix(TrackSearchFilter.folder, (e) => e.filename.toLowerCase()),
       SortType.duration => (e) => e.durationMS,
       SortType.sampleRate => (e) => e.sampleRate,
       SortType.size => (e) => e.size,
@@ -411,6 +420,7 @@ class SearchSortController {
 
     final stitle = tsfMap[TrackSearchFilter.title] ?? true;
     final sfilename = tsfMap[TrackSearchFilter.filename] ?? true;
+    final sfolder = tsfMap[TrackSearchFilter.folder] ?? false;
     final salbum = tsfMap[TrackSearchFilter.album] ?? true;
     final salbumartist = tsfMap[TrackSearchFilter.albumartist] ?? false;
     final sartist = tsfMap[TrackSearchFilter.artist] ?? true;
@@ -450,6 +460,7 @@ class SearchSortController {
       String path,
       List<String>? splitTitle,
       List<String>? splitFilename,
+      List<String>? splitFolder,
       List<String>? splitAlbum,
       List<String>? splitAlbumArtist,
       List<String>? splitArtist,
@@ -467,6 +478,7 @@ class SearchSortController {
           path: path,
           splitTitle: splitThis(trMap['title'], stitle),
           splitFilename: splitThis(path.getFilename, sfilename),
+          splitFolder: splitThis(Track.explicit(path).folderName, sfolder),
           splitAlbum: splitThis(trMap['album'], salbum),
           splitAlbumArtist: splitThis(trMap['albumArtist'], salbumartist),
           splitArtist: sartist
@@ -534,6 +546,7 @@ class SearchSortController {
       final result = <Track>[];
       tracksExtended.loop((trExt) {
         if ((stitle && isMatch(trExt.splitTitle)) ||
+            (sfolder && isMatch(trExt.splitFolder)) ||
             (sfilename && isMatch(trExt.splitFilename)) ||
             (salbum && isMatch(trExt.splitAlbum)) ||
             (salbumartist && isMatch(trExt.splitAlbumArtist)) ||
@@ -804,17 +817,35 @@ class SearchSortController {
     required List<Track> list,
     required void Function(SortType? sortType, bool isReverse) onDone,
   }) {
+    final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
+
     void sortThis(Comparable Function(Track e) comparable) => reverse ? list.sortByReverse(comparable) : list.sortBy(comparable);
     void sortThisAlts(List<Comparable<dynamic> Function(Track tr)> alternatives) => reverse ? list.sortByReverseAlts(alternatives) : list.sortByAlts(alternatives);
 
+    String Function(Track e) encasuplateSortCanIgnorePrefix(TrackSearchFilter filter, String Function(Track e) comparable) {
+      if (ignoreCommonPrefix.contains(filter)) {
+        return (e) => comparable(e).ignoreCommonPrefixes();
+      } else {
+        return comparable;
+      }
+    }
+
+    void sortThisCanIgnorePrefix(TrackSearchFilter filter, String Function(Track e) comparable) {
+      if (ignoreCommonPrefix.contains(filter)) {
+        sortThis((e) => comparable(e).ignoreCommonPrefixes());
+      } else {
+        sortThis(comparable);
+      }
+    }
+
     switch (sortBy) {
       case SortType.title:
-        sortThis((e) => e.title.toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.title, (e) => e.title.toLowerCase());
       case SortType.album:
         final sameAlbumSorters = getMediaTracksSortingComparables(MediaType.album);
         sortThisAlts(
           [
-            (tr) => tr.album.toLowerCase(),
+            encasuplateSortCanIgnorePrefix(TrackSearchFilter.album, (tr) => tr.album.toLowerCase()),
             ...sameAlbumSorters,
           ],
         );
@@ -823,7 +854,7 @@ class SearchSortController {
         final sameAlbumSorters = getMediaTracksSortingComparables(MediaType.album);
         sortThisAlts(
           [
-            (tr) => tr.albumArtist.toLowerCase(),
+            encasuplateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (tr) => tr.albumArtist.toLowerCase()),
             ...sameAlbumSorters,
           ],
         );
@@ -835,7 +866,7 @@ class SearchSortController {
         final sameArtistSorters = getMediaTracksSortingComparables(MediaType.artist);
         sortThisAlts(
           [
-            (tr) => tr.artistsList.join().toLowerCase(),
+            encasuplateSortCanIgnorePrefix(TrackSearchFilter.album, (tr) => tr.artistsList.join().toLowerCase()),
             ...sameArtistSorters,
           ],
         );
@@ -844,7 +875,7 @@ class SearchSortController {
         final sameGenreSorters = getMediaTracksSortingComparables(MediaType.genre);
         sortThisAlts(
           [
-            (tr) => tr.genresList.join().toLowerCase(),
+            encasuplateSortCanIgnorePrefix(TrackSearchFilter.genre, (tr) => tr.genresList.join().toLowerCase()),
             ...sameGenreSorters,
           ],
         );
@@ -919,23 +950,33 @@ class SearchSortController {
   }
 
   void sortAlbumsListRaw(List<MapEntry<String, List<Track>>> albumsList, GroupSortType sortBy, bool reverse) {
+    final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
+
     void sortThis(Comparable Function(MapEntry<String, List<Track>> e) comparable) => reverse ? albumsList.sortByReverse(comparable) : albumsList.sortBy(comparable);
+
+    void sortThisCanIgnorePrefix(TrackSearchFilter filter, String Function(MapEntry<String, List<Track>> e) comparable) {
+      if (ignoreCommonPrefix.contains(filter)) {
+        sortThis((e) => comparable(e).ignoreCommonPrefixes());
+      } else {
+        sortThis(comparable);
+      }
+    }
 
     switch (sortBy) {
       case GroupSortType.album:
-        sortThis((e) => e.key.toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.album, (e) => e.key.toLowerCase());
         break;
       case GroupSortType.albumArtist:
-        sortThis((e) => e.value.albumArtist.toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.value.albumArtist.toLowerCase());
         break;
       case GroupSortType.year:
         sortThis((e) => e.value.yearPreferyyyyMMdd);
         break;
       case GroupSortType.artistsList:
-        sortThis((e) => e.value.first.artistsList.join().toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.value.first.artistsList.join().toLowerCase());
         break;
       case GroupSortType.composer:
-        sortThis((e) => e.value.composer.toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.value.composer.toLowerCase());
         break;
       case GroupSortType.label:
         sortThis((e) => e.value.recordLabel.toLowerCase());
@@ -980,23 +1021,31 @@ class SearchSortController {
     };
     final artistsList = finalMap.value.entries.toList();
 
+    final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
     void sortThis(Comparable Function(MapEntry<String, List<Track>> e) comparable) => reverse! ? artistsList.sortByReverse(comparable) : artistsList.sortBy(comparable);
+    void sortThisCanIgnorePrefix(TrackSearchFilter filter, String Function(MapEntry<String, List<Track>> e) comparable) {
+      if (ignoreCommonPrefix.contains(filter)) {
+        sortThis((e) => comparable(e).ignoreCommonPrefixes());
+      } else {
+        sortThis(comparable);
+      }
+    }
 
     switch (sortBy) {
       case GroupSortType.artistsList:
         artistType == MediaType.artist
-            ? sortThis((e) => e.key.toLowerCase())
-            : sortThis((e) => e.value.firstWhereEff((e) => e.originalArtist != '')?.originalArtist.toLowerCase() ?? '');
+            ? sortThisCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.key.toLowerCase())
+            : sortThisCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.value.firstWhereEff((e) => e.originalArtist != '')?.originalArtist.toLowerCase() ?? '');
         break;
       case GroupSortType.albumArtist:
         artistType == MediaType.albumArtist
-            ? sortThis((e) => e.key.toLowerCase())
-            : sortThis((e) => e.value.firstWhereEff((e) => e.albumArtist != '')?.albumArtist.toLowerCase() ?? '');
+            ? sortThisCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.key.toLowerCase())
+            : sortThisCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.value.firstWhereEff((e) => e.albumArtist != '')?.albumArtist.toLowerCase() ?? '');
         break;
       case GroupSortType.composer:
         artistType == MediaType.composer
-            ? sortThis((e) => e.key.toLowerCase()) //
-            : sortThis((e) => e.value.firstWhereEff((e) => e.composer != '')?.composer.toLowerCase() ?? '');
+            ? sortThisCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.key.toLowerCase()) //
+            : sortThisCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.value.firstWhereEff((e) => e.composer != '')?.composer.toLowerCase() ?? '');
         break;
       case GroupSortType.albumsCount:
         artistType == MediaType.albumArtist
@@ -1006,13 +1055,13 @@ class SearchSortController {
                 : sortThis((e) => e.key.getArtistTracks().toUniqueAlbums().length);
         break;
       case GroupSortType.album:
-        sortThis((e) => e.value.album.toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.album, (e) => e.value.album.toLowerCase());
         break;
       case GroupSortType.year:
         sortThis((e) => e.value.yearPreferyyyyMMdd);
         break;
       case GroupSortType.genresList:
-        sortThis((e) => e.value[0].genresList.join().toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.genre, (e) => e.value[0].genresList.join().toLowerCase());
         break;
       case GroupSortType.dateModified:
         sortThis((e) => e.value[0].dateModified);
@@ -1052,26 +1101,35 @@ class SearchSortController {
 
     final finalMap = Indexer.inst.mainMapGenres;
     final genresList = finalMap.value.entries.toList();
+
+    final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
     void sortThis(Comparable Function(MapEntry<String, List<Track>> e) comparable) => reverse! ? genresList.sortByReverse(comparable) : genresList.sortBy(comparable);
+    void sortThisCanIgnorePrefix(TrackSearchFilter filter, String Function(MapEntry<String, List<Track>> e) comparable) {
+      if (ignoreCommonPrefix.contains(filter)) {
+        sortThis((e) => comparable(e).ignoreCommonPrefixes());
+      } else {
+        sortThis(comparable);
+      }
+    }
 
     switch (sortBy) {
       case GroupSortType.album:
-        sortThis((e) => e.value.album.toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.album, (e) => e.value.album.toLowerCase());
         break;
       case GroupSortType.albumArtist:
-        sortThis((e) => e.value.albumArtist.toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.value.albumArtist.toLowerCase());
         break;
       case GroupSortType.year:
         sortThis((e) => e.value.yearPreferyyyyMMdd);
         break;
       case GroupSortType.artistsList:
-        sortThis((e) => e.value[0].artistsList.join().toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.value[0].artistsList.join().toLowerCase());
         break;
       case GroupSortType.genresList:
-        sortThis((e) => e.key.toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.genre, (e) => e.key.toLowerCase());
         break;
       case GroupSortType.composer:
-        sortThis((e) => e.value.composer.toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.value.composer.toLowerCase());
         break;
       case GroupSortType.dateModified:
         sortThis((e) => e.value[0].dateModified);

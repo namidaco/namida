@@ -1491,6 +1491,7 @@ class _NamidaConverters {
       },
       TrackSearchFilter: {
         TrackSearchFilter.filename: lang.FILE_NAME,
+        TrackSearchFilter.folder: lang.FOLDER,
         TrackSearchFilter.title: lang.TITLE,
         TrackSearchFilter.album: lang.ALBUM,
         TrackSearchFilter.artist: lang.ARTIST,

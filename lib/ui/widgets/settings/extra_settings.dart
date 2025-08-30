@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+// ignore: depend_on_referenced_packages
+import 'package:collection/collection.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/folders_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -20,6 +23,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
@@ -32,6 +36,7 @@ enum _ExtraSettingsKeys {
   defaultLibraryTab,
   libraryTabs,
   filterTracksBy,
+  ignoreCommonPrefixesFor,
   searchCleanup,
   prioritizeEmbeddedLyrics,
   lyricsSource,
@@ -63,6 +68,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         _ExtraSettingsKeys.fabType: [lang.FLOATING_ACTION_BUTTON],
         _ExtraSettingsKeys.libraryTabs: [lang.LIBRARY_TABS],
         _ExtraSettingsKeys.filterTracksBy: [lang.FILTER_TRACKS_BY],
+        _ExtraSettingsKeys.ignoreCommonPrefixesFor: [lang.IGNORE_COMMON_PREFIXES_WHILE_SORTING],
         _ExtraSettingsKeys.searchCleanup: [lang.ENABLE_SEARCH_CLEANUP, lang.ENABLE_SEARCH_CLEANUP_SUBTITLE],
         _ExtraSettingsKeys.prioritizeEmbeddedLyrics: [lang.PRIORITIZE_EMBEDDED_LYRICS],
         _ExtraSettingsKeys.lyricsSource: [lang.LYRICS_SOURCE],
@@ -378,6 +384,179 @@ class ExtrasSettings extends SettingSubpageProvider {
                     ),
                   ),
                 ),
+              ),
+            ),
+          ),
+
+          getItemWrapper(
+            key: _ExtraSettingsKeys.ignoreCommonPrefixesFor,
+            child: Obx(
+              (context) => CustomListTile(
+                bgColor: getBgColor(_ExtraSettingsKeys.ignoreCommonPrefixesFor),
+                icon: Broken.message_remove,
+                title: lang.IGNORE_COMMON_PREFIXES_WHILE_SORTING,
+                subtitle: settings.commonPrefixes.valueR.join(','),
+                trailingText: "${settings.ignoreCommonPrefixForTypes.length}",
+                onTap: () {
+                  final original = List<TrackSearchFilter>.from(settings.ignoreCommonPrefixForTypes.value);
+
+                  final list = List<TrackSearchFilter>.from(TrackSearchFilter.values);
+                  list.remove(TrackSearchFilter.comment);
+                  list.remove(TrackSearchFilter.year);
+
+                  void resortIfNecessary() {
+                    final didChange = !DeepCollectionEquality.unordered().equals(original, settings.ignoreCommonPrefixForTypes.value);
+                    if (didChange) {
+                      Indexer.inst.resortAllAfterIgnoreCommonPrefixChange();
+                    }
+                  }
+
+                  NamidaNavigator.inst.navigateDialog(
+                    onDismissing: resortIfNecessary,
+                    dialog: CustomBlurryDialog(
+                      title: lang.IGNORE_COMMON_PREFIXES_WHILE_SORTING,
+                      actions: [
+                        IconButton(
+                          icon: const Icon(Broken.refresh),
+                          tooltip: lang.RESTORE_DEFAULTS,
+                          onPressed: () {
+                            settings.removeFromList(ignoreCommonPrefixForTypesAll: TrackSearchFilter.values);
+
+                            settings.save(ignoreCommonPrefixForTypes: []);
+                          },
+                        ),
+                        DoneButton(
+                          additional: resortIfNecessary,
+                        ),
+                      ],
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ObxO(
+                              rx: settings.commonPrefixes,
+                              builder: (context, commonPrefixes) => Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  ...commonPrefixes.map(
+                                    (e) => Container(
+                                      margin: const EdgeInsets.all(2.0),
+                                      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
+                                      decoration: BoxDecoration(
+                                        color: context.theme.cardTheme.color,
+                                        borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+                                      ),
+                                      child: InkWell(
+                                        onTap: () {
+                                          if (settings.commonPrefixes.length <= 1) return showMinimumItemsSnack(1);
+
+                                          settings.commonPrefixes.remove(e);
+                                          settings.save(commonPrefixes: settings.commonPrefixes.value);
+                                        },
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(e),
+                                            const SizedBox(width: 6.0),
+                                            const Icon(
+                                              Broken.close_circle,
+                                              size: 18.0,
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  NamidaContainerDivider(
+                                    height: 24.0,
+                                    width: 1.5,
+                                    margin: EdgeInsets.symmetric(horizontal: 2.0),
+                                  ),
+                                  Container(
+                                    margin: const EdgeInsets.all(2.0),
+                                    padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
+                                    decoration: BoxDecoration(
+                                      color: context.theme.cardTheme.color?.withValues(alpha: 1.0),
+                                      borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+                                    ),
+                                    child: InkWell(
+                                      onTap: () {
+                                        final controller = TextEditingController();
+                                        void onAdd(String value) {
+                                          settings.save(commonPrefixes: [value.toLowerCase()]);
+                                          NamidaNavigator.inst.closeDialog();
+                                        }
+
+                                        NamidaNavigator.inst.navigateDialog(
+                                          onDisposing: () {
+                                            controller.dispose();
+                                          },
+                                          dialog: CustomBlurryDialog(
+                                            title: lang.ADD,
+                                            actions: [
+                                              IconButton(
+                                                tooltip: lang.RESTORE_DEFAULTS,
+                                                onPressed: () {
+                                                  settings.commonPrefixes.clear();
+                                                  settings.save(commonPrefixes: ['the ', 'a ', 'an ']);
+                                                  NamidaNavigator.inst.closeDialog();
+                                                },
+                                                icon: const Icon(Broken.refresh),
+                                              ),
+                                              const CancelButton(),
+                                              NamidaButton(
+                                                text: lang.SAVE,
+                                                onPressed: () => onAdd(controller.text),
+                                              ),
+                                            ],
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(top: 14.0),
+                                              child: CustomTagTextField(
+                                                controller: controller,
+                                                onFieldSubmitted: onAdd,
+                                                hintText: '',
+                                                labelText: lang.VALUE,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(lang.ADD),
+                                          const SizedBox(width: 6.0),
+                                          const Icon(
+                                            Broken.add_circle,
+                                            size: 18.0,
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 4.0),
+                            NamidaContainerDivider(),
+                            ...list.map(
+                              (e) => Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Obx(
+                                  (context) => ListTileWithCheckMark(
+                                    title: e.toText(),
+                                    onTap: () => _ignoreCommonPrefixForTypeFilterOnTap(e),
+                                    active: settings.ignoreCommonPrefixForTypes.contains(e),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -838,7 +1017,7 @@ class ExtrasSettings extends SettingSubpageProvider {
   void _trackFilterOnTap(TrackSearchFilter type) {
     final canRemove = settings.trackSearchFilter.length > 1;
 
-    if (settings.trackSearchFilter.contains(type)) {
+    if (settings.trackSearchFilter.value.contains(type)) {
       if (canRemove) {
         settings.removeFromList(trackSearchFilter1: type);
       } else {
@@ -846,6 +1025,14 @@ class ExtrasSettings extends SettingSubpageProvider {
       }
     } else {
       settings.save(trackSearchFilter: [type]);
+    }
+  }
+
+  void _ignoreCommonPrefixForTypeFilterOnTap(TrackSearchFilter type) {
+    if (settings.ignoreCommonPrefixForTypes.value.contains(type)) {
+      settings.removeFromList(ignoreCommonPrefixForTypes1: type);
+    } else {
+      settings.save(ignoreCommonPrefixForTypes: [type]);
     }
   }
 }

@@ -106,6 +106,7 @@ enum TrackTileItem {
 
 enum TrackSearchFilter {
   filename,
+  folder,
   title,
   album,
   artist,

@@ -926,6 +926,24 @@ extension StringPathUtils on String {
     if (isEmpty) return null;
     return this;
   }
+
+  String ignoreCommonPrefixes() {
+    var text = this;
+    while (true) {
+      final before = text;
+
+      for (final prefix in settings.commonPrefixes.value) {
+        if (text.startsWith(prefix)) {
+          text = text.substring(prefix.length);
+        }
+      }
+
+      if (text == before) {
+        break;
+      }
+    }
+    return text;
+  }
 }
 
 extension ColorExtensions on Color {

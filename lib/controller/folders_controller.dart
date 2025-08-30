@@ -169,6 +169,7 @@ class FoldersController<T extends Folder> {
 
   /// Generates missing folders in between
   void onMapChanged<E extends Track>(Map<T, List<E>> map) {
+    _pathsTreeMapRoot = _FolderNode<T>(null, null); // -- vip to properly refill nodes in new sort order
     final res = _buildAdvancedPathTree(_pathsTreeMapRoot, map.keys);
     _pathsTreeMapRoot = res.$1;
     _pathsTreeMapCurrent ??= _pathsTreeMapRoot;
@@ -176,14 +177,19 @@ class FoldersController<T extends Folder> {
       map[folder] ??= <E>[]; // adding missing/new folders
     }
     _sortMap(map, _pathsTreeMapRoot);
+    stepIn(_pathsTreeMapCurrent?.parent);
   }
 
   void _sortMap(Map<T, List<dynamic>> map, _FolderNode<T> rootNode) {
-    final parsedMap = _buildParsedMap(map.keys.map((e) => e.folderName.toLowerCase()));
+    final folderToNameCompare = settings.ignoreCommonPrefixForTypes.value.contains(TrackSearchFilter.folder)
+        ? (T folder) => folder.folderName.toLowerCase().ignoreCommonPrefixes()
+        : (T folder) => folder.folderName.toLowerCase();
+
+    final parsedMap = _buildParsedMap(map.keys.map((e) => folderToNameCompare(e)));
 
     int compare(MapEntry<T, dynamic> entryA, MapEntry<T, dynamic> entryB) {
-      final a = entryA.key.folderName.toLowerCase();
-      final b = entryB.key.folderName.toLowerCase();
+      final a = folderToNameCompare(entryA.key);
+      final b = folderToNameCompare(entryB.key);
       final parsedA = parsedMap[a];
       final parsedB = parsedMap[b];
       if (parsedA != null && parsedB != null) {

@@ -313,6 +313,9 @@ class _SettingsController with SettingsFileWriter {
     LibraryImageSource.local,
   ].obs;
 
+  final ignoreCommonPrefixForTypes = <TrackSearchFilter>[].obs;
+  final commonPrefixes = <String>['the ', 'a ', 'an '].obs;
+
   double fontScaleLRC = 1.0;
   double fontScaleLRCFull = 1.0;
 
@@ -497,6 +500,14 @@ class _SettingsController with SettingsFileWriter {
           trackSearchFilter.value = trackSearchFilterInStorage.map((e) => TrackSearchFilter.values.getEnum(e)).toListy();
         }
       } catch (_) {}
+
+      try {
+        final ignoreCommonPrefixForTypesInStorage = json['ignoreCommonPrefixForTypes'];
+        if (ignoreCommonPrefixForTypesInStorage is List) {
+          ignoreCommonPrefixForTypes.value = ignoreCommonPrefixForTypesInStorage.map((e) => TrackSearchFilter.values.getEnum(e)).toListy();
+        }
+      } catch (_) {}
+      if (json['commonPrefixes'] is List) commonPrefixes.value = (json['commonPrefixes'] as List).cast<String>();
 
       if (json['playlistSearchFilter'] is List) playlistSearchFilter.value = (json['playlistSearchFilter'] as List).cast<String>();
       if (json['directoriesToScan'] is List) directoriesToScan.value = (json['directoriesToScan'] as List).cast<String>();
@@ -719,7 +730,9 @@ class _SettingsController with SettingsFileWriter {
         'ytPlaylistSortReversed': ytPlaylistSortReversed.value,
         'indexMinDurationInSec': indexMinDurationInSec.value,
         'indexMinFileSizeInB': indexMinFileSizeInB.value,
-        'trackSearchFilter': trackSearchFilter.mapped((e) => e.name),
+        'trackSearchFilter': trackSearchFilter.value.mapped((e) => e.name),
+        'ignoreCommonPrefixForTypes': ignoreCommonPrefixForTypes.value.mapped((e) => e.name),
+        'commonPrefixes': commonPrefixes.value,
         'playlistSearchFilter': playlistSearchFilter.value,
         'directoriesToScan': directoriesToScan.value,
         'directoriesToExclude': directoriesToExclude.value,
@@ -891,6 +904,8 @@ class _SettingsController with SettingsFileWriter {
     int? indexMinDurationInSec,
     int? indexMinFileSizeInB,
     List<TrackSearchFilter>? trackSearchFilter,
+    List<TrackSearchFilter>? ignoreCommonPrefixForTypes,
+    List<String>? commonPrefixes,
     List<String>? playlistSearchFilter,
     List<String>? directoriesToScan,
     List<String>? directoriesToExclude,
@@ -1075,6 +1090,20 @@ class _SettingsController with SettingsFileWriter {
         }
       });
     }
+    if (ignoreCommonPrefixForTypes != null) {
+      ignoreCommonPrefixForTypes.loop((f) {
+        if (!this.ignoreCommonPrefixForTypes.contains(f)) {
+          this.ignoreCommonPrefixForTypes.add(f);
+        }
+      });
+    }
+    if (commonPrefixes != null) {
+      commonPrefixes.loop((f) {
+        if (!this.commonPrefixes.contains(f)) {
+          this.commonPrefixes.add(f);
+        }
+      });
+    }
     if (playlistSearchFilter != null) {
       playlistSearchFilter.loop((f) {
         if (!this.playlistSearchFilter.contains(f)) {
@@ -1231,6 +1260,8 @@ class _SettingsController with SettingsFileWriter {
     String? trackGenresSeparatorsBlacklist1,
     TrackSearchFilter? trackSearchFilter1,
     List<TrackSearchFilter>? trackSearchFilterAll,
+    TrackSearchFilter? ignoreCommonPrefixForTypes1,
+    List<TrackSearchFilter>? ignoreCommonPrefixForTypesAll,
     String? playlistSearchFilter1,
     List<String>? playlistSearchFilterAll,
     String? directoriesToScan1,
@@ -1259,6 +1290,8 @@ class _SettingsController with SettingsFileWriter {
     if (trackGenresSeparatorsBlacklist1 != null) trackGenresSeparatorsBlacklist.remove(trackGenresSeparatorsBlacklist1);
     if (trackSearchFilter1 != null) trackSearchFilter.remove(trackSearchFilter1);
     if (trackSearchFilterAll != null) trackSearchFilterAll.loop((f) => trackSearchFilter.remove(f));
+    if (ignoreCommonPrefixForTypes1 != null) ignoreCommonPrefixForTypes.remove(ignoreCommonPrefixForTypes1);
+    if (ignoreCommonPrefixForTypesAll != null) ignoreCommonPrefixForTypesAll.loop((f) => ignoreCommonPrefixForTypes.remove(f));
     if (playlistSearchFilter1 != null) playlistSearchFilter.remove(playlistSearchFilter1);
     if (playlistSearchFilterAll != null) {
       playlistSearchFilterAll.loop((f) => playlistSearchFilter.remove(f));
