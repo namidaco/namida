@@ -10,6 +10,7 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -23,7 +24,7 @@ import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 
-enum _SortType {
+enum FileBrowserSortType {
   name,
   dateModified,
   type, // extension
@@ -236,19 +237,17 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   var _currentFiles = <File>[];
   var _currentFolders = <Directory>[];
   bool _isFetching = true;
-  final _sortType = _SortType.name.obs;
-  final _sortReversed = false.obs;
 
   final _sortTypeToName = {
-    _SortType.name: lang.NAME,
-    _SortType.dateModified: lang.DATE,
-    _SortType.type: lang.EXTENSION,
-    _SortType.size: lang.SIZE,
+    FileBrowserSortType.name: lang.NAME,
+    FileBrowserSortType.dateModified: lang.DATE,
+    FileBrowserSortType.type: lang.EXTENSION,
+    FileBrowserSortType.size: lang.SIZE,
   };
 
-  void _sortItems(_SortType? type, bool? reversed, {bool refreshState = true}) {
-    type ??= _sortType.value;
-    reversed ??= _sortReversed.value;
+  void _sortItems(FileBrowserSortType? type, bool? reversed, {bool refreshState = true}) {
+    type ??= settings.fileBrowserSort.value;
+    reversed ??= settings.fileBrowserSortReversed.value;
 
     void sorterFnFiles(Comparable<dynamic> Function(File item) fn) {
       reversed! ? _currentFiles.sortByReverse(fn) : _currentFiles.sortBy(fn);
@@ -259,21 +258,26 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     }
 
     switch (type) {
-      case _SortType.name:
+      case FileBrowserSortType.name:
         sorterFnFiles((item) => _pathToName(item.path).toLowerCase());
         sorterFnFolder((item) => _pathToName(item.path).toLowerCase());
-      case _SortType.dateModified:
+      case FileBrowserSortType.dateModified:
         sorterFnFiles((item) => _currentInfoFiles[item.path]?.modified ?? DateTime(0));
         sorterFnFolder((item) => _currentInfoDirs[item.path]?.modified ?? DateTime(0));
-      case _SortType.type:
+      case FileBrowserSortType.type:
         sorterFnFiles((item) => _pathToExtension(item.path).toLowerCase());
         sorterFnFolder((item) => _pathToExtension(item.path).toLowerCase());
-      case _SortType.size:
+      case FileBrowserSortType.size:
         sorterFnFiles((item) => _currentInfoFiles[item.path]?.size ?? 0);
         sorterFnFolder((item) => _currentInfoDirs[item.path]?.size ?? 0);
     }
-    _sortType.value = type;
-    _sortReversed.value = reversed;
+
+    if (type != settings.fileBrowserSort.value || reversed != settings.fileBrowserSortReversed.value) {
+      settings.save(
+        fileBrowserSort: type,
+        fileBrowserSortReversed: reversed,
+      );
+    }
 
     if (refreshState) setState(() {});
   }
@@ -370,7 +374,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
         setState(() {
           _currentInfoFiles = res.$1;
           _currentInfoDirs = res.$2;
-          if (_sortType.value != _SortType.name) _sortItems(null, null, refreshState: false);
+          if (settings.fileBrowserSort.value != FileBrowserSortType.name) _sortItems(null, null, refreshState: false);
         });
       }
       _stopInfoIsolates();
@@ -692,8 +696,6 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     _scrollController.dispose();
     _pathSplitsScrollController.dispose();
     _showHiddenFiles.close();
-    _sortType.close();
-    _sortReversed.close();
     super.dispose();
   }
 
@@ -1152,11 +1154,11 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                     const Spacer(),
                     Obx(
                       (context) => SortByMenu(
-                        title: _sortTypeToName[_sortType.valueR] ?? '',
+                        title: _sortTypeToName[settings.fileBrowserSort.valueR] ?? '',
                         popupMenuChild: () {
-                          Widget getTile(IconData icon, String title, _SortType sort) {
+                          Widget getTile(IconData icon, String title, FileBrowserSortType sort) {
                             return ObxO(
-                              rx: _sortType,
+                              rx: settings.fileBrowserSort,
                               builder: (context, currentSort) => SmallListTile(
                                 visualDensity: const VisualDensity(horizontal: -4, vertical: -3.5),
                                 trailing: Padding(
@@ -1173,19 +1175,19 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                           return Column(
                             children: [
                               ListTileWithCheckMark(
-                                activeRx: _sortReversed,
-                                onTap: () => _sortItems(null, !_sortReversed.value),
+                                activeRx: settings.fileBrowserSortReversed,
+                                onTap: () => _sortItems(null, !settings.fileBrowserSortReversed.value),
                               ),
                               const SizedBox(height: 8.0),
-                              getTile(Broken.text, lang.FILE_NAME, _SortType.name),
-                              getTile(Broken.calendar, lang.DATE, _SortType.dateModified),
-                              getTile(Broken.document_code, lang.EXTENSION, _SortType.type),
-                              getTile(Broken.math, lang.SIZE, _SortType.size),
+                              getTile(Broken.text, lang.FILE_NAME, FileBrowserSortType.name),
+                              getTile(Broken.calendar, lang.DATE, FileBrowserSortType.dateModified),
+                              getTile(Broken.document_code, lang.EXTENSION, FileBrowserSortType.type),
+                              getTile(Broken.math, lang.SIZE, FileBrowserSortType.size),
                             ],
                           );
                         },
-                        isCurrentlyReversed: _sortReversed.valueR,
-                        onReverseIconTap: () => _sortItems(null, !_sortReversed.value),
+                        isCurrentlyReversed: settings.fileBrowserSortReversed.valueR,
+                        onReverseIconTap: () => _sortItems(null, !settings.fileBrowserSortReversed.value),
                       ),
                     ),
                     const SizedBox(width: 8.0),

@@ -10,6 +10,7 @@ import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue_insertion.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -91,6 +92,8 @@ class _SettingsController with SettingsFileWriter {
   final RxList<String> trackGenresSeparators = <String>['&', ',', ';', '//', ' x '].obs;
   final RxList<String> trackArtistsSeparatorsBlacklist = <String>[].obs;
   final RxList<String> trackGenresSeparatorsBlacklist = <String>[].obs;
+  final fileBrowserSort = FileBrowserSortType.name.obs;
+  final fileBrowserSortReversed = false.obs;
   final tracksSortSearch = SortType.title.obs;
   final tracksSortSearchReversed = false.obs;
   final tracksSortSearchIsAuto = true.obs;
@@ -469,6 +472,8 @@ class _SettingsController with SettingsFileWriter {
       if (json['trackGenresSeparators'] is List) trackGenresSeparators.value = (json['trackGenresSeparators'] as List).cast<String>();
       if (json['trackArtistsSeparatorsBlacklist'] is List) trackArtistsSeparatorsBlacklist.value = (json['trackArtistsSeparatorsBlacklist'] as List).cast<String>();
       if (json['trackGenresSeparatorsBlacklist'] is List) trackGenresSeparatorsBlacklist.value = (json['trackGenresSeparatorsBlacklist'] as List).cast<String>();
+      fileBrowserSort.value = FileBrowserSortType.values.getEnum(json['fileBrowserSort']) ?? fileBrowserSort.value;
+      fileBrowserSortReversed.value = json['fileBrowserSortReversed'] ?? fileBrowserSortReversed.value;
       tracksSortSearch.value = SortType.values.getEnum(json['tracksSortSearch']) ?? tracksSortSearch.value;
       tracksSortSearchReversed.value = json['tracksSortSearchReversed'] ?? tracksSortSearchReversed.value;
       tracksSortSearchIsAuto.value = json['tracksSortSearchIsAuto'] ?? tracksSortSearchIsAuto.value;
@@ -697,6 +702,8 @@ class _SettingsController with SettingsFileWriter {
         'trackGenresSeparators': trackGenresSeparators.value,
         'trackArtistsSeparatorsBlacklist': trackArtistsSeparatorsBlacklist.value,
         'trackGenresSeparatorsBlacklist': trackGenresSeparatorsBlacklist.value,
+        'fileBrowserSort': fileBrowserSort.value.name,
+        'fileBrowserSortReversed': fileBrowserSortReversed.value,
         'tracksSortSearch': tracksSortSearch.value.name,
         'tracksSortSearchReversed': tracksSortSearchReversed.value,
         'tracksSortSearchIsAuto': tracksSortSearchIsAuto.value,
@@ -861,6 +868,8 @@ class _SettingsController with SettingsFileWriter {
     List<String>? trackGenresSeparators,
     List<String>? trackArtistsSeparatorsBlacklist,
     List<String>? trackGenresSeparatorsBlacklist,
+    FileBrowserSortType? fileBrowserSort,
+    bool? fileBrowserSortReversed,
     SortType? tracksSortSearch,
     bool? tracksSortSearchReversed,
     bool? tracksSortSearchIsAuto,
@@ -1037,6 +1046,8 @@ class _SettingsController with SettingsFileWriter {
     if (trackGenresSeparatorsBlacklist != null && !this.trackGenresSeparatorsBlacklist.contains(trackGenresSeparatorsBlacklist[0])) {
       this.trackGenresSeparatorsBlacklist.addAll(trackGenresSeparatorsBlacklist);
     }
+    if (fileBrowserSort != null) this.fileBrowserSort.value = fileBrowserSort;
+    if (fileBrowserSortReversed != null) this.fileBrowserSortReversed.value = fileBrowserSortReversed;
     if (tracksSortSearch != null) this.tracksSortSearch.value = tracksSortSearch;
     if (tracksSortSearchReversed != null) this.tracksSortSearchReversed.value = tracksSortSearchReversed;
     if (tracksSortSearchIsAuto != null) this.tracksSortSearchIsAuto.value = tracksSortSearchIsAuto;
