@@ -69,12 +69,13 @@ class NamidaTaggerController {
     required File artworkFile,
   }) async {
     final filename = TagsExtractor.defaultGroupArtworksByAlbum
-        ? TagsExtractor.getArtworkIdentifier(
-            albumName: trackExtended.album,
-            albumArtist: trackExtended.albumArtist,
-            year: trackExtended.year.toString(),
-            identifiers: TagsExtractor.getAlbumIdentifiersSet(),
-          )
+        ? trackExtended.albumIdentifierWrapper?.resolved() ??
+            TagsExtractor.getArtworkIdentifier(
+              albumName: trackExtended.album,
+              albumArtist: trackExtended.albumArtist,
+              year: trackExtended.year.toString(),
+              identifiers: TagsExtractor.getAlbumIdentifiersSet(),
+            )
         : trackPath.getFilename;
     try {
       return await artworkFile.copy("${AppDirs.ARTWORKS}$filename.png");

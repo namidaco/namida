@@ -143,7 +143,8 @@ class Indexer<T extends Track> {
       if (TagsExtractor.defaultGroupArtworksByAlbum) {
         final identifiersSet = TagsExtractor.getAlbumIdentifiersSet();
         final trExt = Track.decide(trackPath, isVideo).toTrackExtOrNull();
-        filename = TagsExtractor.getArtworkIdentifier(albumName: trExt?.album, albumArtist: trExt?.albumArtist, year: trExt?.year.toString(), identifiers: identifiersSet);
+        filename = trExt?.albumIdentifierWrapper?.resolved() ??
+            TagsExtractor.getArtworkIdentifier(albumName: trExt?.album, albumArtist: trExt?.albumArtist, year: trExt?.year.toString(), identifiers: identifiersSet);
       } else {
         filename = trackPath.getFilename;
       }
@@ -1568,7 +1569,7 @@ class Indexer<T extends Track> {
   static void clearMemoryImageCache() {
     imageCache.clear();
     imageCache.clearLiveImages();
-    AudioService.evictArtworkCache();
+    if (Platform.isAndroid) AudioService.evictArtworkCache();
   }
 }
 

@@ -97,7 +97,7 @@ abstract class TagsExtractor {
     if (albumName != null && identifiers.contains(AlbumIdentifier.albumName)) buffer.write(albumName);
     if (albumArtist != null && identifiers.contains(AlbumIdentifier.albumArtist)) buffer.write(albumArtist);
     if (year != null && identifiers.contains(AlbumIdentifier.year)) buffer.write(year);
-    return buffer.toString();
+    return DownloadTaskFilename.cleanupFilename(buffer.toString());
   }
 
   static String getArtworkIdentifierFromInfo(FAudioModel? data, Set<AlbumIdentifier> identifiers) {

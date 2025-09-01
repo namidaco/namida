@@ -344,7 +344,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                         if (artworkIdentifiers[ArtworkIdentifier.year] == true) {
                           if (year != null) parts += year
                         }
-                        filename = parts.replace('/', '_')
+                        filename = cleanupFilename(parts)
                       }
 
                       val artworkSavePath = "$artworkDirectory${filename}.png"
@@ -522,6 +522,12 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
     }
     eventChannels.clear()
   }
+
+  private val cleanupFilenameRegex = Regex("""[*#\$|/\\!^:"\?%]""", RegexOption.IGNORE_CASE)
+  private fun cleanupFilename(filename: String): String {
+    return filename.replace(cleanupFilenameRegex, "_")
+  }
+
 }
 
 enum class ArtworkIdentifier {
