@@ -1677,6 +1677,7 @@ class _ArtworkManager extends StatelessWidget {
                                           size: 48.0,
                                         )
                                       : GridView.builder(
+                                          padding: EdgeInsets.zero,
                                           shrinkWrap: true,
                                           cacheExtent: context.height * 3,
                                           itemCount: urls.length,

@@ -83,6 +83,10 @@ class _SettingsController with SettingsFileWriter {
     LibraryTab.genres: null,
     LibraryTab.playlists: CountPerRow(1),
   }.obs;
+  final activeAlbumTypes = <AlbumType, bool>{
+    AlbumType.single: true,
+    AlbumType.normal: true,
+  }.obs;
   final enableBlurEffect = false.obs;
   final enableGlowEffect = false.obs;
   final enableGlowBehindVideo = false.obs;
@@ -465,6 +469,12 @@ class _SettingsController with SettingsFileWriter {
           for (final e in mediaGridCountsInStorage.entries) LibraryTab.values.getEnum(e.key) ?? LibraryTab.tracks: CountPerRow.fromJsonValue(e.value),
         };
       }
+      final activeAlbumTypesInStorage = json["activeAlbumTypes"];
+      if (activeAlbumTypesInStorage is Map && activeAlbumTypesInStorage.isNotEmpty) {
+        activeAlbumTypes.value = {
+          for (final e in activeAlbumTypesInStorage.entries) AlbumType.values.getEnum(e.key) ?? AlbumType.normal: e.value ?? true,
+        };
+      }
       enableBlurEffect.value = json['enableBlurEffect'] ?? enableBlurEffect.value;
       enableGlowEffect.value = json['enableGlowEffect'] ?? enableGlowEffect.value;
       enableGlowBehindVideo.value = json['enableGlowBehindVideo'] ?? enableGlowBehindVideo.value;
@@ -704,6 +714,7 @@ class _SettingsController with SettingsFileWriter {
         'useAlbumStaggeredGridView': useAlbumStaggeredGridView.value,
         'useSettingCollapsedTiles': useSettingCollapsedTiles.value,
         'mediaGridCounts': mediaGridCounts.value.map((key, value) => MapEntry(key.name, value?.rawValue)),
+        'activeAlbumTypes': activeAlbumTypes.value.map((key, value) => MapEntry(key.name, value)),
         'enableBlurEffect': enableBlurEffect.value,
         'enableGlowEffect': enableGlowEffect.value,
         'enableGlowBehindVideo': enableGlowBehindVideo.value,
@@ -1349,6 +1360,11 @@ class _SettingsController with SettingsFileWriter {
 
   void updateMediaGridCounts(LibraryTab tab, CountPerRow? countPerRow) {
     mediaGridCounts[tab] = countPerRow;
+    _writeToStorage();
+  }
+
+  void updateActiveAlbumTypes(AlbumType type, bool active) {
+    activeAlbumTypes[type] = active;
     _writeToStorage();
   }
 

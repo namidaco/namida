@@ -12,6 +12,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -46,6 +47,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
   Widget build(BuildContext context) {
     final scrollController = LibraryTab.albums.scrollController;
     final countPerRowResolved = countPerRow.resolve(context);
+    final artistTypeColor = context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.8);
 
     return BackgroundWrapper(
       child: NamidaScrollbar(
@@ -70,7 +72,29 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                           : null,
                       isBarVisible: LibraryTab.albums.isBarVisible.valueR,
                       showSearchBox: LibraryTab.albums.isSearchBoxVisible.valueR,
-                      leftText: finalAlbums.length.displayAlbumKeyword,
+                      leftText: '',
+                      leftWidgets: [
+                        NamidaPopupWrapper(
+                          children: _getSinglesAndAlbumsToggles,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Broken.arrange_circle,
+                                size: 14.0,
+                                color: artistTypeColor,
+                              ),
+                              const SizedBox(width: 4.0),
+                              Text(
+                                finalAlbums.length.displayAlbumKeyword,
+                                style: context.textTheme.displayMedium?.copyWith(
+                                  color: artistTypeColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.albums),
                       onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.albums),
                       sortByMenuWidget: SortByMenu(
@@ -188,5 +212,36 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
         ),
       ),
     );
+  }
+
+  List<MapEntry<VoidCallback?, Widget>> _getSinglesAndAlbumsToggles() {
+    MapEntry<VoidCallback?, Widget> buildTile(AlbumType type, IconData icon, String title) {
+      void onTap() {
+        final wasActive = settings.activeAlbumTypes.value[type] ?? true;
+        settings.updateActiveAlbumTypes(type, !wasActive);
+        SearchSortController.inst.searchMedia(LibraryTab.albums.textSearchController?.text ?? '', MediaType.album);
+      }
+
+      return MapEntry(
+        onTap,
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3.0),
+          child: ObxO(
+            rx: settings.activeAlbumTypes,
+            builder: (context, activeAlbumTypes) => ListTileWithCheckMark(
+              icon: icon,
+              title: title,
+              active: activeAlbumTypes[type] ?? true,
+              onTap: onTap,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return [
+      buildTile(AlbumType.single, Broken.music_square, lang.SINGLES),
+      buildTile(AlbumType.normal, Broken.music_dashboard, lang.ALBUMS),
+    ];
   }
 }

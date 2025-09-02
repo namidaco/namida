@@ -643,6 +643,7 @@ abstract class LanguageKeys {
   String get SIMILAR_DISCOVER_DATE_SUBTITLE => _getKey('SIMILAR_DISCOVER_DATE_SUBTITLE');
   String get SIMILAR_TIME_RANGE => _getKey('SIMILAR_TIME_RANGE');
   String get SIMILAR_TIME_RANGE_SUBTITLE => _getKey('SIMILAR_TIME_RANGE_SUBTITLE');
+  String get SINGLES => _getKey('SINGLES');
   String get SIZE => _getKey('SIZE');
   String get SKIP_SILENCE => _getKey('SKIP_SILENCE');
   String get SKIP => _getKey('SKIP');

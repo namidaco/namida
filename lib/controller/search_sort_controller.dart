@@ -396,14 +396,22 @@ class SearchSortController {
         final r = result as (List<String>, bool, String);
         final isTemp = r.$2;
         final fetchedQuery = r.$3;
+
         if (isTemp) {
           if (fetchedQuery == lastSearchText) {
             _searchMapTemp[type]?.value = r.$1;
             sortMedia(type);
           }
         } else {
+          List<String> keysList;
+          if (type == MediaType.album) {
+            keysList = _modifyAlbumKeys(r.$1);
+          } else {
+            keysList = r.$1.toList();
+          }
+
           final typeNomalize = type == MediaType.albumArtist || type == MediaType.composer ? MediaType.artist : type;
-          if (fetchedQuery == typeNomalize.toLibraryTab().textSearchController?.text) _searchMap[typeNomalize]?.value = r.$1;
+          if (fetchedQuery == typeNomalize.toLibraryTab().textSearchController?.text) _searchMap[typeNomalize]?.value = keysList;
         }
       },
       isolateFunction: (itemsSendPort) async {
@@ -598,6 +606,23 @@ class SearchSortController {
     sendPort.send(null);
   }
 
+  List<String> _modifyAlbumKeys(Iterable<String> original) {
+    final activeAlbumTypes = settings.activeAlbumTypes.value;
+    final showSingles = activeAlbumTypes[AlbumType.single] ?? true;
+    final showAlbums = activeAlbumTypes[AlbumType.normal] ?? true;
+
+    if (showSingles == false && showAlbums == false) return [];
+
+    if (!showSingles) {
+      return original.where((element) => !(element.getAlbumTracks().length == 1)).toList();
+    }
+    if (!showAlbums) {
+      return original.where((element) => element.getAlbumTracks().length == 1).toList();
+    }
+
+    return original.toList();
+  }
+
   void _searchMediaType({required MediaType type, required String text, bool temp = false}) async {
     Iterable<String> keys = [];
     switch (type) {
@@ -625,7 +650,13 @@ class SearchSortController {
       } else {
         final typeNomalize = type == MediaType.albumArtist || type == MediaType.composer ? MediaType.artist : type;
         typeNomalize.toLibraryTab().textSearchController?.clear();
-        _searchMap[typeNomalize]?.value = keys.toList();
+        List<String> keysList;
+        if (type == MediaType.album) {
+          keysList = _modifyAlbumKeys(keys);
+        } else {
+          keysList = keys.toList();
+        }
+        _searchMap[typeNomalize]?.value = keysList;
       }
       return;
     }
