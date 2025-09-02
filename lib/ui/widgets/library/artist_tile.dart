@@ -85,7 +85,7 @@ class ArtistTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (extraText != null && extraText!.isNotEmpty)
+                      if (extraText != null && extraText!.isNotEmpty && extraText != name)
                         Text(
                           extraText!,
                           style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0),

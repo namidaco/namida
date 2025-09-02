@@ -68,7 +68,7 @@ class ArtistCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (bottomCenterText != null)
+                  if (bottomCenterText != null && bottomCenterText!.isNotEmpty && bottomCenterText != name)
                     Positioned(
                       bottom: -5.0,
                       child: DecoratedBox(

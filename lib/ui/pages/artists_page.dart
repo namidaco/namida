@@ -107,9 +107,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                 final sortReverse = settings.artistSortReversed.valueR;
 
                 final sortTextIsUseless = sort == GroupSortType.artistsList ||
-                    sort == GroupSortType.albumsCount ||
-                    (sort == GroupSortType.numberOfTracks && countPerRowResolved == 1) ||
-                    sort == GroupSortType.duration;
+                    (countPerRowResolved == 1 && (sort == GroupSortType.albumsCount || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration));
                 final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolver(sort);
 
                 return Column(
