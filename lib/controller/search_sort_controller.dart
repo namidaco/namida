@@ -706,29 +706,28 @@ class SearchSortController {
     }
 
     final formatDate = DateFormat('yyyyMMdd');
+    final textCleanedForSearch = _functionOfCleanup(cleanup);
+    final textNonCleanedForSearch = cleanup ? _functionOfCleanup(false) : null;
 
     final playlists = <({
       LocalPlaylist pl,
-      String name,
+      String trName,
       String dateCreatedFormatted,
       String dateModifiedFormatted,
     })>[];
     for (int i = 0; i < playlistsMap.length; i++) {
       var plMap = playlistsMap[i];
       final pl = LocalPlaylist.fromJson(plMap, (itemJson) => TrackWithDate.fromJson(itemJson), PlaylistController.sortFromJson);
-      final trName = translatePlName(pl.name);
+      final trName = textCleanedForSearch(translatePlName(pl.name));
       final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(pl.creationDate));
       final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(pl.modifiedDate));
       playlists.add((
         pl: pl,
-        name: trName,
+        trName: trName,
         dateCreatedFormatted: dateCreatedFormatted,
         dateModifiedFormatted: dateModifiedFormatted,
       ));
     }
-
-    final textCleanedForSearch = _functionOfCleanup(cleanup);
-    final textNonCleanedForSearch = cleanup ? _functionOfCleanup(false) : null;
 
     final psfMap = <String, bool>{};
     psf.loop((f) => psfMap[f] = true);
@@ -770,7 +769,7 @@ class SearchSortController {
         final item = itemInfo.pl;
         final playlistName = item.name;
 
-        if ((sTitle && isMatch(itemInfo.name)) ||
+        if ((sTitle && (isMatch(itemInfo.trName))) ||
             (sCreationDate && isMatch(itemInfo.dateCreatedFormatted)) ||
             (sModifiedDate && isMatch(itemInfo.dateModifiedFormatted)) ||
             (sComment && isMatch(item.comment)) ||

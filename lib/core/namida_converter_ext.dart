@@ -1117,13 +1117,9 @@ extension TracksFromMaps on String {
   List<Track> getAlbumTracks() => Indexer.inst.mainMapAlbums.value[this] ?? [];
 
   List<Track> getArtistTracks() => Indexer.inst.mainMapArtists.value[this] ?? [];
+
   List<Track> getArtistTracksFor(MediaType type) {
-    return switch (type) {
-      MediaType.artist => Indexer.inst.mainMapArtists.value[this] ?? [],
-      MediaType.albumArtist => Indexer.inst.mainMapAlbumArtists.value[this] ?? [],
-      MediaType.composer => Indexer.inst.mainMapComposer.value[this] ?? [],
-      _ => Indexer.inst.mainMapArtists.value[this] ?? [],
-    };
+    return Indexer.inst.getArtistMapFor(type).value[this] ?? [];
   }
 
   List<Track> getAlbumArtistTracks() => Indexer.inst.mainMapAlbumArtists.value[this] ?? [];

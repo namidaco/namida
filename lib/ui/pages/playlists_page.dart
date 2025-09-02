@@ -159,19 +159,19 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                 _importPlaylists(keepSynced: false, pickFolder: false);
               },
             ),
-            CustomListTile(
-              visualDensity: VisualDensity.compact,
-              icon: Broken.add_circle,
-              title: lang.CREATE,
-              subtitle: lang.CREATE_NEW_PLAYLIST,
-              onTap: () {
-                _closeDialog();
-                showSettingDialogWithTextField(
-                  title: lang.CREATE_NEW_PLAYLIST,
-                  addNewPlaylist: true,
-                );
-              },
-            ),
+            // CustomListTile(
+            //   visualDensity: VisualDensity.compact,
+            //   icon: Broken.add_circle,
+            //   title: lang.CREATE,
+            //   subtitle: lang.CREATE_NEW_PLAYLIST,
+            //   onTap: () {
+            //     _closeDialog();
+            //     showSettingDialogWithTextField(
+            //       title: lang.CREATE_NEW_PLAYLIST,
+            //       addNewPlaylist: true,
+            //     );
+            //   },
+            // ),
           ],
         ),
       ),
@@ -270,30 +270,38 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
             child: Column(
               children: [
                 Obx(
-                  (context) => ExpandableBox(
-                    enableHero: widget.enableHero && enableHero,
-                    gridWidget: isInsideDialog
-                        ? null
-                        : const ChangeGridCountWidget(
-                            tab: LibraryTab.playlists,
-                          ),
-                    isBarVisible: LibraryTab.playlists.isBarVisible.valueR,
-                    showSearchBox: LibraryTab.playlists.isSearchBoxVisible.valueR,
-                    leftText: SearchSortController.inst.playlistSearchList.length.displayPlaylistKeyword,
-                    onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.playlists),
-                    onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.playlists),
-                    sortByMenuWidget: SortByMenu(
-                      title: settings.playlistSort.valueR.toText(),
-                      popupMenuChild: () => const SortByMenuPlaylist(),
-                      isCurrentlyReversed: settings.playlistSortReversed.valueR,
-                      onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
-                    ),
-                    textField: () => CustomTextFiled(
-                      textFieldController: LibraryTab.playlists.textSearchController,
-                      textFieldHintText: lang.FILTER_PLAYLISTS,
-                      onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.playlist),
-                    ),
-                  ),
+                  (context) {
+                    final finalPlaylistsLength = SearchSortController.inst.playlistSearchList.valueR.length;
+                    final totalPlaylistsLength = PlaylistController.inst.playlistsMap.valueR.length;
+                    String leftText = finalPlaylistsLength != totalPlaylistsLength
+                        ? '$finalPlaylistsLength/${totalPlaylistsLength.displayPlaylistKeyword}'
+                        : finalPlaylistsLength.displayPlaylistKeyword;
+
+                    return ExpandableBox(
+                      enableHero: widget.enableHero && enableHero,
+                      gridWidget: isInsideDialog
+                          ? null
+                          : const ChangeGridCountWidget(
+                              tab: LibraryTab.playlists,
+                            ),
+                      isBarVisible: LibraryTab.playlists.isBarVisible.valueR,
+                      showSearchBox: LibraryTab.playlists.isSearchBoxVisible.valueR,
+                      leftText: leftText,
+                      onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.playlists),
+                      onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.playlists),
+                      sortByMenuWidget: SortByMenu(
+                        title: settings.playlistSort.valueR.toText(),
+                        popupMenuChild: () => const SortByMenuPlaylist(),
+                        isCurrentlyReversed: settings.playlistSortReversed.valueR,
+                        onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
+                      ),
+                      textField: () => CustomTextFiled(
+                        textFieldController: LibraryTab.playlists.textSearchController,
+                        textFieldHintText: lang.FILTER_PLAYLISTS,
+                        onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.playlist),
+                      ),
+                    );
+                  },
                 ),
                 Expanded(
                   child: Stack(
@@ -309,25 +317,37 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12.0),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       const SizedBox(width: 12.0),
-                                      Expanded(
-                                        child: ObxO(
-                                          rx: PlaylistController.inst.playlistsMap,
-                                          builder: (context, playlistsMap) => Text(
-                                            playlistsMap.length.displayPlaylistKeyword,
-                                            style: context.textTheme.displayLarge,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12.0),
+                                      // Expanded(
+                                      //   child: ObxO(
+                                      //     rx: PlaylistController.inst.playlistsMap,
+                                      //     builder: (context, playlistsMap) => Text(
+                                      //       playlistsMap.length.displayPlaylistKeyword,
+                                      //       style: context.textTheme.displayLarge,
+                                      //       maxLines: 2,
+                                      //       overflow: TextOverflow.ellipsis,
+                                      //     ),
+                                      //   ),
+                                      // ),
+                                      // const SizedBox(width: 12.0),
+
                                       NamidaButton(
                                         icon: Broken.add,
                                         text: lang.ADD,
                                         onPressed: _onAddPlaylistsTap,
+                                      ),
+                                      const SizedBox(width: 8.0),
+                                      NamidaButton(
+                                        icon: Broken.pen_add,
+                                        text: lang.CREATE,
+                                        onPressed: () {
+                                          showSettingDialogWithTextField(
+                                            title: lang.CREATE_NEW_PLAYLIST,
+                                            addNewPlaylist: true,
+                                          );
+                                        },
                                       ),
                                       const SizedBox(width: 8.0),
                                       NamidaButton(

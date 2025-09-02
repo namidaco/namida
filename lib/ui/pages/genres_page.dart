@@ -5,6 +5,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -55,6 +56,10 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
               final sortTextIsUseless = sort == GroupSortType.genresList || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
               final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolver(sort);
 
+              final finalGenresLength = SearchSortController.inst.genreSearchList.valueR.length;
+              final totalGenresLength = Indexer.inst.mainMapGenres.valueR.length;
+              String leftText = finalGenresLength != totalGenresLength ? '$finalGenresLength/${totalGenresLength.displayGenreKeyword}' : finalGenresLength.displayGenreKeyword;
+
               return Column(
                 children: [
                   ExpandableBox(
@@ -64,7 +69,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                     ),
                     isBarVisible: LibraryTab.genres.isBarVisible.valueR,
                     showSearchBox: LibraryTab.genres.isSearchBoxVisible.valueR,
-                    leftText: SearchSortController.inst.genreSearchList.length.displayGenreKeyword,
+                    leftText: leftText,
                     onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.genres),
                     onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.genres),
                     sortByMenuWidget: SortByMenu(

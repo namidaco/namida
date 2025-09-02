@@ -68,46 +68,52 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
         child: Column(
           children: [
             Obx(
-              (context) => ExpandableBox(
-                enableHero: false,
-                isBarVisible: LibraryTab.tracks.isBarVisible.valueR,
-                showSearchBox: LibraryTab.tracks.isSearchBoxVisible.valueR,
-                displayloadingIndicator: Indexer.inst.isIndexing.valueR,
-                leftWidgets: [
-                  NamidaIconButton(
-                    icon: Broken.shuffle,
-                    onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList.value, QueueSource.allTracks, shuffle: true),
-                    iconSize: 18.0,
-                    horizontalPadding: 2.0,
-                  ),
-                  const SizedBox(width: 10.0),
-                  NamidaIconButton(
-                    icon: Broken.play,
-                    onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList.value, QueueSource.allTracks),
-                    iconSize: 18.0,
-                    horizontalPadding: 2.0,
-                  ),
-                  const SizedBox(width: 10.0),
-                ],
-                leftText: SearchSortController.inst.trackSearchList.valueR.displayTrackKeyword,
-                onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.tracks),
-                onCloseButtonPressed: () {
-                  ScrollSearchController.inst.clearSearchTextField(LibraryTab.tracks);
-                },
-                sortByMenuWidget: SortByMenu(
-                  title: settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull?.toText() ?? '',
-                  popupMenuChild: () => const SortByMenuTracks(),
-                  isCurrentlyReversed: settings.mediaItemsTrackSortingReverse.valueR[MediaType.track] == true,
-                  onReverseIconTap: () {
-                    SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse[MediaType.track] == true));
+              (context) {
+                final finalTracksLength = SearchSortController.inst.trackSearchList.valueR.length;
+                final totalTracksLength = Indexer.inst.tracksInfoList.valueR.length;
+                String leftText = finalTracksLength != totalTracksLength ? '$finalTracksLength/${totalTracksLength.displayTrackKeyword}' : finalTracksLength.displayTrackKeyword;
+
+                return ExpandableBox(
+                  enableHero: false,
+                  isBarVisible: LibraryTab.tracks.isBarVisible.valueR,
+                  showSearchBox: LibraryTab.tracks.isSearchBoxVisible.valueR,
+                  displayloadingIndicator: Indexer.inst.isIndexing.valueR,
+                  leftWidgets: [
+                    NamidaIconButton(
+                      icon: Broken.shuffle,
+                      onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList.value, QueueSource.allTracks, shuffle: true),
+                      iconSize: 18.0,
+                      horizontalPadding: 2.0,
+                    ),
+                    const SizedBox(width: 10.0),
+                    NamidaIconButton(
+                      icon: Broken.play,
+                      onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList.value, QueueSource.allTracks),
+                      iconSize: 18.0,
+                      horizontalPadding: 2.0,
+                    ),
+                    const SizedBox(width: 10.0),
+                  ],
+                  leftText: leftText,
+                  onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.tracks),
+                  onCloseButtonPressed: () {
+                    ScrollSearchController.inst.clearSearchTextField(LibraryTab.tracks);
                   },
-                ),
-                textField: () => CustomTextFiled(
-                  textFieldController: LibraryTab.tracks.textSearchController,
-                  textFieldHintText: lang.FILTER_TRACKS,
-                  onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.track),
-                ),
-              ),
+                  sortByMenuWidget: SortByMenu(
+                    title: settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull?.toText() ?? '',
+                    popupMenuChild: () => const SortByMenuTracks(),
+                    isCurrentlyReversed: settings.mediaItemsTrackSortingReverse.valueR[MediaType.track] == true,
+                    onReverseIconTap: () {
+                      SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse[MediaType.track] == true));
+                    },
+                  ),
+                  textField: () => CustomTextFiled(
+                    textFieldController: LibraryTab.tracks.textSearchController,
+                    textFieldHintText: lang.FILTER_TRACKS,
+                    onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.track),
+                  ),
+                );
+              },
             ),
             Expanded(
               child: AnimationLimiter(

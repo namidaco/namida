@@ -44,13 +44,8 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
       child: Obx(
         (context) {
           // to update after sorting
-          type == MediaType.artist
-              ? Indexer.inst.mainMapArtists.valueR
-              : type == MediaType.albumArtist
-                  ? Indexer.inst.mainMapAlbumArtists.valueR
-                  : type == MediaType.composer
-                      ? Indexer.inst.mainMapComposer.valueR
-                      : null;
+          Indexer.inst.getArtistMapFor(type).valueR;
+
           return NamidaTracksList(
             queueSource: QueueSource.artist,
             queueLength: tracks.length,

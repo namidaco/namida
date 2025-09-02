@@ -5,6 +5,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -90,6 +91,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
     final scrollController = LibraryTab.artists.scrollController;
     final countPerRowResolved = countPerRow.resolve(context);
     final artistTypeColor = context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.8);
+
     return BackgroundWrapper(
       child: NamidaScrollbar(
         controller: scrollController,
@@ -100,8 +102,16 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
               (context) {
                 final artistTypeSettings = settings.activeArtistType.valueR;
                 final artistType = customType ?? artistTypeSettings;
-                final artistTypeText = artistType.toText();
-                final artistLeftText = finalArtists.length.displayKeyword(artistTypeText, artistTypeText);
+                final (String, String) artistTypeTextSinglePlural = switch (artistType) {
+                  MediaType.artist => (lang.ARTIST, lang.ARTISTS),
+                  MediaType.albumArtist => (lang.ALBUM_ARTIST, lang.ALBUM_ARTISTS),
+                  MediaType.composer => (lang.COMPOSER, lang.COMPOSER),
+                  _ => ('', ''),
+                };
+                String countToText(int count) => count.displayKeyword(artistTypeTextSinglePlural.$1, artistTypeTextSinglePlural.$2);
+                final finalArtistsLength = finalArtists.length;
+                final totalArtistsLength = Indexer.inst.getArtistMapFor(artistType).valueR.length;
+                String artistLeftText = finalArtistsLength != totalArtistsLength ? '$finalArtistsLength/${countToText(totalArtistsLength)}' : countToText(finalArtistsLength);
 
                 final sort = settings.artistSort.valueR;
                 final sortReverse = settings.artistSortReversed.valueR;

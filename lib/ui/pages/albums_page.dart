@@ -6,6 +6,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -62,6 +63,11 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                     final sort = settings.albumSort.valueR;
                     final sortReverse = settings.albumSortReversed.valueR;
 
+                    final finalAlbumsLength = finalAlbums.length;
+                    final totalAlbumsLength = Indexer.inst.mainMapAlbums.valueR.length;
+                    String leftText =
+                        finalAlbumsLength != totalAlbumsLength ? '$finalAlbumsLength/${totalAlbumsLength.displayAlbumKeyword}' : finalAlbumsLength.displayAlbumKeyword;
+
                     return ExpandableBox(
                       enableHero: enableHero,
                       gridWidget: enableGridIconButton
@@ -86,7 +92,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                               ),
                               const SizedBox(width: 4.0),
                               Text(
-                                finalAlbums.length.displayAlbumKeyword,
+                                leftText,
                                 style: context.textTheme.displayMedium?.copyWith(
                                   color: artistTypeColor,
                                 ),
@@ -225,7 +231,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
       return MapEntry(
         onTap,
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 3.0),
+          padding: const EdgeInsets.all(3.0),
           child: ObxO(
             rx: settings.activeAlbumTypes,
             builder: (context, activeAlbumTypes) => ListTileWithCheckMark(

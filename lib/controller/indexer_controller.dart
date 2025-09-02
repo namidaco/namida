@@ -78,6 +78,15 @@ class Indexer<T extends Track> {
   RxMap<Folder, List<T>> get mainMapFolders => mainMapsGroup.mainMapFolders;
   RxMap<VideoFolder, List<Video>> get mainMapFoldersVideos => mainMapsGroup.mainMapFoldersVideos;
 
+  LibraryItemMap getArtistMapFor(MediaType type) {
+    return switch (type) {
+      MediaType.artist => Indexer.inst.mainMapArtists,
+      MediaType.albumArtist => Indexer.inst.mainMapAlbumArtists,
+      MediaType.composer => Indexer.inst.mainMapComposer,
+      _ => Indexer.inst.mainMapArtists,
+    };
+  }
+
   final tracksInfoList = <T>[].obs;
 
   /// tracks map used for lookup
