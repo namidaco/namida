@@ -336,12 +336,14 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                       NamidaButton(
                                         icon: Broken.add,
                                         text: lang.ADD,
+                                        iconSize: 20.0,
                                         onPressed: _onAddPlaylistsTap,
                                       ),
                                       const SizedBox(width: 8.0),
                                       NamidaButton(
                                         icon: Broken.pen_add,
                                         text: lang.CREATE,
+                                        iconSize: 19.0,
                                         onPressed: () {
                                           showSettingDialogWithTextField(
                                             title: lang.CREATE_NEW_PLAYLIST,

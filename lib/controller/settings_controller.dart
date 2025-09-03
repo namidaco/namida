@@ -293,6 +293,8 @@ class _SettingsController with SettingsFileWriter {
     MediaType.track: [SortType.title, SortType.year, SortType.album],
     MediaType.album: [SortType.trackNo, SortType.year, SortType.title],
     MediaType.artist: [SortType.year, SortType.title],
+    MediaType.albumArtist: [SortType.year, SortType.title],
+    MediaType.composer: [SortType.year, SortType.title],
     MediaType.genre: [SortType.year, SortType.title],
     MediaType.folder: [SortType.filename],
     MediaType.folderVideo: [SortType.filename],
@@ -465,15 +467,21 @@ class _SettingsController with SettingsFileWriter {
 
       final mediaGridCountsInStorage = json["mediaGridCounts"];
       if (mediaGridCountsInStorage is Map && mediaGridCountsInStorage.isNotEmpty) {
-        mediaGridCounts.value = {
+        final map = {
           for (final e in mediaGridCountsInStorage.entries) LibraryTab.values.getEnum(e.key) ?? LibraryTab.tracks: CountPerRow.fromJsonValue(e.value),
         };
+        mediaGridCounts
+          ..addAll(map)
+          ..refresh();
       }
       final activeAlbumTypesInStorage = json["activeAlbumTypes"];
       if (activeAlbumTypesInStorage is Map && activeAlbumTypesInStorage.isNotEmpty) {
-        activeAlbumTypes.value = {
+        final map = <AlbumType, bool>{
           for (final e in activeAlbumTypesInStorage.entries) AlbumType.values.getEnum(e.key) ?? AlbumType.normal: e.value ?? true,
         };
+        activeAlbumTypes
+          ..addAll(map)
+          ..refresh();
       }
       enableBlurEffect.value = json['enableBlurEffect'] ?? enableBlurEffect.value;
       enableGlowEffect.value = json['enableGlowEffect'] ?? enableGlowEffect.value;
@@ -638,13 +646,17 @@ class _SettingsController with SettingsFileWriter {
         ..refresh();
 
       final mediaItemsTrackSortingInStorage = json["mediaItemsTrackSorting"] as Map? ?? {};
-      mediaItemsTrackSorting.value = {
-        for (final e in mediaItemsTrackSortingInStorage.entries)
-          MediaType.values.getEnum(e.key) ?? MediaType.track: (e.value as List?)?.map((v) => SortType.values.getEnum(v) ?? SortType.title).toList() ?? <SortType>[SortType.year]
-      };
+      mediaItemsTrackSorting
+        ..addAll({
+          for (final e in mediaItemsTrackSortingInStorage.entries)
+            MediaType.values.getEnum(e.key) ?? MediaType.track: (e.value as List?)?.map((v) => SortType.values.getEnum(v) ?? SortType.title).toList() ?? <SortType>[SortType.year]
+        })
+        ..refresh();
       final mediaItemsTrackSortingReverseInStorage = json["mediaItemsTrackSortingReverse"] as Map? ?? {};
 
-      mediaItemsTrackSortingReverse.value = {for (final e in mediaItemsTrackSortingReverseInStorage.entries) MediaType.values.getEnum(e.key) ?? MediaType.track: e.value};
+      mediaItemsTrackSortingReverse
+        ..addAll({for (final e in mediaItemsTrackSortingReverseInStorage.entries) MediaType.values.getEnum(e.key) ?? MediaType.track: e.value})
+        ..refresh();
 
       final imageSourceAlbumFromStorage = json['imageSourceAlbum'];
       if (imageSourceAlbumFromStorage is List) imageSourceAlbum.value = imageSourceAlbumFromStorage.map((e) => LibraryImageSource.values.getEnum(e)).toListy();

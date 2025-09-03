@@ -872,9 +872,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     ObxO(
                       key: _videoConstraintsKey,
                       rx: settings.enableGlowBehindVideo,
-                      builder: (context, enableGlowBehindVideo) => _DropShadowWrapper(
-                        enabled: widget.isFullScreen && enableGlowBehindVideo,
-                        child: finalVideoWidget,
+                      builder: (context, enableGlowBehindVideo) => ObxO(
+                        rx: NamidaChannel.inst.isInPip,
+                        builder: (context, inPip) => _DropShadowWrapper(
+                          enabled: widget.isFullScreen && !inPip && enableGlowBehindVideo,
+                          child: finalVideoWidget,
+                        ),
                       ),
                     ),
                     if (_canShowControls)

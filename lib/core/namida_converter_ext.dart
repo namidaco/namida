@@ -918,9 +918,11 @@ extension RouteUtils on NamidaRoute {
         sortingTracksMediaType = MediaType.album;
         break;
       case RouteType.SUBPAGE_artistTracks:
-      case RouteType.SUBPAGE_albumArtistTracks:
-      case RouteType.SUBPAGE_composerTracks:
         sortingTracksMediaType = MediaType.artist;
+      case RouteType.SUBPAGE_albumArtistTracks:
+        sortingTracksMediaType = MediaType.albumArtist;
+      case RouteType.SUBPAGE_composerTracks:
+        sortingTracksMediaType = MediaType.composer;
         break;
       case RouteType.SUBPAGE_genreTracks:
         sortingTracksMediaType = MediaType.genre;
@@ -942,6 +944,8 @@ extension RouteUtils on NamidaRoute {
         route == RouteType.SUBPAGE_queueTracks;
 
     final showPlaylistMenu = route == RouteType.SUBPAGE_playlistTracks || route == RouteType.SUBPAGE_historyTracks || route == RouteType.SUBPAGE_mostPlayedTracks;
+
+    final shouldShowSettingsIcon = !showMainMenu && !showPlaylistMenu && shouldShowInitialActions;
 
     return <Widget>[
       const SizedBox(width: 2.0),
@@ -1101,11 +1105,16 @@ extension RouteUtils on NamidaRoute {
 
       // -- Settings Icon
       _getAnimatedCrossFade(
-        child: NamidaAppBarIcon(
-          icon: Broken.setting_2,
-          onPressed: const SettingsPage().navigate,
+        child: AnimatedRotation(
+          duration: const Duration(milliseconds: 300),
+          turns: shouldShowSettingsIcon ? 0.0 : 0.25,
+          curve: Curves.easeOutQuart,
+          child: NamidaAppBarIcon(
+            icon: Broken.setting_2,
+            onPressed: const SettingsPage().navigate,
+          ),
         ),
-        shouldShow: !showMainMenu && !showPlaylistMenu && shouldShowInitialActions,
+        shouldShow: shouldShowSettingsIcon,
       ),
 
       const SizedBox(width: 8.0),
