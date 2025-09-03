@@ -1,5 +1,72 @@
 # Namida Changelog
 
+## 03/09/2025
+# v5.3.9
+
+### 🎉 New Features:
+   - 63140e8: fetch album/artist images from network + option to decide source + ability to set custom image manually + ability to choose network image ref #5
+   - 48cc658: option to show/hide albums and singles in albums page
+   - 0d02ab3: option to ignore common prefixes like (A/An/The/etc) while sorting, for customizable media types (title/artist/album/folder/etc) ref #603
+   - 42a611f: 2 new add track options (similar dicover date & similar time range)
+   - dfe2478: display "liked music" playlist in user yt hosted playlists section
+   - e3cfd1a: option to add tracks at the beginning for playlists ref #628
+   - c5f3ade: option to disable "stretch lyrics duration" (stretching allows normal lyrics to fit perfectly on spedup/slowed/nightcore versions) ref #675
+
+### 🛠️ Bug fixes & Improvements:
+
+- core:
+   - 6079b36: integrate with `namida_sync` (https//github.com/010101-sans/namida_sync) thanks @010101-sans ref #621
+   - 92d966e: improve downloading especially for unavailable videos - when downloading an unavailable video -> use cached versions if available, write info file to download location, set cache priority to `VIP` & show descriptive error message - fix/reduce lag when adding downloaded track to local library - fix ocasional tripled download tasks - improve info obtaining by merging all possible infos available
+
+- perf:
+   - 592866e: most played tracks are now smoothly manipulated, instead of sorting after each addition - this also eliminates video lag the moment it counts the listen - also forced stricter reactive access for the listens map (so that ui is refreshed only when needed)
+   - fda9f5c: app freeze while importing huge or multiple takeouts at once - and show progress for files parsing
+   - 04c499b: improve all lists scrolling performance and fix lyrics view causing issues in floating window
+
+- chore:
+   - a040524: more sort options and show sorting info on cards for albums/artists/playlists/etc
+   - 887fe9a: improve sorting for albums/artists/genres - by having extra fallbacks
+   - 3d9a722: show "count/total" for filtering in pages (albums/playlists/etc) - mainly to make it clear that an album filter (single/normal) is applied - also replace duplicated playlists count with a create button in playlists page - fix inaccurate playlists search matching
+   - 6a49ba4: improve hit box of position/duration text in player (to seek backwards/forwards)
+   - 5039981: add a menu button with some video options in fullscreen player - like (show endcards/show channel watermark/enable glow effect)
+   - a27c0a5: improve default color decision for a palette - no longer mix all palette, but instead only first few colors
+   - adefa67: ui tweaks - increase area of equalizer slider magnet & decrease area of video slider magnet in fullscreen
+   - d2d6301: always fetch new info when opening video info dialog (views/likes/like status)
+   - 02609c0: toggle to also delete m3u file while deleting playlist inside app
+   - 4f2f9ee: display proper empty list messages in home page
+   - 9818ac9: add button in auto backup error snack, to request needed permission
+   - 7855d05: always display album artist in album card, regardless of sort mode
+   - 0f543c7: display total duration in playlist page ref #682
+   - fb6807a: avoid ui jumps for album staggered view
+   - bf403f5: remember sort mode in file browser ref #684
+   - e862ace: improve m3u line path extraction
+   - 525659b: improve file extensions support
+   - 7087f6f: improve wheel slider ref #642
+   - e9ca9a5: improve how sleep timer is started
+   - 50642b9: add error logging in more places
+   - 35fef07: few fixes n tweaks
+   - 5818462: small adjustment
+   - 9606b0b: final adjustments
+
+- fix:
+   - b537cbf: app stuck on startup (especially for windows)
+   - 45fc868: equalizer ui displaying wrong gain value
+   - b273c13: some languages causing white parts in ui
+   - 0b1b918: tracks page shuffle sorting (in advanced sorting)
+   - 0b8c0fa: multiple skips when spamming play/pause in the end of playback
+   - 46f0215: startup issues
+   - 9cb3652: not importing/refreshing m3u playlist
+   - 242237b: few fixes for network artwork
+   - 99fbaa6: issues with replay gain and volume
+   - 81abc5e: small touch area in some menus
+   - 740e88f: artwork not showing when specific settings are applied
+   - 81f18f4: various visual data fixes
+   - 46b9f45: smol fixes
+   - 34fdcf4: some fixes
+   - 8dd51a3: some fixes
+   - 1597112: more fixes
+
+
 ## 08/07/2025
 # v5.2.6
 
