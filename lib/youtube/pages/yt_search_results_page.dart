@@ -58,18 +58,19 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   }
 
   String? get currentSearchText => widget.searchTextCallback?.call() ?? _latestSearched;
-  String? _latestSearched;
+  static String? _latestSearched;
 
-  YoutiPieSearchResult? _searchResult;
+  static YoutiPieSearchResult? _searchResult;
   final _isFetchingMoreResults = false.obs;
-  bool? _loadingFirstResults;
-  bool? _cachedSearchResults;
+  static bool? _loadingFirstResults;
+  static bool? _cachedSearchResults;
 
   final _offlineSearchPageKey = GlobalKey<YTLocalSearchResultsState>();
 
   @override
   void initState() {
     super.initState();
+    _keepAliveTimer?.cancel();
     fetchSearch();
     YTLocalSearchController.inst.initialize().then((_) {
       YTLocalSearchController.inst.search(currentSearchText ?? '');
@@ -85,7 +86,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   }
 
   Future<void> fetchSearch({String customText = ''}) async {
-    final newSearch = customText == '' ? widget.searchTextCallback?.call() ?? '' : customText;
+    final newSearch = customText == '' ? widget.searchTextCallback?.call() ?? ScrollSearchController.inst.searchTextEditingController.text : customText;
     if (_latestSearched == newSearch && _searchResult != null) return;
     _latestSearched = newSearch;
 
