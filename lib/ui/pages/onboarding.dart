@@ -254,6 +254,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                   ),
                                 ),
                               Flexible(
+                                flex: NamidaFeaturesVisibility.isStoragePermissionNotRequired ? 1 : 0,
                                 fit: NamidaFeaturesVisibility.isStoragePermissionNotRequired ? FlexFit.tight : FlexFit.loose,
                                 child: AnimatedOpacity(
                                   duration: const Duration(milliseconds: 400),

@@ -273,20 +273,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
         child: SizedBox(
           width: namida.width,
           height: namida.height * 0.5,
-          child: Obx(
-            (context) => Column(
-              children: [
-                Expanded(
-                  flex: 6,
-                  child: Builder(builder: (context) {
-                    return NamidaListView(
+          child: Column(
+            children: [
+              Expanded(
+                flex: 6,
+                child: Builder(builder: (context) {
+                  return ObxO(
+                    rx: settings.homePageItems,
+                    builder: (context, homePageItems) => NamidaListView(
                       itemExtent: null,
                       scrollController: mainListController,
-                      itemCount: settings.homePageItems.length,
+                      itemCount: homePageItems.length,
                       itemBuilder: (context, index) {
-                        final item = settings.homePageItems[index];
+                        final item = homePageItems[index];
                         return Material(
-                          key: ValueKey(index),
+                          key: ValueKey(item),
                           type: MaterialType.transparency,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -312,39 +313,44 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                         settings.removeFromList(homePageItem1: item);
                         settings.insertInList(newIndex, homePageItem1: item);
                       },
-                    );
-                  }),
-                ),
-                const NamidaContainerDivider(height: 4.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
-                if (subList.isNotEmpty)
-                  Expanded(
-                    flex: subList.length,
-                    child: SuperListView.builder(
-                      padding: EdgeInsets.zero,
-                      itemCount: subList.length,
-                      itemBuilder: (context, index) {
-                        final item = subList[index];
-                        return Material(
-                          type: MaterialType.transparency,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
-                            child: ListTileWithCheckMark(
-                              active: false,
-                              icon: Broken.recovery_convert,
-                              title: item.toText(),
-                              onTap: () {
-                                settings.save(homePageItems: [item]);
-                                subList.remove(item);
-                                jumpToLast();
-                              },
-                            ),
-                          ),
-                        );
-                      },
                     ),
-                  ),
-              ],
-            ),
+                  );
+                }),
+              ),
+              const NamidaContainerDivider(height: 4.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
+              if (subList.isNotEmpty)
+                ObxO(
+                  rx: subList,
+                  builder: (context, subList) => subList.isEmpty
+                      ? const SizedBox()
+                      : Expanded(
+                          flex: subList.length,
+                          child: SuperListView.builder(
+                            padding: EdgeInsets.zero,
+                            itemCount: subList.length,
+                            itemBuilder: (context, index) {
+                              final item = subList[index];
+                              return Material(
+                                type: MaterialType.transparency,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                  child: ListTileWithCheckMark(
+                                    active: false,
+                                    icon: Broken.recovery_convert,
+                                    title: item.toText(),
+                                    onTap: () {
+                                      settings.save(homePageItems: [item]);
+                                      subList.remove(item);
+                                      jumpToLast();
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                ),
+            ],
           ),
         ),
       ),
@@ -412,6 +418,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                 return SliverToBoxAdapter(
                                   child: _HorizontalList(
                                     homepageItem: element,
+                                    isLoading: _isLoading,
                                     title: lang.MIXES,
                                     icon: Broken.scanning,
                                     height: 186.0 + 12.0,
@@ -436,6 +443,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                 return _TracksList(
                                   listId: 'recentListens',
                                   homepageItem: element,
+                                  isLoading: _isLoading,
                                   title: lang.RECENT_LISTENS,
                                   icon: Broken.command_square,
                                   listy: _recentListened,
@@ -450,6 +458,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                 return _TracksList(
                                   listId: 'topRecentListens',
                                   homepageItem: element,
+                                  isLoading: _isLoading,
                                   title: lang.TOP_RECENTS,
                                   icon: Broken.crown_1,
                                   listy: const [],
@@ -466,6 +475,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                   listId: 'lostMemories_$currentYearLostMemories',
                                   controller: _lostMemoriesScrollController,
                                   homepageItem: element,
+                                  isLoading: _isLoading,
                                   title: lang.LOST_MEMORIES,
                                   subtitle: () {
                                     final diff = DateTime.now().year - currentYearLostMemories;
@@ -528,6 +538,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                 return _TracksList(
                                   listId: 'recentlyAdded',
                                   queueSource: QueueSource.recentlyAdded,
+                                  isLoading: _isLoading,
                                   homepageItem: element,
                                   title: lang.RECENTLY_ADDED,
                                   icon: Broken.back_square,
@@ -617,6 +628,7 @@ class _TracksList extends StatelessWidget {
   final QueueSource queueSource;
   final String listId;
   final ScrollController? controller;
+  final bool isLoading;
 
   const _TracksList({
     super.key,
@@ -633,6 +645,7 @@ class _TracksList extends StatelessWidget {
     this.queueSource = QueueSource.homePageItem,
     required this.listId,
     this.controller,
+    required this.isLoading,
   });
 
   @override
@@ -643,6 +656,7 @@ class _TracksList extends StatelessWidget {
       final queue = listWithListens?.firstOrNull == null ? <Track>[] : listWithListens!.map((e) => e!.key);
       return SliverToBoxAdapter(
         child: _HorizontalList(
+          isLoading: isLoading,
           homepageItem: homepageItem,
           controller: controller,
           title: title,
@@ -675,6 +689,7 @@ class _TracksList extends StatelessWidget {
       final queue = listy.firstOrNull == null ? <Track>[] : finalList.cast<Selectable>();
       return SliverToBoxAdapter(
         child: _HorizontalList(
+            isLoading: isLoading,
             homepageItem: homepageItem,
             title: title,
             icon: icon,
@@ -726,6 +741,7 @@ class _AlbumsList extends StatelessWidget {
     final itemCount = albums.length;
     return SliverToBoxAdapter(
       child: _HorizontalList(
+        isLoading: isLoading,
         homepageItem: homepageItem,
         title: title,
         leading: StackedIcon(
@@ -738,6 +754,7 @@ class _AlbumsList extends StatelessWidget {
         itemBuilder: (context, index) {
           final albumId = albums[index];
           return AlbumCard(
+            key: ValueKey(albumId),
             dummyCard: isLoading,
             homepageItem: homepageItem,
             displayIcon: !isLoading,
@@ -778,6 +795,7 @@ class _ArtistsList extends StatelessWidget {
     final itemCount = artists.length;
     return SliverToBoxAdapter(
       child: _HorizontalList(
+        isLoading: isLoading,
         homepageItem: homepageItem,
         title: title,
         leading: StackedIcon(
@@ -819,6 +837,7 @@ class _HorizontalList extends StatelessWidget {
   final NullableIndexedWidgetBuilder itemBuilder;
   final Color? iconColor;
   final ScrollController? controller;
+  final bool isLoading;
 
   const _HorizontalList({
     required this.homepageItem,
@@ -835,6 +854,7 @@ class _HorizontalList extends StatelessWidget {
     this.leading,
     this.iconColor,
     this.controller,
+    required this.isLoading,
   });
 
   @override
@@ -874,7 +894,7 @@ class _HorizontalList extends StatelessWidget {
         SizedBox(
           height: height,
           width: context.width,
-          child: itemCount == 0
+          child: itemCount == 0 && !isLoading
               ? Center(
                   child: SingleChildScrollView(
                     controller: controller,
@@ -900,6 +920,7 @@ class _HorizontalList extends StatelessWidget {
                   ),
                 )
               : ListView.builder(
+                  key: ValueKey(isLoading),
                   controller: controller,
                   itemExtent: itemExtent,
                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),

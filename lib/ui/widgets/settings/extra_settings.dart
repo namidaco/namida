@@ -301,7 +301,9 @@ class ExtrasSettings extends SettingSubpageProvider {
                               (context) => ListTileWithCheckMark(
                                 title: lang.AUTO,
                                 icon: Broken.recovery_convert,
-                                onTap: () => settings.extra.save(autoLibraryTab: true),
+                                onTap: () => settings.extra.save(
+                                  autoLibraryTab: !settings.extra.autoLibraryTab.value,
+                                ),
                                 active: settings.extra.autoLibraryTab.valueR,
                               ),
                             ),
@@ -321,7 +323,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                           autoLibraryTab: false,
                                         );
                                       },
-                                      active: settings.extra.selectedLibraryTab.valueR == e.value,
+                                      active: !settings.extra.autoLibraryTab.valueR && settings.extra.selectedLibraryTab.valueR == e.value,
                                     ),
                                   ),
                                 ),
@@ -395,7 +397,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_ExtraSettingsKeys.ignoreCommonPrefixesFor),
                 icon: Broken.message_remove,
                 title: lang.IGNORE_COMMON_PREFIXES_WHILE_SORTING,
-                subtitle: settings.commonPrefixes.valueR.join(','),
+                subtitle: settings.commonPrefixes.valueR.map((e) => e.addDQuotation()).join(', '),
                 trailingText: "${settings.ignoreCommonPrefixForTypes.length}",
                 onTap: () {
                   final original = List<TrackSearchFilter>.from(settings.ignoreCommonPrefixForTypes.value);

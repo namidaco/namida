@@ -509,49 +509,59 @@ class _FolderSmallCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NamidaInkWell(
-      margin: const EdgeInsets.only(left: 6.0),
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      onTap: () => NamidaOnTaps.inst.onFolderTapNavigate(folder),
-      onLongPress: () => NamidaDialogs.inst.showFolderDialog(
-        folder: folder,
-        tracks: folder.tracks(),
-        controller: controller,
-        isTracksRecursive: false,
-      ),
-      borderRadius: 8.0,
-      bgColor: context.theme.colorScheme.secondary.withValues(alpha: 0.12),
-      child: Row(
-        children: [
-          const SizedBox(width: 4.0),
-          ArtworkWidget(
-            key: Key(tracks.pathToImage),
-            track: tracks.trackOfImage,
-            thumbnailSize: 48.0,
-            path: tracks.pathToImage,
-            forceSquared: true,
-          ),
-          const SizedBox(width: 4.0),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                folder.folderName,
-                style: context.textTheme.displayMedium?.copyWith(
-                  fontSize: 13.0,
-                ),
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: context.width * 0.75),
+      child: NamidaInkWell(
+        margin: const EdgeInsets.only(left: 6.0),
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        onTap: () => NamidaOnTaps.inst.onFolderTapNavigate(folder),
+        onLongPress: () => NamidaDialogs.inst.showFolderDialog(
+          folder: folder,
+          tracks: folder.tracks(),
+          controller: controller,
+          isTracksRecursive: false,
+        ),
+        borderRadius: 8.0,
+        bgColor: context.theme.colorScheme.secondary.withValues(alpha: 0.12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(width: 4.0),
+            ArtworkWidget(
+              key: Key(tracks.pathToImage),
+              track: tracks.trackOfImage,
+              thumbnailSize: 48.0,
+              path: tracks.pathToImage,
+              forceSquared: true,
+            ),
+            const SizedBox(width: 4.0),
+            Flexible(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    folder.folderName,
+                    softWrap: false,
+                    overflow: TextOverflow.fade,
+                    style: context.textTheme.displayMedium?.copyWith(
+                      fontSize: 13.0,
+                    ),
+                  ),
+                  Text(
+                    tracks.length.displayTrackKeyword,
+                    softWrap: false,
+                    overflow: TextOverflow.fade,
+                    style: context.textTheme.displaySmall?.copyWith(
+                      fontSize: 12.0,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                tracks.length.displayTrackKeyword,
-                style: context.textTheme.displaySmall?.copyWith(
-                  fontSize: 12.0,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12.0),
-        ],
+            ),
+            const SizedBox(width: 12.0),
+          ],
+        ),
       ),
     );
   }
