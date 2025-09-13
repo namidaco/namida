@@ -417,11 +417,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           if (line.startsWith('primary/')) {
             line = line.replaceFirst('primary/', '');
           }
+          line = line.replaceAll(pathSepRegex, pathSep);
 
           String fullPath = line; // maybe is absolute path
           bool fileExists = false;
-
-          fullPath = fullPath.replaceAll(pathSepRegex, pathSep);
 
           if (pathExists(fullPath)) fileExists = true;
 
@@ -432,7 +431,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
           if (!fileExists) {
             if (tracksDBManager == null) await loadTracksDb();
-            final maybePath = libraryTracksPaths.firstWhereEff((path) => path.endsWith(fullPath)); // no idea, trying to get from library
+            final normalizedPath = p.normalize(line);
+            final maybePath = libraryTracksPaths.firstWhereEff((path) => path.endsWith(normalizedPath)); // no idea, trying to get from library
             if (maybePath != null) {
               fullPath = maybePath;
               // if (pathExists(fullPath)) fileExists = true; // no further checks
