@@ -301,7 +301,7 @@ class CurrentColor {
 
     NamidaColor? nc = await extractPaletteFromImage(
       networkArtwork ?? track.pathToImage,
-      track: track,
+      track: networkArtwork != null ? null : track,
       useIsolate: useIsolate,
     );
 
@@ -312,7 +312,7 @@ class CurrentColor {
       delightnedAndAlpha: delightnedAndAlpha,
       fallbackToPlayerStaticColor: fallbackToPlayerStaticColor,
     );
-    _updateInColorMap(filename, finalnc);
+    if (networkArtwork == null || nc != null) _updateInColorMap(filename, finalnc);
     return finalnc;
   }
 
