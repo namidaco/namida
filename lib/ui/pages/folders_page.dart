@@ -165,6 +165,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                               properties: properties,
                                               index: i,
                                               trackOrTwd: folderTracks[i],
+                                              tracks: folderTracks,
                                               bgColor: i == indexToScrollTo ? highlighedColor : null,
                                             );
                                           },
@@ -252,6 +253,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                               properties: properties,
                                               index: i,
                                               trackOrTwd: tr,
+                                              tracks: folderTracks,
                                               bgColor: i == indexToScrollTo ? highlighedColor : null,
                                             );
                                           },

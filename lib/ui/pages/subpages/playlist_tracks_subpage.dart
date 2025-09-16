@@ -227,6 +227,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                                   properties: properties,
                                   trackOrTwd: tr,
                                   index: i,
+                                  tracks: tracks,
                                   bgColor: highlightedItem != null && day == highlightedItem.dayToHighLight && i == highlightedItem.indexOfSmallList ? highlightColor : null,
                                   thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
                                   topRightWidget: topRightWidget,
@@ -328,6 +329,7 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
                     properties: properties,
                     index: i,
                     trackOrTwd: track,
+                    tracks: tracks,
                     onRightAreaTap: () => showTrackListensDialog(track, datesOfListen: listens),
                     trailingWidget: Container(
                       padding: const EdgeInsets.all(6.0),
@@ -429,6 +431,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
                           properties: properties,
                           trackOrTwd: tr,
                           index: i,
+                          tracks: randomTracks,
                           onTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
                           onRightAreaTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
                           trailingWidget: Obx(
@@ -574,6 +577,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
                         properties: properties,
                         index: i,
                         trackOrTwd: trackWithDate,
+                        tracks: tracksWithDate,
                       ),
                     ),
                   );

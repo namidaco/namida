@@ -219,6 +219,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
             key: key,
             index: i,
             trackOrTwd: track,
+            tracks: queue,
             cardColorOpacity: 0.5,
             fadeOpacity: i < currentIndex ? 0.3 : 0.0,
             onPlaying: () {

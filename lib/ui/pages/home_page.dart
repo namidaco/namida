@@ -1097,6 +1097,7 @@ class _MixesCardState extends State<_MixesCard> {
                                 },
                                 trackOrTwd: tr,
                                 index: index,
+                                tracks: widget.tracks,
                               ),
                             );
                           },

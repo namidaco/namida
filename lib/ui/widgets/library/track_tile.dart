@@ -15,7 +15,6 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -203,6 +202,7 @@ class TrackTileProperties {
 class TrackTile extends StatelessWidget {
   final int index;
   final Selectable trackOrTwd;
+  final List<Playable> tracks;
   final TrackTileProperties properties;
   final VoidCallback? onTap;
   final VoidCallback? onPlaying;
@@ -219,6 +219,7 @@ class TrackTile extends StatelessWidget {
     super.key,
     required this.properties,
     required this.trackOrTwd,
+    required this.tracks,
     this.onTap,
     this.onPlaying,
     required this.index,
@@ -391,7 +392,7 @@ class TrackTile extends StatelessWidget {
                       } else {
                         await Player.inst.playOrPause(
                           index,
-                          queueSource.toTracks(null, trackWithDate?.dateAdded.toDaysSince1970()),
+                          tracks,
                           queueSource,
                           maximumItems: queueSource == QueueSource.allTracks ? 1000 : null,
                         );

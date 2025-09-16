@@ -3266,6 +3266,7 @@ class NamidaTracksList extends StatelessWidget {
                     properties: properties,
                     index: i,
                     trackOrTwd: track,
+                    tracks: queue,
                     onTap: onTap,
                     thirdLineText: thirdLineText == null ? null : thirdLineText(track),
                   ),

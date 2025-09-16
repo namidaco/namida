@@ -472,6 +472,7 @@ class SearchPage extends StatelessWidget {
                                                   properties: properties,
                                                   index: i,
                                                   trackOrTwd: track,
+                                                  tracks: tracksSearchTemp,
                                                 ),
                                               );
                                             },

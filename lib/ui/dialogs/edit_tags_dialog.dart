@@ -695,6 +695,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                     properties: properties,
                     index: index,
                     trackOrTwd: tr,
+                    tracks: list,
                     onTap: () => tracksGoingToBeEditedRx[tr] = !isSelected,
                     bgColor: isSelected ? null : Colors.black.withAlpha(0),
                     trailingWidget: IconButton(

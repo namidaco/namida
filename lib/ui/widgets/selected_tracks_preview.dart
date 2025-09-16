@@ -126,6 +126,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                                             properties: properties,
                                                             index: i,
                                                             trackOrTwd: selectedTracks[i],
+                                                            tracks: selectedTracks,
                                                           ),
                                                         );
                                                       },

@@ -204,6 +204,7 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                                             properties: properties,
                                             index: trackEffectiveIndex,
                                             trackOrTwd: track,
+                                            tracks: tracks, // all tracks not just disc section
                                           ),
                                         );
                                       },
@@ -229,6 +230,7 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                                     properties: properties,
                                     index: i,
                                     trackOrTwd: track,
+                                    tracks: tracks,
                                   ),
                                 );
                               },

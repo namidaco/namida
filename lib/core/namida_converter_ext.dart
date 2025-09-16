@@ -390,47 +390,47 @@ extension QUEUESOURCEExtensions on QueueSourceBase {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
-extension QUEUESOURCEtoTRACKS on QueueSource {
-  String toText() => _NamidaConverters.inst.getTitle(this);
+// extension QUEUESOURCEtoTRACKS on QueueSource {
+//   String toText() => _NamidaConverters.inst.getTitle(this);
 
-  List<Selectable> toTracks([int? limit, int? dayOfHistory]) {
-    final trs = <Selectable>[];
-    void addThese(Iterable<Selectable> tracks) => trs.addAll(tracks.withLimit(limit));
-    switch (this) {
-      case QueueSource.allTracks:
-        addThese(SearchSortController.inst.trackSearchList.value);
-        break;
-      case QueueSource.search:
-        addThese(SearchSortController.inst.trackSearchTemp.value);
-        break;
-      case QueueSource.mostPlayed:
-        addThese(HistoryController.inst.currentMostPlayedTracks);
-        break;
-      case QueueSource.history:
-        dayOfHistory != null ? addThese(HistoryController.inst.historyMap.value[dayOfHistory] ?? []) : addThese(HistoryController.inst.historyTracks);
-        break;
-      case QueueSource.favourites:
-        addThese(PlaylistController.inst.favouritesPlaylist.value.tracks);
-        break;
-      case QueueSource.queuePage:
-        addThese(SelectedTracksController.inst.getCurrentAllTracks());
-        break;
-      case QueueSource.selectedTracks:
-        addThese(SelectedTracksController.inst.selectedTracks.value);
-        break;
-      case QueueSource.playerQueue:
-        addThese(Player.inst.currentQueue.value.whereType<Selectable>());
-        break;
-      case QueueSource.recentlyAdded:
-        addThese(Indexer.inst.recentlyAddedTracksSorted());
-        break;
-      default:
-        addThese(SelectedTracksController.inst.getCurrentAllTracks());
-    }
+//   List<Selectable> toTracksObso([int? limit, int? dayOfHistory]) {
+//     final trs = <Selectable>[];
+//     void addThese(Iterable<Selectable> tracks) => trs.addAll(tracks.withLimit(limit));
+//     switch (this) {
+//       case QueueSource.allTracks:
+//         addThese(SearchSortController.inst.trackSearchList.value);
+//         break;
+//       case QueueSource.search:
+//         addThese(SearchSortController.inst.trackSearchTemp.value);
+//         break;
+//       case QueueSource.mostPlayed:
+//         addThese(HistoryController.inst.currentMostPlayedTracks);
+//         break;
+//       case QueueSource.history:
+//         dayOfHistory != null ? addThese(HistoryController.inst.historyMap.value[dayOfHistory] ?? []) : addThese(HistoryController.inst.historyTracks);
+//         break;
+//       case QueueSource.favourites:
+//         addThese(PlaylistController.inst.favouritesPlaylist.value.tracks);
+//         break;
+//       case QueueSource.queuePage:
+//         addThese(SelectedTracksController.inst.getCurrentAllTracks());
+//         break;
+//       case QueueSource.selectedTracks:
+//         addThese(SelectedTracksController.inst.selectedTracks.value);
+//         break;
+//       case QueueSource.playerQueue:
+//         addThese(Player.inst.currentQueue.value.whereType<Selectable>());
+//         break;
+//       case QueueSource.recentlyAdded:
+//         addThese(Indexer.inst.recentlyAddedTracksSorted());
+//         break;
+//       default:
+//         addThese(SelectedTracksController.inst.getCurrentAllTracks());
+//     }
 
-    return trs;
-  }
-}
+//     return trs;
+//   }
+// }
 
 extension PlaylistToQueueSource on LocalPlaylist {
   QueueSource toQueueSource() {

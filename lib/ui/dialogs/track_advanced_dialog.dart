@@ -799,6 +799,7 @@ void showLibraryTracksChooseDialog({
                           properties: properties,
                           trackOrTwd: tr,
                           index: i,
+                          tracks: allTracksList.value,
                           onTap: () => onTrackTap(tr),
                           onRightAreaTap: () => onTrackTap(tr),
                           trailingWidget: ObxO(
