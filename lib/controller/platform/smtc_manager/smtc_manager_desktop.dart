@@ -1,8 +1,6 @@
 part of 'smtc_manager.dart';
 
 class _SMTCManagerWindows extends NamidaSMTCManager {
-  static const appId = "94dba250-1e0f-11f0-846e-a101934a6b13"; // same as the one for inno setup in pubspec.yaml
-
   SMTCWindows? smtc;
 
   @override
@@ -10,7 +8,7 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
     try {
       await SMTCWindows.initialize();
       smtc = SMTCWindows(
-        appId: _SMTCManagerWindows.appId,
+        appId: NamidaWindowManager.appId,
         enabled: true,
         config: const SMTCConfig(
           fastForwardEnabled: true,

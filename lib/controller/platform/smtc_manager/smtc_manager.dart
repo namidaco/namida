@@ -5,6 +5,7 @@ import 'package:smtc_windows/smtc_windows.dart';
 
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/platform/base.dart';
+import 'package:namida/controller/platform/window_manager/window_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 
 part 'smtc_manager_base.dart';
