@@ -26,14 +26,19 @@ class SelectedTracksController {
   final _tracksOrTwdList = <Selectable>[].obs;
   final _allTracksHashCodes = <Track, bool>{}.obs;
 
-  Iterable<Selectable> getCurrentAllTracks() {
-    if (MiniPlayerController.inst.isInQueue) {
-      return Player.inst.currentQueue.value.whereType<Selectable>();
-    } else if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
+  Iterable<Selectable> getCurrentAllTracks({bool fallbackToQueue = true}) {
+    if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
       return SearchSortController.inst.trackSearchTemp.value;
     }
 
-    return NamidaNavigator.inst.currentRoute?.tracksInside() ?? [];
+    final tracks = NamidaNavigator.inst.currentRoute?.tracksInside();
+    if (tracks != null) return tracks;
+
+    if (fallbackToQueue && MiniPlayerController.inst.isInQueue) {
+      return Player.inst.currentQueue.value.whereType<Selectable>();
+    }
+
+    return [];
   }
 
   final isMenuMinimized = true.obs;
