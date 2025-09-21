@@ -548,7 +548,7 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  Widget highMatchesWidget(Set<String> highMatchesFiles, {bool showFullPath = false}) {
+  Widget highMatchesWidget(Iterable<String> highMatchesFiles, {bool showFullPath = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -588,7 +588,7 @@ Future<void> showGeneralPopupDialog(
     final paths = files.mapped((e) => e.path);
     paths.sortBy((e) => e);
 
-    final highMatchesFiles = NamidaGenerator.getHighMatcheFilesFromFilename(paths, tracks.first.path.getFilename).toSet();
+    final highMatchesFiles = NamidaGenerator.getHighMatcheFilesFromFilename(paths, tracks.first.path);
 
     /// Searching
     final txtc = TextEditingController();
@@ -986,8 +986,7 @@ Future<void> showGeneralPopupDialog(
                                     }
 
                                     /// firstly checks if a file exists in current library
-                                    final firstHighMatchesFiles =
-                                        NamidaGenerator.getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles.value, tracks.first.path.getFilename).toSet();
+                                    final firstHighMatchesFiles = NamidaGenerator.getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles.value, tracks.first.path);
                                     if (firstHighMatchesFiles.isNotEmpty) {
                                       await openDialog(
                                         (theme) => CustomBlurryDialog(

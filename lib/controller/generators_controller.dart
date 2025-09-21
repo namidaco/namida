@@ -9,19 +9,61 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
   static final NamidaGenerator inst = NamidaGenerator._internal();
   NamidaGenerator._internal() : super(HistoryController.inst);
 
-  static Iterable<String> getHighMatcheFilesFromFilename(Iterable<String> files, String filename) {
-    return files.where(
-      (element) {
-        final trackFilename = filename;
-        final fileSystemFilenameCleaned = element.getFilename.cleanUpForComparison;
-        final l = Indexer.getTitleAndArtistFromFilename(trackFilename);
-        final trackTitle = l.$1;
-        final trackArtist = l.$2;
-        if (fileSystemFilenameCleaned.contains(trackFilename.cleanUpForComparison)) return true;
-        if (fileSystemFilenameCleaned.contains(trackTitle.splitFirst('(')) && fileSystemFilenameCleaned.contains(trackArtist)) return true;
-        return false;
-      },
-    );
+  static Iterable<String> getHighMatcheFilesFromFilename(Iterable<String> files, String filePathToMatch) {
+    int? latestPriority;
+    bool requiresSorting = false;
+    final matches = <(String, int)>[];
+
+    void addMatch(String filePath, int priority) {
+      matches.add((filePath, priority));
+      if (requiresSorting == false) {
+        if (priority != latestPriority) {
+          if (latestPriority == null) {
+            latestPriority = priority;
+          } else {
+            latestPriority = priority;
+            requiresSorting = true;
+          }
+        }
+      }
+    }
+
+    final filenameToMatch = filePathToMatch.getFilename;
+    final filenameWOExtToMatch = filePathToMatch.getFilenameWOExt;
+    final filenameToMatchCleaned = filenameToMatch.cleanUpForComparison;
+    final l = Indexer.getTitleAndArtistFromFilename(filenameToMatch);
+    final trackTitle = l.$1;
+    final trackArtist = l.$2;
+
+    for (final path in files) {
+      final fileSystemFilename = path.getFilename;
+      if (filenameToMatch == fileSystemFilename) {
+        addMatch(path, 0);
+        continue;
+      }
+      final fileSystemFilenameWOExt = path.getFilenameWOExt;
+      if (filenameWOExtToMatch == fileSystemFilenameWOExt) {
+        addMatch(path, 1);
+        continue;
+      }
+
+      final fileSystemFilenameCleaned = fileSystemFilename.cleanUpForComparison;
+
+      if (fileSystemFilenameCleaned.contains(filenameToMatchCleaned)) {
+        addMatch(path, 2);
+        continue;
+      }
+      if (fileSystemFilenameCleaned.contains(trackTitle.splitFirst('(')) && fileSystemFilenameCleaned.contains(trackArtist)) {
+        addMatch(path, 3);
+        continue;
+      }
+    }
+
+    if (requiresSorting) {
+      matches.sortBy((e) => e.$2); // lower priority means it should be first
+    }
+
+    return matches.map((e) => e.$1);
   }
 
   Iterable<Track> getRandomTracks({Track? exclude, int? min, int? max}) {
