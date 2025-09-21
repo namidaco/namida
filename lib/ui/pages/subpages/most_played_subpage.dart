@@ -133,6 +133,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                   title: lang.CHOOSE,
                   buttonText: lang.CONFIRM,
                   useHistoryDates: true,
+                  historyController: historyController,
                   onGenerate: (dates) => _onSelectingTimeRange(
                     dateCustom: DateRange(oldest: dates.first, newest: dates.last),
                     mptr: MostPlayedTimeRange.custom,
