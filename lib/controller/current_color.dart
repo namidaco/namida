@@ -111,16 +111,17 @@ class CurrentColor {
   void updateColorAfterThemeModeChange() {
     if (settings.autoColor.value) {
       final nc = _namidaColor.value ?? _defaultNamidaColor;
-      _namidaColor.value = NamidaColor(
+      _namidaColor.set(NamidaColor(
         used: nc.used?.withAlpha(colorAlpha),
         // mix: nc.mix,
         mix2: nc.mix2,
         palette: nc.palette,
-      );
+      ));
     } else {
       final nc = playerStaticColor.lighter;
-      _namidaColor.value = NamidaColor.single(nc);
+      _namidaColor.set(NamidaColor.single(nc));
     }
+    _namidaColor.refresh();
   }
 
   void updatePlayerColorFromColor(Color color, [bool customAlpha = true]) async {
