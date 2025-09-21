@@ -1,0 +1,11 @@
+flutter_native_splash:
+  image: assets/namida_icon.png
+  image_dark: assets/namida_icon.png
+  color: "#dfc6a7"
+  color_dark: "#121212"
+  android: true
+  ios: false
+  web: false
+  android_12:
+    color: "#dfc6a7"
+    color_dark: "#121212"

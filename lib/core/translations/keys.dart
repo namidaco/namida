@@ -50,6 +50,7 @@ abstract class LanguageKeys {
   String get ANIMATING_THUMBNAIL_INVERSED_SUBTITLE => _getKey('ANIMATING_THUMBNAIL_INVERSED_SUBTITLE');
   String get ANIMATING_THUMBNAIL_INVERSED => _getKey('ANIMATING_THUMBNAIL_INVERSED');
   String get ANOTHER_PROCESS_IS_RUNNING => _getKey('ANOTHER_PROCESS_IS_RUNNING');
+  String get APP_ICON => _getKey('APP_ICON');
   String get ARTIST => _getKey('ARTIST');
   String get ARTISTS => _getKey('ARTISTS');
   String get ARTWORK => _getKey('ARTWORK');

@@ -12,6 +12,10 @@ abstract class NamidaChannel {
 
   final isInPip = false.obs;
 
+  Future<bool?> isAppIconEnabled(NamidaAppIcons type);
+
+  Future<void> changeAppIcon(NamidaAppIcons type);
+
   Future<void> updatePipRatio({int? width, int? height});
 
   Future<void> setCanEnterPip(bool canEnter);
@@ -54,3 +58,14 @@ abstract class NamidaChannel {
     _onSuspending.remove(fn);
   }
 }
+
+// SPLASH_AUTO_GENERATED START
+enum NamidaAppIcons {
+	main("assets/namida_icon.png"),
+	monet("assets/namida_icon_monet.png"),
+	;
+
+	final String assetPath;
+	const NamidaAppIcons(this.assetPath);
+}
+// SPLASH_AUTO_GENERATED END

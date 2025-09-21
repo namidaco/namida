@@ -29,7 +29,9 @@ import java.util.concurrent.CompletableFuture
 class NamidaMainActivity : FlutterActivity() {
   companion object {
     var currentLifecycle: Lifecycle? = null
+    var currentApplicationContext : Context? = null
   }
+
 
   private val CHANNELNAME = "namida"
   private val CHANNELNAME_STORAGE = "namida/storage"
@@ -124,6 +126,39 @@ class NamidaMainActivity : FlutterActivity() {
               result.error("LAUNCH_FAILED", "Could not launch Namida Sync: ${e.message}", null)
           }
         }
+
+				// SPLASH_AUTO_GENERATED START
+				"changeAppIcon" -> {
+          val key = call.argument<String>("key")
+          val nativeIcon = when (key) {
+						"main" -> LauncherIcon.DEFAULT
+						"monet" -> LauncherIcon.MONET
+            else -> null
+          }
+
+          if (nativeIcon != null) {
+              LauncherIconController.setIcon(nativeIcon)
+              result.success(true)
+          } else {
+              result.error("INVALID_ICON", "No matching icon for key: $key", null)
+          }
+        }
+				"isAppIconEnabled" -> {
+          val key = call.argument<String>("key")
+          val nativeIcon = when (key) {
+						"main" -> LauncherIcon.DEFAULT
+						"monet" -> LauncherIcon.MONET
+            else -> null
+          }
+
+          if (nativeIcon != null) {
+              val enabled = LauncherIconController.isEnabled(nativeIcon)
+              result.success(enabled)
+          } else {
+              result.error("INVALID_ICON", "No matching icon for key: $key", null)
+          }
+        }
+				// SPLASH_AUTO_GENERATED END
 
         else -> result.notImplemented()
       }
@@ -229,10 +264,16 @@ class NamidaMainActivity : FlutterActivity() {
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    try {
+      currentApplicationContext = getApplicationContext();
+    } catch (e: Exception) {
+    }
+    
     super.onCreate(savedInstanceState)
     if (intent?.action == NamidaConstants.BABE_WAKE_UP) {
       moveTaskToBack(true)
     }
+    LauncherIconController.tryFixLauncherIconIfNeeded();
   }
 
   override fun onResume() {

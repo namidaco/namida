@@ -6,6 +6,7 @@ import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
@@ -61,6 +62,7 @@ enum _CustomizationSettingsKeys {
   waveformBarsCount,
   displayAudioInfo,
   displayArtistBeforeTitle,
+  appIcons,
 }
 
 class CustomizationSettings extends SettingSubpageProvider {
@@ -108,6 +110,7 @@ class CustomizationSettings extends SettingSubpageProvider {
         _CustomizationSettingsKeys.waveformBarsCount: [lang.WAVEFORM_BARS_COUNT],
         _CustomizationSettingsKeys.displayAudioInfo: [lang.DISPLAY_AUDIO_INFO_IN_MINIPLAYER],
         _CustomizationSettingsKeys.displayArtistBeforeTitle: [lang.DISPLAY_ARTIST_BEFORE_TITLE],
+        _CustomizationSettingsKeys.appIcons: [lang.APP_ICON],
       };
 
   @override
@@ -307,6 +310,51 @@ class CustomizationSettings extends SettingSubpageProvider {
           _getAlbumCustomizationsTile(),
           _getTrackTileCustomizationsTile(context),
           _getMiniplayerCustomizationsTile(context),
+          if (NamidaFeaturesVisibility.displayAppIcons) NamidaContainerDivider(),
+          if (NamidaFeaturesVisibility.displayAppIcons)
+            getItemWrapper(
+              key: _CustomizationSettingsKeys.appIcons,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: getBgColor(_CustomizationSettingsKeys.appIcons),
+                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 12.0),
+                    SizedBox(
+                      width: context.width,
+                      child: Wrap(
+                        runSpacing: 8.0,
+                        alignment: WrapAlignment.start,
+                        runAlignment: WrapAlignment.start,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          SizedBox(width: 12.0),
+                          Icon(
+                            Broken.attach_square,
+                            size: 22.0,
+                            color: context.defaultIconColor(),
+                          ),
+                          SizedBox(width: 8.0),
+                          Text(
+                            lang.APP_ICON,
+                            style: context.theme.textTheme.displayMedium,
+                          ),
+                          SizedBox(width: 4.0),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: const _AppIconWidgetRow(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 8.0),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -1054,6 +1102,81 @@ class TrackItemSmallBox extends StatelessWidget {
               style: context.theme.textTheme.displaySmall,
             )
           : child,
+    );
+  }
+}
+
+class _AppIconWidgetRow extends StatefulWidget {
+  const _AppIconWidgetRow();
+
+  @override
+  State<_AppIconWidgetRow> createState() => _AppIconWidgetRowState();
+}
+
+class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
+  NamidaAppIcons? _enabledIcon;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshStatus();
+  }
+
+  Future<void> _refreshStatus() async {
+    NamidaAppIcons? newEnabledIcon;
+    for (final e in NamidaAppIcons.values) {
+      final enabled = await NamidaChannel.inst.isAppIconEnabled(e) ?? false;
+      if (enabled) {
+        newEnabledIcon = e;
+        break;
+      }
+    }
+    if (mounted && _enabledIcon != newEnabledIcon) {
+      setState(() {
+        _enabledIcon = newEnabledIcon;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: NamidaAppIcons.values
+          .map(
+            (e) {
+              final isEnabled = e == _enabledIcon;
+              return NamidaInkWell(
+                animationDurationMS: 300,
+                borderRadius: 12.0,
+                padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                enableSecondaryTap: false,
+                decoration: isEnabled
+                    ? BoxDecoration(
+                        color: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.75),
+                        border: Border.all(
+                          color: context.theme.colorScheme.secondaryContainer,
+                          width: 1.5,
+                        ),
+                      )
+                    : BoxDecoration(
+                        color: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.25),
+                      ),
+                onTap: () async {
+                  await NamidaChannel.inst.changeAppIcon(e);
+                  await _refreshStatus();
+                },
+                child: Image.asset(
+                  e.assetPath,
+                  width: 32.0,
+                  height: 32.0,
+                  alignment: Alignment.center,
+                ),
+              );
+            },
+          )
+          .addSeparators(separator: SizedBox(width: 4.0))
+          .toList(),
     );
   }
 }

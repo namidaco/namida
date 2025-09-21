@@ -759,6 +759,7 @@ class NamidaFeaturesVisibility {
   static final displayFavButtonInNotif = _isAndroid;
   static final displayFavButtonInNotifMightCauseIssue = displayFavButtonInNotif && NamidaDeviceInfo.sdkVersion < 31;
   static final shouldRequestManageAllFilesPermission = _isAndroid && NamidaDeviceInfo.sdkVersion >= 30;
+  static final displayAppIcons = _isAndroid;
   static final showEqualizerBands = _isAndroid;
   static final showToggleMediaStore = onAudioQueryAvailable;
   static final showToggleImmersiveMode = _isAndroid;

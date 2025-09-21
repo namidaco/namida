@@ -15,6 +15,7 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/version_controller.dart';
@@ -155,7 +156,7 @@ class _AboutPageState extends State<AboutPage> {
                               color: Color.fromRGBO(25, 25, 25, 0.1),
                             ),
                             child: Image.asset(
-                              'assets/namida_icon.png',
+                              NamidaAppIcons.main.assetPath,
                             ),
                           ),
                         ),

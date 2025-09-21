@@ -4,6 +4,17 @@ class _NamidaChannelWindows extends NamidaChannel {
   _NamidaChannelWindows._internal();
 
   @override
+  Future<bool?> isAppIconEnabled(NamidaAppIcons type) async {
+    // -- unsupported
+    return false;
+  }
+
+  @override
+  Future<void> changeAppIcon(NamidaAppIcons type) async {
+    // -- unsupported
+  }
+
+  @override
   Future<void> updatePipRatio({int? width, int? height}) async {
     // -- unsupported
   }

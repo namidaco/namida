@@ -1,0 +1,23 @@
+flutter_native_splash:
+  image: assets/namida_icon_monet.png
+  image_dark: assets/namida_icon_monet.png
+  color: "#f2fcff"
+  color_dark: "#121212"
+  android: true
+  ios: false
+  web: false
+  android_12:
+    color: "#f2fcff"
+    color_dark: "#121212"
+
+flutter_launcher_icons:
+  android: "ic_launcher_monet"
+  image_path: "assets/namida_icon_monet.png"
+  ios: false
+  min_sdk_android: 21
+  web: 
+    generate: false
+  windows: 
+    generate: false
+  macos: 
+    generate: false
