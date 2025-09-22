@@ -17,8 +17,9 @@ class _YtFilenameRebuilder {
     VideoStream? videoStream,
     AudioStream? audioStream,
     int? originalIndex,
-    int? totalLength,
-  ) {
+    int? totalLength, {
+    String fallback = 'NA',
+  }) {
     bool didConvertSmth = false;
     var decodedFilename = filenameEncoded.replaceAllMapped(
       paramRegex,
@@ -38,10 +39,8 @@ class _YtFilenameRebuilder {
               originalIndex,
               totalLength,
             );
-            if (converted != null) {
-              didConvertSmth = true;
-              return converted;
-            }
+            didConvertSmth = true; // always set to true, even if converted value is null (ex. null playlist name)
+            if (converted != null) return converted;
           } on _NonMatched catch (_) {
             // confusing param, ex: `%(blabla)s`
             // ain't changing it to 'NA' or etc.
@@ -49,7 +48,7 @@ class _YtFilenameRebuilder {
           }
         }
 
-        return 'NA';
+        return fallback;
       },
     );
     return didConvertSmth ? decodedFilename : null;

@@ -73,6 +73,13 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
         queueSource: QueueSourceYoutubeID.mostPlayed,
         playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
         playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
+        playlistInfo: () => PlaylistBasicInfo(
+          id: '',
+          title: lang.MOST_PLAYED,
+          videosCountText: YoutubeHistoryController.inst.currentTopTracksMapListens.length.displayVideoKeyword,
+          videosCount: YoutubeHistoryController.inst.currentTopTracksMapListens.length,
+          thumbnails: [],
+        ),
       ),
       builder: (properties) => ObxO(
         rx: YoutubeHistoryController.inst.currentMostPlayedTimeRange,
@@ -359,6 +366,13 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                       draggingEnabled: true, // actual is managed using reorderableRx
                       showMoreIcon: true,
                       reorderableRx: YoutubePlaylistController.inst.canReorderItems,
+                      playlistInfo: () => PlaylistBasicInfo(
+                        id: '',
+                        title: playlistCurrentName,
+                        videosCountText: playlist.tracks.length.displayVideoKeyword,
+                        videosCount: playlist.tracks.length,
+                        thumbnails: [],
+                      ),
                     ),
                     builder: (properties) => NamidaSliverReorderableList(
                       onReorder: (oldIndex, newIndex) => YoutubePlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),

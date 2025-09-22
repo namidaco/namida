@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:sticky_headers/sticky_headers.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/base/history_days_rebuilder.dart';
 import 'package:namida/class/route.dart';
@@ -12,6 +13,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -58,10 +60,17 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
           yearsRow,
           Expanded(
             child: VideoTilePropertiesProvider(
-              configs: const VideoTilePropertiesConfigs(
+              configs: VideoTilePropertiesConfigs(
                 queueSource: QueueSourceYoutubeID.history,
                 playlistName: k_PLAYLIST_NAME_HISTORY,
                 playlistID: PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
+                playlistInfo: () => PlaylistBasicInfo(
+                  id: '',
+                  title: lang.HISTORY,
+                  videosCountText: YoutubeHistoryController.inst.totalHistoryItemsCount.value.displayVideoKeyword,
+                  videosCount: YoutubeHistoryController.inst.totalHistoryItemsCount.value,
+                  thumbnails: [],
+                ),
               ),
               builder: (properties) => CustomScrollView(
                 controller: YoutubeHistoryController.inst.scrollController,

@@ -6,6 +6,7 @@ import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -141,6 +142,13 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                   displayTimeAgo: true,
                   totalVideosCountInMainList: lengthDummy ? 0 : length,
                   displayShimmer: lengthDummy,
+                  playlistInfo: () => PlaylistBasicInfo(
+                    id: '',
+                    title: lang.HISTORY,
+                    videosCountText: length.displayVideoKeyword,
+                    videosCount: length,
+                    thumbnails: [],
+                  ),
                 );
               },
             ),
@@ -171,6 +179,13 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                       totalVideosCountInMainList: videos.length,
                       displayShimmer: totalLength == -1,
                       listensMap: listensMap,
+                      playlistInfo: () => PlaylistBasicInfo(
+                        id: '',
+                        title: lang.MOST_PLAYED,
+                        videosCountText: videos.length.displayVideoKeyword,
+                        videosCount: videos.length,
+                        thumbnails: [],
+                      ),
                     );
                   },
                 ),
@@ -192,6 +207,13 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                     playlistID: k_PLAYLIST_NAME_FAV,
                     displayTimeAgo: false,
                     totalVideosCountInMainList: favs.value.tracks.length,
+                    playlistInfo: () => PlaylistBasicInfo(
+                      id: '',
+                      title: lang.FAVOURITES,
+                      videosCountText: favs.value.tracks.length.displayVideoKeyword,
+                      videosCount: favs.value.tracks.length,
+                      thumbnails: [],
+                    ),
                   ),
                 );
               },
@@ -475,6 +497,7 @@ class _HorizontalSliverList extends StatelessWidget {
   final Iterable<YoutubeID> videos;
   final String playlistName;
   final String playlistID;
+  final PlaylistBasicInfo Function()? playlistInfo;
   final int totalVideosCountInMainList;
   final Widget? subHeader;
   final EdgeInsets padding;
@@ -491,6 +514,7 @@ class _HorizontalSliverList extends StatelessWidget {
     required this.videos,
     required this.playlistName,
     required this.playlistID,
+    required this.playlistInfo,
     required this.totalVideosCountInMainList,
     this.subHeader,
     this.padding = const EdgeInsets.symmetric(vertical: 8.0),
@@ -513,6 +537,7 @@ class _HorizontalSliverList extends StatelessWidget {
         playlistName: playlistName,
         playlistID: PlaylistID(id: playlistID),
         displayTimeAgo: displayTimeAgo,
+        playlistInfo: playlistInfo,
       ),
       builder: (properties) => SliverToBoxAdapter(
         child: Column(

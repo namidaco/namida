@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/track.dart';
@@ -124,6 +125,7 @@ class VideoTilePropertiesProvider extends StatelessWidget {
 class VideoTilePropertiesConfigs {
   final QueueSourceYoutubeID queueSource;
   final PlaylistID? playlistID;
+  final PlaylistBasicInfo Function()? playlistInfo;
   final String playlistName;
   final bool horizontalGestures;
   final bool openMenuOnLongPress;
@@ -136,6 +138,7 @@ class VideoTilePropertiesConfigs {
   const VideoTilePropertiesConfigs({
     required this.queueSource,
     this.playlistID,
+    this.playlistInfo,
     this.playlistName = '',
     this.openMenuOnLongPress = true,
     this.displayTimeAgo = true,
@@ -621,6 +624,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
         queueSource: configs.queueSource,
         downloadIndex: widget.downloadIndex,
         totalLength: widget.downloadTotalLength,
+        playlistInfo: configs.playlistInfo,
         streamInfoItem: info,
         videoId: videoId,
         channelID: _infoVideoFinal?.channelId ?? info?.channelId ?? info?.channel?.id,
@@ -703,6 +707,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
                     queueSource: configs.queueSource,
                     downloadIndex: widget.downloadIndex,
                     totalLength: widget.downloadTotalLength,
+                    playlistInfo: configs.playlistInfo,
                     streamInfoItem: info,
                     videoId: videoId,
                     channelID: _infoVideoFinal?.channelId ?? info?.channelId ?? info?.channel?.id,

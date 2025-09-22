@@ -114,6 +114,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       originalIndex: originalIndex,
       totalLength: widget.playlistInfo?.videosCount ?? widget.ids.length,
       playlistId: widget.playlistInfo?.id,
+      playlistInfo: widget.playlistInfo,
       id: DownloadTaskVideoId(videoId: id),
       groupName: group,
       filename: DownloadTaskFilename.create(initialFilename: filename),

@@ -572,8 +572,8 @@ class YoutubeController {
     List<String> preferredQualities = const [],
     Future<void> Function(File? downloadedFile)? onOldFileDeleted,
     Future<void> Function(File? deletedFile)? onFileDownloaded,
-    Directory? saveDirectory,
     PlaylistBasicInfo? playlistInfo,
+    Directory? saveDirectory,
   }) async {
     await _updateDownloadTask(groupName: groupName, itemsConfig: itemsConfig);
     YoutubeParallelDownloadsHandler.inst.setMaxParalellDownloads(parallelDownloads);
@@ -649,7 +649,7 @@ class YoutubeController {
             config.videoStream,
             config.audioStream,
             streams,
-            playlistInfo,
+            playlistInfo ?? config.playlistInfo,
             playlistInfo?.id ?? config.playlistId,
             config.originalIndex,
             config.totalLength,
@@ -682,7 +682,6 @@ class YoutubeController {
         fileExtension: config.videoStream?.codecInfo.container ?? config.audioStream?.codecInfo.container ?? 'm4a',
         streams: streams,
         pageResult: pageResult,
-        playlistInfo: playlistInfo,
         videoStream: config.videoStream,
         audioStream: config.audioStream,
         merge: true,
@@ -839,7 +838,6 @@ class YoutubeController {
     required String fileExtension,
     required VideoStreamsResult? streams,
     required YoutiPieVideoPageResult? pageResult,
-    required PlaylistBasicInfo? playlistInfo,
     required VideoStream? videoStream,
     required AudioStream? audioStream,
     required Map<String, String?> ffmpegTags,
@@ -861,6 +859,15 @@ class YoutubeController {
       streams ??= await YoutubeInfoController.video.fetchVideoStreams(config.id.videoId);
     } catch (_) {}
 
+    var playlistInfo = config.playlistInfo;
+    final playlistId = config.playlistId;
+
+    if (playlistInfo == null && playlistId != null && playlistId.isNotEmpty) {
+      try {
+        final pl = await YoutubeInfoController.playlist.fetchPlaylist(playlistId: playlistId);
+        playlistInfo = pl?.info;
+      } catch (_) {}
+    }
     final finalFilenameWrapper = config.filename;
     String finalFilenameTemp = finalFilenameWrapper.filename;
     bool requiresRenaming = false;

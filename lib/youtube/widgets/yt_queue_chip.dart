@@ -431,6 +431,13 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                           draggingEnabled: true,
                           draggableThumbnail: true,
                           showMoreIcon: true,
+                          playlistInfo: () => PlaylistBasicInfo(
+                            id: '',
+                            title: lang.QUEUE,
+                            videosCountText: Player.inst.currentQueue.value.length.displayVideoKeyword,
+                            videosCount: Player.inst.currentQueue.value.length,
+                            thumbnails: [],
+                          ),
                         ),
                         builder: (properties) => Obx(
                           (context) {

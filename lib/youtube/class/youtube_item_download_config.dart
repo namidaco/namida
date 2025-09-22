@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
@@ -27,6 +28,7 @@ class YoutubeItemDownloadConfig {
   final int? originalIndex;
   final int? totalLength;
   final String? playlistId;
+  final PlaylistBasicInfo? playlistInfo;
   final DateTime? addedAt;
 
   YoutubeItemDownloadConfig({
@@ -45,6 +47,7 @@ class YoutubeItemDownloadConfig {
     required this.originalIndex,
     required this.totalLength,
     required this.playlistId,
+    required this.playlistInfo,
     required DateTime? addedAt,
   })  : _filename = filename.obs,
         this.addedAt = addedAt ?? DateTime.now();
@@ -86,6 +89,7 @@ class YoutubeItemDownloadConfig {
       originalIndex: map['index'],
       totalLength: map['totalLength'],
       playlistId: map['playlistId'],
+      playlistInfo: map['playlistInfo'] == null ? null : PlaylistBasicInfo.fromMap(map['playlistInfo']),
       addedAt: map['addedAt'] is int ? DateTime.fromMicrosecondsSinceEpoch(map['addedAt'] as int) : null,
     );
   }
@@ -107,6 +111,7 @@ class YoutubeItemDownloadConfig {
       'index': originalIndex,
       'totalLength': totalLength,
       'playlistId': playlistId,
+      'playlistInfo': playlistInfo?.toMap(),
       'addedAt': addedAt?.microsecondsSinceEpoch,
     };
   }
@@ -139,6 +144,7 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
     int? originalIndex,
     int? totalLength,
     String? playlistId,
+    PlaylistBasicInfo? playlistInfo,
     DateTime? addedAt,
   }) {
     return YoutubeItemDownloadConfig(
@@ -157,6 +163,7 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
       originalIndex: originalIndex ?? this.originalIndex,
       totalLength: totalLength ?? this.totalLength,
       playlistId: playlistId ?? this.playlistId,
+      playlistInfo: playlistInfo ?? this.playlistInfo,
       addedAt: addedAt ?? this.addedAt,
     );
   }

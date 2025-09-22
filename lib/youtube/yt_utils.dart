@@ -484,6 +484,7 @@ class YTUtils {
     required int? totalLength,
     required StreamInfoItem? streamInfoItem,
     String? playlistId,
+    PlaylistBasicInfo Function()? playlistInfo,
     required String videoId,
     required String? channelID,
     bool displayGoToChannel = true,
@@ -539,10 +540,12 @@ class YTUtils {
         icon: Broken.import,
         title: lang.DOWNLOAD,
         onTap: () {
+          final plInfo = playlistInfo?.call();
           showDownloadVideoBottomSheet(
             videoId: videoId,
             originalIndex: downloadIndex,
-            playlistId: playlistId,
+            playlistId: plInfo?.id ?? playlistId,
+            playlistInfo: plInfo,
             totalLength: totalLength,
             streamInfoItem: streamInfoItem,
             initialGroupName: playlistName.emptyIfHasDefaultPlaylistName(),
@@ -682,7 +685,7 @@ class YTUtils {
     bool autoExtract = true,
     Map<String, String?>? initialBuilding,
   }) async {
-    if (playlistInfo == null && playlistId != null) {
+    if (playlistInfo == null && playlistId != null && playlistId.isNotEmpty) {
       final plInfo = await YoutubeInfoController.playlist.fetchPlaylist(playlistId: playlistId).catchError((_) => null);
       playlistInfo = plInfo?.info;
     }
@@ -695,8 +698,9 @@ class YTUtils {
       for (final ib in initialBuilding.entries) {
         final userText = ib.value;
         if (userText != null) {
-          infoMap[ib.key] = YoutubeController.filenameBuilder
-                  .rebuildFilenameWithDecodedParams(userText, id, streamInfo, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength) ??
+          infoMap[ib.key] = YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
+                  userText, id, streamInfo, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength,
+                  fallback: '') ??
               userText;
         }
       }
@@ -705,16 +709,18 @@ class YTUtils {
     final defaultInfoSett = settings.youtube.initialDefaultMetadataTags;
     for (final di in defaultInfoSett.entries) {
       final defaultText = di.value;
-      infoMap[di.key] ??= YoutubeController.filenameBuilder
-              .rebuildFilenameWithDecodedParams(defaultText, id, streamInfo, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength) ??
+      infoMap[di.key] ??= YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
+              defaultText, id, streamInfo, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength,
+              fallback: '') ??
           defaultText;
     }
 
     final defaultInfo = getDefaultTagsFieldsBuilders(autoExtract);
     for (final di in defaultInfo.entries) {
       final defaultText = di.value;
-      infoMap[di.key] ??= YoutubeController.filenameBuilder
-              .rebuildFilenameWithDecodedParams(defaultText, id, streamInfo, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength) ??
+      infoMap[di.key] ??= YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
+              defaultText, id, streamInfo, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength,
+              fallback: '') ??
           '';
     }
 
