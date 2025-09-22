@@ -123,7 +123,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
     final historytracks = historyController.historyTracks.toList();
     if (historytracks.isEmpty) return [];
 
-    final q = QueueInsertionType.algorithmDiscoverDate.toQueueInsertion();
+    final q = QueueInsertionType.algorithm.toQueueInsertion();
     final sampleCount = q.sample ?? 10;
 
     final max = historytracks.length;
