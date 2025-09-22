@@ -128,15 +128,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
     // -- Top Recents --
     if (_topRecentListened.isEmpty) {
-      _topRecentListened.addAll(
-        HistoryController.inst
-            .getMostListensInTimeRange(
-              mptr: _topRecentsTimeRange,
-              isStartOfDay: false,
-              mainItemToSubItem: (item) => item.track,
-            )
-            .take(50),
+      final sortedMap = HistoryController.inst.getMostListensInTimeRange(
+        mptr: _topRecentsTimeRange,
+        isStartOfDay: false,
+        mainItemToSubItem: (item) => item.track,
       );
+      _topRecentListened.addAll(sortedMap.entriesSortedByValue);
     }
 
     // -- Lost Memories --
@@ -185,18 +182,72 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
           supremacyEntry = MapEntry('"${ct.title}" ${lang.SUPREMACY}', supremacy);
         }
       }
+      final favsSample = PlaylistController.inst.favouritesPlaylist.value.tracks.getRandomSample(25).tracks.toList();
+      final topRecentListenedKeys = _topRecentListened.map((e) => e.key).toList();
+
+      final recentTopSortedByTotalListens = List.from(topRecentListenedKeys)..sortByReverse((e) => HistoryController.inst.topTracksMapListens.value[e.track]?.length ?? 0);
+      final recent30Tracks = HistoryController.inst.historyTracks.take(30).map((e) => e.track).toList();
+
+      final topRecentListenedExpanded = HistoryController.inst.getMostListensInTimeRange(
+        mptr: MostPlayedTimeRange.custom,
+        customDate: DateRange(
+          oldest: timeNow.subtract(Duration(days: 14)),
+          newest: timeNow,
+        ),
+        isStartOfDay: false,
+        mainItemToSubItem: (item) => item.track,
+      );
+      recent30Tracks.sortByReverse((tr) => topRecentListenedExpanded[tr]?.length ?? 0);
+
+      final sameTimeAyearAgo = HistoryController.inst
+          .getMostListensInTimeRange(
+            mptr: MostPlayedTimeRange.custom,
+            customDate: DateRange(
+              oldest: DateTime(timeNow.year - 1, timeNow.month, timeNow.day - 9),
+              newest: DateTime(timeNow.year - 1, timeNow.month, timeNow.day + 9),
+            ),
+            isStartOfDay: false,
+            mainItemToSubItem: (item) => item.track,
+          )
+          .keysSortedByValue
+          .take(40);
+
+      final recommendedMixTracks = <Track>{
+        // -- top recents, sorted by total listens
+        ...recentTopSortedByTotalListens,
+
+        // -- top recents, but only from favourites
+        ...topRecentListenedKeys.where((element) => element.isFavourite),
+
+        // -- recents, sorted by listens count in a wider recent date range
+        ...recent30Tracks,
+
+        // -- top tracks in the same time, a year ago
+        ...sameTimeAyearAgo,
+      }.toList();
+      recommendedMixTracks.shuffle();
+
       _mixes.addAll([
-        MapEntry(lang.TOP_RECENTS, _topRecentListened.map((e) => e.key).toList()),
+        MapEntry(lang.NEW_TRACKS_RECOMMENDED, recommendedMixTracks),
+        MapEntry(lang.TOP_RECENTS, topRecentListenedKeys),
         if (supremacyEntry != null) supremacyEntry,
-        MapEntry(lang.FAVOURITES, favs.take(25).tracks.toList()),
+        MapEntry(lang.FAVOURITES, favsSample),
         MapEntry(lang.RANDOM_PICKS, _randomTracks),
       ]);
-      for (final m in _mixes) {
-        if (m.value.isEmpty) {
-          _mixes.sort((a, b) => b.value.isEmpty ? 0 : 1);
-          break;
-        }
-      }
+
+      // -- if any one is empty, remove it and add it to the end
+      List<MapEntry<String, List<Track>>>? emptyOnes;
+      _mixes.removeWhere(
+        (m) {
+          if (m.value.isEmpty) {
+            emptyOnes ??= [];
+            emptyOnes!.add(m);
+            return true;
+          }
+          return false;
+        },
+      );
+      if (emptyOnes != null) _mixes.addAll(emptyOnes!);
     }
 
     _isLoading = false;
@@ -211,12 +262,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     );
     currentYearLostMemories = year;
     currentYearLostMemoriesDateRange = dateRange;
-    _sameTimeYearAgo = HistoryController.inst.getMostListensInTimeRange(
+    final sortedMap = HistoryController.inst.getMostListensInTimeRange(
       mptr: MostPlayedTimeRange.custom,
       customDate: dateRange,
       isStartOfDay: false,
       mainItemToSubItem: (item) => item.track,
     );
+    _sameTimeYearAgo = sortedMap.entriesSortedByValue.toList();
     if (_lostMemoriesScrollController.hasClients) _lostMemoriesScrollController.jumpTo(0);
   }
 
