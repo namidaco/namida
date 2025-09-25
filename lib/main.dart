@@ -396,8 +396,9 @@ Future<bool> requestIgnoreBatteryOptimizations() async {
   return p.isGranted;
 }
 
-Future<bool> requestManageStoragePermission({bool request = true, bool showError = true}) async {
+Future<bool> requestManageStoragePermission({bool request = true, bool showError = true, bool ensureDirectoryCreated = false}) async {
   Future<void> createDir() async {
+    if (!ensureDirectoryCreated) return;
     final dir = Directory(AppDirs.INTERNAL_STORAGE);
     if (!await dir.exists()) await dir.create(recursive: true);
   }

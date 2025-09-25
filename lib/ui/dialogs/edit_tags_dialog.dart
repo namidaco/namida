@@ -217,7 +217,7 @@ Widget get _getKeepDatesWidget => ObxO(
     );
 
 Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
-  if (!await requestManageStoragePermission()) return;
+  if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
 
   final color = Colors.transparent.obso;
 
@@ -658,7 +658,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
 }
 
 Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
-  if (!await requestManageStoragePermission()) return;
+  if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
 
   final tracksGoingToBeEditedRx = <Track, bool>{for (final t in tracksPre) t: true}.obs;
 
