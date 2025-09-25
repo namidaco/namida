@@ -241,7 +241,8 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                         (context) {
                           final off = newOffset.valueR;
                           final ms = off.remainder(1000).abs().toString();
-                          final msText = ms.length > 2 ? ms.substring(0, 2) : ms;
+                          String msText = ms.padLeft(3, '0');
+                          if (msText.endsWith('0')) msText = msText.substring(0, 2);
                           final secondsText = off.abs().milliSecondsLabel;
                           final prefix = off < 0 ? '-' : '';
                           return Text(
