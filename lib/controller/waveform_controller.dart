@@ -14,7 +14,7 @@ class WaveformController {
   RxBaseCore<bool> get isWaveformUIEnabled => _isWaveformUIEnabled;
   final _isWaveformUIEnabled = false.obso;
 
-  late List<double> currentWaveformUI = List<double>.filled(_defaultUserBarsCount, -1, growable: false);
+  late final currentWaveformUIRx = List<double>.filled(_defaultUserBarsCount, -1, growable: false).obs;
 
   List<double> _currentWaveform = [];
 
@@ -74,7 +74,7 @@ class WaveformController {
       targetSize: _defaultUserBarsCount,
       original: _currentWaveform,
     );
-    currentWaveformUI = waveform;
+    currentWaveformUIRx.value = waveform;
     _isWaveformUIEnabled.value = true;
   }
 

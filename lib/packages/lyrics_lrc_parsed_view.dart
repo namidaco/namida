@@ -286,6 +286,26 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     final initialFontSize = fullscreen ? 25.0 : 15.0;
     final normalTextStyle = context.textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize);
     final plainLyricsTextStyle = normalTextStyle.copyWith(height: 1.8);
+    final fullscreenIconButton = fullscreen
+        ? Container(
+            clipBehavior: Clip.antiAlias,
+            padding: const EdgeInsets.all(4.0),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 8.0,
+                  color: context.theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+                ),
+              ],
+            ),
+            child: NamidaIconButton(
+              icon: Broken.maximize_3,
+              iconSize: 24.0,
+              onPressed: toggleFullscreen,
+            ),
+          )
+        : null;
 
     final topInfoWidget = fullscreen
         ? ObxO(
@@ -564,20 +584,26 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
                     final color = CurrentColor.inst.miniplayerColor;
                     return ObxO(
-                      rx: _latestUpdatedLine,
-                      builder: (context, highlightedTimeStamp) => SuperListView.builder(
+                      rx: _latestUpdatedLineIndex,
+                      builder: (context, selectedIndex) => SuperListView.builder(
                         padding: EdgeInsets.symmetric(vertical: _paddingVertical),
                         controller: _scrollController,
                         listController: _listController,
                         itemCount: lyrics.length,
                         itemBuilder: (context, index) {
+                          final distanceDiffFromSelected = (index - selectedIndex).abs(); // -- does not accound for empty lines
                           final lrc = lyrics[index];
                           final text = lrc.lyrics;
-                          final selected = highlightedTimeStamp == lrc.timestamp;
+                          final selected = distanceDiffFromSelected == 0;
                           final selectedAndEmpty = selected && _checkIfTextEmpty(text);
                           final bgColor =
                               selected ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withValues(alpha: selectedAndEmpty ? 0.1 : 0.5) : null;
-                          final padding = selected ? 2.0 : 0.0;
+                          final vMargin = (selected ? 2.0 : 0.0) + (fullscreen ? 2.0 : 0.0);
+                          final normalLineColorOpacity = distanceDiffFromSelected == 1
+                              ? 0.5
+                              : distanceDiffFromSelected == 2
+                                  ? 0.4
+                                  : 0.25;
 
                           return Stack(
                             alignment: Alignment.center,
@@ -606,7 +632,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                       bgColor: bgColor,
                                       borderRadius: selectedAndEmpty ? 5.0 : 8.0,
                                       animationDurationMS: 300,
-                                      margin: EdgeInsets.symmetric(vertical: padding, horizontal: 4.0),
+                                      margin: EdgeInsets.symmetric(vertical: vMargin, horizontal: 4.0),
                                       padding: selectedAndEmpty
                                           ? const EdgeInsets.symmetric(vertical: 3.0, horizontal: 24.0)
                                           : const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
@@ -615,7 +641,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                         style: normalTextStyle.copyWith(
                                           color: selected
                                               ? Colors.white.withValues(alpha: 0.7) //
-                                              : normalTextStyle.color?.withValues(alpha: 0.5) ?? Colors.transparent,
+                                              : normalTextStyle.color?.withValues(alpha: normalLineColorOpacity) ?? Colors.transparent,
                                         ),
                                         textAlign: TextAlign.center,
                                         // softWrap: false, // keep the text steady while animating mp
@@ -673,28 +699,11 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                     ),
                   ),
                 ),
-                if (fullscreen)
+                if (fullscreenIconButton != null)
                   Positioned(
                     bottom: 8.0,
                     right: 0.0,
-                    child: Container(
-                      clipBehavior: Clip.antiAlias,
-                      padding: const EdgeInsets.all(4.0),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            blurRadius: 8.0,
-                            color: context.theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
-                          ),
-                        ],
-                      ),
-                      child: NamidaIconButton(
-                        icon: Broken.maximize_3,
-                        iconSize: 24.0,
-                        onPressed: toggleFullscreen,
-                      ),
-                    ),
+                    child: fullscreenIconButton,
                   ),
               ],
             ),

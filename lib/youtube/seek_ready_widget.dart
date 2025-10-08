@@ -154,8 +154,10 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     const seekTextWidth = SeekReadyDimensions.seekTextWidth;
     const seekTextExtraMargin = SeekReadyDimensions.seekTextExtraMargin;
 
+    final progressColor = CurrentColor.inst.miniplayerColor.withValues(alpha: 0.8);
     final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(context.theme.secondaryHeaderColor.withValues(alpha: 0.25), context.theme.scaffoldBackgroundColor);
-    final bufferColor = miniplayerBGColor.invert();
+    final bufferColor =
+        fullscreen ? miniplayerBGColor.invert() : Color.alphaBlend(progressColor.withValues(alpha: 0.25), miniplayerBGColor.invert().withValues(alpha: 0.5)).withValues(alpha: 0.5);
 
     final circleWidget = AnimatedBuilder(
       animation: _animation,
@@ -204,7 +206,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                   if (_dragUpToCancel > _dragUpToCancelMax) {
                     _canDragToSeekLatest = false;
                     setState(() {
-                      _currentSeekStuckWord = <String>[" --:-- ", " kuru ", "umm..", "🫵😂", "🫵😹"].random;
+                      _currentSeekStuckWord = const <String>[" --:-- ", " kuru ", "umm..", "🫵😂", "🫵😹"].random;
                       _dragToSeek = false;
                     });
                     VibratorController.veryhigh();
@@ -360,7 +362,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                           bottom: 0,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: CurrentColor.inst.miniplayerColor.withValues(alpha: 0.8),
+                              color: progressColor,
                               borderRadius: const BorderRadius.all(
                                 Radius.circular(6.0),
                               ),

@@ -303,6 +303,7 @@ class ChangeGridCountWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = context.theme.colorScheme.secondary;
     // final List<IconData> normal = [Broken.grid_1 /* dummy */, Broken.row_vertical, Broken.grid_2, Broken.grid_8, Broken.grid_1];
     // final List<IconData> staggered = [Broken.grid_1 /* dummy */, Broken.row_vertical, Broken.grid_3, Broken.grid_edit, Broken.grid_1];
     return ObxO(
@@ -343,6 +344,8 @@ class ChangeGridCountWidget extends StatelessWidget {
               baseIcon: _resolveIcon(count),
               secondaryText: secondaryText,
               secondaryIcon: secondaryIcon,
+              baseIconColor: iconColor,
+              secondaryIconColor: iconColor,
               iconSize: 22.0,
             ),
           ),

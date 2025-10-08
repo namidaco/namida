@@ -90,57 +90,62 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
             rx: WaveformController.inst.isWaveformUIEnabled,
             builder: (context, enabled) {
               _updateAnimation(enabled);
-              final downscaled = WaveformController.inst.currentWaveformUI;
-              final barWidth = maxWidth / downscaled.length * 0.54;
-              return Center(
-                child: AnimatedBuilder(
-                  animation: _animation,
-                  builder: (context, _) {
-                    final barBehind = NamidaWaveBars(
-                      heightPercentage: _animation.value,
-                      decorationBox: decorationBoxBehind,
-                      waveList: downscaled,
-                      barWidth: barWidth,
-                      barMinHeight: widget.barsMinHeight,
-                      barMaxHeight: widget.barsMaxHeight,
-                    );
-                    final barInFront = NamidaWaveBars(
-                      heightPercentage: _animation.value,
-                      decorationBox: decorationBoxFront,
-                      waveList: downscaled,
-                      barWidth: barWidth,
-                      barMinHeight: widget.barsMinHeight,
-                      barMaxHeight: widget.barsMaxHeight,
-                    );
-                    return Stack(
-                      children: [
-                        barBehind,
-                        ObxO(
-                          rx: MiniPlayerController.inst.seekValue,
-                          builder: (context, seek) => ObxO(
-                            rx: Player.inst.nowPlayingPosition,
-                            builder: (context, nowPlayingPosition) {
-                              final position = seek != 0 ? seek : nowPlayingPosition;
-                              final durInMs = _currentDurationInMSR;
-                              final percentage = (position / durInMs).clampDouble(0.0, durInMs.toDouble());
-                              return ShaderMask(
-                                blendMode: BlendMode.srcIn,
-                                shaderCallback: (Rect bounds) {
-                                  return LinearGradient(
-                                    tileMode: TileMode.decal,
-                                    stops: [0.0, percentage, percentage + 0.005, 1.0],
-                                    colors: colors,
-                                  ).createShader(bounds);
+
+              return ObxO(
+                rx: WaveformController.inst.currentWaveformUIRx,
+                builder: (context, downscaled) {
+                  final barWidth = maxWidth / downscaled.length * 0.54;
+                  return Center(
+                    child: AnimatedBuilder(
+                      animation: _animation,
+                      builder: (context, _) {
+                        final barBehind = NamidaWaveBars(
+                          heightPercentage: _animation.value,
+                          decorationBox: decorationBoxBehind,
+                          waveList: downscaled,
+                          barWidth: barWidth,
+                          barMinHeight: widget.barsMinHeight,
+                          barMaxHeight: widget.barsMaxHeight,
+                        );
+                        final barInFront = NamidaWaveBars(
+                          heightPercentage: _animation.value,
+                          decorationBox: decorationBoxFront,
+                          waveList: downscaled,
+                          barWidth: barWidth,
+                          barMinHeight: widget.barsMinHeight,
+                          barMaxHeight: widget.barsMaxHeight,
+                        );
+                        return Stack(
+                          children: [
+                            barBehind,
+                            ObxO(
+                              rx: MiniPlayerController.inst.seekValue,
+                              builder: (context, seek) => ObxO(
+                                rx: Player.inst.nowPlayingPosition,
+                                builder: (context, nowPlayingPosition) {
+                                  final position = seek != 0 ? seek : nowPlayingPosition;
+                                  final durInMs = _currentDurationInMSR;
+                                  final percentage = (position / durInMs).clampDouble(0.0, durInMs.toDouble());
+                                  return ShaderMask(
+                                    blendMode: BlendMode.srcIn,
+                                    shaderCallback: (Rect bounds) {
+                                      return LinearGradient(
+                                        tileMode: TileMode.decal,
+                                        stops: [0.0, percentage, percentage + 0.005, 1.0],
+                                        colors: colors,
+                                      ).createShader(bounds);
+                                    },
+                                    child: barInFront,
+                                  );
                                 },
-                                child: barInFront,
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  );
+                },
               );
             });
       },
