@@ -87,7 +87,10 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
 
   Future<void> fetchSearch({String customText = ''}) async {
     final newSearch = customText == '' ? widget.searchTextCallback?.call() ?? ScrollSearchController.inst.searchTextEditingController.text : customText;
-    if (_latestSearched == newSearch && _searchResult != null) return;
+    if (_latestSearched == newSearch && _searchResult != null) {
+      YTLocalSearchController.inst.search(newSearch); // has its own latest search checks
+      return;
+    }
     _latestSearched = newSearch;
 
     YTLocalSearchController.inst.search(newSearch);
