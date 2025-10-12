@@ -16,6 +16,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -26,6 +27,9 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   static YoutubePlaylistController get inst => _instance;
   static final YoutubePlaylistController _instance = YoutubePlaylistController._internal();
   YoutubePlaylistController._internal();
+
+  @override
+  RegExp get cleanupFilenameRegex => DownloadTaskFilename.cleanupFilenameRegex;
 
   @override
   String identifyBy(YoutubeID item) => item.id;
