@@ -339,10 +339,10 @@ class _SettingsController with SettingsFileWriter {
     trackThumbnailSizeinList.value = 90.0;
     trackListTileHeight.value = 60.0;
     forceSquaredTrackThumbnail.value = false;
-    dateTimeFormat.value = '[dd.MM.yyyy]';
+    dateTimeFormat.value = '[dd.MM.yyyy] EEE';
     trackArtistsSeparatorsBlacklist.value = <String>['T & Sugah', 'Miles & Miles'];
     tracksSortSearch.value = SortType.mostPlayed;
-    tracksSortSearchReversed.value = true;
+    tracksSortSearchReversed.value = false;
     tracksSortSearchIsAuto.value = false;
     albumSort.value = GroupSortType.numberOfTracks;
     albumSortReversed.value = true;

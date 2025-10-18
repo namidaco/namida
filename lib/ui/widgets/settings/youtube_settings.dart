@@ -674,19 +674,7 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
             setState(() => settings.youtube.save(setDefaultInnertubeClient: true));
           },
         ),
-        ...{
-          InnertubeClients.mweb,
-          InnertubeClients.web,
-          InnertubeClients.ios,
-          InnertubeClients.android,
-          InnertubeClients.android_vr,
-          InnertubeClients.tv,
-          InnertubeClients.tv_embedded,
-          InnertubeClients.web_embedded,
-          InnertubeClients.web_creator,
-          InnertubeClients.web_music,
-          InnertubeClients.web_safari,
-        }.map(
+        ...InnertubeClients.values.map(
           (e) => NamidaPopupItem(
             icon: Broken.video_octagon,
             title: e.name,

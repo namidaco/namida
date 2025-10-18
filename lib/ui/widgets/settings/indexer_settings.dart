@@ -377,7 +377,7 @@ class IndexerSettings extends SettingSubpageProvider {
                       builder: (context, artworksInStorage) => StatsContainer(
                         icon: Broken.image,
                         title: '${lang.ARTWORKS} :',
-                        value: artworksInStorage.formatDecimal(),
+                        value: artworksInStorage == 0 ? '?' : artworksInStorage.formatDecimal(),
                         total: allAudioFiles.isEmpty ? null : allAudioFiles.length.formatDecimal(),
                       ),
                     ),
