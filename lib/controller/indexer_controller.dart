@@ -1299,7 +1299,7 @@ class Indexer<T extends Track> {
     required String? originalArtist,
     required ArtistsSplitConfig config,
   }) {
-    final allArtists = <String>[];
+    final allArtists = <String>{};
 
     final artistsOrg = config.splitText(originalArtist, fallback: UnknownTags.ARTIST);
     allArtists.addAll(artistsOrg);
@@ -1308,12 +1308,11 @@ class Indexer<T extends Track> {
       final List<String>? moreArtists = title?.split(RegExp(r'\(ft\. |\[ft\. |\(feat\. |\[feat\. \]', caseSensitive: false));
       if (moreArtists != null && moreArtists.length > 1) {
         final extractedFeatArtists = moreArtists[1].split(RegExp(r'\)|\]')).first;
-        allArtists.addAll(
-          config.splitText(extractedFeatArtists, fallback: ''),
-        );
+        final artists = config.splitText(extractedFeatArtists, fallback: null);
+        allArtists.addAll(artists);
       }
     }
-    return allArtists;
+    return allArtists.toList();
   }
 
   static List<String> splitGenre(
@@ -1332,7 +1331,7 @@ class Indexer<T extends Track> {
   }) {
     return config.splitText(
       originalText,
-      fallback: '',
+      fallback: null,
     );
   }
 

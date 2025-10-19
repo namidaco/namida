@@ -164,11 +164,11 @@ interface class SplitterConfig {
     delimiter = SplitDelimiter.fromList(separators);
   }
 
-  List<String> splitText(String? string, {required String fallback}) {
-    if (string == null) return [fallback];
+  List<String> splitText(String? string, {String? fallback}) {
+    if (string == null) return fallback == null ? [] : [fallback];
     final config = this;
     final splitted = config.delimiter.multiSplit(string.trimAll(), config.separatorsBlacklist);
-    if (splitted.isEmpty) return [fallback];
+    if (splitted.isEmpty) return fallback == null ? [] : [fallback];
     return splitted;
   }
 }
