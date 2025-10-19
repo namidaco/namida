@@ -13,7 +13,7 @@ class _WindowManagerDesktop extends NamidaWindowManager {
       center: true,
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
-      titleBarStyle: TitleBarStyle.normal,
+      titleBarStyle: TitleBarStyle.hidden,
     );
     windowManager.addListener(_NamidaWindowListener());
     await windowManager.waitUntilReadyToShow(windowOptions, () async {

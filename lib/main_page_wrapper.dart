@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:super_sliver_list/super_sliver_list.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -17,6 +21,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer.dart';
+import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/pages/onboarding.dart';
 import 'package:namida/ui/pages/queues_page.dart';
@@ -53,7 +58,7 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return NamidaInnerDrawer(
+    Widget finalPageWrapper = NamidaInnerDrawer(
       key: NamidaNavigator.inst.innerDrawerKey,
       borderRadius: 42.0.multipliedRadius,
       drawerChild: const NamidaDrawer(),
@@ -61,6 +66,22 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
       initiallySwipeable: settings.swipeableDrawer.value,
       child: const MainScreenStack(),
     );
+
+    if (Platform.isWindows) {
+      finalPageWrapper = Column(
+        children: [
+          _NamidaDesktopAppBar(
+            title: 'Namida',
+            height: 36.0,
+          ),
+          Expanded(
+            child: finalPageWrapper,
+          ),
+        ],
+      );
+    }
+
+    return finalPageWrapper;
   }
 }
 
@@ -247,15 +268,17 @@ class NamidaDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showLogoInDrawer = !(Platform.isWindows);
     return SafeArea(
       child: Column(
         children: [
           Expanded(
             child: SuperListView(
               children: [
-                NamidaLogoContainer(
-                  afterTap: NamidaNavigator.inst.toggleDrawer,
-                ),
+                if (showLogoInDrawer)
+                  NamidaLogoContainer(
+                    afterTap: NamidaNavigator.inst.toggleDrawer,
+                  ),
                 const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
                 ...LibraryTab.values.map(
                   (e) => ObxO(
@@ -348,6 +371,155 @@ class NamidaDrawer extends StatelessWidget {
           ),
           const SizedBox(height: 8.0),
         ],
+      ),
+    );
+  }
+}
+
+class _NamidaDesktopAppBar extends StatefulWidget {
+  final String title;
+  final double height;
+
+  const _NamidaDesktopAppBar({
+    required this.title,
+    required this.height,
+  });
+
+  @override
+  State<_NamidaDesktopAppBar> createState() => _NamidaDesktopAppBarState();
+}
+
+class _NamidaDesktopAppBarState extends State<_NamidaDesktopAppBar> with WindowListener {
+  @override
+  void initState() {
+    windowManager.addListener(this);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  void onWindowMaximize() {
+    setState(() {});
+  }
+
+  @override
+  void onWindowUnmaximize() {
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appBarTheme = AppBarTheme.of(context);
+    final theme = context.theme;
+    final colorscheme = theme.colorScheme;
+    final brightness = theme.brightness;
+    // final backgroundColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor, Colors.white.withValues(alpha: 0.25));
+    final backgroundColor = appBarTheme.backgroundColor ?? colorscheme.surface;
+    final surfaceTintColor = appBarTheme.surfaceTintColor ?? colorscheme.surfaceTint;
+    final logoImg = context.isDarkMode ? NamidaAppIcons.monet : NamidaAppIcons.monet;
+    final logoBgColor = context.isDarkMode ? const Color(0x40262729) : const Color(0x063c3f46);
+    final logoTextColor = context.isDarkMode ? Color.alphaBlend(logoBgColor.withAlpha(100), Colors.white) : const Color.fromARGB(180, 44, 44, 44);
+    return SizedBox(
+      height: widget.height,
+      child: Material(
+        shadowColor: Colors.transparent,
+        type: MaterialType.canvas,
+        color: backgroundColor,
+        surfaceTintColor: surfaceTintColor,
+        child: Row(
+          children: [
+            Expanded(
+              child: DragToMoveArea(
+                child: SizedBox(
+                  height: double.infinity,
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: NamidaInkWell(
+                          onTap: () {
+                            if (NamidaNavigator.inst.currentRoute?.route != RouteType.PAGE_about) {
+                              const AboutPage().navigate();
+                            }
+                          },
+                          height: widget.height,
+                          animationDurationMS: 200,
+                          decoration: BoxDecoration(
+                            color: logoBgColor,
+                            borderRadius: BorderRadius.only(
+                              bottomRight: Radius.circular(8.0),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(width: 6.0),
+                              Image.asset(
+                                logoImg.assetPath,
+                                width: 24.0,
+                                height: 24.0,
+                                cacheHeight: 240,
+                                cacheWidth: 240,
+                                alignment: Alignment.center,
+                              ),
+                              const SizedBox(width: 4.0),
+                              Text(
+                                widget.title,
+                                style: context.textTheme.displayMedium?.copyWith(
+                                  color: logoTextColor,
+                                  fontSize: 14.0,
+                                ),
+                                overflow: TextOverflow.fade,
+                                softWrap: false,
+                              ),
+                              const SizedBox(width: 6.0),
+                              const SizedBox(width: 4.0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            WindowCaptionButton.minimize(
+              brightness: brightness,
+              onPressed: () async {
+                bool isMinimized = await windowManager.isMinimized();
+                if (isMinimized) {
+                  windowManager.restore();
+                } else {
+                  windowManager.minimize();
+                }
+              },
+            ),
+            FutureBuilder<bool>(
+              future: windowManager.isMaximized(),
+              builder: (context, snapshot) {
+                if (snapshot.data == true) {
+                  return WindowCaptionButton.unmaximize(
+                    brightness: brightness,
+                    onPressed: windowManager.unmaximize,
+                  );
+                }
+                return WindowCaptionButton.maximize(
+                  brightness: brightness,
+                  onPressed: windowManager.maximize,
+                );
+              },
+            ),
+            WindowCaptionButton.close(
+              brightness: brightness,
+              onPressed: windowManager.close,
+            ),
+          ],
+        ),
       ),
     );
   }
