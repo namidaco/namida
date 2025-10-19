@@ -19,6 +19,7 @@ import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:rhttp/rhttp.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
+import 'package:windows_single_instance/windows_single_instance.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
@@ -91,6 +92,15 @@ void _mainAppInitialization() async {
       SMTCController.instance?.init(),
       HomeWidgetController.instance?.init(),
     ].executeAllAndSilentReportErrors();
+
+    if (Platform.isWindows) {
+      await WindowsSingleInstance.ensureSingleInstance(
+        args,
+        "namida_instance",
+        bringWindowToFront: true,
+        onSecondWindow: null,
+      );
+    }
 
     ShortcutsController.instance?.init();
 
