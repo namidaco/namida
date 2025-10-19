@@ -551,6 +551,10 @@ class Player {
     await _audioHandler.clearQueue();
   }
 
+  Future<void> resetGaplessPlaybackData() async {
+    await _audioHandler.resetGaplessPlaybackData();
+  }
+
   Future<void> pauseRaw() async {
     await _audioHandler.onPauseRaw();
   }

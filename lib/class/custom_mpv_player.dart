@@ -184,41 +184,35 @@ class CustomMPVPlayer implements AVPlayer {
   bool get playing => _player.state.playing;
 
   @override
-  AudioVideoSource? get audioSource => _audioSource;
+  UriSource? get audioSource => _audioSource;
   @override
   bool get isDisposed => _disposed;
 
   @override
-  Future<Duration?> setSource(
-    UriSource source, {
-    bool preload = true,
-    Duration? initialPosition,
-    VideoSourceOptions? videoOptions,
-    bool keepOldVideoSource = false,
-  }) async {
-    _audioSource = source;
-    if (keepOldVideoSource == false) _videoOptions = videoOptions;
+  Future<Duration?> setSource<T>(ItemPrepareConfig<T, UriSource> config) async {
+    _audioSource = config.source;
+    if (config.keepOldVideoSource == false) _videoOptions = config.videoOptions;
 
     if (_videoOptions == null) {
       _player.open(
         Media(
-          source.uri.toString(),
-          start: initialPosition,
+          config.source.uri.toString(),
+          start: config.initialPosition,
         ),
         play: false,
       );
     } else {
       final mainMedia = Media(
         (_videoOptions!.source as UriSource).uri.toString(),
-        start: initialPosition,
+        start: config.initialPosition,
       );
-      final audioTrack = AudioTrack.uri(source.uri.toString());
+      final audioTrack = AudioTrack.uri(config.source.uri.toString());
       _player.open(mainMedia, play: false).then((_) {
         _player.setAudioTrack(audioTrack);
       });
     }
 
-    if (_checkIsSourceLive(source) || _checkIsSourceLive(videoOptions?.source)) {
+    if (_checkIsSourceLive(config.source) || _checkIsSourceLive(config.videoOptions?.source)) {
       // -- not waiting for duration
       return null;
     }
@@ -233,10 +227,13 @@ class CustomMPVPlayer implements AVPlayer {
   Future<void> setVideo(VideoSourceOptions? video) async {
     if (_audioSource != null) {
       await setSource(
-        _audioSource!,
-        videoOptions: video,
-        initialPosition: position,
-        keepOldVideoSource: false,
+        ItemPrepareConfig(
+          _audioSource!,
+          index: 0, // -- not used
+          videoOptions: video,
+          initialPosition: position,
+          keepOldVideoSource: false,
+        ),
       );
     } else {
       _videoOptions = video;
@@ -310,6 +307,13 @@ class CustomMPVPlayer implements AVPlayer {
   Future<void> setSpeed(double speed) {
     return _player.setRate(speed);
   }
+
+  @override
+  Future<void> addMediaNext<T>(ItemPrepareConfig<T, UriSource> config) async {}
+  @override
+  Future<void> removeAllMediaNext() async {}
+  @override
+  Future<void> removePreviousMedia() async {}
 }
 
 class _VideoDetails {

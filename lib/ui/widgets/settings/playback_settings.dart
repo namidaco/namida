@@ -38,6 +38,7 @@ enum _PlaybackSettingsKeys {
   dismissibleMiniplayer,
   replayGain,
   skipSilence,
+  gaplessPlayback,
   crossfade,
   fadeEffectOnPlayPause,
   autoPlayOnNextPrev,
@@ -72,6 +73,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         _PlaybackSettingsKeys.dismissibleMiniplayer: [lang.DISMISSIBLE_MINIPLAYER],
         _PlaybackSettingsKeys.replayGain: [lang.NORMALIZE_AUDIO, lang.NORMALIZE_AUDIO_SUBTITLE],
         _PlaybackSettingsKeys.skipSilence: [lang.SKIP_SILENCE],
+        _PlaybackSettingsKeys.gaplessPlayback: [lang.GAPLESS_PLAYBACK],
         _PlaybackSettingsKeys.crossfade: [lang.ENABLE_CROSSFADE_EFFECT, lang.CROSSFADE_DURATION, lang.CROSSFADE_TRIGGER_SECONDS],
         _PlaybackSettingsKeys.fadeEffectOnPlayPause: [lang.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE, lang.PLAY_FADE_DURATION, lang.PAUSE_FADE_DURATION],
         _PlaybackSettingsKeys.autoPlayOnNextPrev: [lang.PLAY_AFTER_NEXT_PREV],
@@ -471,65 +473,97 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
         ),
       ),
+      getItemWrapper(
+        key: _PlaybackSettingsKeys.gaplessPlayback,
+        child: Obx(
+          (context) => CustomSwitchListTile(
+            bgColor: getBgColor(_PlaybackSettingsKeys.gaplessPlayback),
+            icon: Broken.blend_2,
+            title: "${lang.GAPLESS_PLAYBACK} (${lang.BETA})",
+            onChanged: (value) {
+              settings.player.save(enableGaplessPlayback: !value);
+              Player.inst.resetGaplessPlaybackData();
+            },
+            value: settings.player.enableGaplessPlayback.valueR,
+          ),
+        ),
+      ),
+
       // -- Crossfade
       getItemWrapper(
         key: _PlaybackSettingsKeys.crossfade,
-        child: NamidaExpansionTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.crossfade),
-          bigahh: true,
-          normalRightPadding: true,
-          initiallyExpanded: settings.player.enableCrossFade.value,
-          leading: const StackedIcon(
-            baseIcon: Broken.play,
-            secondaryIcon: Broken.recovery_convert,
+        child: ObxO(
+          rx: settings.player.enableGaplessPlayback,
+          builder: (context, gaplessEnabled) => AnimatedEnabled(
+            enabled: !gaplessEnabled,
+            child: NamidaExpansionTile(
+              bgColor: getBgColor(_PlaybackSettingsKeys.crossfade),
+              bigahh: true,
+              normalRightPadding: true,
+              initiallyExpanded: settings.player.enableCrossFade.value,
+              leading: const StackedIcon(
+                baseIcon: Broken.play,
+                secondaryIcon: Broken.recovery_convert,
+              ),
+              subtitle: gaplessEnabled
+                  ? Text(
+                      'x ${lang.GAPLESS_PLAYBACK}',
+                      style: context.textTheme.displaySmall,
+                    )
+                  : null,
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+              iconColor: context.defaultIconColor(),
+              titleText: lang.ENABLE_CROSSFADE_EFFECT,
+              onExpansionChanged: (wasCollapsed) {
+                if (!wasCollapsed) return settings.player.save(enableCrossFade: false);
+                SussyBaka.monetize(onEnable: () => settings.player.save(enableCrossFade: true));
+              },
+              trailing: Obx((context) {
+                return CustomSwitch(
+                  active: settings.player.enableCrossFade.valueR && !gaplessEnabled,
+                );
+              }),
+              children: [
+                Obx(
+                  (context) {
+                    final enableCrossFade = settings.player.enableCrossFade.valueR;
+                    final crossFadeDurationMS = settings.player.crossFadeDurationMS.valueR;
+                    return CustomListTile(
+                      enabled: enableCrossFade,
+                      icon: Broken.blend_2,
+                      title: lang.CROSSFADE_DURATION,
+                      trailing: NamidaWheelSlider(
+                        min: 100,
+                        max: 10000,
+                        stepper: 100,
+                        initValue: crossFadeDurationMS,
+                        onValueChanged: (val) => settings.player.save(crossFadeDurationMS: val),
+                        text: crossFadeDurationMS >= 1000 ? "${crossFadeDurationMS / 1000}s" : "${crossFadeDurationMS}ms",
+                      ),
+                    );
+                  },
+                ),
+                Obx(
+                  (context) {
+                    final crossFadeAutoTriggerSeconds = settings.player.crossFadeAutoTriggerSeconds.valueR;
+                    return CustomListTile(
+                      enabled: settings.player.enableCrossFade.valueR,
+                      icon: Broken.blend,
+                      title: crossFadeAutoTriggerSeconds == 0
+                          ? lang.CROSSFADE_TRIGGER_SECONDS_DISABLED
+                          : lang.CROSSFADE_TRIGGER_SECONDS.replaceFirst('_SECONDS_', "$crossFadeAutoTriggerSeconds"),
+                      trailing: NamidaWheelSlider(
+                        max: 30,
+                        initValue: crossFadeAutoTriggerSeconds,
+                        onValueChanged: (val) => settings.player.save(crossFadeAutoTriggerSeconds: val),
+                        text: "${crossFadeAutoTriggerSeconds}s",
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-          iconColor: context.defaultIconColor(),
-          titleText: lang.ENABLE_CROSSFADE_EFFECT,
-          onExpansionChanged: (wasCollapsed) {
-            if (!wasCollapsed) return settings.player.save(enableCrossFade: false);
-            SussyBaka.monetize(onEnable: () => settings.player.save(enableCrossFade: true));
-          },
-          trailing: Obx((context) => CustomSwitch(active: settings.player.enableCrossFade.valueR)),
-          children: [
-            Obx(
-              (context) {
-                final enableCrossFade = settings.player.enableCrossFade.valueR;
-                final crossFadeDurationMS = settings.player.crossFadeDurationMS.valueR;
-                return CustomListTile(
-                  enabled: enableCrossFade,
-                  icon: Broken.blend_2,
-                  title: lang.CROSSFADE_DURATION,
-                  trailing: NamidaWheelSlider(
-                    min: 100,
-                    max: 10000,
-                    stepper: 100,
-                    initValue: crossFadeDurationMS,
-                    onValueChanged: (val) => settings.player.save(crossFadeDurationMS: val),
-                    text: crossFadeDurationMS >= 1000 ? "${crossFadeDurationMS / 1000}s" : "${crossFadeDurationMS}ms",
-                  ),
-                );
-              },
-            ),
-            Obx(
-              (context) {
-                final crossFadeAutoTriggerSeconds = settings.player.crossFadeAutoTriggerSeconds.valueR;
-                return CustomListTile(
-                  enabled: settings.player.enableCrossFade.valueR,
-                  icon: Broken.blend,
-                  title: crossFadeAutoTriggerSeconds == 0
-                      ? lang.CROSSFADE_TRIGGER_SECONDS_DISABLED
-                      : lang.CROSSFADE_TRIGGER_SECONDS.replaceFirst('_SECONDS_', "$crossFadeAutoTriggerSeconds"),
-                  trailing: NamidaWheelSlider(
-                    max: 30,
-                    initValue: crossFadeAutoTriggerSeconds,
-                    onValueChanged: (val) => settings.player.save(crossFadeAutoTriggerSeconds: val),
-                    text: "${crossFadeAutoTriggerSeconds}s",
-                  ),
-                );
-              },
-            ),
-          ],
         ),
       ),
       // -- Play/Pause Fade

@@ -181,14 +181,8 @@ class VideoController {
   final localVideoExtractCurrent = Rxn<int>();
   final localVideoExtractTotal = 0.obs;
 
-  final currentVideo = Rxn<NamidaVideo>();
-  final currentPossibleLocalVideos = <NamidaVideo>[].obs;
-  final currentYTStreams = Rxn<VideoStreamsResult>();
-  final currentDownloadedBytes = Rxn<int>();
-
-  /// Indicates that [updateCurrentVideo] didn't find any matching video.
-  final isNoVideosAvailable = false.obs;
-  final videoBlockedByType = Rxn<VideoFetchBlockedBy>();
+  final currentVideoConfig = CurrentVideoConfig();
+  Rxn<NamidaVideo> get currentVideo => currentVideoConfig.currentVideo;
 
   /// `path`: `NamidaVideo`
   var _videoPathsInfoMap = <String, NamidaVideo>{};
@@ -292,13 +286,15 @@ class VideoController {
     _videoCacheIDMapDB.deleteEverything();
   }
 
-  Future<NamidaVideo?> updateCurrentVideo(Track? track, {bool returnEarly = false}) async {
-    currentVideo.value = null;
-    currentPossibleLocalVideos.value.clear();
-    isNoVideosAvailable.value = false;
-    videoBlockedByType.value = null;
-    currentDownloadedBytes.value = null;
-    currentYTStreams.value = null;
+  Future<NamidaVideo?> updateCurrentVideo(Track? track, {bool returnEarly = false, CurrentVideoConfig? configToUpdate}) async {
+    configToUpdate ??= this.currentVideoConfig;
+
+    configToUpdate.currentVideo.value = null;
+    configToUpdate.currentPossibleLocalVideos.value.clear();
+    configToUpdate.isNoVideosAvailable.value = false;
+    configToUpdate.videoBlockedByType.value = null;
+    configToUpdate.currentDownloadedBytes.value = null;
+    configToUpdate.currentYTStreams.value = null;
     if (track == null || track == kDummyTrack) return null;
     if (!settings.enableVideoPlayback.value) return null;
     if (track is Video) {
@@ -317,23 +313,23 @@ class VideoController {
         );
       }
 
-      currentVideo.value = nv;
-      currentPossibleLocalVideos.value = [nv];
+      configToUpdate.currentVideo.value = nv;
+      configToUpdate.currentPossibleLocalVideos.value = [nv];
       await playVideoCurrent(video: nv, track: track);
       return nv;
     }
 
     final trackYTID = track.youtubeID;
     if (await videosPriorityManager.getVideoPriority(trackYTID) == CacheVideoPriority.GETOUT) {
-      isNoVideosAvailable.value = true;
-      videoBlockedByType.value = VideoFetchBlockedBy.cachePriority;
+      configToUpdate.isNoVideosAvailable.value = true;
+      configToUpdate.videoBlockedByType.value = VideoFetchBlockedBy.cachePriority;
       return null;
     }
 
     final possibleVideos = await _getPossibleVideosFromTrack(track);
-    currentPossibleLocalVideos.value = possibleVideos;
+    configToUpdate.currentPossibleLocalVideos.value = possibleVideos;
 
-    if (possibleVideos.isEmpty && trackYTID == '') isNoVideosAvailable.value = true;
+    if (possibleVideos.isEmpty && trackYTID == '') configToUpdate.isNoVideosAvailable.value = true;
 
     final vpsInSettings = settings.videoPlaybackSource.value;
     switch (vpsInSettings) {
@@ -360,17 +356,17 @@ class VideoController {
       erabaretaVideo = await possibleVideos.firstWhereEffAsync((element) => File(element.path).exists());
     }
 
-    currentVideo.value = erabaretaVideo;
+    configToUpdate.currentVideo.value = erabaretaVideo;
 
     if (returnEarly) return erabaretaVideo;
 
     if (erabaretaVideo == null) {
       if (vpsInSettings == VideoPlaybackSource.local) {
-        videoBlockedByType.value = VideoFetchBlockedBy.playbackSource;
+        configToUpdate.videoBlockedByType.value = VideoFetchBlockedBy.playbackSource;
       } else if (!ConnectivityController.inst.hasConnection) {
-        videoBlockedByType.value = VideoFetchBlockedBy.noNetwork;
+        configToUpdate.videoBlockedByType.value = VideoFetchBlockedBy.noNetwork;
       } else if (!ConnectivityController.inst.dataSaverMode.canFetchNetworkVideoStream) {
-        videoBlockedByType.value = VideoFetchBlockedBy.dataSaver;
+        configToUpdate.videoBlockedByType.value = VideoFetchBlockedBy.dataSaver;
       } else {
         final downloadedVideo = await getVideoFromYoutubeAndUpdate(trackYTID);
         erabaretaVideo = downloadedVideo;
@@ -447,7 +443,7 @@ class VideoController {
 
   Future<void> fetchYTQualities(Track track) async {
     final streamsResult = await YoutubeInfoController.video.fetchVideoStreams(track.youtubeID, forceRequest: false);
-    if (_canExecuteForCurrentTrackOnly(track)) currentYTStreams.value = streamsResult;
+    if (_canExecuteForCurrentTrackOnly(track)) currentVideoConfig.currentYTStreams.value = streamsResult;
   }
 
   Future<NamidaVideo?> getVideoFromYoutubeAndUpdate(
@@ -461,9 +457,9 @@ class VideoController {
     if (!settings.enableVideoPlayback.value) return null;
     if (_canExecuteForCurrentTrackOnly(tr)) {
       currentVideo.value = dv;
-      currentYTStreams.refresh();
-      if (dv != null) currentPossibleLocalVideos.addNoDuplicates(dv);
-      currentPossibleLocalVideos.sortByReverseAlt(
+      currentVideoConfig.currentYTStreams.refresh();
+      if (dv != null) currentVideoConfig.currentPossibleLocalVideos.addNoDuplicates(dv);
+      currentVideoConfig.currentPossibleLocalVideos.sortByReverseAlt(
         (e) {
           if (e.resolution != 0) return e.resolution;
           if (e.height != 0) return e.height;
@@ -483,7 +479,7 @@ class VideoController {
   }) async {
     _downloadTimerCancel();
     if (id == null || id == '') return null;
-    currentDownloadedBytes.value = null;
+    currentVideoConfig.currentDownloadedBytes.value = null;
 
     final initialTrack = Player.inst.currentTrack?.track;
 
@@ -491,8 +487,8 @@ class VideoController {
     void updateCurrentBytes() {
       if (!_canExecuteForCurrentTrackOnly(initialTrack)) return;
 
-      if (downloaded > 0) currentDownloadedBytes.value = downloaded;
-      printy('Video Download: ${currentDownloadedBytes.value?.fileSizeFormatted}');
+      if (downloaded > 0) currentVideoConfig.currentDownloadedBytes.value = downloaded;
+      printy('Video Download: ${currentVideoConfig.currentDownloadedBytes.value?.fileSizeFormatted}');
     }
 
     _downloadTimer = Timer.periodic(const Duration(seconds: 1), (_) => updateCurrentBytes());
@@ -509,7 +505,7 @@ class VideoController {
 
     if (streamToUse == null || !canContinue()) {
       if (_canExecuteForCurrentTrackOnly(initialTrack)) {
-        currentDownloadedBytes.value = null;
+        currentVideoConfig.currentDownloadedBytes.value = null;
         _downloadTimerCancel();
       }
       return null;
@@ -555,7 +551,7 @@ class VideoController {
       }
     }
     if (_canExecuteForCurrentTrackOnly(initialTrack)) {
-      currentDownloadedBytes.value = null;
+      currentVideoConfig.currentDownloadedBytes.value = null;
       _downloadTimerCancel();
     }
     return downloadedVideo;
@@ -979,6 +975,26 @@ class _VideoControllerIsolateFunctions {
       }
     }
     return newIdsMap;
+  }
+}
+
+class CurrentVideoConfig {
+  final currentVideo = Rxn<NamidaVideo>();
+  final currentPossibleLocalVideos = <NamidaVideo>[].obs;
+  final currentYTStreams = Rxn<VideoStreamsResult>();
+  final currentDownloadedBytes = Rxn<int>();
+
+  /// Indicates that [updateCurrentVideo] didn't find any matching video.
+  final isNoVideosAvailable = false.obs;
+  final videoBlockedByType = Rxn<VideoFetchBlockedBy>();
+
+  void updateFrom(CurrentVideoConfig other) {
+    currentVideo.value = other.currentVideo.value;
+    currentPossibleLocalVideos.value = other.currentPossibleLocalVideos.value;
+    currentYTStreams.value = other.currentYTStreams.value;
+    currentDownloadedBytes.value = other.currentDownloadedBytes.value;
+    isNoVideosAvailable.value = other.isNoVideosAvailable.value;
+    videoBlockedByType.value = other.videoBlockedByType.value;
   }
 }
 

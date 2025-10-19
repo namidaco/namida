@@ -19,6 +19,7 @@ class _PlayerSettings with SettingsFileWriter {
   final minTrackDurationToRestoreLastPosInMinutes = 20.obs;
   final interruptionResumeThresholdMin = 2.obs;
   final volume0ResumeThresholdMin = 5.obs;
+  final enableGaplessPlayback = false.obs;
   final enableCrossFade = false.obs;
   final crossFadeDurationMS = 500.obs;
   final crossFadeAutoTriggerSeconds = 5.obs;
@@ -58,6 +59,7 @@ class _PlayerSettings with SettingsFileWriter {
     int? minTrackDurationToRestoreLastPosInMinutes,
     int? interruptionResumeThresholdMin,
     int? volume0ResumeThresholdMin,
+    bool? enableGaplessPlayback,
     bool? enableCrossFade,
     int? crossFadeDurationMS,
     int? crossFadeAutoTriggerSeconds,
@@ -88,6 +90,7 @@ class _PlayerSettings with SettingsFileWriter {
     if (minTrackDurationToRestoreLastPosInMinutes != null) this.minTrackDurationToRestoreLastPosInMinutes.value = minTrackDurationToRestoreLastPosInMinutes;
     if (interruptionResumeThresholdMin != null) this.interruptionResumeThresholdMin.value = interruptionResumeThresholdMin;
     if (volume0ResumeThresholdMin != null) this.volume0ResumeThresholdMin.value = volume0ResumeThresholdMin;
+    if (enableGaplessPlayback != null) this.enableGaplessPlayback.value = enableGaplessPlayback;
     if (enableCrossFade != null) this.enableCrossFade.value = enableCrossFade;
     if (crossFadeDurationMS != null) this.crossFadeDurationMS.value = crossFadeDurationMS;
     if (crossFadeAutoTriggerSeconds != null) this.crossFadeAutoTriggerSeconds.value = crossFadeAutoTriggerSeconds;
@@ -139,6 +142,7 @@ class _PlayerSettings with SettingsFileWriter {
       minTrackDurationToRestoreLastPosInMinutes.value = json['minTrackDurationToRestoreLastPosInMinutes'] ?? minTrackDurationToRestoreLastPosInMinutes.value;
       interruptionResumeThresholdMin.value = json['interruptionResumeThresholdMin'] ?? interruptionResumeThresholdMin.value;
       volume0ResumeThresholdMin.value = json['volume0ResumeThresholdMin'] ?? volume0ResumeThresholdMin.value;
+      enableGaplessPlayback.value = json['enableGaplessPlayback'] ?? enableGaplessPlayback.value;
       enableCrossFade.value = json['enableCrossFade'] ?? enableCrossFade.value;
       crossFadeDurationMS.value = json['crossFadeDurationMS'] ?? crossFadeDurationMS.value;
       crossFadeAutoTriggerSeconds.value = json['crossFadeAutoTriggerSeconds'] ?? crossFadeAutoTriggerSeconds.value;
@@ -190,6 +194,7 @@ class _PlayerSettings with SettingsFileWriter {
         'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
         'interruptionResumeThresholdMin': interruptionResumeThresholdMin.value,
         'volume0ResumeThresholdMin': volume0ResumeThresholdMin.value,
+        'enableGaplessPlayback': enableGaplessPlayback.value,
         'enableCrossFade': enableCrossFade.value,
         'crossFadeDurationMS': crossFadeDurationMS.value,
         'crossFadeAutoTriggerSeconds': crossFadeAutoTriggerSeconds.value,

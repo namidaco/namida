@@ -277,6 +277,7 @@ abstract class LanguageKeys {
   String get FORCE_STOP_COLOR_PALETTE_GENERATION => _getKey('FORCE_STOP_COLOR_PALETTE_GENERATION');
   String get FORMAT => _getKey('FORMAT');
   String get FULLSCREEN => _getKey('FULLSCREEN');
+  String get GAPLESS_PLAYBACK => _getKey('GAPLESS_PLAYBACK');
   String get GENERATE_FROM_DATES_SUBTITLE => _getKey('GENERATE_FROM_DATES_SUBTITLE');
   String get GENERATE_FROM_DATES => _getKey('GENERATE_FROM_DATES');
   String get GENERATE => _getKey('GENERATE');

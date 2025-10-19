@@ -286,16 +286,16 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
               );
             }
             final currentVideo = VideoController.inst.currentVideo.valueR;
-            final downloadedBytes = VideoController.inst.currentDownloadedBytes.valueR;
+            final downloadedBytes = VideoController.inst.currentVideoConfig.currentDownloadedBytes.valueR;
             final videoTotalSize = currentVideo?.sizeInBytes ?? 0;
             final videoQuality = currentVideo?.resolution ?? 0;
             final videoFramerate = currentVideo?.framerateText(30);
-            final markText = VideoController.inst.isNoVideosAvailable.valueR ? 'x' : '?';
+            final markText = VideoController.inst.currentVideoConfig.isNoVideosAvailable.valueR ? 'x' : '?';
             final fallbackQualityLabel = currentVideo?.nameInCache?.splitLast('_');
             final qualityText = videoQuality == 0 ? fallbackQualityLabel ?? markText : '${videoQuality}p';
             final framerateText = videoFramerate ?? '';
 
-            final videoBlockedBy = VideoController.inst.videoBlockedByType.valueR;
+            final videoBlockedBy = VideoController.inst.currentVideoConfig.videoBlockedByType.valueR;
             final videoBlockedByIcon = switch (videoBlockedBy) {
               VideoFetchBlockedBy.cachePriority => Broken.cpu,
               VideoFetchBlockedBy.noNetwork => Broken.global_refresh,
@@ -343,8 +343,8 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         },
         currentId: (item) => (item as Selectable).track.youtubeID,
         loadQualities: (item) async => await VideoController.inst.fetchYTQualities((item as Selectable).track),
-        localVideos: VideoController.inst.currentPossibleLocalVideos,
-        streams: VideoController.inst.currentYTStreams,
+        localVideos: VideoController.inst.currentVideoConfig.currentPossibleLocalVideos,
+        streams: VideoController.inst.currentVideoConfig.currentYTStreams,
         onLocalVideoTap: (item, video) async {
           VideoController.inst.playVideoCurrent(video: video, track: (item as Selectable).track);
         },

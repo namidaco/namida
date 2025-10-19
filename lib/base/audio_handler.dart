@@ -471,8 +471,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     CurrentColor.inst.resetCurrentPlayingTrack();
 
     VideoController.inst.currentVideo.value = null;
-    VideoController.inst.currentYTStreams.value = null;
-    VideoController.inst.currentPossibleLocalVideos.clear();
+    VideoController.inst.currentVideoConfig.currentYTStreams.value = null;
+    VideoController.inst.currentVideoConfig.currentPossibleLocalVideos.clear();
 
     YoutubeInfoController.current.resetAll();
 
@@ -491,9 +491,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  Future<void> beforeSkippingToItem() async {
-    await super.beforeSkippingToItem(); // saving last position & waiting for reorder/removing.
+  Future<void>? beforeSkippingToItem() {
     NamidaNavigator.inst.popAllMenus();
+    return super.beforeSkippingToItem(); // saving last position & waiting for reorder/removing.
   }
 
   @override
@@ -607,15 +607,28 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  Future<void> onItemPlay(Q item, int index, Function skipItem) async {
+  FutureOr<ItemPrepareConfig<Q, UriSource>?> prepareItem(Q item, int index) async {
+    return await item._executeAsync(
+      selectable: (finalItem) async {
+        return _itemToPrepareConfigSelectable(item, finalItem, index, null);
+      },
+      youtubeID: (finalItem) async {
+        // TOOD: gapless for yt ?
+        return null;
+      },
+    );
+  }
+
+  @override
+  Future<void> onItemPlay(Q item, int index, Function skipItem, ItemPreparedPlayerInfo<Q>? preparedItemInfo) {
     _currentItemDuration.value = null;
     currentState.value = null;
     if (settings.enablePartyModeColorSwap.value) CurrentColor.inst.switchColorPalettes(item: item);
-    await _fnLimiter.executeFuture(
+    return _fnLimiter.executeFuture(
       () async {
         return await item._execute(
           selectable: (finalItem) async {
-            await onItemPlaySelectable(item, finalItem, index, skipItem);
+            await onItemPlaySelectable(item, finalItem, index, skipItem, preparedItemInfo);
           },
           youtubeID: (finalItem) async {
             await onItemPlayYoutubeID(item, finalItem, index, skipItem);
@@ -646,10 +659,42 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     playErrorRemainingSecondsToSkip.value = 0;
   }
 
-  Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, Function skipItem) async {
+  Future<ItemPrepareConfigSelectable<Q, UriSource>> _itemToPrepareConfigSelectable(Q pi, Selectable item, int index, Duration? duration,
+      {CurrentVideoConfig? configToUpdate}) async {
+    final isVideo = item is Video;
+    final tr = item.track;
+    duration ??= Duration(milliseconds: tr.durationMS);
+    final configToUpdate = CurrentVideoConfig();
+    final initialVideo = await VideoController.inst.updateCurrentVideo(tr, returnEarly: true, configToUpdate: configToUpdate);
+    final videoOptions = !settings.enableVideoPlayback.value
+        ? null
+        : initialVideo == null
+            ? isVideo
+                ? VideoSourceOptions(
+                    source: AudioVideoSource.file(item.path),
+                    loop: false,
+                    videoOnly: true,
+                  )
+                : null
+            : VideoSourceOptions(
+                source: AudioVideoSource.file(initialVideo.path),
+                loop: VideoController.inst.canLoopVideo(initialVideo, duration.inMilliseconds),
+                videoOnly: false,
+              );
+    return ItemPrepareConfigSelectable(
+      tr.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
+      itemExists: await File(tr.path).exists(),
+      item: pi,
+      videoOptions: videoOptions,
+      index: index,
+      initialPosition: await _getItemInitialPosition(pi, duration),
+      videoUpdateConfig: configToUpdate,
+    );
+  }
+
+  Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, Function skipItem, ItemPreparedPlayerInfo<Q>? preparedItemInfo) async {
     final tr = item.track;
     videoPlayerInfo.value = null;
-    final isVideo = item is Video;
     Lyrics.inst.resetLyrics();
     WaveformController.inst.resetWaveform();
     WaveformController.inst.generateWaveform(
@@ -671,9 +716,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       }
     }
 
-    final initialVideo = await VideoController.inst.updateCurrentVideo(tr, returnEarly: true);
-
-    if (checkInterrupted()) return;
+    if (tr.path.startsWith('/namida_dummy/')) return;
 
     // -- generating artwork in case it wasnt, to be displayed in notification
     File(tr.pathToImage).exists().then((exists) {
@@ -690,28 +733,28 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     //   YoutubeInfoController.history.markVideoWatched(videoId: trackYoutubeId, streamResult: null, errorOnMissingParam: false);
     // }
 
+    ItemPrepareConfig<Q, UriSource>? preparedConfig = preparedItemInfo?.config;
+
+    if (preparedConfig is ItemPrepareConfigSelectable<Q, UriSource>) {
+      VideoController.inst.currentVideoConfig.updateFrom(preparedConfig.videoUpdateConfig);
+    }
     Future<Duration?> setPls() async {
-      if (!await File(tr.path).exists()) throw PathNotFoundException(tr.path, const OSError(), 'Track file not found or couldn\'t be accessed.');
-      final videoOptions = !settings.enableVideoPlayback.value
-          ? null
-          : initialVideo == null
-              ? isVideo
-                  ? VideoSourceOptions(
-                      source: AudioVideoSource.file(item.path),
-                      loop: false,
-                      videoOnly: true,
-                    )
-                  : null
-              : VideoSourceOptions(
-                  source: AudioVideoSource.file(initialVideo.path),
-                  loop: VideoController.inst.canLoopVideo(initialVideo, duration?.inMilliseconds ?? tr.durationMS),
-                  videoOnly: false,
-                );
+      bool itemReallyExists = preparedConfig?.itemExists == true ? true : File(tr.path).existsSync();
+      if (!itemReallyExists) throw PathNotFoundException(tr.path, const OSError(), 'Track file not found or couldn\'t be accessed.');
+
+      if (preparedConfig == null || preparedConfig!.item != item) {
+        // -- creating new config
+        preparedConfig = await _itemToPrepareConfigSelectable(pi, item, index, duration, configToUpdate: VideoController.inst.currentVideoConfig);
+      } else {
+        // -- using already prepared config
+      }
+      final config = preparedConfig!;
       final dur = await setSource(
-        tr.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
-        item: pi,
-        videoOptions: videoOptions,
-        initialPosition: await _getItemInitialPosition(pi, duration),
+        config.source,
+        index: index,
+        item: config.item,
+        videoOptions: config.videoOptions,
+        initialPosition: config.initialPosition,
         initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
         isVideoFile: true,
       );
@@ -721,8 +764,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       refreshNotification(currentItem.value);
       return dur;
     }
-
-    if (tr.path.startsWith('/namida_dummy/')) return;
 
     try {
       duration = await setPls();
@@ -783,7 +824,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       }
     }
 
-    if (initialVideo == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false);
+    if (preparedConfig?.videoOptions == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false);
 
     // -- to fix a bug where [headset buttons/android next gesture] sometimes don't get detected.
     if (playWhenReady.value) onPlayRaw(attemptFixVolume: false);
@@ -836,16 +877,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         if (cachedAudioPath != null) {
           activeAudioSource = AudioVideoSource.file(
             cachedAudioPath,
-            tag: curritem is YoutubeID
-                ? curritem.toMediaItem(
-                    videoId,
-                    _ytNotificationVideoInfo,
-                    _ytNotificationVideoThumbnail,
-                    currentIndex.value,
-                    currentQueue.value.length,
-                    currentItemDuration.value,
-                  )
-                : null,
+            // tag: curritem is YoutubeID
+            //     ? curritem.toMediaItem(
+            //         videoId,
+            //         _ytNotificationVideoInfo,
+            //         _ytNotificationVideoThumbnail,
+            //         currentIndex.value,
+            //         currentQueue.value.length,
+            //         currentItemDuration.value,
+            //       )
+            //     : null,
           );
         } else {
           AudioStream? audioStream = currentAudioStream.value;
@@ -881,6 +922,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         activeAudioSource != null
             ? await setSource(
                 activeAudioSource,
+                index: currentIndex.value,
                 item: curritem,
                 initialPosition: positionToRestore,
                 videoOptions: videoOptions,
@@ -945,6 +987,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final positionToRestore = currentPositionMS.value.milliseconds;
       await setSource(
         AudioVideoSource.file(cachedAudio.path),
+        index: currentIndex.value,
         item: currentItem.value,
         keepOldVideoSource: true,
         initialPosition: positionToRestore,
@@ -966,6 +1009,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             videoId: videoId,
             streamsResult: mainStreams,
           ),
+          index: currentIndex.value,
           initialPosition: positionToRestore,
           item: currentItem.value,
           keepOldVideoSource: true,
@@ -1577,6 +1621,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         duration = await setSource(
           finalAudioSource,
           item: pi,
+          index: index,
           initialPosition: positionToRestore,
           initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
           videoOptions: videoSourceOptions,
@@ -1675,6 +1720,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         final dur = await setSource(
           AudioVideoSource.file(cachedAudio.file.path),
           item: item as Q?,
+          index: index,
           initialPosition: positionToRestore,
           initialPositionFallback: initialPositionFallback,
           videoOptions: VideoSourceOptions(
@@ -1706,6 +1752,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final dur = await setSource(
         AudioVideoSource.file(cachedAudio.file.path),
         item: item as Q?,
+        index: index,
         initialPosition: positionToRestore,
         initialPositionFallback: initialPositionFallback,
         cachedAudioPath: cachedAudio.file.path,
@@ -1801,9 +1848,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  void onPlaybackCompleted() {
+  Future<void> onPlaybackCompleted() {
     VideoController.inst.videoControlsKey.currentState?.showControlsBriefly();
     VideoController.inst.videoControlsKeyFullScreen.currentState?.showControlsBriefly();
+    return super.onPlaybackCompleted();
   }
 
   @override
@@ -1825,6 +1873,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   bool get enableCrossFade => settings.player.enableCrossFade.value && currentItem.value is! YoutubeID;
+
+  @override
+  bool get defaultGapelessEnabled => settings.player.enableGaplessPlayback.value && currentItem.value is! YoutubeID;
 
   @override
   int get defaultCrossFadeMilliseconds => settings.player.crossFadeDurationMS.value;
@@ -1925,6 +1976,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
             await setSource(
               AudioVideoSource.file(cachedAudioFile.path),
+              index: currentIndex.value,
               item: currentItem.value,
               keepOldVideoSource: true,
               initialPosition: position,
@@ -1951,6 +2003,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             _nextSeekSetAudioCache = null;
             await setSource(
               AudioVideoSource.file(cachedAudioFile.path),
+              index: currentIndex.value,
               item: currentItem.value,
               keepOldVideoSource: true,
               initialPosition: position,
@@ -1971,7 +2024,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  Future<void> skipToPrevious() async {
+  Future<void> skipToPrevious({bool isManualSkip = true}) async {
     if (previousButtonReplays) {
       final int secondsToReplay;
       if (settings.player.isSeekDurationPercentage.value) {
@@ -2047,7 +2100,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<Duration?> setSource(
     UriSource source, {
     required Q? item,
-    bool preload = true,
+    required int index,
     Duration? initialPosition,
     FutureOr<Duration?> Function(Duration duration)? initialPositionFallback,
     VideoSourceOptions? videoOptions,
@@ -2064,16 +2117,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
     if (!keepOldVideoSource) _latestVideoOptions = videoOptions;
     final duration = await setAudioSource(
-      source,
-      item: item,
-      preload: preload,
-      initialPosition: initialPosition,
-      videoOptions: videoOptions,
-      keepOldVideoSource: keepOldVideoSource,
+      ItemPrepareConfig<Q, UriSource>(
+        source,
+        item: item,
+        index: index,
+        initialPosition: initialPosition,
+        videoOptions: videoOptions,
+        keepOldVideoSource: keepOldVideoSource,
+      ),
     );
     if (initialPosition == null && initialPositionFallback != null && duration != null) {
       final p = await initialPositionFallback(duration);
-      if (p != null && p > Duration.zero) seek(p);
+      if (p != null && p > Duration.zero && p != initialPosition) seek(p);
     }
     return duration;
   }
@@ -2192,7 +2247,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
   UriSource toAudioSource(int currentIndex, int queueLength, Duration? duration) {
     return AudioVideoSource.file(
       track.path,
-      tag: toMediaItem(currentIndex, queueLength, duration),
+      // tag: toMediaItem(currentIndex, queueLength, duration),
     );
   }
 
@@ -2340,4 +2395,18 @@ class AndroidLoudnessEnhancerExtended {
   Future<void> refreshEnabled() {
     return _loudnessEnhancer.setEnabled(getActualEnabled);
   }
+}
+
+class ItemPrepareConfigSelectable<Q, S extends UriSource> extends ItemPrepareConfig<Q, S> {
+  final CurrentVideoConfig videoUpdateConfig;
+  const ItemPrepareConfigSelectable(
+    super.source, {
+    required super.index,
+    required super.initialPosition,
+    required super.videoOptions,
+    required this.videoUpdateConfig,
+    super.item,
+    super.itemExists,
+    super.keepOldVideoSource = false,
+  });
 }
