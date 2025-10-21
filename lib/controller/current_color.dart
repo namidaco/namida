@@ -380,7 +380,7 @@ class CurrentColor {
     // -- file doesnt exist or couldn't be read or [forceReExtract==true]
     final pcolors = <Color>[];
     try {
-      pcolors.addAll(await _colorGenerationTasks.add(() async => await _extractPaletteGenerator(imagePath, useIsolate: useIsolate)));
+      pcolors.addAll(await _colorGenerationTasks.add(() async => await _extractPaletteGenerator(imagePath, track: track, useIsolate: useIsolate)));
     } catch (_) {}
     final nc = NamidaColor.create(palette: pcolors);
     await paletteFile.writeAsJson(nc.toJson()); // writing the file bothways, to prevent reduntant re-extraction.
@@ -408,7 +408,7 @@ class CurrentColor {
     }
   }
 
-  Future<Iterable<Color>> _extractPaletteGenerator(String imagePath, {bool useIsolate = _defaultUseIsolate}) async {
+  Future<Iterable<Color>> _extractPaletteGenerator(String imagePath, {Track? track, bool useIsolate = _defaultUseIsolate}) async {
     Uint8List? bytes;
     File? imageFile;
 
@@ -422,6 +422,20 @@ class CurrentColor {
             size: 200,
           )
           .then((value) => value.$2);
+      if (bytes?.isEmpty == true) bytes = null;
+    }
+
+    if (imageFile == null && bytes == null) {
+      if (track != null) {
+        final id = track.youtubeID;
+        final ytImg = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(type: ThumbnailType.video, id: id, isTemp: false);
+        if (ytImg != null) imageFile = File(ytImg.path);
+
+        if (imageFile == null) {
+          final cover = Indexer.inst.getFallbackFolderArtworkPath(folderPath: track.folderPath);
+          if (cover != null) imageFile = File(cover);
+        }
+      }
     }
 
     if (imageFile == null && bytes == null) return [];
