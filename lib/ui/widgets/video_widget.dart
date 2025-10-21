@@ -168,11 +168,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _doubleSeekTimer?.cancel();
     _doubleSeekTimer = Timer(doubleTapSeekReset, () {
       _shouldSeekOnTap = false;
-      _seekSeconds = 0;
+      _seekSecondsRx.value = 0;
     });
   }
 
-  int _seekSeconds = 0;
+  final _seekSecondsRx = 0.obs;
 
   /// This prevents mixing up forward seek seconds with backward ones.
   bool _lastSeekWasForward = true;
@@ -191,11 +191,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           onSecondsReady: (finalSeconds) {
             if (_shouldSeekOnTap && !_lastSeekWasForward) {
               // only increase if not at the start
-              if (Player.inst.nowPlayingPosition.value != 0) {
-                _seekSeconds += finalSeconds;
+              if (Player.inst.nowPlayingPosition.value > 0) {
+                _seekSecondsRx.value += finalSeconds;
               }
             } else {
-              _seekSeconds = finalSeconds;
+              _seekSecondsRx.value = finalSeconds;
             }
           },
         );
@@ -208,11 +208,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           onSecondsReady: (finalSeconds) {
             if (_shouldSeekOnTap && _lastSeekWasForward) {
               // only increase if not at the end
-              if (Player.inst.nowPlayingPosition.value != Player.inst.currentItemDuration.value?.inMilliseconds) {
-                _seekSeconds += finalSeconds;
+              if (Player.inst.nowPlayingPosition.value < (Player.inst.currentItemDuration.value?.inMilliseconds ?? 0)) {
+                _seekSecondsRx.value += finalSeconds;
               }
             } else {
-              _seekSeconds = finalSeconds;
+              _seekSecondsRx.value = finalSeconds;
             }
           },
         );
@@ -418,29 +418,31 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       // topLeft
       Shadow(offset: Offset(-strokeWidth, strokeWidth), color: strokeColor, blurRadius: shadowBR),
     ];
-    final ss = _seekSeconds;
     return Positioned(
       right: isForward ? finalOffset : null,
       left: isForward ? null : finalOffset,
       child: FadeIgnoreTransition(
         completelyKillWhenPossible: true,
         opacity: controller,
-        child: Column(
-          children: [
-            Icon(
-              isForward ? forwardIcons[ss] ?? Broken.forward : backwardIcons[ss] ?? Broken.backward,
-              color: color,
-              shadows: outlineShadow,
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              '$ss ${lang.SECONDS}',
-              style: context.textTheme.displayMedium?.copyWith(
+        child: ObxO(
+          rx: _seekSecondsRx,
+          builder: (context, ss) => Column(
+            children: [
+              Icon(
+                isForward ? forwardIcons[ss] ?? Broken.forward : backwardIcons[ss] ?? Broken.backward,
                 color: color,
                 shadows: outlineShadow,
               ),
-            )
-          ],
+              const SizedBox(height: 8.0),
+              Text(
+                '$ss ${lang.SECONDS}',
+                style: context.textTheme.displayMedium?.copyWith(
+                  color: color,
+                  shadows: outlineShadow,
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
