@@ -495,6 +495,17 @@ sealed class NetworkArtworkInfo {
     return null;
   }
 
+  File? toArtworkIfExistsAndValidAndEnabled() {
+    final file = toArtworkIfExistsAndEnabled();
+    if (file != null) {
+      final size = file.fileSizeSync() ?? 0;
+      if (size > 0) {
+        return file;
+      }
+    }
+    return null;
+  }
+
   CustomArtworkManager toManager() {
     return CustomArtworkManager(
       getArtworkFile: () => toArtworkLocation(),

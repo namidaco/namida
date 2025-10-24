@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:just_audio/just_audio.dart';
-import 'package:photo_view/photo_view.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/audio_handler.dart';
@@ -242,43 +241,12 @@ Future<void> showTrackInfoDialog(
                                 child: Row(
                                   children: [
                                     const SizedBox(width: 2.0),
-                                    TapDetector(
-                                      onTap: () => NamidaNavigator.inst.navigateDialog(
-                                        scale: 1.0,
-                                        blackBg: true,
-                                        dialog: LongPressDetector(
-                                          onLongPress: () async {
-                                            final saveDirPath = await EditDeleteController.inst.saveArtworkToStorage(track);
-                                            String title = lang.COPIED_ARTWORK;
-                                            String subtitle = '${lang.SAVED_IN} $saveDirPath';
-                                            Color snackColor = color.value;
-
-                                            if (saveDirPath == null) {
-                                              title = lang.ERROR;
-                                              subtitle = lang.COULDNT_SAVE_IMAGE;
-                                              snackColor = Colors.red;
-                                            }
-                                            snackyy(
-                                              title: title,
-                                              message: subtitle,
-                                              leftBarIndicatorColor: snackColor,
-                                              altDesign: true,
-                                              top: false,
-                                            );
-                                          },
-                                          child: PhotoView(
-                                            heroAttributes: heroTag == null ? null : PhotoViewHeroAttributes(tag: heroTag),
-                                            gaplessPlayback: true,
-                                            tightMode: true,
-                                            minScale: PhotoViewComputedScale.contained,
-                                            loadingBuilder: (context, event) => artwork,
-                                            backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-                                            filterQuality: FilterQuality.high,
-                                            imageProvider: FileImage(File(networkArtworkInfo?.toArtworkLocation().path ?? track.pathToImage)),
-                                          ),
-                                        ),
-                                      ),
-                                      child: artwork,
+                                    NamidaArtworkExpandableToFullscreen(
+                                      artwork: artwork,
+                                      heroTag: heroTag,
+                                      imageFile: () => File(networkArtworkInfo?.toArtworkLocation().path ?? track.pathToImage),
+                                      onSave: (_) => EditDeleteController.inst.saveTrackArtworkToStorage(track),
+                                      themeColor: () => color.value,
                                     ),
                                     const SizedBox(width: 10.0),
                                     Expanded(

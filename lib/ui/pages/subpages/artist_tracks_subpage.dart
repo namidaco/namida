@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -91,26 +92,37 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
                 if (tracks.year != 0) tracks.year.yearFormatted,
               ].join(' - '),
               heroTag: 'artist_$name',
-              imageBuilder: (size) => NamidaHero(
-                tag: 'artist_$name',
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                  child: ContainerWithBorder(
-                    child: NetworkArtwork.orLocal(
-                      key: Key(tracks.pathToImage),
-                      info: NetworkArtworkInfo.artist(name),
-                      path: tracks.pathToImage,
-                      track: tracks.trackOfImage,
-                      thumbnailSize: size,
-                      fit: BoxFit.fitHeight,
-                      forceSquared: true,
-                      isCircle: true,
-                      blur: 12.0,
-                      iconSize: 32.0,
+              imageBuilder: (size) {
+                final info = NetworkArtworkInfo.artist(name);
+                final artworkPre = NetworkArtwork.orLocal(
+                  key: Key(tracks.pathToImage),
+                  info: info,
+                  path: tracks.pathToImage,
+                  track: tracks.trackOfImage,
+                  thumbnailSize: size,
+                  fit: BoxFit.cover,
+                  forceSquared: true,
+                  isCircle: true,
+                  blur: 12.0,
+                  iconSize: 32.0,
+                );
+                final artwork = NamidaArtworkExpandableToFullscreen(
+                  artwork: artworkPre,
+                  heroTag: 'artist_$name',
+                  imageFile: () => info.toArtworkIfExistsAndValidAndEnabled(),
+                  onSave: (imgFile) => EditDeleteController.inst.saveImageToStorage(imgFile),
+                  themeColor: null,
+                );
+                return NamidaHero(
+                  tag: 'artist_$name',
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                    child: ContainerWithBorder(
+                      child: artwork,
                     ),
                   ),
-                ),
-              ),
+                );
+              },
               tracksFn: () => tracks,
             ),
           );

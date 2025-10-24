@@ -39,6 +39,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -270,23 +271,8 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
           final file = files[fileIndex].$2;
           if (file == null) return;
           final saveDirPath = await EditDeleteController.inst.saveImageToStorage(file);
-          String title = lang.COPIED_ARTWORK;
-          String subtitle = '${lang.SAVED_IN} $saveDirPath';
           // ignore: use_build_context_synchronously
-          Color snackColor = context.theme.colorScheme.surface;
-
-          if (saveDirPath == null) {
-            title = lang.ERROR;
-            subtitle = lang.COULDNT_SAVE_IMAGE;
-            snackColor = Colors.red;
-          }
-          snackyy(
-            title: title,
-            message: subtitle,
-            leftBarIndicatorColor: snackColor,
-            altDesign: true,
-            top: false,
-          );
+          NamidaOnTaps.inst.showSavedImageInSnack(saveDirPath, context.theme.colorScheme.surface);
         },
         child: PhotoViewGallery.builder(
           pageController: pageController,

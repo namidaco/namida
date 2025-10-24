@@ -724,6 +724,25 @@ class NamidaOnTaps {
     );
     return actionToUse;
   }
+
+  void showSavedImageInSnack(String? saveDirPath, Color? themeColor) {
+    String title = lang.COPIED_ARTWORK;
+    String subtitle = '${lang.SAVED_IN}: $saveDirPath';
+    Color snackColor = themeColor ?? CurrentColor.inst.color;
+
+    if (saveDirPath == null) {
+      title = lang.ERROR;
+      subtitle = lang.COULDNT_SAVE_IMAGE;
+      snackColor = Colors.red;
+    }
+    snackyy(
+      title: title,
+      message: subtitle,
+      leftBarIndicatorColor: snackColor,
+      altDesign: true,
+      top: false,
+    );
+  }
 }
 
 Future<void> showCalendarDialog<T extends ItemWithDate, E>({

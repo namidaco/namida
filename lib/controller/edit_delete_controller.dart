@@ -101,7 +101,7 @@ class EditDeleteController {
   }
 
   /// returns save directory path if saved successfully
-  Future<String?> saveArtworkToStorage(Track track) async {
+  Future<String?> saveTrackArtworkToStorage(Track track) async {
     if (!await requestManageStoragePermission()) {
       return null;
     }

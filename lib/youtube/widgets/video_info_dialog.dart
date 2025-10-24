@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:photo_view/photo_view.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/videos/missing_video_info.dart';
@@ -11,8 +10,6 @@ import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/yt_video_like_manager.dart';
-import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -460,50 +457,16 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                             child: Row(
                               children: [
                                 const SizedBox(width: 2.0),
-                                TapDetector(
-                                  onTap: () async {
-                                    final imgFile = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(
-                                      id: videoId,
-                                      type: ThumbnailType.video,
-                                      isTemp: null,
-                                    );
-                                    if (imgFile == null) return;
-                                    NamidaNavigator.inst.navigateDialog(
-                                      scale: 1.0,
-                                      blackBg: true,
-                                      dialog: LongPressDetector(
-                                        onLongPress: () async {
-                                          final saveDirPath = await YTUtils.copyThumbnailToStorage(videoId);
-                                          String title = lang.COPIED_ARTWORK;
-                                          String subtitle = '${lang.SAVED_IN} $saveDirPath';
-                                          Color snackColor = _themeColor ?? CurrentColor.inst.color;
-
-                                          if (saveDirPath == null) {
-                                            title = lang.ERROR;
-                                            subtitle = lang.COULDNT_SAVE_IMAGE;
-                                            snackColor = Colors.red;
-                                          }
-                                          snackyy(
-                                            title: title,
-                                            message: subtitle,
-                                            leftBarIndicatorColor: snackColor,
-                                            altDesign: true,
-                                            top: false,
-                                          );
-                                        },
-                                        child: PhotoView(
-                                          gaplessPlayback: true,
-                                          tightMode: true,
-                                          minScale: PhotoViewComputedScale.contained,
-                                          loadingBuilder: (context, event) => artwork,
-                                          backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-                                          filterQuality: FilterQuality.high,
-                                          imageProvider: FileImage(imgFile),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: artwork,
+                                NamidaArtworkExpandableToFullscreen(
+                                  artwork: artwork,
+                                  heroTag: null,
+                                  imageFile: () => ThumbnailManager.inst.getYoutubeThumbnailFromCache(
+                                    id: videoId,
+                                    type: ThumbnailType.video,
+                                    isTemp: null,
+                                  ),
+                                  onSave: (_) => YTUtils.copyThumbnailToStorage(videoId),
+                                  themeColor: () => _themeColor,
                                 ),
                                 const SizedBox(width: 10.0),
                                 Expanded(

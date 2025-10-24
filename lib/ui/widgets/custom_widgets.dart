@@ -17,6 +17,7 @@ import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:like_button/like_button.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
@@ -5915,6 +5916,54 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
             ),
           )
           .toList(),
+    );
+  }
+}
+
+class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
+  final Widget artwork;
+  final String? heroTag;
+  final FutureOr<File?> Function() imageFile;
+  final FutureOr<String?> Function(File imgFile) onSave;
+  final Color? Function()? themeColor;
+
+  const NamidaArtworkExpandableToFullscreen({
+    super.key,
+    required this.artwork,
+    required this.heroTag,
+    required this.imageFile,
+    required this.onSave,
+    required this.themeColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TapDetector(
+      onTap: () async {
+        final imgFile = await imageFile();
+        if (imgFile == null) return;
+        NamidaNavigator.inst.navigateDialog(
+          scale: 1.0,
+          blackBg: true,
+          dialog: LongPressDetector(
+            onLongPress: () async {
+              final saveDirPath = await onSave(imgFile);
+              NamidaOnTaps.inst.showSavedImageInSnack(saveDirPath, themeColor?.call());
+            },
+            child: PhotoView(
+              heroAttributes: heroTag == null ? null : PhotoViewHeroAttributes(tag: heroTag!),
+              gaplessPlayback: true,
+              tightMode: true,
+              minScale: PhotoViewComputedScale.contained,
+              loadingBuilder: (context, event) => artwork,
+              backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+              filterQuality: FilterQuality.high,
+              imageProvider: FileImage(imgFile),
+            ),
+          ),
+        );
+      },
+      child: artwork,
     );
   }
 }

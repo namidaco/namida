@@ -4,6 +4,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -86,16 +87,24 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                           heroTag: 'album_$albumIdentifier',
                           imageBuilder: (size) {
                             final squared = Dimensions.inst.shouldAlbumBeSquared(context);
-                            final artwork = NetworkArtwork.orLocal(
+                            final info = NetworkArtworkInfo.albumAutoArtist(albumIdentifier);
+                            final artworkPre = NetworkArtwork.orLocal(
                               key: Key(tracks.pathToImage),
                               path: tracks.pathToImage,
                               track: tracks.trackOfImage,
-                              info: NetworkArtworkInfo.albumAutoArtist(albumIdentifier),
+                              info: info,
                               thumbnailSize: size,
                               forceSquared: squared,
                               compressed: false,
                               borderRadius: 12.0,
                               staggered: false, // -- keep false
+                            );
+                            final artwork = NamidaArtworkExpandableToFullscreen(
+                              artwork: artworkPre,
+                              heroTag: 'album_$albumIdentifier',
+                              imageFile: () => info.toArtworkIfExistsAndValidAndEnabled(),
+                              onSave: (imgFile) => EditDeleteController.inst.saveImageToStorage(imgFile),
+                              themeColor: null,
                             );
                             return squared
                                 ? MultiArtworkContainer(
