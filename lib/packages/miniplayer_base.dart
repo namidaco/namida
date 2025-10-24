@@ -389,11 +389,21 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                     key: const ValueKey('seek_switcher'),
                     firstChild: Obx(
                       (context) {
-                        final diffInMs = seek - nowPlayingPosition;
-                        final plusOrMinus = diffInMs < 0 ? '' : '+';
-                        final seekText = seek == 0 ? '00:00' : diffInMs.milliSecondsLabel;
+                        String finalText;
+                        if (settings.player.displayActualPositionWhenSeeking.value) {
+                          final itemDur = Player.inst.currentItemDuration.value?.inMilliseconds;
+                          int seekClamped = seek;
+                          seekClamped = seekClamped.withMinimum(0);
+                          if (itemDur != null) seekClamped = seekClamped.withMaximum(itemDur);
+                          finalText = seekClamped.milliSecondsLabel;
+                        } else {
+                          final diffInMs = seek - nowPlayingPosition;
+                          final plusOrMinus = diffInMs < 0 ? '' : '+';
+                          final seekText = diffInMs.milliSecondsLabel;
+                          finalText = "$plusOrMinus$seekText";
+                        }
                         return Text(
-                          "$plusOrMinus$seekText",
+                          finalText,
                           style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.fontSize),
                         );
                       },

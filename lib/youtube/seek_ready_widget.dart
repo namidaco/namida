@@ -266,11 +266,25 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
             // -- current seek
             Obx(
               (context) {
-                final currentPositionMS = Player.inst.nowPlayingPositionR;
-                final seekTo = _seekPercentage.valueR * _currentDurationR.inMilliseconds;
-                final seekToDiff = seekTo - currentPositionMS;
-                final plusOrMinus = seekToDiff < 0 ? ' ' : '+';
-                final finalText = _currentSeekStuckWord != '' ? _currentSeekStuckWord : "$plusOrMinus${seekToDiff.round().milliSecondsLabel} ";
+                final nowPlayingPosition = Player.inst.nowPlayingPositionR;
+                final itemDurMS = _currentDurationR.inMilliseconds;
+                final seek = (_seekPercentage.valueR * itemDurMS).round();
+
+                String finalText;
+                if (_currentSeekStuckWord != '') {
+                  finalText = _currentSeekStuckWord;
+                } else if (settings.player.displayActualPositionWhenSeeking.value) {
+                  int seekClamped = seek;
+                  seekClamped = seekClamped.withMinimum(0);
+                  seekClamped = seekClamped.withMaximum(itemDurMS);
+                  finalText = " ${seekClamped.milliSecondsLabel} ";
+                } else {
+                  final diffInMs = seek - nowPlayingPosition;
+                  final plusOrMinus = diffInMs < 0 ? '' : '+';
+                  final seekText = diffInMs.milliSecondsLabel;
+                  finalText = " $plusOrMinus$seekText ";
+                }
+
                 return Transform.translate(
                   offset: Offset((maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5).clampDouble(seekTextExtraMargin, maxWidth - seekTextWidth - seekTextExtraMargin), -12.0),
                   child: AnimatedBuilder(
