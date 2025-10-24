@@ -963,7 +963,7 @@ class Indexer<T extends Track> {
 
     final orderLookup = <String, int>{};
     int index = 0;
-    for (final path in tracksPathPre) {
+    void onPath(String path) {
       final infoInLib = allTracksMappedByPath[path];
       if (infoInLib != null) {
         finalTracks.add(infoInLib.asTrack() as T);
@@ -972,6 +972,18 @@ class Indexer<T extends Track> {
       }
       orderLookup[path] = index;
       index++;
+    }
+
+    for (final path in tracksPathPre) {
+      final isDir = await Directory(path).exists().ignoreError() ?? false;
+      if (isDir) {
+        final files = await Directory(path).listAllIsolate(recursive: true).ignoreError() ?? [];
+        for (final f in files) {
+          onPath(f.path);
+        }
+      } else {
+        onPath(path);
+      }
     }
 
     if (tracksToExtract.isNotEmpty) {
