@@ -67,14 +67,18 @@ import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart'
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 
-void main() {
+void main(List<String> args) {
   runZonedGuarded(
     _mainAppInitialization,
     (error, stack) => logger.error(error.runtimeType, e: error, st: stack),
+    zoneValues: {
+      'args': args,
+    },
   );
 }
 
 void _mainAppInitialization() async {
+  List<String>? args;
   WidgetsFlutterBinding.ensureInitialized();
 
   /// if `true`:
@@ -94,11 +98,12 @@ void _mainAppInitialization() async {
     ].executeAllAndSilentReportErrors();
 
     if (Platform.isWindows) {
+      args = Zone.current['args'] as List<String>? ?? [];
       await WindowsSingleInstance.ensureSingleInstance(
         args,
         "namida_instance",
         bringWindowToFront: true,
-        onSecondWindow: null,
+        onSecondWindow: (args) => _NamidaReceiveIntentManager.executeReceivedItems(args, (p) => p, (p) => p),
       );
     }
 
@@ -223,6 +228,10 @@ void _mainAppInitialization() async {
   }
 
   runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));
+
+  if (args != null && args.isNotEmpty) {
+    _NamidaReceiveIntentManager.executeReceivedItems(args, (p) => p, (p) => p);
+  }
 }
 
 Future<void> _mainInitialization(bool shouldShowOnBoarding) async {

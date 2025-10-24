@@ -645,16 +645,15 @@ class NamidaFileExtensionsWrapper {
   }
 
   static const _audioExtensions = {
-    'm4a', 'mp3', 'weba', 'ogg', 'wav', 'flac', 'aac', 'ac3', 'opus', 'm4b', 'pk', '8svx', 'aa', 'aax', 'act', 'aiff', 'alac', 'amr', //
-    'ape', 'au', 'awb', 'cda', 'dss', 'dts', 'dvf', 'gsm', 'iklax', 'ivs', 'm4p', 'mmf', 'movpkg', 'mid', 'mpc', 'msv', 'nmf', 'oga', //
-    'mogg', 'ra', 'raw', 'rf64', 'sln', 'tak', 'tta', 'voc', 'vox', 'wma', 'wv', 'aif', 'aifc', 'amz', 'awc', 'bwf', 'caf', 'dct', 'dff', //
-    'dsf', 'fap', 'flp', 'its', 'kar', 'kfn', 'm4r', 'mac', 'mka', 'mlp', 'mp2', 'mpp', 'oma', 'qcp', 'rmi', 'snd', 'spx', 'uax', 'xmz',
-    'M4A', 'MP3', 'WEBA', 'OGG', 'WAV', 'FLAC', 'AAC', 'AC3', 'OPUS', 'ALAC', // caps for popular only
+    'm4a', 'mp3', 'wav', 'flac', 'ogg', 'oga', 'aac', 'opus', 'weba', 'm4b', 'alac', 'ac3', 'mp2', 'm4p', 'mpa',
+    'amr', 'ape', 'aa', 'aax', 'act', 'dss', 'dts', 'dvf', 'dct', 'dff', 'dsf', 'mmf', 'mid', 'mpc', 'msv', 'mogg',
+    'raw', 'ra', 'voc', 'wma', 'caf', 'aiff', 'wv', 'aif', 'aifc', 'm4r', 'mac', 'mka', 'mlp', 'mpp', 'uax',
+    'M4A', 'MP3', 'WAV', 'FLAC', 'OGG', 'AAC', 'OPUS', 'WEBA', 'ALAC', 'AC3', // caps for popular only
   };
 
   static const _videoExtensions = {
     'mp4', 'mkv', 'avi', 'wmv', 'flv', 'mov', '3gp', 'ogv', 'webm', 'mpg', 'mpeg', 'm4v', 'ts', 'vob', 'asf', //
-    'rm', 'swf', 'f4v', 'divx', 'm2ts', 'mts', 'mpv', 'mpe', 'mpa', 'mxf', 'm2v', 'mpeg1', 'mpeg2', 'mpeg4', //
+    'rm', 'f4v', 'divx', 'm2ts', 'mts', 'mpv', 'mpe', 'mxf', 'm2v', 'mpeg1', 'mpeg2', 'mpeg4',
     'MP4', 'MKV', 'AVI', '3GP', 'WEBM', 'MPV', // caps for popular only
   };
 
