@@ -184,6 +184,8 @@ the video filename should contain at least one of the following:
    1. the music filename as shown above.
  <br>
    2. title & first artist of the track.
+ <br>
+   3. track youtube id (in track comment tag/filename, see "#How youtube?" section below).
 <br>
 note: some cleanup is made to improve the matching, all symbols & whitespaces are ignored.
 </details>

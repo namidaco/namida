@@ -1410,6 +1410,7 @@ class _NamidaConverters {
         LocalVideoMatchingType.auto: lang.AUTO,
         LocalVideoMatchingType.titleAndArtist: "${lang.TITLE} & ${lang.ARTIST}",
         LocalVideoMatchingType.filename: lang.FILE_NAME,
+        LocalVideoMatchingType.youtubeID: "${lang.FILE_NAME} (${lang.YOUTUBE})",
       },
       TrackPlayMode: {
         TrackPlayMode.selectedTrack: lang.TRACK_PLAY_MODE_SELECTED_ONLY,

@@ -564,25 +564,41 @@ class VideoController {
     final valInSett = settings.localVideoMatchingType.value;
     final shouldCheckSameDir = settings.localVideoMatchingCheckSameDir.value;
 
+    final pathDirectoryPath = path.getDirectoryPath;
+    final trExtFilenameWithoutExt = path.getFilenameWOExt;
+    final trExtFilenameWithoutExtCleaned = trExtFilenameWithoutExt.cleanUpForComparison;
+    final trExtTitleCleaned = trExt.title.cleanUpForComparison;
+    final trExtArtistCleaned = trExt.artistsList.first.cleanUpForComparison;
+    final trExtGenreCleaned = trExt.genresList.first.cleanUpForComparison;
+    final trExtYTID = trExt.youtubeID;
+
     void matchFileName(String videoName, String vpath, bool ensureSameDir) {
       if (ensureSameDir) {
-        if (vpath.getDirectoryPath != path.getDirectoryPath) return;
+        if (vpath.getDirectoryPath != pathDirectoryPath) return;
       }
 
-      final videoNameContainsMusicFileName = _checkFileNameAudioVideo(videoName, path.getFilenameWOExt);
+      final videoNameContainsMusicFileName = _checkFileNameAudioVideo(videoName, trExtFilenameWithoutExt, trExtFilenameWithoutExtCleaned);
       if (videoNameContainsMusicFileName) possibleLocal.add(vpath);
     }
 
     void matchTitleAndArtist(String videoName, String vpath, bool ensureSameDir) {
       if (ensureSameDir) {
-        if (vpath.getDirectoryPath != path.getDirectoryPath) return;
+        if (vpath.getDirectoryPath != pathDirectoryPath) return;
       }
-      final videoContainsTitle = videoName.contains(trExt.title.cleanUpForComparison);
-      final videoNameContainsTitleAndArtist = videoContainsTitle && trExt.artistsList.isNotEmpty && videoName.contains(trExt.artistsList.first.cleanUpForComparison);
+      final videoContainsTitle = videoName.contains(trExtTitleCleaned);
+      final videoNameContainsTitleAndArtist = videoContainsTitle && trExt.artistsList.isNotEmpty && videoName.contains(trExtArtistCleaned);
       // useful for [Nightcore - title]
       // track must contain Nightcore as the first Genre
-      final videoNameContainsTitleAndGenre = videoContainsTitle && trExt.genresList.isNotEmpty && videoName.contains(trExt.genresList.first.cleanUpForComparison);
+      final videoNameContainsTitleAndGenre = videoContainsTitle && trExt.genresList.isNotEmpty && videoName.contains(trExtGenreCleaned);
       if (videoNameContainsTitleAndArtist || videoNameContainsTitleAndGenre) possibleLocal.add(vpath);
+    }
+
+    void matchYTID(String videoName, String vpath, bool ensureSameDir) {
+      if (ensureSameDir) {
+        if (vpath.getDirectoryPath != pathDirectoryPath) return;
+      }
+      final videoContainsYTID = videoName.contains(trExtYTID);
+      if (videoContainsYTID) possibleLocal.add(vpath);
     }
 
     switch (valInSett) {
@@ -591,6 +607,7 @@ class VideoController {
           final videoName = vp.getFilenameWOExt;
           matchFileName(videoName, vp, shouldCheckSameDir);
           matchTitleAndArtist(videoName, vp, shouldCheckSameDir);
+          matchYTID(videoName, vp, shouldCheckSameDir);
         }
         break;
 
@@ -605,6 +622,12 @@ class VideoController {
         for (final vp in _allVideoPaths) {
           final videoName = vp.getFilenameWOExt;
           matchTitleAndArtist(videoName, vp, shouldCheckSameDir);
+        }
+        break;
+      case LocalVideoMatchingType.youtubeID:
+        for (final vp in _allVideoPaths) {
+          final videoName = vp.getFilenameWOExt;
+          matchYTID(videoName, vp, shouldCheckSameDir);
         }
         break;
     }
@@ -644,8 +667,8 @@ class VideoController {
     return [...possibleCached, ...possibleLocal];
   }
 
-  bool _checkFileNameAudioVideo(String videoFileName, String audioFileName) {
-    return videoFileName.cleanUpForComparison.contains(audioFileName.cleanUpForComparison) || videoFileName.contains(audioFileName);
+  bool _checkFileNameAudioVideo(String videoFileName, String audioFileName, String audioFileNameCleaned) {
+    return videoFileName.cleanUpForComparison.contains(audioFileNameCleaned) || videoFileName.contains(audioFileName);
   }
 
   Future<void> initialize() async {

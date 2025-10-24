@@ -360,6 +360,7 @@ enum LocalVideoMatchingType {
   auto,
   filename,
   titleAndArtist,
+  youtubeID,
 }
 
 enum HomePageItems {
