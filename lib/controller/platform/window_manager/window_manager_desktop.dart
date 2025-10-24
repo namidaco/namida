@@ -2,6 +2,9 @@ part of 'window_manager.dart';
 
 class _WindowManagerDesktop extends NamidaWindowManager {
   @override
+  bool get usingCustomWindowTitleBar => true;
+
+  @override
   Future<void> init() async {
     await windowManager.ensureInitialized();
   }
@@ -13,7 +16,7 @@ class _WindowManagerDesktop extends NamidaWindowManager {
       center: true,
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
-      titleBarStyle: TitleBarStyle.hidden,
+      titleBarStyle: usingCustomWindowTitleBar ? TitleBarStyle.hidden : TitleBarStyle.normal,
     );
     windowManager.addListener(_NamidaWindowListener());
     await windowManager.waitUntilReadyToShow(windowOptions, () async {

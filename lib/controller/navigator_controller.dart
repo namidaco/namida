@@ -16,6 +16,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
+import 'package:namida/controller/window_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -598,7 +599,7 @@ SnackbarController snackyy({
   required String message,
   bool top = true,
   void Function(SnackbarStatus status)? onStatusChanged,
-  EdgeInsets margin = const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+  EdgeInsetsGeometry margin = const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
   bool altDesign = false,
   int animationDurationMS = 600,
   SnackDisplayDuration displayDuration = SnackDisplayDuration.medium,
@@ -650,6 +651,9 @@ SnackbarController snackyy({
   double? snackWidth = view == null ? null : view.physicalSize.shortestSide / view.devicePixelRatio;
   if (snackWidth != null && Dimensions.inst.miniplayerIsWideScreen) {
     snackWidth = snackWidth.withMaximum(Dimensions.inst.availableAppContentWidth - margin.horizontal * 2 - kFABSize);
+  }
+  if (WindowController.instance?.usingCustomWindowTitleBar == true) {
+    margin = margin.add(EdgeInsetsGeometry.only(top: WindowController.instance?.windowTitleBarHeight ?? 0));
   }
 
   final content = Theme(

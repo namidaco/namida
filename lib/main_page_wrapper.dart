@@ -12,6 +12,7 @@ import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/window_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -67,13 +68,10 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
       child: const MainScreenStack(),
     );
 
-    if (Platform.isWindows) {
+    if (WindowController.instance?.usingCustomWindowTitleBar == true) {
       finalPageWrapper = Column(
         children: [
-          _NamidaDesktopAppBar(
-            title: 'Namida',
-            height: 36.0,
-          ),
+          const NamidaDesktopAppBar(),
           Expanded(
             child: finalPageWrapper,
           ),
@@ -376,20 +374,14 @@ class NamidaDrawer extends StatelessWidget {
   }
 }
 
-class _NamidaDesktopAppBar extends StatefulWidget {
-  final String title;
-  final double height;
-
-  const _NamidaDesktopAppBar({
-    required this.title,
-    required this.height,
-  });
+class NamidaDesktopAppBar extends StatefulWidget {
+  const NamidaDesktopAppBar({super.key});
 
   @override
-  State<_NamidaDesktopAppBar> createState() => _NamidaDesktopAppBarState();
+  State<NamidaDesktopAppBar> createState() => NamidaDesktopAppBarState();
 }
 
-class _NamidaDesktopAppBarState extends State<_NamidaDesktopAppBar> with WindowListener {
+class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowListener {
   @override
   void initState() {
     windowManager.addListener(this);
@@ -414,6 +406,9 @@ class _NamidaDesktopAppBarState extends State<_NamidaDesktopAppBar> with WindowL
 
   @override
   Widget build(BuildContext context) {
+    final title = 'Namida';
+    final height = WindowController.instance?.windowTitleBarHeight;
+
     final appBarTheme = AppBarTheme.of(context);
     final theme = context.theme;
     final colorscheme = theme.colorScheme;
@@ -425,7 +420,7 @@ class _NamidaDesktopAppBarState extends State<_NamidaDesktopAppBar> with WindowL
     final logoBgColor = context.isDarkMode ? const Color(0x40262729) : const Color(0x063c3f46);
     final logoTextColor = context.isDarkMode ? Color.alphaBlend(logoBgColor.withAlpha(100), Colors.white) : const Color.fromARGB(180, 44, 44, 44);
     return SizedBox(
-      height: widget.height,
+      height: height,
       child: Material(
         shadowColor: Colors.transparent,
         type: MaterialType.canvas,
@@ -446,7 +441,7 @@ class _NamidaDesktopAppBarState extends State<_NamidaDesktopAppBar> with WindowL
                               const AboutPage().navigate();
                             }
                           },
-                          height: widget.height,
+                          height: height,
                           animationDurationMS: 200,
                           decoration: BoxDecoration(
                             color: logoBgColor,
@@ -469,7 +464,7 @@ class _NamidaDesktopAppBarState extends State<_NamidaDesktopAppBar> with WindowL
                               ),
                               const SizedBox(width: 4.0),
                               Text(
-                                widget.title,
+                                title,
                                 style: context.textTheme.displayMedium?.copyWith(
                                   color: logoTextColor,
                                   fontSize: 14.0,
