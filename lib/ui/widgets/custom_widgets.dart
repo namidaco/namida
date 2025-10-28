@@ -5898,12 +5898,10 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
                     ),
                   ),
                   SizedBox(width: 4.0),
-                  Expanded(
-                    child: RichText(
-                      text: TextSpan(
-                        text: title,
-                        style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5),
-                      ),
+                  RichText(
+                    text: TextSpan(
+                      text: title,
+                      style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5),
                     ),
                   ),
                 ],
