@@ -1,6 +1,5 @@
 flutter_native_splash:
   image: assets/namida_icon_monet.png
-  image_dark: assets/namida_icon_monet.png
   color: "#f2fcff"
   color_dark: "#121212"
   android: true

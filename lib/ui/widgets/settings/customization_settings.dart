@@ -333,40 +333,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   color: getBgColor(_CustomizationSettingsKeys.appIcons),
                   borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: 12.0),
-                    SizedBox(
-                      width: context.width,
-                      child: Wrap(
-                        runSpacing: 8.0,
-                        alignment: WrapAlignment.start,
-                        runAlignment: WrapAlignment.start,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          SizedBox(width: 12.0),
-                          Icon(
-                            Broken.attach_square,
-                            size: 22.0,
-                            color: context.defaultIconColor(),
-                          ),
-                          SizedBox(width: 8.0),
-                          Text(
-                            lang.APP_ICON,
-                            style: context.theme.textTheme.displayMedium,
-                          ),
-                          SizedBox(width: 4.0),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: const _AppIconWidgetRow(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 8.0),
-                  ],
-                ),
+                child: const _AppIconWidgetRow(),
               ),
             ),
         ],
@@ -1137,14 +1104,7 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
   }
 
   Future<void> _refreshStatus() async {
-    NamidaAppIcons? newEnabledIcon;
-    for (final e in NamidaAppIcons.values) {
-      final enabled = await NamidaChannel.inst.isAppIconEnabled(e) ?? false;
-      if (enabled) {
-        newEnabledIcon = e;
-        break;
-      }
-    }
+    final newEnabledIcon = await NamidaChannel.inst.getEnabledAppIcon();
     if (mounted && _enabledIcon != newEnabledIcon) {
       setState(() {
         _enabledIcon = newEnabledIcon;
@@ -1152,45 +1112,146 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
     }
   }
 
+  Future<void> _onAddTap() {
+    const submitUrl = 'https://discord.com/channels/1156253663803740271/1423484977693327430';
+    return NamidaLinkUtils.openLink(submitUrl);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final enabledIcon = _enabledIcon;
+    final enabledIconAuthorInfo = enabledIcon?.authorInfos.firstOrNull;
+    final bgColor = context.theme.colorScheme.secondaryContainer;
+    final iconsRow = Row(
       mainAxisSize: MainAxisSize.min,
-      children: NamidaAppIcons.values
-          .map(
-            (e) {
-              final isEnabled = e == _enabledIcon;
-              return NamidaInkWell(
-                animationDurationMS: 300,
-                borderRadius: 12.0,
-                padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                enableSecondaryTap: false,
-                decoration: isEnabled
-                    ? BoxDecoration(
-                        color: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.75),
-                        border: Border.all(
-                          color: context.theme.colorScheme.secondaryContainer,
-                          width: 1.5,
-                        ),
-                      )
-                    : BoxDecoration(
-                        color: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.25),
+      children: <Widget>[
+        ...NamidaAppIcons.values.map(
+          (e) {
+            final isEnabled = e == enabledIcon;
+            return NamidaInkWell(
+              animationDurationMS: 300,
+              borderRadius: 12.0,
+              padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+              enableSecondaryTap: false,
+              decoration: isEnabled
+                  ? BoxDecoration(
+                      color: bgColor.withValues(alpha: 0.75),
+                      border: Border.all(
+                        color: bgColor,
+                        width: 1.5,
                       ),
-                onTap: () async {
-                  await NamidaChannel.inst.changeAppIcon(e);
-                  await _refreshStatus();
-                },
-                child: Image.asset(
-                  e.assetPath,
-                  width: 32.0,
-                  height: 32.0,
-                  alignment: Alignment.center,
-                ),
-              );
-            },
+                    )
+                  : BoxDecoration(
+                      color: bgColor.withValues(alpha: 0.25),
+                    ),
+              onTap: () async {
+                await NamidaChannel.inst.changeAppIcon(e);
+                await _refreshStatus();
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    e.assetPath,
+                    width: 34.0,
+                    height: 35.0,
+                    alignment: Alignment.center,
+                  ),
+                  SizedBox(height: 1.0),
+                  Text(
+                    e.name,
+                    style: context.textTheme.displaySmall,
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        NamidaInkWell(
+          animationDurationMS: 300,
+          borderRadius: 12.0,
+          padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+          enableSecondaryTap: false,
+          decoration: BoxDecoration(
+            color: bgColor.withValues(alpha: 0.25),
+          ),
+          onTap: _onAddTap,
+          child: Text(
+            lang.ADD,
+            style: context.textTheme.displayMedium,
+          ),
+        ),
+      ]
+          .addSeparators(
+            separator: SizedBox(width: 4.0),
           )
-          .addSeparators(separator: SizedBox(width: 4.0))
           .toList(),
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(height: 12.0),
+        SizedBox(
+          width: context.width,
+          child: Row(
+            children: [
+              SizedBox(width: 8.0),
+              Icon(
+                Broken.attach_square,
+                size: 22.0,
+                color: context.defaultIconColor(),
+              ),
+              SizedBox(width: 8.0),
+              Expanded(
+                child: Wrap(
+                  runSpacing: 2.0,
+                  alignment: WrapAlignment.start,
+                  runAlignment: WrapAlignment.start,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      "${lang.APP_ICON}:",
+                      style: context.theme.textTheme.displayMedium,
+                    ),
+                    if (enabledIcon != null) ...[
+                      SizedBox(width: 6.0),
+                      Text(
+                        enabledIcon.name,
+                        style: context.theme.textTheme.displayMedium,
+                      ),
+                      if (enabledIconAuthorInfo != null) ...[
+                        SizedBox(width: 2.0),
+                        Text(
+                          "(@${enabledIconAuthorInfo.name})",
+                          style: context.theme.textTheme.displaySmall,
+                        ),
+                        if (enabledIconAuthorInfo.aiModel != null)
+                          NamidaInkWell(
+                            bgColor: context.theme.cardColor,
+                            margin: EdgeInsets.symmetric(horizontal: 2.0),
+                            padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
+                            borderRadius: 4.0,
+                            child: Text(
+                              "AI",
+                              style: context.theme.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                            ),
+                          ),
+                      ],
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 8.0),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: iconsRow,
+        ),
+        SizedBox(height: 8.0),
+      ],
     );
   }
 }

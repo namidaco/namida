@@ -46,10 +46,160 @@
 
 		<activity-alias
             android:enabled="false"
+            android:name="com.msob7y.namida.EnhancedIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_enhanced"
+            android:roundIcon="@mipmap/ic_launcher_enhanced"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+		<activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.HollowIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_hollow"
+            android:roundIcon="@mipmap/ic_launcher_hollow"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+		<activity-alias
+            android:enabled="false"
             android:name="com.msob7y.namida.MonetIcon"
             android:targetActivity=".NamidaMainActivity"
             android:icon="@mipmap/ic_launcher_monet"
             android:roundIcon="@mipmap/ic_launcher_monet"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+		<activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.GlowyIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_glowy"
+            android:roundIcon="@mipmap/ic_launcher_glowy"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+		<activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.SpookyIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_spooky"
+            android:roundIcon="@mipmap/ic_launcher_spooky"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+		<activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.NamiweenIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_namiween"
+            android:roundIcon="@mipmap/ic_launcher_namiween"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+		<activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.SpaceIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_space"
+            android:roundIcon="@mipmap/ic_launcher_space"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+		<activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.TiredIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_tired"
+            android:roundIcon="@mipmap/ic_launcher_tired"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+		<activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.EddyIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_eddy"
+            android:roundIcon="@mipmap/ic_launcher_eddy"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+		<activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.NamichinIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_namichin"
+            android:roundIcon="@mipmap/ic_launcher_namichin"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+		<activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.CutsieIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_cutsie"
+            android:roundIcon="@mipmap/ic_launcher_cutsie"
             android:exported="true">
 
             <intent-filter>

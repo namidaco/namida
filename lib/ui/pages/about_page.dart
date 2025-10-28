@@ -155,8 +155,14 @@ class _AboutPageState extends State<AboutPage> {
                               shape: BoxShape.circle,
                               color: Color.fromRGBO(25, 25, 25, 0.1),
                             ),
-                            child: Image.asset(
-                              NamidaAppIcons.main.assetPath,
+                            child: FutureBuilder(
+                              future: NamidaChannel.inst.getEnabledAppIcon(),
+                              builder: (context, snapshot) {
+                                final enabledIcon = snapshot.data ?? NamidaAppIcons.namida;
+                                return Image.asset(
+                                  enabledIcon.assetPath,
+                                );
+                              },
                             ),
                           ),
                         ),

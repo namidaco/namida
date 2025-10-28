@@ -53,7 +53,17 @@ enum class LauncherIcon(
     val foreground: Int
 ) {
 	DEFAULT("DefaultIcon", R.mipmap.ic_launcher),
-	MONET("MonetIcon", R.mipmap.ic_launcher_monet);
+	ENHANCED("EnhancedIcon", R.mipmap.ic_launcher_enhanced),
+	HOLLOW("HollowIcon", R.mipmap.ic_launcher_hollow),
+	MONET("MonetIcon", R.mipmap.ic_launcher_monet),
+	GLOWY("GlowyIcon", R.mipmap.ic_launcher_glowy),
+	SPOOKY("SpookyIcon", R.mipmap.ic_launcher_spooky),
+	NAMIWEEN("NamiweenIcon", R.mipmap.ic_launcher_namiween),
+	SPACE("SpaceIcon", R.mipmap.ic_launcher_space),
+	TIRED("TiredIcon", R.mipmap.ic_launcher_tired),
+	EDDY("EddyIcon", R.mipmap.ic_launcher_eddy),
+	NAMICHIN("NamichinIcon", R.mipmap.ic_launcher_namichin),
+	CUTSIE("CutsieIcon", R.mipmap.ic_launcher_cutsie);
 
     private var componentName: ComponentName? = null
 

@@ -131,8 +131,18 @@ class NamidaMainActivity : FlutterActivity() {
 				"changeAppIcon" -> {
           val key = call.argument<String>("key")
           val nativeIcon = when (key) {
-						"main" -> LauncherIcon.DEFAULT
+						"namida" -> LauncherIcon.DEFAULT
+						"enhanced" -> LauncherIcon.ENHANCED
+						"hollow" -> LauncherIcon.HOLLOW
 						"monet" -> LauncherIcon.MONET
+						"glowy" -> LauncherIcon.GLOWY
+						"spooky" -> LauncherIcon.SPOOKY
+						"namiween" -> LauncherIcon.NAMIWEEN
+						"space" -> LauncherIcon.SPACE
+						"tired" -> LauncherIcon.TIRED
+						"eddy" -> LauncherIcon.EDDY
+						"namichin" -> LauncherIcon.NAMICHIN
+						"cutsie" -> LauncherIcon.CUTSIE
             else -> null
           }
 
@@ -146,8 +156,18 @@ class NamidaMainActivity : FlutterActivity() {
 				"isAppIconEnabled" -> {
           val key = call.argument<String>("key")
           val nativeIcon = when (key) {
-						"main" -> LauncherIcon.DEFAULT
+						"namida" -> LauncherIcon.DEFAULT
+						"enhanced" -> LauncherIcon.ENHANCED
+						"hollow" -> LauncherIcon.HOLLOW
 						"monet" -> LauncherIcon.MONET
+						"glowy" -> LauncherIcon.GLOWY
+						"spooky" -> LauncherIcon.SPOOKY
+						"namiween" -> LauncherIcon.NAMIWEEN
+						"space" -> LauncherIcon.SPACE
+						"tired" -> LauncherIcon.TIRED
+						"eddy" -> LauncherIcon.EDDY
+						"namichin" -> LauncherIcon.NAMICHIN
+						"cutsie" -> LauncherIcon.CUTSIE
             else -> null
           }
 

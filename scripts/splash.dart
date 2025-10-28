@@ -16,21 +16,19 @@ class _FilePaths {
 
 /// Generates code for multiple icons in dart/kotlin/AndroidManifest
 void main() async {
-  final configNames = [
-    r'monet',
-    r'default', // should be last to ensure default values applied
-  ];
-
-  for (final configName in configNames) {
-    await Process.run(
-      'dart',
-      [
-        'run',
-        'flutter_native_splash:create',
-        '--path=scripts/splash_configs/splash_$configName.yaml',
-      ],
-      runInShell: true,
-    );
+  for (final icon in _appIcons) {
+    final configName = icon.dartName;
+    // if (icon == _IconDetails.defaultIcon) {
+    //   await Process.run(
+    //     'dart',
+    //     [
+    //       'run',
+    //       'flutter_native_splash:create',
+    //       '--path=scripts/splash_configs/splash_$configName.yaml',
+    //     ],
+    //     runInShell: true,
+    //   );
+    // }
 
     _renameAndroidFiles(configName);
 
@@ -60,8 +58,10 @@ void _renameAndroidFiles(String suffix) {
 void _replaceInDart() {
   final prefixComment = '// $_kPrefixComment';
   final suffixComment = '// $_kSuffixComment';
-  final iconsEnum = _appIcons.map((e) => '\t${e.dartName}("${e.assetPath}"),').join('\n');
-
+  final iconsEnum = _appIcons.map((e) {
+    final authorInfo = e.authorInfos.map((e) => e.toClassString()).join(', ');
+    return '\t${e.dartName}("${e.assetPath}", [$authorInfo]),';
+  }).join('\n');
   _replaceAllInFile(
     _FilePaths.namida_channel_base_dart,
     (content) => content.replaceFirst(
@@ -72,8 +72,27 @@ $iconsEnum
 \t;
 
 \tfinal String assetPath;
-\tconst NamidaAppIcons(this.assetPath);
+\tfinal List<AuthorInfo> authorInfos;
+\tconst NamidaAppIcons(this.assetPath, this.authorInfos);
 }
+
+class AuthorInfo {
+\tfinal String name;
+\tfinal String? username;
+\tfinal AuthorPlatform? platform;
+\tfinal AuthorAIModel? aiModel;
+
+\tconst AuthorInfo(this.name, this.username, this.platform, this.aiModel);
+}
+
+enum AuthorPlatform {
+${_AuthorPlatform.values.map((e) => '\t${e.name},').join('\n')}
+}
+
+enum AuthorAIModel {
+${_AuthorAIModel.values.map((e) => '\t${e.name},').join('\n')}
+}
+
 $suffixComment''',
     ),
   );
@@ -230,32 +249,144 @@ File _renameFileAdv(File file, String Function(String old) newFileNameBuilder) {
 const _kPrefixComment = 'SPLASH_AUTO_GENERATED START';
 const _kSuffixComment = 'SPLASH_AUTO_GENERATED END';
 
-const _appIcons = [
-  _IconDetails(
-    kotlinName: 'DEFAULT',
-    manifestName: 'DefaultIcon',
-    mipmapName: 'ic_launcher',
-    dartName: 'main',
-    assetPath: 'assets/namida_icon.png',
+final _appIcons = [
+  _IconDetails.defaultIcon,
+  _IconDetails.create(
+    'enhanced',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('im_mehu', null, _AuthorPlatform.discord, null),
+    ],
   ),
-  _IconDetails(
-    kotlinName: 'MONET',
-    manifestName: 'MonetIcon',
-    mipmapName: 'ic_launcher_monet',
-    dartName: 'monet',
-    assetPath: 'assets/namida_icon_monet.png',
+  _IconDetails.create(
+    'hollow',
+    ext: _ImgExtension.png,
+    authorInfos: [
+      _AuthorInfo('wispy', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+  _IconDetails.create(
+    'monet',
+    ext: _ImgExtension.png,
+    authorInfos: [
+      _AuthorInfo('Sujal', null, _AuthorPlatform.telegram, null),
+    ],
+  ),
+  _IconDetails.create(
+    'glowy',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('Sujal', null, _AuthorPlatform.telegram, null),
+    ],
+  ),
+  _IconDetails.create(
+    'spooky',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('Miguquis', null, _AuthorPlatform.discord, _AuthorAIModel.gemini),
+    ],
+  ),
+  _IconDetails.create(
+    'namiween',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('𐔌 . ⋮ Reggie .ᐟ ֹ ₊ ꒱', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
+    ],
+  ),
+  _IconDetails.create(
+    'space',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo(':𝟛𝓗𝓪𝓹𝓹𝔂', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+  _IconDetails.create(
+    'tired',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('Zephyr', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
+    ],
+  ),
+  _IconDetails.create(
+    'eddy',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo(':𝟛𝓗𝓪𝓹𝓹𝔂', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+  _IconDetails.create(
+    'namichin',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('Scarecloud', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+  _IconDetails.create(
+    'cutsie',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('smilez', null, _AuthorPlatform.discord, _AuthorAIModel.gpt4),
+    ],
   ),
 ];
 
 class _IconDetails {
   final String kotlinName, manifestName, mipmapName, dartName, assetPath;
+  final List<_AuthorInfo> authorInfos;
   const _IconDetails({
     required this.kotlinName,
     required this.manifestName,
     required this.mipmapName,
     required this.dartName,
     required this.assetPath,
+    required this.authorInfos,
   });
+
+  static String _capitalizeFirst(String word) {
+    if (word.length > 1) {
+      try {
+        return "${word[0].toUpperCase()}${word.substring(1)}";
+      } catch (_) {}
+    }
+    return word;
+  }
+
+  static const defaultIcon = _IconDetails(
+    kotlinName: 'DEFAULT',
+    manifestName: 'DefaultIcon',
+    mipmapName: 'ic_launcher',
+    dartName: 'namida',
+    assetPath: 'assets/namida_icon.webp',
+    authorInfos: [
+      _AuthorInfo(
+        'MSOB7YY',
+        'MSOB7YY',
+        _AuthorPlatform.github,
+        _AuthorAIModel.midjourney,
+      ),
+    ],
+  );
+
+  factory _IconDetails.create(String mainName, {required List<_AuthorInfo> authorInfos, required _ImgExtension ext}) {
+    final upperCase = mainName.toUpperCase();
+    final lowercase = mainName.toLowerCase();
+    final camelcase = _capitalizeFirst(mainName);
+    final extName = ext.name;
+
+    return _IconDetails(
+      kotlinName: upperCase,
+      manifestName: '${camelcase}Icon',
+      mipmapName: 'ic_launcher_$lowercase',
+      dartName: mainName.toLowerCase(),
+      assetPath: 'assets/namida_icon_$lowercase.$extName',
+      authorInfos: authorInfos,
+    );
+  }
+}
+
+enum _ImgExtension {
+  webp,
+  png,
 }
 
 extension _IterablieListieUtils<E> on List<E> {
@@ -265,4 +396,36 @@ extension _IterablieListieUtils<E> on List<E> {
       yield toElement(this[i], i);
     }
   }
+}
+
+class _AuthorInfo {
+  final String name;
+  final String? username;
+  final _AuthorPlatform? platform;
+  final _AuthorAIModel? aiModel;
+
+  const _AuthorInfo(this.name, this.username, this.platform, this.aiModel);
+
+  String toClassString() {
+    final nameText = '"$name"';
+    final usernameText = username == null ? null : '"$username"';
+    final platformText = platform == null ? null : 'AuthorPlatform.${platform!.name}';
+    final aiModelText = aiModel == null ? null : 'AuthorAIModel.${aiModel!.name}';
+    return 'AuthorInfo($nameText, $usernameText, $platformText, $aiModelText)';
+  }
+}
+
+enum _AuthorPlatform {
+  github,
+  telegram,
+  discord,
+}
+
+enum _AuthorAIModel {
+  midjourney,
+  gemini,
+  gpt4,
+
+  /// uses an ai model but not known
+  unknown,
 }
