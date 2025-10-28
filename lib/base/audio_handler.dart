@@ -602,8 +602,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   );
   bool? _pausedTemporarily;
 
-  Future<void> _freePlayerTemporarily() {
-    return super.freePlayer();
+  Future<void> _freePlayerTemporarily() async {
+    // -- can cause issues, disabled currently.
+    // return super.freePlayer();
   }
 
   @override

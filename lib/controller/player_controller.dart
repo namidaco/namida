@@ -548,6 +548,7 @@ class Player {
   }
 
   Future<void> clearQueue() async {
+    await _audioHandler.onDispose().ignoreError();
     await _audioHandler.clearQueue();
   }
 
