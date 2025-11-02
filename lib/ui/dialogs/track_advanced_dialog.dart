@@ -350,19 +350,32 @@ void showTrackAdvancedDialog({
                     trackColor: trackColors?.combine(),
                     onFinalColor: (palette, color) async {
                       onAction();
+                      final newNC = NamidaColor.create(
+                        used: color,
+                        palette: palette,
+                      );
+                      if (networkArtworkInfo != null) {
+                        await CurrentColor.inst.reExtractNetworkArtworkColorPalette(
+                          networkArtworkInfo: networkArtworkInfo,
+                          newNC: newNC,
+                        );
+                      }
                       for (final track in tracksForColorPalette) {
                         await CurrentColor.inst.reExtractTrackColorPalette(
                           track: track,
                           imagePath: null,
-                          newNC: NamidaColor.create(
-                            used: color,
-                            palette: palette,
-                          ),
+                          newNC: newNC,
                         );
                       }
                     },
                     onRestoreDefaults: () async {
                       onAction();
+                      if (networkArtworkInfo != null) {
+                        await CurrentColor.inst.reExtractNetworkArtworkColorPalette(
+                          networkArtworkInfo: networkArtworkInfo,
+                          newNC: null,
+                        );
+                      }
                       for (final track in tracksForColorPalette) {
                         await CurrentColor.inst.reExtractTrackColorPalette(
                           track: track,

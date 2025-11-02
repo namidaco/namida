@@ -88,17 +88,20 @@ class NamidaColor {
 }
 
 extension NamidaColorMExtensions on List<NamidaColor> {
-  NamidaColor combine() {
+  NamidaColor combine({bool forceGenerateUsed = true}) {
     final palettes = <Color>[];
     final palettesFew = <Color>[];
+    final usedAll = <Color>[];
     for (final c in this) {
       palettes.addAll(c.palette);
       palettesFew.addAll(c.palette.takeFew());
+      if (forceGenerateUsed) usedAll.add(c.color);
     }
     // final mix = NamidaColor.mixIntColors(palettes);
     final mix2 = NamidaColor.mixIntColors(palettesFew);
+    final used = usedAll.isEmpty ? null : NamidaColor.mixIntColors(usedAll);
     return NamidaColor(
-      used: null,
+      used: used,
       // mix: mix,
       mix2: mix2,
       palette: palettes,

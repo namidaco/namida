@@ -16,11 +16,14 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -405,6 +408,36 @@ class CurrentColor {
     }
     if (Player.inst.currentTrack?.track == track) {
       updatePlayerColorFromTrack(Player.inst.currentTrack, null);
+    }
+  }
+
+  Future<void> reExtractNetworkArtworkColorPalette({required NetworkArtworkInfo networkArtworkInfo, required NamidaColor? newNC, bool useIsolate = true}) async {
+    final imagePath = networkArtworkInfo.toArtworkIfExistsAndValidAndEnabled()?.path;
+    if (imagePath == null || !await File(imagePath).exists()) return;
+
+    final filenameKeyInMaps = imagePath;
+    final filenamePalette = networkArtworkInfo.name;
+    final paletteFile = FileParts.join(AppDirs.PALETTES, "$filenamePalette.palette");
+    if (newNC != null) {
+      await paletteFile.writeAsJson(newNC.toJson());
+      _updateInColorMap(filenameKeyInMaps, newNC);
+    } else {
+      final nc = await extractPaletteFromImage(imagePath, forceReExtract: true, useIsolate: useIsolate);
+      _updateInColorMap(filenameKeyInMaps, nc);
+    }
+
+    final currentRoute = NamidaNavigator.inst.currentRoute;
+    final currentRouteType = currentRoute?.route;
+    switch (currentRouteType) {
+      case RouteType.SUBPAGE_albumArtistTracks ||
+            RouteType.SUBPAGE_albumTracks ||
+            RouteType.SUBPAGE_artistTracks ||
+            RouteType.SUBPAGE_albumArtistTracks ||
+            RouteType.SUBPAGE_composerTracks ||
+            RouteType.SUBPAGE_genreTracks:
+        currentRoute?.updateColorScheme();
+      default:
+        null;
     }
   }
 
