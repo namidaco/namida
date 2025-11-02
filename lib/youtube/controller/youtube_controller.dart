@@ -747,6 +747,9 @@ class YoutubeController {
           Indexer.inst.convertPathToTracksAndAddToListsSingle(downloadedFile.path);
         }
       }
+      if (downloadedFile != null) {
+        Indexer.inst.scanMediaStore(downloadedFile.path);
+      }
 
       final dfmg = downloadedFilesMap.value[groupName] ??= {};
       dfmg[config.filename] = downloadedFile;

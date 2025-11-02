@@ -799,6 +799,7 @@ class Indexer<T extends Track> {
         allTracksMappedByPath.remove(tr.path);
         unawaited(_tracksDBManager.delete(tr.path));
         TrackTileManager.rebuildTrackInfo(tr);
+        this.scanMediaStore(tr.path);
       },
     );
     this.tracksInfoList.refresh();
@@ -1397,6 +1398,14 @@ class Indexer<T extends Track> {
 
     printy("Paths Found: ${allPaths.length}");
     return allPaths;
+  }
+
+  Future<void> scanMediaStore(String path) async {
+    if (NamidaFeaturesVisibility.onAudioQueryAvailable) {
+      try {
+        await _audioQuery.scanMedia(path);
+      } catch (_) {}
+    }
   }
 
   Future<List<TrackExtended>> _fetchMediaStoreTracks() async {
