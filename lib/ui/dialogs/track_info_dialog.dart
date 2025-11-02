@@ -490,41 +490,44 @@ class TrackInfoListTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: NamidaInkWell(
-        borderRadius: 16.0,
+        borderRadius: 12.0,
         onTap: () => _copyField(context),
         onLongPress: () => _copyField(context),
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-        child: Wrap(
-          runSpacing: 6.0,
-          children: [
-            Icon(
-              icon,
-              size: iconSize,
-              color: context.theme.colorScheme.onSurface.withAlpha(220),
-            ),
-            const SizedBox(width: 6.0),
-            Padding(
-              padding: textToIconPaddingCorrector,
-              child: Text(
-                '$title:',
-                style: context.theme.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(220)),
+        child: SizedBox(
+          width: context.width,
+          child: Wrap(
+            runSpacing: 6.0,
+            children: [
+              Icon(
+                icon,
+                size: iconSize,
+                color: context.theme.colorScheme.onSurface.withAlpha(220),
               ),
-            ),
-            const SizedBox(width: 4.0),
-            Padding(
-              padding: textToIconPaddingCorrector,
-              child: child ??
-                  (isComment
-                      ? NamidaSelectableAutoLinkText(text: value == '' ? '?' : value)
-                      : Text(
-                          value == '' ? '?' : value,
-                          style: context.theme.textTheme.displayMedium?.copyWith(
-                            color: Color.alphaBlend(context.theme.colorScheme.primary.withAlpha(140), context.textTheme.displayMedium!.color!),
-                            fontSize: 13.5,
-                          ),
-                        )),
-            ),
-          ],
+              const SizedBox(width: 6.0),
+              Padding(
+                padding: textToIconPaddingCorrector,
+                child: Text(
+                  '$title:',
+                  style: context.theme.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(220)),
+                ),
+              ),
+              const SizedBox(width: 4.0),
+              Padding(
+                padding: textToIconPaddingCorrector,
+                child: child ??
+                    (isComment
+                        ? NamidaSelectableAutoLinkText(text: value == '' ? '?' : value)
+                        : Text(
+                            value == '' ? '?' : value,
+                            style: context.theme.textTheme.displayMedium?.copyWith(
+                              color: Color.alphaBlend(context.theme.colorScheme.primary.withAlpha(140), context.textTheme.displayMedium!.color!),
+                              fontSize: 13.5,
+                            ),
+                          )),
+              ),
+            ],
+          ),
         ),
       ),
     );
