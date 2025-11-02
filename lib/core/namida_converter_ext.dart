@@ -786,6 +786,7 @@ extension RouteUtils on NamidaRoute {
   }
 
   bool hasTracksInside() => tracksInside().isNotEmpty;
+  bool hasTracksInsideReactive() => tracksInsideReactive().isNotEmpty;
 
   /// NOTE: any modification done to this will be reflected in the original list.
   Iterable<Selectable> tracksInside() {
@@ -803,7 +804,35 @@ extension RouteUtils on NamidaRoute {
           RouteType.SUBPAGE_historyTracks => HistoryController.inst.historyTracks,
           // RouteType.SUBPAGE_mostPlayedTracks => HistoryController.inst.currentMostPlayedTracks,
           RouteType.SUBPAGE_recentlyAddedTracks => Indexer.inst.recentlyAddedTracksSorted(),
-          _ => [],
+          _ => null,
+        } ??
+        [];
+  }
+
+  Iterable<Selectable>? _registerAndReturn(Iterable<Selectable>? trs, void Function() fn) {
+    fn();
+    return trs;
+  }
+
+  Iterable<Selectable> tracksInsideReactive() {
+    return switch (route) {
+          RouteType.PAGE_allTracks => SearchSortController.inst.trackSearchList.valueR,
+          RouteType.PAGE_folders => FoldersController.tracks.currentFolder.valueR?.tracks(),
+          RouteType.PAGE_folders_videos => FoldersController.videos.currentFolder.valueR?.tracks(),
+          RouteType.SUBPAGE_mostPlayedTracks =>
+            HistoryController.inst.currentTopTracksMapListensReactive(HistoryController.inst.currentMostPlayedTimeRange.valueR).valueR.keysSortedByValue,
+          RouteType.SUBPAGE_albumTracks => _registerAndReturn(name?.getAlbumTracks(), () => Indexer.inst.mainMapAlbums.valueR),
+          RouteType.SUBPAGE_artistTracks => _registerAndReturn(name?.getArtistTracks(), () => Indexer.inst.mainMapArtists.valueR),
+          RouteType.SUBPAGE_albumArtistTracks => _registerAndReturn(name?.getAlbumArtistTracks(), () => Indexer.inst.mainMapAlbumArtists.valueR),
+          RouteType.SUBPAGE_composerTracks => _registerAndReturn(name?.getComposerTracks(), () => Indexer.inst.mainMapComposer.valueR),
+          RouteType.SUBPAGE_genreTracks => _registerAndReturn(name?.getGenresTracks(), () => Indexer.inst.mainMapGenres.valueR),
+          RouteType.SUBPAGE_queueTracks => _registerAndReturn(name?.getQueue()?.tracks, () => QueueController.inst.queuesMap.valueR),
+          RouteType.SUBPAGE_playlistTracks =>
+            name == null ? null : _registerAndReturn(PlaylistController.inst.getPlaylist(name!)?.tracks, () => PlaylistController.inst.playlistsMap.valueR),
+          RouteType.SUBPAGE_historyTracks => HistoryController.inst.historyTracksR,
+          // RouteType.SUBPAGE_mostPlayedTracks => HistoryController.inst.currentMostPlayedTracks,
+          RouteType.SUBPAGE_recentlyAddedTracks => _registerAndReturn(Indexer.inst.recentlyAddedTracksSorted(), () => Indexer.inst.tracksInfoList.valueR),
+          _ => null,
         } ??
         [];
   }

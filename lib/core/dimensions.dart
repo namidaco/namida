@@ -62,7 +62,7 @@ class Dimensions {
             route == RouteType.SUBPAGE_INDEXER_UPDATE_MISSING_TRACKS || // bcz has fab
             route == RouteType.YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE || // bcz has middle button
             route == RouteType.YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE || // bcz bcz..
-            ((fab == FABType.shuffle || fab == FABType.play) && currentRoute?.hasTracksInside() != true) ||
+            ((fab == FABType.shuffle || fab == FABType.play) && currentRoute?.hasTracksInsideReactive() != true) ||
             (settings.extra.selectedLibraryTab.valueR == LibraryTab.tracks && LibraryTab.tracks.isBarVisible.valueR == false);
     return shouldHide;
   }
