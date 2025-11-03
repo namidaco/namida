@@ -79,11 +79,16 @@ class NamidaDialogs {
   Future<void> showArtistDialog(String name, MediaType type) async {
     final tracks = name.getArtistTracksFor(type);
     final albums = tracks.mappedUniqued((e) => e.album);
+    final queueSource = type == MediaType.albumArtist
+        ? QueueSource.albumArtist
+        : type == MediaType.composer
+            ? QueueSource.composer
+            : QueueSource.artist;
     await showGeneralPopupDialog(
       tracks,
       name.overflow,
       "${tracks.displayTrackKeyword} & ${albums.length.displayAlbumKeyword}",
-      QueueSource.artist,
+      queueSource,
       thirdLineText: albums.take(5).join(', ').overflow,
       forceSquared: true,
       forceSingleArtwork: true,

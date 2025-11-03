@@ -480,7 +480,7 @@ class NormalPlaylistTracksPage extends StatefulWidget with NamidaRouteWidget {
   String? get name => playlistName;
 
   @override
-  RouteType get route => RouteType.SUBPAGE_playlistTracks;
+  RouteType get route => playlistName == k_PLAYLIST_NAME_FAV ? RouteType.SUBPAGE_favPlaylistTracks : RouteType.SUBPAGE_playlistTracks;
 
   final String playlistName;
   final bool disableAnimation;

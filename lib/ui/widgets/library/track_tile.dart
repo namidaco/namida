@@ -261,7 +261,8 @@ class TrackTile extends StatelessWidget {
         heroTag: _heroTag,
       );
 
-  void _selectTrack() => SelectedTracksController.inst.selectOrUnselect(trackOrTwd, properties.configs.queueSource, properties.configs.playlistName);
+  void _selectTrack({required bool ranged}) =>
+      SelectedTracksController.inst.selectOrUnselect(trackOrTwd, index, properties.configs.queueSource, properties.configs.playlistName, ranged: ranged);
 
   @override
   Widget build(BuildContext context) {
@@ -375,7 +376,7 @@ class TrackTile extends StatelessWidget {
               onTap: onTap ??
                   () async {
                     if (SelectedTracksController.inst.selectedTracks.value.isNotEmpty && !isInSelectedTracksPreview) {
-                      _selectTrack();
+                      _selectTrack(ranged: false);
                     } else {
                       if (onPlaying != null) {
                         onPlaying!();
@@ -407,7 +408,7 @@ class TrackTile extends StatelessWidget {
                       if (isInSelectedTracksPreview) return;
 
                       ScrollSearchController.inst.unfocusKeyboard();
-                      _selectTrack();
+                      _selectTrack(ranged: true);
                     },
               onSecondaryTap: _triggerTrackDialog,
               child: ColoredBox(

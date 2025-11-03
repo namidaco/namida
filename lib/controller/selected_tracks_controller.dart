@@ -19,12 +19,14 @@ class SelectedTracksController {
   SelectedTracksController._internal();
 
   RxBaseCore<List<Selectable>> get selectedTracks => _tracksOrTwdList;
-  RxBaseCore<Map<Track, bool>> get existingTracksMap => _allTracksHashCodes;
+  RxBaseCore<Map<Track, TrackSelectionInfo?>> get existingTracksMap => _allTracksHashCodes;
 
   final selectedPlaylistsNames = <Track, String>{};
 
   final _tracksOrTwdList = <Selectable>[].obs;
-  final _allTracksHashCodes = <Track, bool>{}.obs;
+  final _allTracksHashCodes = <Track, TrackSelectionInfo?>{}.obs;
+
+  NamidaRoute? get _currentRoute => NamidaNavigator.inst.currentRoute;
 
   Iterable<Selectable> getCurrentAllTracks({bool fallbackToQueue = true}) {
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
@@ -51,7 +53,7 @@ class SelectedTracksController {
   // bool isTrackSelected(Selectable twd) => _tracksOrTwdList.contains(twd);
   bool isTrackSelected(Selectable twd) => _allTracksHashCodes[twd.track] != null;
 
-  void selectOrUnselect(Selectable track, QueueSource queueSource, String? playlistName) {
+  void selectOrUnselect(Selectable track, int index, QueueSource queueSource, String? playlistName, {bool ranged = false}) {
     playlistName ??= '';
     final rawTrack = track.track;
     if (isTrackSelected(track)) {
@@ -60,9 +62,30 @@ class SelectedTracksController {
       if (indexInList != -1) _tracksOrTwdList.removeAt(indexInList);
       selectedPlaylistsNames.remove(rawTrack);
     } else {
-      _allTracksHashCodes[rawTrack] = true;
-      _tracksOrTwdList.add(track);
-      selectedPlaylistsNames[rawTrack] = playlistName;
+      void selectSingle() {
+        _allTracksHashCodes[rawTrack] = TrackSelectionInfo(route: _currentRoute, source: queueSource, index: index);
+        _tracksOrTwdList.add(track);
+        selectedPlaylistsNames[rawTrack] = playlistName!;
+      }
+
+      if (ranged) {
+        int latestIndexAbove = -1;
+        final cr = _currentRoute;
+        for (final t in _allTracksHashCodes.values) {
+          if (t != null && t.isTheSameList(cr, queueSource)) {
+            if (t.index > latestIndexAbove && t.index < index) {
+              latestIndexAbove = t.index;
+            }
+          }
+        }
+        if (latestIndexAbove < 0) {
+          selectSingle();
+        } else {
+          selectAllTracks(range: (latestIndexAbove, index));
+        }
+      } else {
+        selectSingle();
+      }
     }
 
     bottomPadding.value = _tracksOrTwdList.isEmpty ? 0.0 : 102.0;
@@ -89,17 +112,21 @@ class SelectedTracksController {
     bottomPadding.value = 0.0;
   }
 
-  void selectAllTracks() {
+  void selectAllTracks({(int, int)? range}) {
     List<Selectable>? tracks;
+    QueueSource queueSource;
     NamidaRoute? routeTracks; // if the tracks are obtained from route
     if (MiniPlayerController.inst.isInQueue) {
       tracks = Player.inst.currentQueue.value.whereType<Selectable>().toList();
+      queueSource = QueueSource.playerQueue;
     } else if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
       tracks = SearchSortController.inst.trackSearchTemp.value;
+      queueSource = QueueSource.search;
     } else {
       final currentRoute = NamidaNavigator.inst.currentRoute;
       tracks = currentRoute?.tracksListInside();
       routeTracks = currentRoute;
+      queueSource = currentRoute?.toQueueSource() ?? QueueSource.others;
     }
 
     if (tracks == null || tracks.isEmpty) return;
@@ -118,21 +145,27 @@ class SelectedTracksController {
     final pln = playlistNameToAdd;
     final hashMap = _allTracksHashCodes.value;
     final trMainList = _tracksOrTwdList.value;
+    List<Selectable> finalTracks;
+    if (range != null) {
+      finalTracks = tracks.sublist(range.$1, range.$2 + 1);
+    } else {
+      finalTracks = tracks;
+    }
     if (pln != null && pln != '') {
-      tracks.loop((twd) {
+      finalTracks.loopAdv((twd, index) {
         final tr = twd.track;
-        if (hashMap[tr] != true) {
+        if (hashMap[tr] == null) {
           trMainList.add(twd);
-          hashMap[tr] = true;
+          hashMap[tr] = TrackSelectionInfo(route: _currentRoute, source: queueSource, index: index);
           selectedPlaylistsNames[tr] = pln; // <-- difference here
         }
       });
     } else {
-      tracks.loop((twd) {
+      finalTracks.loopAdv((twd, index) {
         final tr = twd.track;
-        if (hashMap[tr] != true) {
+        if (hashMap[tr] == null) {
           trMainList.add(twd);
-          hashMap[tr] = true;
+          hashMap[tr] = TrackSelectionInfo(route: _currentRoute, source: queueSource, index: index);
         }
       });
     }
@@ -142,9 +175,10 @@ class SelectedTracksController {
   }
 
   void replaceThisTrack(Track oldTrack, Track newTrack) {
+    final oldTrackRoute = _allTracksHashCodes[oldTrack];
     _tracksOrTwdList.replaceItem(oldTrack, newTrack);
     _allTracksHashCodes.remove(oldTrack);
-    _allTracksHashCodes[newTrack] = true;
+    _allTracksHashCodes[newTrack] = oldTrackRoute;
   }
 
   void replaceTrackDirectory(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) {
@@ -173,9 +207,31 @@ class SelectedTracksController {
         }
       },
     );
-    _allTracksHashCodes.clear();
-    _tracksOrTwdList.value.loop((e) {
-      _allTracksHashCodes[e.track] = true;
-    });
+    // -- either dont update stuff, or clear everything
+    // _allTracksHashCodes.clear();
+    // _tracksOrTwdList.value.loop((e) {
+    //   _allTracksHashCodes[e.track] = true;
+    // });
+  }
+}
+
+class TrackSelectionInfo {
+  final NamidaRoute? route;
+  final QueueSource source;
+  final int index;
+
+  const TrackSelectionInfo({
+    required this.route,
+    required this.index,
+    required this.source,
+  });
+
+  bool isTheSameList(NamidaRoute? currentRoute, QueueSource currentSource) {
+    final thisRoute = this.route;
+    final thisSource = this.source;
+    return currentRoute != null &&
+        thisRoute != null &&
+        currentRoute.isSameRouteAs(thisRoute) && //
+        currentSource == thisSource;
   }
 }

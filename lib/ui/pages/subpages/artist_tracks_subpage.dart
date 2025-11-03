@@ -41,6 +41,11 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
+    final queueSource = type == MediaType.albumArtist
+        ? QueueSource.albumArtist
+        : type == MediaType.composer
+            ? QueueSource.composer
+            : QueueSource.artist;
     return BackgroundWrapper(
       child: Obx(
         (context) {
@@ -48,7 +53,7 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
           Indexer.inst.getArtistMapFor(type).valueR;
 
           return NamidaTracksList(
-            queueSource: QueueSource.artist,
+            queueSource: queueSource,
             queueLength: tracks.length,
             queue: tracks,
             paddingAfterHeader: const EdgeInsets.only(bottom: 12.0),
@@ -86,7 +91,7 @@ class ArtistTracksPage extends StatelessWidget with NamidaRouteWidget {
               topPadding: 8.0,
               bottomPadding: 8.0,
               title: name,
-              source: QueueSource.artist,
+              source: queueSource,
               subtitle: [
                 tracks.displayTrackKeyword,
                 if (tracks.year != 0) tracks.year.yearFormatted,

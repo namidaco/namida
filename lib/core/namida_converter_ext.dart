@@ -788,6 +788,26 @@ extension RouteUtils on NamidaRoute {
   bool hasTracksInside() => tracksInside().isNotEmpty;
   bool hasTracksInsideReactive() => tracksInsideReactive().isNotEmpty;
 
+  QueueSource toQueueSource() {
+    return switch (route) {
+      RouteType.PAGE_allTracks => QueueSource.allTracks,
+      RouteType.PAGE_folders => QueueSource.folder,
+      RouteType.PAGE_folders_videos => QueueSource.folderVideos,
+      RouteType.SUBPAGE_albumTracks => QueueSource.album,
+      RouteType.SUBPAGE_artistTracks => QueueSource.artist,
+      RouteType.SUBPAGE_albumArtistTracks => QueueSource.albumArtist,
+      RouteType.SUBPAGE_composerTracks => QueueSource.composer,
+      RouteType.SUBPAGE_genreTracks => QueueSource.genre,
+      RouteType.SUBPAGE_queueTracks => QueueSource.queuePage,
+      RouteType.SUBPAGE_playlistTracks => QueueSource.playlist,
+      RouteType.SUBPAGE_favPlaylistTracks => QueueSource.favourites,
+      RouteType.SUBPAGE_historyTracks => QueueSource.history,
+      RouteType.SUBPAGE_mostPlayedTracks => QueueSource.mostPlayed,
+      RouteType.SUBPAGE_recentlyAddedTracks => QueueSource.recentlyAdded,
+      _ => QueueSource.others,
+    };
+  }
+
   /// NOTE: any modification done to this will be reflected in the original list.
   Iterable<Selectable> tracksInside() {
     return switch (route) {
@@ -1359,6 +1379,8 @@ class _NamidaConverters {
         QueueSource.allTracks: lang.TRACKS,
         QueueSource.album: lang.ALBUM,
         QueueSource.artist: lang.ARTIST,
+        QueueSource.albumArtist: lang.ALBUM_ARTIST,
+        QueueSource.composer: lang.COMPOSER,
         QueueSource.genre: lang.GENRE,
         QueueSource.playlist: lang.PLAYLIST,
         QueueSource.favourites: lang.FAVOURITES,
