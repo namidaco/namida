@@ -4,6 +4,19 @@ class _NamidaChannelWindows extends NamidaChannel {
   _NamidaChannelWindows._internal();
 
   @override
+  bool get canOpenFileInExplorer => true;
+
+  @override
+  Future<void>? openFileInExplorer(String filePath) {
+    return Process.start(
+      'explorer.exe',
+      ['/select,', filePath],
+      runInShell: true,
+      mode: ProcessStartMode.normal,
+    );
+  }
+
+  @override
   Future<bool?> isAppIconEnabled(NamidaAppIcons type) async {
     // -- unsupported
     return false;

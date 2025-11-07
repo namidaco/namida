@@ -467,6 +467,7 @@ abstract class LanguageKeys {
   String get ON_VOLUME_ZERO => _getKey('ON_VOLUME_ZERO');
   String get OPEN => _getKey('OPEN');
   String get OPEN_APP => _getKey('OPEN_APP');
+  String get OPEN_IN_FILE_EXPLORER => _getKey('OPEN_IN_FILE_EXPLORER');
   String get OPEN_IN_YOUTUBE_VIEW => _getKey('OPEN_IN_YOUTUBE_VIEW');
   String get OPEN_MINIPLAYER => _getKey('OPEN_MINIPLAYER');
   String get OPEN_QUEUE => _getKey('OPEN_QUEUE');

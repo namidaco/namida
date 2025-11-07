@@ -9,6 +9,11 @@ class _NamidaChannelAndroid extends NamidaChannel {
 
   StreamSubscription? _streamSub;
 
+  @override
+  bool get canOpenFileInExplorer => false;
+  @override
+  Future<void>? openFileInExplorer(String filePath) => null;
+
   _NamidaChannelAndroid._init() {
     _channel = const MethodChannel('namida');
     _channelEvent = const EventChannel('namida_events');

@@ -19,6 +19,7 @@ import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -702,6 +703,22 @@ Future<void> showGeneralPopupDialog(
           ),
         );
 
+  final openInFileExplorerTile = NamidaChannel.inst.canOpenFileInExplorer && tracksExisting.isNotEmpty && availableFolders.length == 1
+      ? ObxO(
+          rx: colorDelightened,
+          builder: (context, colorDelightened) => SmallListTile(
+            color: colorDelightened,
+            compact: false,
+            title: lang.OPEN_IN_FILE_EXPLORER,
+            icon: Broken.export_1,
+            onTap: () {
+              final filePath = tracksExisting.first.path;
+              NamidaChannel.inst.openFileInExplorer(filePath);
+            },
+          ),
+        )
+      : null;
+
   final Widget? removeFromPlaylistListTile = shoulShowRemoveFromPlaylist()
       ? ObxO(
           rx: colorDelightened,
@@ -1296,6 +1313,8 @@ Future<void> showGeneralPopupDialog(
                               ),
                               // --- Advanced dialog
                               if (advancedStuffListTile != null) advancedStuffListTile,
+
+                              if (openInFileExplorerTile != null) openInFileExplorerTile,
 
                               if (openInYtViewWidget != null) openInYtViewWidget,
 
