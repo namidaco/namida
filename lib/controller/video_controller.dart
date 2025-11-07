@@ -568,8 +568,8 @@ class VideoController {
     final trExtFilenameWithoutExt = path.getFilenameWOExt;
     final trExtFilenameWithoutExtCleaned = trExtFilenameWithoutExt.cleanUpForComparison;
     final trExtTitleCleaned = trExt.title.cleanUpForComparison;
-    final trExtArtistCleaned = trExt.artistsList.first.cleanUpForComparison;
-    final trExtGenreCleaned = trExt.genresList.first.cleanUpForComparison;
+    final trExtArtistCleaned = trExt.artistsList.firstOrNull?.cleanUpForComparison;
+    final trExtGenreCleaned = trExt.genresList.firstOrNull?.cleanUpForComparison;
     final trExtYTID = trExt.youtubeID;
 
     void matchFileName(String videoName, String vpath, bool ensureSameDir) {
@@ -586,10 +586,10 @@ class VideoController {
         if (vpath.getDirectoryPath != pathDirectoryPath) return;
       }
       final videoContainsTitle = videoName.contains(trExtTitleCleaned);
-      final videoNameContainsTitleAndArtist = videoContainsTitle && trExt.artistsList.isNotEmpty && videoName.contains(trExtArtistCleaned);
+      final videoNameContainsTitleAndArtist = videoContainsTitle && trExt.artistsList.isNotEmpty && (trExtArtistCleaned != null && videoName.contains(trExtArtistCleaned));
       // useful for [Nightcore - title]
       // track must contain Nightcore as the first Genre
-      final videoNameContainsTitleAndGenre = videoContainsTitle && trExt.genresList.isNotEmpty && videoName.contains(trExtGenreCleaned);
+      final videoNameContainsTitleAndGenre = videoContainsTitle && trExt.genresList.isNotEmpty && (trExtGenreCleaned != null && videoName.contains(trExtGenreCleaned));
       if (videoNameContainsTitleAndArtist || videoNameContainsTitleAndGenre) possibleLocal.add(vpath);
     }
 
