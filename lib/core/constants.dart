@@ -641,25 +641,22 @@ class NamidaFileExtensionsWrapper {
   }
 
   bool isExtensionValid(String ext) {
-    return extensions.contains(ext);
+    return extensions.contains(ext.toLowerCase());
   }
 
   static const _audioExtensions = {
-    'm4a', 'mp3', 'wav', 'flac', 'ogg', 'oga', 'aac', 'opus', 'weba', 'm4b', 'alac', 'ac3', 'mp2', 'm4p', 'mpa',
+    'm4a', 'mp3', 'wav', 'flac', 'ogg', 'oga', 'aac', 'opus', 'weba', 'm4b', 'alac', 'ac3', 'mp2', 'm4p', 'mpa', //
     'amr', 'ape', 'aa', 'aax', 'act', 'dss', 'dts', 'dvf', 'dct', 'dff', 'dsf', 'mmf', 'mid', 'mpc', 'msv', 'mogg',
     'raw', 'ra', 'voc', 'wma', 'caf', 'aiff', 'wv', 'aif', 'aifc', 'm4r', 'mac', 'mka', 'mlp', 'mpp', 'uax',
-    'M4A', 'MP3', 'WAV', 'FLAC', 'OGG', 'AAC', 'OPUS', 'WEBA', 'ALAC', 'AC3', // caps for popular only
   };
 
   static const _videoExtensions = {
     'mp4', 'mkv', 'avi', 'wmv', 'flv', 'mov', '3gp', 'ogv', 'webm', 'mpg', 'mpeg', 'm4v', 'ts', 'vob', 'asf', //
     'rm', 'f4v', 'divx', 'm2ts', 'mts', 'mpv', 'mpe', 'mxf', 'm2v', 'mpeg1', 'mpeg2', 'mpeg4',
-    'MP4', 'MKV', 'AVI', '3GP', 'WEBM', 'MPV', // caps for popular only
   };
 
   static const _zipExtensions = {
     'zip', 'rar', '7z', //
-    'ZIP', 'RAR'
   };
 
   static const audio = NamidaFileExtensionsWrapper._(_audioExtensions);
@@ -668,17 +665,16 @@ class NamidaFileExtensionsWrapper {
 
   static const image = NamidaFileExtensionsWrapper._({
     'png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', //
-    'PNG', 'JPG', 'JPEG', 'BMP', 'GIF', 'WEBP', //
   });
 
-  static const m3u = NamidaFileExtensionsWrapper._({'m3u', 'm3u8', 'M3U', 'M3U8'});
-  static const csv = NamidaFileExtensionsWrapper._({'csv', 'CSV'});
-  static const json = NamidaFileExtensionsWrapper._({'json', 'JSON'});
+  static const m3u = NamidaFileExtensionsWrapper._({'m3u', 'm3u8'});
+  static const csv = NamidaFileExtensionsWrapper._({'csv'});
+  static const json = NamidaFileExtensionsWrapper._({'json'});
   static const zip = NamidaFileExtensionsWrapper._(_zipExtensions);
   static const compressed = NamidaFileExtensionsWrapper._({..._zipExtensions, 'tar', 'gz', 'bz2', 'xz', 'cab', 'iso', 'jar'});
-  static const lrcOrTxt = NamidaFileExtensionsWrapper._({'lrc', 'txt', 'LRC', 'TXT'});
+  static const lrcOrTxt = NamidaFileExtensionsWrapper._({'lrc', 'txt'});
 
-  static const exe = NamidaFileExtensionsWrapper._({'exe', 'EXE'});
+  static const exe = NamidaFileExtensionsWrapper._({'exe'});
 }
 
 const kDefaultLang = NamidaLanguage(
