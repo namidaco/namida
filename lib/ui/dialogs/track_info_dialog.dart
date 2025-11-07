@@ -420,21 +420,21 @@ Future<void> showTrackInfoDialog(
                                     title: lang.COMMENT,
                                     value: trackExt.comment,
                                     icon: Broken.message_text_1,
-                                    isComment: true,
+                                    hasLinks: true,
                                   ),
                                 if (shouldShowTheField(trackExt.description == ''))
                                   TrackInfoListTile(
                                     title: lang.DESCRIPTION,
                                     value: trackExt.description,
                                     icon: Broken.note_text,
-                                    isComment: true,
+                                    hasLinks: true,
                                   ),
                                 if (shouldShowTheField(trackExt.synopsis == ''))
                                   TrackInfoListTile(
                                     title: lang.SYNOPSIS,
                                     value: trackExt.synopsis,
                                     icon: Broken.text,
-                                    isComment: true,
+                                    hasLinks: true,
                                   ),
                                 const SizedBox(height: 12.0),
                               ],
@@ -458,7 +458,7 @@ class TrackInfoListTile extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
-  final bool isComment;
+  final bool hasLinks;
   final Widget? child;
 
   const TrackInfoListTile({
@@ -466,7 +466,7 @@ class TrackInfoListTile extends StatelessWidget {
     required this.title,
     required this.value,
     required this.icon,
-    this.isComment = false,
+    this.hasLinks = false,
     this.child,
   });
 
@@ -516,7 +516,7 @@ class TrackInfoListTile extends StatelessWidget {
               Padding(
                 padding: textToIconPaddingCorrector,
                 child: child ??
-                    (isComment
+                    (hasLinks
                         ? NamidaSelectableAutoLinkText(text: value == '' ? '?' : value)
                         : Text(
                             value == '' ? '?' : value,

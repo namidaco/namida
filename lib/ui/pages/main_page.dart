@@ -12,6 +12,7 @@ import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
+import 'package:namida/controller/window_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -720,6 +721,7 @@ class __CustomRailBarState extends State<_CustomRailBar> {
     const iconPaddingBottomAction = iconPadding * bottomActionSizeMultiplier;
 
     final showCustomizationIcon = maxHeight > 550;
+    final showLogo = WindowController.instance?.usingCustomWindowTitleBar != true;
 
     final bgColor = Color.alphaBlend(
       (context.theme.navigationRailTheme.backgroundColor ?? context.theme.colorScheme.surface).withValues(alpha: .5),
@@ -747,16 +749,17 @@ class __CustomRailBarState extends State<_CustomRailBar> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 6.0),
-                            const NamidaLogoContainer(
-                              displayText: false,
-                              lighterShadow: true,
-                              width: maxWidth - iconPadding,
-                              height: maxWidth - iconPadding,
-                              iconSize: iconSize * 1.5,
-                              margin: EdgeInsets.zero,
-                              padding: EdgeInsets.zero,
-                            ),
+                            if (showLogo) const SizedBox(height: 6.0) else const SizedBox(height: 4.0),
+                            if (showLogo)
+                              const NamidaLogoContainer(
+                                displayText: false,
+                                lighterShadow: true,
+                                width: maxWidth - iconPadding,
+                                height: maxWidth - iconPadding,
+                                iconSize: iconSize * 1.5,
+                                margin: EdgeInsets.zero,
+                                padding: EdgeInsets.zero,
+                              ),
                             const NamidaContainerDivider(
                               margin: EdgeInsets.only(top: 6.0),
                               width: itemWidth - 4.0,

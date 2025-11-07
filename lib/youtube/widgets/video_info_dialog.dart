@@ -590,11 +590,13 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                           TrackInfoListTile(
                             title: lang.LINK,
                             value: isDummyVideoId ? '' : YTUrlUtils.buildVideoUrl(videoId),
+                            hasLinks: true,
                             icon: Broken.link_1,
                           ),
                           TrackInfoListTile(
                             title: "${lang.LINK} (${lang.CHANNEL})",
                             value: channelId != null && channelId!.isNotEmpty ? YTUrlUtils.buildChannelUrl(channelId!) : '?',
+                            hasLinks: true,
                             icon: Broken.link_1,
                           ),
                           if (saveLocation != null)

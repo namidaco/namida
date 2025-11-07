@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import 'package:super_sliver_list/super_sliver_list.dart';
@@ -266,7 +264,7 @@ class NamidaDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showLogoInDrawer = !(Platform.isWindows);
+    final showLogoInDrawer = WindowController.instance?.usingCustomWindowTitleBar != true;
     return SafeArea(
       child: Column(
         children: [
