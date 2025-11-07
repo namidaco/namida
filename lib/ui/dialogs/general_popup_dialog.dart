@@ -703,22 +703,6 @@ Future<void> showGeneralPopupDialog(
           ),
         );
 
-  final openInFileExplorerTile = NamidaChannel.inst.canOpenFileInExplorer && tracksExisting.isNotEmpty && availableFolders.length == 1
-      ? ObxO(
-          rx: colorDelightened,
-          builder: (context, colorDelightened) => SmallListTile(
-            color: colorDelightened,
-            compact: false,
-            title: lang.OPEN_IN_FILE_EXPLORER,
-            icon: Broken.export_1,
-            onTap: () {
-              final filePath = tracksExisting.first.path;
-              NamidaChannel.inst.openFileInExplorer(filePath);
-            },
-          ),
-        )
-      : null;
-
   final Widget? removeFromPlaylistListTile = shoulShowRemoveFromPlaylist()
       ? ObxO(
           rx: colorDelightened,
@@ -1193,13 +1177,32 @@ Future<void> showGeneralPopupDialog(
                                     NamidaNavigator.inst.closeDialog();
                                     NamidaOnTaps.inst.onFolderTapNavigate(availableFolders.first, trackToScrollTo: tracks.first);
                                   },
-                                  trailing: IconButton(
-                                    tooltip: lang.ADD_MORE_FROM_THIS_FOLDER,
-                                    onPressed: () {
-                                      final tracks = availableFolders.first.tracks();
-                                      Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreFolder);
-                                    },
-                                    icon: const Icon(Broken.add),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (NamidaChannel.inst.canOpenFileInExplorer && tracksExisting.isNotEmpty)
+                                        IconButton(
+                                          tooltip: lang.OPEN_IN_FILE_EXPLORER,
+                                          onPressed: () {
+                                            final path = tracksExisting.firstOrNull?.path ?? availableFolders.first.path;
+                                            NamidaChannel.inst.openFileInExplorer(path);
+                                          },
+                                          icon: const Icon(
+                                            Broken.export_1,
+                                            size: 20.0,
+                                          ),
+                                        ),
+                                      IconButton(
+                                        tooltip: lang.ADD_MORE_FROM_THIS_FOLDER,
+                                        onPressed: () {
+                                          final tracks = availableFolders.first.tracks();
+                                          Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreFolder);
+                                        },
+                                        icon: const Icon(
+                                          Broken.add,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
 
@@ -1313,8 +1316,6 @@ Future<void> showGeneralPopupDialog(
                               ),
                               // --- Advanced dialog
                               if (advancedStuffListTile != null) advancedStuffListTile,
-
-                              if (openInFileExplorerTile != null) openInFileExplorerTile,
 
                               if (openInYtViewWidget != null) openInYtViewWidget,
 
