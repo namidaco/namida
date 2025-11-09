@@ -14,17 +14,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: git config
-        run: |
-          git config --global user.name namidaco
-          git config --global user.email namida.coo@gmail.com
-          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
-
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.PAT }}
           submodules: recursive
           persist-credentials: false
+
+      - name: git config
+        run: |
+          git config --global user.name namidaco
+          git config --global user.email namida.coo@gmail.com
+          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
           
       - uses: subosito/flutter-action@v2
         with:
