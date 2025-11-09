@@ -172,6 +172,70 @@ class PlaybackSettings extends SettingSubpageProvider {
     );
   }
 
+  // Widget _getInternalPlayerWidget() {
+  //   return getItemWrapper(
+  //     key: _PlaybackSettingsKeys.internalPlayer,
+  //     child: ObxO(
+  //       rx: settings.player.internalPlayer,
+  //       builder: (context, pl) {
+  //         String playerTitle = pl.name;
+  //         if (pl == InternalPlayerType.auto) {
+  //           final platformDefaultPlayer = InternalPlayerType.platformDefault;
+  //           playerTitle = '$playerTitle (${platformDefaultPlayer.name})';
+  //         }
+
+  //         return CustomListTile(
+  //           bgColor: getBgColor(_PlaybackSettingsKeys.internalPlayer),
+  //           title: 'Internal Player: $playerTitle',
+  //           // subtitle: pl.getInfoForAndroid(),
+  //           icon: Broken.cpu,
+  //           onTap: () {
+  //             void tileOnTap(InternalPlayerType val) async {
+  //               if (val == settings.player.internalPlayer.value) return;
+  //               settings.player.save(internalPlayer: val);
+  //             }
+
+  //             NamidaNavigator.inst.navigateDialog(
+  //               dialog: CustomBlurryDialog(
+  //                 title: "Internal Player",
+  //                 actions: [
+  //                   IconButton(
+  //                     onPressed: () => tileOnTap(InternalPlayerType.auto),
+  //                     icon: const Icon(Broken.refresh),
+  //                   ),
+  //                   const DoneButton(),
+  //                 ],
+  //                 child: ObxO(
+  //                   rx: settings.player.internalPlayer,
+  //                   builder: (context, pl) {
+  //                     return SuperListView(
+  //                       padding: EdgeInsets.zero,
+  //                       shrinkWrap: true,
+  //                       children: [
+  //                         ...InternalPlayerType.getAvailableForCurrentPlatform().map(
+  //                           (e) => Padding(
+  //                             padding: const EdgeInsets.only(bottom: 12.0),
+  //                             child: ListTileWithCheckMark(
+  //                               active: pl == e,
+  //                               title: e.name,
+  //                               subtitle: e.getInfoForAndroid(),
+  //                               onTap: () => tileOnTap(e),
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     );
+  //                   },
+  //                 ),
+  //               ),
+  //             );
+  //           },
+  //         );
+  //       },
+  //     ),
+  //   );
+  // }
+
   @override
   Widget build(BuildContext context) {
     final children = <Widget>[

@@ -37,6 +37,7 @@ class _PlayerSettings with SettingsFileWriter {
   final killAfterDismissingApp = KillAppMode.ifNotPlaying.obs;
   final lockscreenArtwork = true.obs;
   final replayGainType = ReplayGainType.platform_default.obs;
+  final internalPlayer = InternalPlayerType.auto.obs;
 
   final onInterrupted = <InterruptionType, InterruptionAction>{
     InterruptionType.shouldPause: InterruptionAction.pause,
@@ -76,6 +77,7 @@ class _PlayerSettings with SettingsFileWriter {
     KillAppMode? killAfterDismissingApp,
     bool? lockscreenArtwork,
     ReplayGainType? replayGainType,
+    InternalPlayerType? internalPlayer,
   }) {
     if (enableVolumeFadeOnPlayPause != null) this.enableVolumeFadeOnPlayPause.value = enableVolumeFadeOnPlayPause;
     if (infiniyQueueOnNextPrevious != null) this.infiniyQueueOnNextPrevious.value = infiniyQueueOnNextPrevious;
@@ -108,6 +110,7 @@ class _PlayerSettings with SettingsFileWriter {
     if (killAfterDismissingApp != null) this.killAfterDismissingApp.value = killAfterDismissingApp;
     if (lockscreenArtwork != null) this.lockscreenArtwork.value = lockscreenArtwork;
     if (replayGainType != null) this.replayGainType.value = replayGainType;
+    if (internalPlayer != null) this.internalPlayer.value = internalPlayer;
     _writeToStorage();
   }
 
@@ -167,6 +170,7 @@ class _PlayerSettings with SettingsFileWriter {
       if (json['replayGain'] is bool) {
         replayGainType.value = json['replayGain'] == true ? ReplayGainType.getPlatformDefault() : ReplayGainType.off;
       }
+      internalPlayer.value = InternalPlayerType.getAvailableForCurrentPlatform().getEnum(json['internalPlayer']) ?? internalPlayer.value;
       onInterrupted
         ..value.addAll(getEnumMap_(
               json['onInterrupted'],
@@ -213,6 +217,7 @@ class _PlayerSettings with SettingsFileWriter {
         'killAfterDismissingApp': killAfterDismissingApp.value.name,
         'lockscreenArtwork': lockscreenArtwork.value,
         'replayGainType': replayGainType.value.name,
+        'internalPlayer': internalPlayer.value.name,
         'infiniyQueueOnNextPrevious': infiniyQueueOnNextPrevious.value,
         'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
         'displayActualPositionWhenSeeking': displayActualPositionWhenSeeking.value,

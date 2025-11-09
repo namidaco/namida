@@ -203,7 +203,8 @@ class Player {
         }
       }
     });
-    if (Platform.isAndroid || Platform.isIOS) _initializeEqualizer();
+    final internalPlayer = settings.player.internalPlayer.value.ensureResolved();
+    if (internalPlayer == InternalPlayerType.exoplayer || internalPlayer == InternalPlayerType.exoplayer_sw) _initializeEqualizer();
   }
 
   void _initializeEqualizer() async {

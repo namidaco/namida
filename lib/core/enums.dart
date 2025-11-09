@@ -529,10 +529,34 @@ enum DataSaverMode {
 }
 
 enum InternalPlayerType {
+  auto,
   exoplayer,
+  exoplayer_sw,
   mpv;
 
-  bool get shouldInitializeMPV => this == InternalPlayerType.mpv;
+  InternalPlayerType ensureResolved() {
+    var instance = this;
+    if (instance == InternalPlayerType.auto) {
+      instance = InternalPlayerType.platformDefault;
+    }
+    return instance;
+  }
+
+  bool get shouldInitializeMPV => ensureResolved() == InternalPlayerType.mpv;
+
+  static List<InternalPlayerType> getAvailableForCurrentPlatform() {
+    final nativePlayers = NamidaPlatformBuilder.init(
+      android: () => const [InternalPlayerType.exoplayer, InternalPlayerType.exoplayer_sw],
+      ios: () => const [InternalPlayerType.exoplayer],
+      windows: () => const [InternalPlayerType.mpv],
+      macos: () => const [InternalPlayerType.mpv],
+      linux: () => const [InternalPlayerType.mpv],
+    );
+    return [
+      InternalPlayerType.auto,
+      ...nativePlayers,
+    ];
+  }
 
   static final InternalPlayerType platformDefault = InternalPlayerType._getForPlatform();
 
@@ -542,7 +566,22 @@ enum InternalPlayerType {
       ios: () => InternalPlayerType.exoplayer,
       windows: () => InternalPlayerType.mpv,
       macos: () => InternalPlayerType.mpv,
+      linux: () => InternalPlayerType.mpv,
     );
+  }
+
+  String getInfoForAndroid() {
+    return switch (this) {
+      InternalPlayerType.auto => InternalPlayerType.platformDefault.name,
+      InternalPlayerType.exoplayer =>
+        "HW Decoder. Good with most formats, can fallback to sw decoder if it can't play something, but sometimes won't. Always Recommended Unless you have playback issues.",
+      InternalPlayerType.exoplayer_sw => "SW Decoder. Can play almost all formats like mpv, only issue is high cpu/battery usage due to it being a software decoder.",
+      InternalPlayerType.mpv =>
+        """HW Decoder. Can play almost all formats like ffmpeg, but with normal cpu/battery. It's used mainly for pc version so it lacks some features for android like: 
+skip silence, looping animations, gapless, equalizer & equalizer presets, loudness enhancer,
+quick settings tile, picture in picture
+""",
+    };
   }
 }
 

@@ -2228,18 +2228,35 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   AVPlayer createPlayerInstance() {
-    return switch (InternalPlayerType.platformDefault) {
+    var pl = settings.player.internalPlayer.value;
+    if (pl == InternalPlayerType.auto) {
+      pl = InternalPlayerType.platformDefault;
+    }
+    return switch (pl) {
+      InternalPlayerType.auto => CustomMPVPlayer(), // shouldn't happen
       InternalPlayerType.exoplayer => CustomAudioPlayer(
-          AudioPlayer(
-            androidApplyAudioAttributes: false,
-            handleInterruptions: false,
-            handleAudioSessionActivation: true,
-            audioLoadConfiguration: defaultAndroidLoadConfig,
-            audioPipeline: audioPipeline,
+          _createAndroidPlayer(
+            preferSWDecoders: false,
+          ),
+        ),
+      InternalPlayerType.exoplayer_sw => CustomAudioPlayer(
+          _createAndroidPlayer(
+            preferSWDecoders: true,
           ),
         ),
       InternalPlayerType.mpv => CustomMPVPlayer(),
     };
+  }
+
+  AudioPlayer _createAndroidPlayer({required bool preferSWDecoders}) {
+    return AudioPlayer(
+      androidApplyAudioAttributes: false,
+      handleInterruptions: false,
+      handleAudioSessionActivation: true,
+      audioLoadConfiguration: defaultAndroidLoadConfig,
+      audioPipeline: audioPipeline,
+      preferSWDecoders: preferSWDecoders,
+    );
   }
 }
 
