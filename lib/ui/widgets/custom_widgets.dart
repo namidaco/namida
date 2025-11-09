@@ -3423,6 +3423,8 @@ class NamidaInkWellButton extends StatelessWidget {
   final bool showLoadingWhenDisabled;
   final bool disableWhenLoading;
   final double sizeMultiplier;
+  final double paddingMultiplier;
+  final Widget? leading;
   final Widget? trailing;
 
   const NamidaInkWellButton({
@@ -3438,6 +3440,8 @@ class NamidaInkWellButton extends StatelessWidget {
     this.showLoadingWhenDisabled = true,
     this.disableWhenLoading = true,
     this.sizeMultiplier = 1.0,
+    this.paddingMultiplier = 1.0,
+    this.leading,
     this.trailing,
   });
 
@@ -3453,13 +3457,14 @@ class NamidaInkWellButton extends StatelessWidget {
         child: NamidaInkWell(
           animationDurationMS: animationDurationMS,
           borderRadius: borderRadius * sizeMultiplier,
-          padding: EdgeInsets.symmetric(horizontal: 12.0 * sizeMultiplier, vertical: 6.0 * sizeMultiplier),
+          padding: EdgeInsets.symmetric(horizontal: 12.0 * sizeMultiplier * paddingMultiplier, vertical: 6.0 * sizeMultiplier * paddingMultiplier),
           bgColor: bgColor ?? context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
           onTap: onTap,
           enableSecondaryTap: false,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (leading != null) leading!,
               if (!enabled && showLoadingWhenDisabled) ...[
                 const LoadingIndicator(boxHeight: 18.0),
                 SizedBox(width: 6.0 * sizeMultiplier),

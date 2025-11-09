@@ -43,19 +43,55 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
       children: [
         verticalPadding,
         Obx(
-          (context) => _SliderTextWidget(
-            icon: Broken.airpods,
-            title: lang.PITCH,
-            value: settings.player.pitch.valueR,
-            restoreDefault: () {
-              Player.inst.setPlayerPitch(1.0);
-              settings.player.save(pitch: 1.0);
-              pitchKey.currentState?._updateVal(1.0);
-            },
-            onManualChange: (value) {
-              pitchKey.currentState?._updateValNoRound(value);
-            },
-          ),
+          (context) {
+            final pitch = settings.player.pitch.valueR;
+            const hz432Value = 432.0 / 440.0;
+            final is432HzEnabled = pitch == hz432Value;
+            return _SliderTextWidget(
+              icon: Broken.airpods,
+              title: lang.PITCH,
+              value: pitch,
+              restoreDefault: () {
+                Player.inst.setPlayerPitch(1.0);
+                settings.player.save(pitch: 1.0);
+                pitchKey.currentState?._updateVal(1.0);
+              },
+              onManualChange: (value) {
+                pitchKey.currentState?._updateValNoRound(value);
+              },
+              featuredButton: NamidaInkWellButton(
+                icon: null,
+                text: '',
+                borderRadius: 8.0,
+                sizeMultiplier: 0.9,
+                paddingMultiplier: 0.7,
+                bgColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: is432HzEnabled ? 0.5 : 0.2),
+                onTap: () {
+                  final newValue = is432HzEnabled ? 1.0 : hz432Value;
+                  Player.inst.setPlayerPitch(newValue);
+                  settings.player.save(pitch: newValue);
+                  pitchKey.currentState?._updateValNoRound(newValue);
+                },
+                leading: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '✓ ',
+                      style: context.textTheme.displaySmall,
+                    ).animateEntrance(
+                      showWhen: is432HzEnabled,
+                      allCurves: Curves.fastLinearToSlowEaseIn,
+                      durationMS: 300,
+                    ),
+                    Text(
+                      '432Hz',
+                      style: context.textTheme.displaySmall,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
         _CuteSlider(
           key: pitchKey,
@@ -456,6 +492,7 @@ class _SliderTextWidget extends StatelessWidget {
   final double min;
   final double max;
   final bool useMaxToLimitPreciseValue;
+  final Widget? featuredButton;
   final VoidCallback? restoreDefault;
   final Widget? trailing;
   final bool displayValue;
@@ -469,6 +506,7 @@ class _SliderTextWidget extends StatelessWidget {
     this.min = 0.0,
     this.max = 2.0,
     this.useMaxToLimitPreciseValue = true,
+    this.featuredButton,
     this.restoreDefault,
     this.trailing,
     this.displayValue = true,
@@ -543,7 +581,9 @@ class _SliderTextWidget extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8.0),
+          if (featuredButton != null) const SizedBox(width: 2.0),
+          if (featuredButton != null) featuredButton!,
+          const SizedBox(width: 6.0),
           if (restoreDefault != null)
             NamidaIconButton(
               horizontalPadding: 8.0,
