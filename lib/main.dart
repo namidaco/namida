@@ -471,9 +471,20 @@ class _NamidaState extends State<Namida> {
                     final mode = settings.themeMode.valueR;
                     final isLight = mode.isLight(platformBrightness);
                     final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
+                    final mainChild = WindowController.instance?.usingCustomWindowTitleBar == true
+                        ? Column(
+                            children: [
+                              const NamidaDesktopAppBar(),
+                              Expanded(
+                                child: widget,
+                              ),
+                            ],
+                          )
+                        : widget;
+
                     return Theme(
                       data: theme,
-                      child: widget,
+                      child: mainChild,
                     );
                   },
                 ),

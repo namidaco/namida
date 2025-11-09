@@ -57,7 +57,7 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    Widget finalPageWrapper = NamidaInnerDrawer(
+    return NamidaInnerDrawer(
       key: NamidaNavigator.inst.innerDrawerKey,
       borderRadius: 42.0.multipliedRadius,
       drawerChild: const NamidaDrawer(),
@@ -65,19 +65,6 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
       initiallySwipeable: settings.swipeableDrawer.value,
       child: const MainScreenStack(),
     );
-
-    if (WindowController.instance?.usingCustomWindowTitleBar == true) {
-      finalPageWrapper = Column(
-        children: [
-          const NamidaDesktopAppBar(),
-          Expanded(
-            child: finalPageWrapper,
-          ),
-        ],
-      );
-    }
-
-    return finalPageWrapper;
   }
 }
 
@@ -405,7 +392,7 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
   @override
   Widget build(BuildContext context) {
     final title = 'Namida';
-    final height = WindowController.instance?.windowTitleBarHeight;
+    final height = WindowController.instance?.windowTitleBarHeightIfActive;
 
     final appBarTheme = AppBarTheme.of(context);
     final theme = context.theme;

@@ -9,7 +9,6 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
-import 'package:namida/controller/window_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
@@ -138,7 +137,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     const advanced = AdvancedSettings();
     final performanceTile = advanced.getPerformanceTile(context);
 
-    Widget finalPage = BackgroundWrapper(
+    return BackgroundWrapper(
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -295,16 +294,5 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
         ],
       ),
     );
-    if (WindowController.instance?.usingCustomWindowTitleBar == true) {
-      finalPage = Column(
-        children: [
-          const NamidaDesktopAppBar(),
-          Expanded(
-            child: finalPage,
-          ),
-        ],
-      );
-    }
-    return finalPage;
   }
 }

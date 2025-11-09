@@ -13,6 +13,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
+import 'package:namida/controller/window_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -92,15 +93,17 @@ class MiniPlayerController {
     bottomInset = viewPadding.bottom;
     rightInset = viewPadding.right / 2;
 
+    final mediaSizeHeight = mediaSize.height - (WindowController.instance?.windowTitleBarHeightIfActive ?? 0.0);
+
     final miniplayerDetails = _getPlayerDetails(
       screenWidth: mediaSize.width,
-      screenHeight: mediaSize.height,
+      screenHeight: mediaSizeHeight,
     );
     final isWidescreen = miniplayerDetails.isWidescreen;
     double maxWidth = miniplayerDetails.maxWidth;
     if (isWidescreen) maxWidth += rightInset;
 
-    screenSize = Size(maxWidth, mediaSize.height);
+    screenSize = Size(maxWidth, mediaSizeHeight);
     maxOffset = screenSize.height;
     sMaxOffset = maxWidth;
 

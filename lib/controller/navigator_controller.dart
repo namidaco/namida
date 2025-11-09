@@ -652,8 +652,9 @@ SnackbarController snackyy({
   if (snackWidth != null && Dimensions.inst.miniplayerIsWideScreen) {
     snackWidth = snackWidth.withMaximum(Dimensions.inst.availableAppContentWidth - margin.horizontal * 2 - kFABSize);
   }
-  if (WindowController.instance?.usingCustomWindowTitleBar == true) {
-    margin = margin.add(EdgeInsetsGeometry.only(top: WindowController.instance?.windowTitleBarHeight ?? 0));
+  final desktopTopMargin = WindowController.instance?.windowTitleBarHeightIfActive ?? 0.0;
+  if (desktopTopMargin > 0) {
+    margin = margin.add(EdgeInsetsGeometry.only(top: desktopTopMargin));
   }
 
   final content = Theme(
