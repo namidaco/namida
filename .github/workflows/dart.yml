@@ -14,18 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.PAT_GEN }}
           submodules: recursive
-          persist-credentials: false
 
-      - name: git config
-        run: |
-          git config --global user.name namidaco
-          git config --global user.email namida.coo@gmail.com
-          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
-          
       - uses: subosito/flutter-action@v2
         with:
           flutter-version-file: pubspec.yaml
@@ -36,8 +29,8 @@ jobs:
 
       - name: setup credentials 
         run: |
-          git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
-          git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
+          git config --global url.https://${{ secrets.PAT_ORG_GEN }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
+          git config --global url.https://${{ secrets.PAT_GEN }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
 
       - name: Setup dependencies
         run: |
