@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PAT_GEN }}
+          token: ${{ secrets.PAT }}
           submodules: recursive
 
       - uses: subosito/flutter-action@v2
@@ -29,8 +29,8 @@ jobs:
 
       - name: setup credentials 
         run: |
-          git config --global url.https://${{ secrets.PAT_ORG_GEN }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
-          git config --global url.https://${{ secrets.PAT_GEN }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
+          git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
+          git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
 
       - name: Setup dependencies
         run: |
