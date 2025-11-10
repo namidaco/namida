@@ -175,7 +175,7 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   Duration? get duration => _player.state.duration;
   @override
-  double get volume => _player.state.volume;
+  double get volume => _player.state.volume / 100;
   @override
   double get speed => _player.state.rate;
   @override

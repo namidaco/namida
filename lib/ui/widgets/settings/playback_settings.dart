@@ -537,21 +537,22 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
         ),
       ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.gaplessPlayback,
-        child: Obx(
-          (context) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.gaplessPlayback),
-            icon: Broken.blend_2,
-            title: "${lang.GAPLESS_PLAYBACK} (${lang.BETA})",
-            onChanged: (value) {
-              settings.player.save(enableGaplessPlayback: !value);
-              Player.inst.resetGaplessPlaybackData();
-            },
-            value: settings.player.enableGaplessPlayback.valueR,
+      if (NamidaFeaturesVisibility.gaplessPlaybackAvailable)
+        getItemWrapper(
+          key: _PlaybackSettingsKeys.gaplessPlayback,
+          child: Obx(
+            (context) => CustomSwitchListTile(
+              bgColor: getBgColor(_PlaybackSettingsKeys.gaplessPlayback),
+              icon: Broken.blend_2,
+              title: "${lang.GAPLESS_PLAYBACK} (${lang.BETA})",
+              onChanged: (value) {
+                settings.player.save(enableGaplessPlayback: !value);
+                Player.inst.resetGaplessPlaybackData();
+              },
+              value: settings.player.enableGaplessPlayback.valueR,
+            ),
           ),
         ),
-      ),
 
       // -- Crossfade
       getItemWrapper(
