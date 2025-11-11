@@ -1003,6 +1003,7 @@ class YTUtils {
     required void Function(String text) onChanged,
   }) async {
     final controller = TextEditingController(text: settings.youtube.downloadFilenameBuilder.value);
+    if (controller.text.isEmpty) controller.text = settings.youtube.defaultFilenameBuilder;
     await showNamidaBottomSheetWithTextField(
       title: lang.OUTPUT,
       textfieldConfig: BottomSheetTextFieldConfigWC(

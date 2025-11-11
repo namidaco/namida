@@ -322,17 +322,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       NamidaIconButton(
-                        tooltip: () => lang.OUTPUT,
-                        icon: Broken.edit_2,
-                        onPressed: () {
-                          YTUtils.showFilenameBuilderOutputSheet(
-                            showEditTags: true,
-                            groupName: _groupName.value.groupName,
-                            onChanged: (text) => onRenameAllTasks(text),
-                          );
-                        },
-                      ),
-                      NamidaIconButton(
                         tooltip: () => lang.INVERT_SELECTION,
                         icon: Broken.recovery_convert,
                         onPressed: () {
@@ -342,10 +331,11 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                       ),
                       Obx(
                         (context) => Checkbox.adaptive(
-                          splashRadius: 28.0,
+                          splashRadius: 20.0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(4.0.multipliedRadius),
                           ),
+                          visualDensity: VisualDensity.compact,
                           tristate: true,
                           value: _selectedList.isEmpty
                               ? false
@@ -365,43 +355,60 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   ),
                 ),
               ),
-              YTDownloadOptionFolderListTile(
-                key: _folderController,
-                visualDensity: VisualDensity.compact,
-                trailingPadding: 12.0,
-                playlistName: widget.playlistName.translatePlaylistName(),
-                initialFolder: _groupName.value.groupName,
-                subtitle: (value) => FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, value),
-                onDownloadGroupNameChanged: (newGroupName) {
-                  _groupName.value = DownloadTaskGroupName(groupName: newGroupName);
-                },
+              NamidaContainerDivider(),
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 12.0),
+                child: YTDownloadOptionFolderListTile(
+                  key: _folderController,
+                  iconSize: 20.0,
+                  visualDensity: VisualDensity.compact,
+                  trailingPadding: 12.0,
+                  playlistName: widget.playlistName.translatePlaylistName(),
+                  initialFolder: _groupName.value.groupName,
+                  subtitle: (value) => FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, value),
+                  onDownloadGroupNameChanged: (newGroupName) {
+                    _groupName.value = DownloadTaskGroupName(groupName: newGroupName);
+                  },
+                ),
               ),
-              ObxO(
-                rx: settings.youtube.downloadFilenameBuilder,
-                builder: (context, value) {
-                  return value.isEmpty
-                      ? const SizedBox()
-                      : Padding(
-                          padding: const EdgeInsets.only(bottom: 6.0),
-                          child: Row(
-                            children: [
-                              const SizedBox(width: 18.0),
-                              const Icon(
-                                Broken.document_code,
-                                size: 20.0,
-                              ),
-                              const SizedBox(width: 12.0),
-                              Expanded(
-                                child: Text(
-                                  value,
-                                  style: textTheme.displaySmall,
-                                ),
-                              ),
-                              const SizedBox(width: 18.0),
-                            ],
-                          ),
+              const SizedBox(height: 6.0),
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 12.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Broken.document_code,
+                      size: 20.0,
+                    ),
+                    const SizedBox(width: 12.0),
+                    Expanded(
+                      child: ObxO(
+                        rx: settings.youtube.downloadFilenameBuilder,
+                        builder: (context, value) {
+                          if (value.isEmpty) value = settings.youtube.defaultFilenameBuilder;
+                          return Text(
+                            value,
+                            style: textTheme.displaySmall,
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 6.0),
+                    NamidaIconButton(
+                      tooltip: () => lang.OUTPUT,
+                      icon: Broken.edit_2,
+                      iconSize: 20.0,
+                      onPressed: () {
+                        YTUtils.showFilenameBuilderOutputSheet(
+                          showEditTags: true,
+                          groupName: _groupName.value.groupName,
+                          onChanged: (text) => onRenameAllTasks(text),
                         );
-                },
+                      },
+                    ),
+                  ],
+                ),
               ),
               Expanded(
                 child: NamidaScrollbarWithController(
