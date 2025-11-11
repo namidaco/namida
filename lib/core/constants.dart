@@ -751,6 +751,7 @@ class NamidaFeaturesVisibility {
 
   static final wallpaperColors = _isAndroid && NamidaDeviceInfo.sdkVersion >= 31;
   static final displayArtworkOnLockscreen = _isAndroid && NamidaDeviceInfo.sdkVersion < 33;
+  static final displayStopButtonInNotification = _isAndroid && NamidaDeviceInfo.sdkVersion < 34; // A14+ forces notifications to be dismissible
   static final displayFavButtonInNotif = _isAndroid;
   static final displayFavButtonInNotifMightCauseIssue = displayFavButtonInNotif && NamidaDeviceInfo.sdkVersion < 31;
   static final shouldRequestManageAllFilesPermission = _isAndroid && NamidaDeviceInfo.sdkVersion >= 30;
