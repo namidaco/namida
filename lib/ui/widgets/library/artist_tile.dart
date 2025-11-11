@@ -28,6 +28,7 @@ class ArtistTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final hero = 'artist_$name';
 
     return Padding(
@@ -70,7 +71,7 @@ class ArtistTile extends StatelessWidget {
                         tag: 'line1_$hero',
                         child: Text(
                           name,
-                          style: context.textTheme.displayMedium,
+                          style: textTheme.displayMedium,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -81,14 +82,14 @@ class ArtistTile extends StatelessWidget {
                             tracks.displayTrackKeyword,
                             albums.length.displayAlbumKeyword,
                           ].join(' & '),
-                          style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0),
+                          style: textTheme.displaySmall?.copyWith(fontSize: 14.0),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (extraText != null && extraText!.isNotEmpty && extraText != name)
                         Text(
                           extraText!,
-                          style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                          style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
                           overflow: TextOverflow.ellipsis,
                         ),
                     ],
@@ -96,7 +97,7 @@ class ArtistTile extends StatelessWidget {
                 ),
                 Text(
                   tracks.totalDurationFormatted,
-                  style: context.textTheme.displaySmall?.copyWith(
+                  style: textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,

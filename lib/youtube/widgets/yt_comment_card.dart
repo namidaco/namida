@@ -214,6 +214,8 @@ class _YTCommentCardState extends State<YTCommentCard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final comment = this.widget.comment;
     final uploaderAvatar = comment?.authorAvatarUrl ?? comment?.author?.avatarThumbnailUrl;
     final author = comment?.author?.displayName;
@@ -226,11 +228,11 @@ class _YTCommentCardState extends State<YTCommentCard> {
     final commentContent = comment?.content;
     final isHearted = comment?.isHearted ?? false;
 
-    final containerColor = context.theme.cardColor.withAlpha(widget.bgAlpha);
-    final readmoreColor = context.theme.colorScheme.primary.withAlpha(160);
+    final containerColor = theme.cardColor.withAlpha(widget.bgAlpha);
+    final readmoreColor = theme.colorScheme.primary.withAlpha(160);
 
-    final authorTextColor = context.theme.colorScheme.onSurface.withAlpha(180);
-    final authorTextStyle = context.textTheme.displaySmall?.copyWith(
+    final authorTextColor = theme.colorScheme.onSurface.withAlpha(180);
+    final authorTextStyle = textTheme.displaySmall?.copyWith(
       fontWeight: FontWeight.w400,
       color: authorTextColor,
     );
@@ -248,7 +250,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                   borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                   boxShadow: [
                     BoxShadow(
-                      color: context.theme.secondaryHeaderColor.withAlpha(60),
+                      color: theme.secondaryHeaderColor.withAlpha(60),
                       blurRadius: 4.0,
                       spreadRadius: 1.5,
                       offset: const Offset(0.0, 1.0),
@@ -292,7 +294,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                     const SizedBox(width: 4.0),
                                     Text(
                                       lang.PINNED,
-                                      style: context.textTheme.displaySmall?.copyWith(
+                                      style: textTheme.displaySmall?.copyWith(
                                         fontSize: 11.5,
                                       ),
                                     ),
@@ -374,7 +376,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                           : YoutubeDescriptionWidget(
                                               videoId: widget.videoId,
                                               content: commentContent,
-                                              linkColor: context.theme.colorScheme.primary.withAlpha(210),
+                                              linkColor: theme.colorScheme.primary.withAlpha(210),
                                               childBuilder: (span) {
                                                 return NamidaReadMoreText(
                                                   span: span,
@@ -398,7 +400,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                                                 children: [
                                                                   Text(
                                                                     isExpanded ? '' : lang.SHOW_MORE,
-                                                                    style: context.textTheme.displaySmall?.copyWith(color: readmoreColor),
+                                                                    style: textTheme.displaySmall?.copyWith(color: readmoreColor),
                                                                   ),
                                                                   const SizedBox(width: 8),
                                                                   Icon(
@@ -453,7 +455,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                             shimmerEnabled: likeCount == null,
                                             child: Text(
                                               likeCount?.formatDecimalShort() ?? '?',
-                                              style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
+                                              style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
                                             ),
                                           ),
                                         ],
@@ -482,7 +484,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                             sizeMultiplier: 0.8,
                                             borderRadius: 6.0,
                                             onTap: () => _onRepliesTap(comment: comment, repliesCount: comment.repliesCount),
-                                            bgColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.2),
+                                            bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.2),
                                             icon: Broken.document,
                                             text: [
                                               lang.REPLIES,
@@ -528,6 +530,8 @@ class YTCommentCardCompact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final uploaderAvatar = comment?.authorAvatarUrl ?? comment?.author?.avatarThumbnailUrl;
     final author = comment?.author?.displayName;
 
@@ -542,8 +546,8 @@ class YTCommentCardCompact extends StatelessWidget {
     final isPinned = comment?.isPinned ?? false;
     final isArtist = comment?.author?.isArtist ?? false;
 
-    final authorTextColor = context.theme.colorScheme.onSurface.withAlpha(180);
-    final authorTextStyle = context.textTheme.displaySmall?.copyWith(
+    final authorTextColor = theme.colorScheme.onSurface.withAlpha(180);
+    final authorTextStyle = textTheme.displaySmall?.copyWith(
       fontSize: 11.5,
       fontWeight: FontWeight.w400,
       color: authorTextColor,
@@ -655,10 +659,10 @@ class YTCommentCardCompact extends StatelessWidget {
                             commentTextParsed,
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.displaySmall?.copyWith(
+                            style: textTheme.displaySmall?.copyWith(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w500,
-                              color: context.theme.colorScheme.onSurface.withAlpha(220),
+                              color: theme.colorScheme.onSurface.withAlpha(220),
                             ),
                           ),
                   ),
@@ -683,7 +687,7 @@ class YTCommentCardCompact extends StatelessWidget {
                             shimmerEnabled: likeCount == null,
                             child: Text(
                               likeCount?.formatDecimalShort() ?? '?',
-                              style: context.textTheme.displaySmall?.copyWith(
+                              style: textTheme.displaySmall?.copyWith(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -693,14 +697,14 @@ class YTCommentCardCompact extends StatelessWidget {
                         if (repliesCount != null && repliesCount > 0) ...[
                           Text(
                             ' | ',
-                            style: context.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w300),
+                            style: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w300),
                           ),
                           Text(
                             [
                               lang.REPLIES,
                               repliesCount,
                             ].join(' • '),
-                            style: context.textTheme.displaySmall?.copyWith(
+                            style: textTheme.displaySmall?.copyWith(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w400,
                             ),

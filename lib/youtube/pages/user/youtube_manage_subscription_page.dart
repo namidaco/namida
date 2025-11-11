@@ -85,13 +85,14 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
   Future<void> _onPatreonLoginTap(BuildContext context, {required SignInDecision signInDecision}) async {
     _isSigningInPatreon.value = true;
 
+    final textTheme = context.textTheme;
     final header = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           lang.MEMBERSHIP_SIGN_IN_TO_PATREON_ACCOUNT,
-          style: context.textTheme.displayMedium,
+          style: textTheme.displayMedium,
         ),
       ],
     );
@@ -141,6 +142,8 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return BackgroundWrapper(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -152,7 +155,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
                       decoration: BoxDecoration(
-                        color: context.theme.cardColor,
+                        color: theme.cardColor,
                         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
                       ),
                       child: Column(
@@ -201,7 +204,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                               rx: YoutubeAccountController.membership.userMembershipTypePatreon,
                               builder: (context, userMembershipTypePatreon) => Text(
                                 userMembershipTypePatreon?.name ?? '?',
-                                style: context.textTheme.displaySmall,
+                                style: textTheme.displaySmall,
                               ),
                             ),
                             children: [
@@ -339,7 +342,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                     rx: YoutubeAccountController.membership.userMembershipTypeSupabase,
                                     builder: (context, userMembershipTypeSupabase) => Text(
                                       userMembershipTypeSupabase?.name ?? '?',
-                                      style: context.textTheme.displaySmall,
+                                      style: textTheme.displaySmall,
                                     ),
                                   ),
                                   ObxO(
@@ -355,7 +358,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                       }
                                       return Text(
                                         " - $endTimeLeftText",
-                                        style: context.textTheme.displaySmall,
+                                        style: textTheme.displaySmall,
                                       );
                                     },
                                   ),

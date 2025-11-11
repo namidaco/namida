@@ -41,6 +41,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final scrollController = LibraryTab.genres.scrollController;
     final countPerRowResolved = countPerRow.resolve(context);
 
@@ -121,7 +122,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                                         child: NamidaBlurryContainer(
                                           child: Text(
                                             topRightText,
-                                            style: context.textTheme.displaySmall?.copyWith(
+                                            style: textTheme.displaySmall?.copyWith(
                                               fontSize: 12.0,
                                               fontWeight: FontWeight.bold,
                                             ),

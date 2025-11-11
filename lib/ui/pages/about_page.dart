@@ -67,6 +67,8 @@ class _AboutPageState extends State<AboutPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final imageSize = Dimensions.inst.availableAppContentWidth * 0.25;
     final topPadding = imageSize / 2;
     const textTopPadding = 28.0 * 2;
@@ -95,7 +97,7 @@ class _AboutPageState extends State<AboutPage> {
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 24.0),
               decoration: BoxDecoration(
-                color: context.theme.cardColor.withValues(alpha: 0.6),
+                color: theme.cardColor.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(20.0.multipliedRadius),
               ),
               child: Stack(
@@ -169,7 +171,7 @@ class _AboutPageState extends State<AboutPage> {
                         const SizedBox(height: 4.0),
                         Text(
                           "Namida",
-                          style: context.textTheme.displayLarge,
+                          style: textTheme.displayLarge,
                         ),
                         if (currentVersionText != '')
                           latestVersion?.isUpdate() ?? false
@@ -178,7 +180,7 @@ class _AboutPageState extends State<AboutPage> {
                                   children: [
                                     Text(
                                       currentVersionText,
-                                      style: context.textTheme.displaySmall,
+                                      style: textTheme.displaySmall,
                                     ),
                                     const SizedBox(width: 4.0),
                                     const Icon(
@@ -189,12 +191,12 @@ class _AboutPageState extends State<AboutPage> {
                                 )
                               : Text(
                                   currentVersionText,
-                                  style: context.textTheme.displaySmall,
+                                  style: textTheme.displaySmall,
                                 ),
                         if (buildDateDiff != '')
                           Text(
                             buildDateDiff,
-                            style: context.textTheme.displaySmall,
+                            style: textTheme.displaySmall,
                           ),
                       ],
                     ),
@@ -269,12 +271,12 @@ class _AboutPageState extends State<AboutPage> {
                               'h1': _NamidaMarkdownElementBuilderHeader(),
                             },
                             styleSheet: MarkdownStyleSheet(
-                              a: context.textTheme.displayLarge,
-                              h1: context.textTheme.displayLarge,
-                              h2: context.textTheme.displayMedium,
-                              h3: context.textTheme.displayMedium,
-                              p: context.textTheme.displaySmall,
-                              listBullet: context.textTheme.displayMedium,
+                              a: textTheme.displayLarge,
+                              h1: textTheme.displayLarge,
+                              h2: textTheme.displayMedium,
+                              h3: textTheme.displayMedium,
+                              p: textTheme.displaySmall,
+                              listBullet: textTheme.displayMedium,
                             ),
                           ),
                         );
@@ -380,7 +382,7 @@ class _AboutPageState extends State<AboutPage> {
                     link: isBeta ? AppSocial.GITHUB_RELEASES_BETA : AppSocial.GITHUB_RELEASES,
                     trailing: NamidaInkWell(
                       borderRadius: 8.0,
-                      bgColor: context.theme.cardColor,
+                      bgColor: theme.cardColor,
                       padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -388,14 +390,14 @@ class _AboutPageState extends State<AboutPage> {
                             ? [
                                 Text(
                                   '?',
-                                  style: context.textTheme.displaySmall,
+                                  style: textTheme.displaySmall,
                                 ),
                               ]
                             : latestVersion.isUpdate() ?? false
                                 ? [
                                     Text(
                                       latestVersion.prettyVersion,
-                                      style: context.textTheme.displaySmall,
+                                      style: textTheme.displaySmall,
                                     ),
                                     const SizedBox(width: 4.0),
                                     const Icon(

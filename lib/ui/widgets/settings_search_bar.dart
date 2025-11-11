@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/searchbar_animation.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -55,6 +56,8 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     const animationMs = 300;
     return Stack(
       alignment: Alignment.centerLeft,
@@ -71,18 +74,18 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
           enableKeyboardFocus: true,
           isOriginalAnimation: false,
           textEditingController: controller,
-          hintText: 'Search Settings',
+          hintText: "${lang.SEARCH}: ${lang.SETTINGS}",
           searchBoxWidth: context.width / 1.2,
           buttonColour: Colors.transparent,
           enableBoxShadow: false,
           buttonShadowColour: Colors.transparent,
-          hintTextStyle: (height) => context.textTheme.displaySmall?.copyWith(
+          hintTextStyle: (height) => textTheme.displaySmall?.copyWith(
             fontSize: 17.0,
             height: height * 1.1,
           ),
-          searchBoxColour: context.theme.cardColor.withAlpha(200),
-          enteredTextStyle: context.theme.textTheme.displayMedium,
-          cursorColour: context.theme.colorScheme.onSurface,
+          searchBoxColour: theme.cardColor.withAlpha(200),
+          enteredTextStyle: theme.textTheme.displayMedium,
+          cursorColour: theme.colorScheme.onSurface,
           buttonBorderColour: Colors.black45,
           cursorRadius: const Radius.circular(12.0),
           buttonWidget: const IgnorePointer(

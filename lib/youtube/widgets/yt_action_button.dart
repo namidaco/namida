@@ -28,6 +28,7 @@ class SmallYTActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return SizedBox(
       width: width,
       child: NamidaInkWell(
@@ -60,7 +61,7 @@ class SmallYTActionButton extends StatelessWidget {
                 child: titleWidget ??
                     Text(
                       title ?? '',
-                      style: context.textTheme.displaySmall,
+                      style: textTheme.displaySmall,
                       softWrap: false,
                       overflow: TextOverflow.fade,
                     ),

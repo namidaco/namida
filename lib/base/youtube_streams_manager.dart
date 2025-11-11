@@ -38,64 +38,67 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
   late final sorting = Rxn<YTVideosSorting>(_defaultSorting);
   late final sortingByTop = _defaultSortingByTop.obs;
 
-  Widget get sortWidget => SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            ...YTVideosSorting.values.map(
-              (e) {
-                final details = sortToTextAndIcon(e);
-                return ObxO(
-                  rx: sorting,
-                  builder: (context, s) {
-                    final enabled = s == e;
-                    final itemsColor = enabled ? Colors.white.withValues(alpha: 0.8) : null;
-                    return NamidaInkWell(
-                      animationDurationMS: 200,
-                      borderRadius: 6.0,
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                      margin: const EdgeInsets.symmetric(horizontal: 3.0),
-                      bgColor: enabled ? sortChipBGColor : context.theme.cardColor,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          enabled
-                              ? ObxO(
-                                  rx: sortingByTop,
-                                  builder: (context, sortingByTop) => StackedIcon(
-                                    baseIcon: details.$2,
-                                    secondaryIcon: sortingByTop ? Broken.arrow_down_2 : Broken.arrow_up_3,
-                                    iconSize: 20.0,
-                                    secondaryIconSize: 10.0,
-                                    blurRadius: 4.0,
-                                    baseIconColor: itemsColor,
-                                    // secondaryIconColor: enabled ? context.theme.colorScheme.surface : null,
-                                  ),
-                                )
-                              : Icon(
-                                  details.$2,
-                                  size: 20.0,
-                                  color: null,
+  Widget get sortWidget {
+    final textTheme = context.textTheme;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          ...YTVideosSorting.values.map(
+            (e) {
+              final details = sortToTextAndIcon(e);
+              return ObxO(
+                rx: sorting,
+                builder: (context, s) {
+                  final enabled = s == e;
+                  final itemsColor = enabled ? Colors.white.withValues(alpha: 0.8) : null;
+                  return NamidaInkWell(
+                    animationDurationMS: 200,
+                    borderRadius: 6.0,
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                    margin: const EdgeInsets.symmetric(horizontal: 3.0),
+                    bgColor: enabled ? sortChipBGColor : context.theme.cardColor,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        enabled
+                            ? ObxO(
+                                rx: sortingByTop,
+                                builder: (context, sortingByTop) => StackedIcon(
+                                  baseIcon: details.$2,
+                                  secondaryIcon: sortingByTop ? Broken.arrow_down_2 : Broken.arrow_up_3,
+                                  iconSize: 20.0,
+                                  secondaryIconSize: 10.0,
+                                  blurRadius: 4.0,
+                                  baseIconColor: itemsColor,
+                                  // secondaryIconColor: enabled ? context.theme.colorScheme.surface : null,
                                 ),
-                          const SizedBox(width: 4.0),
-                          Text(
-                            details.$1,
-                            style: context.textTheme.displayMedium?.copyWith(color: itemsColor),
-                          ),
-                        ],
-                      ),
-                      onTap: () => onSortChanged(
-                        () => sortStreams(sort: e, sortingByTop: enabled ? !sortingByTop.value : null),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      );
+                              )
+                            : Icon(
+                                details.$2,
+                                size: 20.0,
+                                color: null,
+                              ),
+                        const SizedBox(width: 4.0),
+                        Text(
+                          details.$1,
+                          style: textTheme.displayMedium?.copyWith(color: itemsColor),
+                        ),
+                      ],
+                    ),
+                    onTap: () => onSortChanged(
+                      () => sortStreams(sort: e, sortingByTop: enabled ? !sortingByTop.value : null),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   /// return if sorting was done.
   bool trySortStreams() {

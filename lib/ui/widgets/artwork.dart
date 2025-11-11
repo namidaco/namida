@@ -199,6 +199,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     required final BoxShape shape,
     required final BorderRadiusGeometry? borderRadius,
   }) {
+    final theme = context.theme;
     final icon = Icon(
       widget.displayIcon ? widget.icon ?? (widget.track is Video ? Broken.video : Broken.musicnote) : null,
       size: widget.iconSize ?? widget.thumbnailSize * 0.5,
@@ -209,7 +210,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       height: boxHeight,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
+        color: widget.bgcolor ?? Color.alphaBlend(theme.cardColor.withAlpha(100), theme.scaffoldBackgroundColor),
         borderRadius: borderRadius,
         shape: shape,
         boxShadow: widget.boxShadow,
@@ -281,6 +282,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     final borderR = widget.isCircle || settings.borderRadiusMultiplier.value == 0 ? null : BorderRadius.circular(widget.borderRadius.multipliedRadius);
     final shape = widget.isCircle ? BoxShape.circle : BoxShape.rectangle;
+    final theme = context.theme;
     return SizedBox(
       key: key,
       width: widget.staggered ? null : boxWidth,
@@ -298,7 +300,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                   borderRadius: borderR,
                   shape: shape,
                   stackWithOnTopWidgets: true,
-                  bgc: widget.bgcolor ?? Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor),
+                  bgc: widget.bgcolor ?? Color.alphaBlend(theme.cardColor.withAlpha(100), theme.scaffoldBackgroundColor),
                 )
               : Container(
                   clipBehavior: Clip.antiAlias,
@@ -340,7 +342,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                                     child!,
                                     Positioned.fill(
                                       child: IgnorePointer(
-                                        child: ColoredBox(color: context.theme.cardColor.withValues(alpha: value)),
+                                        child: ColoredBox(color: theme.cardColor.withValues(alpha: value)),
                                       ),
                                     ),
                                   ],

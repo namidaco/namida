@@ -202,6 +202,8 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
   }
 
   NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return NamidaMiniPlayerBase<Track, SortType>(
       queueItemExtent: Dimensions.inst.trackTileItemExtent,
       trackTileConfigs: const TrackTilePropertiesConfigs(
@@ -266,18 +268,18 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           ),
         ),
         builder: (currentItem, fontSizeMultiplier, sizeMultiplier) {
-          final onSecondary = context.theme.colorScheme.onSecondaryContainer;
+          final onSecondary = theme.colorScheme.onSecondaryContainer;
           return Obx((context) {
             if (!settings.enableVideoPlayback.valueR) {
               return Text.rich(
                 TextSpan(
                   text: lang.AUDIO,
-                  style: context.textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: context.theme.colorScheme.onSecondaryContainer),
+                  style: textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: theme.colorScheme.onSecondaryContainer),
                   children: [
                     if (settings.displayAudioInfoMiniplayer.valueR)
                       TextSpan(
                         text: " • ${(currentItem as Selectable).track.audioInfoFormattedCompact}",
-                        style: TextStyle(color: context.theme.colorScheme.primary, fontSize: fontSizeMultiplier(11.0)),
+                        style: TextStyle(color: theme.colorScheme.primary, fontSize: fontSizeMultiplier(11.0)),
                       )
                   ],
                 ),
@@ -307,7 +309,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
             return Text.rich(
               TextSpan(
                 text: lang.VIDEO,
-                style: context.textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: context.theme.colorScheme.onSecondaryContainer),
+                style: textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: theme.colorScheme.onSecondaryContainer),
                 children: [
                   if (videoBlockedByIcon != null) ...[
                     TextSpan(text: " • ", style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(15.0))),
@@ -322,13 +324,13 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                     TextSpan(
                       text: " • $qualityText$framerateText",
                       style: TextStyle(
-                        color: context.theme.colorScheme.primary,
+                        color: theme.colorScheme.primary,
                         fontSize: fontSizeMultiplier(13.0),
                       ),
                     ),
                   // --
                   if (videoTotalSize > 0) ...[
-                    TextSpan(text: " • ", style: TextStyle(color: context.theme.colorScheme.primary, fontSize: fontSizeMultiplier(14.0))),
+                    TextSpan(text: " • ", style: TextStyle(color: theme.colorScheme.primary, fontSize: fontSizeMultiplier(14.0))),
                     TextSpan(
                       text: downloadedBytes == null ? videoTotalSize.fileSizeFormatted : "${downloadedBytes.fileSizeFormatted}/${videoTotalSize.fileSizeFormatted}",
                       style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(10.0)),
@@ -455,6 +457,8 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
   }
 
   NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return NamidaMiniPlayerBase<String, YTSortType>(
       queueItemExtent: Dimensions.youtubeCardItemExtent,
       videoTileConfigs: const VideoTilePropertiesConfigs(
@@ -511,7 +515,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
           ),
         ),
         builder: (currentItem, fontSizeMultiplier, sizeMultiplier) {
-          final onSecondary = context.theme.colorScheme.onSecondaryContainer;
+          final onSecondary = theme.colorScheme.onSecondaryContainer;
           return Obx((context) {
             if (settings.youtube.isAudioOnlyMode.valueR) {
               List<TextSpan>? textChildren;
@@ -535,7 +539,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
                   textChildren = <TextSpan>[
                     TextSpan(
                       text: " • ${finalText.joinText(separator: ' • ')}",
-                      style: TextStyle(color: context.theme.colorScheme.primary, fontSize: fontSizeMultiplier(11.0)),
+                      style: TextStyle(color: theme.colorScheme.primary, fontSize: fontSizeMultiplier(11.0)),
                     ),
                   ];
                 }
@@ -543,7 +547,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
               return Text.rich(
                 TextSpan(
                   text: lang.AUDIO,
-                  style: context.textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: context.theme.colorScheme.onSecondaryContainer),
+                  style: textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: theme.colorScheme.onSecondaryContainer),
                   children: textChildren,
                 ),
                 overflow: TextOverflow.ellipsis,
@@ -561,7 +565,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
               return Text.rich(
                 TextSpan(
                   text: lang.VIDEO,
-                  style: context.textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: context.theme.colorScheme.onSecondaryContainer),
+                  style: textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: theme.colorScheme.onSecondaryContainer),
                   children: [
                     if (stream == null && cached == null && !ConnectivityController.inst.hasConnectionR) ...[
                       TextSpan(text: " • ", style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(15.0))),
@@ -576,13 +580,13 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
                       TextSpan(
                         text: " • ${qualityText ?? '?'}",
                         style: TextStyle(
-                          color: context.theme.colorScheme.primary,
+                          color: theme.colorScheme.primary,
                           fontSize: fontSizeMultiplier(13.0),
                         ),
                       ),
                     // --
                     if (sizeFinal > 0) ...[
-                      TextSpan(text: " • ", style: TextStyle(color: context.theme.colorScheme.primary, fontSize: fontSizeMultiplier(14.0))),
+                      TextSpan(text: " • ", style: TextStyle(color: theme.colorScheme.primary, fontSize: fontSizeMultiplier(14.0))),
                       TextSpan(
                         text: sizeFinal.fileSizeFormatted,
                         style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(10.0)),
@@ -868,6 +872,7 @@ class Wallpaper extends StatefulWidget {
 class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Stack(
@@ -879,8 +884,8 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
                   center: const Alignment(0.95, -0.95),
                   radius: 1.0,
                   colors: [
-                    context.theme.colorScheme.onSecondary.withValues(alpha: .3),
-                    context.theme.colorScheme.onSecondary.withValues(alpha: .2),
+                    theme.colorScheme.onSecondary.withValues(alpha: .3),
+                    theme.colorScheme.onSecondary.withValues(alpha: .2),
                   ],
                 ),
               ),
@@ -903,7 +908,7 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
                         vsync: this,
                         behaviour: RandomParticleBehaviour(
                           options: ParticleOptions(
-                            baseColor: context.theme.colorScheme.tertiary,
+                            baseColor: theme.colorScheme.tertiary,
                             spawnMaxRadius: 4,
                             spawnMinRadius: 2,
                             spawnMaxSpeed: 60 + bpm * 2,

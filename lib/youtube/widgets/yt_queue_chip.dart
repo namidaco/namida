@@ -172,6 +172,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final maxHeight = context.height;
     const minHeight = kYTQueueSheetMinHeight;
 
@@ -211,7 +213,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             padding: const EdgeInsets.all(12.0),
                             child: FloatingActionButton(
                               heroTag: 'yt_queue_fab_hero',
-                              backgroundColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.9),
+                              backgroundColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.9),
                               onPressed: () => _animateSmallToBig(),
                               child: const Icon(
                                 Broken.driver,
@@ -224,14 +226,14 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             margin: EdgeInsets.symmetric(horizontal: 18.0, vertical: 6.0),
                             padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
                             height: minHeight,
-                            bgColor: Color.alphaBlend(context.theme.cardColor.withValues(alpha: 0.5), context.theme.scaffoldBackgroundColor).withValues(alpha: 0.95),
+                            bgColor: Color.alphaBlend(theme.cardColor.withValues(alpha: 0.5), theme.scaffoldBackgroundColor).withValues(alpha: 0.95),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
                                   Broken.airdrop,
                                   size: 24.0,
-                                  color: context.theme.iconTheme.color?.withValues(alpha: 0.65),
+                                  color: theme.iconTheme.color?.withValues(alpha: 0.65),
                                 ),
                                 const SizedBox(width: 6.0),
                                 Expanded(
@@ -249,13 +251,13 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                         children: [
                                           Text(
                                             "${currentIndex + 1}/$queueLength",
-                                            style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                                            style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
                                           ),
                                           // const SizedBox(height: 2.0),
                                           if (nextItemName != null && nextItemName != '')
                                             Text(
                                               "${lang.NEXT}: $nextItemName",
-                                              style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                              style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -284,7 +286,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
         AnimatedBuilder(
           animation: _bigBoxAnimation,
           child: ColoredBox(
-            color: Color.alphaBlend(context.theme.cardColor.withValues(alpha: 0.5), context.theme.scaffoldBackgroundColor),
+            color: Color.alphaBlend(theme.cardColor.withValues(alpha: 0.5), theme.scaffoldBackgroundColor),
             child: Listener(
               onPointerMove: (event) {
                 if (Player.inst.isModifyingQueue) return;
@@ -350,12 +352,12 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                           children: [
                                             Text(
                                               lang.QUEUE,
-                                              style: context.textTheme.displayMedium,
+                                              style: textTheme.displayMedium,
                                             ),
                                             Obx(
                                               (context) => Text(
                                                 "${Player.inst.currentIndex.valueR + 1}/${Player.inst.currentQueue.valueR.length}",
-                                                style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                                                style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
                                               ),
                                             ),
                                           ],
@@ -483,7 +485,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                       ),
                     ),
                     ColoredBox(
-                      color: context.theme.scaffoldBackgroundColor,
+                      color: theme.scaffoldBackgroundColor,
                       child: SizedBox(
                         width: context.width,
                         height: kQueueBottomRowHeight,
@@ -550,12 +552,13 @@ class _ActionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return IconButton.filledTonal(
       padding: EdgeInsets.zero,
       style: ButtonStyle(
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         visualDensity: const VisualDensity(horizontal: -2.0, vertical: -2.0),
-        backgroundColor: WidgetStatePropertyAll(context.theme.colorScheme.secondary.withValues(alpha: 0.18)),
+        backgroundColor: WidgetStatePropertyAll(theme.colorScheme.secondary.withValues(alpha: 0.18)),
       ),
       onPressed: onTap,
       icon: Icon(icon, size: 20.0),

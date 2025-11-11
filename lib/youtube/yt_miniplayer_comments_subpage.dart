@@ -45,6 +45,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return BackgroundWrapper(
       child: ObxO(
         rx: Player.inst.currentItem,
@@ -58,7 +59,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                   boxShadow: [
                     BoxShadow(
                       blurRadius: 12.0,
-                      color: context.theme.secondaryHeaderColor.withValues(alpha: 0.5),
+                      color: theme.secondaryHeaderColor.withValues(alpha: 0.5),
                     )
                   ],
                 ),
@@ -177,7 +178,9 @@ class YoutubeCommentsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final commentsIconColor = context.theme.iconTheme.color;
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final commentsIconColor = theme.iconTheme.color;
     return LayoutWidthProvider(
       builder: (context, maxWidth) => Row(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -234,7 +237,7 @@ class YoutubeCommentsHeader extends StatelessWidget {
                         lang.COMMENTS,
                         if (count != null) count.formatDecimalShort(),
                       ].join(' • '),
-                      style: context.textTheme.displayMedium,
+                      style: textTheme.displayMedium,
                       textAlign: TextAlign.start,
                     );
                   },
@@ -258,7 +261,7 @@ class YoutubeCommentsHeader extends StatelessWidget {
                         borderRadius: 8.0,
                         margin: const EdgeInsets.symmetric(horizontal: 4.0),
                         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                        bgColor: currentCommentSort == s ? context.theme.colorScheme.secondaryContainer : context.theme.cardColor,
+                        bgColor: currentCommentSort == s ? theme.colorScheme.secondaryContainer : theme.cardColor,
                         onTap: () async {
                           final activeSort = YoutubeMiniplayerUiController.inst.currentCommentSort.value;
                           if (activeSort == s) return;
@@ -278,7 +281,7 @@ class YoutubeCommentsHeader extends StatelessWidget {
                         },
                         child: Text(
                           s.toText(),
-                          style: context.textTheme.displayMedium,
+                          style: textTheme.displayMedium,
                         ),
                       ),
                     ),

@@ -418,6 +418,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return BackgroundWrapper(
       child: Listener(
         onPointerMove: (event) {
@@ -452,7 +454,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                               children: [
                                 Text(
                                   'Namida',
-                                  style: context.textTheme.displayLarge?.copyWith(fontSize: 32.0),
+                                  style: textTheme.displayLarge?.copyWith(fontSize: 32.0),
                                 ),
                                 const Spacer(),
                                 NamidaIconButton(
@@ -562,14 +564,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                                     child: AnimatedDecoration(
                                                       duration: const Duration(milliseconds: 250),
                                                       decoration: BoxDecoration(
-                                                        color: currentYearLostMemories == e ? CurrentColor.inst.currentColorScheme.withAlpha(160) : context.theme.cardColor,
+                                                        color: currentYearLostMemories == e ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
                                                         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                                                       ),
                                                       child: Padding(
                                                         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                                                         child: Text(
                                                           '$e',
-                                                          style: context.textTheme.displaySmall?.copyWith(
+                                                          style: textTheme.displaySmall?.copyWith(
                                                             color: currentYearLostMemories == e ? Colors.white.withAlpha(240) : null,
                                                             fontWeight: FontWeight.w600,
                                                           ),
@@ -911,6 +913,8 @@ class _HorizontalList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return Column(
       children: [
         NamidaInkWell(
@@ -925,11 +929,11 @@ class _HorizontalList extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: context.textTheme.displayLarge),
+                    Text(title, style: textTheme.displayLarge),
                     if (subtitle != null)
                       Text(
                         subtitle!,
-                        style: context.textTheme.displaySmall,
+                        style: textTheme.displaySmall,
                       ),
                     if (thirdWidget != null) thirdWidget!,
                   ],
@@ -954,7 +958,7 @@ class _HorizontalList extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     child: NamidaInkWell(
                       borderRadius: 10.0,
-                      bgColor: context.theme.cardColor.withValues(alpha: 0.5),
+                      bgColor: theme.cardColor.withValues(alpha: 0.5),
                       padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                       child: Text(
                         switch (homepageItem) {
@@ -965,7 +969,7 @@ class _HorizontalList extends StatelessWidget {
                           HomePageItems.recentAlbums || HomePageItems.recentArtists => "${lang.NONE}: ${lang.NO_TRACKS_IN_HISTORY}",
                           HomePageItems.topRecentAlbums || HomePageItems.topRecentArtists => "${lang.NONE}: ${lang.NO_TRACKS_IN_HISTORY}",
                         },
-                        style: context.textTheme.displayMedium,
+                        style: textTheme.displayMedium,
                         softWrap: false,
                       ),
                     ),
@@ -1027,6 +1031,7 @@ class _MixesCardState extends State<_MixesCard> {
   }
 
   void onMixTap(Widget thumbnailWidget) {
+    final textTheme = context.textTheme;
     const contentColor = Color.fromRGBO(242, 242, 242, 0.7);
     const contentColorAlt = Color.fromRGBO(42, 42, 42, 0.8);
     NamidaNavigator.inst.navigateDialog(
@@ -1068,7 +1073,7 @@ class _MixesCardState extends State<_MixesCard> {
                         Expanded(
                           child: Text(
                             widget.title,
-                            style: context.textTheme.displayLarge?.copyWith(
+                            style: textTheme.displayLarge?.copyWith(
                               fontSize: 15.0,
                               color: contentColor,
                             ),
@@ -1099,7 +1104,7 @@ class _MixesCardState extends State<_MixesCard> {
                               const SizedBox(width: 4.0),
                               Text(
                                 "${widget.tracks.length}",
-                                style: context.textTheme.displayLarge?.copyWith(
+                                style: textTheme.displayLarge?.copyWith(
                                   fontSize: 15.0,
                                   color: contentColorAlt,
                                 ),
@@ -1118,7 +1123,7 @@ class _MixesCardState extends State<_MixesCard> {
                     child: Container(
                       clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
-                        color: context.theme.cardColor,
+                        color: theme.cardColor,
                         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
                       ),
                       child: TrackTilePropertiesProvider(
@@ -1134,7 +1139,7 @@ class _MixesCardState extends State<_MixesCard> {
                               margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
                               clipBehavior: Clip.antiAlias,
                               decoration: BoxDecoration(
-                                color: context.theme.scaffoldBackgroundColor,
+                                color: theme.scaffoldBackgroundColor,
                                 borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                               ),
                               child: TrackTile(
@@ -1200,6 +1205,7 @@ class _MixesCardState extends State<_MixesCard> {
   }
 
   Widget artworkWidget({required bool displayShimmer, required bool fullscreen}) {
+    final textTheme = context.textTheme;
     const contentColor = Color.fromRGBO(242, 242, 242, 0.1);
     const contentColorAlt = Color.fromRGBO(242, 242, 242, 0.8);
     final tag = 'mix_thumbnail_${widget.title}${widget.index}';
@@ -1262,7 +1268,7 @@ class _MixesCardState extends State<_MixesCard> {
                     const SizedBox(width: 4.0),
                     Text(
                       "${widget.tracks.length}",
-                      style: context.textTheme.displaySmall?.copyWith(fontSize: 15.0),
+                      style: textTheme.displaySmall?.copyWith(fontSize: 15.0),
                     ),
                   ],
                 ),
@@ -1275,6 +1281,7 @@ class _MixesCardState extends State<_MixesCard> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final displayShimmer = _track == null;
 
     final thumbnailWidget = Stack(
@@ -1323,13 +1330,13 @@ class _MixesCardState extends State<_MixesCard> {
                     const SizedBox(height: 4.0),
                     Text(
                       widget.title,
-                      style: context.textTheme.displayMedium,
+                      style: textTheme.displayMedium,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       widget.tracks.take(5).map((e) => e.title).join(', '),
-                      style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                      style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1404,8 +1411,10 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final track = widget.track;
-    final color = Color.alphaBlend((_cardColor ?? context.theme.scaffoldBackgroundColor).withAlpha(50), context.theme.cardColor);
+    final color = Color.alphaBlend((_cardColor ?? theme.scaffoldBackgroundColor).withAlpha(50), theme.cardColor);
     final dummyContainer = track == null;
     if (dummyContainer) {
       return NamidaInkWell(
@@ -1484,11 +1493,11 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
                             bottomLeft: Radius.circular(6.0.multipliedRadius),
                             topRight: Radius.circular(6.0.multipliedRadius),
                           ),
-                          color: context.theme.scaffoldBackgroundColor,
+                          color: theme.scaffoldBackgroundColor,
                         ),
                         child: Text(
                           widget.topRightText!,
-                          style: context.textTheme.displaySmall?.copyWith(
+                          style: textTheme.displaySmall?.copyWith(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w500,
                           ),
@@ -1503,11 +1512,11 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
                         right: 2.0,
                         child: CircleAvatar(
                           radius: 10.0,
-                          backgroundColor: context.theme.cardColor,
+                          backgroundColor: theme.cardColor,
                           child: FittedBox(
                             child: Text(
                               widget.listens!.length.formatDecimal(),
-                              style: context.textTheme.displaySmall,
+                              style: textTheme.displaySmall,
                             ),
                           ),
                         ))
@@ -1522,13 +1531,13 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
                   children: [
                     Text(
                       track.title,
-                      style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0, fontWeight: FontWeight.w500),
+                      style: textTheme.displaySmall?.copyWith(fontSize: 12.0, fontWeight: FontWeight.w500),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       track.originalArtist,
-                      style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w400),
+                      style: textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w400),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1553,6 +1562,7 @@ class RecentlyAddedTracksPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return BackgroundWrapper(
       child: NamidaTracksList(
         infoBox: null,
@@ -1568,7 +1578,7 @@ class RecentlyAddedTracksPage extends StatelessWidget with NamidaRouteWidget {
               const SizedBox(width: 12.0),
               Text(
                 lang.RECENTLY_ADDED,
-                style: context.textTheme.displayLarge?.copyWith(fontSize: 18.0),
+                style: textTheme.displayLarge?.copyWith(fontSize: 18.0),
               )
             ],
           ),

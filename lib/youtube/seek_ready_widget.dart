@@ -144,6 +144,8 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final fullscreen = widget.isFullscreen;
     final clampCircleEdges = !widget.isFullscreen;
     const barHeight = SeekReadyDimensions.barHeight;
@@ -155,7 +157,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     const seekTextExtraMargin = SeekReadyDimensions.seekTextExtraMargin;
 
     final progressColor = CurrentColor.inst.miniplayerColor.withValues(alpha: 0.8);
-    final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(context.theme.secondaryHeaderColor.withValues(alpha: 0.25), context.theme.scaffoldBackgroundColor);
+    final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(theme.secondaryHeaderColor.withValues(alpha: 0.25), theme.scaffoldBackgroundColor);
     final bufferColor =
         fullscreen ? miniplayerBGColor.invert() : Color.alphaBlend(progressColor.withValues(alpha: 0.25), miniplayerBGColor.invert().withValues(alpha: 0.5)).withValues(alpha: 0.5);
 
@@ -294,13 +296,13 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                       margin: const EdgeInsets.only(bottom: 12.0),
                       padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
                       decoration: BoxDecoration(
-                        color: context.theme.scaffoldBackgroundColor,
+                        color: theme.scaffoldBackgroundColor,
                         borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                       ),
                       child: FittedBox(
                         child: Text(
                           finalText,
-                          style: context.textTheme.displaySmall,
+                          style: textTheme.displaySmall,
                         ),
                       ),
                     ),

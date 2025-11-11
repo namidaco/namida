@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:nampack/core/main_utils.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:youtipie/class/comments/comment_info_item.dart';
@@ -99,6 +98,7 @@ class YTUtils {
   }) {
     iconsColor ??= context.theme.iconTheme.color;
     final listens = overrideListens.isNotEmpty ? overrideListens : YoutubeHistoryController.inst.topTracksMapListens.value[videoId] ?? [];
+    final textTheme = context.textTheme;
     return [
       if (listens.isNotEmpty)
         Material(
@@ -118,9 +118,8 @@ class YTUtils {
                   padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
                   child: Text(
                     listens.length.formatDecimal(),
-                    style: fontMultiplier != null
-                        ? context.textTheme.displaySmall?.copyWith(fontSize: (context.textTheme.displaySmall?.fontSize ?? 12.0) * fontMultiplier)
-                        : context.textTheme.displaySmall,
+                    style:
+                        fontMultiplier != null ? textTheme.displaySmall?.copyWith(fontSize: (textTheme.displaySmall?.fontSize ?? 12.0) * fontMultiplier) : textTheme.displaySmall,
                   ),
                 ),
               ),
@@ -153,7 +152,7 @@ class YTUtils {
     ];
   }
 
-  static _getPlayAllTile({required QueueSourceYoutubeID queueSource, required Iterable<YoutubeID> videos, required bool showPlayAllReverse}) {
+  static NamidaPopupItem _getPlayAllTile({required QueueSourceYoutubeID queueSource, required Iterable<YoutubeID> videos, required bool showPlayAllReverse}) {
     return NamidaPopupItem(
       icon: Broken.play_circle,
       title: lang.PLAY_ALL,

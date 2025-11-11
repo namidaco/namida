@@ -12,6 +12,7 @@ class SettingsSearchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return BackgroundWrapper(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -40,7 +41,7 @@ class SettingsSearchPage extends StatelessWidget {
                                 const SizedBox(width: 6.0),
                                 Text(
                                   details.title,
-                                  style: context.textTheme.displayLarge,
+                                  style: textTheme.displayLarge,
                                 ),
                               ],
                             ),

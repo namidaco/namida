@@ -29,6 +29,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final boxHeightMinimized = 80.0.withMaximum(0.2 * context.height);
     final boxHeightMaximized = 425.0.withMaximum(0.8 * context.height);
     final boxWidth = 375.0.withMaximum(context.width);
@@ -87,11 +88,11 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                     height: isMenuMinimized ? boxHeightMinimized + extra : boxHeightMaximized + extra,
                                     width: boxWidth + extra,
                                     decoration: BoxDecoration(
-                                      color: Color.alphaBlend(context.theme.colorScheme.surface.withAlpha(160), context.theme.scaffoldBackgroundColor),
+                                      color: Color.alphaBlend(theme.colorScheme.surface.withAlpha(160), theme.scaffoldBackgroundColor),
                                       borderRadius: const BorderRadius.all(Radius.circular(20)),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: context.theme.shadowColor.withAlpha(30),
+                                          color: theme.shadowColor.withAlpha(30),
                                           blurRadius: 10,
                                           offset: const Offset(0, 5),
                                         ),
@@ -207,6 +208,7 @@ class SelectedTracksRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -228,12 +230,12 @@ class SelectedTracksRow extends StatelessWidget {
                 children: [
                   Text(
                     selectedTracks.displayTrackKeyword,
-                    style: context.theme.textTheme.displayLarge!.copyWith(fontSize: 21.0),
+                    style: theme.textTheme.displayLarge!.copyWith(fontSize: 21.0),
                   ),
                   if (!SelectedTracksController.inst.isMenuMinimized.valueR)
                     Text(
                       selectedTracks.totalDurationFormatted,
-                      style: context.theme.textTheme.displayMedium,
+                      style: theme.textTheme.displayMedium,
                     )
                 ],
               );

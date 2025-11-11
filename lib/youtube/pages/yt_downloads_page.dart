@@ -44,12 +44,14 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
     required void Function() onTap,
     required bool? isOnGoing,
   }) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return Obx(
       (context) {
         final enabled = isOnGoing == YTOnGoingFinishedDownloads.inst.isOnGoingSelected.valueR;
         final color = enabled ? Colors.white.withValues(alpha: 0.7) : null;
         return NamidaInkWell(
-          bgColor: enabled ? CurrentColor.inst.color : context.theme.cardColor,
+          bgColor: enabled ? CurrentColor.inst.color : theme.cardColor,
           borderRadius: 6.0,
           margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
@@ -62,7 +64,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
               const SizedBox(width: 4.0),
               Text(
                 title,
-                style: context.textTheme.displayMedium?.copyWith(color: color),
+                style: textTheme.displayMedium?.copyWith(color: color),
               ),
             ],
           ),
@@ -78,6 +80,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
     String groupTitle = '',
     required int itemsLength,
   }) async {
+    final textTheme = context.textTheme;
     bool confirmed = false;
     bool delete = false;
 
@@ -119,12 +122,12 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
               Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(text: "$operationTitle: ", style: context.textTheme.displayLarge),
+                    TextSpan(text: "$operationTitle: ", style: textTheme.displayLarge),
                     TextSpan(
                       text: '$groupTitleText ($itemsLength)',
-                      style: context.textTheme.displayMedium,
+                      style: textTheme.displayMedium,
                     ),
-                    TextSpan(text: " ?", style: context.textTheme.displayLarge),
+                    TextSpan(text: " ?", style: textTheme.displayLarge),
                   ],
                 ),
               ),
@@ -190,13 +193,15 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return BackgroundWrapper(
       child: ObxO(
         rx: YoutubeController.inst.isLoadingDownloadTasks,
         builder: (context, loadingAllTasks) => loadingAllTasks
             ? Center(
                 child: ThreeArchedCircle(
-                  color: context.theme.colorScheme.primary.withValues(alpha: 0.5),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.5),
                   size: 56.0,
                 ),
               )
@@ -266,7 +271,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                 const SizedBox(width: 24.0),
                                 Text(
                                   _downloadTasksTempList.length.displayVideoKeyword,
-                                  style: context.textTheme.displayMedium?.copyWith(fontSize: 20.0),
+                                  style: textTheme.displayMedium?.copyWith(fontSize: 20.0),
                                 ),
                                 if (_isOnGoingSelectedR == true) ...[
                                   const Spacer(),
@@ -339,7 +344,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                       builder: (context, maxWidth) => NamidaInkWell(
                                         borderRadius: 0.0,
                                         padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                        bgColor: context.theme.scaffoldBackgroundColor,
+                                        bgColor: theme.scaffoldBackgroundColor,
                                         onTap: () {
                                           _hiddenGroupsMap.value[groupName] = _hiddenGroupsMap.value[groupName] == true ? false : true;
                                           _hiddenGroupsMap.refresh();
@@ -352,12 +357,12 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                               width: maxWidth * 0.12,
                                               borderRadius: 8.0,
                                               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                                              bgColor: context.theme.cardColor,
+                                              bgColor: theme.cardColor,
                                               child: FittedBox(
                                                 fit: BoxFit.scaleDown,
                                                 child: Text(
                                                   "${list.length}",
-                                                  style: context.textTheme.displayLarge,
+                                                  style: textTheme.displayLarge,
                                                 ),
                                               ),
                                             ),
@@ -369,12 +374,12 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                                 children: [
                                                   Text(
                                                     groupName.groupName == '' ? lang.DEFAULT : groupName.groupName,
-                                                    style: context.textTheme.displayMedium,
+                                                    style: textTheme.displayMedium,
                                                   ),
                                                   if (lastEditedAgo != null)
                                                     Text(
                                                       lastEditedAgo,
-                                                      style: context.textTheme.displaySmall,
+                                                      style: textTheme.displaySmall,
                                                     ),
                                                 ],
                                               ),

@@ -238,6 +238,7 @@ class PlaybackSettings extends SettingSubpageProvider {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final children = <Widget>[
       getItemWrapper(
         key: _PlaybackSettingsKeys.enableVideoPlayback,
@@ -335,7 +336,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                     DoneButton(),
                   ],
                   child: DefaultTextStyle(
-                    style: context.textTheme.displaySmall!,
+                    style: textTheme.displaySmall!,
                     child: Column(
                       children: [
                         Text(lang.VIDEO_QUALITY_SUBTITLE),
@@ -573,7 +574,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               subtitle: gaplessEnabled
                   ? Text(
                       'x ${lang.GAPLESS_PLAYBACK}',
-                      style: context.textTheme.displaySmall,
+                      style: textTheme.displaySmall,
                     )
                   : null,
               childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -946,7 +947,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   children: [
                     Text(
                       lang.MIN_VALUE_TO_COUNT_TRACK_LISTEN,
-                      style: context.textTheme.displayLarge,
+                      style: textTheme.displayLarge,
                     ),
                     const SizedBox(
                       height: 32.0,
@@ -966,7 +967,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                           ),
                           Text(
                             lang.OR,
-                            style: context.textTheme.displayMedium,
+                            style: textTheme.displayMedium,
                           ),
                           NamidaWheelSlider(
                             min: 20,

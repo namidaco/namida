@@ -48,6 +48,7 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final showNavigationAtSide = Dimensions.inst.showNavigationAtSide;
     final main = RepaintBoundary(
       child: WillPopScope(
@@ -168,7 +169,7 @@ class MainPage extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     boxShadow: [
                                       BoxShadow(
-                                        color: context.theme.scaffoldBackgroundColor,
+                                        color: theme.scaffoldBackgroundColor,
                                         spreadRadius: 4.0,
                                         blurRadius: 8.0,
                                       ),
@@ -203,7 +204,7 @@ class MainPage extends StatelessWidget {
         if (!animatedTheme) {
           return Builder(
             builder: (context) => Theme(
-              data: context.theme,
+              data: theme,
               child: mainChild,
             ),
           );
@@ -213,7 +214,7 @@ class MainPage extends StatelessWidget {
           builder: (context) => _AnimatedTheme(
             key: _animatedThemeGlobalKey,
             duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-            data: context.theme,
+            data: theme,
             child: mainChild,
           ),
         );
@@ -292,11 +293,12 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final searchProgressWidget = Builder(builder: (context) {
       return CircularProgressIndicator(
         strokeWidth: 2.0,
         strokeCap: StrokeCap.round,
-        color: context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.4),
+        color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.4),
       );
     });
     return Builder(
@@ -304,7 +306,7 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
         message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
         child: FloatingActionButton(
           heroTag: 'main_page_fab_hero',
-          backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withValues(alpha: 0.6), context.theme.cardColor),
+          backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withValues(alpha: 0.6), theme.cardColor),
           onPressed: () {
             final fab = settings.floatingActionButton.value;
             final isMenuOpened = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
@@ -397,6 +399,8 @@ class NamidaSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return SearchBarAnimation(
       key: searchBarKey,
       initiallyAlwaysExpanded: settings.alwaysExpandedSearchbar.value,
@@ -411,14 +415,13 @@ class NamidaSearchBar extends StatelessWidget {
       buttonColour: Colors.transparent,
       enableBoxShadow: false,
       buttonShadowColour: Colors.transparent,
-      hintTextStyle: (height) => context.textTheme.displaySmall?.copyWith(
+      hintTextStyle: (height) => textTheme.displaySmall?.copyWith(
         fontSize: 17.0,
         height: height * 1.1,
       ),
-      searchBoxColour:
-          context.isDarkMode ? context.theme.cardColor.withAlpha(200) : Color.alphaBlend(context.theme.cardColor.withAlpha(200), context.theme.colorScheme.onSurface.withAlpha(40)),
-      enteredTextStyle: context.theme.textTheme.displayMedium,
-      cursorColour: context.theme.colorScheme.onSurface,
+      searchBoxColour: context.isDarkMode ? theme.cardColor.withAlpha(200) : Color.alphaBlend(theme.cardColor.withAlpha(200), theme.colorScheme.onSurface.withAlpha(40)),
+      enteredTextStyle: theme.textTheme.displayMedium,
+      cursorColour: theme.colorScheme.onSurface,
       buttonBorderColour: Colors.black45,
       cursorRadius: const Radius.circular(12.0),
       buttonWidget: const IgnorePointer(
@@ -637,10 +640,11 @@ class _CustomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final bottomNavBar = NavigationBarTheme(
       data: NavigationBarThemeData(
-        backgroundColor: context.theme.navigationBarTheme.backgroundColor,
-        indicatorColor: Color.alphaBlend(context.theme.colorScheme.primary.withAlpha(20), context.theme.colorScheme.secondaryContainer),
+        backgroundColor: theme.navigationBarTheme.backgroundColor,
+        indicatorColor: Color.alphaBlend(theme.colorScheme.primary.withAlpha(20), theme.colorScheme.secondaryContainer),
       ),
       child: ObxO(
         rx: settings.libraryTabs,
@@ -707,6 +711,7 @@ class _CustomRailBar extends StatefulWidget {
 class __CustomRailBarState extends State<_CustomRailBar> {
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final maxHeight = context.height;
 
     const hMargin = 4.0;
@@ -724,8 +729,8 @@ class __CustomRailBarState extends State<_CustomRailBar> {
     final showLogo = WindowController.instance?.usingCustomWindowTitleBar != true;
 
     final bgColor = Color.alphaBlend(
-      (context.theme.navigationRailTheme.backgroundColor ?? context.theme.colorScheme.surface).withValues(alpha: .5),
-      context.theme.colorScheme.surfaceContainer,
+      (theme.navigationRailTheme.backgroundColor ?? theme.colorScheme.surface).withValues(alpha: .5),
+      theme.colorScheme.surfaceContainer,
     );
     Widget child = Material(
       color: bgColor,
@@ -771,7 +776,7 @@ class __CustomRailBarState extends State<_CustomRailBar> {
                                   duration: Duration(milliseconds: 400),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular((isSelected ? 16.0 : 24.0).multipliedRadius),
-                                    color: isSelected ? context.theme.colorScheme.secondaryContainer : null,
+                                    color: isSelected ? theme.colorScheme.secondaryContainer : null,
                                   ),
                                   child: NamidaIconButton(
                                     tooltip: () => e.toText(),

@@ -83,6 +83,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final uploadsScrollController = widget.scrollController;
     const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
     const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
@@ -151,14 +152,14 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                       Flexible(
                         child: Text(
                           videosCountVSTotalText,
-                          style: context.textTheme.displayMedium,
+                          style: textTheme.displayMedium,
                         ),
                       ),
                       if (peakDatesText != null)
                         Flexible(
                           child: Text(
                             peakDatesText,
-                            style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                            style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
                           ),
                         ),
                     ],
@@ -243,7 +244,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                                 child: Center(
                                   child: Text(
                                     lang.ERROR,
-                                    style: context.textTheme.displayLarge,
+                                    style: textTheme.displayLarge,
                                   ),
                                 ),
                               )

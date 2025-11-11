@@ -32,6 +32,7 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     const multiplier = 1;
     const thumbnailHeight = multiplier * Dimensions.youtubeThumbnailHeight;
     const thumbnailWidth = multiplier * Dimensions.youtubeThumbnailWidth;
@@ -83,7 +84,7 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
                         child: Text(
                           chunk.title,
-                          style: context.textTheme.displayMedium,
+                          style: textTheme.displayMedium,
                         ),
                       ),
                     ),

@@ -37,13 +37,14 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
   const YoutubeAccountManagePage({super.key});
 
   void _onSignInTap(BuildContext context, {required bool forceSignIn}) {
+    final textTheme = context.textTheme;
     final header = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           lang.SIGN_IN_TO_YOUR_ACCOUNT,
-          style: context.textTheme.displayMedium,
+          style: textTheme.displayMedium,
         ),
         ObxO(
           rx: YoutubeAccountController.signInProgress,
@@ -51,7 +52,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
               ? const SizedBox()
               : Text(
                   loginProgress.name,
-                  style: context.textTheme.displaySmall,
+                  style: textTheme.displaySmall,
                 ),
         ),
       ],
@@ -157,8 +158,10 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accountColorActive = context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.8);
-    final accountColorNonActive = context.theme.cardColor.withValues(alpha: 0.5);
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final accountColorActive = theme.colorScheme.secondaryContainer.withValues(alpha: 0.8);
+    final accountColorNonActive = theme.cardColor.withValues(alpha: 0.5);
     return BackgroundWrapper(
       child: ObxO(
         rx: YoutubeAccountController.current.signedInAccounts,
@@ -185,8 +188,8 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                             title: hasMembership ? lang.MEMBERSHIP_MANAGE : "${lang.SIGNING_IN_ALLOWS_BASIC_USAGE}.\n${lang.SIGNING_IN_ALLOWS_BASIC_USAGE_SUBTITLE}",
                             icon: Broken.money_3,
                             bgColor: Color.alphaBlend(
-                              context.theme.cardTheme.color?.withValues(alpha: 0.3) ?? Colors.transparent,
-                              context.theme.colorScheme.secondaryContainer,
+                              theme.cardTheme.color?.withValues(alpha: 0.3) ?? Colors.transparent,
+                              theme.colorScheme.secondaryContainer,
                             ).withValues(alpha: 0.5),
                             trailingRaw: const MembershipCard(displayName: false),
                           );
@@ -251,7 +254,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                           padding: const EdgeInsets.all(12.0),
                           child: Text(
                             lang.SIGN_IN_YOU_DONT_HAVE_ACCOUNT,
-                            style: context.textTheme.displayLarge,
+                            style: textTheme.displayLarge,
                           ),
                         )
                     ],

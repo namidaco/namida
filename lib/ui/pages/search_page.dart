@@ -96,6 +96,8 @@ class SearchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return BackgroundWrapper(
       child: NamidaTabView(
         initialIndex: switch (ScrollSearchController.inst.currentSearchType.value) {
@@ -142,7 +144,7 @@ class SearchPage extends StatelessWidget {
                           return NamidaOpacity(
                             opacity: isForcelyEnabled ? 0.6 : 1.0,
                             child: NamidaInkWell(
-                              bgColor: isActive ? context.theme.colorScheme.secondary.withValues(alpha: 0.12) : null,
+                              bgColor: isActive ? theme.colorScheme.secondary.withValues(alpha: 0.12) : null,
                               borderRadius: 8.0,
                               onTap: () async {
                                 if (isForcelyEnabled) return;
@@ -158,7 +160,7 @@ class SearchPage extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                  color: context.theme.colorScheme.secondary.withValues(alpha: 0.7),
+                                  color: theme.colorScheme.secondary.withValues(alpha: 0.7),
                                   width: 1.5,
                                 ),
                               ),
@@ -166,16 +168,16 @@ class SearchPage extends StatelessWidget {
                                 children: [
                                   Text(
                                     e.toText(),
-                                    style: context.textTheme.displayMedium?.copyWith(
-                                      color: context.theme.colorScheme.secondary.withValues(alpha: 0.7),
+                                    style: textTheme.displayMedium?.copyWith(
+                                      color: theme.colorScheme.secondary.withValues(alpha: 0.7),
                                     ),
                                   ),
                                   const SizedBox(width: 8.0),
                                   NamidaCheckMark(
                                     size: 12.0,
                                     active: isActive,
-                                    activeColor: context.theme.colorScheme.secondary.withValues(alpha: 0.7),
-                                    inactiveColor: context.theme.colorScheme.secondary.withValues(alpha: 0.7),
+                                    activeColor: theme.colorScheme.secondary.withValues(alpha: 0.7),
+                                    inactiveColor: theme.colorScheme.secondary.withValues(alpha: 0.7),
                                   ),
                                 ],
                               ),
@@ -421,8 +423,8 @@ class SearchPage extends StatelessWidget {
                                                                 isAuto ? settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull : settings.tracksSortSearch.valueR;
                                                             return Text(
                                                               (activeType?.toText() ?? '') + (isAuto ? ' (${lang.AUTO})' : ''),
-                                                              style: context.textTheme.displaySmall?.copyWith(
-                                                                color: isAuto ? null : context.theme.colorScheme.secondary,
+                                                              style: textTheme.displaySmall?.copyWith(
+                                                                color: isAuto ? null : theme.colorScheme.secondary,
                                                               ),
                                                             );
                                                           },
@@ -444,7 +446,7 @@ class SearchPage extends StatelessWidget {
                                                           return Icon(
                                                             activeReverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
                                                             size: 16.0,
-                                                            color: isAuto ? null : context.theme.colorScheme.secondary,
+                                                            color: isAuto ? null : theme.colorScheme.secondary,
                                                           );
                                                         },
                                                       ),
@@ -510,6 +512,8 @@ class _FolderSmallCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: context.width * 0.75),
       child: NamidaInkWell(
@@ -523,7 +527,7 @@ class _FolderSmallCard extends StatelessWidget {
           isTracksRecursive: false,
         ),
         borderRadius: 8.0,
-        bgColor: context.theme.colorScheme.secondary.withValues(alpha: 0.12),
+        bgColor: theme.colorScheme.secondary.withValues(alpha: 0.12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -545,7 +549,7 @@ class _FolderSmallCard extends StatelessWidget {
                     folder.folderName,
                     softWrap: false,
                     overflow: TextOverflow.fade,
-                    style: context.textTheme.displayMedium?.copyWith(
+                    style: textTheme.displayMedium?.copyWith(
                       fontSize: 13.0,
                     ),
                   ),
@@ -553,7 +557,7 @@ class _FolderSmallCard extends StatelessWidget {
                     tracks.length.displayTrackKeyword,
                     softWrap: false,
                     overflow: TextOverflow.fade,
-                    style: context.textTheme.displaySmall?.copyWith(
+                    style: textTheme.displaySmall?.copyWith(
                       fontSize: 12.0,
                     ),
                   ),

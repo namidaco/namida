@@ -92,6 +92,8 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final tabResult = _tabResult;
     final displaySortChips = tabResult != null && tabResult.itemsSort.isNotEmpty;
 
@@ -118,7 +120,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                 ...tabResult.itemsSort.map(
                   (s) => NamidaInkWell(
                     borderRadius: 10.0,
-                    bgColor: _currentSort?.title == s.title ? context.theme.colorScheme.secondaryContainer : context.theme.cardColor.withValues(alpha: 0.5),
+                    bgColor: _currentSort?.title == s.title ? theme.colorScheme.secondaryContainer : theme.cardColor.withValues(alpha: 0.5),
                     margin: const EdgeInsets.symmetric(horizontal: 4.0),
                     padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                     onTap: () async {
@@ -143,7 +145,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                     },
                     child: Text(
                       s.title,
-                      style: context.textTheme.displayMedium,
+                      style: textTheme.displayMedium,
                     ),
                   ),
                 ),
@@ -190,7 +192,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                 child: Center(
                                   child: Text(
                                     lang.ERROR,
-                                    style: context.textTheme.displayLarge,
+                                    style: textTheme.displayLarge,
                                   ),
                                 ),
                               )
@@ -236,7 +238,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                               Expanded(
                                                 child: Text(
                                                   headerTitle,
-                                                  style: context.textTheme.displayMedium,
+                                                  style: textTheme.displayMedium,
                                                   maxLines: 1,
                                                   overflow: TextOverflow.ellipsis,
                                                 ),

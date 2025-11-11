@@ -248,6 +248,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final tracksToAdd = widget.tracksToAdd;
     final isInsideDialog = tracksToAdd != null;
     final enableHero = !isInsideDialog;
@@ -325,7 +326,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                       //     rx: PlaylistController.inst.playlistsMap,
                                       //     builder: (context, playlistsMap) => Text(
                                       //       playlistsMap.length.displayPlaylistKeyword,
-                                      //       style: context.textTheme.displayLarge,
+                                      //       style: textTheme.displayLarge,
                                       //       maxLines: 2,
                                       //       overflow: TextOverflow.ellipsis,
                                       //     ),
@@ -574,7 +575,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                             child: NamidaBlurryContainer(
                                                               child: Text(
                                                                 extraText,
-                                                                style: context.textTheme.displaySmall?.copyWith(
+                                                                style: textTheme.displaySmall?.copyWith(
                                                                   fontSize: 12.0,
                                                                   fontWeight: FontWeight.bold,
                                                                 ),

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:nampack/extensions/double_ext.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:namida/class/route.dart';
@@ -20,6 +19,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/utils.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';

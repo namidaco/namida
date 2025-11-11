@@ -112,6 +112,7 @@ class _AccountHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return ObxO(
       rx: YoutubeAccountController.current.activeAccountChannel,
       builder: (context, acc) {
@@ -143,13 +144,13 @@ class _AccountHeader extends StatelessWidget {
                     if (showTitle)
                       Text(
                         title,
-                        style: context.textTheme.displayMedium,
+                        style: textTheme.displayMedium,
                       ),
                     if (showTitle || showHandler) const SizedBox(height: 2.0),
                     if (showHandler)
                       Text(
                         acc.handler,
-                        style: context.textTheme.displaySmall,
+                        style: textTheme.displaySmall,
                       ),
                   ],
                 ),

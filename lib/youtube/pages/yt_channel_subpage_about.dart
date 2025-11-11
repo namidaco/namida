@@ -87,6 +87,8 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final aboutResult = _aboutResult;
     const dividerContainer = NamidaContainerDivider(
       margin: EdgeInsets.symmetric(horizontal: 32.0, vertical: 12.0),
@@ -97,14 +99,14 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: _isLoadingInitial
             ? ThreeArchedCircle(
-                color: context.theme.colorScheme.secondaryContainer,
+                color: theme.colorScheme.secondaryContainer,
                 size: 64.0,
               )
             : aboutResult == null
                 ? Center(
                     child: Text(
                       lang.ERROR,
-                      style: context.textTheme.displayLarge,
+                      style: textTheme.displayLarge,
                     ),
                   )
                 : SuperListView(
@@ -133,11 +135,11 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
                             },
                             margin: const EdgeInsets.symmetric(vertical: 4.0),
                             padding: const EdgeInsets.symmetric(vertical: 10.0),
-                            bgColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.01),
+                            bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.01),
                             decoration: BoxDecoration(
                               border: Border.all(
                                 width: 1.5,
-                                color: context.theme.colorScheme.secondary.withValues(alpha: 0.2),
+                                color: theme.colorScheme.secondary.withValues(alpha: 0.2),
                               ),
                             ),
                             borderRadius: 10.0,
@@ -168,19 +170,19 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
                                     children: [
                                       Text(
                                         e.title,
-                                        style: context.textTheme.displayMedium?.copyWith(
+                                        style: textTheme.displayMedium?.copyWith(
                                           fontSize: 15.0,
                                           color: Color.alphaBlend(
-                                            context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.5),
-                                            context.theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                            theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.5),
+                                            theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                           ),
                                         ),
                                       ),
                                       Text(
                                         e.linkText,
-                                        style: context.textTheme.displaySmall?.copyWith(
+                                        style: textTheme.displaySmall?.copyWith(
                                           fontSize: 11.5,
-                                          // color: context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
+                                          // color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
                                         ),
                                       ),
                                     ],
@@ -194,7 +196,7 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
                       ),
                       dividerContainer,
                       NamidaInkWell(
-                        bgColor: context.theme.cardColor.withValues(alpha: 0.5),
+                        bgColor: theme.cardColor.withValues(alpha: 0.5),
                         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
                         child: Column(
                           children: [
@@ -252,23 +254,25 @@ class _SmolInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (title == null) return const SizedBox();
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     Widget child = Row(
       children: [
         const SizedBox(width: 12.0),
         Icon(
           icon,
           size: 20.0,
-          color: context.theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
         ),
         const SizedBox(width: 12.0),
         Expanded(
           child: Text(
             title!,
-            style: context.textTheme.displayMedium?.copyWith(
+            style: textTheme.displayMedium?.copyWith(
               fontSize: 15.0,
               color: Color.alphaBlend(
-                context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.3),
-                context.theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.3),
+                theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ),

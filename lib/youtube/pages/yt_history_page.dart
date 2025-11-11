@@ -39,18 +39,20 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     const cardExtent = Dimensions.youtubeCardItemExtent;
     const dayHeaderExtent = kYoutubeHistoryDayHeaderHeightWithPadding;
 
     const dayHeaderHeight = kYoutubeHistoryDayHeaderHeight;
-    final dayHeaderBgColor = Color.alphaBlend(context.theme.cardColor.withAlpha(100), context.theme.scaffoldBackgroundColor);
+    final dayHeaderBgColor = Color.alphaBlend(theme.cardColor.withAlpha(100), theme.scaffoldBackgroundColor);
     final dayHeaderSideColor = CurrentColor.inst.color;
-    final dayHeaderShadowColor = Color.alphaBlend(context.theme.shadowColor.withAlpha(160), context.theme.scaffoldBackgroundColor).withValues(alpha: 0.4);
+    final dayHeaderShadowColor = Color.alphaBlend(theme.shadowColor.withAlpha(160), theme.scaffoldBackgroundColor).withValues(alpha: 0.4);
 
     final daysLength = historyDays.length;
 
-    final highlightColor = context.theme.colorScheme.onSurface.withAlpha(40);
-    final smallTextStyle = context.textTheme.displaySmall?.copyWith(fontSize: 12.0);
+    final highlightColor = theme.colorScheme.onSurface.withAlpha(40);
+    final smallTextStyle = textTheme.displaySmall?.copyWith(fontSize: 12.0);
 
     final yearsRow = getYearsRowWidget(context, _onYearTap);
 

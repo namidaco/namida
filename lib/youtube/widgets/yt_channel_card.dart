@@ -33,6 +33,8 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final channel = widget.channel;
     final thumbnailSize = widget.thumbnailSize;
     const verticalPadding = 8.0;
@@ -66,19 +68,19 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
     );
     final titleTextWidget = Text(
       channel?.title ?? '',
-      style: mininmalCard ? context.textTheme.displayMedium : context.textTheme.displayLarge,
+      style: mininmalCard ? textTheme.displayMedium : textTheme.displayLarge,
       maxLines: mininmalCard ? 1 : 2,
       overflow: TextOverflow.ellipsis,
     );
     final subtitleTextWidget = Text(
       subscribersCount == null ? '' : "${subscribersCount.formatDecimalShort()} ${subscribersCount < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS}",
-      style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
+      style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
       maxLines: mininmalCard ? 1 : 2,
       overflow: TextOverflow.ellipsis,
     );
     return NamidaInkWell(
       margin: mininmalCard ? const EdgeInsets.symmetric(horizontal: 4.0) : const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-      bgColor: bgColor?.withValues(alpha: 0.12) ?? context.theme.cardColor,
+      bgColor: bgColor?.withValues(alpha: 0.12) ?? theme.cardColor,
       animationDurationMS: 300,
       borderRadius: mininmalCard ? 16.0 : 20.0,
       onTap: () {

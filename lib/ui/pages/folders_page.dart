@@ -64,8 +64,10 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final ScrollController scrollController = tab.scrollController;
-    final highlighedColor = context.theme.colorScheme.onSurface.withAlpha(40);
+    final highlighedColor = theme.colorScheme.onSurface.withAlpha(40);
     const scrollToIconSize = 24.0;
     const scrollToiconBottomPaddingSliver = SliverPadding(padding: EdgeInsets.only(bottom: scrollToIconSize * 2));
     return BackgroundWrapper(
@@ -93,7 +95,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                     borderR: 16.0,
                                     icon: isHome ? Broken.home_2 : Broken.folder_2,
                                     title: currentFolder?.formattedPath() ?? lang.HOME,
-                                    titleStyle: context.textTheme.displaySmall,
+                                    titleStyle: textTheme.displaySmall,
                                     onTap: () => foldersController.stepOut(),
                                     trailingRaw: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -200,7 +202,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                               rx: foldersController.currentFolder,
                               builder: (context, currentFolder) => Text(
                                 currentFolder?.formattedPath() ?? lang.HOME,
-                                style: context.textTheme.displaySmall,
+                                style: textTheme.displaySmall,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -277,7 +279,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                         right: (Dimensions.inst.shouldHideFABR ? 0.0 : kFABSize) + 12.0 + 8.0,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: context.theme.scaffoldBackgroundColor,
+                            color: theme.scaffoldBackgroundColor,
                             shape: BoxShape.circle,
                           ),
                           child: _SmolIconFolderScroll(

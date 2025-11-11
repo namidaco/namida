@@ -260,9 +260,10 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
-    final cardColor = context.theme.cardColor;
-    final borderColor = context.theme.colorScheme.secondary.withValues(alpha: 0.6);
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final cardColor = theme.cardColor;
+    final borderColor = theme.colorScheme.secondary.withValues(alpha: 0.6);
 
     return BackgroundWrapper(
       child: Stack(
@@ -282,13 +283,13 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                             children: [
                               ThreeArchedCircle(
                                 size: 56.0,
-                                color: context.theme.colorScheme.secondary,
+                                color: theme.colorScheme.secondary,
                               ),
                               ObxO(
                                 rx: _subLoadingProgress,
                                 builder: (context, subProgress) => Text(
                                   "${(subProgress * 100).toStringAsFixed(2)}%",
-                                  style: context.textTheme.displaySmall,
+                                  style: textTheme.displaySmall,
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -312,8 +313,8 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                     padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
                                     child: Text(
                                       val,
-                                      style: context.textTheme.displaySmall?.copyWith(
-                                        color: context.textTheme.displaySmall?.color?.withValues(alpha: opacity),
+                                      style: textTheme.displaySmall?.copyWith(
+                                        color: textTheme.displaySmall?.color?.withValues(alpha: opacity),
                                       ),
                                     ),
                                   );
@@ -353,7 +354,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                               (context) {
                                 final suggestion = _missingTracksSuggestions[path];
                                 final isSelected = _selectedTracksToUpdate[path] == true;
-                                final leftColor = context.theme.colorScheme.secondary.withValues(alpha: 0.3);
+                                final leftColor = theme.colorScheme.secondary.withValues(alpha: 0.3);
                                 return NamidaInkWell(
                                   animationDurationMS: 300,
                                   borderRadius: 12.0,
@@ -448,7 +449,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                           padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
                                           child: Text(
                                             "${index + 1}",
-                                            style: context.textTheme.displaySmall,
+                                            style: textTheme.displaySmall,
                                           ),
                                         ),
                                       )
@@ -471,10 +472,10 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                 ? DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                      color: context.theme.cardColor,
+                      color: theme.cardColor,
                       boxShadow: [
                         BoxShadow(
-                          color: context.theme.shadowColor,
+                          color: theme.shadowColor,
                           blurRadius: 6.0,
                           offset: const Offset(0, 4.0),
                         ),
@@ -484,7 +485,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                       padding: const EdgeInsets.all(12.0),
                       child: ThreeArchedCircle(
                         size: 36.0,
-                        color: context.theme.colorScheme.secondary,
+                        color: theme.colorScheme.secondary,
                       ),
                     ),
                   )
@@ -497,7 +498,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                           return FloatingActionButton.small(
                             heroTag: 'indexer_missing_tracks_fab_hero_small',
                             tooltip: lang.SELECT_ALL,
-                            backgroundColor: allSelected ? CurrentColor.inst.color.withValues(alpha: 1.0) : context.theme.disabledColor.withValues(alpha: 1.0),
+                            backgroundColor: allSelected ? CurrentColor.inst.color.withValues(alpha: 1.0) : theme.disabledColor.withValues(alpha: 1.0),
                             child: Icon(
                               allSelected ? Broken.tick_square : Broken.task_square,
                               color: Colors.white.withValues(alpha: 0.8),
@@ -522,7 +523,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                           final totalLength = _selectedTracksToUpdate.length;
                           return FloatingActionButton.extended(
                             heroTag: 'indexer_missing_tracks_fab_hero_extended',
-                            backgroundColor: (totalLength <= 0 ? context.theme.disabledColor : CurrentColor.inst.color).withValues(alpha: 1.0),
+                            backgroundColor: (totalLength <= 0 ? theme.disabledColor : CurrentColor.inst.color).withValues(alpha: 1.0),
                             extendedPadding: const EdgeInsets.symmetric(horizontal: 12.0),
                             onPressed: () async {
                               final isUpdating = false.obs;
@@ -566,7 +567,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                               const SizedBox(width: 12.0),
                               Text(
                                 "${lang.UPDATE} ($totalLength)",
-                                style: context.textTheme.displayMedium?.copyWith(
+                                style: textTheme.displayMedium?.copyWith(
                                   color: Colors.white.withValues(alpha: 0.8),
                                 ),
                               ),

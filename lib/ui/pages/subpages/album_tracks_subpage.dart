@@ -35,6 +35,8 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final name = tracks.album;
     final displayTrackNumberinAlbumPage = settings.displayTrackNumberinAlbumPage.value;
     return BackgroundWrapper(
@@ -139,7 +141,7 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                                           children: [
                                             DecoratedBox(
                                               decoration: BoxDecoration(
-                                                color: Color.alphaBlend(context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.5), context.theme.scaffoldBackgroundColor),
+                                                color: Color.alphaBlend(theme.colorScheme.secondaryContainer.withValues(alpha: 0.5), theme.scaffoldBackgroundColor),
                                                 borderRadius: BorderRadius.horizontal(
                                                   right: Radius.circular(6.0.multipliedRadius),
                                                 ),
@@ -158,7 +160,7 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                                                     Flexible(
                                                       child: Text(
                                                         " ${discEntry.key}",
-                                                        style: context.textTheme.displayMedium,
+                                                        style: textTheme.displayMedium,
                                                       ),
                                                     ),
                                                     SizedBox(width: 12.0),
@@ -171,7 +173,7 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                                                 fit: BoxFit.scaleDown,
                                                 child: DecoratedBox(
                                                   decoration: BoxDecoration(
-                                                    color: context.theme.scaffoldBackgroundColor,
+                                                    color: theme.scaffoldBackgroundColor,
                                                     borderRadius: BorderRadius.only(
                                                       bottomLeft: Radius.circular(6.0.multipliedRadius),
                                                     ),
@@ -187,7 +189,7 @@ class AlbumTracksPage extends StatelessWidget with NamidaRouteWidget {
                                                             discEntry.value.displayTrackKeyword,
                                                             discEntry.value.totalDurationFormatted,
                                                           ].join(' • '),
-                                                          style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                                          style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
                                                         ),
                                                         SizedBox(width: 12.0),
                                                       ],

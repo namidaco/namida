@@ -1258,6 +1258,8 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final borderR = widget.borderRadius.multipliedRadius;
     final borderRS = (widget.borderRadius - 2.0).withMinimum(0).multipliedRadius;
     return TextFormField(
@@ -1270,7 +1272,7 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
       maxLines: widget.maxLines,
       autovalidateMode: widget.validatorMode,
       keyboardType: widget.keyboardType ?? (widget.isNumeric ? TextInputType.number : null),
-      style: context.textTheme.displaySmall?.copyWith(fontSize: 14.5, fontWeight: FontWeight.w600),
+      style: textTheme.displaySmall?.copyWith(fontSize: 14.5, fontWeight: FontWeight.w600),
       // onTapOutside: (event) => FocusScope.of(context).unfocus(), // inconvenient
       onChanged: (value) {
         if (widget.onChanged != null) widget.onChanged!(value);
@@ -1289,11 +1291,11 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
         suffixIcon: Icon(widget.icon, size: 18.0),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRS),
-          borderSide: BorderSide(color: context.theme.colorScheme.onSurface.withAlpha(100), width: 2.0),
+          borderSide: BorderSide(color: theme.colorScheme.onSurface.withAlpha(100), width: 2.0),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderR),
-          borderSide: BorderSide(color: context.theme.colorScheme.onSurface.withAlpha(100), width: 1.0),
+          borderSide: BorderSide(color: theme.colorScheme.onSurface.withAlpha(100), width: 1.0),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderR),
@@ -1304,7 +1306,7 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
           borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
         ),
         hintText: widget.hintText,
-        hintStyle: context.textTheme.displaySmall?.copyWith(fontSize: 14.5, color: context.textTheme.displaySmall?.color?.withAlpha(120)),
+        hintStyle: textTheme.displaySmall?.copyWith(fontSize: 14.5, color: textTheme.displaySmall?.color?.withAlpha(120)),
       ),
     );
   }

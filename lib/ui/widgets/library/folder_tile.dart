@@ -87,11 +87,13 @@ class _FolderTileState extends State<FolderTile> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final double iconSize = (settings.trackThumbnailSizeinList.value / 1.35).clampDouble(0, settings.trackListTileHeight.value);
     final double thumbSize = (settings.trackThumbnailSizeinList.value / 2.6).clampDouble(0, settings.trackListTileHeight.value * 0.5);
     final extraInfo = _getFolderExtraInfo(widget.folder);
 
-    final subtitleTextStyle = context.textTheme.displaySmall?.copyWith(fontSize: 12.0);
+    final subtitleTextStyle = textTheme.displaySmall?.copyWith(fontSize: 12.0);
     final subtitleFirstPart = widget.tracks.isEmpty
         ? null
         : <Widget>[
@@ -140,7 +142,7 @@ class _FolderTileState extends State<FolderTile> {
     return Padding(
       padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin, right: Dimensions.tileBottomMargin, left: Dimensions.tileBottomMargin),
       child: NamidaInkWell(
-        bgColor: context.theme.cardColor,
+        bgColor: theme.cardColor,
         borderRadius: 10.0,
         onTap: widget.folder.navigate,
         onLongPress: _showFolderDialog,
@@ -198,24 +200,24 @@ class _FolderTileState extends State<FolderTile> {
                             children: [
                               Text(
                                 widget.folder.folderName,
-                                style: context.textTheme.displayMedium,
+                                style: textTheme.displayMedium,
                               ),
                               Text(
                                 ' - ($extraInfo)',
-                                style: context.textTheme.displaySmall,
+                                style: textTheme.displaySmall,
                               ),
                             ],
                           )
                         : Text(
                             widget.folder.folderName,
-                            style: context.textTheme.displayMedium,
+                            style: textTheme.displayMedium,
                           ),
                     if (widget.subtitle != null)
                       Text(
                         widget.subtitle!,
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
-                        style: context.textTheme.displaySmall,
+                        style: textTheme.displaySmall,
                       ),
                     if (subtitleRowChildren.isNotEmpty) ...[
                       SizedBox(height: 4.0),

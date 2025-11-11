@@ -306,6 +306,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final showSubpageInfoAtSide = Dimensions.inst.showSubpageInfoAtSideContext(context);
     final maxWidth = Dimensions.inst.availableAppContentWidth;
 
@@ -393,13 +394,13 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
           padding: const EdgeInsets.only(left: 2.0),
           child: Text(
             channelInfo?.title ?? ch.title,
-            style: context.textTheme.displayLarge,
+            style: textTheme.displayLarge,
           ),
         ),
         showSubpageInfoAtSide ? const SizedBox(height: 8.0) : const SizedBox(height: 4.0),
         Text(
           subsCountText ?? (subsCount == null ? '? ${lang.SUBSCRIBERS}' : subsCount.displaySubscribersKeywordShort),
-          style: context.textTheme.displayMedium?.copyWith(
+          style: textTheme.displayMedium?.copyWith(
             fontSize: 12.0,
           ),
           maxLines: 1,

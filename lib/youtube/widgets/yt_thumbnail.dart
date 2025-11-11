@@ -285,6 +285,7 @@ class YtThumbnailOverlayBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return Padding(
       padding: const EdgeInsets.all(2.0),
       child: NamidaBgBlurClipped(
@@ -310,7 +311,7 @@ class YtThumbnailOverlayBox extends StatelessWidget {
               if (text != null)
                 Text(
                   text!,
-                  style: context.textTheme.displaySmall?.copyWith(
+                  style: textTheme.displaySmall?.copyWith(
                     color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w600,
                   ),

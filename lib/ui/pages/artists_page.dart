@@ -88,6 +88,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final scrollController = LibraryTab.artists.scrollController;
     final countPerRowResolved = countPerRow.resolve(context);
     final artistTypeColor = context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.8);
@@ -148,7 +149,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                                     const SizedBox(width: 4.0),
                                     Text(
                                       artistLeftText,
-                                      style: context.textTheme.displayMedium?.copyWith(
+                                      style: textTheme.displayMedium?.copyWith(
                                         color: artistTypeColor,
                                       ),
                                     ),

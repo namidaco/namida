@@ -36,11 +36,13 @@ class MultiArtworkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return Container(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
       decoration: BoxDecoration(
-        color: context.theme.cardColor,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12.0.multipliedRadius),
       ),
       child: LayoutBuilder(
@@ -80,7 +82,7 @@ class MultiArtworkCard extends StatelessWidget {
                             tag: 'line1_$heroTag',
                             child: Text(
                               name.overflow,
-                              style: context.textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.38)),
+                              style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.38)),
                               softWrap: false,
                               overflow: TextOverflow.fade,
                             ),
@@ -93,7 +95,7 @@ class MultiArtworkCard extends StatelessWidget {
                               tracks.displayTrackKeyword,
                               tracks.totalDurationFormatted,
                             ].join(' - '),
-                            style: context.textTheme.displaySmall?.copyWith(
+                            style: textTheme.displaySmall?.copyWith(
                               fontWeight: FontWeight.w400,
                               fontSize: getFontSize(0.28),
                             ),

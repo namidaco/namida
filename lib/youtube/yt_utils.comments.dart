@@ -284,7 +284,7 @@ class _YTUtilsCommentActions {
                   const SizedBox(width: 12.0),
                   Text(
                     author,
-                    style: nampack.textTheme.displayMedium,
+                    style: namida.textTheme.displayMedium,
                   ),
                 ],
               ),
@@ -295,7 +295,7 @@ class _YTUtilsCommentActions {
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   content,
-                  style: nampack.textTheme.displayMedium,
+                  style: namida.textTheme.displayMedium,
                 ),
               ),
             ],

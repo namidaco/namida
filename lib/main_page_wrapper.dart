@@ -162,6 +162,7 @@ class NamidaDrawer extends StatelessWidget {
   void toggleDrawer() => NamidaNavigator.inst.toggleDrawer();
 
   static void openSleepTimerDialog(BuildContext context) {
+    final textTheme = context.textTheme;
     final sleepConfig = Player.inst.sleepTimerConfig.value;
     final minutes = sleepConfig.sleepAfterMin.obs;
     final tracks = sleepConfig.sleepAfterItems.obs;
@@ -227,7 +228,7 @@ class NamidaDrawer extends StatelessWidget {
                 ),
                 Text(
                   lang.OR,
-                  style: context.textTheme.displayMedium,
+                  style: textTheme.displayMedium,
                 ),
                 // tracks
                 ObxO(
@@ -396,6 +397,7 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
 
     final appBarTheme = AppBarTheme.of(context);
     final theme = context.theme;
+    final textTheme = theme.textTheme;
     final colorscheme = theme.colorScheme;
     final brightness = theme.brightness;
     // final backgroundColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor, Colors.white.withValues(alpha: 0.25));
@@ -450,7 +452,7 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                               const SizedBox(width: 4.0),
                               Text(
                                 title,
-                                style: context.textTheme.displayMedium?.copyWith(
+                                style: textTheme.displayMedium?.copyWith(
                                   color: logoTextColor,
                                   fontSize: 14.0,
                                 ),

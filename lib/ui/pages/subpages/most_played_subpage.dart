@@ -52,6 +52,8 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     required MostPlayedTimeRange mptr,
     Widget? Function(Color? textColor)? trailing,
   }) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final dateText = dateCustom == null || dateCustom == DateRange.dummy()
         ? null
         : "${dateCustom.oldest.millisecondsSinceEpoch.dateFormattedOriginalNoYears(dateCustom.newest)} → ${dateCustom.newest.millisecondsSinceEpoch.dateFormattedOriginalNoYears(dateCustom.oldest)}";
@@ -72,14 +74,14 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
               duration: const Duration(milliseconds: 250),
               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
               decoration: BoxDecoration(
-                color: isActive ? CurrentColor.inst.currentColorScheme.withAlpha(160) : context.theme.cardColor,
+                color: isActive ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
                 borderRadius: BorderRadius.circular(8.0.multipliedRadius),
               ),
               child: Row(
                 children: [
                   Text(
                     dateText ?? mptr.toText(),
-                    style: context.textTheme.displaySmall?.copyWith(
+                    style: textTheme.displaySmall?.copyWith(
                       color: textColor,
                       fontSize: dateText == null ? null : 12.0,
                       fontWeight: FontWeight.w600,
@@ -99,6 +101,8 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   }
 
   Widget getChipsRow(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final mostplayedOptions = List<MostPlayedTimeRange>.from(MostPlayedTimeRange.values)..remove(MostPlayedTimeRange.custom);
 
     return Padding(
@@ -111,7 +115,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
             builder: (context, activeChip) => NamidaInkWell(
               animationDurationMS: 200,
               borderRadius: 6.0,
-              bgColor: context.theme.cardTheme.color,
+              bgColor: theme.cardTheme.color,
               padding: const EdgeInsets.all(8.0),
               decoration: BoxDecoration(
                 border: activeChip == MostPlayedTimeRange.custom ? Border.all(color: CurrentColor.inst.color) : null,
@@ -122,7 +126,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                   const SizedBox(width: 4.0),
                   Text(
                     lang.CUSTOM,
-                    style: context.textTheme.displayMedium,
+                    style: textTheme.displayMedium,
                   ),
                   const SizedBox(width: 4.0),
                   const Icon(Broken.arrow_down_2, size: 14.0),
@@ -189,10 +193,11 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final bottomWidget = getChipsRow(context);
     const bottomPadding = 0.0;
     final headerWidget = ColoredBox(
-      color: context.theme.scaffoldBackgroundColor,
+      color: theme.scaffoldBackgroundColor,
       child: header?.call(bottomWidget, bottomPadding),
     );
 

@@ -71,6 +71,8 @@ class YoutubeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     const verticalPadding = 8.0;
 
     final thumbnailHeight = this.thumbnailHeight ?? (thumbnailWidthPercentage * Dimensions.youtubeThumbnailHeight);
@@ -84,7 +86,7 @@ class YoutubeCard extends StatelessWidget {
         alignment: Alignment.bottomRight,
         children: [
           NamidaInkWell(
-            bgColor: context.theme.cardColor,
+            bgColor: theme.cardColor,
             borderRadius: borderRadius,
             onTap: onTap,
             height: thumbnailHeight + verticalPadding,
@@ -115,6 +117,7 @@ class YoutubeCard extends StatelessWidget {
                 const SizedBox(width: 8.0),
                 Expanded(
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -126,7 +129,7 @@ class YoutubeCard extends StatelessWidget {
                         shimmerEnabled: shimmerEnabled && title == '',
                         child: Text(
                           title,
-                          style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0 * fontMultiplier),
+                          style: textTheme.displayMedium?.copyWith(fontSize: 13.0 * fontMultiplier),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -139,7 +142,7 @@ class YoutubeCard extends StatelessWidget {
                         shimmerEnabled: shimmerEnabled && subtitle == '',
                         child: Text(
                           subtitle,
-                          style: context.textTheme.displaySmall?.copyWith(
+                          style: textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.w400,
                             fontSize: 13.0 * fontMultiplier,
                           ),
@@ -183,7 +186,7 @@ class YoutubeCard extends StatelessWidget {
                                     width: double.infinity,
                                     child: Text(
                                       thirdLineText,
-                                      style: context.textTheme.displaySmall?.copyWith(
+                                      style: textTheme.displaySmall?.copyWith(
                                         fontWeight: FontWeight.w400,
                                         fontSize: 11.0 * fontMultiplier,
                                       ),
@@ -295,6 +298,8 @@ class YoutubeCardMinimal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final thumbnailHeight = this.thumbnailHeight ?? (thumbnailWidthPercentage * Dimensions.youtubeThumbnailHeight);
     final thumbnailWidth = this.thumbnailWidth ?? (isCircle ? thumbnailHeight : thumbnailHeight * 16 / 9);
 
@@ -304,7 +309,7 @@ class YoutubeCardMinimal extends StatelessWidget {
         alignment: Alignment.topRight,
         children: [
           NamidaInkWell(
-            bgColor: context.theme.cardColor,
+            bgColor: theme.cardColor,
             borderRadius: borderRadius,
             onTap: onTap,
             width: thumbnailWidth,
@@ -346,7 +351,7 @@ class YoutubeCardMinimal extends StatelessWidget {
                         shimmerEnabled: shimmerEnabled && title == '',
                         child: Text(
                           title,
-                          style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0 * fontMultiplier),
+                          style: textTheme.displayMedium?.copyWith(fontSize: 13.0 * fontMultiplier),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -359,7 +364,7 @@ class YoutubeCardMinimal extends StatelessWidget {
                         shimmerEnabled: shimmerEnabled && subtitle == '',
                         child: Text(
                           subtitle,
-                          style: context.textTheme.displaySmall?.copyWith(
+                          style: textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.w400,
                             fontSize: 13.0 * fontMultiplier,
                           ),

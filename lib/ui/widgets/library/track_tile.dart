@@ -34,12 +34,13 @@ class TrackTilePropertiesProvider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     var queueSource = configs.queueSource;
     final comingFromQueue = queueSource == QueueSource.playerQueue;
     final canHaveDuplicates = queueSource.canHaveDuplicates;
 
-    final backgroundColorNotPlaying = context.theme.cardTheme.color ?? Colors.transparent;
-    final selectionColorLayer = context.theme.focusColor;
+    final backgroundColorNotPlaying = theme.cardTheme.color ?? Colors.transparent;
+    final selectionColorLayer = theme.focusColor;
 
     final listenToTopHistoryItems =
         settings.trackItem.values.any((element) => element == TrackTileItem.listenCount || element == TrackTileItem.latestListenDate || element == TrackTileItem.firstListenDate);
@@ -266,6 +267,8 @@ class TrackTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final queueSource = properties.configs.queueSource;
     final track = _tr;
     final trackWithDate = _twd;
@@ -297,7 +300,7 @@ class TrackTile extends StatelessWidget {
     if (trackOrTwd.track.toTrackExtOrNull() == null) {
       threeLinesColumn = Text(
         trackOrTwd.track.path,
-        style: context.textTheme.displaySmall?.copyWith(
+        style: textTheme.displaySmall?.copyWith(
           color: textColor?.withAlpha(170),
         ),
       );
@@ -321,7 +324,7 @@ class TrackTile extends StatelessWidget {
               row1Text,
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
-              style: context.textTheme.displayMedium!.copyWith(
+              style: textTheme.displayMedium!.copyWith(
                 color: textColor?.withAlpha(170),
               ),
             ),
@@ -330,7 +333,7 @@ class TrackTile extends StatelessWidget {
           if (row2Text != '')
             Text(
               row2Text,
-              style: context.textTheme.displaySmall?.copyWith(
+              style: textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.w500,
                 color: textColor?.withAlpha(140),
               ),
@@ -342,7 +345,7 @@ class TrackTile extends StatelessWidget {
           if (row3Text != null && row3Text != '')
             Text(
               row3Text,
-              style: context.textTheme.displaySmall?.copyWith(
+              style: textTheme.displaySmall?.copyWith(
                 color: textColor?.withAlpha(130),
               ),
               maxLines: 1,
@@ -361,7 +364,7 @@ class TrackTile extends StatelessWidget {
         ? Icon(
             Broken.video,
             size: 12.0,
-            color: textColor?.withAlpha(100) ?? context.textTheme.displaySmall?.color?.withAlpha(100),
+            color: textColor?.withAlpha(100) ?? textTheme.displaySmall?.color?.withAlpha(100),
           )
         : null;
 
@@ -450,7 +453,7 @@ class TrackTile extends StatelessWidget {
                                             borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
                                             child: Text(
                                               (track.trackNo).toString(),
-                                              style: context.textTheme.displaySmall,
+                                              style: textTheme.displaySmall,
                                             ),
                                           ),
                                         ),
@@ -461,7 +464,7 @@ class TrackTile extends StatelessWidget {
                                           child: Container(
                                             padding: const EdgeInsets.all(2.0),
                                             decoration: BoxDecoration(
-                                              color: context.theme.colorScheme.surface.withAlpha(160),
+                                              color: theme.colorScheme.surface.withAlpha(160),
                                               borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                                             ),
                                             child: const Icon(
@@ -499,7 +502,7 @@ class TrackTile extends StatelessWidget {
                               if (rightItem1Text != '')
                                 Text(
                                   rightItem1Text,
-                                  style: context.textTheme.displaySmall?.copyWith(
+                                  style: textTheme.displaySmall?.copyWith(
                                     fontWeight: FontWeight.w500,
                                     color: textColor?.withAlpha(170),
                                   ),
@@ -508,7 +511,7 @@ class TrackTile extends StatelessWidget {
                               if (rightItem2Text != '')
                                 Text(
                                   rightItem2Text,
-                                  style: context.textTheme.displaySmall?.copyWith(
+                                  style: textTheme.displaySmall?.copyWith(
                                     fontWeight: FontWeight.w500,
                                     color: textColor?.withAlpha(170),
                                   ),
@@ -518,7 +521,7 @@ class TrackTile extends StatelessWidget {
                                 NamidaLocalLikeButton(
                                   track: track,
                                   size: 22.0,
-                                  color: textColor?.withAlpha(140) ?? context.textTheme.displayMedium?.color?.withAlpha(140),
+                                  color: textColor?.withAlpha(140) ?? textTheme.displayMedium?.color?.withAlpha(140),
                                 ),
                             ],
                           ),
@@ -560,7 +563,7 @@ class TrackTile extends StatelessWidget {
           Positioned.fill(
             child: IgnorePointer(
               child: ColoredBox(
-                color: context.theme.scaffoldBackgroundColor.withValues(alpha: fadeOpacity),
+                color: theme.scaffoldBackgroundColor.withValues(alpha: fadeOpacity),
               ),
             ),
           ),

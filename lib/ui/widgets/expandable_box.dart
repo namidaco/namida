@@ -77,6 +77,7 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final leftWidgets = widget.leftWidgets;
     return NamidaHero(
       enabled: widget.enableHero,
@@ -116,7 +117,7 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                                   if (widget.leftText.isNotEmpty)
                                     Text(
                                       widget.leftText,
-                                      style: context.textTheme.displayMedium,
+                                      style: textTheme.displayMedium,
                                       softWrap: false,
                                       overflow: TextOverflow.fade,
                                     ),
@@ -242,6 +243,7 @@ class SortByMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Row(
       children: [
         TextButton(
@@ -250,7 +252,7 @@ class SortByMenu extends StatelessWidget {
           ),
           child: NamidaButtonText(title, style: const TextStyle(fontSize: 14.5)),
           onPressed: () => showMenu(
-            color: context.theme.appBarTheme.backgroundColor,
+            color: theme.appBarTheme.backgroundColor,
             context: context,
             position: RelativeRect.fromLTRB(context.width, kExpandableBoxHeight + 8.0, 0, 0),
             constraints: BoxConstraints(maxHeight: context.height * 0.6),

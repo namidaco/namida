@@ -51,13 +51,15 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
     required IconData icon,
     required bool Function(YTLocalSearchSortType sort) enabled,
   }) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return NamidaInkWell(
       animationDurationMS: 100,
       borderRadius: 8.0,
-      bgColor: context.theme.cardTheme.color,
+      bgColor: theme.cardTheme.color,
       padding: const EdgeInsets.all(8.0),
       decoration: BoxDecoration(
-        border: enabled(sort) ? Border.all(color: context.theme.colorScheme.primary) : null,
+        border: enabled(sort) ? Border.all(color: theme.colorScheme.primary) : null,
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
       ),
       onTap: () {
@@ -71,7 +73,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
           const SizedBox(width: 4.0),
           Text(
             title,
-            style: context.textTheme.displayMedium,
+            style: textTheme.displayMedium,
           ),
           const SizedBox(width: 4.0),
           const Icon(Broken.arrow_down_2, size: 14.0),

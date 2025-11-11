@@ -249,9 +249,10 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     Widget headerTitle = Text(
       widget.title,
-      style: context.textTheme.displayLarge?.copyWith(fontSize: 28.0),
+      style: textTheme.displayLarge?.copyWith(fontSize: 28.0),
     );
     if (widget.isSortable) {
       headerTitle = Column(
@@ -303,7 +304,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                       rx: _currentSort!,
                       builder: (context, sort) => Text(
                         sort?.title ?? selectedSort?.title ?? '?',
-                        style: context.textTheme.displaySmall?.copyWith(
+                        style: textTheme.displaySmall?.copyWith(
                           color: context.theme.colorScheme.secondary,
                         ),
                       ),
@@ -423,7 +424,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                               children: [
                                 Text(
                                   errorMessage,
-                                  style: context.textTheme.displayLarge,
+                                  style: textTheme.displayLarge,
                                   textAlign: TextAlign.center,
                                 ),
                                 if (button != null) ...[

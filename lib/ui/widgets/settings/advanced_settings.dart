@@ -69,6 +69,8 @@ class AdvancedSettings extends SettingSubpageProvider {
       };
 
   void _onPerformanceTileTap(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     const artworkPartsMultiplier = 100;
     bool changedArtworkCacheM = false; // to rebuild wheel slider
     NamidaNavigator.inst.navigateDialog(
@@ -104,7 +106,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                               margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
                               padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
                               borderRadius: 6.0,
-                              bgColor: performanceMode == e ? context.theme.cardColor : null,
+                              bgColor: performanceMode == e ? theme.cardColor : null,
                               onTap: onTap,
                               child: Row(
                                 children: [
@@ -115,7 +117,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                                   const SizedBox(width: 6.0),
                                   Text(
                                     e.toText(),
-                                    style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                                    style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
                                   ),
                                 ],
                               ),
@@ -129,7 +131,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                     rx: settings.performanceMode,
                     builder: (context, performanceMode) => Text(
                       performanceMode.toText(),
-                      style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
+                      style: textTheme.displaySmall?.copyWith(color: theme.colorScheme.onSurface.withAlpha(200)),
                       textAlign: TextAlign.end,
                     ),
                   ),
@@ -211,6 +213,8 @@ class AdvancedSettings extends SettingSubpageProvider {
   }
 
   Widget getPerformanceTile(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return getItemWrapper(
       key: _AdvancedSettingKeys.performanceMode,
       child: CustomListTile(
@@ -221,7 +225,7 @@ class AdvancedSettings extends SettingSubpageProvider {
           rx: settings.performanceMode,
           builder: (context, performanceMode) => Text(
             performanceMode.toText(),
-            style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
+            style: textTheme.displaySmall?.copyWith(color: theme.colorScheme.onSurface.withAlpha(200)),
             textAlign: TextAlign.end,
           ),
         ),
@@ -270,6 +274,7 @@ class AdvancedSettings extends SettingSubpageProvider {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return SettingsCard(
       title: lang.ADVANCED_SETTINGS,
       subtitle: lang.ADVANCED_SETTINGS_SUBTITLE,
@@ -412,7 +417,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                               const SizedBox(width: 8.0),
                               Obx((context) => Text(
                                     '${lang.TOTAL_TRACKS}: ${totalTracksToBeRemoved.valueR}',
-                                    style: context.textTheme.displayMedium,
+                                    style: textTheme.displayMedium,
                                   )),
                             ],
                           ),

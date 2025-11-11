@@ -201,6 +201,7 @@ class BackupAndRestore extends SettingSubpageProvider {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return SettingsCard(
       title: lang.BACKUP_AND_RESTORE,
       subtitle: lang.BACKUP_AND_RESTORE_SUBTITLE,
@@ -298,7 +299,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                     children: [
                                       Text(
                                         title,
-                                        style: context.textTheme.displayMedium,
+                                        style: textTheme.displayMedium,
                                       ),
                                       FittedBox(
                                         fit: BoxFit.fitWidth,
@@ -310,7 +311,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                               opacity: isLocalIconChecked ? 1.0 : 0.5,
                                               child: Text(
                                                 "(${localSize.fileSizeFormatted})${localUnknown ? '?' : ''}",
-                                                style: context.textTheme.displaySmall,
+                                                style: textTheme.displaySmall,
                                               ),
                                             ),
                                             if (ytSize > 0 || ytUnknown)
@@ -319,7 +320,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                                 opacity: isYoutubeIconChecked ? 1.0 : 0.5,
                                                 child: Text(
                                                   " + (${ytSize.fileSizeFormatted})${ytUnknown ? '?' : ''}",
-                                                  style: context.textTheme.displaySmall,
+                                                  style: textTheme.displaySmall,
                                                 ),
                                               ),
                                           ],

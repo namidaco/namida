@@ -895,7 +895,8 @@ extension RouteUtils on NamidaRoute {
   }
 
   Widget? toTitle(BuildContext context) {
-    Widget getTextWidget(String t) => Text(t, style: context.textTheme.titleLarge);
+    final textTheme = context.textTheme;
+    Widget getTextWidget(String t) => Text(t, style: textTheme.titleLarge);
     Widget? finalWidget;
     bool displaySettingSearch = false;
     switch (route) {

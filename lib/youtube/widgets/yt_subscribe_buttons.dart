@@ -297,6 +297,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
 
     await NamidaNavigator.inst.showSheet(
       builder: (context, bottomPadding, maxWidth, maxHeight) {
+        final textTheme = context.textTheme;
         return PopScope(
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) return;
@@ -314,7 +315,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Text(
                       '${lang.CONFIGURE}: ${lang.CHANNEL}',
-                      style: context.textTheme.displayLarge,
+                      style: textTheme.displayLarge,
                     ),
                   ),
                 ),
@@ -359,7 +360,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                         Expanded(
                           child: Text(
                             lang.GROUP,
-                            style: context.textTheme.displayLarge,
+                            style: textTheme.displayLarge,
                           ),
                         ),
                         NamidaInkWellButton(

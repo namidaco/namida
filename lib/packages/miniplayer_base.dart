@@ -318,12 +318,14 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final sAnim = getsAnim;
 
     final kStParallax = MiniPlayerController.kStParallax;
     final kSiParallax = MiniPlayerController.kSiParallax;
 
-    final onSecondary = context.theme.colorScheme.onSecondaryContainer;
+    final onSecondary = theme.colorScheme.onSecondaryContainer;
     const waveformChild = RepaintBoundary(child: WaveformMiniplayer());
 
     final topBottomMargin = 8.0.spaceY;
@@ -331,7 +333,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
     final topRightButton = _TopActionButton(
       icon: Broken.more,
       iconColor: onSecondary,
-      bgColor: context.theme.colorScheme.secondary.withValues(alpha: .2),
+      bgColor: theme.colorScheme.secondary.withValues(alpha: .2),
       onTapUp: (details) => widget.onMenuOpen(_getcurrentItem, details),
     );
 
@@ -404,7 +406,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                         }
                         return Text(
                           finalText,
-                          style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0.fontSize),
+                          style: textTheme.displaySmall?.copyWith(fontSize: 10.0.fontSize),
                         );
                       },
                     ),
@@ -419,7 +421,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                 rx: Player.inst.nowPlayingPosition,
                 builder: (context, nowPlayingPosition) => Text(
                   nowPlayingPosition.milliSecondsLabel,
-                  style: context.textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
+                  style: textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
                 ),
               ),
             ],
@@ -492,18 +494,18 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                           secondaryText: !Lyrics.inst.lyricsCanBeAvailable.valueR ? 'x' : '?',
                           iconSize: _CustomIconButton.defaultIconSize.size,
                           blurRadius: 6.0,
-                          baseIconColor: context.theme.colorScheme.onSecondaryContainer,
-                          secondaryIconColor: context.theme.colorScheme.onSecondaryContainer,
+                          baseIconColor: theme.colorScheme.onSecondaryContainer,
+                          secondaryIconColor: theme.colorScheme.onSecondaryContainer,
                         )
                       : Icon(
                           Broken.document,
                           size: 20.0.size,
-                          color: context.theme.colorScheme.onSecondaryContainer,
+                          color: theme.colorScheme.onSecondaryContainer,
                         )
                   : Icon(
                       Broken.card_slash,
                       size: 20.0.size,
-                      color: context.theme.colorScheme.onSecondaryContainer,
+                      color: theme.colorScheme.onSecondaryContainer,
                     ),
             ),
           ),
@@ -515,7 +517,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
           icon: Icon(
             Broken.row_vertical,
             size: 19.0.size,
-            color: context.theme.colorScheme.onSecondaryContainer,
+            color: theme.colorScheme.onSecondaryContainer,
           ),
         ),
         const SizedBox(width: 6.0),
@@ -574,7 +576,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                 width: context.width,
                 height: kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom,
                 decoration: BoxDecoration(
-                  color: context.theme.scaffoldBackgroundColor,
+                  color: theme.scaffoldBackgroundColor,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(12.0.multipliedRadius.br),
                   ),
@@ -710,7 +712,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                             final msToDisplay = currentDurationInMS - toSubtract;
                             return Text(
                               "$prefix ${msToDisplay.milliSecondsLabel}",
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
+                              style: textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
                             );
                           },
                         ),
@@ -760,7 +762,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                           animateMenuItems: false,
                           menuWidth: (_) => Dimensions.inst.miniplayerMaxWidth * 0.5,
                           menuBoxDecoration: BoxDecoration(
-                            color: context.theme.scaffoldBackgroundColor,
+                            color: theme.scaffoldBackgroundColor,
                             borderRadius: BorderRadius.circular(12.0.multipliedRadius.br),
                           ),
                           menuWidget: Obx(
@@ -854,7 +856,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                 duration: animationDuration,
                                 decoration: isMenuOpened.valueR
                                     ? BoxDecoration(
-                                        color: context.theme.scaffoldBackgroundColor,
+                                        color: theme.scaffoldBackgroundColor,
                                         borderRadius: BorderRadius.circular(24.0.multipliedRadius.br),
                                       )
                                     : BoxDecoration(
@@ -869,7 +871,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                         padding: EdgeInsets.symmetric(vertical: 3.0.spaceY),
                                         child: DecoratedBox(
                                           decoration: BoxDecoration(
-                                            color: context.theme.colorScheme.secondaryContainer,
+                                            color: theme.colorScheme.secondaryContainer,
                                             shape: BoxShape.circle,
                                           ),
                                           child: NamidaIconButton(
@@ -886,12 +888,12 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                                     const SizedBox(width: 12.0),
                                                     NamidaButtonText(
                                                       title,
-                                                      style: context.textTheme.displayLarge,
+                                                      style: textTheme.displayLarge,
                                                     ),
                                                     const SizedBox(width: 8.0),
                                                     NamidaButtonText(
                                                       toPercentage(value),
-                                                      style: context.textTheme.displayMedium,
+                                                      style: textTheme.displayMedium,
                                                     )
                                                   ],
                                                 );
@@ -978,7 +980,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                   decoration: BoxDecoration(
                     color: CurrentColor.inst.miniplayerColor,
                     borderRadius: BorderRadius.circular(50),
-                    //  color: Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
+                    //  color: Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
                     //   .withValues(alpha: velpy(a: .3, b: .22, c: icp)),
                   ),
                 ),
@@ -1093,11 +1095,11 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                   child: _AnimatedDecorationOrDecoration(
                                     duration: const Duration(milliseconds: kThemeAnimationDurationMS),
                                     decoration: BoxDecoration(
-                                      color: context.theme.scaffoldBackgroundColor,
+                                      color: theme.scaffoldBackgroundColor,
                                       borderRadius: borderRadius,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: context.theme.shadowColor.withValues(alpha: 0.2 + 0.1 * cp),
+                                          color: theme.shadowColor.withValues(alpha: 0.2 + 0.1 * cp),
                                           blurRadius: 20.0,
                                         )
                                       ],
@@ -1116,9 +1118,9 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                                 begin: Alignment.topCenter,
                                                 end: Alignment.bottomCenter,
                                                 colors: [
-                                                  Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(100), CurrentColor.inst.miniplayerColor)
+                                                  Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(100), CurrentColor.inst.miniplayerColor)
                                                       .withValues(alpha: velpy(a: .38, b: .28, c: icp)),
-                                                  Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
+                                                  Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
                                                       .withValues(alpha: velpy(a: .1, b: .22, c: icp)),
                                                 ],
                                               ),
@@ -1619,6 +1621,8 @@ class _TrackInfo<E, S> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final ytLikeManager = textData.ytLikeManager;
 
     final paddingAll = 12.0.space * (1 - bcp);
@@ -1649,7 +1653,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
                         padding: EdgeInsets.only(right: (32.0.spaceX + (82.0.spaceX * (1 - bcp) * (1 - qp)) + (60.0.spaceX * qp))),
                         child: InkWell(
                           onTapUp: bcp == 1 ? textData.onMenuOpen : null,
-                          highlightColor: Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor),
+                          highlightColor: Color.alphaBlend(theme.scaffoldBackgroundColor.withAlpha(20), theme.highlightColor),
                           borderRadius: BorderRadius.circular(12.0.multipliedRadius.br),
                           child: Padding(
                             padding: EdgeInsets.only(left: 8.0.spaceX * bcp),
@@ -1664,7 +1668,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                     maxLines: textData.secondLine == '' ? 2 : 1,
                                     overflow: TextOverflow.fade,
                                     softWrap: textData.secondLine.isEmpty,
-                                    style: context.textTheme.displayMedium?.copyWith(
+                                    style: textTheme.displayMedium?.copyWith(
                                       fontSize: velpy(a: 14.5.fontSize, b: 20.0.fontSize, c: p),
                                     ),
                                   ),
@@ -1674,7 +1678,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                     textData.secondLine,
                                     softWrap: false,
                                     overflow: TextOverflow.fade,
-                                    style: context.textTheme.displayMedium?.copyWith(
+                                    style: textTheme.displayMedium?.copyWith(
                                       fontSize: velpy(a: 12.5.fontSize, b: 15.0.fontSize, c: p),
                                     ),
                                   ),
@@ -1816,6 +1820,7 @@ class _MPQualityButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return NamidaInkWell(
       margin: EdgeInsets.symmetric(horizontal: 12.0.spaceX, vertical: 4.0.spaceY),
       padding: EdgeInsets.all(padding),
@@ -1836,14 +1841,14 @@ class _MPQualityButton extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: context.textTheme.displayMedium?.copyWith(
+                  style: textTheme.displayMedium?.copyWith(
                     fontSize: 13.0.fontSize,
                   ),
                 ),
                 if (subtitle != '')
                   Text(
                     subtitle,
-                    style: context.textTheme.displaySmall?.copyWith(
+                    style: textTheme.displaySmall?.copyWith(
                       fontSize: 13.0.fontSize,
                     ),
                   ),

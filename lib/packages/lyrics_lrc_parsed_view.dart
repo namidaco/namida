@@ -282,9 +282,11 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final fullscreen = widget.isFullScreenView;
     final initialFontSize = fullscreen ? 25.0 : 15.0;
-    final normalTextStyle = context.textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize);
+    final normalTextStyle = textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize);
     final plainLyricsTextStyle = normalTextStyle.copyWith(height: 1.8);
     final fullscreenIconButton = fullscreen
         ? Container(
@@ -295,7 +297,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
               boxShadow: [
                 BoxShadow(
                   blurRadius: 8.0,
-                  color: context.theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+                  color: theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
                 ),
               ],
             ),
@@ -345,7 +347,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           maxLines: textData.secondLine == '' ? 2 : 1,
                           overflow: TextOverflow.fade,
                           softWrap: textData.secondLine.isEmpty,
-                          style: context.textTheme.displayMedium?.copyWith(
+                          style: textTheme.displayMedium?.copyWith(
                             fontSize: 17.0,
                           ),
                         ),
@@ -355,7 +357,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           textData.secondLine,
                           softWrap: false,
                           overflow: TextOverflow.fade,
-                          style: context.textTheme.displayMedium?.copyWith(
+                          style: textTheme.displayMedium?.copyWith(
                             fontSize: 15.0,
                           ),
                         ),
@@ -381,7 +383,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                     rx: Player.inst.nowPlayingPosition,
                     builder: (context, currentMS) => Text(
                       currentMS.milliSecondsLabel,
-                      style: context.textTheme.displaySmall,
+                      style: textTheme.displaySmall,
                     ),
                   ),
                 ),
@@ -429,7 +431,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                         final msToDisplay = finalDurMS - toSubtract;
                                         return Text(
                                           "- ${msToDisplay.milliSecondsLabel}",
-                                          style: context.textTheme.displaySmall,
+                                          style: textTheme.displaySmall,
                                         );
                                       },
                                     );
@@ -447,14 +449,14 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                       final milliseconds = currentItem is Selectable ? currentItem.track.durationMS : 0;
                                       return Text(
                                         milliseconds.milliSecondsLabel,
-                                        style: context.textTheme.displaySmall,
+                                        style: textTheme.displaySmall,
                                       );
                                     },
                                   );
                                 }
                                 return Text(
                                   milliseconds.milliSecondsLabel,
-                                  style: context.textTheme.displaySmall,
+                                  style: textTheme.displaySmall,
                                 );
                               },
                             )),
@@ -498,7 +500,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                         final mpAnimationValue = mpAnimation.value;
                         final blur = 12.0 * mpAnimationValue;
                         late final maskColor =
-                            mpAnimationValue == 0 ? Colors.transparent : context.theme.scaffoldBackgroundColor.withValues(alpha: (fullscreen ? 0.8 : 0.5) * mpAnimationValue);
+                            mpAnimationValue == 0 ? Colors.transparent : theme.scaffoldBackgroundColor.withValues(alpha: (fullscreen ? 0.8 : 0.5) * mpAnimationValue);
                         return Stack(
                           children: [
                             NamidaBlur(
@@ -596,8 +598,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           final text = lrc.lyrics;
                           final selected = distanceDiffFromSelected == 0;
                           final selectedAndEmpty = selected && _checkIfTextEmpty(text);
-                          final bgColor =
-                              selected ? Color.alphaBlend(color.withAlpha(140), context.theme.scaffoldBackgroundColor).withValues(alpha: selectedAndEmpty ? 0.1 : 0.5) : null;
+                          final bgColor = selected ? Color.alphaBlend(color.withAlpha(140), theme.scaffoldBackgroundColor).withValues(alpha: selectedAndEmpty ? 0.1 : 0.5) : null;
                           final vMargin = (selected ? 2.0 : 0.0) + (fullscreen ? 2.0 : 0.0);
                           final normalLineColorOpacity = distanceDiffFromSelected == 1
                               ? 0.5

@@ -1582,6 +1582,8 @@ class _ArtworkManager extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return NamidaIconButton(
       icon: Broken.gallery_edit,
       onPressed: () async {
@@ -1673,7 +1675,7 @@ class _ArtworkManager extends StatelessWidget {
                         padding: const EdgeInsets.all(12.0),
                         child: Text(
                           lang.CHOOSE + extraCountText,
-                          style: context.textTheme.displayMedium,
+                          style: textTheme.displayMedium,
                         ),
                       ),
                       ObxO(
@@ -1684,7 +1686,7 @@ class _ArtworkManager extends StatelessWidget {
                           child: loading
                               ? Center(
                                   child: ThreeArchedCircle(
-                                    color: context.theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                     size: 32.0,
                                   ),
                                 )
@@ -1726,7 +1728,7 @@ class _ArtworkManager extends StatelessWidget {
                                                     duration: Duration(milliseconds: 200),
                                                     child: bytes == null
                                                         ? ColoredBox(
-                                                            color: context.theme.cardColor,
+                                                            color: theme.cardColor,
                                                           )
                                                         : TapDetector(
                                                             onTap: () async {

@@ -87,18 +87,20 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final trackTileExtent = Dimensions.inst.trackTileItemExtent;
     const dayHeaderExtent = kHistoryDayHeaderHeightWithPadding;
 
     const dayHeaderHeight = kHistoryDayHeaderHeight;
-    final dayHeaderBgColor = Color.alphaBlend(context.theme.cardTheme.color!.withAlpha(140), context.theme.scaffoldBackgroundColor);
+    final dayHeaderBgColor = Color.alphaBlend(theme.cardTheme.color!.withAlpha(140), theme.scaffoldBackgroundColor);
     final dayHeaderSideColor = CurrentColor.inst.color;
-    final dayHeaderShadowColor = Color.alphaBlend(context.theme.shadowColor.withAlpha(140), context.theme.scaffoldBackgroundColor).withValues(alpha: 0.4);
+    final dayHeaderShadowColor = Color.alphaBlend(theme.shadowColor.withAlpha(140), theme.scaffoldBackgroundColor).withValues(alpha: 0.4);
 
     final daysLength = historyDays.length;
 
-    final highlightColor = context.theme.colorScheme.onSurface.withAlpha(40);
-    final smallTextStyle = context.textTheme.displaySmall?.copyWith(fontSize: 12.0);
+    final highlightColor = theme.colorScheme.onSurface.withAlpha(40);
+    final smallTextStyle = textTheme.displaySmall?.copyWith(fontSize: 12.0);
 
     final yearsRow = getYearsRowWidget(context, _onYearTap);
 
@@ -282,6 +284,8 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return TrackTilePropertiesProvider(
       configs: const TrackTilePropertiesConfigs(
         queueSource: QueueSource.mostPlayed,
@@ -334,12 +338,12 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
                     trailingWidget: Container(
                       padding: const EdgeInsets.all(6.0),
                       decoration: BoxDecoration(
-                        color: context.theme.scaffoldBackgroundColor,
+                        color: theme.scaffoldBackgroundColor,
                         shape: BoxShape.circle,
                       ),
                       child: Text(
                         listens.length.formatDecimal(),
-                        style: context.textTheme.displaySmall,
+                        style: textTheme.displaySmall,
                       ),
                     ),
                   );
@@ -380,6 +384,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return TrackTilePropertiesProvider(
       configs: const TrackTilePropertiesConfigs(
         queueSource: QueueSource.playlist,
@@ -419,7 +424,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
                     height: context.height * 0.5,
                     width: context.width,
                     decoration: BoxDecoration(
-                      color: context.theme.cardColor,
+                      color: theme.cardColor,
                       borderRadius: BorderRadius.circular(18.0.multipliedRadius),
                     ),
                     child: ListView.builder(

@@ -374,103 +374,107 @@ class StorageCacheManager {
                     rx: allFiles,
                     builder: (context, allFiles) => ObxO(
                       rx: itemsToDelete,
-                      builder: (context, toDelete) => SuperListView.builder(
-                        controller: sc,
-                        padding: EdgeInsets.zero,
-                        itemCount: allFiles.length,
-                        itemBuilder: (context, index) {
-                          final item = allFiles[index];
-                          final id = itemToYtId(item);
-                          final listens = id == null ? null : listensMap[id];
-                          final itemSize = sizesMap[itemToPath(item)] ?? 0;
-                          String? lastPlayedTimeText;
-                          if (currentSort.value == _CacheSorting.accessTime || currentSort.value == _CacheSorting.recommended) {
-                            final accessTime = accessTimeMap[itemToPath(item)];
-                            if (accessTime != null) lastPlayedTimeText = TimeAgoController.dateMSSEFromNow(accessTime);
-                          }
-                          final isSelected = toDelete.contains(item);
-                          return NamidaInkWell(
-                            animationDurationMS: 200,
-                            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                            decoration: BoxDecoration(
-                              border: isSelected
-                                  ? Border.all(
-                                      color: context.theme.colorScheme.secondary.withValues(alpha: 0.5),
-                                      width: 2.0,
-                                    )
-                                  : null,
-                            ),
-                            onTap: () {
-                              final didRemove = itemsToDelete.value.remove(item);
-                              if (didRemove) {
-                                itemsToDeleteSize.value -= itemSize;
-                              } else {
-                                itemsToDelete.value.add(item);
-                                itemsToDeleteSize.value += itemSize;
-                              }
-                              itemsToDelete.refresh();
-                            },
-                            child: Row(
-                              children: [
-                                YoutubeThumbnail(
-                                  key: Key(id ?? ''),
-                                  type: ThumbnailType.video,
-                                  videoId: id,
-                                  borderRadius: 8.0,
-                                  iconSize: 24.0,
-                                  width: 92.0,
-                                  height: 92 * 9 / 16,
-                                  forceSquared: true,
-                                  isImportantInCache: false,
-                                ),
-                                const SizedBox(width: 8.0),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      _VideoIdToTitleWidget(
-                                        id: id ?? '',
-                                        style: context.textTheme.displayMedium,
-                                      ),
-                                      Text(
-                                        itemToSubtitle(item, itemSize),
-                                        style: context.textTheme.displaySmall,
-                                      ),
-                                      if (lastPlayedTimeText != null)
-                                        Text(
-                                          lastPlayedTimeText,
-                                          style: context.textTheme.displaySmall,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8.0),
-                                if (listens != null && listens > 0) ...[
-                                  Text(
-                                    listens.toString(),
-                                    style: context.textTheme.displaySmall,
+                      builder: (context, toDelete) {
+                        final theme = context.theme;
+                        final textTheme = theme.textTheme;
+                        return SuperListView.builder(
+                          controller: sc,
+                          padding: EdgeInsets.zero,
+                          itemCount: allFiles.length,
+                          itemBuilder: (context, index) {
+                            final item = allFiles[index];
+                            final id = itemToYtId(item);
+                            final listens = id == null ? null : listensMap[id];
+                            final itemSize = sizesMap[itemToPath(item)] ?? 0;
+                            String? lastPlayedTimeText;
+                            if (currentSort.value == _CacheSorting.accessTime || currentSort.value == _CacheSorting.recommended) {
+                              final accessTime = accessTimeMap[itemToPath(item)];
+                              if (accessTime != null) lastPlayedTimeText = TimeAgoController.dateMSSEFromNow(accessTime);
+                            }
+                            final isSelected = toDelete.contains(item);
+                            return NamidaInkWell(
+                              animationDurationMS: 200,
+                              margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                              decoration: BoxDecoration(
+                                border: isSelected
+                                    ? Border.all(
+                                        color: theme.colorScheme.secondary.withValues(alpha: 0.5),
+                                        width: 2.0,
+                                      )
+                                    : null,
+                              ),
+                              onTap: () {
+                                final didRemove = itemsToDelete.value.remove(item);
+                                if (didRemove) {
+                                  itemsToDeleteSize.value -= itemSize;
+                                } else {
+                                  itemsToDelete.value.add(item);
+                                  itemsToDeleteSize.value += itemSize;
+                                }
+                                itemsToDelete.refresh();
+                              },
+                              child: Row(
+                                children: [
+                                  YoutubeThumbnail(
+                                    key: Key(id ?? ''),
+                                    type: ThumbnailType.video,
+                                    videoId: id,
+                                    borderRadius: 8.0,
+                                    iconSize: 24.0,
+                                    width: 92.0,
+                                    height: 92 * 9 / 16,
+                                    forceSquared: true,
+                                    isImportantInCache: false,
                                   ),
                                   const SizedBox(width: 8.0),
-                                ],
-                                IgnorePointer(
-                                  child: SizedBox(
-                                    height: 16.0,
-                                    width: 16.0,
-                                    child: CheckMark(
-                                      strokeWidth: 2,
-                                      activeColor: context.theme.listTileTheme.iconColor!,
-                                      inactiveColor: context.theme.listTileTheme.iconColor!,
-                                      duration: const Duration(milliseconds: 400),
-                                      active: isSelected,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        _VideoIdToTitleWidget(
+                                          id: id ?? '',
+                                          style: textTheme.displayMedium,
+                                        ),
+                                        Text(
+                                          itemToSubtitle(item, itemSize),
+                                          style: textTheme.displaySmall,
+                                        ),
+                                        if (lastPlayedTimeText != null)
+                                          Text(
+                                            lastPlayedTimeText,
+                                            style: textTheme.displaySmall,
+                                          ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
+                                  const SizedBox(width: 8.0),
+                                  if (listens != null && listens > 0) ...[
+                                    Text(
+                                      listens.toString(),
+                                      style: textTheme.displaySmall,
+                                    ),
+                                    const SizedBox(width: 8.0),
+                                  ],
+                                  IgnorePointer(
+                                    child: SizedBox(
+                                      height: 16.0,
+                                      width: 16.0,
+                                      child: CheckMark(
+                                        strokeWidth: 2,
+                                        activeColor: theme.listTileTheme.iconColor!,
+                                        inactiveColor: theme.listTileTheme.iconColor!,
+                                        duration: const Duration(milliseconds: 400),
+                                        active: isSelected,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
                     ),
                   ),
                 ),

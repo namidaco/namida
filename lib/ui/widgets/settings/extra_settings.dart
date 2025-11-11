@@ -162,6 +162,8 @@ class ExtrasSettings extends SettingSubpageProvider {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return SettingsCard(
       title: lang.EXTRAS,
       subtitle: lang.EXTRAS_SUBTITLE,
@@ -445,7 +447,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                       margin: const EdgeInsets.all(2.0),
                                       padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
                                       decoration: BoxDecoration(
-                                        color: context.theme.cardTheme.color,
+                                        color: theme.cardTheme.color,
                                         borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                                       ),
                                       child: InkWell(
@@ -478,7 +480,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                     margin: const EdgeInsets.all(2.0),
                                     padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
                                     decoration: BoxDecoration(
-                                      color: context.theme.cardTheme.color?.withValues(alpha: 1.0),
+                                      color: theme.cardTheme.color?.withValues(alpha: 1.0),
                                       borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                                     ),
                                     child: InkWell(
@@ -799,7 +801,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                             margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
                             padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
                             borderRadius: 6.0,
-                            bgColor: vibrationType == e ? context.theme.cardColor : null,
+                            bgColor: vibrationType == e ? theme.cardColor : null,
                             onTap: onTap,
                             child: Row(
                               children: [
@@ -810,7 +812,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                 const SizedBox(width: 6.0),
                                 Text(
                                   e.toText(),
-                                  style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                                  style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
                                 ),
                               ],
                             ),
@@ -824,7 +826,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                   rx: settings.vibrationType,
                   builder: (context, vibrationType) => Text(
                     vibrationType.toText(),
-                    style: context.textTheme.displaySmall,
+                    style: textTheme.displaySmall,
                     textAlign: TextAlign.end,
                   ),
                 ),
@@ -899,6 +901,7 @@ class ExtrasSettings extends SettingSubpageProvider {
   }
 
   Widget getLibraryTabsTile(BuildContext context) {
+    final textTheme = context.textTheme;
     return getItemWrapper(
       key: _ExtraSettingsKeys.libraryTabs,
       child: Obx(
@@ -934,7 +937,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                       children: [
                         Text(
                           lang.LIBRARY_TABS_REORDER,
-                          style: context.textTheme.displayMedium,
+                          style: textTheme.displayMedium,
                         ),
                         const SizedBox(height: 12.0),
                         Expanded(

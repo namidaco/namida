@@ -158,6 +158,7 @@ class IndexerSettings extends SettingSubpageProvider {
     required BuildContext context,
     bool initiallyExpanded = false,
   }) {
+    final textTheme = context.textTheme;
     return getItemWrapper(
       key: _IndexerSettingsKeys.foldersToScan,
       child: Obx(
@@ -174,7 +175,7 @@ class IndexerSettings extends SettingSubpageProvider {
               initiallyExpanded: initiallyExpanded,
               icon: Broken.folder,
               titleText: lang.LIST_OF_FOLDERS,
-              textColor: context.textTheme.displayLarge!.color,
+              textColor: textTheme.displayLarge!.color,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -195,7 +196,7 @@ class IndexerSettings extends SettingSubpageProvider {
                     child: ListTile(
                       title: Text(
                         e,
-                        style: context.textTheme.displayMedium,
+                        style: textTheme.displayMedium,
                       ),
                       trailing: TextButton(
                         onPressed: () {
@@ -246,6 +247,7 @@ class IndexerSettings extends SettingSubpageProvider {
     required BuildContext context,
     bool initiallyExpanded = false,
   }) {
+    final textTheme = context.textTheme;
     return getItemWrapper(
       key: _IndexerSettingsKeys.foldersToExclude,
       child: ObxO(
@@ -257,7 +259,7 @@ class IndexerSettings extends SettingSubpageProvider {
           initiallyExpanded: initiallyExpanded,
           icon: Broken.folder_minus,
           titleText: lang.EXCLUDED_FODLERS,
-          textColor: context.textTheme.displayLarge!.color,
+          textColor: textTheme.displayLarge!.color,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -273,7 +275,7 @@ class IndexerSettings extends SettingSubpageProvider {
                   ListTile(
                     title: Text(
                       lang.NO_EXCLUDED_FOLDERS,
-                      style: context.textTheme.displayMedium,
+                      style: textTheme.displayMedium,
                     ),
                   ),
                 ]
@@ -282,7 +284,7 @@ class IndexerSettings extends SettingSubpageProvider {
                     (e) => ListTile(
                       title: Text(
                         e,
-                        style: context.textTheme.displayMedium,
+                        style: textTheme.displayMedium,
                       ),
                       trailing: TextButton(
                         onPressed: () {
@@ -328,6 +330,7 @@ class IndexerSettings extends SettingSubpageProvider {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     const refreshIconKey1 = 'kurukuru';
     const refreshIconKey2 = 'kururin';
 
@@ -390,7 +393,7 @@ class IndexerSettings extends SettingSubpageProvider {
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Text(
               lang.INDEXER_NOTE,
-              style: context.textTheme.displaySmall,
+              style: textTheme.displaySmall,
             ),
           ),
           Padding(
@@ -398,7 +401,7 @@ class IndexerSettings extends SettingSubpageProvider {
             child: Obx(
               (context) => Text(
                 '${lang.DUPLICATED_TRACKS}: ${Indexer.inst.duplicatedTracksLength.valueR}\n${lang.TRACKS_EXCLUDED_BY_NOMEDIA}: ${Indexer.inst.tracksExcludedByNoMedia.valueR}\n${lang.FILTERED_BY_SIZE_AND_DURATION}: ${Indexer.inst.filteredForSizeDurationTracks.valueR}',
-                style: context.textTheme.displaySmall,
+                style: textTheme.displaySmall,
               ),
             ),
           ),
@@ -661,7 +664,7 @@ class IndexerSettings extends SettingSubpageProvider {
                         children: [
                           Text(
                             lang.RE_INDEX_WARNING,
-                            style: context.textTheme.displayMedium,
+                            style: textTheme.displayMedium,
                           ),
                           const SizedBox(height: 16.0),
                           ObxO(
@@ -1006,6 +1009,7 @@ class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return NamidaInkWell(
       onTap: () => setState(() => _isPathsExpanded = !_isPathsExpanded),
       child: Obx(
@@ -1022,7 +1026,7 @@ class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
                               e,
                               maxLines: _isPathsExpanded ? null : 1,
                               overflow: _isPathsExpanded ? null : TextOverflow.ellipsis,
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                              style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
                             ),
                           ))
                       .toList(),

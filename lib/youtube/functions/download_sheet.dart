@@ -52,6 +52,8 @@ Future<void> showDownloadVideoBottomSheet({
 }) async {
   colorScheme ??= CurrentColor.inst.color;
   final context = ctx ?? rootContext;
+  final theme = context.theme;
+  final textTheme = theme.textTheme;
 
   originalIndex ??= initialItemConfig?.originalIndex;
   totalLength ??= initialItemConfig?.totalLength;
@@ -250,7 +252,7 @@ Future<void> showDownloadVideoBottomSheet({
       padding: EdgeInsets.symmetric(vertical: verticalPadding),
       onTap: onTap,
       borderRadius: 8.0,
-      bgColor: bgColor ?? (selectedColor != null ? Color.alphaBlend(selectedColor.withAlpha(40), context.theme.cardTheme.color!) : context.theme.cardTheme.color),
+      bgColor: bgColor ?? (selectedColor != null ? Color.alphaBlend(selectedColor.withAlpha(40), theme.cardTheme.color!) : theme.cardTheme.color),
       child: child,
     );
   }
@@ -262,7 +264,7 @@ Future<void> showDownloadVideoBottomSheet({
       onTap: () {},
       width: width,
       height: 38.0,
-      bgColor: context.theme.colorScheme.surface,
+      bgColor: theme.colorScheme.surface,
       child: null,
     );
   }
@@ -276,6 +278,7 @@ Future<void> showDownloadVideoBottomSheet({
     final double verticalPadding = 8.0,
     required void Function() onTap,
   }) {
+    final textTheme = context.textTheme;
     final selectedColor = colorScheme!;
     return getQualityChipBase(
       selectedColor: selected ? selectedColor : null,
@@ -294,14 +297,14 @@ Future<void> showDownloadVideoBottomSheet({
             children: [
               Text(
                 title,
-                style: context.textTheme.displayMedium?.copyWith(
+                style: textTheme.displayMedium?.copyWith(
                   fontSize: 12.0,
                 ),
               ),
               if (subtitle != '')
                 Text(
                   subtitle,
-                  style: context.textTheme.displaySmall?.copyWith(
+                  style: textTheme.displaySmall?.copyWith(
                     fontSize: 12.0,
                   ),
                 ),
@@ -458,7 +461,7 @@ Future<void> showDownloadVideoBottomSheet({
                                               shimmerEnabled: infoShimmerEnabled,
                                               child: Text(
                                                 videoInfo?.title ?? videoId,
-                                                style: context.textTheme.displayMedium,
+                                                style: textTheme.displayMedium,
                                               ),
                                             ),
                                           ),
@@ -479,7 +482,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                     videoInfo?.durSeconds?.secondsLabel ?? "00:00",
                                                     if (dateFormatted != null) dateFormatted,
                                                   ].join(' - '),
-                                                  style: context.textTheme.displaySmall,
+                                                  style: textTheme.displaySmall,
                                                 );
                                               }(),
                                             ),
@@ -531,7 +534,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                       borderRadius: BorderRadius.circular(6),
                                                       boxShadow: [
                                                         BoxShadow(
-                                                          color: context.theme.scaffoldBackgroundColor,
+                                                          color: theme.scaffoldBackgroundColor,
                                                           spreadRadius: 0,
                                                           blurRadius: 3.0,
                                                         ),
@@ -711,11 +714,11 @@ Future<void> showDownloadVideoBottomSheet({
                                   return Text.rich(
                                     TextSpan(
                                       text: "${lang.OUTPUT}: ",
-                                      style: context.textTheme.displaySmall,
+                                      style: textTheme.displaySmall,
                                       children: [
                                         TextSpan(
                                           text: videoOnly ?? audioOnly ?? audioAndVideo ?? lang.NONE,
-                                          style: context.textTheme.displayMedium?.copyWith(color: videoOnly != null ? Colors.red : null),
+                                          style: textTheme.displayMedium?.copyWith(color: videoOnly != null ? Colors.red : null),
                                         ),
                                       ],
                                     ),
@@ -831,7 +834,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                 child: Center(
                                                   child: Text(
                                                     '${confirmButtonText == '' ? lang.DOWNLOAD : confirmButtonText} $sizeText',
-                                                    style: context.textTheme.displayMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                                                    style: textTheme.displayMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
                                                   ),
                                                 ),
                                               ),

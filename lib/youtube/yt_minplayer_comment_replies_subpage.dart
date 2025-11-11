@@ -125,7 +125,9 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
 
   @override
   Widget build(BuildContext context) {
-    final commentsIconColor = context.theme.iconTheme.color;
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final commentsIconColor = theme.iconTheme.color;
     final repliesCount = widget.repliesCount;
     return BackgroundWrapper(
       child: ObxO(
@@ -140,7 +142,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                   boxShadow: [
                     BoxShadow(
                       blurRadius: 12.0,
-                      color: context.theme.secondaryHeaderColor.withValues(alpha: 0.5),
+                      color: theme.secondaryHeaderColor.withValues(alpha: 0.5),
                     )
                   ],
                 ),
@@ -179,7 +181,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                               lang.REPLIES,
                               if (repliesCount != null) repliesCount.formatDecimalShort(),
                             ].join(' • '),
-                            style: context.textTheme.displayMedium,
+                            style: textTheme.displayMedium,
                             textAlign: TextAlign.start,
                           ),
                         ),

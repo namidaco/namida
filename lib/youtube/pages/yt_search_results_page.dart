@@ -142,6 +142,8 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
     const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
@@ -184,7 +186,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               const SizedBox(width: 8.0),
                               Text(
                                 lang.OFFLINE_SEARCH,
-                                style: context.textTheme.displayLarge,
+                                style: textTheme.displayLarge,
                               ),
                               const Spacer(),
                               const SizedBox(width: 6.0),
@@ -224,7 +226,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                       margin: YTHistoryVideoCardBase.cardMargin(true),
                                       width: thumbnailWidthLocal - YTHistoryVideoCardBase.minimalCardExtraThumbCropWidth,
                                       height: thumbnailHeightLocal - YTHistoryVideoCardBase.minimalCardExtraThumbCropHeight,
-                                      bgColor: context.theme.cardColor,
+                                      bgColor: theme.cardColor,
                                     );
                                   },
                                 ),
@@ -260,7 +262,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                             child: Center(
                                               child: Text(
                                                 "+${remainingVideosCount.formatDecimalShort()}",
-                                                style: context.textTheme.displayMedium,
+                                                style: textTheme.displayMedium,
                                               ),
                                             ),
                                           );
@@ -319,11 +321,11 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                   child: Text.rich(
                                     TextSpan(
                                       text: "${lang.DID_YOU_MEAN}: ",
-                                      style: context.textTheme.displaySmall?.copyWith(fontSize: 13.0),
+                                      style: textTheme.displaySmall?.copyWith(fontSize: 13.0),
                                       children: searchResult.correctedQuery
                                           .map((c) => TextSpan(
                                                 text: c.text,
-                                                style: context.textTheme.displaySmall?.copyWith(
+                                                style: textTheme.displaySmall?.copyWith(
                                                   fontSize: 14.0,
                                                   fontWeight: c.corrected ? FontWeight.w700 : FontWeight.w500,
                                                 ),
@@ -386,7 +388,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                                                         child: Text(
                                                           chunk.title,
-                                                          style: context.textTheme.displayMedium,
+                                                          style: textTheme.displayMedium,
                                                         ),
                                                       ),
                                                     SizedBox(

@@ -20,6 +20,8 @@ class QueueTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final hero = 'queue_${queue.date}';
     const absorberHeight = Dimensions.queueTileItemExtent * 0.2;
     final absorberWidget = ColoredBox(
@@ -34,7 +36,7 @@ class QueueTile extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: context.theme.shadowColor.withAlpha(20),
+            color: theme.shadowColor.withAlpha(20),
             blurRadius: 12.0,
             offset: const Offset(0, 2),
           )
@@ -59,7 +61,7 @@ class QueueTile extends StatelessWidget {
               );
             },
             child: NamidaInkWell(
-              bgColor: context.theme.cardColor,
+              bgColor: theme.cardColor,
               onTap: () => NamidaOnTaps.inst.onQueueTap(queue),
               onLongPress: () => NamidaDialogs.inst.showQueueDialog(queue.date),
               enableSecondaryTap: true,
@@ -85,7 +87,7 @@ class QueueTile extends StatelessWidget {
                         tag: 'line1_$hero',
                         child: Text(
                           queue.date.dateAndClockFormattedOriginal,
-                          style: context.textTheme.displayMedium?.copyWith(
+                          style: textTheme.displayMedium?.copyWith(
                             fontSize: 14.0,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -96,7 +98,7 @@ class QueueTile extends StatelessWidget {
                         tag: 'line2_$hero',
                         child: Text(
                           [queue.toText(), queue.tracks.displayTrackKeyword].join(' - '),
-                          style: context.textTheme.displaySmall?.copyWith(
+                          style: textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -107,7 +109,7 @@ class QueueTile extends StatelessWidget {
                   const Spacer(),
                   Text(
                     queue.tracks.totalDurationFormatted,
-                    style: context.textTheme.displaySmall?.copyWith(
+                    style: textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.w500,
                       fontSize: 12.5,
                     ),

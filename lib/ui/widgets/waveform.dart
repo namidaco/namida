@@ -66,21 +66,22 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final decorationBoxBehind = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(5.0.multipliedRadius),
-        color: context.theme.colorScheme.onSurface.withAlpha(40),
+        color: theme.colorScheme.onSurface.withAlpha(40),
       ),
     );
     final decorationBoxFront = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(5.0.multipliedRadius),
-        color: context.theme.colorScheme.onSurface.withAlpha(110),
+        color: theme.colorScheme.onSurface.withAlpha(110),
       ),
     );
     final colors = [
-      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), context.theme.colorScheme.onSurface),
-      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), context.theme.colorScheme.onSurface),
+      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(220), theme.colorScheme.onSurface),
+      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), theme.colorScheme.onSurface),
       Colors.transparent,
       Colors.transparent,
     ];

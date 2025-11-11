@@ -24,6 +24,8 @@ class AlbumTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final albumThumbnailSize = settings.albumThumbnailSizeinList.value;
     final albumTileHeight = settings.albumListTileHeight.value;
     final finalYear = album.year.yearFormatted;
@@ -36,7 +38,7 @@ class AlbumTile extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: context.theme.shadowColor.withAlpha(20),
+            color: theme.shadowColor.withAlpha(20),
             blurRadius: 12.0,
             offset: const Offset(0, 2),
           )
@@ -44,7 +46,7 @@ class AlbumTile extends StatelessWidget {
       ),
       child: NamidaInkWell(
         borderRadius: 0.2 * albumTileHeight,
-        bgColor: context.theme.cardColor,
+        bgColor: theme.cardColor,
         onTap: () => NamidaOnTaps.inst.onAlbumTap(identifier),
         onLongPress: () => NamidaDialogs.inst.showAlbumDialog(identifier),
         enableSecondaryTap: true,
@@ -81,7 +83,7 @@ class AlbumTile extends StatelessWidget {
                         tag: 'line1_$hero',
                         child: Text(
                           album.album,
-                          style: context.textTheme.displayMedium,
+                          style: textTheme.displayMedium,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -90,7 +92,7 @@ class AlbumTile extends StatelessWidget {
                           tag: 'line2_$hero',
                           child: Text(
                             secondLine,
-                            style: context.textTheme.displaySmall,
+                            style: textTheme.displaySmall,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -101,7 +103,7 @@ class AlbumTile extends StatelessWidget {
                             album.displayTrackKeyword,
                             if (finalYear != '') finalYear,
                           ].join(' • '),
-                          style: context.textTheme.displaySmall?.copyWith(
+                          style: textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -112,7 +114,7 @@ class AlbumTile extends StatelessWidget {
                 ),
                 Text(
                   album.totalDurationFormatted,
-                  style: context.textTheme.displaySmall?.copyWith(
+                  style: textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,

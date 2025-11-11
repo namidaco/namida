@@ -31,6 +31,8 @@ class ArtistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final hero = 'artist_$name$additionalHeroTag';
     return NamidaInkWell(
       onTap: () => NamidaOnTaps.inst.onArtistTap(name, type, artist),
@@ -73,7 +75,7 @@ class ArtistCard extends StatelessWidget {
                       bottom: -5.0,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: context.theme.scaffoldBackgroundColor,
+                          color: theme.scaffoldBackgroundColor,
                           borderRadius: BorderRadius.circular(99.0.multipliedRadius),
                         ),
                         child: Padding(
@@ -86,7 +88,7 @@ class ArtistCard extends StatelessWidget {
                             ),
                             child: Text(
                               bottomCenterText!,
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: bottomCenterTextSize),
+                              style: textTheme.displaySmall?.copyWith(fontSize: bottomCenterTextSize),
                               textAlign: TextAlign.center,
                               softWrap: false,
                               overflow: TextOverflow.fade,
@@ -115,7 +117,7 @@ class ArtistCard extends StatelessWidget {
                             tag: 'line1_$hero',
                             child: Text(
                               name.overflow,
-                              style: context.textTheme.displayMedium?.copyWith(
+                              style: textTheme.displayMedium?.copyWith(
                                 fontSize: getFontSize(0.5),
                                 fontWeight: FontWeight.w500,
                               ),

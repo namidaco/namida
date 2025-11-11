@@ -104,6 +104,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final drawerChild = RepaintBoundary(child: widget.drawerChild);
     final scaffoldBody = RepaintBoundary(child: widget.child);
     return AnimatedBuilder(
@@ -142,7 +143,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
               Positioned.fill(
                 child: AnimatedColor(
                   duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                  color: context.theme.scaffoldBackgroundColor,
+                  color: theme.scaffoldBackgroundColor,
                 ),
               ),
               Positioned.fill(
@@ -152,7 +153,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                     decoration: BoxDecoration(
                       boxShadow: [
                         BoxShadow(
-                          color: context.theme.colorScheme.primary.withAlpha(context.isDarkMode ? 5 : 25),
+                          color: theme.colorScheme.primary.withAlpha(context.isDarkMode ? 5 : 25),
                           blurRadius: 58.0,
                           spreadRadius: 12.0,
                           offset: const Offset(-2.0, 0),

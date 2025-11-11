@@ -485,6 +485,8 @@ class TrackInfoListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     const iconSize = 17.0;
     const textToIconPaddingCorrector = EdgeInsets.only(top: 1.0);
     return Padding(
@@ -502,14 +504,14 @@ class TrackInfoListTile extends StatelessWidget {
               Icon(
                 icon,
                 size: iconSize,
-                color: context.theme.colorScheme.onSurface.withAlpha(220),
+                color: theme.colorScheme.onSurface.withAlpha(220),
               ),
               const SizedBox(width: 6.0),
               Padding(
                 padding: textToIconPaddingCorrector,
                 child: Text(
                   '$title:',
-                  style: context.theme.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(220)),
+                  style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.onSurface.withAlpha(220)),
                 ),
               ),
               const SizedBox(width: 4.0),
@@ -520,8 +522,8 @@ class TrackInfoListTile extends StatelessWidget {
                         ? NamidaSelectableAutoLinkText(text: value == '' ? '?' : value)
                         : Text(
                             value == '' ? '?' : value,
-                            style: context.theme.textTheme.displayMedium?.copyWith(
-                              color: Color.alphaBlend(context.theme.colorScheme.primary.withAlpha(140), context.textTheme.displayMedium!.color!),
+                            style: theme.textTheme.displayMedium?.copyWith(
+                              color: Color.alphaBlend(theme.colorScheme.primary.withAlpha(140), textTheme.displayMedium!.color!),
                               fontSize: 13.5,
                             ),
                           )),

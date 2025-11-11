@@ -113,6 +113,8 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final isMinimalView = minimalView ?? idsToAdd.isNotEmpty;
 
     const playlistsItemExtent = Dimensions.youtubeCardItemExtent * 0.9;
@@ -273,8 +275,8 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                                 rx: settings.ytPlaylistSort,
                                 builder: (context, ytPlaylistSort) => Text(
                                   ytPlaylistSort.toText(),
-                                  style: context.textTheme.displaySmall?.copyWith(
-                                    color: context.theme.colorScheme.secondary,
+                                  style: textTheme.displaySmall?.copyWith(
+                                    color: theme.colorScheme.secondary,
                                   ),
                                 ),
                               ),
@@ -287,7 +289,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                                 builder: (context, ytPlaylistSortReversed) => Icon(
                                   ytPlaylistSortReversed ? Broken.arrow_up_3 : Broken.arrow_down_2,
                                   size: 16.0,
-                                  color: context.theme.colorScheme.secondary,
+                                  color: theme.colorScheme.secondary,
                                 ),
                               ),
                             ),
@@ -525,6 +527,8 @@ class _HorizontalSliverList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final finalVideos = videos is List<YoutubeID> ? videos as List<YoutubeID> : videos.toList();
     final remainingVideosCount = totalVideosCountInMainList - finalVideos.length;
 
@@ -574,7 +578,7 @@ class _HorizontalSliverList extends StatelessWidget {
                             animationDurationMS: 200,
                             margin: const EdgeInsets.symmetric(horizontal: 4.0),
                             width: thumbWidth,
-                            bgColor: context.theme.cardColor,
+                            bgColor: theme.cardColor,
                           );
                         },
                       ),
@@ -594,7 +598,7 @@ class _HorizontalSliverList extends StatelessWidget {
                                   child: Center(
                                     child: Text(
                                       "+${remainingVideosCount.formatDecimalShort()}",
-                                      style: context.textTheme.displayMedium,
+                                      style: textTheme.displayMedium,
                                     ),
                                   ),
                                 );

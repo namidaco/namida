@@ -15,13 +15,15 @@ class SortByMenuTracks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return Column(
       children: [
         NamidaInkWell(
           borderRadius: 10.0,
           margin: EdgeInsets.symmetric(horizontal: 6.0),
           padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          bgColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
+          bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
           onTap: () {
             Navigator.of(context).pop();
             NamidaOnTaps.inst.onSubPageTracksSortIconTap(MediaType.track);
@@ -32,7 +34,7 @@ class SortByMenuTracks extends StatelessWidget {
               Expanded(
                 child: Text(
                   lang.ADVANCED,
-                  style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                  style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
                   softWrap: false,
                   overflow: TextOverflow.fade,
                 ),

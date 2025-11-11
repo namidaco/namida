@@ -34,6 +34,8 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final verticalPadding = SizedBox(height: verticalInBetweenPadding);
     final pitchKey = GlobalKey<_CuteSliderState>();
     final speedKey = GlobalKey<_CuteSliderState>();
@@ -65,7 +67,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
                 borderRadius: 8.0,
                 sizeMultiplier: 0.9,
                 paddingMultiplier: 0.7,
-                bgColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: is432HzEnabled ? 0.5 : 0.2),
+                bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: is432HzEnabled ? 0.5 : 0.2),
                 onTap: () {
                   final newValue = is432HzEnabled ? 1.0 : hz432Value;
                   Player.inst.setPlayerPitch(newValue);
@@ -77,7 +79,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
                   children: [
                     Text(
                       '✓ ',
-                      style: context.textTheme.displaySmall,
+                      style: textTheme.displaySmall,
                     ).animateEntrance(
                       showWhen: is432HzEnabled,
                       allCurves: Curves.fastLinearToSlowEaseIn,
@@ -85,7 +87,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
                     ),
                     Text(
                       '432Hz',
-                      style: context.textTheme.displaySmall,
+                      style: textTheme.displaySmall,
                     ),
                   ],
                 ),
@@ -226,6 +228,8 @@ class EqualizerPageState extends State<EqualizerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     const verticalInBetweenPaddingH = 18.0;
     const verticalInBetweenPadding = SizedBox(height: verticalInBetweenPaddingH);
     late final loudnessEnhancerSliderWidget = ObxO(
@@ -245,7 +249,7 @@ class EqualizerPageState extends State<EqualizerPage> {
     );
     return AnimatedThemeOrTheme(
       duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-      data: context.theme,
+      data: theme,
       child: BackgroundWrapper(
         child: SafeArea(
           child: Padding(
@@ -253,7 +257,7 @@ class EqualizerPageState extends State<EqualizerPage> {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                color: context.theme.cardColor,
+                color: theme.cardColor,
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -277,7 +281,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                         Expanded(
                           child: Text(
                             "${lang.CONFIGURE} (${lang.BETA})",
-                            style: context.textTheme.displayMedium,
+                            style: textTheme.displayMedium,
                           ),
                         ),
                         if (NamidaFeaturesVisibility.equalizerAvailable) ...[
@@ -362,12 +366,12 @@ class EqualizerPageState extends State<EqualizerPage> {
                                   margin: const EdgeInsets.symmetric(horizontal: 4.0),
                                   padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                                   bgColor: _activePresetCustom.valueR
-                                      ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), context.theme.scaffoldBackgroundColor)
-                                      : context.theme.colorScheme.secondary.withValues(alpha: 0.15),
+                                      ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), theme.scaffoldBackgroundColor)
+                                      : theme.colorScheme.secondary.withValues(alpha: 0.15),
                                   onTap: _resetPreset,
                                   child: Text(
                                     lang.CUSTOM,
-                                    style: context.textTheme.displaySmall?.copyWith(
+                                    style: textTheme.displaySmall?.copyWith(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 13.5,
                                       color: _activePresetCustom.valueR ? Colors.white.withValues(alpha: 0.7) : null,
@@ -383,8 +387,8 @@ class EqualizerPageState extends State<EqualizerPage> {
                                         margin: const EdgeInsets.symmetric(horizontal: 4.0),
                                         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                                         bgColor: _activePreset.valueR == e.value
-                                            ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), context.theme.scaffoldBackgroundColor)
-                                            : context.theme.colorScheme.secondary.withValues(alpha: 0.15),
+                                            ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), theme.scaffoldBackgroundColor)
+                                            : theme.colorScheme.secondary.withValues(alpha: 0.15),
                                         onTap: () async {
                                           _activePreset.value = e.value;
                                           _activePresetCustom.value = false;
@@ -394,7 +398,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                         },
                                         child: Text(
                                           e.value,
-                                          style: context.textTheme.displaySmall?.copyWith(
+                                          style: textTheme.displaySmall?.copyWith(
                                             color: _activePreset.valueR == e.value ? Colors.white.withValues(alpha: 0.7) : null,
                                             fontWeight: FontWeight.w700,
                                             fontSize: 13.5,
@@ -548,6 +552,7 @@ class _SliderTextWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: Row(
@@ -569,14 +574,14 @@ class _SliderTextWidget extends StatelessWidget {
                 Flexible(
                   child: Text(
                     title,
-                    style: context.textTheme.displayLarge?.copyWith(fontSize: 16.0),
+                    style: textTheme.displayLarge?.copyWith(fontSize: 16.0),
                   ),
                 ),
                 const SizedBox(width: 8.0),
                 if (displayValue)
                   Text(
                     valToText(value),
-                    style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5),
+                    style: textTheme.displayMedium?.copyWith(fontSize: 13.5),
                   ),
               ],
             ),
@@ -757,6 +762,8 @@ class EqualizerControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     const incremental = 0.01;
     return StreamBuilder<AndroidEqualizerParameters>(
       stream: equalizer.parametersStream,
@@ -808,7 +815,7 @@ class EqualizerControls extends StatelessWidget {
                                     FittedBox(
                                       child: Text(
                                         "${band.gain > 0 ? '+' : ''}${(band.gain).toStringAsFixed(2)}",
-                                        style: context.textTheme.displayMedium,
+                                        style: textTheme.displayMedium,
                                       ),
                                     ),
                                   ],
@@ -821,13 +828,13 @@ class EqualizerControls extends StatelessWidget {
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(4.0.multipliedRadius),
-                                color: context.theme.scaffoldBackgroundColor,
+                                color: theme.scaffoldBackgroundColor,
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
                                 child: Text(
                                   band.centerFrequency >= 1000 ? '${(band.centerFrequency / 1000).round()} khz' : '${band.centerFrequency.round()} hz',
-                                  style: context.textTheme.displaySmall,
+                                  style: textTheme.displaySmall,
                                 ),
                               ),
                             ),
@@ -885,6 +892,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     const circleHeight = 32.0;
     final circleWidth = widget.circleWidth;
     final total = widget.min.abs() + widget.max;
@@ -896,7 +904,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
         width: 6.0,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: context.theme.colorScheme.secondary.withValues(alpha: 0.2),
+            color: theme.colorScheme.secondary.withValues(alpha: 0.2),
             borderRadius: const BorderRadius.all(
               Radius.circular(12.0),
             ),
@@ -944,7 +952,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
                   width: 8.0,
                   animateWidth: false,
                   decoration: BoxDecoration(
-                    color: context.theme.colorScheme.primary.withValues(alpha: 0.5),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
                     borderRadius: const BorderRadius.all(
                       Radius.circular(12.0),
                     ),
@@ -962,7 +970,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
                       width: circleWidth,
                       height: circleHeight,
                       decoration: BoxDecoration(
-                        color: context.theme.colorScheme.primary,
+                        color: theme.colorScheme.primary,
                         borderRadius: const BorderRadius.all(
                           Radius.circular(12.0),
                         ),

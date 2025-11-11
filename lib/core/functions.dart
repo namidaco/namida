@@ -889,6 +889,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
     showDragHandle: showDragHandle,
     isScrollControlled: isScrollControlled,
     builder: (context, bottomPadding, maxWidth, maxHeight) {
+      final textTheme = context.textTheme;
       final child = Padding(
         padding: const EdgeInsets.symmetric(horizontal: 28.0).add(const EdgeInsets.only(bottom: 18.0)),
         child: Form(
@@ -900,12 +901,12 @@ Future<String?> showNamidaBottomSheetWithTextField({
                 children: [
                   Text(
                     title,
-                    style: context.textTheme.displayLarge,
+                    style: textTheme.displayLarge,
                   ),
                   if (subtitle != null)
                     Text(
                       subtitle,
-                      style: context.textTheme.displaySmall,
+                      style: textTheme.displaySmall,
                     ),
                   if (subtitle != null) const SizedBox(height: 6.0),
                   const SizedBox(height: 18.0),
@@ -968,7 +969,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
                           child: Center(
                             child: Text(
                               buttonText,
-                              style: buttonTextStyle ?? context.textTheme.displayMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                              style: buttonTextStyle ?? textTheme.displayMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
                             ),
                           ),
                           onTap: () async {
@@ -1205,6 +1206,7 @@ class TracksAddOnTap {
     final currentTrackS = Player.inst.currentItem.value;
     if (currentTrackS is! Selectable) return;
     final currentTrack = currentTrackS.track;
+    final textTheme = context.textTheme;
     showAddItemsToQueueDialog(
       onDisposing: null,
       context: context,
@@ -1292,6 +1294,7 @@ class TracksAddOnTap {
 
               final selectedmoodsPlaylists = <String>[].obs;
               final selectedmoodsTracks = <String>[].obs;
+              final textTheme = context.textTheme;
 
               List<Widget> getListy({
                 required String title,
@@ -1303,7 +1306,7 @@ class TracksAddOnTap {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
-                      child: Text("$title (${moodsList.length})", style: context.textTheme.displayMedium),
+                      child: Text("$title (${moodsList.length})", style: textTheme.displayMedium),
                     ),
                   ),
                   SliverToBoxAdapter(
@@ -1323,7 +1326,7 @@ class TracksAddOnTap {
                                 children: [
                                   Text(
                                     "$m ($tracksCount)",
-                                    style: context.textTheme.displayMedium,
+                                    style: textTheme.displayMedium,
                                   ),
                                   const SizedBox(width: 8.0),
                                   Obx(
@@ -1452,7 +1455,7 @@ class TracksAddOnTap {
                               Obx(
                                 (context) => Text(
                                   '${minRating.valueR}%',
-                                  style: context.textTheme.displaySmall,
+                                  style: textTheme.displaySmall,
                                 ),
                               )
                             ],
@@ -1470,7 +1473,7 @@ class TracksAddOnTap {
                               Obx(
                                 (context) => Text(
                                   '${maxRating.valueR}%',
-                                  style: context.textTheme.displaySmall,
+                                  style: textTheme.displaySmall,
                                 ),
                               ),
                             ],
@@ -1897,6 +1900,7 @@ class TracksAddOnTap {
       final maxTracksCount = 200.withMaximum(allTracksInLibrary.length);
       final recommendedSampleCount = insertionType.recommendedSampleCount;
       final recommendedSampleDaysCount = insertionType.recommendedSampleDaysCount;
+      final textTheme = context.textTheme;
       await NamidaNavigator.inst.navigateDialog(
         onDisposing: () {
           tracksNo.close();
@@ -1932,7 +1936,7 @@ class TracksAddOnTap {
                 borderRadius: 10.0,
                 bgColor: context.theme.cardColor,
                 padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                child: Text(title, style: context.textTheme.displayLarge),
+                child: Text(title, style: textTheme.displayLarge),
               ),
               const SizedBox(height: 24.0),
               CustomListTile(

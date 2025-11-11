@@ -108,6 +108,8 @@ class ThemeSetting extends SettingSubpageProvider {
   }
 
   Widget getLanguageTile(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return getItemWrapper(
       key: _ThemeSettingsKeys.language,
       child: ObxO(
@@ -172,7 +174,7 @@ class ThemeSetting extends SettingSubpageProvider {
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       width: 1.5,
-                                      color: context.theme.colorScheme.onSurface.withAlpha(100),
+                                      color: theme.colorScheme.onSurface.withAlpha(100),
                                     ),
                                   ),
                                   child: Text(
@@ -183,11 +185,11 @@ class ThemeSetting extends SettingSubpageProvider {
                                 titleWidget: Text.rich(
                                   TextSpan(
                                     text: e.name,
-                                    style: context.textTheme.displayMedium,
+                                    style: textTheme.displayMedium,
                                     children: [
                                       TextSpan(
                                         text: " (${e.country})",
-                                        style: context.textTheme.displaySmall,
+                                        style: textTheme.displaySmall,
                                       ),
                                     ],
                                   ),
@@ -412,6 +414,7 @@ class ToggleThemeModeContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     const brConst = 8.0;
     const horizontalPaddingConst = 8.0;
     final itemsCount = ThemeMode.values.length;
@@ -420,10 +423,10 @@ class ToggleThemeModeContainer extends StatelessWidget {
       rx: settings.themeMode,
       builder: (context, currentTheme) => Container(
         decoration: BoxDecoration(
-          color: Color.alphaBlend(context.theme.listTileTheme.textColor!.withAlpha(200), Colors.white.withAlpha(160)),
+          color: Color.alphaBlend(theme.listTileTheme.textColor!.withAlpha(200), Colors.white.withAlpha(160)),
           borderRadius: BorderRadius.circular(12.0.multipliedRadius),
           boxShadow: [
-            BoxShadow(color: context.theme.listTileTheme.iconColor!.withAlpha(80), spreadRadius: 1.0, blurRadius: blurRadius, offset: const Offset(0, 2)),
+            BoxShadow(color: theme.listTileTheme.iconColor!.withAlpha(80), spreadRadius: 1.0, blurRadius: blurRadius, offset: const Offset(0, 2)),
           ],
         ),
         width: maxWidth,
@@ -437,7 +440,7 @@ class ToggleThemeModeContainer extends StatelessWidget {
                 child: Container(
                   width: bgSlideWidth,
                   decoration: BoxDecoration(
-                    color: context.theme.colorScheme.surface.withAlpha(180),
+                    color: theme.colorScheme.surface.withAlpha(180),
                     borderRadius: BorderRadius.circular(brConst.multipliedRadius),
                     // boxShadow: [
                     //   BoxShadow(color: Colors.black.withAlpha(100), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),
@@ -460,7 +463,7 @@ class ToggleThemeModeContainer extends StatelessWidget {
                         onTap: () => onThemeChangeTap(e),
                         child: Icon(
                           e.toIcon(),
-                          color: currentTheme == e ? context.theme.listTileTheme.iconColor : context.theme.colorScheme.surface.withAlpha(180),
+                          color: currentTheme == e ? theme.listTileTheme.iconColor : theme.colorScheme.surface.withAlpha(180),
                         ),
                       ),
                     ),

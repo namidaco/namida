@@ -186,6 +186,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
           )
         ];
 
+    final textTheme = context.textTheme;
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: lang.CONFIGURE,
@@ -196,7 +197,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             Expanded(
               child: Text(
                 lang.CONFIGURE,
-                style: context.textTheme.displayLarge,
+                style: textTheme.displayLarge,
               ),
             ),
           ],
@@ -301,6 +302,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final thumHeight = _hmultiplier * Dimensions.youtubeThumbnailHeight;
     final thumWidth = thumHeight * 16 / 9;
     const cardBorderRadiusRaw = 12.0;
@@ -391,7 +394,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                               Expanded(
                                 child: Text(
                                   value,
-                                  style: context.textTheme.displaySmall,
+                                  style: textTheme.displaySmall,
                                 ),
                               ),
                               const SizedBox(width: 18.0),
@@ -424,11 +427,11 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                 height: Dimensions.youtubeCardItemHeight * _hmultiplier,
                                 margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: Dimensions.youtubeCardItemVerticalPadding * _hmultiplier),
                                 borderRadius: cardBorderRadiusRaw,
-                                bgColor: context.theme.cardColor.withValues(alpha: 0.3),
+                                bgColor: theme.cardColor.withValues(alpha: 0.3),
                                 decoration: isSelected
                                     ? BoxDecoration(
                                         border: Border.all(
-                                        color: context.theme.colorScheme.secondary.withValues(alpha: 0.5),
+                                        color: theme.colorScheme.secondary.withValues(alpha: 0.5),
                                         width: 2.0,
                                       ))
                                     : const BoxDecoration(),
@@ -482,7 +485,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                               const SizedBox(height: 6.0),
                                               Text(
                                                 info?.title ?? id,
-                                                style: context.textTheme.displayMedium?.copyWith(fontSize: 15.0 * _hmultiplier),
+                                                style: textTheme.displayMedium?.copyWith(fontSize: 15.0 * _hmultiplier),
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -498,7 +501,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                                   _VideoIdToChannelNameWidget(
                                                     channelName: info?.channelName ?? info?.channel?.title,
                                                     videoId: id,
-                                                    style: context.textTheme.displaySmall?.copyWith(fontSize: 14.0 * _hmultiplier),
+                                                    style: textTheme.displaySmall?.copyWith(fontSize: 14.0 * _hmultiplier),
                                                   ),
                                                 ],
                                               ),
@@ -537,7 +540,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                         padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
                                         child: Text(
                                           '${originalIndex + 1}',
-                                          style: context.textTheme.displaySmall,
+                                          style: textTheme.displaySmall,
                                         ),
                                       ),
                                     ),
@@ -564,7 +567,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               child: Row(
                 children: [
                   FloatingActionButton.small(
-                    backgroundColor: context.theme.disabledColor.withValues(alpha: 1.0),
+                    backgroundColor: theme.disabledColor.withValues(alpha: 1.0),
                     heroTag: 'config_fab',
                     child: Icon(Broken.setting_3, color: Colors.white.withValues(alpha: 0.8)),
                     onPressed: () {
@@ -575,7 +578,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   Obx(
                     (context) => FloatingActionButton.extended(
                       heroTag: 'download_fab',
-                      backgroundColor: (_selectedList.isEmpty ? context.theme.disabledColor : CurrentColor.inst.color).withValues(alpha: 1.0),
+                      backgroundColor: (_selectedList.isEmpty ? theme.disabledColor : CurrentColor.inst.color).withValues(alpha: 1.0),
                       isExtended: true,
                       icon: Icon(
                         Broken.import_2,
@@ -584,7 +587,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                       ),
                       label: Text(
                         lang.DOWNLOAD,
-                        style: context.textTheme.displayMedium?.copyWith(
+                        style: textTheme.displayMedium?.copyWith(
                           color: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
@@ -655,6 +658,8 @@ class YTDownloadFilenameBuilderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -662,7 +667,7 @@ class YTDownloadFilenameBuilderRow extends StatelessWidget {
             .map(
               (e) => NamidaInkWell(
                 borderRadius: 4.0,
-                bgColor: context.theme.cardColor,
+                bgColor: theme.cardColor,
                 margin: const EdgeInsets.symmetric(horizontal: 2.0),
                 padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
                 onTap: () {
@@ -679,7 +684,7 @@ class YTDownloadFilenameBuilderRow extends StatelessWidget {
                 },
                 child: Text(
                   e,
-                  style: context.textTheme.displaySmall,
+                  style: textTheme.displaySmall,
                 ),
               ),
             )

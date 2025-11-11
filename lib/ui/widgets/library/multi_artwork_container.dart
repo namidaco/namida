@@ -38,6 +38,7 @@ class MultiArtworkContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = this.size.withMaximum(constraints.maxWidth).withMaximum(constraints.maxHeight);
@@ -48,11 +49,11 @@ class MultiArtworkContainer extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: context.theme.cardTheme.color?.withAlpha(180),
+            color: theme.cardTheme.color?.withAlpha(180),
             borderRadius: BorderRadius.circular(18.0.multipliedRadius),
             boxShadow: [
               BoxShadow(
-                color: context.theme.shadowColor.withAlpha(180),
+                color: theme.shadowColor.withAlpha(180),
                 blurRadius: 8,
                 offset: const Offset(0, 2.0),
               )

@@ -392,6 +392,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     required AnimationController controller,
     required bool isForward,
   }) {
+    final textTheme = context.textTheme;
     final seekContainerSize = _maxWidth;
     final finalOffset = seekContainerSize * 0.05;
     final forwardIcons = <int, IconData>{
@@ -436,7 +437,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               const SizedBox(height: 8.0),
               Text(
                 '$ss ${lang.SECONDS}',
-                style: context.textTheme.displayMedium?.copyWith(
+                style: textTheme.displayMedium?.copyWith(
                   color: color,
                   shadows: outlineShadow,
                 ),
@@ -457,6 +458,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     required bool selected,
     required bool isCached,
   }) {
+    final textTheme = context.textTheme;
     return NamidaInkWell(
       onTap: () {
         _startTimer();
@@ -480,19 +482,19 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 children: [
                   Text(
                     title,
-                    style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                    style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
                   ),
                   if (subtitle != null && subtitle != '')
                     Text(
                       subtitle,
-                      style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                      style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
                     ),
                 ],
               ),
               if (thirdLine != null && thirdLine != '')
                 Text(
                   thirdLine,
-                  style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                  style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
                 ),
             ],
           ),
@@ -545,6 +547,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   final _maxBrightnessValue = NamidaFeaturesVisibility.changeApplicationBrightness ? 2.0 : 1.0;
 
   Widget _getVerticalSliderWidget(String key, double? perc, IconData icon, ui.FlutterView view, {double max = 1.0}) {
+    final textTheme = context.textTheme;
     final totalHeight = view.physicalSize.shortestSide / view.devicePixelRatio * 0.75;
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
@@ -586,7 +589,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     const SizedBox(height: 12.0),
                     Text(
                       "${(perc * 100).round()}%",
-                      style: context.textTheme.displaySmall,
+                      style: textTheme.displaySmall,
                     ),
                     const SizedBox(height: 6.0),
                     Icon(icon, size: 20.0),
@@ -648,6 +651,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final newDeviceInsets = MediaQuery.viewPaddingOf(context);
     if (_deviceInsets == EdgeInsets.zero || _didDeviceInsetsChange(newDeviceInsets)) {
       if (newDeviceInsets != EdgeInsets.zero) _deviceInsets = newDeviceInsets;
@@ -1059,7 +1063,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                       const SizedBox(width: 12.0),
                                                       Text(
                                                         "${speed}x",
-                                                        style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                                                        style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
                                                       ),
                                                     ],
                                                   ),
@@ -1086,7 +1090,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               const SizedBox(width: 12.0),
                                               Text(
                                                 lang.ADD,
-                                                style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                                                style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
                                               ),
                                             ],
                                           ),
@@ -1116,7 +1120,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                   const SizedBox(width: 4.0).animateEntrance(showWhen: speed != 1.0, allCurves: Curves.easeInOutQuart),
                                                   Text(
                                                     "${speed}x",
-                                                    style: context.textTheme.displaySmall?.copyWith(
+                                                    style: textTheme.displaySmall?.copyWith(
                                                       color: itemsColor,
                                                       fontSize: 12.0,
                                                     ),
@@ -1209,7 +1213,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                         ? const SizedBox()
                                                         : Text(
                                                             displayName,
-                                                            style: context.textTheme.displaySmall?.copyWith(color: itemsColor),
+                                                            style: textTheme.displaySmall?.copyWith(color: itemsColor),
                                                           );
                                                   },
                                                 ),
@@ -1433,7 +1437,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                   if (qt != null) ...[
                                                     Text(
                                                       qt,
-                                                      style: context.textTheme.displaySmall?.copyWith(color: itemsColor),
+                                                      style: textTheme.displaySmall?.copyWith(color: itemsColor),
                                                     ),
                                                     const SizedBox(width: 4.0),
                                                   ],
@@ -1601,7 +1605,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                   Obx(
                                                     (context) => Text(
                                                       "${Player.inst.nowPlayingPositionR.milliSecondsLabel}/",
-                                                      style: context.textTheme.displayMedium?.copyWith(
+                                                      style: textTheme.displayMedium?.copyWith(
                                                         fontSize: 13.5,
                                                         color: itemsColor,
                                                       ),
@@ -1618,7 +1622,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
                                                       return Text(
                                                         "$prefix${totalDurMs.milliSecondsLabel}",
-                                                        style: context.textTheme.displayMedium?.copyWith(
+                                                        style: textTheme.displayMedium?.copyWith(
                                                           fontSize: 13.5,
                                                           color: itemsColor,
                                                         ),
@@ -1648,7 +1652,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                   child: Obx(
                                                     (context) => Text(
                                                       "${Player.inst.currentIndex.valueR + 1}/$queueL",
-                                                      style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600, color: itemsColor),
+                                                      style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600, color: itemsColor),
                                                     ),
                                                   ),
                                                 ),
@@ -2272,6 +2276,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
             );
           };
 
+    final textTheme = context.textTheme;
     return [
       MapEntry(
         onTap,
@@ -2295,14 +2300,14 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
                       title!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.displaySmall,
+                      style: textTheme.displaySmall,
                     ),
                     if (subtitle != null)
                       Text(
                         subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.displaySmall?.copyWith(
+                        style: textTheme.displaySmall?.copyWith(
                           fontSize: 10.0,
                         ),
                       ),
@@ -2551,6 +2556,7 @@ class _VideoIdToTitleWidgetState extends State<_VideoTitleSubtitleWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final videoName = _videoName;
     final channelName = _channelName;
     return Column(
@@ -2560,12 +2566,12 @@ class _VideoIdToTitleWidgetState extends State<_VideoTitleSubtitleWidget> {
         if (videoName != null && videoName.isNotEmpty)
           Text(
             videoName,
-            style: context.textTheme.displayLarge?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.85)),
+            style: textTheme.displayLarge?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.85)),
           ),
         if (channelName != null && channelName.isNotEmpty)
           Text(
             channelName,
-            style: context.textTheme.displaySmall?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.7)),
+            style: textTheme.displaySmall?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.7)),
           ),
       ],
     );

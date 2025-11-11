@@ -302,6 +302,7 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final videoId = short.id;
     final title = short.title;
     final viewsCountText = short.viewsText;
@@ -340,7 +341,7 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: context.textTheme.displayMedium?.copyWith(
+                          style: textTheme.displayMedium?.copyWith(
                             fontSize: 12.0,
                             color: Colors.white70,
                             shadows: [
@@ -356,7 +357,7 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
                         ),
                         Text(
                           viewsCountText,
-                          style: context.textTheme.displaySmall?.copyWith(
+                          style: textTheme.displaySmall?.copyWith(
                             fontSize: 11.0,
                             color: Colors.white60,
                             shadows: [

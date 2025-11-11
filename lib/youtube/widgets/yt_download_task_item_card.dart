@@ -59,10 +59,11 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     void Function()? onTap,
     Widget? Function(double size)? iconWidget,
   }) {
+    final textTheme = context.textTheme;
     final textWidget = Text.rich(
       TextSpan(
         children: [
-          TextSpan(text: title, style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0)),
+          TextSpan(text: title, style: textTheme.displayMedium?.copyWith(fontSize: 13.0)),
           if (betweenBrackets != '')
             TextSpan(
               text: " ($betweenBrackets)",
@@ -152,6 +153,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     final audioStream = item.audioStream;
 
     Widget getRow({required IconData icon, required List<String> texts}) {
+      final textTheme = context.textTheme;
       return Row(
         children: [
           Icon(icon, size: 18.0),
@@ -159,7 +161,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
           Expanded(
             child: Text(
               texts.joinText(),
-              style: context.textTheme.displaySmall?.copyWith(fontSize: 12.0),
+              style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
             ),
           ),
         ],
@@ -207,6 +209,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     String confirmMessage = '',
     bool deleteButton = false,
   }) async {
+    final textTheme = context.textTheme;
     final item = widget.videos[widget.index];
     bool confirmed = false;
     bool delete = false;
@@ -250,12 +253,12 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
               Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(text: "$operationTitle: ", style: context.textTheme.displayLarge),
+                    TextSpan(text: "$operationTitle: ", style: textTheme.displayLarge),
                     TextSpan(
                       text: item.filename.filename,
-                      style: context.textTheme.displayMedium,
+                      style: textTheme.displayMedium,
                     ),
-                    TextSpan(text: " ?", style: context.textTheme.displayLarge),
+                    TextSpan(text: " ?", style: textTheme.displayLarge),
                   ],
                 ),
               ),
@@ -395,6 +398,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     const thumbHeight = 24.0 * 2.6;
     const thumbWidth = thumbHeight * 16 / 9;
 
@@ -482,7 +486,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                     const SizedBox(height: 6.0),
                     Text(
                       item.filename.filename,
-                      style: context.textTheme.displaySmall,
+                      style: textTheme.displaySmall,
                     ),
                     const SizedBox(height: 6.0),
                     Row(
@@ -495,7 +499,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                       : videoPerc != null
                                           ? lang.VIDEO
                                           : '',
-                                  style: context.textTheme.displaySmall,
+                                  style: textTheme.displaySmall,
                                 )
                               : const LoadingIndicator(),
                           const SizedBox(width: 6.0),
@@ -535,7 +539,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                       const SizedBox(height: 4.0),
                       Text(
                         [percentageText, downloadInfoText].joinText(),
-                        style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                        style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
                       ),
                     ],
                     const SizedBox(height: 4.0),
@@ -658,7 +662,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                 item.videoStream?.qualityLabel,
                                 downloadedFile.fileSizeFormatted(),
                               ].joinText(),
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                              style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
                             ),
                             const SizedBox(width: 4.0),
                             if (itemIcon != null)

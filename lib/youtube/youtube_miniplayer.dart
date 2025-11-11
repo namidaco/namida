@@ -541,7 +541,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                                     isLiked: isUserLiked,
                                                                                     likedIcon: Broken.like_filled,
                                                                                     normalIcon: Broken.like_1,
-                                                                                    disabledColor: context.theme.iconTheme.color,
+                                                                                    disabledColor: mainTheme.iconTheme.color,
                                                                                     size: 24.0,
                                                                                     onTap: (isLiked) {
                                                                                       return _videoLikeManager.onLikeClicked(
@@ -582,7 +582,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                                     isLiked: isUserDisLiked,
                                                                                     likedIcon: Broken.dislike_filled,
                                                                                     normalIcon: Broken.dislike,
-                                                                                    disabledColor: context.theme.iconTheme.color,
+                                                                                    disabledColor: mainTheme.iconTheme.color,
                                                                                     size: 24.0,
                                                                                     onTap: (isDisLiked) async {
                                                                                       return _videoLikeManager.onDisLikeClicked(

@@ -29,6 +29,7 @@ class PlaylistTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final hero = 'playlist_$playlistName';
     return Padding(
       padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
@@ -68,7 +69,7 @@ class PlaylistTile extends StatelessWidget {
                             tag: 'line1_$hero',
                             child: Text(
                               playlist.name.translatePlaylistName(),
-                              style: context.textTheme.displayMedium,
+                              style: textTheme.displayMedium,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -80,7 +81,7 @@ class PlaylistTile extends StatelessWidget {
                                 tracksRaw.displayTrackKeyword,
                                 if (extraText?.isNotEmpty == true) extraText,
                               ].join(' • '),
-                              style: context.textTheme.displaySmall?.copyWith(fontSize: 13.7),
+                              style: textTheme.displaySmall?.copyWith(fontSize: 13.7),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -90,7 +91,7 @@ class PlaylistTile extends StatelessWidget {
                               tag: 'line3_$hero',
                               child: Text(
                                 playlist.moods.join(', ').overflow,
-                                style: context.textTheme.displaySmall,
+                                style: textTheme.displaySmall,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -107,7 +108,7 @@ class PlaylistTile extends StatelessWidget {
                     ],
                     Text(
                       tracksRaw.totalDurationFormatted,
-                      style: context.textTheme.displaySmall?.copyWith(
+                      style: textTheme.displaySmall?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                       overflow: TextOverflow.ellipsis,

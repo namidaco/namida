@@ -45,141 +45,145 @@ void showAddToPlaylistSheet({
       borderRadius: BorderRadius.circular(24.0.multipliedRadius),
       color: context.theme.scaffoldBackgroundColor,
     ),
-    builder: (context, bottomPadding, maxWidth, maxHeight) => Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 24.0),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Text(
-              lang.ADD_TO_PLAYLIST,
-              style: context.textTheme.displayLarge,
+    builder: (context, bottomPadding, maxWidth, maxHeight) {
+      final theme = context.theme;
+      final textTheme = theme.textTheme;
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 24.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Text(
+                lang.ADD_TO_PLAYLIST,
+                style: textTheme.displayLarge,
+              ),
             ),
-          ),
-          const SizedBox(height: 6.0),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: playlistNameToAdd == ''
-                ? Text(
-                    videoNamesSubtitle,
-                    style: context.textTheme.displaySmall,
-                  )
-                : Text.rich(
-                    TextSpan(
-                      text: playlistNameToAdd,
-                      style: context.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600),
-                      children: [
-                        TextSpan(
-                          text: " ($videoNamesSubtitle)",
-                          style: context.textTheme.displaySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-          ),
-          const SizedBox(height: 6.0),
-          Expanded(
-            child: NamidaTabView(
-              initialIndex: settings.extra.ytAddToPlaylistsTabIndex,
-              onIndexChanged: (index) {
-                settings.extra.save(ytAddToPlaylistsTabIndex: index);
-              },
-              tabs: [lang.LOCAL, lang.YOUTUBE],
-              children: [
-                Column(
-                  mainAxisSize: MainAxisSize.max,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ObxO(
-                      rx: settings.playlistAddTracksAtBeginningYT,
-                      builder: (context, atBeginning) => CustomSwitchListTile(
-                        visualDensity: VisualDensity.compact,
-                        icon: Broken.arrow_square_up,
-                        title: lang.ADD_TRACKS_AT_THE_BEGINNING,
-                        value: atBeginning,
-                        onChanged: (val) => settings.save(playlistAddTracksAtBeginningYT: !val),
+            const SizedBox(height: 6.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: playlistNameToAdd == ''
+                  ? Text(
+                      videoNamesSubtitle,
+                      style: textTheme.displaySmall,
+                    )
+                  : Text.rich(
+                      TextSpan(
+                        text: playlistNameToAdd,
+                        style: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600),
+                        children: [
+                          TextSpan(
+                            text: " ($videoNamesSubtitle)",
+                            style: textTheme.displaySmall,
+                          ),
+                        ],
                       ),
                     ),
-                    Expanded(
-                      child: YoutubePlaylistsView(idsToAdd: ids, displayMenu: false),
-                    ),
-                    const SizedBox(height: 6.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        const SizedBox(width: 18.0),
-                        Expanded(
-                          child: NamidaInkWell(
-                            bgColor: CurrentColor.inst.color.withAlpha(40),
-                            height: 48.0,
-                            borderRadius: 12.0,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Broken.add),
-                                const SizedBox(width: 8.0),
-                                Text(
-                                  lang.CREATE,
-                                  style: context.textTheme.displayMedium,
-                                ),
-                              ],
+            ),
+            const SizedBox(height: 6.0),
+            Expanded(
+              child: NamidaTabView(
+                initialIndex: settings.extra.ytAddToPlaylistsTabIndex,
+                onIndexChanged: (index) {
+                  settings.extra.save(ytAddToPlaylistsTabIndex: index);
+                },
+                tabs: [lang.LOCAL, lang.YOUTUBE],
+                children: [
+                  Column(
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ObxO(
+                        rx: settings.playlistAddTracksAtBeginningYT,
+                        builder: (context, atBeginning) => CustomSwitchListTile(
+                          visualDensity: VisualDensity.compact,
+                          icon: Broken.arrow_square_up,
+                          title: lang.ADD_TRACKS_AT_THE_BEGINNING,
+                          value: atBeginning,
+                          onChanged: (val) => settings.save(playlistAddTracksAtBeginningYT: !val),
+                        ),
+                      ),
+                      Expanded(
+                        child: YoutubePlaylistsView(idsToAdd: ids, displayMenu: false),
+                      ),
+                      const SizedBox(height: 6.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          const SizedBox(width: 18.0),
+                          Expanded(
+                            child: NamidaInkWell(
+                              bgColor: CurrentColor.inst.color.withAlpha(40),
+                              height: 48.0,
+                              borderRadius: 12.0,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Broken.add),
+                                  const SizedBox(width: 8.0),
+                                  Text(
+                                    lang.CREATE,
+                                    style: textTheme.displayMedium,
+                                  ),
+                                ],
+                              ),
+                              onTap: () async {
+                                final text = await showNamidaBottomSheetWithTextField(
+                                  title: lang.CONFIGURE,
+                                  textfieldConfig: BottomSheetTextFieldConfig(
+                                    initalControllerText: '',
+                                    hintText: '',
+                                    labelText: lang.NAME,
+                                    validator: (value) => pc.YoutubePlaylistController.inst.validatePlaylistName(value),
+                                  ),
+                                  buttonText: lang.ADD,
+                                  onButtonTap: (text) => true,
+                                );
+                                if (text != null) pc.YoutubePlaylistController.inst.addNewPlaylist(text);
+                              },
                             ),
-                            onTap: () async {
-                              final text = await showNamidaBottomSheetWithTextField(
-                                title: lang.CONFIGURE,
-                                textfieldConfig: BottomSheetTextFieldConfig(
-                                  initalControllerText: '',
-                                  hintText: '',
-                                  labelText: lang.NAME,
-                                  validator: (value) => pc.YoutubePlaylistController.inst.validatePlaylistName(value),
-                                ),
-                                buttonText: lang.ADD,
-                                onButtonTap: (text) => true,
+                          ),
+                          const SizedBox(width: 12.0),
+                          Obx(
+                            (context) {
+                              const watchLater = 'Watch Later';
+                              pc.YoutubePlaylistController.inst.playlistsMap.valueR;
+                              final pl = pc.YoutubePlaylistController.inst.getPlaylist(watchLater);
+                              final idExist = pl?.tracks.firstWhereEff((e) => e.id == ids.firstOrNull) != null;
+                              return NamidaIconButton(
+                                tooltip: () => watchLater,
+                                icon: Broken.clock,
+                                child: idExist ? const StackedIcon(baseIcon: Broken.clock, secondaryIcon: Broken.tick_circle) : null,
+                                onPressed: () {
+                                  final pl = pc.YoutubePlaylistController.inst.getPlaylist(watchLater);
+                                  if (pl == null) {
+                                    pc.YoutubePlaylistController.inst.addNewPlaylist(watchLater, videoIds: ids);
+                                  } else if (pl.tracks.firstWhereEff((e) => e.id == ids.firstOrNull) == null) {
+                                    pc.YoutubePlaylistController.inst.addTracksToPlaylist(pl, ids);
+                                  }
+                                },
                               );
-                              if (text != null) pc.YoutubePlaylistController.inst.addNewPlaylist(text);
                             },
                           ),
-                        ),
-                        const SizedBox(width: 12.0),
-                        Obx(
-                          (context) {
-                            const watchLater = 'Watch Later';
-                            pc.YoutubePlaylistController.inst.playlistsMap.valueR;
-                            final pl = pc.YoutubePlaylistController.inst.getPlaylist(watchLater);
-                            final idExist = pl?.tracks.firstWhereEff((e) => e.id == ids.firstOrNull) != null;
-                            return NamidaIconButton(
-                              tooltip: () => watchLater,
-                              icon: Broken.clock,
-                              child: idExist ? const StackedIcon(baseIcon: Broken.clock, secondaryIcon: Broken.tick_circle) : null,
-                              onPressed: () {
-                                final pl = pc.YoutubePlaylistController.inst.getPlaylist(watchLater);
-                                if (pl == null) {
-                                  pc.YoutubePlaylistController.inst.addNewPlaylist(watchLater, videoIds: ids);
-                                } else if (pl.tracks.firstWhereEff((e) => e.id == ids.firstOrNull) == null) {
-                                  pc.YoutubePlaylistController.inst.addTracksToPlaylist(pl, ids);
-                                }
-                              },
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 18.0),
-                      ],
-                    ),
-                  ],
-                ),
-                _PlaylistsForVideoPage(
-                  videoIds: ids,
-                  maxWidth: maxWidth,
-                ),
-              ],
+                          const SizedBox(width: 18.0),
+                        ],
+                      ),
+                    ],
+                  ),
+                  _PlaylistsForVideoPage(
+                    videoIds: ids,
+                    maxWidth: maxWidth,
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 18.0),
-        ],
-      ),
-    ),
+            const SizedBox(height: 18.0),
+          ],
+        ),
+      );
+    },
   );
 }
 
@@ -330,6 +334,8 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
   }
 
   Widget? _itemBuilder(BuildContext context, PlaylistForVideoItem pl) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final title = pl.playlistTitle ?? '?';
     final subtitle = pl.privacy?.toText();
     final info = _playlistsLookup[pl.playlistId];
@@ -345,17 +351,17 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
         animationDurationMS: 200,
         margin: const EdgeInsets.symmetric(vertical: 4.0),
         width: widget.maxWidth,
-        bgColor: context.theme.cardColor,
+        bgColor: theme.cardColor,
         decoration: BoxDecoration(
           border: showBorder
               ? Border(
                   left: BorderSide(
                     width: 2.0,
-                    color: context.theme.colorScheme.secondary.withValues(alpha: 0.5),
+                    color: theme.colorScheme.secondary.withValues(alpha: 0.5),
                   ),
                   bottom: BorderSide(
                     width: 2.0,
-                    color: context.theme.colorScheme.secondary.withValues(alpha: 0.5),
+                    color: theme.colorScheme.secondary.withValues(alpha: 0.5),
                   ),
                 )
               : null,
@@ -384,12 +390,12 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                   children: [
                     Text(
                       title,
-                      style: context.textTheme.displayMedium,
+                      style: textTheme.displayMedium,
                     ),
                     if (subtitle != null && subtitle.isNotEmpty)
                       Text(
                         subtitle,
-                        style: context.textTheme.displaySmall,
+                        style: textTheme.displaySmall,
                       ),
                   ],
                 ),
@@ -399,7 +405,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
                   child: Text(
                     info!.videosCount!.formatDecimal(),
-                    style: context.textTheme.displaySmall,
+                    style: textTheme.displaySmall,
                   ),
                 ),
               SizedBox(
@@ -438,6 +444,8 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final allPlaylists = _allPlaylists;
     final createdPlaylists = _createdPlaylists;
 
@@ -479,7 +487,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                                     animationDurationMS: 200,
                                     margin: const EdgeInsets.symmetric(vertical: 4.0),
                                     height: 52.0,
-                                    bgColor: context.theme.cardColor,
+                                    bgColor: theme.cardColor,
                                   );
                                 },
                               ),
@@ -514,7 +522,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                     const SizedBox(width: 8.0),
                     Text(
                       lang.CREATE,
-                      style: context.textTheme.displayMedium,
+                      style: textTheme.displayMedium,
                     ),
                   ],
                 ),

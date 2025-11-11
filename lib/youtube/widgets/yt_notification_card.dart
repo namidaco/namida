@@ -132,6 +132,8 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+
     if (widget.notification.isRead == true && _isNowRead.value == false) _isNowRead.value = true; // after refreshing response and was read outside
 
     final thumbnailWidth = this.widget.thumbnailWidth;
@@ -191,7 +193,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
                 shimmerEnabled: false,
                 child: Text(
                   firstLine,
-                  style: context.textTheme.displayMedium?.copyWith(fontSize: 13.0 * widget.fontMultiplier),
+                  style: textTheme.displayMedium?.copyWith(fontSize: 13.0 * widget.fontMultiplier),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -204,7 +206,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
                 shimmerEnabled: false,
                 child: Text(
                   secondLine,
-                  style: context.textTheme.displaySmall?.copyWith(
+                  style: textTheme.displaySmall?.copyWith(
                     fontWeight: FontWeight.w400,
                     fontSize: 13.0 * widget.fontMultiplier,
                   ),

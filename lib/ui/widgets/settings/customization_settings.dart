@@ -1072,15 +1072,16 @@ class TrackItemSmallBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return NamidaInkWell(
-      bgColor: context.theme.colorScheme.surface.withAlpha(160),
+      bgColor: theme.colorScheme.surface.withAlpha(160),
       onTap: onTap,
       borderRadius: 8.0,
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       child: text != null
           ? Text(
               text!,
-              style: context.theme.textTheme.displaySmall,
+              style: theme.textTheme.displaySmall,
             )
           : child,
     );
@@ -1119,9 +1120,11 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final enabledIcon = _enabledIcon;
     final enabledIconAuthorInfo = enabledIcon?.authorInfos.firstOrNull;
-    final bgColor = context.theme.colorScheme.secondaryContainer;
+    final bgColor = theme.colorScheme.secondaryContainer;
     final iconsRow = Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
@@ -1160,7 +1163,7 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
                   SizedBox(height: 1.0),
                   Text(
                     e.name,
-                    style: context.textTheme.displaySmall,
+                    style: textTheme.displaySmall,
                   ),
                 ],
               ),
@@ -1178,7 +1181,7 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
           onTap: _onAddTap,
           child: Text(
             lang.ADD,
-            style: context.textTheme.displayMedium,
+            style: textTheme.displayMedium,
           ),
         ),
       ]
@@ -1212,29 +1215,29 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
                   children: [
                     Text(
                       "${lang.APP_ICON}:",
-                      style: context.theme.textTheme.displayMedium,
+                      style: theme.textTheme.displayMedium,
                     ),
                     if (enabledIcon != null) ...[
                       SizedBox(width: 6.0),
                       Text(
                         enabledIcon.name,
-                        style: context.theme.textTheme.displayMedium,
+                        style: theme.textTheme.displayMedium,
                       ),
                       if (enabledIconAuthorInfo != null) ...[
                         SizedBox(width: 2.0),
                         Text(
                           "(@${enabledIconAuthorInfo.name})",
-                          style: context.theme.textTheme.displaySmall,
+                          style: theme.textTheme.displaySmall,
                         ),
                         if (enabledIconAuthorInfo.aiModel != null)
                           NamidaInkWell(
-                            bgColor: context.theme.cardColor,
+                            bgColor: theme.cardColor,
                             margin: EdgeInsets.symmetric(horizontal: 2.0),
                             padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
                             borderRadius: 4.0,
                             child: Text(
                               "AI",
-                              style: context.theme.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                              style: theme.textTheme.displaySmall?.copyWith(fontSize: 10.0),
                             ),
                           ),
                       ],

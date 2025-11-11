@@ -902,6 +902,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
       }
     }
 
+    final textTheme = context.textTheme;
     final widgets = <Widget>[];
     for (final e in map.entries) {
       widgets.add(
@@ -927,7 +928,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
               child: Text(
                 e.value == '' ? _pathSeparator : e.value,
-                style: context.textTheme.displayMedium,
+                style: textTheme.displayMedium,
               ),
             ),
           ),
@@ -946,7 +947,9 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
 
   @override
   Widget build(BuildContext context) {
-    final chipColor = context.theme.cardColor;
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final chipColor = theme.cardColor;
     final pathSplitsChildren = _getCurrentPathsSplitsChildren;
     return WillPopScope(
       onWillPop: () async {
@@ -976,7 +979,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                     child: widget.note != ''
                         ? Text(
                             widget.note.addDQuotation(),
-                            style: context.textTheme.displayMedium?.copyWith(
+                            style: textTheme.displayMedium?.copyWith(
                               fontSize: 16.0,
                             ),
                           )
@@ -1109,13 +1112,13 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                             (e) => NamidaInkWell(
                               animationDurationMS: 200,
                               borderRadius: 8.0,
-                              bgColor: _currentFolderPath.startsWith(e) ? context.theme.colorScheme.secondaryContainer : context.theme.cardColor,
+                              bgColor: _currentFolderPath.startsWith(e) ? theme.colorScheme.secondaryContainer : theme.cardColor,
                               onTap: () => _fetchFiles(Directory(e)),
                               margin: const EdgeInsets.symmetric(horizontal: 4.0),
                               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                               child: Text(
                                 e,
-                                style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                                style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
                               ),
                             ),
                           )
@@ -1148,7 +1151,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                             if (_currentFolders.isNotEmpty) _currentFolders.length.displayFolderKeyword,
                             if (_currentFiles.isNotEmpty) _currentFiles.length.displayFilesKeyword,
                           ].join(' | '),
-                          style: context.textTheme.displayMedium,
+                          style: textTheme.displayMedium,
                         ),
                       ),
                     const Spacer(),
@@ -1209,7 +1212,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                           ? Center(
                               key: const Key('loading'),
                               child: ThreeArchedCircle(
-                                color: context.theme.colorScheme.primary.withValues(alpha: 0.5),
+                                color: theme.colorScheme.primary.withValues(alpha: 0.5),
                                 size: 56.0,
                               ),
                             )
@@ -1227,7 +1230,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                       const SizedBox(height: 12.0),
                                       Text(
                                         "0 ${lang.FILES}",
-                                        style: context.textTheme.displayLarge,
+                                        style: textTheme.displayLarge,
                                       ),
                                     ],
                                   ),
@@ -1372,6 +1375,7 @@ class _FileSystemChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return NamidaInkWell(
       borderRadius: 8.0,
       bgColor: bgColor,
@@ -1390,7 +1394,7 @@ class _FileSystemChip extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: context.textTheme.displaySmall?.copyWith(
+                  style: textTheme.displaySmall?.copyWith(
                     fontSize: 13.0,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1398,10 +1402,10 @@ class _FileSystemChip extends StatelessWidget {
                 const SizedBox(height: 2.0),
                 Text(
                   subtitle,
-                  style: context.textTheme.displaySmall?.copyWith(
+                  style: textTheme.displaySmall?.copyWith(
                     fontSize: 12.0,
                     fontWeight: FontWeight.w400,
-                    // color: context.theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    // color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ],

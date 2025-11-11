@@ -254,6 +254,8 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     const horizontalPadding = 6.0;
 
     const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
@@ -263,7 +265,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     final selectedChannel = channel;
     final currentChannelThumbnail = currentChannelInfo?.thumbnails.pick()?.url;
 
-    final selectedChannelBgColor = context.theme.colorScheme.secondary.withValues(alpha: 0.1);
+    final selectedChannelBgColor = theme.colorScheme.secondary.withValues(alpha: 0.1);
 
     return Column(
       children: [
@@ -302,29 +304,29 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                       children: [
                         DecoratedBox(
                           decoration: BoxDecoration(
-                            color: context.theme.cardColor,
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                             border: Border.all(
                               width: 1.2,
-                              color: context.theme.colorScheme.secondary.withValues(alpha: 0.6),
+                              color: theme.colorScheme.secondary.withValues(alpha: 0.6),
                             ),
                           ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
                             child: Text(
                               streamsList?.length.displayVideoKeyword ?? '?',
-                              style: context.textTheme.displayMedium,
+                              style: textTheme.displayMedium,
                             ),
                           ),
                         ),
                         const SizedBox(width: 4.0),
                         DecoratedBox(
                           decoration: BoxDecoration(
-                            color: context.theme.cardColor,
+                            color: theme.cardColor,
                             borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                             border: Border.all(
                               width: 1.2,
-                              color: context.theme.colorScheme.secondary.withValues(alpha: 0.6),
+                              color: theme.colorScheme.secondary.withValues(alpha: 0.6),
                             ),
                           ),
                           child: Padding(
@@ -334,7 +336,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                 final oldestDate = allChannelFetchOldestDate.valueR;
                                 return Text(
                                   "${oldestDate.millisecondsSinceEpoch.dateFormattedOriginal} - ${TimeAgoController.dateFromNow(oldestDate)}",
-                                  style: context.textTheme.displayMedium,
+                                  style: textTheme.displayMedium,
                                 );
                               },
                             ),
@@ -351,7 +353,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                         scrollDirection: Axis.horizontal,
                         child: NamidaInkWell(
                           borderRadius: 24.0,
-                          bgColor: context.theme.cardColor,
+                          bgColor: theme.cardColor,
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
                           onTap: YTChannelSubpage(channelID: selectedChannel.channelID, sub: selectedChannel).navigate,
                           child: Row(
@@ -373,13 +375,13 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                 children: [
                                   Text(
                                     selectedChannel.title != '' ? selectedChannel.title : currentChannelInfo?.title ?? '',
-                                    style: context.textTheme.displayMedium,
+                                    style: textTheme.displayMedium,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   if (selectedChannel.subscribed ?? false)
                                     Text(
                                       lang.SUBSCRIBED,
-                                      style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                                      style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                 ],
@@ -509,7 +511,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
             child: Container(
               padding: EdgeInsets.only(bottom: _listBottomPadding, top: _listTopPadding),
               decoration: BoxDecoration(
-                color: Color.alphaBlend(context.theme.scaffoldBackgroundColor.withValues(alpha: 0.4), context.theme.cardTheme.color!),
+                color: Color.alphaBlend(theme.scaffoldBackgroundColor.withValues(alpha: 0.4), theme.cardTheme.color!),
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(12.0.multipliedRadius),
                 ),
@@ -523,7 +525,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                       NamidaInkWell(
                         borderRadius: 10.0,
                         animationDurationMS: 150,
-                        bgColor: channel == null ? context.theme.colorScheme.secondary.withValues(alpha: 0.15) : null,
+                        bgColor: channel == null ? theme.colorScheme.secondary.withValues(alpha: 0.15) : null,
                         width: _thumbSize,
                         margin: const EdgeInsets.symmetric(horizontal: horizontalPadding),
                         padding: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
@@ -556,7 +558,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                             const SizedBox(height: 4.0),
                             Text(
                               lang.ALL,
-                              style: context.textTheme.displaySmall,
+                              style: textTheme.displaySmall,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
@@ -630,6 +632,7 @@ class __ChannelSmallCardState extends State<_ChannelSmallCard> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final ch = widget.sub;
     final info = _channelInfo;
     final channelTitle = info?.title;
@@ -658,7 +661,7 @@ class __ChannelSmallCardState extends State<_ChannelSmallCard> {
           const SizedBox(height: 4.0),
           Text(
             channelName,
-            style: context.textTheme.displaySmall,
+            style: textTheme.displaySmall,
             overflow: TextOverflow.ellipsis,
           )
         ],

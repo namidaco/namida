@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:nampack/reactive/reactive.dart';
-
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
@@ -13,6 +11,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart' show RxMap;
 
 class NamidaTaggerController {
   static final NamidaTaggerController inst = NamidaTaggerController._internal();

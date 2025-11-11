@@ -13,7 +13,9 @@ class MembershipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final containerColor = context.theme.colorScheme.secondaryContainer;
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final containerColor = theme.colorScheme.secondaryContainer;
     final brL = 10.0.multipliedRadius;
     final brM = 8.0.multipliedRadius;
     return DecoratedBox(
@@ -48,7 +50,7 @@ class MembershipCard extends StatelessWidget {
 
                   Widget child = Text(
                     text,
-                    style: context.textTheme.displayLarge,
+                    style: textTheme.displayLarge,
                   );
 
                   if (userMembershipType == MembershipType.owner) {

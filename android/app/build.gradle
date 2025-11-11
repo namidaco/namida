@@ -58,7 +58,7 @@ android {
     packaging {
         jniLibs {
             exclude("lib/x86/*.so")
-            exclude("lib/x86_64/*.so")
+            // exclude("lib/x86_64/*.so") // !! required for emulator
         }
     }
 

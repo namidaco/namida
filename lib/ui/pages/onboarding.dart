@@ -118,6 +118,8 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final maxWidth = context.width; // use context as dimensions might not be initialized yet
 
     const indexer = IndexerSettings();
@@ -127,9 +129,9 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     final foldersToExclude = indexer.getFoldersToExcludeWidget(context: context, initiallyExpanded: true);
     final groupArtworksByAlbum = indexer.getGroupArtworksByAlbumWidget();
 
-    const theme = ThemeSetting();
-    final themeTile = theme.getThemeTile(maxWidth: maxWidth);
-    final languageTile = theme.getLanguageTile(context);
+    const themeSettings = ThemeSetting();
+    final themeTile = themeSettings.getThemeTile(maxWidth: maxWidth);
+    final languageTile = themeSettings.getLanguageTile(context);
 
     const extras = ExtrasSettings();
     final libraryTabsTile = extras.getLibraryTabsTile(context);
@@ -211,7 +213,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            color: Color.alphaBlend(context.theme.scaffoldBackgroundColor.withValues(alpha: 0.7), context.theme.cardColor),
+                            color: Color.alphaBlend(theme.scaffoldBackgroundColor.withValues(alpha: 0.7), theme.cardColor),
                             borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                           ),
                           child: Row(
@@ -232,7 +234,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                     ),
                                     onTap: _requestPermission,
                                     borderRadius: didGrantStoragePermission ? 8.0 : 16.0,
-                                    bgColor: context.theme.cardColor,
+                                    bgColor: theme.cardColor,
                                     margin: const EdgeInsets.all(12.0),
                                     padding: const EdgeInsets.all(12.0),
                                     child: Row(
@@ -241,7 +243,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                         Expanded(
                                           child: Text(
                                             lang.GRANT_STORAGE_PERMISSION,
-                                            style: context.textTheme.displayMedium,
+                                            style: textTheme.displayMedium,
                                           ),
                                         ),
                                         const SizedBox(width: 12.0),
@@ -270,7 +272,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                       _navigateToNamida();
                                     },
                                     borderRadius: 8.0,
-                                    bgColor: context.theme.cardColor,
+                                    bgColor: theme.cardColor,
                                     margin: const EdgeInsets.all(12.0),
                                     padding: const EdgeInsets.all(12.0),
                                     child: const Icon(

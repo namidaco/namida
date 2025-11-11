@@ -43,12 +43,13 @@ class VideoTilePropertiesProvider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     var queueSource = configs.queueSource;
     final comingFromQueue = queueSource == QueueSourceYoutubeID.playerQueue;
     final canHaveDuplicates = queueSource.canHaveDuplicates;
 
-    final backgroundColorNotPlaying = context.theme.cardTheme.color ?? Colors.transparent;
-    final selectionColorLayer = context.theme.focusColor;
+    final backgroundColorNotPlaying = theme.cardTheme.color ?? Colors.transparent;
+    final selectionColorLayer = theme.focusColor;
 
     final itemsColor7 = Colors.white.withValues(alpha: 0.7);
     final itemsColor6 = Colors.white.withValues(alpha: 0.6);
@@ -468,6 +469,8 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final configs = widget.properties.configs;
 
     double thumbHeight = widget.thumbnailHeight ?? (widget.minimalCard ? 24.0 * 3.2 : Dimensions.youtubeCardItemHeight);
@@ -583,7 +586,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
                   videoTitle ?? videoId,
                   maxLines: widget.minimalCard && (displayVideoChannel || displayDateText) ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.displayMedium?.copyWith(
+                  style: textTheme.displayMedium?.copyWith(
                     fontSize: widget.minimalCard ? 12.0 * widget.minimalCardFontMultiplier : null,
                     color: itemsColor7,
                   ),
@@ -593,7 +596,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
                     videoChannel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.displaySmall?.copyWith(
+                    style: textTheme.displaySmall?.copyWith(
                       fontSize: widget.minimalCard ? 11.5 * widget.minimalCardFontMultiplier : null,
                       color: itemsColor6,
                     ),
@@ -603,7 +606,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
                     dateText,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.displaySmall?.copyWith(
+                    style: textTheme.displaySmall?.copyWith(
                       fontSize: widget.minimalCard ? 11.0 * widget.minimalCardFontMultiplier : null,
                       color: itemsColor5,
                     ),
@@ -672,7 +675,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
         bgColor: widget.bgColor ??
             (isCurrentlyPlaying
                 ? (widget.properties.comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme).withAlpha(140)
-                : (context.theme.cardColor.withValues(alpha: widget.cardColorOpacity))),
+                : (theme.cardColor.withValues(alpha: widget.cardColorOpacity))),
         child: Stack(
           children: [
             widget.minimalCard
@@ -736,7 +739,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(borderRadiusRawValue.multipliedRadius),
-                      color: context.theme.cardColor.withValues(alpha: widget.fadeOpacity),
+                      color: theme.cardColor.withValues(alpha: widget.fadeOpacity),
                     ),
                   ),
                 ),

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:nampack/core/main_utils.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:youtipie/class/execute_details.dart';
@@ -280,7 +279,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     if (showProgressSheet) {
       WidgetsFlutterBinding.ensureInitialized().addPostFrameCallback(
         (timeStamp) async {
-          final rootContext = nampack.rootNavigatorKey.currentContext;
+          final rootContext = namida.rootNavigatorKey.currentContext;
           if (rootContext != null) {
             popSheet = Navigator.of(rootContext, rootNavigator: true).maybePop;
             void onSheetClose() {
@@ -295,8 +294,10 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
                 .showSheet(
                   isDismissible: false,
                   builder: (context, bottomPadding, maxWidth, maxHeight) {
+                    final theme = context.theme;
+                    final textTheme = theme.textTheme;
                     final iconSize = maxWidth * 0.5;
-                    final iconColor = context.theme.colorScheme.onSurface.withValues(alpha: 0.6);
+                    final iconColor = theme.colorScheme.onSurface.withValues(alpha: 0.6);
                     return Padding(
                       padding: const EdgeInsets.all(32.0),
                       child: Column(
@@ -325,7 +326,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
                           const SizedBox(height: 12.0),
                           Text(
                             '${lang.FETCHING}...',
-                            style: context.textTheme.displayLarge,
+                            style: textTheme.displayLarge,
                           ),
                           const SizedBox(height: 8.0),
                           Obx(
@@ -333,7 +334,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
                               final totalC = totalCount.valueR;
                               return Text(
                                 '${currentCount.valueR.formatDecimal()}/${totalC == null ? '?' : totalC.formatDecimal()}',
-                                style: context.textTheme.displayLarge,
+                                style: textTheme.displayLarge,
                               );
                             },
                           ),

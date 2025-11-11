@@ -108,6 +108,7 @@ class CustomSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final finalColor = passedColor ?? CurrentColor.inst.color;
+    final theme = context.theme;
     return SizedBox(
       width: width,
       height: height,
@@ -115,16 +116,16 @@ class CustomSwitch extends StatelessWidget {
         duration: Duration(milliseconds: durationInMillisecond),
         decoration: BoxDecoration(
           color: (active
-              ? bgColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.surface).withAlpha(140)
-              // : context.theme.scaffoldBackgroundColor.withAlpha(34)
-              : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(60), context.theme.disabledColor)),
+              ? bgColor ?? Color.alphaBlend(finalColor.withAlpha(180), theme.colorScheme.surface).withAlpha(140)
+              // : theme.scaffoldBackgroundColor.withAlpha(34)
+              : Color.alphaBlend(theme.scaffoldBackgroundColor.withAlpha(60), theme.disabledColor)),
           borderRadius: BorderRadius.circular(30.0.multipliedRadius),
           boxShadow: [
             BoxShadow(
               offset: const Offset(0, 2),
               blurRadius: active ? 8 : 2,
               spreadRadius: 0,
-              color: (shadowColor ?? Color.alphaBlend(finalColor.withAlpha(180), context.theme.colorScheme.surface)).withValues(alpha: active ? 0.8 : 0.3),
+              color: (shadowColor ?? Color.alphaBlend(finalColor.withAlpha(180), theme.colorScheme.surface)).withValues(alpha: active ? 0.8 : 0.3),
             ),
           ],
         ),
@@ -260,6 +261,8 @@ class CustomListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final iconColor = context.defaultIconColor(passedColor);
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 400),
@@ -293,14 +296,14 @@ class CustomListTile extends StatelessWidget {
             : leading,
         title: Text(
           title,
-          style: titleStyle ?? (largeTitle ? context.theme.textTheme.displayLarge : context.theme.textTheme.displayMedium),
+          style: titleStyle ?? (largeTitle ? theme.textTheme.displayLarge : theme.textTheme.displayMedium),
           maxLines: subtitle != null ? 4 : 5,
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: subtitle?.isNotEmpty == true
             ? Text(
                 subtitle!,
-                style: context.theme.textTheme.displaySmall,
+                style: theme.textTheme.displaySmall,
                 maxLines: maxSubtitleLines,
                 overflow: TextOverflow.ellipsis,
               )
@@ -314,7 +317,7 @@ class CustomListTile extends StatelessWidget {
                       child: trailingText != null
                           ? Text(
                               trailingText!,
-                              style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
+                              style: textTheme.displayMedium?.copyWith(color: theme.colorScheme.onSurface.withAlpha(200)),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
@@ -795,10 +798,11 @@ class StatsContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       decoration: BoxDecoration(
-        color: context.theme.cardTheme.color?.withAlpha(200),
+        color: theme.cardTheme.color?.withAlpha(200),
         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 5.0),
@@ -862,7 +866,9 @@ class SmallListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = color != null ? context.defaultIconColor(color, context.textTheme.displayMedium?.color) : null;
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final iconColor = color != null ? context.defaultIconColor(color, textTheme.displayMedium?.color) : null;
     return ListTile(
       contentPadding: padding,
       horizontalTitleGap: titleGap,
@@ -887,11 +893,11 @@ class SmallListTile extends StatelessWidget {
       visualDensity: visualDensity ?? (compact ? const VisualDensity(horizontal: -2.2, vertical: -2.2) : const VisualDensity(horizontal: -1.2, vertical: -1.2)),
       title: Text(
         title,
-        style: context.textTheme.displayMedium?.copyWith(
+        style: textTheme.displayMedium?.copyWith(
           color: color != null
               ? Color.alphaBlend(
                   color!.withAlpha(40),
-                  context.textTheme.displayMedium!.color!,
+                  textTheme.displayMedium!.color!,
                 )
               : null,
         ),
@@ -899,11 +905,11 @@ class SmallListTile extends StatelessWidget {
       subtitle: subtitle != null
           ? Text(
               subtitle!,
-              style: context.textTheme.displaySmall?.copyWith(
+              style: textTheme.displaySmall?.copyWith(
                 color: color != null
                     ? Color.alphaBlend(
                         color!.withAlpha(40),
-                        context.textTheme.displayMedium!.color!,
+                        textTheme.displayMedium!.color!,
                       )
                     : null,
               ),
@@ -916,8 +922,8 @@ class SmallListTile extends StatelessWidget {
               child: CheckMark(
                 // curve: Curves.easeInOutExpo,
                 strokeWidth: 2,
-                activeColor: color ?? context.theme.listTileTheme.iconColor!,
-                inactiveColor: color ?? context.theme.listTileTheme.iconColor!,
+                activeColor: color ?? theme.listTileTheme.iconColor!,
+                inactiveColor: color ?? theme.listTileTheme.iconColor!,
                 duration: const Duration(milliseconds: 400),
                 active: settings.artistSortReversed.value,
               ),
@@ -962,6 +968,8 @@ class ListTileWithCheckMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final tileAlpha = context.isDarkMode ? 5 : 20;
     final br = BorderRadius.circular(14.0.multipliedRadius);
     final titleWidgetFinal = Padding(
@@ -973,19 +981,19 @@ class ListTileWithCheckMark extends StatelessWidget {
           titleWidget ??
               Text(
                 title ?? lang.REVERSE_ORDER,
-                style: context.textTheme.displayMedium,
+                style: textTheme.displayMedium,
               ),
           if (subtitle != '')
             Text(
               subtitle,
-              style: context.textTheme.displaySmall,
+              style: textTheme.displaySmall,
             )
         ],
       ),
     );
     return Material(
         borderRadius: br,
-        color: tileColor ?? Color.alphaBlend(context.theme.colorScheme.onSurface.withAlpha(tileAlpha), context.theme.cardTheme.color!),
+        color: tileColor ?? Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(tileAlpha), theme.cardTheme.color!),
         child: InkWell(
           borderRadius: br,
           onTap: onTap,
@@ -1043,13 +1051,14 @@ class NamidaCheckMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return SizedBox(
       width: size,
       height: size,
       child: CheckMark(
         strokeWidth: 2,
-        activeColor: activeColor ?? context.theme.listTileTheme.iconColor!,
-        inactiveColor: inactiveColor ?? context.theme.listTileTheme.iconColor!,
+        activeColor: activeColor ?? theme.listTileTheme.iconColor!,
+        inactiveColor: inactiveColor ?? theme.listTileTheme.iconColor!,
         duration: const Duration(milliseconds: 400),
         active: active,
       ),
@@ -1105,6 +1114,7 @@ class NamidaExpansionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return ListTileTheme(
       dense: !bigahh,
       child: ExpansionTile(
@@ -1137,13 +1147,13 @@ class NamidaExpansionTile extends StatelessWidget {
           children: [
             Text(
               titleText,
-              style: context.textTheme.displayMedium?.copyWith(
+              style: textTheme.displayMedium?.copyWith(
                 color: textColor ??
                     (textColorScheme == null
                         ? null
                         : Color.alphaBlend(
                             textColorScheme!.withAlpha(40),
-                            context.textTheme.displayMedium!.color!,
+                            textTheme.displayMedium!.color!,
                           )),
               ),
             ),
@@ -1152,7 +1162,7 @@ class NamidaExpansionTile extends StatelessWidget {
             else if (subtitleText != null)
               Text(
                 subtitleText!,
-                style: context.textTheme.displaySmall,
+                style: textTheme.displaySmall,
               ),
           ],
         ),
@@ -1258,6 +1268,8 @@ class StackedIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return Stack(
       children: [
         Icon(
@@ -1273,7 +1285,7 @@ class StackedIcon extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
               boxShadow: [
                 BoxShadow(
-                  color: shadowColor ?? context.theme.scaffoldBackgroundColor,
+                  color: shadowColor ?? theme.scaffoldBackgroundColor,
                   spreadRadius: 0,
                   blurRadius: blurRadius,
                 ),
@@ -1283,7 +1295,7 @@ class StackedIcon extends StatelessWidget {
                 (secondaryText != null
                     ? Text(
                         secondaryText!,
-                        style: context.textTheme.displaySmall?.copyWith(color: _getColory(context, secondaryIconColor)),
+                        style: textTheme.displaySmall?.copyWith(color: _getColory(context, secondaryIconColor)),
                       )
                     : Icon(
                         secondaryIcon,
@@ -1405,11 +1417,12 @@ class NamidaBlurryContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final blurredAlphaLight = context.isDarkMode ? 60 : 140;
     final blurEnabled = settings.enableBlurEffect.value;
 
     Widget? finalChild = ColoredBox(
-      color: context.theme.cardColor.withAlpha(blurEnabled ? blurredAlphaLight : 220),
+      color: theme.cardColor.withAlpha(blurEnabled ? blurredAlphaLight : 220),
       child: SizedBox(
         width: width,
         height: height,
@@ -1457,13 +1470,14 @@ class ContainerWithBorder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return DecoratedBox(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: borderColor ?? context.theme.cardColor.withAlpha(160),
+        color: borderColor ?? theme.cardColor.withAlpha(160),
         boxShadow: [
           BoxShadow(
-            color: context.theme.shadowColor.withAlpha(60),
+            color: theme.shadowColor.withAlpha(60),
             blurRadius: 4,
             offset: const Offset(0, 2.0),
           )
@@ -1531,6 +1545,8 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     final totalCount = ((widget.max - widget.min) / widget.stepper).round() + (widget.extraValue ? 1 : 0);
 
     return SizedBox(
@@ -1540,7 +1556,7 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
           if (widget.topText != null) ...[
             Text(
               widget.topText!,
-              style: context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+              style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -1570,7 +1586,7 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
                               width: multipleOfFive ? 35.0 : 20.0,
                               height: 1.5,
                               child: ColoredBox(
-                                color: context.theme.iconTheme.color!,
+                                color: theme.iconTheme.color!,
                               ),
                             ),
                           ),
@@ -1598,7 +1614,7 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4.0.multipliedRadius),
-                      color: context.theme.listTileTheme.textColor!,
+                      color: theme.listTileTheme.textColor!,
                     ),
                   ),
                 ),
@@ -1613,7 +1629,7 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
               child: Text(
                 widget.text!,
                 style: TextStyle(
-                  color: context.textTheme.displaySmall?.color,
+                  color: textTheme.displaySmall?.color,
                 ),
               ),
             ),
@@ -1721,6 +1737,7 @@ class NamidaRawLikeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return MouseRegion(
       hitTestBehavior: HitTestBehavior.translucent,
       cursor: onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
@@ -1729,24 +1746,24 @@ class NamidaRawLikeButton extends StatelessWidget {
         padding: padding,
         likeCountPadding: EdgeInsets.zero,
         bubblesColor: BubblesColor(
-          dotPrimaryColor: context.theme.colorScheme.primary,
-          dotSecondaryColor: context.theme.colorScheme.primaryContainer,
+          dotPrimaryColor: theme.colorScheme.primary,
+          dotSecondaryColor: theme.colorScheme.primaryContainer,
         ),
         circleColor: CircleColor(
-          start: context.theme.colorScheme.tertiary,
-          end: context.theme.colorScheme.tertiary,
+          start: theme.colorScheme.tertiary,
+          end: theme.colorScheme.tertiary,
         ),
         isLiked: isLiked,
         onTap: onTap,
         likeBuilder: (value) => value
             ? Icon(
                 likedIcon,
-                color: enabledColor ?? context.theme.colorScheme.primary,
+                color: enabledColor ?? theme.colorScheme.primary,
                 size: size,
               )
             : Icon(
                 normalIcon,
-                color: disabledColor ?? context.theme.colorScheme.secondary,
+                color: disabledColor ?? theme.colorScheme.secondary,
                 size: size,
               ),
       ),
@@ -2006,6 +2023,7 @@ class SubpageInfoContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     const textHeroEnabled = false;
     const pauseHero = 'kururing';
     final showSubpageInfoAtSide = Dimensions.inst.showSubpageInfoAtSideContext(context);
@@ -2050,12 +2068,12 @@ class SubpageInfoContainer extends StatelessWidget {
                   child: showSubpageInfoAtSide
                       ? Text(
                           title,
-                          style: context.textTheme.displayLarge?.copyWith(fontSize: getFontSize(0.5, 10.0, 32.0)),
+                          style: textTheme.displayLarge?.copyWith(fontSize: getFontSize(0.5, 10.0, 32.0)),
                           softWrap: true,
                         )
                       : Text(
                           title,
-                          style: context.textTheme.displayLarge?.copyWith(fontSize: getFontSize(0.4, 10.0, 32.0)),
+                          style: textTheme.displayLarge?.copyWith(fontSize: getFontSize(0.4, 10.0, 32.0)),
                           maxLines: 1,
                           softWrap: false,
                           overflow: TextOverflow.ellipsis,
@@ -2074,7 +2092,7 @@ class SubpageInfoContainer extends StatelessWidget {
                     subtitle,
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,
-                    style: context.textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28, 10.0, 24.0)),
+                    style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28, 10.0, 24.0)),
                   ),
                 ),
               ),
@@ -2091,7 +2109,7 @@ class SubpageInfoContainer extends StatelessWidget {
                       thirdLineText,
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
-                      style: context.textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.25, 10.0, 22.0)),
+                      style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.25, 10.0, 22.0)),
                     ),
                   ),
                 ),
@@ -2280,13 +2298,15 @@ class NamidaDrawerListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return NamidaInkWell(
       animationDurationMS: 200,
       alignment: Alignment.center,
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: enabled ? CurrentColor.inst.color : context.theme.cardColor,
+        color: enabled ? CurrentColor.inst.color : theme.cardColor,
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
         boxShadow: enabled
             ? [
@@ -2316,7 +2336,7 @@ class NamidaDrawerListTile extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: context.textTheme.displayMedium?.copyWith(
+                style: textTheme.displayMedium?.copyWith(
                   color: enabled ? Colors.white.withAlpha(200) : null,
                   fontSize: 15.0,
                 ),
@@ -2353,6 +2373,7 @@ class SearchPageTitleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return Row(
       children: [
         const SizedBox(width: 16.0),
@@ -2365,13 +2386,13 @@ class SearchPageTitleRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: context.textTheme.displayLarge?.copyWith(fontSize: 15.5),
+                  style: textTheme.displayLarge?.copyWith(fontSize: 15.5),
                 ),
                 if (subtitleWidget != null) subtitleWidget!,
                 if (subtitle != '')
                   Text(
                     subtitle,
-                    style: context.textTheme.displaySmall,
+                    style: textTheme.displaySmall,
                   ),
               ],
             ),
@@ -2414,6 +2435,7 @@ class NamidaLogoContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final bgColor = context.isDarkMode ? const Color(0xd2262729) : const Color(0xd83c3f46);
     return NamidaInkWell(
       onTap: () {
@@ -2465,7 +2487,7 @@ class NamidaLogoContainer extends StatelessWidget {
             Expanded(
               child: Text(
                 'Namida',
-                style: context.textTheme.displayLarge?.copyWith(
+                style: textTheme.displayLarge?.copyWith(
                   color: Color.alphaBlend(bgColor.withAlpha(50), Colors.white),
                   fontSize: 17.5,
                 ),
@@ -2783,18 +2805,20 @@ class NamidaSelectableAutoLinkText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return SelectableAutoLinkText(
       text,
-      style: context.textTheme.displayMedium?.copyWith(
+      style: textTheme.displayMedium?.copyWith(
         fontSize: 13.5 * fontScale,
       ),
-      linkStyle: context.textTheme.displayMedium?.copyWith(
-        color: context.theme.colorScheme.primary.withAlpha(210),
+      linkStyle: textTheme.displayMedium?.copyWith(
+        color: theme.colorScheme.primary.withAlpha(210),
         fontSize: 13.5 * fontScale,
       ),
       highlightedLinkStyle: TextStyle(
-        color: context.theme.colorScheme.primary.withAlpha(220),
-        backgroundColor: context.theme.colorScheme.onSurface.withAlpha(40),
+        color: theme.colorScheme.primary.withAlpha(220),
+        backgroundColor: theme.colorScheme.onSurface.withAlpha(40),
         fontSize: 13.5 * fontScale,
       ),
       scrollPhysics: const NeverScrollableScrollPhysics(),
@@ -2825,9 +2849,11 @@ class DefaultPlaylistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return NamidaInkWell(
       borderRadius: 12.0,
-      bgColor: Color.alphaBlend(colorScheme.withAlpha(10), context.theme.cardColor),
+      bgColor: Color.alphaBlend(colorScheme.withAlpha(10), theme.cardColor),
       onTap: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
       child: Row(
@@ -2840,7 +2866,7 @@ class DefaultPlaylistCard extends StatelessWidget {
           Expanded(
             child: Text(
               title.overflow,
-              style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(10), context.textTheme.displayMedium!.color!)),
+              style: textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(10), textTheme.displayMedium!.color!)),
               softWrap: false,
               overflow: TextOverflow.fade,
             ),
@@ -2850,7 +2876,7 @@ class DefaultPlaylistCard extends StatelessWidget {
               ? const LoadingIndicator()
               : Text(
                   text,
-                  style: context.textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(30), context.textTheme.displayMedium!.color!)),
+                  style: textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(30), textTheme.displayMedium!.color!)),
                 ),
           const SizedBox(width: 2.0),
         ],
@@ -2873,6 +2899,8 @@ class NamidaCircularPercentage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -2886,14 +2914,14 @@ class NamidaCircularPercentage extends StatelessWidget {
               ),
               customColors: CustomSliderColors(
                 dotColor: Colors.transparent,
-                trackColor: context.theme.cardTheme.color,
+                trackColor: theme.cardTheme.color,
                 dynamicGradient: true,
                 progressBarColors: [
-                  context.theme.colorScheme.primary.withAlpha(100),
+                  theme.colorScheme.primary.withAlpha(100),
                   Colors.transparent,
-                  context.theme.colorScheme.secondary.withAlpha(100),
+                  theme.colorScheme.secondary.withAlpha(100),
                   Colors.transparent,
-                  context.theme.colorScheme.primary.withAlpha(100),
+                  theme.colorScheme.primary.withAlpha(100),
                 ],
                 hideShadow: true,
               ),
@@ -2905,7 +2933,7 @@ class NamidaCircularPercentage extends StatelessWidget {
         if (percentage.isFinite)
           Text(
             "${((percentage).clampDouble(0.01, 1.0) * 100).toStringAsFixed(0)}%",
-            style: context.textTheme.displaySmall?.copyWith(fontSize: size / 3.2),
+            style: textTheme.displaySmall?.copyWith(fontSize: size / 3.2),
           )
       ],
     );
@@ -3308,8 +3336,9 @@ class BackgroundWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     return Material(
-      color: context.theme.scaffoldBackgroundColor,
+      color: theme.scaffoldBackgroundColor,
       child: child,
     );
   }
@@ -3352,9 +3381,10 @@ class NamidaInkWell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final borderR =
         decoration.borderRadius?.resolve(Directionality.of(context)) ?? (transparentHighlight || borderRadius == 0 ? null : BorderRadius.circular(borderRadius.multipliedRadius));
-    final highlightColor = transparentHighlight ? Colors.transparent : Color.alphaBlend(context.theme.scaffoldBackgroundColor.withAlpha(20), context.theme.highlightColor);
+    final highlightColor = transparentHighlight ? Colors.transparent : Color.alphaBlend(theme.scaffoldBackgroundColor.withAlpha(20), theme.highlightColor);
     final bgColor = this.bgColor ?? decoration.color ?? Colors.transparent;
     final decorationFinal = BoxDecoration(
       color: bgColor,
@@ -3447,7 +3477,9 @@ class NamidaInkWellButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemsColor = context.theme.colorScheme.onSurface.withValues(alpha: 0.8);
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final itemsColor = theme.colorScheme.onSurface.withValues(alpha: 0.8);
     final textGood = text.isNotEmpty;
     return IgnorePointer(
       ignoring: !enabled && disableWhenLoading,
@@ -3458,7 +3490,7 @@ class NamidaInkWellButton extends StatelessWidget {
           animationDurationMS: animationDurationMS,
           borderRadius: borderRadius * sizeMultiplier,
           padding: EdgeInsets.symmetric(horizontal: 12.0 * sizeMultiplier * paddingMultiplier, vertical: 6.0 * sizeMultiplier * paddingMultiplier),
-          bgColor: bgColor ?? context.theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
+          bgColor: bgColor ?? theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
           onTap: onTap,
           enableSecondaryTap: false,
           child: Row(
@@ -3480,7 +3512,7 @@ class NamidaInkWellButton extends StatelessWidget {
                 Flexible(
                   child: Text(
                     text,
-                    style: context.textTheme.displayMedium?.copyWith(
+                    style: textTheme.displayMedium?.copyWith(
                       color: itemsColor,
                       fontSize: (15.0 * sizeMultiplier),
                     ),
@@ -3580,6 +3612,7 @@ class _BetweenDatesTextButtonState extends State<BetweenDatesTextButton> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     final textWidget = Text(lang.BETWEEN_DATES);
 
     return TextButton.icon(
@@ -3611,13 +3644,13 @@ class _BetweenDatesTextButtonState extends State<BetweenDatesTextButton> {
                     if (widget.tracksLength != 0)
                       NamidaButtonText(
                         "(${widget.tracksLength.displayTrackKeyword})",
-                        style: context.textTheme.displaySmall,
+                        style: textTheme.displaySmall,
                       ),
                   ],
                 ),
                 NamidaButtonText(
                   "${oldestDate?.millisecondsSinceEpoch.dateFormattedOriginal} → ${newestDate?.millisecondsSinceEpoch.dateFormattedOriginal}",
-                  style: context.textTheme.displaySmall,
+                  style: textTheme.displaySmall,
                 ),
               ],
             ),
@@ -3999,12 +4032,14 @@ class NamidaPopupWrapper extends StatelessWidget {
   }
 
   FutureOr<List<PopupMenuEntry<dynamic>>> convertItems(BuildContext context) async {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return [
       if (children != null && !childrenAfterChildrenDefault) ..._mapChildren(await children!()),
       if (childrenDefault != null)
         ...(await childrenDefault!()).map(
           (e) {
-            final titleStyle = context.textTheme.displayMedium?.copyWith(color: e.enabled ? null : context.textTheme.displayMedium?.color?.withValues(alpha: 0.4));
+            final titleStyle = textTheme.displayMedium?.copyWith(color: e.enabled ? null : textTheme.displayMedium?.color?.withValues(alpha: 0.4));
             Widget popupItem = Row(
               children: [
                 e.secondaryIcon != null
@@ -4012,8 +4047,8 @@ class NamidaPopupWrapper extends StatelessWidget {
                         baseIcon: e.icon,
                         iconSize: 20.0,
                         secondaryIcon: e.secondaryIcon,
-                        baseIconColor: context.theme.iconTheme.color?.withValues(alpha: 0.8),
-                        secondaryIconColor: context.theme.iconTheme.color?.withValues(alpha: 0.8),
+                        baseIconColor: theme.iconTheme.color?.withValues(alpha: 0.8),
+                        secondaryIconColor: theme.iconTheme.color?.withValues(alpha: 0.8),
                         secondaryIconSize: 11.0,
                       )
                     : Icon(
@@ -4025,7 +4060,7 @@ class NamidaPopupWrapper extends StatelessWidget {
                             color: Color(0x10202020),
                           ),
                         ],
-                        color: context.theme.iconTheme.color?.withValues(alpha: 0.8),
+                        color: theme.iconTheme.color?.withValues(alpha: 0.8),
                       ),
                 const SizedBox(width: 6.0),
                 Expanded(
@@ -4040,7 +4075,7 @@ class NamidaPopupWrapper extends StatelessWidget {
                       if (e.subtitle != '')
                         Text(
                           e.subtitle,
-                          style: context.textTheme.displaySmall,
+                          style: textTheme.displaySmall,
                           maxLines: e.oneLinedSub ? 1 : null,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -4441,6 +4476,8 @@ class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
       );
     }
 
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return Stack(
       key: stackKey,
       alignment: Alignment.center,
@@ -4452,7 +4489,7 @@ class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
             top: _selectedChar.valueR.$1 * columnHeight,
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 8.0),
-              decoration: BoxDecoration(shape: BoxShape.circle, color: context.theme.cardColor),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: theme.cardColor),
               child: Text(_selectedChar.valueR.$2),
             ),
           ),
@@ -4464,11 +4501,11 @@ class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
             height: stackHeight,
             child: FittedBox(
               child: DefaultTextStyle(
-                style: context.textTheme.displaySmall!.copyWith(fontSize: stackHeight / widget.scrollConfig.length),
+                style: textTheme.displaySmall!.copyWith(fontSize: stackHeight / widget.scrollConfig.length),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: verticalPadding),
                   decoration: BoxDecoration(
-                    color: context.theme.scaffoldBackgroundColor.withValues(alpha: 0.8),
+                    color: theme.scaffoldBackgroundColor.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                   ),
                   child: GestureDetector(
@@ -4686,7 +4723,9 @@ class RepeatModeIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = color ?? context.theme.colorScheme.onSecondaryContainer;
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final iconColor = color ?? theme.colorScheme.onSecondaryContainer;
 
     return ObxO(
       rx: settings.player.repeatMode,
@@ -4706,7 +4745,7 @@ class RepeatModeIconButton extends StatelessWidget {
                 rx: Player.inst.numberOfRepeats,
                 builder: (context, numberOfRepeats) => Text(
                   '$numberOfRepeats',
-                  style: context.textTheme.displaySmall?.copyWith(color: iconColor),
+                  style: textTheme.displaySmall?.copyWith(color: iconColor),
                 ),
               ),
           ],
@@ -5147,6 +5186,7 @@ class NamidaHistoryDayHeaderBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: bgColor,
@@ -5173,7 +5213,7 @@ class NamidaHistoryDayHeaderBox extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: context.textTheme.displayMedium,
+                style: textTheme.displayMedium,
               ),
             ),
             const SizedBox(width: 4.0),
@@ -5216,6 +5256,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final tempFilesSize = this.tempFilesSize;
     final tempFilesDelete = this.tempFilesDelete;
     return NamidaExpansionTile(
@@ -5229,7 +5270,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
         children: [
           DecoratedBox(
             decoration: BoxDecoration(
-              color: context.theme.cardColor,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(6.0.multipliedRadius),
             ),
             child: Padding(
@@ -5250,7 +5291,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
               borderRadius: 12.0,
               icon: Broken.arrow_right_3,
               iconSize: 20.0,
-              color: context.theme.cardColor,
+              color: theme.cardColor,
               visualDensity: const VisualDensity(horizontal: -3.0, vertical: -3.0),
               title: data.title,
               subtitle: data.subtitle,
@@ -5284,7 +5325,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
                 borderRadius: 12.0,
                 icon: Broken.broom,
                 iconSize: 20.0,
-                color: context.theme.cardColor,
+                color: theme.cardColor,
                 visualDensity: const VisualDensity(horizontal: -3.0, vertical: -3.0),
                 title: lang.DELETE_TEMP_FILES,
                 subtitle: size.fileSizeFormatted,
@@ -5453,6 +5494,8 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
   }
 
   NamidaPopupWrapper? _getPopupWrapper() {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return cachePriority != null || widget.totalCount > 1
         ? NamidaPopupWrapper(
             childrenAfterChildrenDefault: false,
@@ -5473,7 +5516,7 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
                         lang.PRIORITY,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.displaySmall,
+                        style: textTheme.displaySmall,
                       ),
                     ],
                   ),
@@ -5508,10 +5551,10 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
                 .toList(),
             child: NamidaInkWell(
               padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
-              bgColor: context.theme.cardColor,
+              bgColor: theme.cardColor,
               child: Text(
                 cachePriority?.toText() ?? '?',
-                style: widget.smaller ? context.theme.textTheme.displaySmall : context.theme.textTheme.displayMedium,
+                style: widget.smaller ? theme.textTheme.displaySmall : theme.textTheme.displayMedium,
               ),
             ),
           )
@@ -5648,105 +5691,108 @@ class NamidaUpdateButton extends StatelessWidget {
     final currentVersionDateText = versionToDate(currentVersion);
 
     NamidaNavigator.inst.showSheet(
-      builder: (context, bottomPadding, maxWidth, maxHeight) => SizedBox(
-        height: maxHeight,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 32.0),
-              ObxO(
-                rx: VersionController.inst.latestVersion,
-                builder: (context, latestVersion) {
-                  final buildDateText = versionToDate(latestVersion);
+      builder: (context, bottomPadding, maxWidth, maxHeight) {
+        final textTheme = context.textTheme;
+        return SizedBox(
+          height: maxHeight,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 32.0),
+                ObxO(
+                  rx: VersionController.inst.latestVersion,
+                  builder: (context, latestVersion) {
+                    final buildDateText = versionToDate(latestVersion);
 
-                  return RichText(
-                    text: TextSpan(
-                      text: latestVersion?.prettyVersion ?? '',
-                      children: buildDateText.isEmpty
-                          ? null
-                          : [
-                              TextSpan(
-                                text: buildDateText,
-                                style: context.textTheme.displayMedium,
-                              ),
-                            ],
-                      style: context.textTheme.displayLarge,
-                    ),
-                  );
-                },
-              ),
-              if (currentVersion != null)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    RotatedBox(
-                      quarterTurns: 2,
-                      child: RichText(
-                        text: TextSpan(
-                          text: '⤵ ',
-                          style: context.textTheme.displaySmall,
-                        ),
-                      ),
-                    ),
-                    RichText(
+                    return RichText(
                       text: TextSpan(
-                        text: currentVersion.prettyVersion,
-                        style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
-                        children: currentVersionDateText.isEmpty
+                        text: latestVersion?.prettyVersion ?? '',
+                        children: buildDateText.isEmpty
                             ? null
                             : [
                                 TextSpan(
-                                  text: currentVersionDateText,
-                                  style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                                  text: buildDateText,
+                                  style: textTheme.displayMedium,
                                 ),
                               ],
+                        style: textTheme.displayLarge,
+                      ),
+                    );
+                  },
+                ),
+                if (currentVersion != null)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RotatedBox(
+                        quarterTurns: 2,
+                        child: RichText(
+                          text: TextSpan(
+                            text: '⤵ ',
+                            style: textTheme.displaySmall,
+                          ),
+                        ),
+                      ),
+                      RichText(
+                        text: TextSpan(
+                          text: currentVersion.prettyVersion,
+                          style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                          children: currentVersionDateText.isEmpty
+                              ? null
+                              : [
+                                  TextSpan(
+                                    text: currentVersionDateText,
+                                    style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                                  ),
+                                ],
+                        ),
+                      ),
+                    ],
+                  ),
+                SizedBox(height: 12.0),
+                Expanded(
+                  child: _NamidaVersionReleasesInfoList(
+                    maxHeight: maxHeight,
+                  ),
+                ),
+                SizedBox(height: 12.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: TextButton(
+                        onPressed: () => popSheet(context),
+                        child: NamidaButtonText(lang.CANCEL),
+                      ),
+                    ),
+                    const SizedBox(width: 12.0),
+                    Expanded(
+                      flex: 2,
+                      child: NamidaInkWell(
+                        onTap: () => onUpdateTap(context),
+                        borderRadius: 12.0,
+                        padding: const EdgeInsets.all(12.0),
+                        height: 48.0,
+                        bgColor: CurrentColor.inst.color.withValues(alpha: 0.9),
+                        child: Center(
+                          child: Text(
+                            lang.UPDATE.toUpperCase(),
+                            style: textTheme.displayMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              SizedBox(height: 12.0),
-              Expanded(
-                child: _NamidaVersionReleasesInfoList(
-                  maxHeight: maxHeight,
-                ),
-              ),
-              SizedBox(height: 12.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: TextButton(
-                      onPressed: () => popSheet(context),
-                      child: NamidaButtonText(lang.CANCEL),
-                    ),
-                  ),
-                  const SizedBox(width: 12.0),
-                  Expanded(
-                    flex: 2,
-                    child: NamidaInkWell(
-                      onTap: () => onUpdateTap(context),
-                      borderRadius: 12.0,
-                      padding: const EdgeInsets.all(12.0),
-                      height: 48.0,
-                      bgColor: CurrentColor.inst.color.withValues(alpha: 0.9),
-                      child: Center(
-                        child: Text(
-                          lang.UPDATE.toUpperCase(),
-                          style: context.textTheme.displayMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12.0),
-            ],
+                SizedBox(height: 12.0),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -5776,6 +5822,8 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return ObxO(
       rx: VersionController.inst.releasesAfterCurrent,
       builder: (context, releasesAfterCurrent) => releasesAfterCurrent == null
@@ -5790,7 +5838,7 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
                     margin: const EdgeInsets.symmetric(vertical: 4.0),
                     width: context.width,
                     height: widget.maxHeight * 0.5,
-                    bgColor: context.theme.cardColor,
+                    bgColor: theme.cardColor,
                   );
                 },
               ),
@@ -5807,11 +5855,11 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
                     if (index > 0)
                       Text(
                         info.version.prettyVersion,
-                        style: context.textTheme.displayMedium,
+                        style: textTheme.displayMedium,
                       ),
                     SizedBox(height: 4.0),
                     NamidaInkWell(
-                      bgColor: context.theme.cardColor,
+                      bgColor: theme.cardColor,
                       padding: EdgeInsets.all(8.0),
                       child: Markdown(
                         physics: const NeverScrollableScrollPhysics(),
@@ -5819,14 +5867,14 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
                         shrinkWrap: true,
                         padding: EdgeInsets.zero,
                         styleSheet: MarkdownStyleSheet(
-                          a: context.textTheme.displayLarge,
-                          h1: context.textTheme.displayLarge,
-                          h2: context.textTheme.displayMedium,
-                          h3: context.textTheme.displayMedium,
-                          h4: context.textTheme.displayMedium,
-                          code: context.textTheme.displaySmall,
-                          p: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                          listBullet: context.textTheme.displayMedium,
+                          a: textTheme.displayLarge,
+                          h1: textTheme.displayLarge,
+                          h2: textTheme.displayMedium,
+                          h3: textTheme.displayMedium,
+                          h4: textTheme.displayMedium,
+                          code: textTheme.displaySmall,
+                          p: textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                          listBullet: textTheme.displayMedium,
                         ),
                       ),
                     ),
@@ -5861,6 +5909,8 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
     return SuperListView(
       shrinkWrap: true,
       children: organizedMap.entries
@@ -5893,11 +5943,11 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
                       borderRadius: 4.0,
                       margin: EdgeInsets.only(right: 3.0),
                       padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                      bgColor: context.theme.cardColor,
+                      bgColor: theme.cardColor,
                       child: RichText(
                         text: TextSpan(
                           text: shortcut,
-                          style: context.textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
+                          style: textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -5906,7 +5956,7 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
                   RichText(
                     text: TextSpan(
                       text: title,
-                      style: context.textTheme.displayMedium?.copyWith(fontSize: 13.5),
+                      style: textTheme.displayMedium?.copyWith(fontSize: 13.5),
                     ),
                   ),
                 ],
