@@ -310,12 +310,17 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
   void initValues() async {
     availableDirectoriesNames[''] = 0;
     int rootFiles = 0;
+    final subfolders = <String>[];
     await for (final d in Directory(AppDirs.YOUTUBE_DOWNLOADS).list()) {
       if (d is Directory) {
-        availableDirectoriesNames[d.path.splitLast(Platform.pathSeparator)] = 0;
+        subfolders.add(d.path.splitLast(Platform.pathSeparator));
       } else {
         rootFiles++;
       }
+    }
+    subfolders.sort();
+    for (final subfolder in subfolders) {
+      availableDirectoriesNames[subfolder] = 0;
     }
     availableDirectoriesNames[''] = rootFiles;
     refreshState();
