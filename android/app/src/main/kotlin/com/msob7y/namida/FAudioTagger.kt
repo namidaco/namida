@@ -14,7 +14,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.util.Base64
-import java.util.concurrent.CompletableFuture
 import kotlin.collections.List
 import kotlin.collections.Map
 import kotlinx.coroutines.*
@@ -40,7 +39,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
   lateinit var channel: MethodChannel
   lateinit var binaryMessenger: BinaryMessenger
   val eventChannels = HashMap<Number, BetterEventChannel>()
-  val streamCompleters = HashMap<Number, CompletableFuture<Number>>()
+  val streamCompleters = HashMap<Number, CompletableDeferred<Number>>()
   lateinit var context: Context
 
   companion object {
@@ -145,13 +144,13 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
           val eventChannel = eventChannels.get(streamKey)!!
           val eventChannelIndices = BetterEventChannel(binaryMessenger, "faudiotagger/stream/" + streamKey + ".index")
 
-          streamCompleters.set(streamKey, CompletableFuture<Number>())
+          streamCompleters.set(streamKey, CompletableDeferred<Number>())
           result.success(streamKey)
 
           CoroutineScope(Dispatchers.IO).launch {
             _addLogsUser()
             // waiting for confirmation before posting to stream
-            streamCompleters.get(streamKey)!!.get()
+            streamCompleters.get(streamKey)!!.await()
             var index: Int = -1
             for (p in paths) {
               var map = HashMap<String, Any>()

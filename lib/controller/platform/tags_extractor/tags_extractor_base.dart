@@ -114,5 +114,6 @@ class ExtractingPathKey {
   int _initial = 0;
   ExtractingPathKey.create();
 
-  int next() => _initial++;
+  // always use unique keys, reusing same event channels can result in indexing being stuck
+  int next() => (_initial++) + DateTime.now().microsecondsSinceEpoch;
 }
