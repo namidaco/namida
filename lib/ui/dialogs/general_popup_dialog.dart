@@ -87,7 +87,7 @@ Future<void> showGeneralPopupDialog(
     final int length = tracks.length;
     for (int i = 0; i < length; i++) {
       final t = tracks[i];
-      if (await File(t.path).exists()) tracksExisting.add(t);
+      if (File(t.path).existsSync()) tracksExisting.add(t);
     }
   } else {
     tracks.loop((t) {
