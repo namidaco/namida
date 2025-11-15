@@ -11,6 +11,7 @@ import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -277,6 +278,7 @@ class TrackExtended {
   final String? originalTags;
   final List<String> tagsList;
   final ReplayGainData? gainData;
+  final String? hashKey;
 
   final AlbumIdentifierWrapper? albumIdentifierWrapper;
   final bool isVideo;
@@ -315,6 +317,7 @@ class TrackExtended {
     required this.originalTags,
     required this.tagsList,
     required this.gainData,
+    required this.hashKey,
     required this.albumIdentifierWrapper,
     required this.isVideo,
   });
@@ -344,7 +347,7 @@ class TrackExtended {
     );
   }
 
-  static buildAudioInfoFormatted(int durationMS, int size, int bitrate, int sampleRate, ReplayGainData? gain) {
+  static String buildAudioInfoFormatted(int durationMS, int size, int bitrate, int sampleRate, ReplayGainData? gain) {
     final initial = [
       durationMS.milliSecondsLabel,
       size.fileSizeFormatted,
@@ -372,6 +375,12 @@ class TrackExtended {
       "$bitrate kbps",
       "${sampleRate / 1000} khz",
     ].joinText(separator: ' • ');
+  }
+
+  static String? generateHashKeyIfEnabled(String? path, String newPath, String? currentHashKey) {
+    if (!TagsExtractor.defaultUniqueArtworkHash) return null;
+    if (newPath == path) return currentHashKey;
+    return newPath.toFastHashKey();
   }
 
   factory TrackExtended.fromJson(
@@ -428,6 +437,7 @@ class TrackExtended {
         config: generalSplitConfig,
       ),
       gainData: json['gainData'] == null ? null : ReplayGainData.fromMap(json['gainData']),
+      hashKey: json['hashKey'],
       albumIdentifierWrapper: json['albumIdentifierWrapper'] == null ? null : AlbumIdentifierWrapper.fromMap(json['albumIdentifierWrapper']),
       isVideo: json['v'] ?? false,
     );
@@ -493,8 +503,16 @@ extension TrackExtUtils on TrackExtended {
   String get folderPath => path.getDirectoryPath;
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
-    final identifier = settings.groupArtworksByAlbum.value ? albumIdentifier : filename;
+    final identifier = this.cacheKey;
     return "${isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS}$identifier.png";
+  }
+
+  String get cacheKey {
+    if (settings.groupArtworksByAlbum.value) return albumIdentifier;
+    if (TagsExtractor.defaultUniqueArtworkHash) {
+      return hashKey != null ? "${filename}_$hashKey" : filename;
+    }
+    return filename;
   }
 
   String get albumIdentifier => albumIdentifierWrapper?.resolved() ?? '';
@@ -559,6 +577,7 @@ extension TrackExtUtils on TrackExtended {
     required SplitArtistGenreConfigsWrapper splittersConfigs,
     int? dateModified,
     String? path,
+    required bool generatePathHash,
   }) {
     final finaltitle = tag.title ?? title;
     final finalartists = tag.artist != null
@@ -590,6 +609,9 @@ extension TrackExtUtils on TrackExtended {
     final albumArtist = tag.albumArtist ?? this.albumArtist;
     final yearText = tag.year ?? this.year.toString();
     final year = TrackExtended.enforceYearFormat(tag.year) ?? this.year;
+
+    final newPath = path ?? this.path;
+    String? newHashKey = TrackExtended.generateHashKeyIfEnabled(path, newPath, this.hashKey);
     return TrackExtended(
       title: finaltitle,
       originalArtist: tag.artist ?? originalArtist,
@@ -605,7 +627,7 @@ extension TrackExtUtils on TrackExtended {
       year: year,
       yearText: yearText,
       dateModified: dateModified ?? this.dateModified,
-      path: path ?? this.path,
+      path: newPath,
       comment: tag.comment ?? comment,
       description: tag.description ?? description,
       synopsis: tag.synopsis ?? synopsis,
@@ -632,6 +654,7 @@ extension TrackExtUtils on TrackExtended {
         year: yearText,
       ),
       isVideo: isVideo,
+      hashKey: newHashKey,
     );
   }
 
@@ -673,7 +696,10 @@ extension TrackExtUtils on TrackExtended {
     ReplayGainData? gainData,
     AlbumIdentifierWrapper? albumIdentifierWrapper,
     bool? isVideo,
+    required bool generatePathHash,
   }) {
+    final newPath = path ?? this.path;
+    String? newHashKey = TrackExtended.generateHashKeyIfEnabled(path, newPath, this.hashKey);
     return TrackExtended(
       title: title ?? this.title,
       originalArtist: originalArtist ?? this.originalArtist,
@@ -692,7 +718,7 @@ extension TrackExtUtils on TrackExtended {
       size: size ?? this.size,
       dateAdded: dateAdded ?? this.dateAdded,
       dateModified: dateModified ?? this.dateModified,
-      path: path ?? this.path,
+      path: newPath,
       comment: comment ?? this.comment,
       description: description ?? this.description,
       synopsis: synopsis ?? this.synopsis,
@@ -708,6 +734,7 @@ extension TrackExtUtils on TrackExtended {
       originalTags: originalTags ?? this.originalTags,
       tagsList: tagsList ?? this.tagsList,
       gainData: gainData ?? this.gainData,
+      hashKey: newHashKey,
       albumIdentifierWrapper: albumIdentifierWrapper ?? this.albumIdentifierWrapper,
       isVideo: isVideo ?? this.isVideo,
     );
@@ -716,7 +743,8 @@ extension TrackExtUtils on TrackExtended {
 
 extension TrackUtils on Track {
   bool hasInfoInLibrary() => toTrackExtOrNull() != null;
-  TrackExtended toTrackExt() => toTrackExtOrNull() ?? kDummyExtendedTrack.copyWith(title: path.getFilenameWOExt, path: path);
+  TrackExtended toTrackExt() =>
+      toTrackExtOrNull() ?? kDummyExtendedTrack.copyWith(title: path.getFilenameWOExt, path: path, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
   TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[path];
 
   String get yearPreferyyyyMMdd => toTrackExt().yearPreferyyyyMMdd;
@@ -778,7 +806,7 @@ extension TrackUtils on Track {
   String get folderPath => path.getDirectoryPath;
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
-    final identifier = settings.groupArtworksByAlbum.value ? albumIdentifier : filename;
+    final identifier = this.cacheKey;
     return "${this is Video ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS}$identifier.png";
   }
 
@@ -791,6 +819,7 @@ extension TrackUtils on Track {
 
   AlbumIdentifierWrapper? get albumIdentifierWrapper => toTrackExtOrNull()?.albumIdentifierWrapper;
 
+  String get cacheKey => toTrackExt().cacheKey;
   String get albumIdentifier => toTrackExt().albumIdentifier;
   String getAlbumIdentifier(List<AlbumIdentifier> identifiers) => toTrackExt().getAlbumIdentifier(identifiers);
 

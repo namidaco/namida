@@ -32,6 +32,7 @@ enum _IndexerSettingsKeys {
   respectNoMedia,
   extractFtArtist,
   groupArtworksByAlbum,
+  uniqueArtworkHash,
   albumIdentifiers,
   artistSeparators,
   genreSeparators,
@@ -59,6 +60,7 @@ class IndexerSettings extends SettingSubpageProvider {
         _IndexerSettingsKeys.respectNoMedia: [lang.RESPECT_NO_MEDIA, lang.RESPECT_NO_MEDIA_SUBTITLE],
         _IndexerSettingsKeys.extractFtArtist: [lang.EXTRACT_FEAT_ARTIST, lang.EXTRACT_FEAT_ARTIST_SUBTITLE],
         _IndexerSettingsKeys.groupArtworksByAlbum: [lang.GROUP_ARTWORKS_BY_ALBUM],
+        _IndexerSettingsKeys.uniqueArtworkHash: [lang.UNIQUE_ARTWORK_HASH],
         _IndexerSettingsKeys.albumIdentifiers: [lang.ALBUM_IDENTIFIERS],
         _IndexerSettingsKeys.artistSeparators: [lang.TRACK_ARTISTS_SEPARATOR],
         _IndexerSettingsKeys.genreSeparators: [lang.TRACK_GENRES_SEPARATOR],
@@ -139,16 +141,19 @@ class IndexerSettings extends SettingSubpageProvider {
     return getItemWrapper(
       key: _IndexerSettingsKeys.groupArtworksByAlbum,
       child: Obx(
-        (context) => CustomSwitchListTile(
-          bgColor: getBgColor(_IndexerSettingsKeys.groupArtworksByAlbum),
-          icon: Broken.backward_item,
-          title: lang.GROUP_ARTWORKS_BY_ALBUM,
-          subtitle: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING,
-          value: settings.groupArtworksByAlbum.valueR,
-          onChanged: (isTrue) {
-            settings.save(groupArtworksByAlbum: !isTrue);
-            _showReindexingPrompt(title: lang.GROUP_ARTWORKS_BY_ALBUM, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
-          },
+        (context) => AnimatedEnabled(
+          enabled: !settings.uniqueArtworkHash.valueR,
+          child: CustomSwitchListTile(
+            bgColor: getBgColor(_IndexerSettingsKeys.groupArtworksByAlbum),
+            icon: Broken.backward_item,
+            title: lang.GROUP_ARTWORKS_BY_ALBUM,
+            subtitle: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING,
+            value: settings.groupArtworksByAlbum.valueR,
+            onChanged: (isTrue) {
+              settings.save(groupArtworksByAlbum: !isTrue);
+              _showReindexingPrompt(title: lang.GROUP_ARTWORKS_BY_ALBUM, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
+            },
+          ),
         ),
       ),
     );
@@ -450,6 +455,29 @@ class IndexerSettings extends SettingSubpageProvider {
             ),
           ),
           getGroupArtworksByAlbumWidget(),
+          getItemWrapper(
+            key: _IndexerSettingsKeys.uniqueArtworkHash,
+            child: Obx(
+              (context) => AnimatedEnabled(
+                enabled: !settings.groupArtworksByAlbum.valueR,
+                child: CustomSwitchListTile(
+                  bgColor: getBgColor(_IndexerSettingsKeys.uniqueArtworkHash),
+                  leading: StackedIcon(
+                    baseIcon: Broken.gallery,
+                    secondaryIcon: Broken.cpu,
+                    secondaryIconSize: 13.0,
+                  ),
+                  title: lang.UNIQUE_ARTWORK_HASH,
+                  subtitle: "${lang.PERFORMANCE_NOTE}. ${lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING}",
+                  value: settings.uniqueArtworkHash.valueR,
+                  onChanged: (isTrue) {
+                    settings.save(uniqueArtworkHash: !isTrue);
+                    _showReindexingPrompt(title: lang.UNIQUE_ARTWORK_HASH, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
+                  },
+                ),
+              ),
+            ),
+          ),
           getItemWrapper(
             key: _IndexerSettingsKeys.albumIdentifiers,
             child: Obx(

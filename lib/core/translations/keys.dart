@@ -725,6 +725,7 @@ abstract class LanguageKeys {
   String get UNDO_CHANGES_DELETED_TRACK => _getKey('UNDO_CHANGES_DELETED_TRACK');
   String get UNDO_CHANGES => _getKey('UNDO_CHANGES');
   String get UNDO => _getKey('UNDO');
+  String get UNIQUE_ARTWORK_HASH => _getKey('UNIQUE_ARTWORK_HASH');
   String get UNLIMITED => _getKey('UNLIMITED');
   String get UNLISTED => _getKey('UNLISTED');
   String get UNLOCK => _getKey('UNLOCK');

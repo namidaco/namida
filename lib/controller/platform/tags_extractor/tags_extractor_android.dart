@@ -46,6 +46,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
       "artworkDirectory": artworkDirectory,
       "extractArtwork": extractArtwork,
       "overrideArtwork": overrideArtwork,
+      "uniqueArtworkHash": TagsExtractor.defaultUniqueArtworkHash,
       "artworkIdentifiers": TagsExtractor.defaultGroupArtworksByAlbum ? TagsExtractor.defaultAlbumIdentifier.map((e) => e.index).toList() : null,
     });
     try {
@@ -144,6 +145,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
       "videoArtworkDirectory": videoArtworkDirectory,
       "extractArtwork": extractArtwork,
       "overrideArtwork": overrideArtwork,
+      "uniqueArtworkHash": TagsExtractor.defaultUniqueArtworkHash,
       "videoExtensions": NamidaFileExtensionsWrapper.video.extensions.toList(),
       "artworkIdentifiers": TagsExtractor.defaultGroupArtworksByAlbum ? TagsExtractor.defaultAlbumIdentifier.map((e) => e.index).toList() : null,
     });

@@ -35,7 +35,9 @@ class _TagsExtractorWindows extends TagsExtractor {
                 year: ffmpegInfo?.format?.tags?.date,
                 identifiers: identifiersSet,
               )
-            : trackPath.getFilename;
+            : TagsExtractor.defaultUniqueArtworkHash
+                ? "${trackPath.getFilename}_${trackPath.toFastHashKey()}"
+                : trackPath.getFilename;
         final possibleThumbFile = FileParts.join(artworkDirectory, '$filename.png');
         artwork.file = possibleThumbFile;
 

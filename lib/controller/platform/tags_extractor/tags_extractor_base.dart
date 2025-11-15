@@ -82,6 +82,7 @@ abstract class TagsExtractor {
     return res;
   }
 
+  static bool get defaultUniqueArtworkHash => settings.uniqueArtworkHash.value;
   static bool get defaultGroupArtworksByAlbum => settings.groupArtworksByAlbum.value;
   static List<AlbumIdentifier> get defaultAlbumIdentifier => settings.albumIdentifiers.value;
 

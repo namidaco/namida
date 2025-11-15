@@ -172,6 +172,7 @@ class _SettingsController with SettingsFileWriter {
   final showUnknownFieldsInTrackInfoDialog = true.obs;
   final extractFeatArtistFromTitle = true.obs;
   final groupArtworksByAlbum = false.obs;
+  final uniqueArtworkHash = false.obs;
   final enableM3USync = false.obs;
   final enableM3USyncStartup = true.obs;
   final prioritizeEmbeddedLyrics = true.obs;
@@ -572,6 +573,7 @@ class _SettingsController with SettingsFileWriter {
       showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
       extractFeatArtistFromTitle.value = json['extractFeatArtistFromTitle'] ?? extractFeatArtistFromTitle.value;
       groupArtworksByAlbum.value = json['groupArtworksByAlbum'] ?? groupArtworksByAlbum.value;
+      uniqueArtworkHash.value = json['uniqueArtworkHash'] ?? uniqueArtworkHash.value;
       enableM3USync.value = json['enableM3USync'] ?? enableM3USync.value;
       enableM3USyncStartup.value = json['enableM3USyncStartup'] ?? enableM3USyncStartup.value;
       prioritizeEmbeddedLyrics.value = json['prioritizeEmbeddedLyrics'] ?? prioritizeEmbeddedLyrics.value;
@@ -797,6 +799,7 @@ class _SettingsController with SettingsFileWriter {
         'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
         'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
         'groupArtworksByAlbum': groupArtworksByAlbum.value,
+        'uniqueArtworkHash': uniqueArtworkHash.value,
         'enableM3USync': enableM3USync.value,
         'enableM3USyncStartup': enableM3USyncStartup.value,
         'prioritizeEmbeddedLyrics': prioritizeEmbeddedLyrics.value,
@@ -979,6 +982,7 @@ class _SettingsController with SettingsFileWriter {
     bool? showUnknownFieldsInTrackInfoDialog,
     bool? extractFeatArtistFromTitle,
     bool? groupArtworksByAlbum,
+    bool? uniqueArtworkHash,
     bool? enableM3USync,
     bool? enableM3USyncStartup,
     bool? prioritizeEmbeddedLyrics,
@@ -1210,6 +1214,7 @@ class _SettingsController with SettingsFileWriter {
     if (showUnknownFieldsInTrackInfoDialog != null) this.showUnknownFieldsInTrackInfoDialog.value = showUnknownFieldsInTrackInfoDialog;
     if (extractFeatArtistFromTitle != null) this.extractFeatArtistFromTitle.value = extractFeatArtistFromTitle;
     if (groupArtworksByAlbum != null) this.groupArtworksByAlbum.value = groupArtworksByAlbum;
+    if (uniqueArtworkHash != null) this.uniqueArtworkHash.value = uniqueArtworkHash;
     if (enableM3USync != null) this.enableM3USync.value = enableM3USync;
     if (enableM3USyncStartup != null) this.enableM3USyncStartup.value = enableM3USyncStartup;
     if (prioritizeEmbeddedLyrics != null) this.prioritizeEmbeddedLyrics.value = prioritizeEmbeddedLyrics;

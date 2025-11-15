@@ -180,7 +180,7 @@ class NamidaTaggerController {
 
           if (didUpdate) {
             final trExt = track.toTrackExt();
-            final newTrExt = trExt.copyWithTag(tag: newTags, splittersConfigs: splittersConfigs);
+            final newTrExt = trExt.copyWithTag(tag: newTags, splittersConfigs: splittersConfigs, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
             tracksMap[track] = newTrExt;
             if (imageFile != null) await imageFile.copy(newTrExt.pathToImage);
           }

@@ -273,7 +273,7 @@ class CurrentColor {
     bool delightnedAndAlpha = true,
     bool useIsolate = _defaultUseIsolate,
   }) {
-    final filename = networkArtworkInfo?.toArtworkIfExistsAndEnabled()?.path ?? (settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename);
+    final filename = networkArtworkInfo?.toArtworkIfExistsAndEnabled()?.path ?? track.cacheKey;
 
     final valInMap = _colorsMap[filename];
 
@@ -309,7 +309,7 @@ class CurrentColor {
       useIsolate: useIsolate,
     );
 
-    final filename = networkArtwork ?? (settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename);
+    final filename = networkArtwork ?? track.cacheKey;
 
     final finalnc = _maybeDelightned(
       nc,
@@ -360,11 +360,7 @@ class CurrentColor {
 
     paletteSaveDirectory ??= Directory(AppDirs.PALETTES);
 
-    final filename = track != null
-        ? settings.groupArtworksByAlbum.value
-            ? track.albumIdentifier
-            : track.filename
-        : imagePath.getFilenameWOExt;
+    final filename = track != null ? track.cacheKey : imagePath.getFilenameWOExt;
 
     final paletteFile = File("${paletteSaveDirectory.path}$filename.palette");
 
@@ -397,14 +393,14 @@ class CurrentColor {
   Future<void> reExtractTrackColorPalette({required Track track, required NamidaColor? newNC, required String? imagePath, bool useIsolate = true}) async {
     assert(newNC != null || imagePath != null, 'a color or imagePath must be provided');
 
-    final filename = settings.groupArtworksByAlbum.value ? track.albumIdentifier : track.filename;
-    final paletteFile = FileParts.join(AppDirs.PALETTES, "$filename.palette");
+    final key = track.cacheKey;
+    final paletteFile = FileParts.join(AppDirs.PALETTES, "$key.palette");
     if (newNC != null) {
       await paletteFile.writeAsJson(newNC.toJson());
-      _updateInColorMap(filename, newNC);
+      _updateInColorMap(key, newNC);
     } else if (imagePath != null) {
       final nc = await extractPaletteFromImage(imagePath, track: track, forceReExtract: true, useIsolate: useIsolate);
-      _updateInColorMap(filename, nc);
+      _updateInColorMap(key, nc);
     }
     if (Player.inst.currentTrack?.track == track) {
       updatePlayerColorFromTrack(Player.inst.currentTrack, null);

@@ -95,6 +95,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
               getArtworkIdentifier(call.argument<List<Int>?>("artworkIdentifiers"))
           val extractArtwork = call.argument<Boolean?>("extractArtwork") ?: true
           val overrideArtwork = call.argument<Boolean?>("overrideArtwork") ?: false
+          val uniqueArtworkHash = call.argument<Boolean?>("uniqueArtworkHash") ?: false
 
           CoroutineScope(Dispatchers.IO).launch {
             _addLogsUser()
@@ -105,6 +106,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                     artworkIdentifiers,
                     extractArtwork,
                     overrideArtwork,
+                    uniqueArtworkHash,
                 )
             map["path"] = path
             result.success(map)
@@ -136,6 +138,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
           val videoExtensions = videoExtensionsList?.toSet()
           val extractArtwork = call.argument<Boolean?>("extractArtwork") ?: true
           val overrideArtwork = call.argument<Boolean?>("overrideArtwork") ?: false
+          val uniqueArtworkHash = call.argument<Boolean?>("uniqueArtworkHash") ?: false
           val streamKey = call.argument<Number?>("streamKey") ?: 0
           eventChannels.set(
               streamKey,
@@ -169,6 +172,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                           artworkIdentifiers,
                           extractArtwork,
                           overrideArtwork,
+                          uniqueArtworkHash,
                       )
                 }
               } catch (_: Exception) {
@@ -238,6 +242,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
       artworkIdentifiers: HashMap<ArtworkIdentifier, Boolean>?,
       extractArtwork: Boolean,
       overrideOldArtwork: Boolean,
+      uniqueArtworkHash: Boolean,
   ): HashMap<String, Any> {
     val metadata = HashMap<String, Any>()
     val errorsMap = HashMap<String, String>()
@@ -329,9 +334,12 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                 if (artworkBytes != null && artworkBytes.isNotEmpty()) {
                   if (artworkDirectory != null) {
                     try {
-                      val filename: String
-                      if (artworkIdentifiers == null || artworkIdentifiers.isEmpty()) {
-                        filename = path.split("/").last()
+                      val artworkFilenameToUse: String
+                      if (uniqueArtworkHash) {
+                        val artworkFilename = path.split("/").last()
+                        artworkFilenameToUse = "${artworkFilename}_${path.toFastHashKey()}"
+                      } else if (artworkIdentifiers == null || artworkIdentifiers.isEmpty()) {
+                        artworkFilenameToUse = path.split("/").last()
                       } else {
                         var parts = ""
                         if (artworkIdentifiers[ArtworkIdentifier.albumName] == true) {
@@ -343,10 +351,10 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                         if (artworkIdentifiers[ArtworkIdentifier.year] == true) {
                           if (year != null) parts += year
                         }
-                        filename = cleanupFilename(parts)
+                        artworkFilenameToUse = cleanupFilename(parts)
                       }
 
-                      val artworkSavePath = "$artworkDirectory${filename}.png"
+                      val artworkSavePath = "$artworkDirectory${artworkFilenameToUse}.png"
                       if (overrideOldArtwork || !File(artworkSavePath.toString()).exists()) {
                         FileOutputStream(artworkSavePath.toString()).use { stream ->
                           stream.write(artworkBytes)
@@ -533,4 +541,18 @@ enum class ArtworkIdentifier {
   albumName,
   year,
   albumArtist,
+}
+
+fun String.toFastHashKey(): String {
+  var hash = 0L
+  for (c in this) {
+      hash += c.code
+      hash += (hash shl 10)
+      hash = hash xor (hash shr 6)
+  }
+  hash += (hash shl 3)
+  hash = hash xor (hash shr 11)
+  hash += (hash shl 15)
+  val number = (hash and 0x7FFFFFFF)
+  return number.toString()
 }

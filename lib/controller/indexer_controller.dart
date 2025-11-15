@@ -279,6 +279,7 @@ class Indexer<T extends Track> {
           oldtr.originalTags,
           config: splitConfig.generalConfig,
         ),
+        generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
       );
     }
     await _afterIndexing();
@@ -297,6 +298,7 @@ class Indexer<T extends Track> {
           originalArtist: oldtr.originalArtist,
           config: artistsSplitConfig,
         ),
+        generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
       );
     }
     await _afterIndexing();
@@ -622,6 +624,7 @@ class Indexer<T extends Track> {
         gainData: null,
         albumIdentifierWrapper: null,
         isVideo: trackPath.isVideo(),
+        hashKey: TrackExtended.generateHashKeyIfEnabled(null, trackPath, null),
       );
       if (!trackInfo.hasError) {
         int durationInMS = trackInfo.durationMS ?? 0;
@@ -701,6 +704,7 @@ class Indexer<T extends Track> {
             year: yearText ?? '',
           ),
           gainData: tags.gainData,
+          generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
         );
 
         // ----- if the title || artist weren't found in the tag fields
@@ -714,6 +718,7 @@ class Indexer<T extends Track> {
             title: newTitle,
             originalArtist: newArtists?.first,
             artistsList: newArtists,
+            generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
           );
         }
       } else {
@@ -725,6 +730,7 @@ class Indexer<T extends Track> {
           title: title,
           originalArtist: artist,
           artistsList: [artist],
+          generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
         );
       }
 
@@ -1184,7 +1190,7 @@ class Indexer<T extends Track> {
     if (durInMS > 0 && track.durationMS != durInMS) {
       final trx = allTracksMappedByPath[track.path];
       if (trx != null) {
-        final newTrExt = trx.copyWith(durationMS: durInMS);
+        final newTrExt = trx.copyWith(durationMS: durInMS, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
         allTracksMappedByPath[track.path] = newTrExt;
         unawaited(_tracksDBManager.put(track.path, newTrExt.toJsonWithoutPath()));
         tracksInfoList.refresh();
@@ -1287,6 +1293,7 @@ class Indexer<T extends Track> {
         mediaSorters,
         mediaSortersReverse,
         settings.albumIdentifiers.value,
+        TagsExtractor.defaultUniqueArtworkHash,
         tracksRecievePort.sendPort,
       ]).then(
         (libraryGroup) async {
@@ -1458,6 +1465,7 @@ class Indexer<T extends Track> {
       final bitrate = map['bitrate'] as int?;
       final disc = map['disc_number'] as int?;
       final yearString = map['year'] as String?;
+      final path = e.data;
       final trext = TrackExtended(
         title: e.title,
         originalArtist: e.artist ?? UnknownTags.ARTIST,
@@ -1476,7 +1484,7 @@ class Indexer<T extends Track> {
         size: e.size,
         dateAdded: e.dateAdded ?? 0,
         dateModified: e.dateModified ?? 0,
-        path: e.data,
+        path: path,
         comment: '',
         description: '',
         synopsis: '',
@@ -1498,6 +1506,7 @@ class Indexer<T extends Track> {
           year: yearString ?? '',
         ),
         isVideo: e.data.isVideo(),
+        hashKey: TrackExtended.generateHashKeyIfEnabled(null, path, null),
       );
       tracks.add(trext);
       _backupMediaStoreIDS[trext.pathToImage] = (trext.asTrack(), e.id);
@@ -1685,7 +1694,8 @@ class _IndexerIsolateExecuter {
     final mediaItemsTrackSorters = paramsList[3] as Map<MediaType, List<Comparable<dynamic> Function(Track)>>;
     final mediaItemsTrackSortingReverse = paramsList[4] as Map<MediaType, bool>;
     final albumIdentifiers = paramsList[5] as List<AlbumIdentifier>;
-    final tracksInitPort = paramsList[6] as SendPort;
+    final generatePathHash = paramsList[6] as bool? ?? false;
+    final tracksInitPort = paramsList[7] as SendPort;
 
     NamicoDBWrapper.initialize();
     final tracksDBManager = await DBWrapper.openFromInfoSyncTry(
@@ -1760,7 +1770,13 @@ class _IndexerIsolateExecuter {
     final libraryGroup = LibraryGroup();
     libraryGroup.fillAll(
       tracksInfoList,
-      (tr) => allTracksMappedByPath[tr.path] ?? kDummyExtendedTrack.copyWith(title: tr.path.getFilenameWOExt, path: tr.path),
+      (tr) =>
+          allTracksMappedByPath[tr.path] ??
+          kDummyExtendedTrack.copyWith(
+            title: tr.path.getFilenameWOExt,
+            path: tr.path,
+            generatePathHash: generatePathHash,
+          ),
       albumIdentifiers,
     );
 

@@ -944,6 +944,21 @@ extension StringPathUtils on String {
     }
     return text;
   }
+
+  String toFastHashKey() {
+    final s = this;
+    int hash = 0;
+    for (int i = 0; i < s.length; i++) {
+      hash += s.codeUnitAt(i);
+      hash += (hash << 10);
+      hash ^= (hash >> 6);
+    }
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+    final number = hash & 0x7FFFFFFF;
+    return number.toString();
+  }
 }
 
 extension ColorExtensions on Color {
