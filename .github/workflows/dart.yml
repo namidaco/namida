@@ -23,6 +23,15 @@ jobs:
         with:
           flutter-version-file: pubspec.yaml
 
+      - name: free disk space
+        continue-on-error: true
+        run: |
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          sudo apt clean
+          docker rmi $(docker image ls -aq)
+          df -h
+
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: "3.6.0"
