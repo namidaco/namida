@@ -18,11 +18,11 @@ class _WaveformExtractorWindows extends WaveformExtractor {
     String? cacheKey,
     int? samplesPerSecond,
   }) async {
+    final appCacheDir = AppDirs.APP_CACHE;
     File? cacheFile;
     if (useCache) {
-      final cacheDir = AppDirs.APP_CACHE;
-      cacheKey ??= source.hashCode.toString();
-      cacheFile = FileParts.join(cacheDir, '$cacheKey.txt');
+      cacheKey ??= "${source.getFilename}_${source.toFastHashKey()}";
+      cacheFile = FileParts.join(appCacheDir, '$cacheKey.txt');
       final cachedWaveform = await _parseWaveformFile(cacheFile);
       if (cachedWaveform != null && cachedWaveform.isNotEmpty) return cachedWaveform;
     }
@@ -30,6 +30,7 @@ class _WaveformExtractorWindows extends WaveformExtractor {
       source,
       samplesPerSecond: samplesPerSecond,
       cacheFile: cacheFile,
+      appCacheDir: appCacheDir,
     );
     return wavelist;
   }
@@ -43,11 +44,13 @@ class _WaveformExtractorWindows extends WaveformExtractor {
     String source, {
     int? samplesPerSecond,
     File? cacheFile,
+    required String appCacheDir,
   }) async {
     final res = await _isolateExecuter.executeIsolate(
       source,
       samplesPerSecond: samplesPerSecond,
       cacheFile: cacheFile,
+      appCacheDir: appCacheDir,
     );
     return res as List<num>;
   }
@@ -65,12 +68,13 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
     String source, {
     int? samplesPerSecond,
     File? cacheFile,
+    required String appCacheDir,
   }) async {
     if (!isInitialized) await initialize();
     final token = _messageTokenWrapper.getToken();
     _completers[token]?.complete(null); // useless but anyways
     final completer = _completers[token] = Completer<dynamic>();
-    sendPort([token, source, samplesPerSecond, cacheFile]);
+    sendPort([token, source, samplesPerSecond, cacheFile, appCacheDir]);
     var res = await completer.future;
     return res;
   }
@@ -87,7 +91,6 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
 
     const supportedFormats = <String>{
       'wav', 'flac', 'mp3', 'ogg', 'opus', 'webm', //
-      'WAV', 'FLAC', 'MP3', 'OGG', 'OPUS', 'WEBM',
     };
 
     final recievePort = ReceivePort();
@@ -107,8 +110,14 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
       final source = p[1] as String;
       final samplesPerSecond = p[2] as int?;
       final cacheFile = p[3] as File?;
+      final appCacheDir = p[4] as String;
 
-      final extension = source.getExtension;
+      if (!File(source).existsSync()) {
+        sendPort.send([token, []]);
+        return;
+      }
+
+      final extension = source.getExtension.toLowerCase();
       const multiplier = 0.05;
       final waveformOutputOptions = [
         '--output-format',
@@ -120,37 +129,51 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
           '$samplesPerSecond',
         ],
       ];
-      ProcessResult audioWaveformGenerate;
-      bool needsConversion = true;
+      List<dynamic>? extractDataListFromProcess(ProcessResult result) {
+        return jsonDecode(result.stdout)?['data'] as List?;
+      }
+
+      List<dynamic>? data;
       String? convertedFilePath;
+
       final probablyGoodFormat = supportedFormats.contains(extension);
       if (probablyGoodFormat) {
         try {
-          audioWaveformGenerate = Process.runSync(waveformExePath, ['-i', source, '--input-format', extension, ...waveformOutputOptions]);
-          needsConversion = false;
+          final audioWaveformGenerate1 = Process.runSync(
+            waveformExePath,
+            ['-i', source, '--input-format', extension, ...waveformOutputOptions],
+            runInShell: true,
+          );
+          data = extractDataListFromProcess(audioWaveformGenerate1);
         } catch (_) {}
       }
-      if (needsConversion) {
-        convertedFilePath = FileParts.joinPath(AppDirs.APP_CACHE, '${source.hashCode}.wav');
-        final ffmpegConvert = Process.runSync(
-          ffmpegExePath,
-          ['-i', source, '-f', 'wav', convertedFilePath],
-        );
-        if (ffmpegConvert.exitCode != 0) {
+
+      if (data == null || data.isEmpty) {
+        convertedFilePath = FileParts.joinPath(appCacheDir, '${source.toFastHashKey()}.wav');
+        ProcessResult? ffmpegConvert;
+        try {
+          ffmpegConvert = Process.runSync(
+            ffmpegExePath,
+            ['-i', source, '-f', 'wav', convertedFilePath],
+            runInShell: true,
+          );
+        } catch (_) {}
+        if (ffmpegConvert == null || ffmpegConvert.exitCode != 0) {
           sendPort.send([token, []]);
           return;
         }
       }
-
-      audioWaveformGenerate = Process.runSync(
-        waveformExePath,
-        ['-i', convertedFilePath ?? source, '--input-format', 'wav', ...waveformOutputOptions],
-      );
+      if (data == null || data.isEmpty) {
+        final audioWaveformGenerate2 = Process.runSync(
+          waveformExePath,
+          ['-i', convertedFilePath ?? source, '--input-format', 'wav', ...waveformOutputOptions],
+          runInShell: true,
+        );
+        data = extractDataListFromProcess(audioWaveformGenerate2);
+      }
       if (convertedFilePath != null) File(convertedFilePath).delete().catchError((_) => File(''));
 
-      final data = jsonDecode(audioWaveformGenerate.stdout)?['data'] as List?;
       final finalList = data?.cast<num>() ?? [];
-
       final combinedList = <num>[];
       final maxLength = finalList.length % 2 == 0 ? finalList.length : finalList.length - 1; // ensure even number for pair combination
       for (int i = 0; i < maxLength; i += 2) {
