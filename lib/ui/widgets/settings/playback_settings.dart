@@ -32,6 +32,7 @@ enum _PlaybackSettingsKeys {
   localVideoMatching,
   keepScreenAwake,
   displayFavButtonInNotif,
+  displayStopButtonInNotif,
   displayArtworkOnLockscreen,
   killPlayerAfterDismissing,
   onNotificationTap,
@@ -452,6 +453,22 @@ class PlaybackSettings extends SettingSubpageProvider {
                 if (!val && NamidaFeaturesVisibility.displayFavButtonInNotifMightCauseIssue) {
                   snackyy(title: lang.NOTE, message: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
                 }
+              },
+            ),
+          ),
+        ),
+      if (NamidaFeaturesVisibility.displayStopButtonInNotif)
+        getItemWrapper(
+          key: _PlaybackSettingsKeys.displayStopButtonInNotif,
+          child: Obx(
+            (context) => CustomSwitchListTile(
+              bgColor: getBgColor(_PlaybackSettingsKeys.displayStopButtonInNotif),
+              title: lang.DISPLAY_STOP_BUTTON_IN_NOTIFICATION,
+              icon: Broken.close_circle,
+              value: settings.displayStopButtonInNotification.valueR,
+              onChanged: (val) {
+                settings.save(displayStopButtonInNotification: !val);
+                Player.inst.refreshNotification();
               },
             ),
           ),

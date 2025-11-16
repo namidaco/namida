@@ -1888,7 +1888,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get displayFavouriteButtonInNotification => settings.displayFavouriteButtonInNotification.value;
 
   @override
-  bool get displayStopButtonInNotification => NamidaFeaturesVisibility.displayStopButtonInNotification;
+  bool get displayStopButtonInNotification => settings.displayStopButtonInNotification.value;
 
   @override
   bool get defaultShouldStartPlayingOnNextPrev => settings.player.playOnNextPrev.value;

@@ -166,6 +166,7 @@ class _SettingsController with SettingsFileWriter {
   final imagesMaxCacheInMB = (8 * 32).obs; // 256 MB
   final hideStatusBarInExpandedMiniplayer = false.obs;
   final displayFavouriteButtonInNotification = false.obs;
+  final displayStopButtonInNotification = true.obs;
   final enableSearchCleanup = true.obs;
   final enableBottomNavBar = true.obs;
   final displayAudioInfoMiniplayer = false.obs;
@@ -567,6 +568,7 @@ class _SettingsController with SettingsFileWriter {
       imagesMaxCacheInMB.value = json['imagesMaxCacheInMB'] ?? imagesMaxCacheInMB.value;
       hideStatusBarInExpandedMiniplayer.value = json['hideStatusBarInExpandedMiniplayer'] ?? hideStatusBarInExpandedMiniplayer.value;
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
+      displayStopButtonInNotification.value = json['displayStopButtonInNotification'] ?? displayStopButtonInNotification.value;
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
       displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
@@ -793,6 +795,7 @@ class _SettingsController with SettingsFileWriter {
         'imagesMaxCacheInMB': imagesMaxCacheInMB.value,
         'hideStatusBarInExpandedMiniplayer': hideStatusBarInExpandedMiniplayer.value,
         'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
+        'displayStopButtonInNotification': displayStopButtonInNotification.value,
         'enableSearchCleanup': enableSearchCleanup.value,
         'enableBottomNavBar': enableBottomNavBar.value,
         'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
@@ -976,6 +979,7 @@ class _SettingsController with SettingsFileWriter {
     int? imagesMaxCacheInMB,
     bool? hideStatusBarInExpandedMiniplayer,
     bool? displayFavouriteButtonInNotification,
+    bool? displayStopButtonInNotification,
     bool? enableSearchCleanup,
     bool? enableBottomNavBar,
     bool? displayAudioInfoMiniplayer,
@@ -1207,6 +1211,7 @@ class _SettingsController with SettingsFileWriter {
     if (hideStatusBarInExpandedMiniplayer != null) this.hideStatusBarInExpandedMiniplayer.value = hideStatusBarInExpandedMiniplayer;
 
     if (displayFavouriteButtonInNotification != null) this.displayFavouriteButtonInNotification.value = displayFavouriteButtonInNotification;
+    if (displayStopButtonInNotification != null) this.displayStopButtonInNotification.value = displayStopButtonInNotification;
     if (enableSearchCleanup != null) this.enableSearchCleanup.value = enableSearchCleanup;
     if (enableBottomNavBar != null) this.enableBottomNavBar.value = enableBottomNavBar;
 
