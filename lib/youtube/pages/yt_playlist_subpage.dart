@@ -182,9 +182,12 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
   Color? bgColor;
   String playlistCurrentName = ''; // to refresh after renaming
 
+  late bool _isFavPlaylist;
+
   @override
   void initState() {
     playlistCurrentName = widget.playlistName;
+    _isFavPlaylist = playlistCurrentName == k_PLAYLIST_NAME_FAV;
     super.initState();
   }
 
@@ -199,7 +202,11 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
         child: NamidaScrollbarWithController(
           child: (sc) => Obx(
             (context) {
-              YoutubePlaylistController.inst.playlistsMap.valueR;
+              if (_isFavPlaylist) {
+                YoutubePlaylistController.inst.favouritesPlaylist.valueR;
+              } else {
+                YoutubePlaylistController.inst.playlistsMap.valueR;
+              }
               final playlist = YoutubePlaylistController.inst.getPlaylist(playlistCurrentName);
               if (playlist == null) return const SizedBox();
               final firstID = playlist.tracks.firstOrNull?.id;
