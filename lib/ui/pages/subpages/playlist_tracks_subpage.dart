@@ -397,19 +397,20 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
               height: isExpanded ? context.height * 0.1 : context.height * 0.3,
             ),
           ),
-          SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.availableAppContentWidth * 0.15).add(const EdgeInsets.only(bottom: 8.0)),
-            sliver: SliverToBoxAdapter(
-              child: Theme(
-                data: AppThemes.inst.getAppTheme(Colors.red, !context.isDarkMode),
-                child: NamidaButton(
-                  icon: Broken.trash,
-                  onPressed: () => NamidaDialogs.inst.showDeletePlaylistDialog(widget.playlist),
-                  text: lang.DELETE_PLAYLIST,
+          if (!PlaylistController.inst.isOneOfDefaultPlaylists(widget.playlist.name))
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.availableAppContentWidth * 0.15).add(const EdgeInsets.only(bottom: 8.0)),
+              sliver: SliverToBoxAdapter(
+                child: Theme(
+                  data: AppThemes.inst.getAppTheme(Colors.red, !context.isDarkMode),
+                  child: NamidaButton(
+                    icon: Broken.trash,
+                    onPressed: () => NamidaDialogs.inst.showDeletePlaylistDialog(widget.playlist),
+                    text: lang.DELETE_PLAYLIST,
+                  ),
                 ),
               ),
             ),
-          ),
           SliverPadding(
             padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.availableAppContentWidth * 0.1),
             sliver: SliverToBoxAdapter(
