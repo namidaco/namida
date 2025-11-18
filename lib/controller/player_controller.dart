@@ -585,6 +585,7 @@ class Player {
   /// Default value is set to user preference [seekDurationInSeconds]
   Future<void> seekSecondsForward({int? seconds, void Function(int finalSeconds)? onSecondsReady}) async {
     final newSeconds = _secondsToSeek(seconds);
+    if (newSeconds == 0) return;
     onSecondsReady?.call(newSeconds);
     await _audioHandler.seek(Duration(milliseconds: nowPlayingPosition.value + newSeconds * 1000));
   }
@@ -592,6 +593,7 @@ class Player {
   /// Default value is set to user preference [seekDurationInSeconds]
   Future<void> seekSecondsBackward({int? seconds, void Function(int finalSeconds)? onSecondsReady}) async {
     final newSeconds = _secondsToSeek(seconds);
+    if (newSeconds == 0) return;
     onSecondsReady?.call(newSeconds);
     await _audioHandler.seek(Duration(milliseconds: nowPlayingPosition.value - newSeconds * 1000));
   }
@@ -600,13 +602,20 @@ class Player {
     int? newSeconds = seconds;
     if (newSeconds == null) {
       if (settings.player.isSeekDurationPercentage.value) {
-        final sFromP = (currentItemDuration.value?.inSeconds ?? 0) * (settings.player.seekDurationInPercentage.value / 100);
-        newSeconds = sFromP.toInt();
+        final percentage = settings.player.seekDurationInPercentage.value;
+        if (percentage > 0) {
+          final sFromP = (currentItemDuration.value?.inSeconds ?? 0) * (percentage / 100);
+          newSeconds = sFromP.toInt();
+          if (newSeconds == 0) newSeconds = 5; // fallback only for >0 percentage
+        } else {
+          newSeconds = 0;
+        }
       } else {
         newSeconds = settings.player.seekDurationInSeconds.value;
       }
     }
-    return newSeconds == 0 ? 5 : newSeconds;
+    // if 0 then it's what user wants
+    return newSeconds;
   }
 
   Future<void> playOrPause<Q extends Playable>(
