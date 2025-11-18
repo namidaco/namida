@@ -467,7 +467,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
             onPressed: onTap,
           ),
         ),
-        EqualizerIconButton(
+        SoundControlButton(
           iconSize: _CustomIconButton.defaultIconSize.size,
           builder: (child, tooltipCallback, onTap) => _CustomIconButton(
             icon: child,

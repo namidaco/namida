@@ -10,11 +10,13 @@ import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/window_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -29,6 +31,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/inner_drawer.dart';
 import 'package:namida/ui/widgets/selected_tracks_preview.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
+import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 
 class MainPageWrapper extends StatefulWidget {
@@ -413,95 +416,191 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
         type: MaterialType.canvas,
         color: backgroundColor,
         surfaceTintColor: surfaceTintColor,
-        child: Row(
+        child: Stack(
           children: [
-            Expanded(
+            const Positioned.fill(
               child: DragToMoveArea(
-                child: SizedBox(
-                  height: double.infinity,
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: NamidaInkWell(
-                          onTap: () {
-                            if (NamidaNavigator.inst.currentRoute?.route != RouteType.PAGE_about) {
-                              const AboutPage().navigate();
-                            }
-                          },
-                          height: height,
-                          animationDurationMS: 200,
-                          decoration: BoxDecoration(
-                            color: logoBgColor,
-                            borderRadius: BorderRadius.only(
-                              bottomRight: Radius.circular(8.0),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const SizedBox(width: 6.0),
-                              Image.asset(
-                                logoImg.assetPath,
-                                width: 24.0,
-                                height: 24.0,
-                                cacheHeight: 240,
-                                cacheWidth: 240,
-                                alignment: Alignment.center,
-                              ),
-                              const SizedBox(width: 4.0),
-                              Text(
-                                title,
-                                style: textTheme.displayMedium?.copyWith(
-                                  color: logoTextColor,
-                                  fontSize: 14.0,
-                                ),
-                                overflow: TextOverflow.fade,
-                                softWrap: false,
-                              ),
-                              const SizedBox(width: 6.0),
-                              const SizedBox(width: 4.0),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                child: SizedBox(),
               ),
             ),
-            WindowCaptionButton.minimize(
-              brightness: brightness,
-              onPressed: () async {
-                bool isMinimized = await windowManager.isMinimized();
-                if (isMinimized) {
-                  windowManager.restore();
-                } else {
-                  windowManager.minimize();
-                }
-              },
-            ),
-            FutureBuilder<bool>(
-              future: windowManager.isMaximized(),
-              builder: (context, snapshot) {
-                if (snapshot.data == true) {
-                  return WindowCaptionButton.unmaximize(
-                    brightness: brightness,
-                    onPressed: windowManager.unmaximize,
-                  );
-                }
-                return WindowCaptionButton.maximize(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: double.infinity,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.translucent,
+                            onPanStart: (_) => windowManager.startDragging(),
+                            child: NamidaInkWell(
+                              onTap: () {
+                                if (NamidaNavigator.inst.currentRoute?.route != RouteType.PAGE_about) {
+                                  const AboutPage().navigate();
+                                }
+                              },
+                              height: height,
+                              animationDurationMS: 200,
+                              decoration: BoxDecoration(
+                                color: logoBgColor,
+                                borderRadius: const BorderRadius.only(
+                                  bottomRight: Radius.circular(8.0),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(width: 6.0),
+                                  Image.asset(
+                                    logoImg.assetPath,
+                                    width: 24.0,
+                                    height: 24.0,
+                                    cacheHeight: 240,
+                                    cacheWidth: 240,
+                                    alignment: Alignment.center,
+                                  ),
+                                  const SizedBox(width: 4.0),
+                                  Text(
+                                    title,
+                                    style: textTheme.displayMedium?.copyWith(
+                                      color: logoTextColor,
+                                      fontSize: 14.0,
+                                    ),
+                                    overflow: TextOverflow.fade,
+                                    softWrap: false,
+                                  ),
+                                  const SizedBox(width: 6.0),
+                                  const SizedBox(width: 4.0),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          height: height,
+                          child: Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(width: 2.0),
+                                  // -- dont try to hide based on rail bar or widescreen, its not reactive here and would look a bit bad
+                                  _DesktopShortcutIcon(
+                                    tooltip: lang.HOME,
+                                    icon: Broken.home_1,
+                                    onTap: () => ScrollSearchController.inst.animatePageController(LibraryTab.home),
+                                  ),
+                                  _DesktopShortcutIcon(
+                                    tooltip: lang.QUEUE,
+                                    icon: Broken.row_vertical,
+                                    size: _DesktopShortcutIcon.iconSize * 0.85,
+                                    onTap: ShortcutsController.instance?.openPlayerQueue,
+                                  ),
+                                  _DesktopShortcutIcon(
+                                    tooltip: lang.EQUALIZER,
+                                    icon: Broken.sound,
+                                    onTap: NamidaOnTaps.inst.openEqualizer,
+                                  ),
+                                  _DesktopShortcutIcon(
+                                    tooltip: lang.REFRESH_LIBRARY,
+                                    icon: Broken.refresh_2,
+                                    onTap: () => showRefreshPromptDialog(false),
+                                    child: RefreshLibraryIcon(
+                                      widgetKey: 'desktop_appbar',
+                                      color: _DesktopShortcutIcon.getColor(context),
+                                      size: _DesktopShortcutIcon.iconSize,
+                                    ),
+                                  ),
+                                  _DesktopShortcutIcon(
+                                    tooltip: lang.SHORTCUTS,
+                                    icon: Broken.flash_1,
+                                    onTap: () => AboutPage.showShortcutsDialog(context),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                WindowCaptionButton.minimize(
                   brightness: brightness,
-                  onPressed: windowManager.maximize,
-                );
-              },
-            ),
-            WindowCaptionButton.close(
-              brightness: brightness,
-              onPressed: windowManager.close,
+                  onPressed: () async {
+                    bool isMinimized = await windowManager.isMinimized();
+                    if (isMinimized) {
+                      windowManager.restore();
+                    } else {
+                      windowManager.minimize();
+                    }
+                  },
+                ),
+                FutureBuilder<bool>(
+                  future: windowManager.isMaximized(),
+                  builder: (context, snapshot) {
+                    if (snapshot.data == true) {
+                      return WindowCaptionButton.unmaximize(
+                        brightness: brightness,
+                        onPressed: windowManager.unmaximize,
+                      );
+                    }
+                    return WindowCaptionButton.maximize(
+                      brightness: brightness,
+                      onPressed: windowManager.maximize,
+                    );
+                  },
+                ),
+                WindowCaptionButton.close(
+                  brightness: brightness,
+                  onPressed: windowManager.close,
+                ),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _DesktopShortcutIcon extends StatelessWidget {
+  final String tooltip;
+  final IconData icon;
+  final double? size;
+  final VoidCallback? onTap;
+  final Widget? child;
+  const _DesktopShortcutIcon({required this.tooltip, required this.icon, this.size, this.onTap, this.child});
+
+  static Color getColor(BuildContext context) {
+    return context.theme.colorScheme.secondary.withValues(alpha: 0.8);
+  }
+
+  static const double iconSize = 15.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaTooltip(
+      message: () => tooltip,
+      preferBelow: true,
+      child: NamidaInkWell(
+        onTap: onTap,
+        borderRadius: 99.0,
+        alignment: Alignment.center,
+        height: iconSize * 1.6,
+        width: iconSize * 1.6,
+        child: child ??
+            Icon(
+              icon,
+              size: size ?? iconSize,
+              color: getColor(context),
+            ),
       ),
     );
   }

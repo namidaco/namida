@@ -40,6 +40,33 @@ class AboutPage extends StatefulWidget with NamidaRouteWidget {
 
   @override
   State<AboutPage> createState() => _AboutPageState();
+
+  // -- dirty hack cuz this dialog can be opened detached from the main navigation stack (means the touch area won't block behind, im lazy to properly fix now)
+  static bool _isShortcutsDialogActive = false;
+  static void showShortcutsDialog(BuildContext context) {
+    if (_isShortcutsDialogActive) return;
+    _isShortcutsDialogActive = true;
+    NamidaNavigator.inst
+        .navigateDialog(
+          dialog: CustomBlurryDialog(
+            icon: Broken.flash_1,
+            title: lang.SHORTCUTS,
+            normalTitleStyle: true,
+            actions: [
+              const DoneButton(),
+            ],
+            child: SizedBox(
+              height: context.height * 0.6,
+              child: ShortcutsInfoWidget(
+                manager: ShortcutsController.instance!,
+              ),
+            ),
+          ),
+        )
+        .then(
+          (_) => _isShortcutsDialogActive = false,
+        );
+  }
 }
 
 class _AboutPageState extends State<AboutPage> {
@@ -344,24 +371,7 @@ class _AboutPageState extends State<AboutPage> {
                     NamidaAboutListTile(
                       icon: Broken.flash_1,
                       title: lang.SHORTCUTS,
-                      onTap: () {
-                        NamidaNavigator.inst.navigateDialog(
-                          dialog: CustomBlurryDialog(
-                            icon: Broken.flash_1,
-                            title: lang.SHORTCUTS,
-                            normalTitleStyle: true,
-                            actions: [
-                              const DoneButton(),
-                            ],
-                            child: SizedBox(
-                              height: context.height * 0.6,
-                              child: ShortcutsInfoWidget(
-                                manager: ShortcutsController.instance!,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                      onTap: () => AboutPage.showShortcutsDialog(context),
                     ),
                   NamidaAboutListTile(
                     icon: Broken.archive_book,

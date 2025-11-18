@@ -4793,14 +4793,14 @@ class RepeatModeIconButton extends StatelessWidget {
   }
 }
 
-class EqualizerIconButton extends StatelessWidget {
+class SoundControlButton extends StatelessWidget {
   final bool compact;
   final Color? color;
   final double iconSize;
   final VoidCallback? onPressed;
   final Widget Function(Widget child, String Function() tooltipCallback, void Function() onTap)? builder;
 
-  const EqualizerIconButton({
+  const SoundControlButton({
     super.key,
     this.compact = false,
     this.color,

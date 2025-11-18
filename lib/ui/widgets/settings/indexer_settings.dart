@@ -352,7 +352,7 @@ class IndexerSettings extends SettingSubpageProvider {
             icon: Broken.refresh_2,
             tooltip: () => lang.REFRESH_LIBRARY,
             onPressed: () => showRefreshPromptDialog(false),
-            child: const _RefreshLibraryIcon(widgetKey: refreshIconKey2),
+            child: const RefreshLibraryIcon(widgetKey: refreshIconKey2),
           ),
           const SizedBox(
             height: 48.0,
@@ -721,7 +721,7 @@ class IndexerSettings extends SettingSubpageProvider {
             key: _IndexerSettingsKeys.refreshLibrary,
             child: CustomListTile(
               bgColor: getBgColor(_IndexerSettingsKeys.refreshLibrary),
-              leading: const _RefreshLibraryIcon(widgetKey: refreshIconKey1),
+              leading: const RefreshLibraryIcon(widgetKey: refreshIconKey1),
               title: lang.REFRESH_LIBRARY,
               subtitle: lang.REFRESH_LIBRARY_SUBTITLE,
               onTap: () => showRefreshPromptDialog(false),
@@ -990,15 +990,23 @@ class RefreshLibraryIconController {
   }
 }
 
-class _RefreshLibraryIcon extends StatefulWidget {
+class RefreshLibraryIcon extends StatefulWidget {
   final String widgetKey;
-  const _RefreshLibraryIcon({required this.widgetKey});
+  final Color? color;
+  final double? size;
+
+  const RefreshLibraryIcon({
+    super.key,
+    required this.widgetKey,
+    this.color,
+    this.size,
+  });
 
   @override
-  State<_RefreshLibraryIcon> createState() => _RefreshLibraryIconState();
+  State<RefreshLibraryIcon> createState() => RefreshLibraryIconState();
 }
 
-class _RefreshLibraryIconState extends State<_RefreshLibraryIcon> with TickerProviderStateMixin {
+class RefreshLibraryIconState extends State<RefreshLibraryIcon> with TickerProviderStateMixin {
   final turnsTween = Tween<double>(begin: 0.0, end: 1.0);
   @override
   void initState() {
@@ -1018,7 +1026,8 @@ class _RefreshLibraryIconState extends State<_RefreshLibraryIcon> with TickerPro
       turns: turnsTween.animate(RefreshLibraryIconController.getController(widget.widgetKey, this)),
       child: Icon(
         Broken.refresh_2,
-        color: context.defaultIconColor(),
+        size: widget.size,
+        color: widget.color ?? context.defaultIconColor(),
       ),
     );
   }

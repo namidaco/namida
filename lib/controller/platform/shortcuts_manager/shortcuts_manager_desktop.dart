@@ -105,22 +105,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ShortcutKeyData(
       key: LogicalKeyboardKey.keyQ,
       control: true,
-      callback: () {
-        _executeMiniPlayers(
-          (localPlayer, ytPlayer, ytQueueChip) {
-            if (ytPlayer != null) {
-              if (!ytPlayer.isExpanded) ytPlayer.animateToState(true);
-              _executeYtQueueSheet(ytQueueChip, (chip) => chip.toggleSheet());
-            } else {
-              if (localPlayer.isInQueue) {
-                localPlayer.snapToExpanded();
-              } else {
-                localPlayer.snapToQueue();
-              }
-            }
-          },
-        );
-      },
+      callback: openPlayerQueue,
       title: lang.OPEN_QUEUE,
     ),
     ShortcutKeyData(
@@ -243,6 +228,24 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
   @override
   void dispose() {
     _attachment?.detach();
+  }
+
+  @override
+  void openPlayerQueue() {
+    _executeMiniPlayers(
+      (localPlayer, ytPlayer, ytQueueChip) {
+        if (ytPlayer != null) {
+          if (!ytPlayer.isExpanded) ytPlayer.animateToState(true);
+          _executeYtQueueSheet(ytQueueChip, (chip) => chip.toggleSheet());
+        } else {
+          if (localPlayer.isInQueue) {
+            localPlayer.snapToExpanded();
+          } else {
+            localPlayer.snapToQueue();
+          }
+        }
+      },
+    );
   }
 
   void _executeMiniPlayers(

@@ -5,7 +5,7 @@ abstract class NamidaWindowManager {
 
   bool get usingCustomWindowTitleBar;
   double get windowTitleBarHeightIfActive => usingCustomWindowTitleBar ? kWindowTitleBarHeight : 0.0;
-  double kWindowTitleBarHeight = 34.0;
+  double kWindowTitleBarHeight = 32.0;
 
   static NamidaWindowManager? platform() {
     return NamidaPlatformBuilder.init(

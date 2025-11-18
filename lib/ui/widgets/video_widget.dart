@@ -1697,7 +1697,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                   },
                                                 ),
                                                 if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
-                                                EqualizerIconButton(
+                                                SoundControlButton(
                                                   compact: true,
                                                   color: itemsColor,
                                                   onPressed: () {

@@ -22,6 +22,8 @@ abstract class ShortcutsManager {
   List<ShortcutKeyData> get _keysToRegister;
   void init();
   void dispose();
+
+  void openPlayerQueue();
 }
 
 class ShortcutKeyData extends SingleActivator {
