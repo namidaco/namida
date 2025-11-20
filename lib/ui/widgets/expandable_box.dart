@@ -322,6 +322,7 @@ class ChangeGridCountWidget extends StatelessWidget {
         }
 
         return NamidaPopupWrapper(
+          openOnTap: currentCount.getNext() == null,
           childrenDefault: () {
             final autoCountPerRow = CountPerRow.autoForTab(tab);
             return [
@@ -339,17 +340,14 @@ class ChangeGridCountWidget extends StatelessWidget {
               ),
             ];
           },
-          child: NamidaInkWell(
-            transparentHighlight: true,
-            onTap: () => _onTap(currentCount.getNext()),
-            child: StackedIcon(
-              baseIcon: _resolveIcon(count),
-              secondaryText: secondaryText,
-              secondaryIcon: secondaryIcon,
-              baseIconColor: iconColor,
-              secondaryIconColor: iconColor,
-              iconSize: 22.0,
-            ),
+          onTap: () => _onTap(currentCount.getNext()),
+          child: StackedIcon(
+            baseIcon: _resolveIcon(count),
+            secondaryText: secondaryText,
+            secondaryIcon: secondaryIcon,
+            baseIconColor: iconColor,
+            secondaryIconColor: iconColor,
+            iconSize: 22.0,
           ),
         );
       },
