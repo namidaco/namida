@@ -137,35 +137,35 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 
 ## Some additional cool features:
 
-- Smort Tracks Generation:
-  - uuh.. with dis advanced algorithm brought for you, u can generate tracks related to one you currently listening to, typically the ones that you often listened to in the same period. based on your history.
-  - also u can generate tracks released around the same time, or from specific range of time, from ratings, from available moods, or randomly.
+- Smooth Tracks Generation:
+  - With this advanced algorithm brought to you, you can generate tracks related to the one you're currently listening to, typically the ones that you often listen to in the same period, based on your history.
+  - You can also generate tracks released around the same time, or from a specific range of time, from ratings, from available moods, or randomly.
 - Animating Thumbnail:
   - A thumbnail that animates with the current audio peak, looks cool.
 - Miniplayer Party Mode:
   - Applies an edge breathing effect, colors can be static or dynamic (all the colors extracted from the artwork)
 - Particles Effect
-  - they speed up with the audio peak too
+  - They speed up with the audio peak too
 - Track Play Mode 
-  - when playing from search, you can selected wether to play: selected track only, search results, album, first artist or first genre.
+  - When playing from search, you can selected whether to play: selected track only, search results, album, first artist or first genre.
 - Insert after latest inserted
   - Want to insert multiple tracks one after each other? this will get your back.
 - Repeat for N times
-  - in addition to normal repeat modes (all, none, one), this one lets you repeat the track for number of times before playing the next track.
+  - In addition to normal repeat modes (all, none, one), this one lets you repeat the track for number of times before playing the next track.
 - Extract feat. & ft. artist
-  - u won't miss the featured artists in the title, they'll have their own entry inside artists tab.
+  - You won't miss the featured artists in the title, they'll have their own entry inside artists tab.
 - Dive into your memories
-  - Find out ur long partners u forgot about, "lost memories" allows u to meet tracks you listened to around this time, but n years ago
+  - Find your long-forgotten partners, "lost memories" allows u to meet tracks you listened to around this time, but n years ago
   - The "Most Played" page also allows you to specify time range, showing ur most beloved tracks at that time
   - The "Recommended" tracks addition in queue lets you add tracks you usually listened to with the current one 
   - The "Similar Release Date" tracks addition in queue lets you add tracks released around the same time as the current one 
 - <p>CAN IMPORT YOUTUBE HISTORY <img src="some stuff/ong.png" width=16 height=16/></p>
 - <p>LASTFM TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/></p>
-- you gonna find decent amount of options/customizations in the settings and inside dialogs so make sure to check them out.
+- You will find decent amount of options/customizations in the settings and inside dialogs so make sure to check them out.
 
 # Video Integration
 
-- For Local Library, Namida is capable of playing videos related to the music, Video can be found either locally or fetched from youtube
+- For Local Library, Namida is capable of playing videos related to the music. Video can be found either locally or fetched from youtube
 
 <details>
 <summary>
@@ -197,7 +197,7 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 </summary>
 
-  - looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
+  - looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches), and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
     - for comment tag, any url format should get matched normally.
     - for filenames, it should contain `v=video_id` or `id=video_id` in order to get matched.
   
