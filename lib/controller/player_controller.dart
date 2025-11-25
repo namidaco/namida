@@ -373,8 +373,8 @@ class Player {
     final newItem = tracks.firstOrNull;
     return await newItem?._execute(
           selectable: (_) async {
-            final finalTracks = List<Selectable>.from(tracks.withLimit(maxCount));
-            insertionType?.shuffleOrSort(finalTracks);
+            final tracksCopy = List<Selectable>.from(tracks);
+            final finalTracks = (insertionType?.shuffleOrSort(tracksCopy) ?? tracksCopy).withLimit(maxCount);
 
             if (showSnackBar && finalTracks.isEmpty) {
               snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND, top: false);
@@ -398,8 +398,8 @@ class Player {
             return true;
           },
           youtubeID: (_) async {
-            final finalVideos = List<YoutubeID>.from(tracks.withLimit(maxCount));
-            insertionType?.shuffleOrSortYT(finalVideos);
+            final tracksCopy = List<YoutubeID>.from(tracks);
+            final finalVideos = (insertionType?.shuffleOrSortYT(tracksCopy) ?? tracksCopy).withLimit(maxCount);
 
             if (showSnackBar && finalVideos.isEmpty) {
               snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND, top: false);
