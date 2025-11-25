@@ -269,14 +269,9 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
     final val = ScrollSearchController.inst.searchTextEditingController.text;
     final latestSubmitted = ScrollSearchController.inst.latestSubmittedYTSearch.value;
 
-    if (val == latestSubmitted || val.isEmpty) {
-      if (_shouldShowSubmitSearch != false) {
-        setState(() => _shouldShowSubmitSearch = false);
-      }
-    } else {
-      if (_shouldShowSubmitSearch != true) {
-        setState(() => _shouldShowSubmitSearch = true);
-      }
+    final newShouldShowSubmitSearch = val != latestSubmitted && val.isNotEmpty;
+    if (_shouldShowSubmitSearch != newShouldShowSubmitSearch) {
+      setState(() => _shouldShowSubmitSearch = newShouldShowSubmitSearch);
     }
   }
 

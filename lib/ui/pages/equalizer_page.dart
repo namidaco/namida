@@ -201,6 +201,7 @@ class EqualizerPageState extends State<EqualizerPage> {
 
   Future<void> _fillPresets() async {
     final p = await _equalizer.presets;
+    if (!mounted) return;
     setState(() => _equalizerPresets.addAll(p));
     if (_equalizerPresets.isNotEmpty) {
       final activePreset = await _equalizer.getCurrentPreset();

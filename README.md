@@ -147,7 +147,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - Particles Effect
   - they speed up with the audio peak too
 - Track Play Mode 
-  - when playing from search, you can selected wether to play: selected track only, search results, album, first artist or first genre.
+  - when playing from search, you can selected whether to play: selected track only, search results, album, first artist or first genre.
 - Insert after latest inserted
   - Want to insert multiple tracks one after each other? this will get your back.
 - Repeat for N times

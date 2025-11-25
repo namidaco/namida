@@ -473,6 +473,7 @@ class TrackExtended {
       if (rating > 0) 'rating': rating,
       if (originalTags?.isNotEmpty == true) 'originalTags': originalTags,
       if (gainData != null) 'gainData': gainData?.toMap(),
+      if (hashKey != null) 'hashKey': hashKey,
       if (albumIdentifierWrapper != null) 'albumIdentifierWrapper': albumIdentifierWrapper?.toMap(),
       'v': isVideo,
     };

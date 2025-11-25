@@ -69,13 +69,14 @@ class SelectedTracksController {
         selectedPlaylistsNames[rawTrack] = playlistName!;
       }
 
-      if (ranged) {
+      if (ranged && _tracksOrTwdList.value.isNotEmpty) {
         int largestSelectedIndex = -1;
         final currentInfo = _getCurrentActiveTracksList(queueSource: source);
         final tracks = currentInfo.$1 ?? [];
         final queueSource = currentInfo.$2;
         // -- find the largest selected index by reverse looping tracks list and breaking on first match
-        for (int i = index; i >= 0; i--) {
+        final startIndex = index.withMaximum(tracks.length - 1);
+        for (int i = startIndex; i >= 0; i--) {
           final tr = tracks[i].track;
           final isSelected = _allTracksHashCodes[tr] != null;
           if (isSelected && i > largestSelectedIndex) {
