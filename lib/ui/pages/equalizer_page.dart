@@ -44,65 +44,77 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
     return Column(
       children: [
         verticalPadding,
-        Obx(
-          (context) {
-            final pitch = settings.player.pitch.valueR;
-            const hz432Value = 432.0 / 440.0;
-            final is432HzEnabled = pitch == hz432Value;
-            return _SliderTextWidget(
-              icon: Broken.airpods,
-              title: lang.PITCH,
-              value: pitch,
-              restoreDefault: () {
-                Player.inst.setPlayerPitch(1.0);
-                settings.player.save(pitch: 1.0);
-                pitchKey.currentState?._updateVal(1.0);
-              },
-              onManualChange: (value) {
-                pitchKey.currentState?._updateValNoRound(value);
-              },
-              featuredButton: NamidaInkWellButton(
-                icon: null,
-                text: '',
-                borderRadius: 8.0,
-                sizeMultiplier: 0.9,
-                paddingMultiplier: 0.7,
-                bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: is432HzEnabled ? 0.5 : 0.2),
-                onTap: () {
-                  final newValue = is432HzEnabled ? 1.0 : hz432Value;
-                  Player.inst.setPlayerPitch(newValue);
-                  settings.player.save(pitch: newValue);
-                  pitchKey.currentState?._updateValNoRound(newValue);
-                },
-                leading: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '✓ ',
-                      style: textTheme.displaySmall,
-                    ).animateEntrance(
-                      showWhen: is432HzEnabled,
-                      allCurves: Curves.fastLinearToSlowEaseIn,
-                      durationMS: 300,
+        ObxO(
+          rx: settings.player.linkSpeedPitch,
+          builder: (context, enabled) => AnimatedEnabled(
+            enabled: !enabled,
+            child: Obx(
+              (context) {
+                final pitch = settings.player.pitch.valueR;
+                const hz432Value = 432.0 / 440.0;
+                final is432HzEnabled = pitch == hz432Value;
+                return _SliderTextWidget(
+                  icon: Broken.airpods,
+                  title: lang.PITCH,
+                  value: pitch,
+                  restoreDefault: () {
+                    Player.inst.setPlayerPitch(1.0);
+                    settings.player.save(pitch: 1.0);
+                    pitchKey.currentState?._updateVal(1.0);
+                  },
+                  onManualChange: (value) {
+                    pitchKey.currentState?._updateValNoRound(value);
+                  },
+                  featuredButton: NamidaInkWellButton(
+                    icon: null,
+                    text: '',
+                    borderRadius: 8.0,
+                    sizeMultiplier: 0.9,
+                    paddingMultiplier: 0.7,
+                    bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: is432HzEnabled ? 0.5 : 0.2),
+                    onTap: () {
+                      final newValue = is432HzEnabled ? 1.0 : hz432Value;
+                      Player.inst.setPlayerPitch(newValue);
+                      settings.player.save(pitch: newValue);
+                      pitchKey.currentState?._updateValNoRound(newValue);
+                    },
+                    leading: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '✓ ',
+                          style: textTheme.displaySmall,
+                        ).animateEntrance(
+                          showWhen: is432HzEnabled,
+                          allCurves: Curves.fastLinearToSlowEaseIn,
+                          durationMS: 300,
+                        ),
+                        Text(
+                          '432Hz',
+                          style: textTheme.displaySmall,
+                        ),
+                      ],
                     ),
-                    Text(
-                      '432Hz',
-                      style: textTheme.displaySmall,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+                  ),
+                );
+              },
+            ),
+          ),
         ),
-        _CuteSlider(
-          key: pitchKey,
-          valueListenable: settings.player.pitch,
-          onChanged: (value) {
-            Player.inst.setPlayerPitch(value);
-            settings.player.save(pitch: value);
-          },
-          tapToUpdate: tapToUpdate,
+        ObxO(
+          rx: settings.player.linkSpeedPitch,
+          builder: (context, enabled) => AnimatedEnabled(
+            enabled: !enabled,
+            child: _CuteSlider(
+              key: pitchKey,
+              valueListenable: settings.player.pitch,
+              onChanged: (value) {
+                Player.inst.setPlayerPitch(value);
+                settings.player.save(pitch: value);
+              },
+              tapToUpdate: tapToUpdate,
+            ),
+          ),
         ),
         verticalPadding,
         Obx(
@@ -112,14 +124,61 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
             value: settings.player.speed.valueR,
             onManualChange: (value) {
               speedKey.currentState?._updateValNoRound(value);
+              if (settings.player.linkSpeedPitch.value) {
+                pitchKey.currentState?._updateValNoRound(value);
+              }
             },
             restoreDefault: () {
               Player.inst.setPlayerSpeed(1.0);
               settings.player.save(speed: 1.0);
               speedKey.currentState?._updateVal(1.0);
+
+              if (settings.player.linkSpeedPitch.value) {
+                Player.inst.setPlayerPitch(1.0);
+                settings.player.save(pitch: 1.0);
+                pitchKey.currentState?._updateVal(1.0);
+              }
             },
             useMaxToLimitPreciseValue: false,
             valToText: _SliderTextWidget.toXMultiplier,
+            featuredButton: ObxO(
+              rx: settings.player.linkSpeedPitch,
+              builder: (context, enabled) => NamidaInkWellButton(
+                icon: null,
+                text: '',
+                borderRadius: 8.0,
+                sizeMultiplier: 0.9,
+                paddingMultiplier: 0.7,
+                bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: enabled ? 0.5 : 0.2),
+                onTap: () {
+                  final newLinkValue = !settings.player.linkSpeedPitch.value;
+                  final newValue = newLinkValue ? settings.player.speed.value : settings.player.pitch.value;
+                  Player.inst.setPlayerPitch(newValue);
+                  settings.player.save(pitch: newValue, linkSpeedPitch: newLinkValue);
+                  pitchKey.currentState?._updateValNoRound(newValue);
+                },
+                leading: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4.0),
+                      child: Icon(
+                        Broken.link_21,
+                        size: 12.0,
+                      ),
+                    ).animateEntrance(
+                      showWhen: enabled,
+                      allCurves: Curves.fastLinearToSlowEaseIn,
+                      durationMS: 300,
+                    ),
+                    Text(
+                      lang.PITCH,
+                      style: textTheme.displaySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
         _CuteSlider(
@@ -128,6 +187,11 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
           onChanged: (value) {
             Player.inst.setPlayerSpeed(value);
             settings.player.save(speed: value);
+
+            if (settings.player.linkSpeedPitch.value) {
+              Player.inst.setPlayerPitch(value);
+              settings.player.save(pitch: value);
+            }
           },
           tapToUpdate: tapToUpdate,
         ),
