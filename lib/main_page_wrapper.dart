@@ -267,19 +267,28 @@ class NamidaDrawer extends StatelessWidget {
                     afterTap: NamidaNavigator.inst.toggleDrawer,
                   ),
                 const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
-                ...LibraryTab.values.map(
-                  (e) => ObxO(
-                    rx: settings.extra.selectedLibraryTab,
-                    builder: (context, selectedLibraryTab) => NamidaDrawerListTile(
-                      enabled: selectedLibraryTab == e,
-                      title: e.toText(),
-                      icon: e.toIcon(),
-                      onTap: () async {
-                        ScrollSearchController.inst.animatePageController(e);
-                        toggleDrawer();
-                      },
+                ...LibraryTab.values.where((element) => element != LibraryTab.search).map(
+                      (e) => ObxO(
+                        rx: settings.extra.selectedLibraryTab,
+                        builder: (context, selectedLibraryTab) => NamidaDrawerListTile(
+                          enabled: selectedLibraryTab == e,
+                          title: e.toText(),
+                          icon: e.toIcon(),
+                          onTap: () async {
+                            ScrollSearchController.inst.animatePageController(e);
+                            toggleDrawer();
+                          },
+                        ),
+                      ),
                     ),
-                  ),
+                NamidaDrawerListTile(
+                  enabled: false,
+                  title: lang.FAVOURITES,
+                  icon: Broken.heart,
+                  onTap: () {
+                    NamidaOnTaps.inst.onNormalPlaylistTap(k_PLAYLIST_NAME_FAV);
+                    toggleDrawer();
+                  },
                 ),
                 NamidaDrawerListTile(
                   enabled: false,
