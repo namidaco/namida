@@ -19,6 +19,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -165,10 +166,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     // -- Random --
     if (_randomTracks.isEmpty) _randomTracks.addAll(NamidaGenerator.inst.getRandomTracks(min: 25, max: 26));
 
-    // -- favs --
-    final favs = List<TrackWithDate>.from(PlaylistController.inst.favouritesPlaylist.value.tracks);
-
-    favs.shuffle();
+    final int mostRecentMSSE = DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch;
+    final underrated = allTracksInLibrary.where((tr) {
+      if (PlaylistController.inst.favouritesPlaylist.isSubItemFavourite(tr)) return false; // alr favourited
+      final listensCount = HistoryController.inst.topTracksMapListens.value[tr]?.length;
+      if (listensCount != null && listensCount > 8) return false; // alr listened enough
+      if (tr.dateAdded > mostRecentMSSE) return false; // its very recently added
+      return true;
+    }).getRandomSample(100);
 
     if (_mixes.isEmpty) {
       // -- supermacy
@@ -232,6 +237,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
         MapEntry(lang.TOP_RECENTS, topRecentListenedKeys),
         if (supremacyEntry != null) supremacyEntry,
         MapEntry(lang.FAVOURITES, favsSample),
+        MapEntry(lang.UNDERRATED, underrated),
         MapEntry(lang.RANDOM_PICKS, _randomTracks),
       ]);
 

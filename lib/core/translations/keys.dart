@@ -721,6 +721,7 @@ abstract class LanguageKeys {
   String get TRACKS_EXCLUDED_BY_NOMEDIA => _getKey('TRACKS_EXCLUDED_BY_NOMEDIA');
   String get TRACKS_INFO => _getKey('TRACKS_INFO');
   String get TRACKS => _getKey('TRACKS');
+  String get UNDERRATED => _getKey('UNDERRATED');
   String get UNDO_CHANGES_DELETED_PLAYLIST => _getKey('UNDO_CHANGES_DELETED_PLAYLIST');
   String get UNDO_CHANGES_DELETED_QUEUE => _getKey('UNDO_CHANGES_DELETED_QUEUE');
   String get UNDO_CHANGES_DELETED_TRACK => _getKey('UNDO_CHANGES_DELETED_TRACK');

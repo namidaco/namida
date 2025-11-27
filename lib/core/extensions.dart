@@ -649,6 +649,10 @@ extension FunctionsExecuter<T> on Iterable<Future<T>?> {
 }
 
 extension IterableExtensions<E> on Iterable<E> {
+  List<E> getRandomSample(int count) {
+    return sample(count);
+  }
+
   bool hasSingleItem() {
     Iterator it = iterator;
     if (!it.moveNext()) return false; // empty
