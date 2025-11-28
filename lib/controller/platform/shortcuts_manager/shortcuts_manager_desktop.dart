@@ -4,26 +4,30 @@ part of 'shortcuts_manager.dart';
 
 class _ShortcutsManagerDesktop extends ShortcutsManager {
   @override
-  List<ShortcutKeyData> get _keysToRegister => __keysToRegister;
+  List<ShortcutKeyActivator> get _keysToRegister => __keysToRegister;
 
-  late final __keysToRegister = <ShortcutKeyData>[
+  late final __keysToRegister = <ShortcutKeyActivator>[
     // ------------------- playback -------------------
-    ShortcutKeyData(
+    ShortcutKeyActivator(
+      action: HotkeyAction.play_pause,
       key: LogicalKeyboardKey.space,
       callback: Player.inst.togglePlayPause,
       title: "${lang.PLAY}/${lang.PAUSE}",
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
+      action: HotkeyAction.seek_backwards,
       key: LogicalKeyboardKey.arrowLeft,
       callback: Player.inst.seekSecondsBackward,
       title: "<- ${lang.SEEKBAR}",
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
+      action: HotkeyAction.seek_forwards,
       key: LogicalKeyboardKey.arrowRight,
       callback: Player.inst.seekSecondsForward,
       title: "${lang.SEEKBAR} ->",
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
+      action: HotkeyAction.volume_up,
       key: LogicalKeyboardKey.arrowUp,
       control: true,
       includeRepeats: true,
@@ -33,7 +37,8 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       },
       title: "${lang.VOLUME} ↑",
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
+      action: HotkeyAction.volume_down,
       key: LogicalKeyboardKey.arrowDown,
       control: true,
       includeRepeats: true,
@@ -43,13 +48,15 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       },
       title: "${lang.VOLUME} ↓",
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
+      action: HotkeyAction.previous,
       key: LogicalKeyboardKey.arrowLeft,
       control: true,
       callback: Player.inst.previous,
       title: lang.PREVIOUS,
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
+      action: HotkeyAction.next,
       key: LogicalKeyboardKey.arrowRight,
       control: true,
       callback: Player.inst.next,
@@ -57,7 +64,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ),
 
     // -------------------
-    ShortcutKeyData(
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyF,
       control: true,
       callback: () {
@@ -72,13 +79,13 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       },
       title: lang.SEARCH,
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyR,
       control: true,
       callback: Indexer.inst.refreshLibraryAndCheckForDiff,
       title: lang.REFRESH_LIBRARY,
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyE,
       control: true,
       callback: () {
@@ -102,13 +109,13 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       },
       title: lang.OPEN_MINIPLAYER,
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyQ,
       control: true,
       callback: openPlayerQueue,
       title: lang.OPEN_QUEUE,
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyL,
       control: true,
       callback: () {
@@ -120,7 +127,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       },
       title: lang.LYRICS,
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyL,
       control: true,
       shift: true,
@@ -134,7 +141,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       },
       title: "${lang.LYRICS} (${lang.FULLSCREEN})",
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyP,
       control: true,
       shift: true,
@@ -150,7 +157,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       },
       title: lang.SETTINGS,
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyS,
       control: true,
       shift: true,
@@ -163,7 +170,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       },
       title: lang.SHUFFLE,
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.tab,
       control: true,
       callback: () {
@@ -177,7 +184,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ),
     // -----------------
     for (int i = 1; i <= 9; i++)
-      ShortcutKeyData(
+      ShortcutKeyActivator(
         key: LogicalKeyboardKey(0x00000000030 + i),
         control: true,
         callback: () {
@@ -192,7 +199,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       ),
 
     // ================
-    ShortcutKeyData(
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.f11,
       callback: () async {
         final isFullscreen = await windowManager.isFullScreen();
@@ -200,7 +207,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       },
       title: lang.FULLSCREEN,
     ),
-    ShortcutKeyData(
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.escape,
       callback: NamidaNavigator.inst.back,
       title: lang.EXIT,
@@ -223,6 +230,23 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         return KeyEventResult.ignored;
       },
     );
+  }
+
+  @override
+  void initUserShortcutsFromSettings() async {
+    for (final s in settings.shortcuts.shortcuts.value.entries) {
+      final data = s.value;
+      data?.createHotkey(s.key.toSimpleCallback());
+    }
+  }
+
+  @override
+  void setUserShortcut({required HotkeyAction action, required ShortcutKeyData? data}) {
+    final oldShortcut = settings.shortcuts.shortcuts.value[action];
+    oldShortcut?.disposeHotkey();
+
+    data?.createHotkey(action.toSimpleCallback());
+    settings.shortcuts.save(action: action, data: data);
   }
 
   @override

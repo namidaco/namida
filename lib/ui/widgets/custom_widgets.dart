@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
@@ -25,6 +23,7 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/connectivity.dart';
@@ -35,6 +34,7 @@ import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.d
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/version_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
@@ -5896,7 +5896,7 @@ class ShortcutsInfoWidget extends StatefulWidget {
 }
 
 class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
-  final organizedMap = <String, List<ShortcutKeyData>>{};
+  final organizedMap = <String, List<ShortcutKeyActivator>>{};
 
   @override
   void initState() {
@@ -5907,68 +5907,308 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
     super.initState();
   }
 
+  void _onAddOrEditTap(String title, HotkeyAction action) {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: _HotKeyRecorderDialog(
+        title: title,
+        initalHotKey: settings.shortcuts.shortcuts.value[action],
+        onHotKeyRecorded: (data) {
+          if (data != null) {
+            // -- its not likely for already registered system hotkeys to be caught again here, but anyways
+            for (final userKey in settings.shortcuts.shortcuts.value.values) {
+              final keyAlrExists = userKey != null && data.isSimilarTo(userKey);
+              if (keyAlrExists) {
+                return '(${userKey.buildKeyLabel()})';
+              }
+            }
+
+            final defaultKeys = ShortcutsController.instance?.bindings.keys;
+            if (defaultKeys != null) {
+              for (final defaultKey in defaultKeys) {
+                final keyData = ShortcutKeyData.fromShortcutKeyActivator(defaultKey);
+                final keyAlrExists = data.isSimilarTo(keyData);
+                if (keyAlrExists) {
+                  return '(${keyData.buildKeyLabel()}) => ${defaultKey.title}';
+                }
+              }
+            }
+          }
+
+          ShortcutsController.instance?.setUserShortcut(action: action, data: data);
+          return null;
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    return SuperListView(
-      shrinkWrap: true,
-      children: organizedMap.entries
-          .map(
-            (e) {
-              var shortcutsTexts = <String>[];
-              String title = e.key;
-              if (title == lang.LIBRARY_TABS) {
-                shortcutsTexts = ['Ctrl + 1..9'];
-              } else {
-                shortcutsTexts = e.value.map((e) {
-                  String label = e.key.keyLabel;
-                  if (label == LogicalKeyboardKey.space.keyLabel) {
-                    label = 'Space';
-                  }
-                  if (e.shift) {
-                    label = 'Shift + $label';
-                  }
-                  if (e.control) {
-                    label = 'Ctrl + $label';
-                  }
-                  return label;
-                }).toList();
-              }
-              return Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  ...shortcutsTexts.map(
-                    (shortcut) => NamidaInkWell(
-                      borderRadius: 4.0,
-                      margin: EdgeInsets.only(right: 3.0),
-                      padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                      bgColor: theme.cardColor,
-                      child: RichText(
-                        text: TextSpan(
-                          text: shortcut,
-                          style: textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
+    return ObxO(
+      rx: settings.shortcuts.shortcuts,
+      builder: (context, userShortcuts) => SuperListView(
+        shrinkWrap: true,
+        children: organizedMap.entries
+            .map(
+              (e) {
+                var shortcutsTexts = <String>[];
+                String title = e.key;
+                if (title == lang.LIBRARY_TABS) {
+                  shortcutsTexts = ['Ctrl + 1..9'];
+                } else {
+                  shortcutsTexts = e.value.map((e) {
+                    return ShortcutKeyData.fromShortcutKeyActivator(e).buildKeyLabel();
+                  }).toList();
+                }
+                final action = e.value[0].action;
+                final data = action == null ? null : userShortcuts[action];
+                void addOrEditTapLocal() => action == null ? null : _onAddOrEditTap(title, action);
+                return Wrap(
+                  runSpacing: 2.0,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    ...shortcutsTexts.map(
+                      (shortcut) => NamidaInkWell(
+                        borderRadius: 4.0,
+                        padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                        bgColor: theme.cardColor,
+                        child: RichText(
+                          text: TextSpan(
+                            text: shortcut,
+                            style: textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 4.0),
-                  RichText(
-                    text: TextSpan(
-                      text: title,
-                      style: textTheme.displayMedium?.copyWith(fontSize: 13.5),
+                    if (data != null)
+                      NamidaContainerDivider(
+                        height: 16.0,
+                        width: 2.0,
+                        margin: EdgeInsets.symmetric(horizontal: 3.0),
+                      ),
+                    if (data != null)
+                      NamidaInkWell(
+                        borderRadius: 4.0,
+                        padding: EdgeInsets.symmetric(vertical: 2.0),
+                        bgColor: theme.cardColor,
+                        onTap: addOrEditTapLocal,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(width: 4.0),
+                            Icon(
+                              Broken.cpu,
+                              size: 14.0,
+                            ),
+                            SizedBox(width: 4.0),
+                            RichText(
+                              text: TextSpan(
+                                text: data.buildKeyLabel(),
+                                style: textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            SizedBox(width: 4.0),
+                            if (action != null)
+                              NamidaInkWell(
+                                onTap: addOrEditTapLocal,
+                                borderRadius: 4.0,
+                                padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                                bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.6),
+                                child: Icon(
+                                  Broken.edit_2,
+                                  size: 13.0,
+                                ),
+                              ),
+                            SizedBox(width: 2.0),
+                          ],
+                        ),
+                      ),
+                    if (action != null && data == null) ...[
+                      SizedBox(width: 4.0),
+                      NamidaInkWell(
+                        onTap: addOrEditTapLocal,
+                        borderRadius: 4.0,
+                        padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                        bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.6),
+                        child: Icon(
+                          Broken.add_circle,
+                          size: 14.0,
+                        ),
+                      ),
+                    ],
+                    SizedBox(width: 4.0),
+                    RichText(
+                      text: TextSpan(
+                        text: title,
+                        style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                      ),
                     ),
-                  ),
-                ],
-              );
+                  ],
+                );
+              },
+            )
+            .addSeparators(
+              separator: const NamidaContainerDivider(
+                margin: EdgeInsets.symmetric(vertical: 3.0),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _HotKeyRecorderDialog extends StatefulWidget {
+  final String? title;
+  final ShortcutKeyData? initalHotKey;
+  final String? Function(ShortcutKeyData? data) onHotKeyRecorded;
+
+  const _HotKeyRecorderDialog({
+    required this.title,
+    this.initalHotKey,
+    required this.onHotKeyRecorded,
+  });
+
+  @override
+  State<_HotKeyRecorderDialog> createState() => _HotKeyRecorderDialogState();
+}
+
+class _HotKeyRecorderDialogState extends State<_HotKeyRecorderDialog> {
+  ShortcutKeyData? _hotKey;
+  String? _errorMsg;
+
+  @override
+  void initState() {
+    _hotKey = widget.initalHotKey;
+    HardwareKeyboard.instance.addHandler(_handleKeyEvent);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
+    super.dispose();
+  }
+
+  bool _handleKeyEvent(KeyEvent keyEvent) {
+    if (keyEvent is! KeyDownEvent) return false;
+    if (keyEvent.physicalKey == PhysicalKeyboardKey.enter || keyEvent.physicalKey == PhysicalKeyboardKey.numpadEnter) {
+      _confirmHotkey();
+      return true;
+    }
+
+    bool ctrl = false;
+    bool shift = false;
+    bool alt = false;
+    bool meta = false;
+
+    void investigateForModifiers(Set<PhysicalKeyboardKey> keys) {
+      for (final k in keys) {
+        if (k == PhysicalKeyboardKey.controlLeft || k == PhysicalKeyboardKey.controlRight) {
+          ctrl = true;
+          continue;
+        }
+        if (k == PhysicalKeyboardKey.shiftLeft || k == PhysicalKeyboardKey.shiftRight) {
+          shift = true;
+          continue;
+        }
+        if (k == PhysicalKeyboardKey.altLeft || k == PhysicalKeyboardKey.altRight) {
+          alt = true;
+          continue;
+        }
+        if (k == PhysicalKeyboardKey.metaLeft || k == PhysicalKeyboardKey.metaRight) {
+          meta = true;
+          continue;
+        }
+      }
+    }
+
+    investigateForModifiers({keyEvent.physicalKey});
+    final isKeyModifier = ctrl || shift || alt || meta; // check after pressed key is investigated
+    investigateForModifiers(HardwareKeyboard.instance.physicalKeysPressed);
+
+    setState(() {
+      _hotKey = ShortcutKeyData(
+        key: isKeyModifier ? null : keyEvent.logicalKey,
+        ctrl: ctrl,
+        shift: shift,
+        alt: alt,
+        meta: meta,
+      );
+      _errorMsg = null;
+    });
+
+    return true;
+  }
+
+  void _confirmHotkey() {
+    final error = widget.onHotKeyRecorded(_hotKey);
+    if (error != null) {
+      setState(() => _errorMsg = error);
+    } else {
+      NamidaNavigator.inst.closeDialog();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final keyLabelNormalized = _hotKey?.buildKeyLabel() ?? '';
+    final isKeyGood = keyLabelNormalized.isNotEmpty;
+    final isEdit = widget.initalHotKey != null;
+    return CustomBlurryDialog(
+      icon: isEdit ? Broken.edit : Broken.add_circle,
+      title: widget.title ?? (isEdit ? lang.EDIT : lang.ADD),
+      normalTitleStyle: true,
+      trailingWidgets: [
+        if (isKeyGood)
+          NamidaIconButton(
+            icon: Broken.refresh,
+            tooltip: () => lang.CLEAR,
+            onPressed: () {
+              setState(() {
+                _hotKey = null;
+                _errorMsg = null;
+              });
             },
-          )
-          .addSeparators(
-            separator: const NamidaContainerDivider(
-              margin: EdgeInsets.symmetric(vertical: 2.0),
+          ),
+      ],
+      actions: [
+        const CancelButton(),
+        NamidaButton(
+          text: lang.SAVE,
+          onPressed: () {
+            _confirmHotkey();
+          },
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Align(
+            alignment: Alignment.center,
+            child: NamidaInkWell(
+              borderRadius: 8.0,
+              bgColor: context.theme.cardColor,
+              padding: EdgeInsetsGeometry.symmetric(
+                horizontal: 12.0,
+                vertical: 12.0,
+              ),
+              child: Text(
+                isKeyGood ? keyLabelNormalized : '?',
+                style: context.textTheme.displayMedium,
+              ),
             ),
-          )
-          .toList(),
+          ),
+          if (_errorMsg != null) ...[
+            SizedBox(height: 8.0),
+            Text(
+              _errorMsg!,
+              style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.error),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

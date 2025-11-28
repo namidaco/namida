@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 part of 'shortcuts_manager.dart';
 
 abstract class ShortcutsManager {
@@ -11,7 +13,7 @@ abstract class ShortcutsManager {
     );
   }
 
-  late final Map<ShortcutKeyData, VoidCallback> bindings = Map.fromEntries(_keysToRegister.map(
+  late final Map<ShortcutKeyActivator, VoidCallback> bindings = Map.fromEntries(_keysToRegister.map(
     (e) => MapEntry(
       e,
       e.callback,
@@ -19,24 +21,34 @@ abstract class ShortcutsManager {
   ));
 
   @protected
-  List<ShortcutKeyData> get _keysToRegister;
+  List<ShortcutKeyActivator> get _keysToRegister;
   void init();
+  void initUserShortcutsFromSettings();
+  void setUserShortcut({required HotkeyAction action, required ShortcutKeyData? data});
   void dispose();
 
   void openPlayerQueue();
 }
 
-class ShortcutKeyData extends SingleActivator {
-  final String title;
-  final LogicalKeyboardKey key;
-  final void Function() callback;
+enum HotkeyAction {
+  play_pause,
+  seek_backwards,
+  seek_forwards,
+  volume_up,
+  volume_down,
+  previous,
+  next,
+  ;
 
-  const ShortcutKeyData({
-    required this.title,
-    required this.key,
-    super.control = false,
-    super.shift = false,
-    super.includeRepeats = false,
-    required this.callback,
-  }) : super(key);
+  void Function() toSimpleCallback() {
+    return switch (this) {
+      HotkeyAction.play_pause => Player.inst.togglePlayPause,
+      HotkeyAction.seek_backwards => Player.inst.seekSecondsBackward,
+      HotkeyAction.seek_forwards => Player.inst.seekSecondsForward,
+      HotkeyAction.volume_up => Player.inst.volumeUp,
+      HotkeyAction.volume_down => Player.inst.volumeDown,
+      HotkeyAction.previous => Player.inst.previous,
+      HotkeyAction.next => Player.inst.next,
+    };
+  }
 }

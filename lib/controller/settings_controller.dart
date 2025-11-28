@@ -10,8 +10,10 @@ import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue_insertion.dart';
+import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/logs_controller.dart';
+import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -22,6 +24,7 @@ part 'settings.extra.dart';
 part 'settings.player.dart';
 part 'settings.tutorial.dart';
 part 'settings.youtube.dart';
+part 'settings.shortcuts.dart';
 
 final settings = _SettingsController._internal();
 
@@ -36,6 +39,7 @@ class _SettingsController with SettingsFileWriter {
       this.youtube.prepareSettingsFile(),
       this.extra.prepareSettingsFile(),
       this.tutorial.prepareSettingsFile(),
+      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) this.shortcuts.prepareSettingsFile(),
     ]);
   }
 
@@ -44,6 +48,7 @@ class _SettingsController with SettingsFileWriter {
   final youtube = _YoutubeSettings._internal();
   final extra = _ExtraSettings._internal();
   final tutorial = _TutorialSettings._internal();
+  final shortcuts = _ShortcutsSettings._internal();
 
   final selectedLanguage = kDefaultLang.obs;
   final themeMode = ThemeMode.system.obs;

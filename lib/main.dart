@@ -175,6 +175,7 @@ void _mainAppInitialization() async {
     }
 
     await settings.prepareAllSettings();
+    ShortcutsController.instance?.initUserShortcutsFromSettings();
 
     if (settings.directoriesToScan.value.isEmpty) {
       final downloadsFolder = await pp.getDownloadsDirectory().ignoreError().then((value) => value?.path) ?? FileParts.joinPath(paths[0], 'Download');
