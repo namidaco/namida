@@ -391,14 +391,14 @@ class TrackTile extends StatelessWidget {
                           settings.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
                           settings.trackPlayMode.value.generateQueue(track),
                           queueSource,
-                          maximumItems: 1000,
+                          maximumItems: null,
                         );
                       } else {
                         await Player.inst.playOrPause(
                           index,
                           tracks,
                           queueSource,
-                          maximumItems: queueSource == QueueSource.allTracks ? 1000 : null,
+                          maximumItems: null,
                         );
                       }
                     }
