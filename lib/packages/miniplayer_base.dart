@@ -1892,23 +1892,26 @@ class _QueueListChildWrapper extends StatelessWidget {
             if (queueLength == 0) return const SizedBox();
             return ObxO(
               rx: Player.inst.currentIndex,
-              builder: (context, currentIndex) => CustomScrollView(
+              builder: (context, currentIndex) => NamidaScrollbar(
                 controller: MiniPlayerController.inst.queueScrollController,
-                slivers: [
-                  NamidaSliverReorderableList(
-                    itemCount: queueLength,
-                    itemExtent: queueItemExtent,
-                    itemExtentBuilder: queueItemExtentBuilder == null ? null : (index, d) => queueItemExtentBuilder!(queue[index]),
-                    onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
-                    onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
-                    onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-                    onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
-                    itemBuilder: (context, i) => itemBuilder(context, i, currentIndex, queue),
-                  ),
-                  SliverPadding(
-                    padding: padding,
-                  ),
-                ],
+                child: CustomScrollView(
+                  controller: MiniPlayerController.inst.queueScrollController,
+                  slivers: [
+                    NamidaSliverReorderableList(
+                      itemCount: queueLength,
+                      itemExtent: queueItemExtent,
+                      itemExtentBuilder: queueItemExtentBuilder == null ? null : (index, d) => queueItemExtentBuilder!(queue[index]),
+                      onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
+                      onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
+                      onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                      onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
+                      itemBuilder: (context, i) => itemBuilder(context, i, currentIndex, queue),
+                    ),
+                    SliverPadding(
+                      padding: padding,
+                    ),
+                  ],
+                ),
               ),
             );
           },
