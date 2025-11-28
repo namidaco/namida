@@ -144,17 +144,21 @@ class Player {
   StreamSubscription? _notificationClickedSub;
 
   Future<void> initializePlayer() async {
-    _audioHandler = await AudioService.init(
-      builder: () => NamidaAudioVideoHandler(),
-      config: const AudioServiceConfig(
-        androidNotificationChannelId: 'com.msob7y.namida',
-        androidNotificationChannelName: 'Namida',
-        androidNotificationChannelDescription: 'Namida Media Notification',
-        androidNotificationIcon: 'drawable/ic_stat_musicnote',
-        androidNotificationOngoing: false,
-        androidStopForegroundOnPause: false,
-      ),
-    );
+    if (Platform.isWindows || Platform.isMacOS) {
+      _audioHandler = NamidaAudioVideoHandler();
+    } else {
+      _audioHandler = await AudioService.init(
+        builder: () => NamidaAudioVideoHandler(),
+        config: const AudioServiceConfig(
+          androidNotificationChannelId: 'com.msob7y.namida',
+          androidNotificationChannelName: 'Namida',
+          androidNotificationChannelDescription: 'Namida Media Notification',
+          androidNotificationIcon: 'drawable/ic_stat_musicnote',
+          androidNotificationOngoing: false,
+          androidStopForegroundOnPause: false,
+        ),
+      );
+    }
 
     void videoInfoListener() {
       final info = _audioHandler.videoPlayerInfo.value;

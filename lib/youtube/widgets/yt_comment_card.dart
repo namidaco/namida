@@ -289,7 +289,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                   children: [
                                     const Icon(
                                       Broken.path,
-                                      size: 14.0,
+                                      size: 13.0,
                                     ),
                                     const SizedBox(width: 4.0),
                                     Text(
@@ -627,7 +627,7 @@ class YTCommentCardCompact extends StatelessWidget {
                             const SizedBox(width: 4.0),
                             const Icon(
                               Broken.path,
-                              size: 14.0,
+                              size: 13.0,
                             ),
                           ],
                         ],

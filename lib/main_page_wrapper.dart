@@ -489,11 +489,11 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                             ),
                           ),
                         ),
-                        SizedBox(
-                          height: height,
-                          child: Flexible(
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: SizedBox(
+                              height: height,
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.min,
