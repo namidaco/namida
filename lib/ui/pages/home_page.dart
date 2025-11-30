@@ -166,12 +166,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     // -- Random --
     if (_randomTracks.isEmpty) _randomTracks.addAll(NamidaGenerator.inst.getRandomTracks(min: 25, max: 26));
 
-    final int mostRecentMSSE = DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch;
+    final int mostRecentAddedMSSE = DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch;
+    final int mostRecentListenedMSSE = DateTime.now().subtract(Duration(days: 2)).millisecondsSinceEpoch;
     final underrated = allTracksInLibrary.where((tr) {
       if (PlaylistController.inst.favouritesPlaylist.isSubItemFavourite(tr)) return false; // alr favourited
       final listensCount = HistoryController.inst.topTracksMapListens.value[tr]?.length;
       if (listensCount != null && listensCount > 8) return false; // alr listened enough
-      if (tr.dateAdded > mostRecentMSSE) return false; // its very recently added
+      if (tr.dateAdded > mostRecentAddedMSSE) return false; // its very recently added
+      final lastListen = HistoryController.inst.topTracksMapListens.value[tr]?.lastOrNull;
+      if (lastListen != null && lastListen > mostRecentListenedMSSE) return false; // recently listened
       return true;
     }).getRandomSample(100);
 
