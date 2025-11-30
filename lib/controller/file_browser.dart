@@ -896,8 +896,11 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
       final sdCardRegex = RegExp(r'\w{4}-\w{4}', caseSensitive: false);
       map[0] = sdCardRegex.hasMatch(currentRoot) ? 'SD Card' : 'Home';
       int index = 1;
-      for (final part in splits.skip(1)) {
-        map[index] = part;
+      final splitsSkipped = Platform.isWindows ? splits.skip(0) : splits.skip(1);
+      for (final part in splitsSkipped) {
+        if (part.isNotEmpty) {
+          map[index] = part;
+        }
         index++;
       }
     }
