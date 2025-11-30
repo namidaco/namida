@@ -192,69 +192,35 @@ class VideoTileProperties {
   });
 }
 
-class YTHistoryVideoCard extends StatelessWidget {
-  final List<Playable> videos;
-  final int? day;
-  final int index;
-  final List<int> overrideListens;
-  final bool minimalCard;
-  final double? thumbnailHeight;
-  final double? minimalCardWidth;
-  final bool reversedList;
-  final double cardColorOpacity;
-  final double fadeOpacity;
-  final bool isImportantInCache;
-  final Color? bgColor;
-  final Widget? topRightWidget;
-  final int? downloadIndex;
-  final int? downloadTotalLength;
-  final VideoTileProperties properties;
-
+class YTHistoryVideoCard extends YTHistoryVideoCardBase {
   const YTHistoryVideoCard({
     super.key,
-    required this.videos,
-    required this.day,
-    required this.index,
-    this.overrideListens = const [],
-    this.minimalCard = false,
-    this.thumbnailHeight,
-    this.minimalCardWidth,
-    this.reversedList = false,
-    this.cardColorOpacity = 0.75,
-    this.fadeOpacity = 0,
-    this.isImportantInCache = true,
-    this.bgColor,
-    this.topRightWidget,
-    this.downloadIndex,
-    this.downloadTotalLength,
-    required this.properties,
-  });
+    required List<Playable> videos,
+    required super.day,
+    required super.index,
+    super.overrideListens = const [],
+    super.minimalCard = false,
+    super.thumbnailHeight,
+    super.minimalCardWidth,
+    super.reversedList = false,
+    super.cardColorOpacity = 0.75,
+    super.fadeOpacity = 0,
+    super.isImportantInCache = true,
+    super.bgColor,
+    super.topRightWidget,
+    super.downloadIndex,
+    super.downloadTotalLength,
+    super.preferFetchNewInfo,
+    required super.properties,
+  }) : super(
+          mainList: videos,
+          info: null,
+          itemToYTVideoId: _itemToYTVideoId,
+        );
 
-  @override
-  Widget build(BuildContext context) {
-    return YTHistoryVideoCardBase(
-      properties: properties,
-      mainList: videos,
-      itemToYTVideoId: (e) {
-        e as YoutubeID;
-        return (e.id, e.watchNull);
-      },
-      day: day,
-      index: index,
-      downloadIndex: downloadIndex,
-      downloadTotalLength: downloadTotalLength,
-      overrideListens: overrideListens,
-      minimalCard: minimalCard,
-      thumbnailHeight: thumbnailHeight,
-      minimalCardWidth: minimalCardWidth,
-      reversedList: reversedList,
-      cardColorOpacity: cardColorOpacity,
-      fadeOpacity: fadeOpacity,
-      isImportantInCache: isImportantInCache,
-      bgColor: bgColor,
-      info: null,
-      topRightWidget: topRightWidget,
-    );
+  static (String, YTWatch?) _itemToYTVideoId<T>(T e) {
+    e as YoutubeID;
+    return (e.id, e.watchNull);
   }
 }
 
@@ -279,6 +245,7 @@ class YTHistoryVideoCardBase<T> extends StatefulWidget {
   final bool playSingle;
   final void Function()? onTap;
   final double minimalCardFontMultiplier;
+  final bool preferFetchNewInfo;
 
   final VideoTileProperties properties;
 
@@ -304,6 +271,7 @@ class YTHistoryVideoCardBase<T> extends StatefulWidget {
     this.playSingle = false,
     this.onTap,
     this.minimalCardFontMultiplier = 1.0,
+    this.preferFetchNewInfo = false,
     required this.properties,
   });
 
@@ -454,7 +422,10 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
 
   Future<void> _fetchNewInfo() async {
     if (!ConnectivityController.inst.hasConnection) return;
-    final newInfo = await YoutubeInfoController.video.fetchVideoStreams(videoId, forceRequest: false);
+    // -- from cache only, if title is missing then most likely video is deleted/etc so no need to refetch (unless enforced)
+    final newInfo = widget.preferFetchNewInfo
+        ? await YoutubeInfoController.video.fetchVideoStreams(videoId, forceRequest: false)
+        : await YoutubeInfoController.video.fetchVideoStreamsCache(videoId, infoOnly: true);
     if (newInfo != null) {
       refreshState(
         () {

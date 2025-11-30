@@ -483,6 +483,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
             thumbnailHeight: Dimensions.youtubeThumbnailHeight,
             cardColorOpacity: 0.5,
             fadeOpacity: i < currentIndex ? 0.3 : 0.0,
+            preferFetchNewInfo: true,
           ),
           key,
         );

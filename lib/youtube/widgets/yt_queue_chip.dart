@@ -475,6 +475,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                       day: null,
                                       isImportantInCache: true,
                                       thumbnailHeight: Dimensions.youtubeThumbnailHeight,
+                                      preferFetchNewInfo: true,
                                     ),
                                   );
                                 },

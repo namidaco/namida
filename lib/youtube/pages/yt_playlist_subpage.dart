@@ -127,6 +127,7 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
                   index: i,
                   day: null,
                   overrideListens: listens,
+                  preferFetchNewInfo: true,
                 );
               },
             );
@@ -400,6 +401,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                             downloadTotalLength: playlist.tracks.length,
                             reversedList: widget.reversedList,
                             day: null,
+                            preferFetchNewInfo: true,
                           ),
                         );
                       },
