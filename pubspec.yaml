@@ -50,8 +50,11 @@ dependencies:
   share_plus: ^12.0.1
   calendar_date_picker2: ^2.0.0
   wakelock_plus: ^1.2.10
-  screen_brightness: ^2.1.1
-  native_device_orientation: ^2.0.3
+  screen_brightness: 
+    git:
+      url: https://github.com/MSOB7YY/screen_brightness
+      path: screen_brightness/
+  native_device_orientation: ^2.0.5
   home_widget: ^0.8.1
   flutter_local_notifications: ^19.0.0-dev.6
   flutter_sharing_intent:
