@@ -9,7 +9,6 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -60,57 +59,6 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
         source: old.source,
       ),
     );
-  }
-
-  Future<int> removeSourcesTracksFromHistory(List<TrackSource> sources, {DateTime? oldestDate, DateTime? newestDate}) async {
-    if (sources.isEmpty) return 0;
-
-    int totalRemoved = 0;
-    List<int>? daysToSave;
-
-    // -- remove all sources (i.e all history)
-    if (oldestDate == null && newestDate == null && sources.isEqualTo(TrackSource.values)) {
-      totalRemoved = totalHistoryItemsCount.value;
-      historyMap.value.clear();
-      daysToSave = null;
-    } else {
-      final daysToRemoveFrom = historyDays.toList();
-
-      final oldestDay = oldestDate?.toDaysSince1970();
-      final newestDay = newestDate?.toDaysSince1970();
-
-      if (oldestDay != null && newestDay == null) {
-        daysToRemoveFrom.retainWhere((day) => day >= oldestDay);
-      }
-      if (oldestDay == null && newestDay != null) {
-        daysToRemoveFrom.retainWhere((day) => day <= newestDay);
-      }
-
-      if (oldestDay != null && newestDay != null) {
-        daysToRemoveFrom.retainWhere((day) => day >= oldestDay && day <= newestDay);
-      }
-
-      // -- will loop the whole days.
-      /* if (oldestDay == null && newestDay == null) {} */
-
-      final history = historyMap.value;
-      daysToRemoveFrom.loop((d) {
-        totalRemoved += history[d]?.removeWhereWithDifference((twd) => sources.contains(twd.source)) ?? 0;
-      });
-      daysToSave = daysToRemoveFrom;
-    }
-
-    if (totalRemoved > 0) {
-      totalHistoryItemsCount.value -= totalRemoved;
-      historyMap.refresh();
-      updateMostPlayedPlaylist();
-      await saveHistoryToStorage(daysToSave);
-    } else if (daysToSave != null) {
-      // just in case its edited but `totalRemoved` uh
-      await saveHistoryToStorage(daysToSave);
-    }
-
-    return totalRemoved;
   }
 
   @override

@@ -579,7 +579,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         final newTrackWithDate = TrackWithDate(
           dateAdded: currentTimeMS,
           track: finalItem.track,
-          source: TrackSource.local,
         );
         await HistoryController.inst.addTracksToHistory([newTrackWithDate]);
       },

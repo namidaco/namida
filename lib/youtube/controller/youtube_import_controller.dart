@@ -5,6 +5,7 @@ import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/video.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
@@ -148,6 +149,7 @@ class YoutubeImportController {
         tracks: newTracks,
         convertItem: (id, dateAddedFallback, playlistID) => YoutubeID(
           id: id,
+          source: TrackSource.youtube,
           watchNull: YTWatch(
             dateMSNull: newTracksDates[id] ?? dateAddedFallback,
             isYTMusic: false,

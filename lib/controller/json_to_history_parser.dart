@@ -41,7 +41,7 @@ class JsonToHistoryParser {
   final totalJsonToParse = 0.obs;
   final addedHistoryJsonToPlaylist = 0.obs;
   final isParsing = false.obs;
-  final _loadingFileProgress = 0.0.obs;
+  final _loadingFileProgress = (0, 0).obs;
   final _updatingYoutubeStatsDirectoryProgress = 0.obs;
   final _updatingYoutubeStatsDirectoryTotal = 0.obs;
   final Rx<TrackSource> currentParsingSource = TrackSource.local.obs;
@@ -100,9 +100,13 @@ class JsonToHistoryParser {
             children: [
               ObxO(
                 rx: _loadingFileProgress,
-                builder: (context, loadingProgress) => getTextWidget(
-                  '${lang.LOADING_FILE}... ${loadingProgress < 1 ? '${(loadingProgress * 100).toStringAsFixed(1)}%' : lang.DONE}',
-                ),
+                builder: (context, loadingProgress) {
+                  final count = loadingProgress.$1;
+                  final total = loadingProgress.$2;
+                  return getTextWidget(
+                    '${lang.LOADING_FILE}... $count/$total ${count >= total ? lang.DONE : ''}',
+                  );
+                },
               ),
               const SizedBox(height: 10.0),
               Obx((context) => getTextWidget('$_parsedProgressR ${lang.PARSED}')),
@@ -362,7 +366,7 @@ class JsonToHistoryParser {
 
   void _resetValues() {
     isParsing.value = false;
-    _loadingFileProgress.value = 0.0;
+    _loadingFileProgress.value = (0, 0);
 
     totalJsonToParse.value = 0;
     parsedHistoryJson.value = 0;
@@ -402,11 +406,10 @@ class JsonToHistoryParser {
           mainDirectory,
           source,
           tempZipMainDestination,
-          (progress, total) => _loadingFileProgress.value = (progress / total) * 0.9,
+          (progress, total) => _loadingFileProgress.value = (progress, total),
         );
       }
     }
-    _loadingFileProgress.value = 1.0 * 0.9; // final 1.0 if after actual json parsing
 
     if (files.isEmpty) {
       snackyy(message: 'No related files were found in this directory.', isError: true);
@@ -503,12 +506,16 @@ class JsonToHistoryParser {
     FutureOr<void> executeFileEnsureZipExtracted(File file, void Function(File file) onMatch) async {
       if (NamidaFileExtensionsWrapper.zip.isPathValid(file.path)) {
         final destinationDir = Directory(FileParts.joinPath(tempZipMainDestination.path, file.path.getFilenameWOExt));
-        await zipManager.extractZip(zipFile: file, destinationDir: destinationDir);
-        final zipContents = listDir(destinationDir);
-        await for (final file in zipContents) {
-          if (file is File) {
-            onMatch(file);
+        try {
+          await zipManager.extractZip(zipFile: file, destinationDir: destinationDir);
+          final zipContents = listDir(destinationDir);
+          await for (final file in zipContents) {
+            if (file is File) {
+              onMatch(file);
+            }
           }
+        } catch (_) {
+          // on windows: most likely RangeError in package:archive.InputMemoryStream.readByte
         }
       } else {
         onMatch(file);
@@ -610,7 +617,7 @@ class JsonToHistoryParser {
       final shouldClosePort = !message.isNegative;
       message = message.abs();
       totalJsonToParse.value = message;
-      _loadingFileProgress.value = 1.0;
+      _loadingFileProgress.value = (_loadingFileProgress.value.$2, _loadingFileProgress.value.$2);
       if (shouldClosePort) {
         portLoadingProgress.close();
         portLoadingProgressSub?.cancel();
@@ -840,6 +847,7 @@ class JsonToHistoryParser {
             if (canAdd) {
               final ytid = YoutubeID(
                 id: yth.id,
+                source: w.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
                 watchNull: w,
                 playlistID: null,
               );
@@ -1033,7 +1041,7 @@ class JsonToHistoryParser {
       final shouldClosePort = !message.isNegative;
       message = message.abs();
       totalJsonToParse.value = message;
-      _loadingFileProgress.value = 1.0;
+      _loadingFileProgress.value = (_loadingFileProgress.value.$2, _loadingFileProgress.value.$2);
       if (shouldClosePort) {
         portLoadingProgress.close();
         portLoadingProgressSub?.cancel();

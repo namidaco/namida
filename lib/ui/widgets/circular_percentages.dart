@@ -28,9 +28,9 @@ class IndexingPercentage extends StatelessWidget {
 
 class ParsingJsonPercentage extends StatelessWidget {
   final double size;
-  final TrackSource source;
+  final TrackSource? source;
   final bool forceDisplay;
-  const ParsingJsonPercentage({super.key, this.size = 48.0, this.source = TrackSource.local, this.forceDisplay = true});
+  const ParsingJsonPercentage({super.key, this.size = 48.0, this.source, this.forceDisplay = true});
 
   @override
   Widget build(BuildContext context) {

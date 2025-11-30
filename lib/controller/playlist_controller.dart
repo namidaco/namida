@@ -52,7 +52,6 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       convertItem: (e, dateAdded, playlistID) => TrackWithDate(
         dateAdded: dateAdded,
         track: e,
-        source: TrackSource.local,
       ),
       creationDate: creationDate,
       comment: comment,
@@ -65,7 +64,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   void addTracksToPlaylist(
     LocalPlaylist playlist,
     List<Track> tracks, {
-    TrackSource source = TrackSource.local,
+    TrackSource? source,
     List<PlaylistAddDuplicateAction> duplicationActions = PlaylistAddDuplicateAction.valuesForAdd,
   }) async {
     final originalModifyDate = playlist.modifiedDate;
@@ -99,7 +98,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
   bool favouriteButtonOnPressed(Track track, {bool refreshNotification = true}) {
     final res = super.toggleTrackFavourite(
-      TrackWithDate(dateAdded: currentTimeMS, track: track, source: TrackSource.local),
+      TrackWithDate(dateAdded: currentTimeMS, track: track),
     );
     if (refreshNotification) {
       final currentItem = Player.inst.currentItem.value;

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:history_manager/history_manager.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
@@ -30,6 +31,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 enum _AdvancedSettingKeys {
   performanceMode,
@@ -272,9 +274,164 @@ class AdvancedSettings extends SettingSubpageProvider {
     );
   }
 
+  void _removeSourceFromHistory(HistoryManager manager) {
+    final RxList<TrackSource> sourcesToDelete = <TrackSource>[].obs;
+    bool isActive(TrackSource e) => sourcesToDelete.contains(e);
+
+    final RxMap<TrackSource, int> sourcesMap = <TrackSource, int>{}.obs;
+    void resetSourcesMap() {
+      sourcesMap.execute((map) => TrackSource.values.loop((e) => map[e] = 0));
+    }
+
+    final totalTracksToBeRemoved = 0.obs;
+
+    final totalTracksBetweenDates = 0.obs;
+
+    void calculateTotalTracks(DateTime? oldest, DateTime? newest) {
+      final sussyDays = manager.historyDays.toList();
+      final isBetweenDays = oldest != null && newest != null;
+      if (isBetweenDays) {
+        final oldestDay = oldest.toDaysSince1970();
+        final newestDay = newest.toDaysSince1970();
+
+        sussyDays.retainWhere((element) => element >= oldestDay && element <= newestDay);
+        printy(sussyDays);
+      }
+      resetSourcesMap();
+      sussyDays.loop((d) {
+        final tracks = manager.historyMap.value[d] ?? [];
+        tracks.loop((twd) {
+          sourcesMap.update(twd.source, (value) => value + 1, ifAbsent: () => 1);
+        });
+      });
+      if (isBetweenDays) {
+        totalTracksBetweenDates.value = sourcesMap.values.reduce((value, element) => value + element);
+      }
+      if (sourcesToDelete.isNotEmpty) {
+        totalTracksToBeRemoved.value = 0;
+        sourcesToDelete.loop((e) {
+          totalTracksToBeRemoved.value += sourcesMap[e] ?? 0;
+        });
+      }
+    }
+
+    // -- filling each source with its tracks number.
+    calculateTotalTracks(null, null);
+
+    DateTime? oldestDate;
+    DateTime? newestDate;
+
+    final isRemovingRx = false.obs;
+    final removeDuplicates = false.obs;
+
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        sourcesToDelete.close();
+        sourcesMap.close();
+        totalTracksToBeRemoved.close();
+        totalTracksBetweenDates.close();
+        removeDuplicates.close();
+        isRemovingRx.close();
+      },
+      dialog: CustomBlurryDialog(
+        title: lang.CHOOSE,
+        actions: [
+          const CancelButton(),
+          ObxO(
+            rx: isRemovingRx,
+            builder: (context, isRemoving) => NamidaButton(
+              enabled: !isRemoving,
+              text: lang.REMOVE,
+              onPressed: () async {
+                isRemovingRx.value = true;
+                final removedNum = await manager.removeSourcesTracksFromHistory(
+                  sourcesToDelete.value,
+                  removeMultiSourceDuplicates: removeDuplicates.value,
+                  oldestDate: oldestDate,
+                  newestDate: newestDate,
+                );
+                isRemovingRx.value = false;
+                NamidaNavigator.inst.closeDialog();
+                snackyy(title: lang.NOTE, message: "${lang.REMOVED} ${removedNum.displayTrackKeyword}");
+              },
+            ),
+          )
+        ],
+        child: Obx(
+          (context) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12.0),
+              Row(
+                children: [
+                  const SizedBox(width: 8.0),
+                  const Icon(Broken.danger),
+                  const SizedBox(width: 8.0),
+                  Obx((context) => Text(
+                        '${lang.TOTAL_TRACKS}: ${totalTracksToBeRemoved.valueR}',
+                        style: context.textTheme.displayMedium,
+                      )),
+                ],
+              ),
+              const SizedBox(height: 12.0),
+              ...sourcesMap.entries.map(
+                (e) {
+                  final source = e.key;
+                  final count = e.value;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Obx(
+                      (context) => ListTileWithCheckMark(
+                        active: isActive(source),
+                        title: '${source.name} (${count.formatDecimal()})',
+                        onTap: () {
+                          if (isActive(source)) {
+                            sourcesToDelete.remove(source);
+                            totalTracksToBeRemoved.value -= count;
+                          } else {
+                            sourcesToDelete.add(source);
+                            totalTracksToBeRemoved.value += count;
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+              NamidaContainerDivider(
+                margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+              ),
+              Obx(
+                (context) => ListTileWithCheckMark(
+                  icon: Broken.broom,
+                  active: removeDuplicates.valueR,
+                  title: lang.REMOVE_DUPLICATES,
+                  onTap: () => removeDuplicates.value = !removeDuplicates.value,
+                ),
+              ),
+              const SizedBox(height: 12.0),
+              ObxO(
+                rx: totalTracksBetweenDates,
+                builder: (context, total) => BetweenDatesTextButton(
+                  useHistoryDates: true,
+                  onConfirm: (dates) {
+                    oldestDate = dates.firstOrNull;
+                    newestDate = dates.lastOrNull;
+                    calculateTotalTracks(oldestDate, newestDate);
+                    NamidaNavigator.inst.closeDialog();
+                  },
+                  tracksLength: total,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return SettingsCard(
       title: lang.ADVANCED_SETTINGS,
       subtitle: lang.ADVANCED_SETTINGS_SUBTITLE,
@@ -325,140 +482,25 @@ class AdvancedSettings extends SettingSubpageProvider {
                 secondaryIcon: Broken.refresh,
               ),
               title: lang.REMOVE_SOURCE_FROM_HISTORY,
-              onTap: () async {
-                final RxList<TrackSource> sourcesToDelete = <TrackSource>[].obs;
-                bool isActive(TrackSource e) => sourcesToDelete.contains(e);
-
-                final RxMap<TrackSource, int> sourcesMap = <TrackSource, int>{}.obs;
-                void resetSourcesMap() {
-                  sourcesMap.execute((map) => TrackSource.values.loop((e) => map[e] = 0));
-                }
-
-                final totalTracksToBeRemoved = 0.obs;
-
-                final totalTracksBetweenDates = 0.obs;
-
-                void calculateTotalTracks(DateTime? oldest, DateTime? newest) {
-                  final sussyDays = HistoryController.inst.historyDays.toList();
-                  final isBetweenDays = oldest != null && newest != null;
-                  if (isBetweenDays) {
-                    final oldestDay = oldest.toDaysSince1970();
-                    final newestDay = newest.toDaysSince1970();
-
-                    sussyDays.retainWhere((element) => element >= oldestDay && element <= newestDay);
-                    printy(sussyDays);
-                  }
-                  resetSourcesMap();
-                  sussyDays.loop((d) {
-                    final tracks = HistoryController.inst.historyMap.value[d] ?? [];
-                    tracks.loop((twd) {
-                      sourcesMap.update(twd.source, (value) => value + 1, ifAbsent: () => 1);
-                    });
-                  });
-                  if (isBetweenDays) {
-                    totalTracksBetweenDates.value = sourcesMap.values.reduce((value, element) => value + element);
-                  }
-                  if (sourcesToDelete.isNotEmpty) {
-                    totalTracksToBeRemoved.value = 0;
-                    sourcesToDelete.loop((e) {
-                      totalTracksToBeRemoved.value += sourcesMap[e] ?? 0;
-                    });
-                  }
-                }
-
-                // -- filling each source with its tracks number.
-                calculateTotalTracks(null, null);
-
-                DateTime? oldestDate;
-                DateTime? newestDate;
-
-                final isRemovingRx = false.obs;
-
+              onTap: () {
                 NamidaNavigator.inst.navigateDialog(
-                  onDisposing: () {
-                    sourcesToDelete.close();
-                    sourcesMap.close();
-                    totalTracksToBeRemoved.close();
-                    totalTracksBetweenDates.close();
-                    isRemovingRx.close();
-                  },
                   dialog: CustomBlurryDialog(
+                    normalTitleStyle: true,
                     title: lang.CHOOSE,
-                    actions: [
-                      const CancelButton(),
-                      ObxO(
-                        rx: isRemovingRx,
-                        builder: (context, isRemoving) => NamidaButton(
-                          enabled: !isRemoving,
-                          text: lang.REMOVE,
-                          onPressed: () async {
-                            isRemovingRx.value = true;
-                            final removedNum = await HistoryController.inst.removeSourcesTracksFromHistory(
-                              sourcesToDelete.value,
-                              oldestDate: oldestDate,
-                              newestDate: newestDate,
-                            );
-                            isRemovingRx.value = false;
-                            NamidaNavigator.inst.closeDialog();
-                            snackyy(title: lang.NOTE, message: "${lang.REMOVED} ${removedNum.displayTrackKeyword}");
-                          },
-                        ),
-                      )
-                    ],
-                    child: Obx(
-                      (context) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    child: SingleChildScrollView(
+                      child: Column(
                         children: [
-                          const SizedBox(height: 12.0),
-                          Row(
-                            children: [
-                              const SizedBox(width: 8.0),
-                              const Icon(Broken.danger),
-                              const SizedBox(width: 8.0),
-                              Obx((context) => Text(
-                                    '${lang.TOTAL_TRACKS}: ${totalTracksToBeRemoved.valueR}',
-                                    style: textTheme.displayMedium,
-                                  )),
-                            ],
+                          CustomListTile(
+                            title: lang.LOCAL,
+                            subtitle: '',
+                            icon: Broken.music_library_2,
+                            onTap: () => _removeSourceFromHistory(HistoryController.inst),
                           ),
-                          const SizedBox(height: 12.0),
-                          ...sourcesMap.entries.map(
-                            (e) {
-                              final source = e.key;
-                              final count = e.value;
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 10.0),
-                                child: Obx(
-                                  (context) => ListTileWithCheckMark(
-                                    active: isActive(source),
-                                    title: '${source.name} (${count.formatDecimal()})',
-                                    onTap: () {
-                                      if (isActive(source)) {
-                                        sourcesToDelete.remove(source);
-                                        totalTracksToBeRemoved.value -= count;
-                                      } else {
-                                        sourcesToDelete.add(source);
-                                        totalTracksToBeRemoved.value += count;
-                                      }
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 12.0),
-                          ObxO(
-                            rx: totalTracksBetweenDates,
-                            builder: (context, total) => BetweenDatesTextButton(
-                              useHistoryDates: true,
-                              onConfirm: (dates) {
-                                oldestDate = dates.firstOrNull;
-                                newestDate = dates.lastOrNull;
-                                calculateTotalTracks(oldestDate, newestDate);
-                                NamidaNavigator.inst.closeDialog();
-                              },
-                              tracksLength: total,
-                            ),
+                          CustomListTile(
+                            title: lang.YOUTUBE,
+                            subtitle: '',
+                            icon: Broken.video_square,
+                            onTap: () => _removeSourceFromHistory(YoutubeHistoryController.inst),
                           ),
                         ],
                       ),

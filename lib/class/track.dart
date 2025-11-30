@@ -27,22 +27,26 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWith
   @override
   TrackWithDate? get trackWithDate => this;
 
+  TrackSource get source => sourceNull ?? TrackSource.local;
+
   final int dateAdded;
   final Track _track;
-  final TrackSource source;
+  @override
+  final TrackSource? sourceNull;
 
   const TrackWithDate({
     required this.dateAdded,
     required Track track,
-    required this.source,
-  }) : _track = track;
+    TrackSource? source,
+  })  : _track = track,
+        sourceNull = source;
 
   factory TrackWithDate.fromJson(Map<String, dynamic> json) {
     final finalTrack = Track.fromJson(json['track'] as String, isVideo: json['v'] == true);
     return TrackWithDate(
       dateAdded: json['dateAdded'] ?? currentTimeMS,
       track: finalTrack,
-      source: TrackSource.values.getEnum(json['source']) ?? TrackSource.local,
+      source: json['source'] == null ? null : TrackSource.values.getEnum(json['source']),
     );
   }
 
@@ -51,7 +55,7 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWith
     return {
       'dateAdded': dateAdded,
       'track': _track.path,
-      'source': source.name,
+      if (sourceNull != null) 'source': sourceNull?.name,
       if (_track is Video) 'v': true,
     };
   }
@@ -63,11 +67,11 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWith
   bool operator ==(other) {
     if (other is! TrackWithDate) return false;
     if (identical(this, other)) return true;
-    return other.dateAdded == dateAdded && other._track == _track && other.source == source;
+    return other.dateAdded == dateAdded && other._track == _track && other.sourceNull == sourceNull;
   }
 
   @override
-  int get hashCode => dateAdded.hashCode ^ _track.hashCode ^ source.hashCode;
+  int get hashCode => dateAdded.hashCode ^ _track.hashCode ^ sourceNull.hashCode;
 
   @override
   String toString() => "track: ${track.toString()}, source: $source, dateAdded: $dateAdded";

@@ -10,6 +10,7 @@ import 'package:youtipie/core/url_utils.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -20,19 +21,26 @@ class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate, Playlis
   final PlaylistID? playlistID;
 
   @override
+  final TrackSource? sourceNull;
+
+  TrackSource get source => sourceNull ?? TrackSource.local;
+
+  @override
   int get dateAddedMS => watchNull?.dateMSNull ?? 0;
 
   YTWatch get watch => watchNull ?? const YTWatch(dateMSNull: null, isYTMusic: false);
 
   const YoutubeID({
     required this.id,
+    TrackSource? source,
     this.watchNull,
     required this.playlistID,
-  });
+  }) : sourceNull = source;
 
   factory YoutubeID.fromJson(Map<String, dynamic> json) {
     return YoutubeID(
       id: json['id'] ?? '',
+      source: json['source'] == null ? null : TrackSource.values.getEnum(json['source']),
       watchNull: YTWatch.fromJson(json['watch']),
       playlistID: json['playlistID'] == null ? null : PlaylistID.fromJson(json['playlistID']),
     );
@@ -43,17 +51,18 @@ class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate, Playlis
     return {
       "id": id,
       "watch": watch.toJson(),
+      if (sourceNull != null) "source": sourceNull!.name,
       if (playlistID != null) "playlistID": playlistID?.toJson(),
     };
   }
 
   @override
   bool operator ==(other) {
-    return other is YoutubeID && id == other.id && dateAddedMS == other.dateAddedMS;
+    return other is YoutubeID && id == other.id && dateAddedMS == other.dateAddedMS && sourceNull == other.sourceNull;
   }
 
   @override
-  int get hashCode => id.hashCode ^ dateAddedMS.hashCode;
+  int get hashCode => id.hashCode ^ dateAddedMS.hashCode ^ sourceNull.hashCode;
 
   @override
   String toString() => "YoutubeID(id: $id, dateAddedMS: $dateAddedMS, playlistID: $playlistID)";
