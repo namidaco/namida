@@ -65,7 +65,11 @@ class SettingsCard extends StatelessWidget {
                         title,
                         style: textTheme.displayLarge?.copyWith(fontSize: 18.0),
                       ),
-                      if (subtitle != null) Text(subtitle!, style: textTheme.displaySmall),
+                      if (subtitle != null)
+                        Text(
+                          '⤷ ${subtitle!}',
+                          style: textTheme.displaySmall,
+                        ),
                     ],
                   ),
                 ),
