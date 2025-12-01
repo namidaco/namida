@@ -32,6 +32,44 @@ jobs:
           docker rmi $(docker image ls -aq)
           df -h
 
+      - name: remove unused SDKs
+        continue-on-error: true
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/local/share/chromium
+          sudo rm -rf /usr/local/share/vcpkg
+          sudo rm -rf /usr/local/share/miniconda
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /opt/hostedtoolcache/go
+          sudo rm -rf /opt/hostedtoolcache/Python
+          sudo rm -rf /opt/hostedtoolcache/node
+          sudo rm -rf /opt/hostedtoolcache/R
+          sudo rm -rf /opt/hostedtoolcache/LLVM
+          sudo rm -rf /opt/hostedtoolcache/Swift
+          sudo rm -rf /opt/hostedtoolcache/Php
+          sudo rm -rf /opt/hostedtoolcache/Perl
+          sudo rm -rf /opt/hostedtoolcache/Scala
+          sudo rm -rf /opt/hostedtoolcache/Julia
+          sudo rm -rf /opt/hostedtoolcache/Mono
+          sudo rm -rf /opt/hostedtoolcache/Crystal
+          sudo rm -rf /opt/hostedtoolcache/Elixir
+          sudo rm -rf /opt/hostedtoolcache/Erlang
+          sudo rm -rf /opt/hostedtoolcache/FSharp
+          sudo rm -rf /opt/hostedtoolcache/Haskell
+          sudo rm -rf /opt/hostedtoolcache/OCaml
+          sudo rm -rf /opt/hostedtoolcache/Rust
+          sudo rm -rf /opt/hostedtoolcache/Sbt
+          sudo rm -rf /opt/hostedtoolcache/Solidity
+          sudo rm -rf /opt/hostedtoolcache/VisualStudio
+          sudo rm -rf /opt/hostedtoolcache/WinAppDriver
+          sudo rm -rf /opt/hostedtoolcache/Xamarin
+          sudo rm -rf /opt/hostedtoolcache/Yarn
+          sudo rm -rf /opt/hostedtoolcache/Zephyr
+          sudo rm -rf /opt/hostedtoolcache/zig
+          sudo rm -rf /opt/hostedtoolcache/azcopy  
+
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: "3.6.0"
