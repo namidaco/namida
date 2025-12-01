@@ -71,7 +71,7 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
 
   String _getWorkingUrl(ChannelAboutLink aboutLink) {
     String url = aboutLink.link ?? aboutLink.linkText;
-    if (!url.startsWith('https://')) url = 'https://$url';
+    if (!url.startsWith('https://') && !url.startsWith('http://')) url = 'https://$url';
     return url;
   }
 
