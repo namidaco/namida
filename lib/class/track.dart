@@ -325,17 +325,43 @@ class TrackExtended {
   });
 
   static String _padInt(int val) => val.toString().padLeft(2, '0');
+  static String _padYear(int val) {
+    if (val < 100) return '20$val';
+    return val.toString();
+  }
 
-  static final _yearFormatRegex = RegExp(r'[\s]');
+  static final _extractNumbersRegex = RegExp(r'\d+');
   static int? enforceYearFormat(String? fromYearString) {
-    final intVal = fromYearString.getIntValue();
-    if (intVal != null) return intVal;
-    if (fromYearString != null) {
-      try {
-        final yearDate = DateTime.parse(fromYearString.replaceAll(_yearFormatRegex, '-'));
-        return int.parse("${yearDate.year}${_padInt(yearDate.month)}${_padInt(yearDate.day)}");
-      } catch (_) {}
+    if (fromYearString == null) return null;
+    if (fromYearString.length == 4) {
+      final intVal = fromYearString.getIntValue();
+      if (intVal != null && intVal > 1000) return intVal;
     }
+    final dateParts = <int>[];
+    final matches = _extractNumbersRegex.allMatches(fromYearString);
+    for (final m in matches) {
+      final text = m[0];
+      if (text != null && text.isNotEmpty) {
+        final value = int.tryParse(text);
+        if (value != null) {
+          dateParts.add(value);
+        }
+      }
+    }
+    if (dateParts.isEmpty) return null;
+
+    try {
+      final buffer = StringBuffer();
+      buffer.write(_padYear(dateParts[0]));
+      if (dateParts.length > 1) buffer.write(_padInt(dateParts[1]));
+      if (dateParts.length > 2) {
+        buffer.write(_padInt(dateParts[2]));
+      } else {
+        buffer.write('01');
+      }
+      return int.parse(buffer.toString());
+    } catch (_) {}
+
     return null;
   }
 
