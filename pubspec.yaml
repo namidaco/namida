@@ -17,6 +17,7 @@ dependency_overrides:
   screen_retriever:
     git:
       url: https://github.com/MSOB7YY/screen_retriever
+      path: packages/screen_retriever/
 
 dependencies:
   flutter:
