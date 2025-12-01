@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:playlist_manager/module/playlist_id.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
 import 'package:youtipie/class/result_wrapper/playlist_mix_result.dart';
@@ -19,6 +18,7 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -557,7 +557,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         title: lang.SHARE,
         onTap: () {
           final url = this.buildUrl();
-          SharePlus.instance.share(ShareParams(uri: Uri.parse(url)));
+          NamidaLinkUtils.shareUri(url);
         },
       ),
       if (displayDownloadItem)

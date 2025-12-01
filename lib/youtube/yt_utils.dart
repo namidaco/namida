@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:playlist_manager/module/playlist_id.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:youtipie/class/comments/comment_info_item.dart';
 import 'package:youtipie/class/comments/comment_info_item_base.dart';
 import 'package:youtipie/class/result_wrapper/comment_reply_result.dart';
@@ -452,7 +451,7 @@ class YTUtils {
             iconSize: 18.0,
             onPressed: () {
               final videoLink = YTUrlUtils.buildVideoUrl(videoId);
-              SharePlus.instance.share(ShareParams(uri: Uri.parse(videoLink)));
+              NamidaLinkUtils.shareUri(videoLink);
             },
           )
         ],

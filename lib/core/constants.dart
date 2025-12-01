@@ -11,6 +11,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/class/file_parts.dart';
@@ -218,6 +219,22 @@ class NamidaLinkUtils {
       return NamidaLinkRegex.youtubePlaylistsLinkRegex.firstMatch(playlistUrl)?.group(1);
     } catch (_) {}
     return null;
+  }
+
+  static Future<void> shareFiles(Iterable<String> paths) async {
+    await Share.shareXFiles(paths.map((e) => XFile(e)).toList());
+  }
+
+  static Future<void> shareUri(String url) async {
+    if (Platform.isWindows) {
+      await shareText(url);
+    } else {
+      await Share.shareUri(Uri.parse(url));
+    }
+  }
+
+  static Future<void> shareText(String text) async {
+    await Share.share(text);
   }
 }
 

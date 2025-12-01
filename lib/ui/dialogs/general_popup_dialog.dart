@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:rhttp/rhttp.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/file_parts.dart';
@@ -1221,7 +1220,7 @@ Future<void> showGeneralPopupDialog(
                                   ),
                                   onTap: () async {
                                     isLoadingFilesToShare.value = true;
-                                    await SharePlus.instance.share(ShareParams(files: tracksExisting.mapped((e) => XFile(e.path))));
+                                    await NamidaLinkUtils.shareFiles(tracksExisting.mapped((e) => e.path));
                                     isLoadingFilesToShare.value = false;
                                     NamidaNavigator.inst.closeDialog();
                                   },
@@ -1406,7 +1405,7 @@ Future<void> showGeneralPopupDialog(
                                         () => lang.SHARE,
                                         () async {
                                           isLoadingFilesToShare.value = true;
-                                          await SharePlus.instance.share(ShareParams(files: tracksExisting.mapped((e) => XFile(e.path))));
+                                          await NamidaLinkUtils.shareFiles(tracksExisting.mapped((e) => e.path));
                                           isLoadingFilesToShare.value = false;
                                           NamidaNavigator.inst.closeDialog();
                                         },

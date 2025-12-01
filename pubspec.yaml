@@ -47,7 +47,7 @@ dependencies:
   url_launcher: ^6.3.0
   connectivity_plus: ^7.0.0
   selectable_autolink_text: ^2.6.0
-  share_plus: ^12.0.1
+  share_plus: "10.1.4" # v12.0.1 doesnt work on windows
   calendar_date_picker2: ^2.0.0
   wakelock_plus: ^1.2.10
   screen_brightness: 

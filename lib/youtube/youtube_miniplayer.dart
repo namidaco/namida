@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import 'package:share_plus/share_plus.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
@@ -21,6 +20,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -611,7 +611,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                           icon: Broken.share,
                                                                           onPressed: () {
                                                                             final url = videoInfo?.buildUrl() ?? YTUrlUtils.buildVideoUrl(currentId);
-                                                                            SharePlus.instance.share(ShareParams(uri: Uri.parse(url)));
+                                                                            NamidaLinkUtils.shareUri(url);
                                                                           },
                                                                         ),
                                                                       ),

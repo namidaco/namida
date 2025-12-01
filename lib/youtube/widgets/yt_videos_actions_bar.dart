@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:share_plus/share_plus.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -146,7 +146,7 @@ class YTVideosActionBar extends StatelessWidget {
         NamidaPopupItem(
           icon: Broken.share,
           title: lang.SHARE,
-          onTap: () => SharePlus.instance.share(ShareParams(uri: Uri.parse(url))),
+          onTap: () => NamidaLinkUtils.shareUri(url),
         ),
       if (menuOptions.download)
         NamidaPopupItem(

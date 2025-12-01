@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:youtipie/core/url_utils.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -73,7 +73,7 @@ extension YoutubeIDUtils on YoutubeID {
 
 extension YoutubeIDSUtils on List<YoutubeID> {
   Future<void> shareVideos() async {
-    await SharePlus.instance.share(ShareParams(text: map((e) => "${YTUrlUtils.buildVideoUrl(e.id)} - ${e.dateAddedMS.dateAndClockFormattedOriginal}\n").join()));
+    await NamidaLinkUtils.shareText(map((e) => "${YTUrlUtils.buildVideoUrl(e.id)} - ${e.dateAddedMS.dateAndClockFormattedOriginal}\n").join());
   }
 
   int getTotalListenCount() {

@@ -9,7 +9,6 @@ import 'package:flutter_mailer/flutter_mailer.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/src/ast.dart' as md;
 import 'package:rhttp/rhttp.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/route.dart';
@@ -449,13 +448,11 @@ class _AboutPageState extends State<AboutPage> {
                     onTap: () async {
                       final taggerLogsFileSize = await File(AppPaths.LOGS_TAGGER).fileSize();
                       final goodTaggerLogsFile = taggerLogsFileSize != null && taggerLogsFileSize > 0;
-                      SharePlus.instance.share(
-                        ShareParams(
-                          files: [
-                            XFile(AppPaths.LOGS),
-                            if (goodTaggerLogsFile) XFile(AppPaths.LOGS_TAGGER),
-                          ],
-                        ),
+                      NamidaLinkUtils.shareFiles(
+                        [
+                          AppPaths.LOGS,
+                          if (goodTaggerLogsFile) AppPaths.LOGS_TAGGER,
+                        ],
                       );
                     },
                   )
