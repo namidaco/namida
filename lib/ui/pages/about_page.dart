@@ -169,29 +169,22 @@ class _AboutPageState extends State<AboutPage> {
                     child: Column(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(4.0),
-                          clipBehavior: Clip.antiAlias,
+                          margin: const EdgeInsets.all(4.0),
+                          width: imageSize,
+                          height: imageSize,
+                          clipBehavior: Clip.none,
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.transparent,
+                            color: Color.fromRGBO(25, 25, 25, 0.1),
                           ),
-                          child: Container(
-                            width: imageSize,
-                            height: imageSize,
-                            clipBehavior: Clip.antiAlias,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color.fromRGBO(25, 25, 25, 0.1),
-                            ),
-                            child: FutureBuilder(
-                              future: NamidaChannel.inst.getEnabledAppIcon(),
-                              builder: (context, snapshot) {
-                                final enabledIcon = snapshot.data ?? NamidaAppIcons.namida;
-                                return Image.asset(
-                                  enabledIcon.assetPath,
-                                );
-                              },
-                            ),
+                          child: FutureBuilder(
+                            future: NamidaChannel.inst.getEnabledAppIcon(),
+                            builder: (context, snapshot) {
+                              final enabledIcon = snapshot.data ?? NamidaAppIcons.namida;
+                              return Image.asset(
+                                enabledIcon.assetPath,
+                              );
+                            },
                           ),
                         ),
                         const SizedBox(height: 4.0),

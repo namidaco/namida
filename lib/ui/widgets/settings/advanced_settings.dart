@@ -494,13 +494,19 @@ class AdvancedSettings extends SettingSubpageProvider {
                             title: lang.LOCAL,
                             subtitle: '',
                             icon: Broken.music_library_2,
-                            onTap: () => _removeSourceFromHistory(HistoryController.inst),
+                            onTap: () {
+                              _removeSourceFromHistory(HistoryController.inst);
+                              NamidaNavigator.inst.closeDialog();
+                            },
                           ),
                           CustomListTile(
                             title: lang.YOUTUBE,
                             subtitle: '',
                             icon: Broken.video_square,
-                            onTap: () => _removeSourceFromHistory(YoutubeHistoryController.inst),
+                            onTap: () {
+                              _removeSourceFromHistory(YoutubeHistoryController.inst);
+                              NamidaNavigator.inst.closeDialog();
+                            },
                           ),
                         ],
                       ),
