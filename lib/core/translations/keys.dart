@@ -68,6 +68,8 @@ abstract class LanguageKeys {
   String get AUTOMATIC_BACKUP_SUBTITLE => _getKey('AUTOMATIC_BACKUP_SUBTITLE');
   String get AUTOMATIC_BACKUP => _getKey('AUTOMATIC_BACKUP');
   String get AUTO_EXTRACT_TITLE_AND_ARTIST_FROM_VIDEO_TITLE => _getKey('AUTO_EXTRACT_TITLE_AND_ARTIST_FROM_VIDEO_TITLE');
+  String get AUTO_SKIP => _getKey('AUTO_SKIP');
+  String get AUTO_SKIP_ONCE => _getKey('AUTO_SKIP_ONCE');
   String get AUTO_START_RADIO => _getKey('AUTO_START_RADIO');
   String get AUTO_START_RADIO_SUBTITLE => _getKey('AUTO_START_RADIO_SUBTITLE');
   String get BACKUP_AND_RESTORE_SUBTITLE => _getKey('BACKUP_AND_RESTORE_SUBTITLE');
@@ -158,6 +160,7 @@ abstract class LanguageKeys {
   String get DIM_INTENSITY => _getKey('DIM_INTENSITY');
   String get DIM_MINIPLAYER_AFTER_SECONDS => _getKey('DIM_MINIPLAYER_AFTER_SECONDS');
   String get DIRECTORY_DOESNT_EXIST => _getKey('DIRECTORY_DOESNT_EXIST');
+  String get DISABLE => _getKey('DISABLE');
   String get DISABLE_ALL => _getKey('DISABLE_ALL');
   String get DISABLE_REORDERING => _getKey('DISABLE_REORDERING');
   String get DISABLE_SEARCH_CLEANUP => _getKey('DISABLE_SEARCH_CLEANUP');
@@ -225,6 +228,7 @@ abstract class LanguageKeys {
   String get ENABLE_REORDERING => _getKey('ENABLE_REORDERING');
   String get ENABLE_SEARCH_CLEANUP_SUBTITLE => _getKey('ENABLE_SEARCH_CLEANUP_SUBTITLE');
   String get ENABLE_SEARCH_CLEANUP => _getKey('ENABLE_SEARCH_CLEANUP');
+  String get ENABLE_SPONSORBLOCK => _getKey('ENABLE_SPONSORBLOCK');
   String get ENABLE_VIDEO_PLAYBACK => _getKey('ENABLE_VIDEO_PLAYBACK');
   String get ENTER_SYMBOL => _getKey('ENTER_SYMBOL');
   String get EQUALIZER => _getKey('EQUALIZER');
@@ -256,6 +260,7 @@ abstract class LanguageKeys {
   String get FILE => _getKey('FILE');
   String get FILES => _getKey('FILES');
   String get FILE_ALREADY_EXISTS => _getKey('FILE_ALREADY_EXISTS');
+  String get FILLER => _getKey('FILLER');
   String get FILTER_ALBUMS => _getKey('FILTER_ALBUMS');
   String get FILTER_ARTISTS => _getKey('FILTER_ARTISTS');
   String get FILTER_GENRES => _getKey('FILTER_GENRES');
@@ -298,12 +303,15 @@ abstract class LanguageKeys {
   String get HAPTIC_FEEDBACK => _getKey('HAPTIC_FEEDBACK');
   String get HEIGHT_OF_ALBUM_TILE => _getKey('HEIGHT_OF_ALBUM_TILE');
   String get HEIGHT_OF_TRACK_TILE => _getKey('HEIGHT_OF_TRACK_TILE');
+  String get HIDE_SKIP_BUTTON_AFTER => _getKey('HIDE_SKIP_BUTTON_AFTER');
+  String get HIGHLIGHT => _getKey('HIGHLIGHT');
   String get HIGH_MATCHES => _getKey('HIGH_MATCHES');
   String get HIGH_PERFORMANCE => _getKey('HIGH_PERFORMANCE');
   String get HISTORY => _getKey('HISTORY');
   String get HISTORY_IMPORT_MISSING_ENTRIES_NOTE => _getKey('HISTORY_IMPORT_MISSING_ENTRIES_NOTE');
   String get HISTORY_LISTENS_REPLACE_WARNING => _getKey('HISTORY_LISTENS_REPLACE_WARNING');
   String get HOME => _getKey('HOME');
+  String get HOOK => _getKey('HOOK');
   String get HOURS => _getKey('HOURS');
   String get HOUR_FORMAT_12 => _getKey('HOUR_FORMAT_12');
   String get IF_NOT_PLAYING => _getKey('IF_NOT_PLAYING');
@@ -332,6 +340,8 @@ abstract class LanguageKeys {
   String get INFO => _getKey('INFO');
   String get INSERTED => _getKey('INSERTED');
   String get INSTANTLY_APPLIES => _getKey('INSTANTLY_APPLIES');
+  String get INTERACTION_REMINDER => _getKey('INTERACTION_REMINDER');
+  String get INTRO => _getKey('INTRO');
   String get INVERT_SELECTION => _getKey('INVERT_SELECTION');
   String get ITEM => _getKey('ITEM');
   String get I_READ_AND_AGREE => _getKey('I_READ_AND_AGREE');
@@ -395,6 +405,7 @@ abstract class LanguageKeys {
   String get MINIMIZED_MINIPLAYER => _getKey('MINIMIZED_MINIPLAYER');
   String get MINIMUM_ONE_ITEM => _getKey('MINIMUM_ONE_ITEM');
   String get MINIMUM_ONE_ITEM_SUBTITLE => _getKey('MINIMUM_ONE_ITEM_SUBTITLE');
+  String get MINIMUM_SEGMENT_DURATION => _getKey('MINIMUM_SEGMENT_DURATION');
   String get MIN_FILE_DURATION => _getKey('MIN_FILE_DURATION');
   String get MIN_FILE_SIZE => _getKey('MIN_FILE_SIZE');
   String get MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION => _getKey('MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION');
@@ -416,6 +427,7 @@ abstract class LanguageKeys {
   String get MORE => _getKey('MORE');
   String get MOST_PLAYED => _getKey('MOST_PLAYED');
   String get MULTIPLE_TRACKS_TAGS_EDIT_NOTE => _getKey('MULTIPLE_TRACKS_TAGS_EDIT_NOTE');
+  String get MUSIC_OFFTOPIC => _getKey('MUSIC_OFFTOPIC');
   String get NAME_CONTAINS_BAD_CHARACTER => _getKey('NAME_CONTAINS_BAD_CHARACTER');
   String get NAME => _getKey('NAME');
   String get NEVER => _getKey('NEVER');
@@ -478,6 +490,7 @@ abstract class LanguageKeys {
   String get OR => _getKey('OR');
   String get OTHERS => _getKey('OTHERS');
   String get OUTPUT => _getKey('OUTPUT');
+  String get OUTRO => _getKey('OUTRO');
   String get OVERRIDE_OLD_FILES_IN_THE_SAME_FOLDER => _getKey('OVERRIDE_OLD_FILES_IN_THE_SAME_FOLDER');
   String get PALETTE => _getKey('PALETTE');
   String get PALETTE_MIX => _getKey('PALETTE_MIX');
@@ -604,8 +617,10 @@ abstract class LanguageKeys {
   String get SELECT_ALL => _getKey('SELECT_ALL');
   String get SELECTED_TRACKS => _getKey('SELECTED_TRACKS');
   String get SELECT_FILES_ALREADY_IN_LOCAL_LIBRARY => _getKey('SELECT_FILES_ALREADY_IN_LOCAL_LIBRARY');
+  String get SELF_PROMOTION => _getKey('SELF_PROMOTION');
   String get SEPARATORS_BLACKLIST_SUBTITLE => _getKey('SEPARATORS_BLACKLIST_SUBTITLE');
   String get SEPARATORS_MESSAGE => _getKey('SEPARATORS_MESSAGE');
+  String get SERVER_ADDRESS => _getKey('SERVER_ADDRESS');
   String get SETUP_FIRST_STARTUP => _getKey('SETUP_FIRST_STARTUP');
   String get SET_AS => _getKey('SET_AS');
   String get SET_AS_DEFAULT => _getKey('SET_AS_DEFAULT');
@@ -626,9 +641,11 @@ abstract class LanguageKeys {
   String get SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN => _getKey('SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN');
   String get SHOW_FAILED_ONLY => _getKey('SHOW_FAILED_ONLY');
   String get SHOW_HIDE_UNKNOWN_FIELDS => _getKey('SHOW_HIDE_UNKNOWN_FIELDS');
+  String get SHOW_IN_SEEKBAR => _getKey('SHOW_IN_SEEKBAR');
   String get SHOW_MIX_PLAYLISTS_IN => _getKey('SHOW_MIX_PLAYLISTS_IN');
   String get SHOW_MORE => _getKey('SHOW_MORE');
   String get SHOW_SHORT_VIDEOS_IN => _getKey('SHOW_SHORT_VIDEOS_IN');
+  String get SHOW_SKIP_BUTTON => _getKey('SHOW_SKIP_BUTTON');
   String get SHOW_VIDEO_ENDCARDS => _getKey('SHOW_VIDEO_ENDCARDS');
   String get SHOW_WEBM => _getKey('SHOW_WEBM');
   String get SHUFFLE => _getKey('SHUFFLE');
@@ -650,13 +667,18 @@ abstract class LanguageKeys {
   String get SIMILAR_TIME_RANGE_SUBTITLE => _getKey('SIMILAR_TIME_RANGE_SUBTITLE');
   String get SINGLES => _getKey('SINGLES');
   String get SIZE => _getKey('SIZE');
+  String get SKIP_COUNT_TRACKING => _getKey('SKIP_COUNT_TRACKING');
   String get SKIP_SILENCE => _getKey('SKIP_SILENCE');
   String get SKIP => _getKey('SKIP');
+  String get SKIP_SPONSOR_SEGMENTS_IN_VIDEOS => _getKey('SKIP_SPONSOR_SEGMENTS_IN_VIDEOS');
   String get SLEEP_AFTER => _getKey('SLEEP_AFTER');
   String get SLEEP_TIMER => _getKey('SLEEP_TIMER');
   String get SORT_BY => _getKey('SORT_BY');
   String get SOURCE => _getKey('SOURCE');
   String get SPEED => _getKey('SPEED');
+  String get SPONSOR => _getKey('SPONSOR');
+  String get SPONSORBLOCK => _getKey('SPONSORBLOCK');
+  String get SPONSORBLOCK_LEADERBOARD => _getKey('SPONSORBLOCK_LEADERBOARD');
   String get STAGGERED_ALBUM_GRID_VIEW => _getKey('STAGGERED_ALBUM_GRID_VIEW');
   String get START => _getKey('START');
   String get STATS_SUBTITLE => _getKey('STATS_SUBTITLE');

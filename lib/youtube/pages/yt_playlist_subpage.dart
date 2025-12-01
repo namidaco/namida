@@ -890,7 +890,7 @@ class _EmptyPlaylistResult extends YoutiPiePlaylistResultBase {
   }
 
   @override
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMapRaw() {
     return {};
   }
 }

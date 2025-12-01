@@ -55,6 +55,7 @@ import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
+import 'package:namida/youtube/class/sponsorblock.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -777,6 +778,50 @@ extension PlaylistPrivacyUtils on PlaylistPrivacy {
 
 extension DownloadNotificationsUtils on DownloadNotifications {
   String toText() => _NamidaConverters.inst.getTitle(this);
+}
+
+extension SponsorBlockCategoryExt on SponsorBlockCategory {
+  String toText() => this.name.sponsorCategoryToText();
+}
+
+extension SponsorBlockCategoryNamesExt on String {
+  String sponsorCategoryToText() {
+    return switch (this) {
+      'sponsor' => lang.SPONSOR,
+      'selfpromo' => lang.SELF_PROMOTION,
+      'interaction' => lang.INTERACTION_REMINDER,
+      'poi_highlight' => lang.HIGHLIGHT,
+      'intro' => lang.INTRO,
+      'outro' => lang.OUTRO,
+      'preview' => lang.PREVIEW,
+      'hook' => lang.HOOK,
+      'filler' => lang.FILLER,
+      'music_offtopic' => lang.MUSIC_OFFTOPIC,
+      _ => '',
+    };
+  }
+}
+
+extension SponsorBlockActionExt on SponsorBlockAction {
+  String toText() {
+    return switch (this) {
+      SponsorBlockAction.showInSeekbar => lang.SHOW_IN_SEEKBAR,
+      SponsorBlockAction.showSkipButton => lang.SHOW_SKIP_BUTTON,
+      SponsorBlockAction.autoSkip => lang.AUTO_SKIP,
+      SponsorBlockAction.autoSkipOnce => lang.AUTO_SKIP_ONCE,
+      SponsorBlockAction.disabled => lang.DISABLE,
+    };
+  }
+
+  IconData toIcon() {
+    return switch (this) {
+      SponsorBlockAction.showInSeekbar => Broken.settings,
+      SponsorBlockAction.showSkipButton => Broken.next,
+      SponsorBlockAction.autoSkip => Broken.forward,
+      SponsorBlockAction.autoSkipOnce => Broken.forward,
+      SponsorBlockAction.disabled => Broken.slash,
+    };
+  }
 }
 
 extension RouteUtils on NamidaRoute {

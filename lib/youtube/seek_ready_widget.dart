@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:youtipie/class/sponsorblock_segment.dart';
+
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -8,6 +10,8 @@ import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/youtube/class/sponsorblock.dart';
+import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 
 class SeekReadyDimensions {
   static const barHeight = 32.0;
@@ -192,6 +196,20 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     return LayoutBuilder(
       builder: (context, c) {
         final maxWidth = c.maxWidth;
+        final sponsorblockWidget = ObxO(
+          rx: settings.youtube.sponsorBlockSettings,
+          builder: (context, sponsorblock) => sponsorblock.enabled
+              ? Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: _SponsorBlockSegmentsBar(
+                    maxWidth: maxWidth,
+                    minimumSegmentDurationMS: sponsorblock.minimumSegmentDurationMS,
+                  ),
+                )
+              : const SizedBox(),
+        );
         return Stack(
           alignment: Alignment.centerLeft,
           children: [
@@ -372,6 +390,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                             ),
                           ),
                         ),
+                        sponsorblockWidget,
                         Positioned(
                           left: 0,
                           top: 0,
@@ -450,6 +469,100 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
               },
             ),
           ],
+        );
+      },
+    );
+  }
+}
+
+class _SponsorBlockSegmentsBar extends StatefulWidget {
+  final double maxWidth;
+  final int minimumSegmentDurationMS;
+  const _SponsorBlockSegmentsBar({required this.maxWidth, required this.minimumSegmentDurationMS});
+
+  @override
+  State<_SponsorBlockSegmentsBar> createState() => _SponsorBlockSegmentsBarState();
+}
+
+class _SponsorBlockSegmentsBarState extends State<_SponsorBlockSegmentsBar> {
+  int _videoDurationMS = 0;
+
+  void _onCurrentItemDurationChange() {
+    final currentItemDur = Player.inst.currentItemDuration.value?.inMilliseconds;
+    if (_videoDurationMS == currentItemDur) return;
+    if (mounted) {
+      setState(() {
+        _videoDurationMS = currentItemDur ?? 0;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    _onCurrentItemDurationChange();
+    Player.inst.currentItemDuration.addListener(_onCurrentItemDurationChange);
+    settings.youtube.sponsorBlockSettings.addListener(SponsorBlockController.inst.reFetchOnSettingsChangedIfRequired);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    Player.inst.currentItemDuration.removeListener(_onCurrentItemDurationChange);
+    settings.youtube.sponsorBlockSettings.removeListener(SponsorBlockController.inst.reFetchOnSettingsChangedIfRequired);
+    super.dispose();
+  }
+
+  Widget _buildSegment(SponsorBlockSegment s, int videoDurationMS, double maxWidth) {
+    final c = SponsorBlockController.inst.getConfigForSegment(s.category);
+    if (c == null || c.action == SponsorBlockAction.disabled) return const SizedBox();
+
+    final start = s.segmentStartMS;
+    final end = s.segmentEndMS;
+    final segmentWidth = ((end - start) / videoDurationMS) * maxWidth;
+    final leftMargin = (start / videoDurationMS) * maxWidth;
+    return Positioned(
+      top: 0,
+      bottom: 0,
+      left: leftMargin,
+      width: segmentWidth.withMinimum(3.0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: c.color,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(6.0),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Iterable<SponsorBlockSegment> _filterMinDurSegments(List<SponsorBlockSegment> segments, int minDur) {
+    final minDur = settings.youtube.sponsorBlockSettings.value.minimumSegmentDurationMS;
+    return segments.where((element) => element.durationMS >= minDur);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    int videoDurationMS = _videoDurationMS;
+    return ObxO(
+      rx: SponsorBlockController.inst.currentSegments,
+      builder: (context, segments) {
+        if (_videoDurationMS == 0) videoDurationMS = segments?.videoDurationMS ?? 0;
+        if (segments == null || videoDurationMS == 0) {
+          return const SizedBox();
+        }
+        final minimumSegmentDurationMS = widget.minimumSegmentDurationMS;
+        final finalSegments = minimumSegmentDurationMS > 0 ? _filterMinDurSegments(segments.segments, minimumSegmentDurationMS) : segments.segments;
+        return SizedBox(
+          width: widget.maxWidth,
+          child: Stack(
+            children: [
+              ...finalSegments.map(
+                (s) => _buildSegment(s, videoDurationMS, widget.maxWidth),
+              ),
+              if (segments.poi_highlight != null) _buildSegment(segments.poi_highlight!, videoDurationMS, widget.maxWidth),
+            ],
+          ),
         );
       },
     );

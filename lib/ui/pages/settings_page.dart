@@ -184,6 +184,7 @@ class CollapsedSettingTiles extends StatelessWidget {
 }
 
 class CustomCollapsedListTile extends StatelessWidget {
+  final Color? bgColor;
   final String title;
   final String? subtitle;
   final Widget Function()? page;
@@ -193,6 +194,7 @@ class CustomCollapsedListTile extends StatelessWidget {
 
   const CustomCollapsedListTile({
     super.key,
+    this.bgColor,
     required this.title,
     required this.subtitle,
     required this.page,
@@ -204,6 +206,7 @@ class CustomCollapsedListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomListTile(
+      bgColor: bgColor,
       largeTitle: true,
       title: title,
       subtitle: subtitle,

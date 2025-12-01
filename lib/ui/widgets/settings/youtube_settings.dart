@@ -17,8 +17,10 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/ui/widgets/settings/sponsorblock_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
@@ -43,6 +45,7 @@ enum _YoutubeSettingKeys {
   downloadNotifications,
   onOpeningYTLink,
   seekbar,
+  sponsorBlock,
 }
 
 class YoutubeSettings extends SettingSubpageProvider {
@@ -71,6 +74,7 @@ class YoutubeSettings extends SettingSubpageProvider {
         _YoutubeSettingKeys.downloadLocation: [lang.DEFAULT_DOWNLOAD_LOCATION],
         _YoutubeSettingKeys.downloadNotifications: [lang.NOTIFICATIONS],
         _YoutubeSettingKeys.onOpeningYTLink: [lang.ON_OPENING_YOUTUBE_LINK],
+        _YoutubeSettingKeys.sponsorBlock: [lang.SPONSORBLOCK, lang.SKIP_SPONSOR_SEGMENTS_IN_VIDEOS],
       };
 
   void _showYTFlagsDialog() {
@@ -123,6 +127,21 @@ class YoutubeSettings extends SettingSubpageProvider {
               title: lang.MANAGE_YOUR_ACCOUNTS,
               trailing: const Icon(Broken.arrow_right_3),
               onTap: const YoutubeAccountManagePage().navigate,
+            ),
+          ),
+          getItemWrapper(
+            key: _YoutubeSettingKeys.sponsorBlock,
+            child: CustomListTile(
+              bgColor: getBgColor(_YoutubeSettingKeys.sponsorBlock),
+              icon: Broken.shield_slash,
+              title: lang.SPONSORBLOCK,
+              trailing: const Icon(Broken.arrow_right_3),
+              onTap: () {
+                SettingsSubPage(
+                  title: lang.SPONSORBLOCK,
+                  child: const SponsorBlockSettingsPage(),
+                ).navigate();
+              },
             ),
           ),
           getItemWrapper(

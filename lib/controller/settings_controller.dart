@@ -18,6 +18,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/youtube/class/sponsorblock.dart';
 
 part 'settings.equalizer.dart';
 part 'settings.extra.dart';

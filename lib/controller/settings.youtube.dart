@@ -41,6 +41,8 @@ class _YoutubeSettings with SettingsFileWriter {
   bool enableDimInLightMode = true;
   bool allowExperimentalCodecs = false;
 
+  final sponsorBlockSettings = SponsorBlockSettings().obs;
+
   void save({
     bool? showChannelWatermarkFullscreen,
     bool? showVideoEndcards,
@@ -63,6 +65,7 @@ class _YoutubeSettings with SettingsFileWriter {
     YTSeekActionMode? dragToSeek,
     String? downloadFilenameBuilder,
     DownloadNotifications? downloadNotifications,
+    SponsorBlockSettings? sponsorBlockSettings,
     bool? markVideoWatched,
     InnertubeClients? innertubeClient,
     bool setDefaultInnertubeClient = false,
@@ -92,6 +95,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (dragToSeek != null) this.dragToSeek.value = dragToSeek;
     if (downloadFilenameBuilder != null) this.downloadFilenameBuilder.value = downloadFilenameBuilder;
     if (downloadNotifications != null) this.downloadNotifications.value = downloadNotifications;
+    if (sponsorBlockSettings != null) this.sponsorBlockSettings.value = sponsorBlockSettings;
 
     if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
     if (innertubeClient != null || setDefaultInnertubeClient) this.innertubeClient = innertubeClient;
@@ -159,6 +163,7 @@ class _YoutubeSettings with SettingsFileWriter {
       ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? ytVisibleMixes.value;
       downloadFilenameBuilder.value = json['downloadFilenameBuilder'] ?? downloadFilenameBuilder.value;
       downloadNotifications.value = DownloadNotifications.values.getEnum(json['downloadNotifications']) ?? downloadNotifications.value;
+      sponsorBlockSettings.value = SponsorBlockSettings.fromJson(json['sponsorBlockSettings']);
 
       final initialDefaultMetadataTagsInStorage = (json['initialDefaultMetadataTags'] as Map?);
       if (initialDefaultMetadataTagsInStorage != null) {
@@ -203,6 +208,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.name, value)),
         'downloadFilenameBuilder': downloadFilenameBuilder.value,
         'downloadNotifications': downloadNotifications.value.name,
+        'sponsorBlockSettings': sponsorBlockSettings.value.toJson(),
         'initialDefaultMetadataTags': initialDefaultMetadataTags,
         'markVideoWatched': markVideoWatched,
         'innertubeClient': innertubeClient?.name,

@@ -48,6 +48,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -1209,6 +1210,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }) async {
     WaveformController.inst.resetWaveform();
     Lyrics.inst.resetLyrics();
+    SponsorBlockController.inst.clearSegmentsIfVideoIsDifferent(item.id);
 
     currentVideoStream.value = null;
     currentAudioStream.value = null;
@@ -1294,6 +1296,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         startCounterToAListen(pi);
         increaseListenTime(LibraryCategory.youtube);
         Lyrics.inst.updateLyrics(item);
+        if (settings.youtube.sponsorBlockSettings.value.enabled) {
+          SponsorBlockController.inst.updateSegments(item.id);
+        }
       }
     }
 
