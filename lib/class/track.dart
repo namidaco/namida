@@ -20,14 +20,12 @@ import 'package:namida/youtube/class/download_task_base.dart';
 
 part 'album_identifier_wrapper.dart';
 
-class TrackWithDate extends Selectable<Map<String, dynamic>> implements ItemWithDate, PlaylistItemWithDate {
+class TrackWithDate extends Selectable<Map<String, dynamic>> with ItemWithDate implements PlaylistItemWithDate {
   @override
   Track get track => _track;
 
   @override
   TrackWithDate? get trackWithDate => this;
-
-  TrackSource get source => sourceNull ?? TrackSource.local;
 
   final int dateAdded;
   final Track _track;

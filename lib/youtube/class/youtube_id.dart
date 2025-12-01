@@ -10,20 +10,17 @@ import 'package:youtipie/core/url_utils.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
-class YoutubeID implements Playable<Map<String, dynamic>>, ItemWithDate, PlaylistItemWithDate {
+class YoutubeID with ItemWithDate implements Playable<Map<String, dynamic>>, PlaylistItemWithDate {
   final String id;
   final YTWatch? watchNull;
   final PlaylistID? playlistID;
 
   @override
   final TrackSource? sourceNull;
-
-  TrackSource get source => sourceNull ?? TrackSource.local;
 
   @override
   int get dateAddedMS => watchNull?.dateMSNull ?? 0;
