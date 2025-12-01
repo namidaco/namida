@@ -258,12 +258,34 @@ extension ListieListieUtils<T> on List<T> {
 
     for (var i = totalLength - sampleCount; i < totalLength; i++) {
       final t = random.nextInt(i + 1);
-      if (selectedIndices.contains(t)) {
-        selectedIndices.add(i);
-        selectedItems.add(list[i]);
-      } else {
-        selectedIndices.add(t);
-        selectedItems.add(list[t]);
+      final indexToSelect = selectedIndices.contains(t) ? i : t;
+      final item = list[indexToSelect];
+      selectedIndices.add(indexToSelect);
+      selectedItems.add(item);
+    }
+
+    return selectedItems;
+  }
+
+  List<T> getRandomSampleWhere(int sampleCount, bool Function(T item) test, [math.Random? random]) {
+    final list = this;
+    if (list.isEmpty) return list;
+
+    final totalLength = list.length;
+    if (sampleCount >= totalLength) return List<T>.of(list);
+
+    random ??= math.Random();
+
+    final selectedIndices = <int>{};
+    final selectedItems = <T>[];
+
+    for (var i = totalLength - sampleCount; i < totalLength; i++) {
+      final t = random.nextInt(i + 1);
+      final indexToSelect = selectedIndices.contains(t) ? i : t;
+      final item = list[indexToSelect];
+      if (test(item)) {
+        selectedIndices.add(indexToSelect);
+        selectedItems.add(item);
       }
     }
 

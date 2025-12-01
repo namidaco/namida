@@ -168,7 +168,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
     final int mostRecentAddedMSSE = DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch;
     final int mostRecentListenedMSSE = DateTime.now().subtract(Duration(days: 2)).millisecondsSinceEpoch;
-    final underrated = allTracksInLibrary.where((tr) {
+    final underrated = allTracksInLibrary.getRandomSampleWhere(100, (tr) {
       if (PlaylistController.inst.favouritesPlaylist.isSubItemFavourite(tr)) return false; // alr favourited
       final listensCount = HistoryController.inst.topTracksMapListens.value[tr]?.length;
       if (listensCount != null && listensCount > 8) return false; // alr listened enough
@@ -176,7 +176,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       final lastListen = HistoryController.inst.topTracksMapListens.value[tr]?.lastOrNull;
       if (lastListen != null && lastListen > mostRecentListenedMSSE) return false; // recently listened
       return true;
-    }).getRandomSample(100);
+    });
 
     if (_mixes.isEmpty) {
       // -- supermacy
