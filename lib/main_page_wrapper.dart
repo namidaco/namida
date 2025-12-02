@@ -50,9 +50,7 @@ class _MainPageWrapperState extends State<MainPageWrapper> {
     if (widget.shouldShowOnBoarding) {
       WidgetsBinding.instance.addPostFrameCallback(
         (timeStamp) {
-          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) {
-            return const FirstRunConfigureScreen();
-          }));
+          NamidaNavigator.inst.navigateToRootReplacement(const FirstRunConfigureScreen());
         },
       );
     }

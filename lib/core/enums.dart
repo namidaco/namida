@@ -229,7 +229,7 @@ enum WakelockMode {
 
 enum RouteType {
   // ----- Pages -----
-  PAGE_HOME,
+  PAGE_Home,
   PAGE_allTracks,
   PAGE_albums,
   PAGE_artists,

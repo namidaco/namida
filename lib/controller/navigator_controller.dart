@@ -281,6 +281,24 @@ class NamidaNavigator {
     );
   }
 
+  Future<T?> navigateToRootReplacement<T>(
+    Widget page, {
+    Transition transition = Transition.cupertino,
+    int durationInMs = _defaultRouteAnimationDurMS,
+    bool opaque = true,
+  }) async {
+    currentWidgetStack.value = [];
+    _hideEverything();
+
+    return await _rootNav.currentState?.pushPageReplacement(
+      page,
+      durationInMs: durationInMs,
+      transition: transition,
+      maintainState: true,
+      opaque: opaque,
+    );
+  }
+
   Future<void> popRoot<T>([T? result]) async {
     final state = _rootNav.currentState;
     if (state == null) return;

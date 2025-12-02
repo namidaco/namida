@@ -83,13 +83,12 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
       );
       return;
     }
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-      builder: (context) {
-        return MainPageWrapper(
-          shouldShowOnBoarding: false,
-        );
-      },
-    ));
+
+    NamidaNavigator.inst.navigateToRootReplacement(
+      MainPageWrapper(
+        shouldShowOnBoarding: false,
+      ),
+    );
     Indexer.inst.prepareTracksFile();
     return QueueController.inst.prepareLatestQueueAsync();
   }

@@ -40,7 +40,7 @@ final int _lowestDateMSSEToDisplay = DateTime(1980).millisecondsSinceEpoch + 1;
 
 class HomePage extends StatefulWidget with NamidaRouteWidget {
   @override
-  RouteType get route => RouteType.PAGE_HOME;
+  RouteType get route => RouteType.PAGE_Home;
 
   const HomePage({super.key});
 
