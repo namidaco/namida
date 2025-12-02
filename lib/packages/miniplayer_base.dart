@@ -43,6 +43,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
+import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 
 class FocusedMenuOptions {
@@ -309,6 +310,10 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
     (rcp, _) => rcp,
   );
 
+  final progressBarOpacityAnimation = NamidaMiniPlayerBase._createOpacityAnimationV2(
+    (cp) => 1 - cp,
+  );
+
   final queueOpacityAnimation = NamidaMiniPlayerBase._createOpacityAnimationV3(
     (_, qcp) => qcp,
   );
@@ -327,6 +332,14 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
 
     final onSecondary = theme.colorScheme.onSecondaryContainer;
     const waveformChild = RepaintBoundary(child: WaveformMiniplayer());
+    const seekReadyWidget = SeekReadyWidget(
+      isLocal: true,
+      isFullscreen: false,
+      showSponsorBlockSegments: false,
+      showBufferBars: false,
+      clampCircleEdges: false,
+      useReducedProgressColor: true,
+    );
 
     final topBottomMargin = 8.0.spaceY;
 
@@ -973,18 +986,18 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                 ),
               );
 
-              final smolProgressBarDecoratedBox = Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: AnimatedDecoration(
-                  duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                  decoration: BoxDecoration(
-                    color: CurrentColor.inst.miniplayerColor,
-                    borderRadius: BorderRadius.circular(50),
-                    //  color: Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
-                    //   .withValues(alpha: velpy(a: .3, b: .22, c: icp)),
-                  ),
-                ),
-              );
+              // final smolProgressBarDecoratedBox = Padding(
+              //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              //   child: AnimatedDecoration(
+              //     duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+              //     decoration: BoxDecoration(
+              //       color: CurrentColor.inst.miniplayerColor,
+              //       borderRadius: BorderRadius.circular(50),
+              //       //  color: Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
+              //       //   .withValues(alpha: velpy(a: .3, b: .22, c: icp)),
+              //     ),
+              //   ),
+              // );
 
               return MiniplayerRaw(
                 builder: (maxOffset, bounceUp, bounceDown, topInset, bottomInset, rightInset, screenSize, sMaxOffset, p, cp, ip, icp, rp, rcp, qp, qcp, bp, bcp,
@@ -1129,19 +1142,19 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                         ),
 
                                         /// Smol progress bar
-                                        Obx(
-                                          (context) {
-                                            final nowPlayingPosition = Player.inst.nowPlayingPosition.valueR;
-                                            final currentDurationInMS =
-                                                currentDefaultDurationInMS > 0 ? currentDefaultDurationInMS : Player.inst.currentItemDuration.valueR?.inMilliseconds ?? 0;
-                                            final w = currentDurationInMS > 0 ? nowPlayingPosition / currentDurationInMS : 0;
-                                            return SizedBox(
-                                              height: 2 * (1 - cp),
-                                              width: w > 0 ? (Dimensions.inst.miniplayerMaxWidth * w) : 0,
-                                              child: smolProgressBarDecoratedBox,
-                                            );
-                                          },
-                                        ),
+                                        // Obx(
+                                        //   (context) {
+                                        //     final nowPlayingPosition = Player.inst.nowPlayingPosition.valueR;
+                                        //     final currentDurationInMS =
+                                        //         currentDefaultDurationInMS > 0 ? currentDefaultDurationInMS : Player.inst.currentItemDuration.valueR?.inMilliseconds ?? 0;
+                                        //     final w = currentDurationInMS > 0 ? nowPlayingPosition / currentDurationInMS : 0;
+                                        //     return SizedBox(
+                                        //       height: 2 * (1 - cp),
+                                        //       width: w > 0 ? (Dimensions.inst.miniplayerMaxWidth * w) : 0,
+                                        //       child: smolProgressBarDecoratedBox,
+                                        //     );
+                                        //   },
+                                        // ),
                                       ],
                                     ),
                                   ),
@@ -1539,6 +1552,16 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                               );
                             },
                           ),
+                        ),
+                      ),
+
+                      Positioned(
+                        bottom: -bottomOffset + (12.0.spaceY * icp) + (-(SeekReadyDimensions.barHeight / 2) + (SeekReadyDimensions.progressBarHeight / 2)),
+                        left: borderRadius.bottomLeft.x + 4.0,
+                        right: borderRadius.bottomRight.x + 4.0,
+                        child: FadeIgnoreTransition(
+                          opacity: progressBarOpacityAnimation,
+                          child: seekReadyWidget,
                         ),
                       ),
 

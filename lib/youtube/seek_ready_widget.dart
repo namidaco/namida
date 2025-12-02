@@ -27,6 +27,10 @@ class SeekReadyWidget extends StatefulWidget {
   final bool isLocal;
   final bool isFullscreen;
   final bool showPositionCircle;
+  final bool showSponsorBlockSegments;
+  final bool showBufferBars;
+  final bool? clampCircleEdges;
+  final bool useReducedProgressColor;
   final bool Function()? canDrag;
   final void Function(bool isDragging)? onDraggingChange;
 
@@ -35,6 +39,10 @@ class SeekReadyWidget extends StatefulWidget {
     this.isLocal = false,
     this.isFullscreen = false,
     this.showPositionCircle = false,
+    this.showSponsorBlockSegments = true,
+    this.showBufferBars = true,
+    this.clampCircleEdges,
+    this.useReducedProgressColor = false,
     this.canDrag,
     this.onDraggingChange,
   });
@@ -151,7 +159,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     final theme = context.theme;
     final textTheme = theme.textTheme;
     final fullscreen = widget.isFullscreen;
-    final clampCircleEdges = !widget.isFullscreen;
+    final clampCircleEdges = widget.clampCircleEdges ?? !widget.isFullscreen;
     const barHeight = SeekReadyDimensions.barHeight;
     const circleWidth = SeekReadyDimensions.circleWidth;
     const halfCircle = SeekReadyDimensions.halfCircle;
@@ -160,10 +168,15 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     const seekTextWidth = SeekReadyDimensions.seekTextWidth;
     const seekTextExtraMargin = SeekReadyDimensions.seekTextExtraMargin;
 
-    final progressColor = CurrentColor.inst.miniplayerColor.withValues(alpha: 0.8);
+    final progressColor = widget.useReducedProgressColor
+        ? Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor).withValues(alpha: 0.8)
+        : CurrentColor.inst.miniplayerColor.withValues(alpha: 0.8);
     final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(theme.secondaryHeaderColor.withValues(alpha: 0.25), theme.scaffoldBackgroundColor);
-    final bufferColor =
-        fullscreen ? miniplayerBGColor.invert() : Color.alphaBlend(progressColor.withValues(alpha: 0.25), miniplayerBGColor.invert().withValues(alpha: 0.5)).withValues(alpha: 0.5);
+    final bufferColor = widget.showBufferBars
+        ? fullscreen
+            ? miniplayerBGColor.invert()
+            : Color.alphaBlend(progressColor.withValues(alpha: 0.25), miniplayerBGColor.invert().withValues(alpha: 0.5)).withValues(alpha: 0.5)
+        : null;
 
     final circleWidget = AnimatedBuilder(
       animation: _animation,
@@ -196,20 +209,22 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     return LayoutBuilder(
       builder: (context, c) {
         final maxWidth = c.maxWidth;
-        final sponsorblockWidget = ObxO(
-          rx: settings.youtube.sponsorBlockSettings,
-          builder: (context, sponsorblock) => sponsorblock.enabled
-              ? Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: _SponsorBlockSegmentsBar(
-                    maxWidth: maxWidth,
-                    minimumSegmentDurationMS: sponsorblock.minimumSegmentDurationMS,
-                  ),
-                )
-              : const SizedBox(),
-        );
+        final sponsorblockWidget = widget.showSponsorBlockSegments
+            ? ObxO(
+                rx: settings.youtube.sponsorBlockSettings,
+                builder: (context, sponsorblock) => sponsorblock.enabled
+                    ? Positioned(
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: _SponsorBlockSegmentsBar(
+                          maxWidth: maxWidth,
+                          minimumSegmentDurationMS: sponsorblock.minimumSegmentDurationMS,
+                        ),
+                      )
+                    : const SizedBox(),
+              )
+            : null;
         return Stack(
           alignment: Alignment.centerLeft,
           children: [
@@ -354,43 +369,45 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                     child: Stack(
                       alignment: Alignment.centerLeft,
                       children: [
-                        if (fullscreen || videoCached || audioCached)
+                        if (widget.showBufferBars)
+                          if (fullscreen || videoCached || audioCached)
+                            Positioned(
+                              left: 0,
+                              top: 0,
+                              bottom: 0,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: bufferColor?.withValues(alpha: fullscreen ? 0.3 : 0.1),
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(6.0),
+                                  ),
+                                ),
+                                child: SizedBox(width: maxWidth),
+                              ),
+                            ),
+                        if (widget.showBufferBars)
                           Positioned(
                             left: 0,
                             top: 0,
                             bottom: 0,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: bufferColor.withValues(alpha: fullscreen ? 0.3 : 0.1),
+                                color: bufferColor?.withValues(alpha: fullscreen ? 0.8 : 0.2),
                                 borderRadius: const BorderRadius.all(
                                   Radius.circular(6.0),
                                 ),
                               ),
-                              child: SizedBox(width: maxWidth),
-                            ),
-                          ),
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: bufferColor.withValues(alpha: fullscreen ? 0.8 : 0.2),
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(6.0),
+                              child: SizedBox(
+                                width: maxWidth *
+                                    ((videoCached && audioCached) || (audioCached && settings.youtube.isAudioOnlyMode.valueR)
+                                        ? 1.0
+                                        : buffered > Duration.zero && durMS > 0
+                                            ? buffered.inMilliseconds / durMS
+                                            : 0.0),
                               ),
                             ),
-                            child: SizedBox(
-                              width: maxWidth *
-                                  ((videoCached && audioCached) || (audioCached && settings.youtube.isAudioOnlyMode.valueR)
-                                      ? 1.0
-                                      : buffered > Duration.zero && durMS > 0
-                                          ? buffered.inMilliseconds / durMS
-                                          : 0.0),
-                            ),
                           ),
-                        ),
-                        sponsorblockWidget,
+                        if (sponsorblockWidget != null) sponsorblockWidget,
                         Positioned(
                           left: 0,
                           top: 0,
