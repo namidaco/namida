@@ -249,14 +249,28 @@ Animating Thumbnail        |  Recommends & Listens
 
 ### Permission Note:
 
-##### the following actions require <span>`all_files_access`</span> permission (requested when needed)
-
-> - editing audio tags
-> - creating or auto-restoring backups
-> - saving artworks
-> - compressing images
-> - downloading youtube content
-> - playing tracks from a root folder
+#### The permissions namida uses and why:
+> - `WAKE_LOCK` & `FOREGROUND_SERVICE`: keep app alive for media playback.
+> - `INTERNET`: for many stuff like artist/album images, streaming & downloading, etc.
+> - `READ_EXTERNAL_STORAGE` (Android ≤ 12): list files from indexer folders only.
+> - `READ_MEDIA_AUDIO` (Android 13+): list audio files from indexer folders only.
+> - `READ_MEDIA_VIDEO` (Android 13+): list video files from indexer folders only (for video playback).
+> - `READ_MEDIA_IMAGES` (Android 13+): list image files from indexer folders only (for fallback covers).
+> - `WRITE_EXTERNAL_STORAGE` (Android ≤ 10): same as below but less restrict.
+> - `MANAGE_EXTERNAL_STORAGE` or `all_files_access` (Android 10+ / requested when needed): used for
+>    - editing audio tags
+>    - creating or auto-restoring backups
+>    - saving artworks
+>    - deleting files
+>    - compressing images & fix ytdlp images
+>    - exporting playlists as m3u
+>    - downloading youtube content
+>    - playing tracks from a root folder
+>    - in-app file browser
+> - `VIBRATE`: vibrate/haptic feedback while doing some actions (can be turned off in settings).
+> - `POST_NOTIFICATIONS` (requested when needed): post notifications like history import/download progress 
+> - `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` (requested when needed): improve downloads.
+> - `WRITE_SETTINGS` (requested when needed): to set audio as ringtone/etc.
 
 ### Special Thanks:
 

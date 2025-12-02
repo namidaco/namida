@@ -307,6 +307,7 @@ class YoutubeController {
 
   void _startNotificationTimer() {
     if (_downloadNotificationTimer == null) {
+      NotificationManager.instance.ensurePermissionGranted();
       final startTime = DateTime.now();
 
       _downloadNotificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {

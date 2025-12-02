@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/platform/base.dart';
@@ -49,6 +50,12 @@ class NotificationManager {
     );
     _flutterLocalNotificationsPlugin.cancelAll();
     return didInit;
+  }
+
+  Future<void> ensurePermissionGranted() async {
+    try {
+      await Permission.notification.request();
+    } catch (_) {}
   }
 
   static void mediaNotification({

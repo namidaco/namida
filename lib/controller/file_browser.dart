@@ -18,6 +18,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/main.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -665,6 +666,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   @override
   void initState() {
     super.initState();
+    _refreshPermissionStatus();
     NamidaStorage.inst.getStorageDirectories().then((paths) {
       _mainStoragePaths.addAll(paths);
       _fetchFiles(Directory(widget.initialDirectory ?? paths.first));
@@ -696,6 +698,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     _scrollController.dispose();
     _pathSplitsScrollController.dispose();
     _showHiddenFiles.close();
+    _hasPermissionRx.close();
     super.dispose();
   }
 
@@ -948,6 +951,11 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     return widgets;
   }
 
+  final _hasPermissionRx = true.obs; // assume yes until confirmed
+  void _refreshPermissionStatus() async {
+    _hasPermissionRx.value = await requestManageStoragePermission();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -967,6 +975,44 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
         child: SafeArea(
           child: Column(
             children: [
+              ObxO(
+                rx: _hasPermissionRx,
+                builder: (context, hasPermission) => hasPermission
+                    ? const SizedBox()
+                    : NamidaInkWell(
+                        onTap: _refreshPermissionStatus,
+                        borderRadius: 8.0,
+                        bgColor: Colors.red.withValues(alpha: 0.1),
+                        margin: EdgeInsets.symmetric(horizontal: 8.0),
+                        padding: EdgeInsets.symmetric(vertical: 10.0),
+                        child: Row(
+                          children: [
+                            SizedBox(width: 8.0),
+                            Icon(
+                              Broken.warning_2,
+                              size: 24.0,
+                            ),
+                            SizedBox(width: 8.0),
+                            Expanded(
+                              child: Text(
+                                lang.GRANT_STORAGE_PERMISSION,
+                                style: textTheme.displayMedium?.copyWith(
+                                  fontSize: 16.0,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 8.0),
+                            NamidaInkWellButton(
+                              onTap: _refreshPermissionStatus,
+                              borderRadius: 6.0,
+                              icon: null,
+                              text: lang.MANAGE,
+                            ),
+                            SizedBox(width: 8.0),
+                          ],
+                        ),
+                      ),
+              ),
               Row(
                 children: [
                   IconButton(

@@ -87,10 +87,6 @@ void _mainAppInitialization() async {
   bool shouldShowOnBoarding = false;
 
   try {
-    if (!await requestStoragePermission(request: false)) {
-      shouldShowOnBoarding = true;
-    }
-
     await [
       WindowController.instance?.init(),
       SMTCController.instance?.init(),
@@ -153,6 +149,11 @@ void _mainAppInitialization() async {
       NamidaStorage.inst.getStorageDirectories().then((value) => paths = value),
       NamidaStorage.inst.getStorageDirectoriesAppCache().then((value) => AppDirs.APP_CACHE = value.firstOrNull ?? ''),
     ].executeAllAndSilentReportErrors();
+
+    // -- sdk must be initialized first
+    if (!await requestStoragePermission(request: false)) {
+      shouldShowOnBoarding = true;
+    }
 
     if (paths.isEmpty) {
       final fallback = NamidaStorage.inst.defaultFallbackStoragePath;
@@ -377,18 +378,28 @@ void _initializeIntenties() {
 /// [request] will prompt dialog if not granted.
 Future<bool> requestStoragePermission({bool request = true}) async {
   bool granted = false;
-  if (await Permission.storage.isPermanentlyDenied) {
+
+  final permissionsToRequest = <Permission>[];
+  if (NamidaDeviceInfo.sdkVersion < 33) {
+    permissionsToRequest.add(Permission.storage);
+  } else {
+    permissionsToRequest.add(Permission.audio);
+    permissionsToRequest.add(Permission.videos);
+    permissionsToRequest.add(Permission.photos);
+  }
+
+  if (await permissionsToRequest.anyAsync((element) => element.isPermanentlyDenied)) {
     if (request) {
       // -- user denied, should open settings.
       await openAppSettings();
     }
-  } else if (await Permission.storage.isDenied) {
+  } else if (await permissionsToRequest.anyAsync((element) => element.isDenied)) {
     if (request) {
-      final st = await Permission.storage.request();
-      if (st.isPermanentlyDenied) {
+      final statuses = await permissionsToRequest.request();
+      if (statuses.values.any((st) => st.isPermanentlyDenied)) {
         await openAppSettings();
       }
-      granted = st.isGranted;
+      granted = statuses.values.every((st) => st.isGranted);
     }
   } else {
     granted = true;
