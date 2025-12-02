@@ -399,17 +399,13 @@ class JsonToHistoryParser {
 
     Directory? tempZipMainDestination;
 
-    if (files.isEmpty) {
-      if (mainDirectory != null) {
-        tempZipMainDestination = await Directory.systemTemp.createTemp('namida_parser_');
-        files = await _filterFilesFromDir(
-          mainDirectory,
-          source,
-          tempZipMainDestination,
-          (progress, total) => _loadingFileProgress.value = (progress, total),
-        );
-      }
-    }
+    final contents = mainDirectory != null && files.isEmpty ? await mainDirectory.listAllIsolate(recursive: true, followLinks: false) : files;
+    files = await _filterFilesFromPossibleZips(
+      contents,
+      source,
+      () async => tempZipMainDestination ??= await Directory.systemTemp.createTemp('namida_parser_'),
+      (progress, total) => _loadingFileProgress.value = (progress, total),
+    );
 
     if (files.isEmpty) {
       snackyy(message: 'No related files were found in this directory.', isError: true);
@@ -422,6 +418,7 @@ class JsonToHistoryParser {
 
     await Future.delayed(Duration.zero);
 
+    NotificationManager.instance.ensurePermissionGranted();
     final startTime = DateTime.now();
     _notificationTimer?.cancel();
     _notificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -491,13 +488,15 @@ class JsonToHistoryParser {
     _latestMissingMap.value = allMissingEntries;
     _latestMissingMapAddedStatus.clear();
     showMissingEntriesDialog();
-
-    if (tempZipMainDestination != null) {
-      tempZipMainDestination.delete(recursive: true);
-    }
+    tempZipMainDestination?.delete(recursive: true);
   }
 
-  Future<List<File>> _filterFilesFromDir(Directory mainDirectory, TrackSource source, Directory tempZipMainDestination, void Function(int progress, int total) onProgress) async {
+  Future<List<File>> _filterFilesFromPossibleZips(
+    List<FileSystemEntity> contents,
+    TrackSource source,
+    Future<Directory> Function() tempZipMainDestination,
+    void Function(int progress, int total) onProgress,
+  ) async {
     final files = <File>[];
 
     late final zipManager = ZipManager.platform();
@@ -505,7 +504,8 @@ class JsonToHistoryParser {
     Stream<FileSystemEntity> listDir(Directory dir) => dir.list(recursive: true, followLinks: false);
     FutureOr<void> executeFileEnsureZipExtracted(File file, void Function(File file) onMatch) async {
       if (NamidaFileExtensionsWrapper.zip.isPathValid(file.path)) {
-        final destinationDir = Directory(FileParts.joinPath(tempZipMainDestination.path, file.path.getFilenameWOExt));
+        final tempDir = (await tempZipMainDestination()).path;
+        final destinationDir = Directory(FileParts.joinPath(tempDir, file.path.getFilenameWOExt));
         try {
           await zipManager.extractZip(zipFile: file, destinationDir: destinationDir);
           final zipContents = listDir(destinationDir);
@@ -521,8 +521,6 @@ class JsonToHistoryParser {
         onMatch(file);
       }
     }
-
-    final contents = await mainDirectory.listAllIsolate(recursive: true, followLinks: false);
 
     int progress = 0;
     final int total = contents.length;

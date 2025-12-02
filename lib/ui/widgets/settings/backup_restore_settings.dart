@@ -571,7 +571,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                   if (pickDirectory) {
                     mainDirectory = await NamidaFileBrowser.pickDirectory(note: lang.IMPORT_YOUTUBE_HISTORY);
                   } else {
-                    jsonfiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT_YOUTUBE_HISTORY, allowedExtensions: NamidaFileExtensionsWrapper.json);
+                    jsonfiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT_YOUTUBE_HISTORY, allowedExtensions: NamidaFileExtensionsWrapper.jsonAndZip);
                   }
                   if (jsonfiles.isNotEmpty || mainDirectory != null) {
                     final isMatchingTypeLink = true.obs;
