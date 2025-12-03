@@ -106,6 +106,30 @@ class YoutubeSettings extends SettingSubpageProvider {
       )
       .toList();
 
+  Widget getAutoStartRadioWidget() {
+    return getItemWrapper(
+      key: _YoutubeSettingKeys.autoStartRadio,
+      child: ObxO(
+        rx: settings.youtube.autoStartRadio,
+        builder: (context, autoStartRadio) => CustomSwitchListTile(
+          bgColor: getBgColor(_YoutubeSettingKeys.autoStartRadio),
+          leading: const StackedIcon(
+            baseIcon: Broken.radar_1,
+            secondaryIcon: Broken.next,
+            secondaryIconSize: 12.0,
+          ),
+          title: lang.AUTO_START_RADIO,
+          subtitle: lang.AUTO_START_RADIO_SUBTITLE,
+          value: autoStartRadio,
+          onChanged: (isTrue) {
+            settings.youtube.save(autoStartRadio: !isTrue);
+            Player.inst.tryAddingMixPlaylist();
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -251,24 +275,7 @@ class YoutubeSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.autoStartRadio,
-            child: ObxO(
-              rx: settings.youtube.autoStartRadio,
-              builder: (context, autoStartRadio) => CustomSwitchListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.autoStartRadio),
-                leading: const StackedIcon(
-                  baseIcon: Broken.radar_1,
-                  secondaryIcon: Broken.next,
-                  secondaryIconSize: 12.0,
-                ),
-                title: lang.AUTO_START_RADIO,
-                subtitle: lang.AUTO_START_RADIO_SUBTITLE,
-                value: autoStartRadio,
-                onChanged: (isTrue) => settings.youtube.save(autoStartRadio: !isTrue),
-              ),
-            ),
-          ),
+          getAutoStartRadioWidget(),
           getItemWrapper(
             key: _YoutubeSettingKeys.personalizedRelatedVideos,
             child: ObxO(

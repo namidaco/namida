@@ -679,6 +679,12 @@ class Player {
     );
   }
 
+  Future<void> tryAddingMixPlaylist() async {
+    final currentId = currentVideo?.id;
+    if (currentId != null) {
+      return await _audioHandler.tryAddingMixPlaylist(currentId);
+    }
+  }
   // ------- video -------
 
   Future<void> tryGenerateWaveform(YoutubeID? video) async {

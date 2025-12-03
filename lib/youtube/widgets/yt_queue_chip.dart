@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/class/route.dart';
@@ -13,11 +14,11 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/yt_generators_controller.dart';
@@ -170,6 +171,23 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
   double _smallBoxDrag = 1.0;
   double _bigBoxDrag = 0.0;
 
+  void _onConfigureTap() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        icon: Broken.setting_3,
+        title: lang.CONFIGURE,
+        normalTitleStyle: true,
+        actions: [
+          NamidaButton(
+            text: lang.DONE,
+            onPressed: NamidaNavigator.inst.closeDialog,
+          ),
+        ],
+        child: const _QueueConfigureOptions(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -184,10 +202,24 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
         ObxO(
           rx: Player.inst.currentQueue,
           builder: (context, queue) {
-            final isSingle = queue.length == 1;
+            // -- single design.. byebye
+            // final singleWidget = queue.length == 1
+            //     ? Padding(
+            //         padding: const EdgeInsets.all(12.0),
+            //         child: FloatingActionButton(
+            //           heroTag: 'yt_queue_fab_hero',
+            //           backgroundColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.9),
+            //           onPressed: () => _animateSmallToBig(),
+            //           child: const Icon(
+            //             Broken.driver,
+            //             color: AppThemes.fabForegroundColor,
+            //           ),
+            //         ),
+            //       )
+            //     : null;
             return Positioned(
               bottom: 0,
-              left: isSingle ? null : 0,
+              left: 0,
               right: 0,
               child: AnimatedBuilder(
                 animation: _smallBoxAnimation,
@@ -208,69 +240,67 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                   },
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
-                    child: isSingle
-                        ? Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: FloatingActionButton(
-                              heroTag: 'yt_queue_fab_hero',
-                              backgroundColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.9),
-                              onPressed: () => _animateSmallToBig(),
-                              child: const Icon(
-                                Broken.driver,
-                                color: AppThemes.fabForegroundColor,
-                              ),
-                            ),
-                          )
-                        : NamidaInkWell(
-                            onTap: () => _animateSmallToBig(),
-                            margin: EdgeInsets.symmetric(horizontal: 18.0, vertical: 6.0),
-                            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
-                            height: minHeight,
-                            bgColor: Color.alphaBlend(theme.cardColor.withValues(alpha: 0.5), theme.scaffoldBackgroundColor).withValues(alpha: 0.95),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Broken.airdrop,
-                                  size: 24.0,
-                                  color: theme.iconTheme.color?.withValues(alpha: 0.65),
-                                ),
-                                const SizedBox(width: 6.0),
-                                Expanded(
-                                  child: Obx(
-                                    (context) {
-                                      final currentIndex = Player.inst.currentIndex.valueR;
-                                      final nextItem =
-                                          Player.inst.currentQueue.valueR.length - 1 >= currentIndex + 1 ? Player.inst.currentQueue.valueR[currentIndex + 1] as YoutubeID : null;
-                                      final nextItemName = nextItem == null ? '' : YoutubeInfoController.utils.getVideoNameSync(nextItem.id);
-                                      final queueLength = Player.inst.currentQueue.valueR.length;
-                                      return Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            "${currentIndex + 1}/$queueLength",
-                                            style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
-                                          ),
-                                          // const SizedBox(height: 2.0),
-                                          if (nextItemName != null && nextItemName != '')
-                                            Text(
-                                              "${lang.NEXT}: $nextItemName",
-                                              style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 6.0),
-                                const Icon(Broken.arrow_up_3, size: 22.0)
-                              ],
+                    child: NamidaInkWell(
+                      onTap: () => _animateSmallToBig(),
+                      margin: EdgeInsets.symmetric(horizontal: 18.0, vertical: 6.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
+                      height: minHeight,
+                      bgColor: Color.alphaBlend(theme.cardColor.withValues(alpha: 0.5), theme.scaffoldBackgroundColor).withValues(alpha: 0.95),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Broken.airdrop,
+                            size: 24.0,
+                            color: theme.iconTheme.color?.withValues(alpha: 0.65),
+                          ),
+                          const SizedBox(width: 6.0),
+                          Expanded(
+                            child: Obx(
+                              (context) {
+                                final currentIndex = Player.inst.currentIndex.valueR;
+                                final nextItem =
+                                    Player.inst.currentQueue.valueR.length - 1 >= currentIndex + 1 ? Player.inst.currentQueue.valueR[currentIndex + 1] as YoutubeID : null;
+                                final nextItemName = nextItem == null ? '' : YoutubeInfoController.utils.getVideoNameSync(nextItem.id);
+                                final queueLength = Player.inst.currentQueue.valueR.length;
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "${currentIndex + 1}/$queueLength",
+                                      style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                                    ),
+                                    // const SizedBox(height: 2.0),
+                                    if (nextItemName != null && nextItemName != '')
+                                      Text(
+                                        "${lang.NEXT}: $nextItemName",
+                                        style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                  ],
+                                );
+                              },
                             ),
                           ),
+                          const SizedBox(width: 6.0),
+                          _ActionItemAlt(
+                            tooltip: lang.NEW_TRACKS_ADD,
+                            icon: Broken.add,
+                            iconSize: 22.0,
+                            onTap: () => TracksAddOnTap().onAddVideosTap(context),
+                          ),
+                          _ActionItemAlt(
+                            tooltip: lang.OPEN_QUEUE,
+                            icon: Broken.arrow_up_3,
+                            iconSize: 22.0,
+                            onTap: _animateSmallToBig,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 builder: (context, child) {
@@ -405,6 +435,12 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                                 ),
                                               ).navigate();
                                             },
+                                          ),
+                                          const SizedBox(width: 6.0),
+                                          _ActionItem(
+                                            icon: Broken.setting_3,
+                                            tooltip: lang.CONFIGURE,
+                                            onTap: () => _onConfigureTap(),
                                           ),
                                           const SizedBox(width: 4.0),
                                           NamidaIconButton(
@@ -564,6 +600,60 @@ class _ActionItem extends StatelessWidget {
       onPressed: onTap,
       icon: Icon(icon, size: 20.0),
       tooltip: tooltip,
+    );
+  }
+}
+
+class _ActionItemAlt extends StatelessWidget {
+  final String tooltip;
+  final IconData icon;
+  final double iconSize;
+  final void Function() onTap;
+
+  const _ActionItemAlt({
+    required this.tooltip,
+    required this.icon,
+    required this.iconSize,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+      style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+      tooltip: tooltip,
+      icon: Icon(
+        icon,
+        size: iconSize,
+      ),
+      color: context.theme.iconTheme.color?.withAlpha(150),
+      iconSize: iconSize,
+      onPressed: onTap,
+    );
+  }
+}
+
+class _QueueConfigureOptions extends StatelessWidget {
+  const _QueueConfigureOptions();
+
+  @override
+  Widget build(BuildContext context) {
+    final ytSettings = YoutubeSettings();
+
+    return SizedBox(
+      width: context.width,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: context.height * 0.6),
+        child: SuperListView(
+          padding: EdgeInsets.zero,
+          shrinkWrap: true,
+          children: [
+            ytSettings.getAutoStartRadioWidget(),
+          ],
+        ),
+      ),
     );
   }
 }

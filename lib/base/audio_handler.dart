@@ -633,7 +633,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           },
           youtubeID: (finalItem) async {
             await onItemPlayYoutubeID(item, finalItem, index, skipItem);
-            _tryAddingMixPlaylist(finalItem.id);
+            tryAddingMixPlaylist(finalItem.id);
           },
         );
       },
@@ -1171,7 +1171,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
   }
 
-  Future<void> _tryAddingMixPlaylist(String videoId) async {
+  Future<void> tryAddingMixPlaylist(String videoId) async {
     if (!settings.youtube.autoStartRadio.value) return;
 
     if (currentQueue.length == 1) {
