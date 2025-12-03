@@ -18,6 +18,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -641,6 +642,7 @@ class _QueueConfigureOptions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ytSettings = YoutubeSettings();
+    final playbackSettings = PlaybackSettings();
 
     return SizedBox(
       width: context.width,
@@ -651,6 +653,13 @@ class _QueueConfigureOptions extends StatelessWidget {
           shrinkWrap: true,
           children: [
             ytSettings.getAutoStartRadioWidget(),
+            NamidaContainerDivider(
+              margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+            ),
+            playbackSettings.getAutoPlayOnNextPrevWidget(),
+            playbackSettings.getInfinityQueueOnNextPrevWidget(),
+            playbackSettings.getJumpToFirstTrackAfterFinishingWidget(),
+            playbackSettings.getPreviousButtonReplaysWidget(),
           ],
         ),
       ),

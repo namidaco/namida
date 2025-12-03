@@ -237,6 +237,75 @@ class PlaybackSettings extends SettingSubpageProvider {
   //   );
   // }
 
+  Widget getAutoPlayOnNextPrevWidget() {
+    return getItemWrapper(
+      key: _PlaybackSettingsKeys.autoPlayOnNextPrev,
+      child: Obx(
+        (context) => CustomSwitchListTile(
+          bgColor: getBgColor(_PlaybackSettingsKeys.autoPlayOnNextPrev),
+          leading: const StackedIcon(
+            baseIcon: Broken.play,
+            secondaryIcon: Broken.record,
+          ),
+          title: lang.PLAY_AFTER_NEXT_PREV,
+          onChanged: (value) => settings.player.save(playOnNextPrev: !value),
+          value: settings.player.playOnNextPrev.valueR,
+        ),
+      ),
+    );
+  }
+
+  Widget getInfinityQueueOnNextPrevWidget() {
+    return getItemWrapper(
+      key: _PlaybackSettingsKeys.infinityQueue,
+      child: Obx(
+        (context) => CustomSwitchListTile(
+          bgColor: getBgColor(_PlaybackSettingsKeys.infinityQueue),
+          icon: Broken.repeat,
+          title: lang.INFINITY_QUEUE_ON_NEXT_PREV,
+          subtitle: lang.INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE,
+          onChanged: (value) => settings.player.save(infiniyQueueOnNextPrevious: !value),
+          value: settings.player.infiniyQueueOnNextPrevious.valueR,
+        ),
+      ),
+    );
+  }
+
+  Widget getJumpToFirstTrackAfterFinishingWidget() {
+    return getItemWrapper(
+      key: _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing,
+      child: Obx(
+        (context) => CustomSwitchListTile(
+          bgColor: getBgColor(_PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing),
+          icon: Broken.rotate_left,
+          title: lang.JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH,
+          onChanged: (value) => settings.player.save(jumpToFirstTrackAfterFinishingQueue: !value),
+          value: settings.player.jumpToFirstTrackAfterFinishingQueue.valueR,
+        ),
+      ),
+    );
+  }
+
+  Widget getPreviousButtonReplaysWidget() {
+    return getItemWrapper(
+      key: _PlaybackSettingsKeys.previousButtonReplays,
+      child: Obx(
+        (context) => CustomSwitchListTile(
+          bgColor: getBgColor(_PlaybackSettingsKeys.previousButtonReplays),
+          leading: const StackedIcon(
+            baseIcon: Broken.previous,
+            secondaryIcon: Broken.rotate_left,
+            secondaryIconSize: 12.0,
+          ),
+          title: lang.PREVIOUS_BUTTON_REPLAYS,
+          subtitle: lang.PREVIOUS_BUTTON_REPLAYS_SUBTITLE,
+          onChanged: (value) => settings.save(previousButtonReplays: !value),
+          value: settings.previousButtonReplays.valueR,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
@@ -703,34 +772,8 @@ class PlaybackSettings extends SettingSubpageProvider {
           ],
         ),
       ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.autoPlayOnNextPrev,
-        child: Obx(
-          (context) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.autoPlayOnNextPrev),
-            leading: const StackedIcon(
-              baseIcon: Broken.play,
-              secondaryIcon: Broken.record,
-            ),
-            title: lang.PLAY_AFTER_NEXT_PREV,
-            onChanged: (value) => settings.player.save(playOnNextPrev: !value),
-            value: settings.player.playOnNextPrev.valueR,
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.infinityQueue,
-        child: Obx(
-          (context) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.infinityQueue),
-            icon: Broken.repeat,
-            title: lang.INFINITY_QUEUE_ON_NEXT_PREV,
-            subtitle: lang.INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE,
-            onChanged: (value) => settings.player.save(infiniyQueueOnNextPrevious: !value),
-            value: settings.player.infiniyQueueOnNextPrevious.valueR,
-          ),
-        ),
-      ),
+      getAutoPlayOnNextPrevWidget(),
+      getInfinityQueueOnNextPrevWidget(),
       getItemWrapper(
         key: _PlaybackSettingsKeys.onVolume0,
         child: NamidaExpansionTile(
@@ -872,35 +915,8 @@ class PlaybackSettings extends SettingSubpageProvider {
           ],
         ),
       ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing,
-        child: Obx(
-          (context) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing),
-            icon: Broken.rotate_left,
-            title: lang.JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH,
-            onChanged: (value) => settings.player.save(jumpToFirstTrackAfterFinishingQueue: !value),
-            value: settings.player.jumpToFirstTrackAfterFinishingQueue.valueR,
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.previousButtonReplays,
-        child: Obx(
-          (context) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.previousButtonReplays),
-            leading: const StackedIcon(
-              baseIcon: Broken.previous,
-              secondaryIcon: Broken.rotate_left,
-              secondaryIconSize: 12.0,
-            ),
-            title: lang.PREVIOUS_BUTTON_REPLAYS,
-            subtitle: lang.PREVIOUS_BUTTON_REPLAYS_SUBTITLE,
-            onChanged: (value) => settings.save(previousButtonReplays: !value),
-            value: settings.previousButtonReplays.valueR,
-          ),
-        ),
-      ),
+      getJumpToFirstTrackAfterFinishingWidget(),
+      getPreviousButtonReplaysWidget(),
       getItemWrapper(
         key: _PlaybackSettingsKeys.seekDuration,
         child: Obx(
