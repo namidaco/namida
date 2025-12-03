@@ -874,9 +874,9 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Stack(
+    return Material(
+      color: theme.scaffoldBackgroundColor,
+      child: Stack(
         children: [
           if (widget.gradient)
             Container(
