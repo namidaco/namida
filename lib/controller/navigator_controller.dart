@@ -25,6 +25,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/inner_drawer.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
@@ -856,13 +857,34 @@ class _CustomModalBottomSheetRoute<T> extends ModalBottomSheetRoute<T> {
     Animation<double> secondaryAnimation,
   ) {
     final child = super.buildPage(context, animation, secondaryAnimation);
+    final animationCompleter = Completer<void>();
+
+    void animationStatusListener(AnimationStatus status) {
+      if (status == AnimationStatus.completed || status == AnimationStatus.dismissed) {
+        animation.removeStatusListener(animationStatusListener);
+        animationCompleter.completeIfWasnt();
+      }
+    }
+
+    animationStatusListener(animation.status);
+    if (!animationCompleter.isCompleted) {
+      animation.addStatusListener(animationStatusListener);
+    }
+
     if (backgroundBlur > 0) {
-      return AnimatedBuilder(
-        animation: animation,
-        builder: (context, _) => NamidaBgBlur(
-          blur: backgroundBlur * animation.value,
-          child: child,
-        ),
+      return FutureBuilder(
+        future: animationCompleter.future,
+        builder: (context, snapshot) {
+          final didAnimate = snapshot.connectionState == ConnectionState.done;
+          return TweenAnimationBuilder(
+            duration: const Duration(milliseconds: 400),
+            tween: DoubleTween(begin: 0, end: didAnimate ? 1 : 0),
+            builder: (context, value, _) => NamidaBgBlur(
+              blur: backgroundBlur * (value ?? 0),
+              child: child,
+            ),
+          );
+        },
       );
     }
     return child;
