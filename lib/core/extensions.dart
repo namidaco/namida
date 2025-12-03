@@ -563,30 +563,38 @@ extension TitleAndArtistUtils on String {
 extension LRCParsingUtils on String {
   Lrc? parseLRC() {
     try {
-      return toLrc();
-    } catch (_) {
-      try {
-        final res = LRCParserSmart(this).parseLines();
-        if (res.isEmpty) return null;
+      final lrc = LrcParser.parse(this);
+      if (lrc.lyrics.isNotEmpty) return lrc;
+    } catch (_) {}
+    try {
+      final ttmlAsLrc = TtmlParser.parse(this);
+      if (ttmlAsLrc.lyrics.isNotEmpty) return ttmlAsLrc;
+    } catch (_) {}
+    try {
+      final res = LRCParserSmart(this).parseLines();
+      if (res.isNotEmpty) {
         final lines = res
             .map(
               (e) => LrcLine(
                 timestamp: e.timeStamp ?? Duration.zero,
                 lyrics: e.mainText ?? '',
+                readableText: e.mainText ?? '',
+                person: null,
+                parts: null,
                 type: LrcTypes.simple,
               ),
             )
             .toList();
         return Lrc(lyrics: lines);
-      } catch (_) {}
-    }
+      }
+    } catch (_) {}
     return null;
   }
 
   bool isValidLRC() {
     bool valid = false;
     try {
-      valid = Lrc.isValid(this);
+      valid = LrcParser.isValid(this) || TtmlParser.isValid(this);
     } catch (_) {}
     if (!valid) {
       try {

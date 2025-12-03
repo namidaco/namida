@@ -84,7 +84,7 @@ class Lyrics {
   }
 
   String _cleanPlainLyrics(String lyrics) {
-    return Lrc.cleanPlainLyrics(lyrics);
+    return LrcParser.cleanPlainLyrics(lyrics);
   }
 
   Future<void> _updateLyrics(Playable item) async {

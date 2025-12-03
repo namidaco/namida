@@ -541,11 +541,12 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   final path = picked?.path;
                   if (path != null) {
                     final file = File(path);
-                    final ext = path.getExtension;
+                    final ext = path.getExtension.toLowerCase();
+                    final synced = ext == 'lrc' || ext == 'ttml' || ext == 'xml';
                     final text = await file.readAsString();
                     final lrcModel = LyricsModel(
                       lyrics: text,
-                      synced: ext == 'lrc' || ext == 'LRC',
+                      synced: synced,
                       isInCache: false,
                       fromInternet: false,
                       file: File(path),

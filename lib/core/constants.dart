@@ -694,7 +694,7 @@ class NamidaFileExtensionsWrapper {
   static const zip = NamidaFileExtensionsWrapper._(_zipExtensions);
   static const jsonAndZip = NamidaFileExtensionsWrapper._({'json', ..._zipExtensions});
   static const compressed = NamidaFileExtensionsWrapper._({..._zipExtensions, 'tar', 'gz', 'bz2', 'xz', 'cab', 'iso', 'jar'});
-  static const lrcOrTxt = NamidaFileExtensionsWrapper._({'lrc', 'txt'});
+  static const lrcOrTxt = NamidaFileExtensionsWrapper._({'lrc', 'xml', 'ttml', 'txt'});
 
   static const exe = NamidaFileExtensionsWrapper._({'exe'});
 }
