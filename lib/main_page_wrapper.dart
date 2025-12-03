@@ -499,22 +499,26 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                                   SizedBox(width: 2.0),
                                   // -- dont try to hide based on rail bar or widescreen, its not reactive here and would look a bit bad
                                   _DesktopShortcutIcon(
+                                    type: _DesktopShortcutActionType.opensRoute,
                                     tooltip: lang.HOME,
                                     icon: Broken.home_1,
                                     onTap: () => ScrollSearchController.inst.animatePageController(LibraryTab.home),
                                   ),
                                   _DesktopShortcutIcon(
+                                    type: _DesktopShortcutActionType.performsAction,
                                     tooltip: lang.QUEUE,
                                     icon: Broken.row_vertical,
                                     size: _DesktopShortcutIcon.iconSize * 0.85,
                                     onTap: ShortcutsController.instance?.openPlayerQueue,
                                   ),
                                   _DesktopShortcutIcon(
+                                    type: _DesktopShortcutActionType.opensRoute,
                                     tooltip: lang.EQUALIZER,
                                     icon: Broken.sound,
                                     onTap: NamidaOnTaps.inst.openEqualizer,
                                   ),
                                   _DesktopShortcutIcon(
+                                    type: _DesktopShortcutActionType.opensDialog,
                                     tooltip: lang.REFRESH_LIBRARY,
                                     icon: Broken.refresh_2,
                                     onTap: () => showRefreshPromptDialog(false),
@@ -525,6 +529,7 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                                     ),
                                   ),
                                   _DesktopShortcutIcon(
+                                    type: _DesktopShortcutActionType.opensDialog,
                                     tooltip: lang.SHORTCUTS,
                                     icon: Broken.flash_1,
                                     onTap: () => AboutPage.showShortcutsDialog(context),
@@ -577,13 +582,28 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
   }
 }
 
+enum _DesktopShortcutActionType {
+  opensRoute,
+  opensDialog,
+  performsAction,
+}
+
 class _DesktopShortcutIcon extends StatelessWidget {
   final String tooltip;
   final IconData icon;
   final double? size;
+  final _DesktopShortcutActionType type;
   final VoidCallback? onTap;
   final Widget? child;
-  const _DesktopShortcutIcon({required this.tooltip, required this.icon, this.size, this.onTap, this.child});
+
+  const _DesktopShortcutIcon({
+    required this.tooltip,
+    required this.icon,
+    this.size,
+    required this.type,
+    this.onTap,
+    this.child,
+  });
 
   static Color getColor(BuildContext context) {
     return context.theme.colorScheme.secondary.withValues(alpha: 0.8);
@@ -597,7 +617,19 @@ class _DesktopShortcutIcon extends StatelessWidget {
       message: () => tooltip,
       preferBelow: true,
       child: NamidaInkWell(
-        onTap: onTap,
+        onTap: () {
+          // -- prevent executing actions over and over
+          switch (type) {
+            case _DesktopShortcutActionType.opensRoute:
+              if (NamidaNavigator.inst.rootNavHasOpenedPages) return;
+            case _DesktopShortcutActionType.opensDialog:
+              if (NamidaNavigator.inst.openedDialogsCount > 0) return;
+            case _DesktopShortcutActionType.performsAction:
+            // -- allow
+          }
+
+          onTap?.call();
+        },
         borderRadius: 99.0,
         alignment: Alignment.center,
         height: iconSize * 1.6,

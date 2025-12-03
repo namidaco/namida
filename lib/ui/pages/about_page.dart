@@ -40,31 +40,23 @@ class AboutPage extends StatefulWidget with NamidaRouteWidget {
   @override
   State<AboutPage> createState() => _AboutPageState();
 
-  // -- dirty hack cuz this dialog can be opened detached from the main navigation stack (means the touch area won't block behind, im lazy to properly fix now)
-  static bool _isShortcutsDialogActive = false;
   static void showShortcutsDialog(BuildContext context) {
-    if (_isShortcutsDialogActive) return;
-    _isShortcutsDialogActive = true;
-    NamidaNavigator.inst
-        .navigateDialog(
-          dialog: CustomBlurryDialog(
-            icon: Broken.flash_1,
-            title: lang.SHORTCUTS,
-            normalTitleStyle: true,
-            actions: [
-              const DoneButton(),
-            ],
-            child: SizedBox(
-              height: context.height * 0.6,
-              child: ShortcutsInfoWidget(
-                manager: ShortcutsController.instance!,
-              ),
-            ),
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        icon: Broken.flash_1,
+        title: lang.SHORTCUTS,
+        normalTitleStyle: true,
+        actions: [
+          const DoneButton(),
+        ],
+        child: SizedBox(
+          height: context.height * 0.6,
+          child: ShortcutsInfoWidget(
+            manager: ShortcutsController.instance!,
           ),
-        )
-        .then(
-          (_) => _isShortcutsDialogActive = false,
-        );
+        ),
+      ),
+    );
   }
 }
 

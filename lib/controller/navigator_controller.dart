@@ -37,6 +37,10 @@ class NamidaNavigator {
   NamidaNavigator._internal();
 
   GlobalKey<NavigatorState> get _rootNav => namida.rootNavigatorKey;
+  bool get rootNavHasOpenedPages => _rootNav.currentState?.canPop() == true;
+  int get openedDialogsCount => _openedNumbersManager._currentDialogNumber;
+  int get openedSheetsCount => _openedNumbersManager._currentSheetNumber;
+  int get openedMenusCount => _openedNumbersManager._currentMenusNumber;
 
   bool get _shouldUpdateSubpagesColors => settings.autoColor.value;
 
