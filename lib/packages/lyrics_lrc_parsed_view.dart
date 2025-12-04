@@ -684,8 +684,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           (double, FontWeight)? fontModifier;
                           TextStyle textStyle;
 
-                          if (person != null && personCount > 1) {
-                            if (person == 0) {
+                          if (person != null && personCount > 0) {
+                            if (personCount == 1) {
+                              // -- keep defaults
+                            } else if (person == 0) {
                               // -- bg
                               fontModifier = (0.75, FontWeight.w400);
                             } else if (person == 1) {
@@ -748,6 +750,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                               ? _TextWithFadingProgress(
                                   parts: parts,
                                   textStyle: textStyle,
+                                  textAlign: textAlign,
                                 )
                               : Text(
                                   text,
@@ -880,10 +883,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 class _TextWithFadingProgress extends StatelessWidget {
   final List<LrcLinePart> parts;
   final TextStyle textStyle;
+  final TextAlign textAlign;
 
   const _TextWithFadingProgress({
     required this.parts,
     required this.textStyle,
+    required this.textAlign,
   });
 
   @override
@@ -907,9 +912,14 @@ class _TextWithFadingProgress extends StatelessWidget {
                   text: TextSpan(
                     text: textPart,
                     style: textStyle, // dont dim here
-                    // textAlign: textAlign,
-                    // softWrap: false, // keep the text steady while animating mp
                   ),
+                  textAlign: textAlign,
+                  // -- fixes artifacts with shader
+                  textHeightBehavior: const TextHeightBehavior(
+                    applyHeightToFirstAscent: false,
+                    applyHeightToLastDescent: false,
+                  ),
+                  // softWrap: false, // keep the text steady while animating mp
                 );
 
                 // -- more accurate but position updates are slower, so it feels jittery
@@ -951,6 +961,7 @@ class _TextWithFadingProgress extends StatelessWidget {
               },
             ).toList(),
           ),
+          textAlign: textAlign,
         ),
       ),
     );
