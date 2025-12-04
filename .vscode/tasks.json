@@ -51,12 +51,33 @@
       "detail": ""
     },
     {
+      "type": "flutter",
+      "command": "flutter",
+      "args": [
+        "build",
+        "windows",
+        "--release",
+        "--dart-define=IS_KURU_BUILD=${input:is_kuru}"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": [],
+      "label": "flutter build windows",
+      "detail": ""
+    },
+    {
       "type": "dart",
       "command": "dart",
       "args": [
         "run",
         "inno_bundle:build",
-        "--release"
+        "--release",
+        "--no-app"
+      ],
+      "dependsOn": [
+        "flutter build windows"
       ],
       "group": {
         "kind": "build",
@@ -83,5 +104,17 @@
       "label": "Push arm64 APK to device",
       "detail": ""
     }
-  ]
+  ],
+  "inputs": [
+    {
+      "id": "is_kuru",
+      "type": "pickString",
+      "description": "for kuru?",
+      "options": [
+        "true",
+        "false",
+      ],
+      "default": "false"
+    },
+  ],
 }
