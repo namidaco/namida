@@ -13,6 +13,7 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -710,38 +711,46 @@ class _AnimatingThumnailWidget extends StatelessWidget {
                     ),
                   )
                 : fallback;
-            final animatedScaleChild = ObxO(
-              rx: settings.enableLyrics,
-              builder: (context, shoulShowLyricsView) => AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: shoulShowLyricsView
-                    ? LyricsLRCParsedView(
-                        key: Lyrics.inst.lrcViewKey,
-                        videoOrImage: videoOrImage,
-                        maxHeight: maxHeight, // limit height for when sizes are internally mutated
-                      )
-                    : KeyedSubtree(
-                        key: const ValueKey('no_lyrics'),
-                        child: videoOrImage,
-                      ),
-              ),
-            );
+
             return ObxO(
-              rx: VideoController.inst.videoZoomAdditionalScale,
-              builder: (context, videoZoomAdditionalScale) {
-                final additionalScaleVideo = 0.02 * videoZoomAdditionalScale;
+              rx: settings.enableLyrics,
+              builder: (context, shoulShowLyricsView) {
+                final animatedScaleChild = AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: shoulShowLyricsView
+                      ? LyricsLRCParsedView(
+                          key: Lyrics.inst.lrcViewKey,
+                          videoOrImage: videoOrImage,
+                          maxHeight: maxHeight, // limit height for when sizes are internally mutated
+                        )
+                      : KeyedSubtree(
+                          key: const ValueKey('no_lyrics'),
+                          child: videoOrImage,
+                        ),
+                );
                 return ObxO(
-                  rx: _lrcAdditionalScale,
-                  builder: (context, lrcAdditionalScale) {
-                    final additionalScaleLRC = 0.02 * lrcAdditionalScale;
+                  rx: VideoController.inst.videoZoomAdditionalScale,
+                  builder: (context, videoZoomAdditionalScale) {
+                    final additionalScaleVideo = 0.02 * videoZoomAdditionalScale;
                     return ObxO(
-                      rx: Player.inst.nowPlayingPosition,
-                      builder: (context, nowPlayingPosition) {
-                        final finalScale = additionalScaleLRC + additionalScaleVideo + WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
-                        return AnimatedScale(
-                          duration: const Duration(milliseconds: 100),
-                          scale: (isInversed ? 1.22 - finalScale : 1.13 + finalScale) * userScaleMultiplier,
-                          child: animatedScaleChild,
+                      rx: _lrcAdditionalScale,
+                      builder: (context, lrcAdditionalScale) {
+                        final additionalScaleLRC = 0.02 * lrcAdditionalScale;
+                        return ObxO(
+                          rx: Player.inst.nowPlayingPosition,
+                          builder: (context, nowPlayingPosition) {
+                            final animatingScale = MiniPlayerController.inst.animation.value == 0
+                                ? WaveformController.inst.getCurrentAnimatingScaleMinimized(nowPlayingPosition)
+                                : shoulShowLyricsView
+                                    ? WaveformController.inst.getCurrentAnimatingScaleLyrics(nowPlayingPosition)
+                                    : WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
+                            final finalScale = additionalScaleLRC + additionalScaleVideo + animatingScale;
+                            return AnimatedScale(
+                              duration: const Duration(milliseconds: 100),
+                              scale: (isInversed ? 1.22 - finalScale : 1.13 + finalScale) * userScaleMultiplier,
+                              child: animatedScaleChild,
+                            );
+                          },
                         );
                       },
                     );

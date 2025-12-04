@@ -212,6 +212,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
       (context) => settings.enableLyrics.valueR
           ? Lyrics.inst.currentLyricsText.valueR == '' && Lyrics.inst.currentLyricsLRC.valueR == null
               ? StackedIcon(
+                  margin: 0.0,
                   baseIcon: Broken.document,
                   secondaryText: !Lyrics.inst.lyricsCanBeAvailable.valueR ? 'x' : '?',
                   iconSize: _CustomIconButton.defaultIconSize.size,

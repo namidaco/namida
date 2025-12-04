@@ -1244,6 +1244,7 @@ class StackedIcon extends StatelessWidget {
   final Widget? smallChild;
   final bool disableColor;
   final bool delightenColors;
+  final double margin;
 
   const StackedIcon({
     super.key,
@@ -1259,6 +1260,7 @@ class StackedIcon extends StatelessWidget {
     this.smallChild,
     this.disableColor = false,
     this.delightenColors = false,
+    this.margin = -2.0,
   });
   Color? _getColory(BuildContext context, Color? c) {
     return disableColor
@@ -1273,6 +1275,7 @@ class StackedIcon extends StatelessWidget {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     return Stack(
+      clipBehavior: Clip.none,
       children: [
         Icon(
           baseIcon,
@@ -1280,8 +1283,8 @@ class StackedIcon extends StatelessWidget {
           size: iconSize,
         ),
         Positioned(
-          bottom: 0,
-          right: 0,
+          bottom: margin,
+          right: margin,
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),

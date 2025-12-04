@@ -57,7 +57,10 @@ enum _CustomizationSettingsKeys {
   partyMode,
   edgeColorsSwitching,
   movingParticles,
-  thumbAnimationIntensity,
+  THUMBANIMATIONINTENSITY,
+  thumbAnimationIntensityExpanded,
+  thumbAnimationIntensityLyrics,
+  thumbAnimationIntensityMinimized,
   thumbInverseAnimation,
   artworkGesture,
   waveformBarsCount,
@@ -106,7 +109,10 @@ class CustomizationSettings extends SettingSubpageProvider {
         _CustomizationSettingsKeys.partyMode: [lang.ENABLE_PARTY_MODE, lang.ENABLE_PARTY_MODE_SUBTITLE],
         _CustomizationSettingsKeys.edgeColorsSwitching: [lang.EDGE_COLORS_SWITCHING],
         _CustomizationSettingsKeys.movingParticles: [lang.ENABLE_MINIPLAYER_PARTICLES],
-        _CustomizationSettingsKeys.thumbAnimationIntensity: [lang.ANIMATING_THUMBNAIL_INTENSITY],
+        _CustomizationSettingsKeys.THUMBANIMATIONINTENSITY: [lang.ANIMATING_THUMBNAIL_INTENSITY],
+        _CustomizationSettingsKeys.thumbAnimationIntensityExpanded: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.EXPANDED_MINIPLAYER],
+        _CustomizationSettingsKeys.thumbAnimationIntensityLyrics: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.LYRICS],
+        _CustomizationSettingsKeys.thumbAnimationIntensityMinimized: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.MINIMIZED_MINIPLAYER],
         _CustomizationSettingsKeys.thumbInverseAnimation: [lang.ANIMATING_THUMBNAIL_INVERSED, lang.ANIMATING_THUMBNAIL_INVERSED_SUBTITLE],
         _CustomizationSettingsKeys.artworkGesture: [lang.ARTWORK_GESTURES],
         _CustomizationSettingsKeys.waveformBarsCount: [lang.WAVEFORM_BARS_COUNT],
@@ -909,21 +915,74 @@ class CustomizationSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          getItemWrapper(
-            key: _CustomizationSettingsKeys.thumbAnimationIntensity,
-            child: Obx(
-              (context) => CustomListTile(
-                bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensity),
-                icon: Broken.flash,
-                title: lang.ANIMATING_THUMBNAIL_INTENSITY,
-                trailing: NamidaWheelSlider(
-                  max: 25,
-                  initValue: settings.animatingThumbnailIntensity.valueR,
-                  onValueChanged: (val) => settings.save(animatingThumbnailIntensity: val),
-                  text: "${(settings.animatingThumbnailIntensity.valueR * 4).toStringAsFixed(0)}%",
+          NamidaExpansionTile(
+            bgColor: getBgColor(_CustomizationSettingsKeys.THUMBANIMATIONINTENSITY),
+            initiallyExpanded: true,
+            icon: Broken.flash,
+            iconColor: context.defaultIconColor(),
+            titleText: lang.ANIMATING_THUMBNAIL_INTENSITY,
+            childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+            children: [
+              getItemWrapper(
+                key: _CustomizationSettingsKeys.thumbAnimationIntensityExpanded,
+                child: Obx(
+                  (context) => CustomListTile(
+                    visualDensity: VisualDensity.compact,
+                    bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityExpanded),
+                    icon: Broken.flash,
+                    title: lang.EXPANDED_MINIPLAYER,
+                    trailing: NamidaWheelSlider(
+                      max: 25,
+                      initValue: settings.animatingThumbnailIntensity.valueR,
+                      onValueChanged: (val) => settings.save(animatingThumbnailIntensity: val),
+                      text: "${(settings.animatingThumbnailIntensity.valueR * 4).toStringAsFixed(0)}%",
+                    ),
+                  ),
                 ),
               ),
-            ),
+              getItemWrapper(
+                key: _CustomizationSettingsKeys.thumbAnimationIntensityLyrics,
+                child: Obx(
+                  (context) => CustomListTile(
+                    visualDensity: VisualDensity.compact,
+                    bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityLyrics),
+                    leading: const StackedIcon(
+                      baseIcon: Broken.flash,
+                      secondaryIcon: Broken.document,
+                      secondaryIconSize: 10.0,
+                    ),
+                    title: lang.LYRICS,
+                    trailing: NamidaWheelSlider(
+                      max: 25,
+                      initValue: settings.animatingThumbnailIntensityLyrics.valueR,
+                      onValueChanged: (val) => settings.save(animatingThumbnailIntensityLyrics: val),
+                      text: "${(settings.animatingThumbnailIntensityLyrics.valueR * 4).toStringAsFixed(0)}%",
+                    ),
+                  ),
+                ),
+              ),
+              getItemWrapper(
+                key: _CustomizationSettingsKeys.thumbAnimationIntensityMinimized,
+                child: Obx(
+                  (context) => CustomListTile(
+                    visualDensity: VisualDensity.compact,
+                    bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityMinimized),
+                    leading: const StackedIcon(
+                      baseIcon: Broken.flash,
+                      secondaryIcon: Broken.arrow_square_down,
+                      secondaryIconSize: 11.0,
+                    ),
+                    title: lang.MINIMIZED_MINIPLAYER,
+                    trailing: NamidaWheelSlider(
+                      max: 25,
+                      initValue: settings.animatingThumbnailIntensityMinimized.valueR,
+                      onValueChanged: (val) => settings.save(animatingThumbnailIntensityMinimized: val),
+                      text: "${(settings.animatingThumbnailIntensityMinimized.valueR * 4).toStringAsFixed(0)}%",
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
           getItemWrapper(
             key: _CustomizationSettingsKeys.thumbInverseAnimation,

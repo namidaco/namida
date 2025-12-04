@@ -111,9 +111,21 @@ class WaveformController {
   static const _positionDividorWithOffset = isKuru ? _positionDividor - 3.58 : 50;
 
   double getCurrentAnimatingScale(int positionInMs) {
+    return _getCurrentAnimatingScaleGeneral(positionInMs, settings.animatingThumbnailIntensity.value);
+  }
+
+  double getCurrentAnimatingScaleLyrics(int positionInMs) {
+    return _getCurrentAnimatingScaleGeneral(positionInMs, settings.animatingThumbnailIntensityLyrics.value);
+  }
+
+  double getCurrentAnimatingScaleMinimized(int positionInMs) {
+    return _getCurrentAnimatingScaleGeneral(positionInMs, settings.animatingThumbnailIntensityMinimized.value);
+  }
+
+  double _getCurrentAnimatingScaleGeneral(int positionInMs, int intensity) {
+    if (intensity == 0) return 0.01;
     final posInMap = positionInMs ~/ _positionDividorWithOffset;
     final dynamicScale = posInMap > _currentScaleMaxIndex ? 0.01 : _currentScaleLookup[posInMap];
-    final intensity = settings.animatingThumbnailIntensity.value;
     final finalScale = dynamicScale * intensity * 0.00005;
     if (finalScale.isNaN || finalScale > 0.3) return 0.01;
     return finalScale;

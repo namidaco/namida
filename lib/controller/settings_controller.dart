@@ -158,6 +158,8 @@ class _SettingsController with SettingsFileWriter {
   final RxList<String> youtubeVideoQualities = ['480p', '360p', '240p', '144p'].obs;
   final animatingThumbnailScaleMultiplier = 1.0.obs;
   final animatingThumbnailIntensity = 25.obs;
+  final animatingThumbnailIntensityLyrics = 10.obs;
+  final animatingThumbnailIntensityMinimized = 10.obs;
   final animatingThumbnailInversed = false.obs;
   final enablePartyModeInMiniplayer = false.obs;
   final enablePartyModeColorSwap = true.obs;
@@ -560,6 +562,8 @@ class _SettingsController with SettingsFileWriter {
 
       animatingThumbnailScaleMultiplier.value = json['animatingThumbnailScaleMultiplier'] ?? animatingThumbnailScaleMultiplier.value;
       animatingThumbnailIntensity.value = json['animatingThumbnailIntensity'] ?? animatingThumbnailIntensity.value;
+      animatingThumbnailIntensityLyrics.value = json['animatingThumbnailIntensityLyrics'] ?? animatingThumbnailIntensityLyrics.value;
+      animatingThumbnailIntensityMinimized.value = json['animatingThumbnailIntensityMinimized'] ?? animatingThumbnailIntensityMinimized.value;
       animatingThumbnailInversed.value = json['animatingThumbnailInversed'] ?? animatingThumbnailInversed.value;
       enablePartyModeInMiniplayer.value = json['enablePartyModeInMiniplayer'] ?? enablePartyModeInMiniplayer.value;
       enablePartyModeColorSwap.value = json['enablePartyModeColorSwap'] ?? enablePartyModeColorSwap.value;
@@ -787,6 +791,8 @@ class _SettingsController with SettingsFileWriter {
         'youtubeVideoQualities': youtubeVideoQualities.value,
         'animatingThumbnailScaleMultiplier': animatingThumbnailScaleMultiplier.value,
         'animatingThumbnailIntensity': animatingThumbnailIntensity.value,
+        'animatingThumbnailIntensityLyrics': animatingThumbnailIntensityLyrics.value,
+        'animatingThumbnailIntensityMinimized': animatingThumbnailIntensityMinimized.value,
         'animatingThumbnailInversed': animatingThumbnailInversed.value,
         'enablePartyModeInMiniplayer': enablePartyModeInMiniplayer.value,
         'enablePartyModeColorSwap': enablePartyModeColorSwap.value,
@@ -962,6 +968,8 @@ class _SettingsController with SettingsFileWriter {
     List<String>? youtubeVideoQualities,
     double? animatingThumbnailScaleMultiplier,
     int? animatingThumbnailIntensity,
+    int? animatingThumbnailIntensityLyrics,
+    int? animatingThumbnailIntensityMinimized,
     bool? animatingThumbnailInversed,
     bool? enablePartyModeInMiniplayer,
     bool? enablePartyModeColorSwap,
@@ -1192,6 +1200,8 @@ class _SettingsController with SettingsFileWriter {
     if (videoPlaybackSource != null) this.videoPlaybackSource.value = videoPlaybackSource;
     if (animatingThumbnailScaleMultiplier != null) this.animatingThumbnailScaleMultiplier.value = animatingThumbnailScaleMultiplier;
     if (animatingThumbnailIntensity != null) this.animatingThumbnailIntensity.value = animatingThumbnailIntensity;
+    if (animatingThumbnailIntensityLyrics != null) this.animatingThumbnailIntensityLyrics.value = animatingThumbnailIntensityLyrics;
+    if (animatingThumbnailIntensityMinimized != null) this.animatingThumbnailIntensityMinimized.value = animatingThumbnailIntensityMinimized;
     if (animatingThumbnailInversed != null) this.animatingThumbnailInversed.value = animatingThumbnailInversed;
     if (enablePartyModeInMiniplayer != null) this.enablePartyModeInMiniplayer.value = enablePartyModeInMiniplayer;
     if (enablePartyModeColorSwap != null) this.enablePartyModeColorSwap.value = enablePartyModeColorSwap;
