@@ -14,6 +14,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/packages/miniplayer_base.dart';
@@ -24,13 +25,25 @@ import 'package:namida/youtube/class/youtube_id.dart';
 class LyricsLRCParsedView extends StatefulWidget {
   final Widget videoOrImage;
   final bool isFullScreenView;
+  final bool canShowToggleFullscreenButton;
+  final void Function()? onCloseFullscreenButtonTap;
+  final bool allowOverflow;
+  final bool useSafeArea;
   final double? maxHeight;
+  final double? verticalPadding;
+  final Widget? bottomPadding;
 
   const LyricsLRCParsedView({
     super.key,
     required this.videoOrImage,
     this.isFullScreenView = false,
+    this.canShowToggleFullscreenButton = false,
+    this.onCloseFullscreenButtonTap,
+    this.allowOverflow = true,
+    this.useSafeArea = true,
     this.maxHeight,
+    this.verticalPadding,
+    this.bottomPadding,
   });
 
   @override
@@ -64,7 +77,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   late final ListController _listController;
   late final ScrollController _scrollController;
 
-  late final double _paddingVertical = widget.isFullScreenView ? 32 * 12.0 : 12 * 12.0;
+  late final double _paddingVertical = widget.verticalPadding ?? (widget.isFullScreenView ? 32 * 12.0 : 12 * 12.0);
   int _currentIndex = -1;
   String _currentLine = '';
 
@@ -101,6 +114,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
       final current = Player.inst.currentItem.value;
       if (current is Selectable) {
         totalDurMS = current.track.durationMS;
+      } else if (current is YoutubeID) {
+        totalDurMS = Player.inst.getCurrentVideoDuration.inMilliseconds;
       }
     }
     _currentItemDurationMS.value = totalDurMS;
@@ -117,6 +132,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     if (!_isCurrentLineEmpty) {
       _updateIsCurrentLineEmpty(true);
     }
+    _latestUpdatedLine.value = null;
+    _latestUpdatedLineIndex.value = -1;
+    _currentIndex = -1;
   }
 
   void fillLists(Lrc? lrc, String? txt) {
@@ -181,9 +199,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     _updateHighlightedLine(position);
   }
 
-  void _updateHighlightedLine(int durMS, {bool forceAnimate = false, bool jump = false}) {
-    final lrcDur = lyrics.lastWhereEff((e) => e.timestamp.inMilliseconds <= durMS + 1 && !e.isBGLyrics);
-    if (_latestUpdatedLine.value == lrcDur?.timestamp) return;
+  void _updateHighlightedLine(int durMS, {bool force = false, bool forceAnimate = false, bool jump = false}) {
+    final lrcDur = lyrics.lastWhereEff((e) => e.timestamp.inMilliseconds <= durMS + 5 && !e.isBGLyrics);
+    if (!force && _latestUpdatedLine.value == lrcDur?.timestamp) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _latestUpdatedLine.value = lrcDur?.timestamp;
@@ -201,7 +219,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
       if ((_canAnimateScroll || forceAnimate) && _listController.isAttached) {
         if (newIndex < 0) newIndex = 0;
-        if (_currentIndex == newIndex) return;
+        if (!force && _currentIndex == newIndex) return;
         _currentIndex = newIndex;
         jump
             ? _listController.jumpToItem(
@@ -283,7 +301,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     final initialFontSize = fullscreen ? 25.0 : 15.0;
     final normalTextStyle = textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize);
     final plainLyricsTextStyle = normalTextStyle.copyWith(height: 1.8);
-    final fullscreenIconButton = fullscreen
+    final fullscreenIconButton = fullscreen && widget.canShowToggleFullscreenButton
         ? Container(
             clipBehavior: Clip.antiAlias,
             padding: const EdgeInsets.all(4.0),
@@ -313,50 +331,97 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   : item is YoutubeID
                       ? NamidaMiniPlayerYoutubeIDState.textBuilder(context, item)
                       : null;
-              if (textData == null) return const SizedBox();
-              return MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: TapDetector(
-                  onTap: null,
-                  initializer: (instance) {
-                    void fn(TapUpDetails d) {
-                      if (item is Selectable) {
-                        NamidaMiniPlayerTrack.openMenu(item.trackWithDate, item.track);
-                      } else if (item is YoutubeID) {
-                        NamidaMiniPlayerYoutubeIDState.openMenu(context, item, d);
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: context.width, // vip
+                  minHeight: 36.0, // eyeballed to match when textData is valid
+                ),
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: TapDetector(
+                    onTap: null,
+                    initializer: (instance) {
+                      void fn(TapUpDetails d) {
+                        if (item is Selectable) {
+                          NamidaMiniPlayerTrack.openMenu(item.trackWithDate, item.track);
+                        } else if (item is YoutubeID) {
+                          NamidaMiniPlayerYoutubeIDState.openMenu(context, item, d);
+                        }
                       }
-                    }
 
-                    instance
-                      ..onTapUp = fn
-                      ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      if (textData.firstLineGood)
-                        Text(
-                          textData.firstLine,
-                          maxLines: textData.secondLine == '' ? 2 : 1,
-                          overflow: TextOverflow.fade,
-                          softWrap: textData.secondLine.isEmpty,
-                          style: textTheme.displayMedium?.copyWith(
-                            fontSize: 17.0,
+                      instance
+                        ..onTapUp = fn
+                        ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+                    },
+                    child: Stack(
+                      alignment: AlignmentGeometry.center,
+                      children: [
+                        Positioned(
+                          left: 10.0,
+                          bottom: 0,
+                          top: 0,
+                          child: NamidaIconButton(
+                            tooltip: () => lang.JUMP,
+                            icon: Broken.cd,
+                            iconColor: context.theme.colorScheme.secondary.withValues(alpha: 0.6),
+                            iconSize: 20.0,
+                            onPressed: () {
+                              _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true, force: true);
+                            },
                           ),
                         ),
-                      if (textData.firstLineGood && textData.secondLineGood) const SizedBox(height: 4.0),
-                      if (textData.secondLineGood)
-                        Text(
-                          textData.secondLine,
-                          softWrap: false,
-                          overflow: TextOverflow.fade,
-                          style: textTheme.displayMedium?.copyWith(
-                            fontSize: 15.0,
+                        Padding(
+                          padding: EdgeInsetsGeometry.symmetric(horizontal: 48.0),
+                          child: textData == null
+                              ? Text(
+                                  lang.LYRICS,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.fade,
+                                  softWrap: false,
+                                  style: textTheme.displayLarge,
+                                )
+                              : Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    if (textData.firstLineGood)
+                                      Text(
+                                        textData.firstLine,
+                                        maxLines: textData.secondLine == '' ? 2 : 1,
+                                        overflow: TextOverflow.fade,
+                                        softWrap: textData.secondLine.isEmpty,
+                                        style: textTheme.displayMedium?.copyWith(
+                                          fontSize: 17.0,
+                                        ),
+                                      ),
+                                    if (textData.firstLineGood && textData.secondLineGood) const SizedBox(height: 4.0),
+                                    if (textData.secondLineGood)
+                                      Text(
+                                        textData.secondLine,
+                                        softWrap: false,
+                                        overflow: TextOverflow.fade,
+                                        style: textTheme.displayMedium?.copyWith(
+                                          fontSize: 15.0,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                        ),
+                        Positioned(
+                          right: 10.0,
+                          bottom: 0,
+                          top: 0,
+                          child: NamidaIconButton(
+                            tooltip: () => lang.EXIT,
+                            icon: Broken.close_circle,
+                            iconColor: context.theme.colorScheme.secondary.withValues(alpha: 0.6),
+                            iconSize: 20.0,
+                            onPressed: widget.onCloseFullscreenButtonTap ?? toggleFullscreen,
                           ),
                         ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -393,7 +458,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   builder: (context, playWhenReady) => NamidaIconButton(
                     horizontalPadding: 18.0,
                     icon: playWhenReady ? Broken.pause : Broken.play,
-                    iconSize: 32.0,
+                    iconSize: 34.0,
                     onPressed: Player.inst.togglePlayPause,
                   ),
                 ),
@@ -474,8 +539,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                 color: Color.alphaBlend(
                   // -- careful with making the result non-opaque, it will cause the foreground to dim as well (no idea how :/)
                   CurrentColor.inst.miniplayerColor.withValues(alpha: 0.2),
-                  context.isDarkMode ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
-                ),
+                  context.isDarkMode ? Colors.black.withValues(alpha: 0.9) : Colors.white.withValues(alpha: 0.9),
+                ).withValues(alpha: 1.0),
                 child: widget.videoOrImage,
               ),
             ),
@@ -540,7 +605,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
             _scrollTimer = Timer(const Duration(seconds: 3), () {
               _canAnimateScroll = true;
               if (Player.inst.playWhenReady.value) {
-                _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true);
+                _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true, force: true);
               }
               if (_updateOpacityForEmptyLines && currentLRC != null && _checkIfTextEmpty(_currentLine)) {
                 _updateIsCurrentLineEmpty(true);
@@ -700,8 +765,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                   child: InkWell(
                                     splashFactory: InkSparkle.splashFactory,
                                     onTap: () {
-                                      Player.inst.seek(lrc.timestamp);
-                                      _updateHighlightedLine(lrc.timestamp.inMilliseconds, forceAnimate: true);
+                                      _canAnimateScroll = true;
+                                      Player.inst.seek(lrc.timestamp); //  should auto scroll bcz position changes
                                     },
                                   ),
                                 ),
@@ -760,7 +825,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                     opacity: _isCurrentLineEmpty ? 0.0 : 1.0,
                     child: FadeIgnoreTransition(
                       opacity: mpAnimation,
-                      child: fullscreen
+                      child: fullscreen || !widget.allowOverflow
                           ? Padding(
                               padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
                               child: middleLyricsStackWidget,
@@ -786,9 +851,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
           ),
         ),
         ...?bottomControlsChildren,
+        if (widget.bottomPadding != null) widget.bottomPadding!,
       ],
     );
-    if (fullscreen) {
+    if (fullscreen && widget.useSafeArea) {
       mainLyricsWidget = SafeArea(
         bottom: false,
         child: mainLyricsWidget,

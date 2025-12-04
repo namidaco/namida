@@ -205,6 +205,32 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
       },
     ));
   }
+
+  static Widget getLrcButton(ThemeData theme, {Color? color}) {
+    color ??= theme.colorScheme.onSecondaryContainer;
+    return Obx(
+      (context) => settings.enableLyrics.valueR
+          ? Lyrics.inst.currentLyricsText.valueR == '' && Lyrics.inst.currentLyricsLRC.valueR == null
+              ? StackedIcon(
+                  baseIcon: Broken.document,
+                  secondaryText: !Lyrics.inst.lyricsCanBeAvailable.valueR ? 'x' : '?',
+                  iconSize: _CustomIconButton.defaultIconSize.size,
+                  blurRadius: 6.0,
+                  baseIconColor: color,
+                  secondaryIconColor: color,
+                )
+              : Icon(
+                  Broken.document,
+                  size: 20.0.size,
+                  color: color,
+                )
+          : Icon(
+              Broken.card_slash,
+              size: 20.0.size,
+              color: color,
+            ),
+    );
+  }
 }
 
 class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
@@ -499,28 +525,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
               settings.save(enableLyrics: !settings.enableLyrics.value);
               Lyrics.inst.updateLyrics(_getcurrentItem);
             },
-            icon: Obx(
-              (context) => settings.enableLyrics.valueR
-                  ? Lyrics.inst.currentLyricsText.valueR == '' && Lyrics.inst.currentLyricsLRC.valueR == null
-                      ? StackedIcon(
-                          baseIcon: Broken.document,
-                          secondaryText: !Lyrics.inst.lyricsCanBeAvailable.valueR ? 'x' : '?',
-                          iconSize: _CustomIconButton.defaultIconSize.size,
-                          blurRadius: 6.0,
-                          baseIconColor: theme.colorScheme.onSecondaryContainer,
-                          secondaryIconColor: theme.colorScheme.onSecondaryContainer,
-                        )
-                      : Icon(
-                          Broken.document,
-                          size: 20.0.size,
-                          color: theme.colorScheme.onSecondaryContainer,
-                        )
-                  : Icon(
-                      Broken.card_slash,
-                      size: 20.0.size,
-                      color: theme.colorScheme.onSecondaryContainer,
-                    ),
-            ),
+            icon: NamidaMiniPlayerBase.getLrcButton(theme),
           ),
         ),
         _CustomIconButton(

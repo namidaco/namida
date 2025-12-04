@@ -25,7 +25,6 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
-import 'package:namida/youtube/class/youtube_id.dart';
 
 class Lyrics {
   static Lyrics get inst => _instance;
@@ -44,7 +43,6 @@ class Lyrics {
   Playable? _currentItem;
 
   bool get _lyricsEnabled => settings.enableLyrics.value;
-  bool get _canDisplayLRCForYoutubeID => settings.youtube.youtubeStyleMiniplayer.value == false;
   bool get _lyricsPrioritizeEmbedded => settings.prioritizeEmbeddedLyrics.value;
   LyricsSource get _lyricsSource => settings.lyricsSource.value;
 
@@ -98,7 +96,6 @@ class Lyrics {
 
     lyricsCanBeAvailable.value = true;
     if (!_lyricsEnabled) return;
-    if (item is YoutubeID && !_canDisplayLRCForYoutubeID) return;
 
     final LrcSearchUtils? lrcUtils = await LrcSearchUtils.fromPlayable(item);
 
