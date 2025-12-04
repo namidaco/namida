@@ -884,6 +884,8 @@ class _CustomModalBottomSheetRoute<T> extends ModalBottomSheetRoute<T> {
             duration: const Duration(milliseconds: 400),
             tween: DoubleTween(begin: 0, end: didAnimate ? 1 : 0),
             builder: (context, value, _) => NamidaBgBlur(
+              enabled: true,
+              disableIfBlur0: false,
               blur: backgroundBlur * (value ?? 0),
               child: child,
             ),

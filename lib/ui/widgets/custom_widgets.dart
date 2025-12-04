@@ -361,12 +361,14 @@ class NamidaBlur extends StatelessWidget {
 class NamidaBgBlur extends StatelessWidget {
   final double blur;
   final bool enabled;
+  final bool disableIfBlur0;
   final Widget child;
 
   const NamidaBgBlur({
     super.key,
     required this.blur,
     this.enabled = true,
+    this.disableIfBlur0 = true,
     required this.child,
   });
 
@@ -374,7 +376,7 @@ class NamidaBgBlur extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!enabled || blur == 0) return child;
+    if (!enabled || (disableIfBlur0 && blur == 0)) return child;
     return BackdropFilter(
       backdropGroupKey: _groupKey,
       filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur, tileMode: NamidaBlur.kDefaultTileMode),
