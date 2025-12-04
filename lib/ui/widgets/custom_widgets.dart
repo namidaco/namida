@@ -37,7 +37,6 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/version_controller.dart';
-import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -5573,23 +5572,33 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
   }
 }
 
+class SwipeQueueAddTileInfo {
+  final QueueSourceBase queueSource; // TODO: remove?
+  final String? heroTag;
+  final String? videoTitle;
+
+  const SwipeQueueAddTileInfo({
+    required this.queueSource,
+    required this.heroTag,
+    this.videoTitle,
+  });
+}
+
 class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
   final Q item;
+  final SwipeQueueAddTileInfo Function() infoCallback;
   final Object dismissibleKey;
   final bool allowSwipeLeft;
   final bool allowSwipeRight;
-  final void Function(Q item) onAddToPlaylist;
-  final void Function(Q item) onOpenInfo;
   final Widget child;
 
   const SwipeQueueAddTile({
     super.key,
     required this.item,
+    required this.infoCallback,
     required this.dismissibleKey,
     required this.allowSwipeLeft,
     required this.allowSwipeRight,
-    required this.onAddToPlaylist,
-    required this.onOpenInfo,
     required this.child,
   });
 
@@ -5611,21 +5620,10 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
         final swipedLeft = direction == DismissDirection.endToStart;
         final action = swipedLeft ? settings.onTrackSwipeLeft.value : settings.onTrackSwipeRight.value;
         if (action == OnTrackTileSwapActions.none) return;
-
-        switch (action) {
-          case OnTrackTileSwapActions.playnext:
-            Player.inst.addToQueue([item], insertNext: true);
-          case OnTrackTileSwapActions.playlast:
-            Player.inst.addToQueue([item], insertNext: false);
-          case OnTrackTileSwapActions.playafter:
-            Player.inst.addToQueue([item], insertAfterLatest: true);
-          case OnTrackTileSwapActions.addtoplaylist:
-            onAddToPlaylist(item);
-          case OnTrackTileSwapActions.openinfo:
-            onOpenInfo(item);
-          case OnTrackTileSwapActions.none:
-        }
-        VibratorController.verylight();
+        action.execute(
+          item,
+          info: infoCallback(),
+        );
       },
       child: child,
     );

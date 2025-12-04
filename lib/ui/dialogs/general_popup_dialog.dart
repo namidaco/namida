@@ -66,7 +66,6 @@ Future<void> showGeneralPopupDialog(
   bool forceSquared = false,
   bool? forceSingleArtwork,
   bool extractColor = true,
-  bool comingFromQueue = false,
   bool isCircle = false,
   bool isFromPlayerQueue = false,
   Exception? errorPlayingTrack,
@@ -845,10 +844,7 @@ Future<void> showGeneralPopupDialog(
                               tracks.first,
                               false,
                               networkArtworkInfo: networkArtworkInfo,
-                              comingFromQueue: comingFromQueue,
-                              index: index,
                               colorScheme: colorDelightened,
-                              queueSource: source,
                               heroTag: heroTag,
                             )
                           : null,

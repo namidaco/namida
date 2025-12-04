@@ -18,7 +18,6 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
@@ -32,10 +31,7 @@ Future<void> showTrackInfoDialog(
   Track track,
   bool enableBlur, {
   NetworkArtworkInfo? networkArtworkInfo,
-  bool comingFromQueue = false,
-  int? index,
   Color? colorScheme,
-  required QueueSource queueSource,
   required String? heroTag,
 }) async {
   final trackExt = track.toTrackExtOrNull();

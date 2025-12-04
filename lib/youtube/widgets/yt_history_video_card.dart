@@ -12,7 +12,6 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
@@ -26,8 +25,6 @@ import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
-import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
-import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
@@ -724,11 +721,13 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
       final plItem = itemToYTIDPlay(item);
       return SwipeQueueAddTile(
         item: plItem,
+        infoCallback: () => SwipeQueueAddTileInfo(
+          queueSource: configs.queueSource,
+          heroTag: null,
+        ),
         dismissibleKey: plItem,
         allowSwipeLeft: widget.properties.allowSwipeLeft,
         allowSwipeRight: widget.properties.allowSwipeRight,
-        onAddToPlaylist: (_) => showAddToPlaylistSheet(ids: [videoId], idsNamesLookup: {videoId: videoTitle}),
-        onOpenInfo: (_) => NamidaNavigator.inst.navigateDialog(dialog: VideoInfoDialog(videoId: videoId)),
         child: finalChild,
       );
     }

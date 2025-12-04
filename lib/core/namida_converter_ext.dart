@@ -11,6 +11,7 @@ import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/extensions.dart';
 
+import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/folder.dart';
@@ -34,6 +35,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/version_controller.dart';
+import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -42,7 +44,9 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/folders_page.dart';
@@ -64,6 +68,7 @@ import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/pages/youtube_home_view.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
+import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 extension MediaTypeUtils on MediaType {
@@ -459,10 +464,6 @@ extension LocalVideoMatchingTypeText on LocalVideoMatchingType {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
 
-extension OnTrackTileSwapActionsUtils on OnTrackTileSwapActions {
-  String toText() => _NamidaConverters.inst.getTitle(this);
-}
-
 extension TRACKPLAYMODE on TrackPlayMode {
   String toText() => _NamidaConverters.inst.getTitle(this);
 }
@@ -520,6 +521,50 @@ extension ReplayGainTypeUtils on ReplayGainType {
 extension LibraryImageSourceUtils on LibraryImageSource {
   String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
+}
+
+extension OnTrackTileSwapActionsUtils on OnTrackTileSwapActions {
+  String toText() => _NamidaConverters.inst.getTitle(this);
+
+  void execute(Playable item, {required SwipeQueueAddTileInfo info}) {
+    switch (this) {
+      case OnTrackTileSwapActions.none:
+        return;
+      case OnTrackTileSwapActions.playnext:
+        Player.inst.addToQueue([item], insertNext: true);
+      case OnTrackTileSwapActions.playlast:
+        Player.inst.addToQueue([item], insertNext: false);
+      case OnTrackTileSwapActions.playafter:
+        Player.inst.addToQueue([item], insertAfterLatest: true);
+      case OnTrackTileSwapActions.addtoplaylist:
+        item.execute(
+          selectable: (finalItem) {
+            showAddToPlaylistDialog([finalItem.track]);
+          },
+          youtubeID: (finalItem) {
+            showAddToPlaylistSheet(ids: [finalItem.id], idsNamesLookup: {finalItem.id: info.videoTitle});
+          },
+        );
+      case OnTrackTileSwapActions.openinfo:
+        item.execute(
+          selectable: (finalItem) {
+            showTrackInfoDialog(
+              finalItem.track,
+              true,
+              heroTag: info.heroTag,
+            );
+          },
+          youtubeID: (finalItem) {
+            NamidaNavigator.inst.navigateDialog(
+              dialog: VideoInfoDialog(
+                videoId: finalItem.id,
+              ),
+            );
+          },
+        );
+    }
+    VibratorController.verylight();
+  }
 }
 
 extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {

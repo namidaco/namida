@@ -335,7 +335,7 @@ class Player {
 
   FutureOr<void> shuffleTracks(bool allTracks) async {
     if (allTracks) {
-      currentItem.value?._execute(
+      currentItem.value?.execute(
         selectable: (_) {
           return _audioHandler.shuffleAllItems((element) => (element as Selectable).track);
         },
@@ -351,7 +351,7 @@ class Player {
   }
 
   int removeDuplicatesFromQueue() {
-    return currentItem.value?._execute<int>(
+    return currentItem.value?.execute<int>(
           selectable: (_) {
             return _audioHandler.removeDuplicatesFromQueue((element) => (element as Selectable).track);
           },
@@ -375,7 +375,7 @@ class Player {
     final shouldInsertNext = insertionDetails?.insertNext ?? insertNext;
     final maxCount = insertionDetails?.numberOfTracks == 0 ? null : insertionDetails?.numberOfTracks;
     final newItem = tracks.firstOrNull;
-    return await newItem?._execute(
+    return await newItem?.execute(
           selectable: (_) async {
             final tracksCopy = List<Selectable>.from(tracks);
             final finalTracks = (insertionType?.shuffleOrSort(tracksCopy) ?? tracksCopy).withLimit(maxCount);
@@ -670,7 +670,7 @@ class Player {
       onAssigningCurrentItem: onAssigningCurrentItem,
       duplicateRemover: source == QueueSource.history || source == QueueSourceYoutubeID.history
           ? (item) {
-              return item._execute(
+              return item.execute(
                 selectable: (finalItem) => finalItem.track.path,
                 youtubeID: (finalItem) => finalItem.id,
               );
@@ -697,21 +697,5 @@ class Player {
 
   Future<void> disposeVideo() async {
     await _audioHandler.setVideo(null);
-  }
-}
-
-// -- duplicated from audio_handler.dart but not a FutureOr<T>
-extension _PlayableExecuter on Playable {
-  T? _execute<T>({
-    required T Function(Selectable finalItem) selectable,
-    required T Function(YoutubeID finalItem) youtubeID,
-  }) {
-    final item = this;
-    if (item is Selectable) {
-      return selectable(item);
-    } else if (item is YoutubeID) {
-      return youtubeID(item);
-    }
-    return null;
   }
 }

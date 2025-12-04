@@ -187,7 +187,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final minValueInSetMS = minValueInSetMinutes * 60 * 1000;
       final seekValueInMS = settings.player.seekDurationInSeconds.value * 1000;
 
-      final lastPosAndDurationMSFn = item._executeAsync(
+      final lastPosAndDurationMSFn = item.executeAsync(
         selectable: (finalItem) {
           final track = finalItem.track.toTrackExt();
           final duration = itemDuration?.inMilliseconds ?? track.durationMS;
@@ -232,7 +232,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       exectuteOn = currentItem.value;
       knownDur = currentItemDuration.value;
     }
-    exectuteOn?._execute(
+    exectuteOn?.execute(
       selectable: (finalItem) {
         _notificationUpdateItemSelectable(
           item: finalItem,
@@ -304,7 +304,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (Platform.isWindows) {
       ThumbnailToolbarAssetIcon getIco(String name) => ThumbnailToolbarAssetIcon('assets\\icons\\media_ico\\$name.ico');
 
-      isFavourite ??= currentItem.value?._execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: (finalItem) => finalItem.isFavourite);
+      isFavourite ??= currentItem.value?.execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: (finalItem) => finalItem.isFavourite);
       void onFavOrUnfavPress() {
         final current = currentItem.value;
         if (current != null) {
@@ -403,7 +403,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   void onIndexChanged(int newIndex, Q newItem) {
     refreshNotification(newItem);
     settings.extra.save(lastPlayedIndex: newIndex);
-    newItem._execute(
+    newItem.execute(
       selectable: (finalItem) {
         CurrentColor.inst.updatePlayerColorFromTrack(finalItem, newIndex);
       },
@@ -436,7 +436,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     refreshNotification();
 
-    itemDragged._execute(
+    itemDragged.execute(
       selectable: (finalItem) => CurrentColor.inst.updatePlayerColorFromTrack(null, currentIndex, updateIndexOnly: true),
       youtubeID: (finalItem) {},
     );
@@ -552,7 +552,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   FutureOr<int> itemToDurationInSeconds(Q item) async {
-    return (await item._execute<Future<int?>>(
+    return (await item.execute<Future<int?>>(
           selectable: (finalItem) async {
             final dur = finalItem.track.durationMS;
             if (dur > 0) {
@@ -575,7 +575,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   FutureOr<void> onItemMarkedListened(Q item, int listenedSeconds, double listenedPercentage) async {
-    await item._execute(
+    await item.execute(
       selectable: (finalItem) async {
         final newTrackWithDate = TrackWithDate(
           dateAdded: currentTimeMS,
@@ -609,7 +609,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   FutureOr<ItemPrepareConfig<Q, UriSource>?> prepareItem(Q item, int index) async {
-    return await item._executeAsync(
+    return await item.executeAsync(
       selectable: (finalItem) async {
         return _itemToPrepareConfigSelectable(item, finalItem, index, null);
       },
@@ -627,7 +627,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (settings.enablePartyModeColorSwap.value) CurrentColor.inst.switchColorPalettes(item: item);
     return _fnLimiter.executeFuture(
       () async {
-        return await item._execute(
+        return await item.execute(
           selectable: (finalItem) async {
             await onItemPlaySelectable(item, finalItem, index, skipItem, preparedItemInfo);
           },
@@ -1778,7 +1778,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   void onNotificationFavouriteButtonPressed(Q item) {
-    item._execute(
+    item.execute(
       selectable: (finalItem) {
         final newStat = PlaylistController.inst.favouriteButtonOnPressed(finalItem.track, refreshNotification: false);
         _notificationUpdateItemSelectable(
@@ -1832,7 +1832,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   void onItemLastPositionReport(Q? currentItem, int currentPositionMs) async {
-    await currentItem?._execute(
+    await currentItem?.execute(
       selectable: (finalItem) => _updateTrackLastPosition(finalItem.track, currentPositionMS.value),
       youtubeID: (finalItem) => _updateYoutubeIDLastPosition(finalItem, currentPositionMS.value),
     );
@@ -1841,7 +1841,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   void onPlaybackEventStream(PlaybackEvent event) {
     final item = currentItem.value;
-    item?._execute(
+    item?.execute(
       selectable: (finalItem) async {
         final isFav = finalItem.track.isFavourite;
         playbackState.add(transformEvent(event, isFav, currentIndex.value));
@@ -1958,7 +1958,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> seek(Duration position) async {
     Future<void> plsSeek() => super.seek(position);
 
-    await currentItem.value?._execute(
+    await currentItem.value?.execute(
       selectable: (finalItem) => plsSeek(),
       youtubeID: (finalItem) async {
         File? cachedAudioFile = _nextSeekSetAudioCache?.getFileIfPlaying(finalItem.id);
@@ -2143,7 +2143,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<MediaItem> itemToMediaItem(Q item) {
-    return item._execute(
+    return item.execute(
       selectable: (finalItem) {
         int durMS = finalItem.track.durationMS;
         return finalItem.toMediaItem(currentIndex.value, currentQueue.value.length, durMS > 0 ? durMS.milliseconds : currentItemDuration.value);
@@ -2155,7 +2155,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   String itemToMediaItemId(Q item) {
-    return item._execute(
+    return item.execute(
       selectable: (finalItem) => finalItem.toMediaItemId(),
       youtubeID: (finalItem) => finalItem.toMediaItemId(),
     )!;
@@ -2176,7 +2176,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   MediaControlsProvider get mediaControls => _mediaControls;
-  static const _mediaControls = MediaControlsProvider.main();
+  static final _mediaControls = Platform.isAndroid && NamidaDeviceInfo.sdkVersion >= 33
+      ? MediaControlsProvider.android13plus() // can crash on android below 13
+      : MediaControlsProvider.main();
 
   // -- builders
 
@@ -2336,8 +2338,8 @@ extension YoutubeIDToMediaItem on YoutubeID {
   }
 }
 
-extension _PlayableExecuter on Playable {
-  T? _execute<T>({
+extension PlayableExecuter on Playable {
+  T? execute<T>({
     required T Function(Selectable finalItem) selectable,
     required T Function(YoutubeID finalItem) youtubeID,
   }) {
@@ -2350,7 +2352,7 @@ extension _PlayableExecuter on Playable {
     return null;
   }
 
-  FutureOr<T?> _executeAsync<T>({
+  FutureOr<T?> executeAsync<T>({
     required FutureOr<T?> Function(Selectable finalItem) selectable,
     required FutureOr<T?> Function(YoutubeID finalItem) youtubeID,
   }) {

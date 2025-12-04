@@ -16,7 +16,6 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -240,14 +239,12 @@ class TrackTile extends StatelessWidget {
 
   Track get _tr => trackOrTwd.track;
   TrackWithDate? get _twd => trackOrTwd.trackWithDate;
-  bool get _isFromQueue => properties.configs.queueSource == QueueSource.playerQueue;
   String get _heroTag => obtainHeroTag(_twd, _tr, index, properties.comingFromQueue);
 
   void _triggerTrackDialog() => NamidaDialogs.inst.showTrackDialog(
         _tr,
         playlistName: properties.configs.playlistName,
         index: index,
-        comingFromQueue: _isFromQueue,
         trackWithDate: trackOrTwd.trackWithDate,
         source: properties.configs.queueSource,
         heroTag: _heroTag,
@@ -256,9 +253,6 @@ class TrackTile extends StatelessWidget {
   void _triggerTrackInfoDialog() => showTrackInfoDialog(
         _tr,
         true,
-        comingFromQueue: _isFromQueue,
-        index: index,
-        queueSource: properties.configs.queueSource,
         heroTag: _heroTag,
       );
 
@@ -607,11 +601,13 @@ class TrackTile extends StatelessWidget {
     if (properties.configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
       finalChild = SwipeQueueAddTile(
         item: trackOrTwd,
+        infoCallback: () => SwipeQueueAddTileInfo(
+          queueSource: queueSource,
+          heroTag: heroTag,
+        ),
         dismissibleKey: heroTag,
         allowSwipeLeft: properties.allowSwipeLeft,
         allowSwipeRight: properties.allowSwipeRight,
-        onAddToPlaylist: (item) => showAddToPlaylistDialog([item.track]),
-        onOpenInfo: (_) => _triggerTrackInfoDialog(),
         child: finalChild,
       );
     }

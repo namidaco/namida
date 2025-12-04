@@ -7,7 +7,6 @@ import 'package:youtipie/class/result_wrapper/notification_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_notification.dart';
 import 'package:youtipie/youtipie.dart';
 
-import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -19,8 +18,6 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
-import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
-import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -281,11 +278,13 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
       final plItem = YoutubeID(id: videoId, playlistID: null);
       return SwipeQueueAddTile(
         item: plItem,
+        infoCallback: () => SwipeQueueAddTileInfo(
+          queueSource: QueueSourceYoutubeID.notificationsHosted,
+          heroTag: null,
+        ),
         dismissibleKey: plItem,
         allowSwipeLeft: properties.allowSwipeLeft,
         allowSwipeRight: properties.allowSwipeRight,
-        onAddToPlaylist: (item) => showAddToPlaylistSheet(ids: [videoId], idsNamesLookup: {videoId: firstLine}),
-        onOpenInfo: (_) => NamidaNavigator.inst.navigateDialog(dialog: VideoInfoDialog(videoId: videoId)),
         child: finalChild,
       );
     }
