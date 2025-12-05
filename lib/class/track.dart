@@ -352,12 +352,17 @@ class TrackExtended {
 
     try {
       final buffer = StringBuffer();
-      buffer.write(_padYear(dateParts[0]));
-      if (dateParts.length > 1) buffer.write(_padInt(dateParts[1]));
-      if (dateParts.length > 2) {
-        buffer.write(_padInt(dateParts[2]));
-      } else {
-        buffer.write('01');
+      final yearText = _padYear(dateParts[0]); // can be 2/4 digits (separated) or 6 yyyyMM or 8 yyyyMMdd
+      buffer.write(yearText);
+      if (dateParts.length > 1) {
+        buffer.write(_padInt(dateParts[1]));
+        if (dateParts.length > 2) {
+          buffer.write(_padInt(dateParts[2]));
+        } else {
+          buffer.write('01'); // only add day 01 if month was there
+        }
+      } else if (yearText.length == 6) {
+        buffer.write('01'); // also add day 01 if year was 6 yyyyMM
       }
       return int.parse(buffer.toString());
     } catch (_) {}
