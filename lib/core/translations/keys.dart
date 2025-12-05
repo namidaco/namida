@@ -137,6 +137,8 @@ abstract class LanguageKeys {
   String get CUSTOMIZATIONS_SUBTITLE => _getKey('CUSTOMIZATIONS_SUBTITLE');
   String get CUSTOMIZATIONS => _getKey('CUSTOMIZATIONS');
   String get DATABASE => _getKey('DATABASE');
+  String get DATA_SAVER => _getKey('DATA_SAVER');
+  String get DATA_SAVER_MODE => _getKey('DATA_SAVER_MODE');
   String get DATE_ADDED => _getKey('DATE_ADDED');
   String get DATE_CREATED => _getKey('DATE_CREATED');
   String get DATE_MODIFIED => _getKey('DATE_MODIFIED');
@@ -249,6 +251,7 @@ abstract class LanguageKeys {
   String get EXTRACTING_INFO => _getKey('EXTRACTING_INFO');
   String get EXTRAS_SUBTITLE => _getKey('EXTRAS_SUBTITLE');
   String get EXTRAS => _getKey('EXTRAS');
+  String get EXTREME => _getKey('EXTREME');
   String get FAILED_EDITS => _getKey('FAILED_EDITS');
   String get FAILED => _getKey('FAILED');
   String get FAVOURITES => _getKey('FAVOURITES');
@@ -388,6 +391,7 @@ abstract class LanguageKeys {
   String get MAX_IMAGE_CACHE_SIZE => _getKey('MAX_IMAGE_CACHE_SIZE');
   String get MAX_VIDEO_CACHE_SIZE => _getKey('MAX_VIDEO_CACHE_SIZE');
   String get MEDIA_STORE_IS_ENABLED_THIS_WILL_HAVE_NO_EFFECT => _getKey('MEDIA_STORE_IS_ENABLED_THIS_WILL_HAVE_NO_EFFECT');
+  String get MEDIUM => _getKey('MEDIUM');
   String get MEMBERSHIP_CODE => _getKey('MEMBERSHIP_CODE');
   String get MEMBERSHIP_CODE_SENT_TO_EMAIL => _getKey('MEMBERSHIP_CODE_SENT_TO_EMAIL');
   String get MEMBERSHIP_DIDNT_CHANGE => _getKey('MEMBERSHIP_DIDNT_CHANGE');
@@ -420,6 +424,7 @@ abstract class LanguageKeys {
   String get MIX => _getKey('MIX');
   String get MIXES => _getKey('MIXES');
   String get MIX_PLAYLIST_GENERATED_BY_YOUTUBE => _getKey('MIX_PLAYLIST_GENERATED_BY_YOUTUBE');
+  String get MOBILE => _getKey('MOBILE');
   String get MONTH => _getKey('MONTH');
   String get MONTHS => _getKey('MONTHS');
   String get MOOD => _getKey('MOOD');

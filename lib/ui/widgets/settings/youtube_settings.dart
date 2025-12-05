@@ -94,6 +94,71 @@ class YoutubeSettings extends SettingSubpageProvider {
     );
   }
 
+  static void openDataSaverConfigureDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        icon: Broken.blur,
+        title: lang.DATA_SAVER,
+        normalTitleStyle: true,
+        actions: const [
+          DoneButton(),
+        ],
+        child: Builder(
+          builder: (context) {
+            return SizedBox(
+              width: context.width,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: context.height * 0.6),
+                child: SuperListView(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  children: [
+                    NamidaPopupWrapper(
+                      child: NamidaPopupWrapper(
+                        childrenDefault: () => _YTFlagsOptionsState._dataSaverChildren(),
+                        child: CustomListTile(
+                          icon: Broken.wifi_square,
+                          title: lang.DATA_SAVER_MODE,
+                          trailing: NamidaPopupWrapper(
+                            childrenDefault: () => _YTFlagsOptionsState._dataSaverChildren(),
+                            child: ObxO(
+                              rx: settings.youtube.dataSaverMode,
+                              builder: (context, dataSaverMode) => Text(
+                                dataSaverMode.toText(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    NamidaPopupWrapper(
+                      child: NamidaPopupWrapper(
+                        childrenDefault: () => _YTFlagsOptionsState._dataSaverMobileChildren(),
+                        child: CustomListTile(
+                          icon: Broken.chart_1,
+                          title: '${lang.DATA_SAVER_MODE} (${lang.MOBILE})',
+                          trailing: NamidaPopupWrapper(
+                            childrenDefault: () => _YTFlagsOptionsState._dataSaverMobileChildren(),
+                            child: ObxO(
+                              rx: settings.youtube.dataSaverModeMobile,
+                              builder: (context, dataSaverModeMobile) => Text(
+                                dataSaverModeMobile.toText(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   List<NamidaPopupItem> get _notificationsChildren => DownloadNotifications.values
       .map(
         (e) => NamidaPopupItem(
@@ -675,10 +740,10 @@ class _YTFlagsOptions extends StatefulWidget {
   const _YTFlagsOptions();
 
   @override
-  State<_YTFlagsOptions> createState() => __YTFlagsOptionsState();
+  State<_YTFlagsOptions> createState() => _YTFlagsOptionsState();
 }
 
-class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
+class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
   bool isRefreshingJsPlayer = false;
 
   String? _jsPlayerVersion;
@@ -711,25 +776,27 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
         ),
       ];
 
-  List<NamidaPopupItem> get _dataSaverChildren => [
+  static List<NamidaPopupItem> _dataSaverChildren([void Function()? onSave]) => [
         ...DataSaverMode.values.map(
           (e) => NamidaPopupItem(
             icon: Broken.cd,
-            title: e.name,
+            title: e.toText(),
             onTap: () {
-              setState(() => settings.youtube.save(dataSaverMode: e));
+              settings.youtube.save(dataSaverMode: e);
+              onSave?.call();
             },
           ),
         ),
       ];
 
-  List<NamidaPopupItem> get _dataSaverMobileChildren => [
+  static List<NamidaPopupItem> _dataSaverMobileChildren([void Function()? onSave]) => [
         ...DataSaverMode.values.map(
           (e) => NamidaPopupItem(
             icon: Broken.cd,
-            title: e.name,
+            title: e.toText(),
             onTap: () {
-              setState(() => settings.youtube.save(dataSaverModeMobile: e));
+              settings.youtube.save(dataSaverModeMobile: e);
+              onSave?.call();
             },
           ),
         ),
@@ -807,16 +874,16 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
             ),
             NamidaPopupWrapper(
               child: NamidaPopupWrapper(
-                childrenDefault: () => _dataSaverChildren,
+                childrenDefault: () => _dataSaverChildren(() => setState(() {})),
                 child: CustomListTile(
                   icon: Broken.wifi_square,
                   title: 'data_saver_mode'.toUpperCase(),
                   trailing: NamidaPopupWrapper(
-                    childrenDefault: () => _dataSaverChildren,
+                    childrenDefault: () => _dataSaverChildren(() => setState(() {})),
                     child: ObxO(
                       rx: settings.youtube.dataSaverMode,
                       builder: (context, dataSaverMode) => Text(
-                        dataSaverMode.name,
+                        dataSaverMode.toText(),
                       ),
                     ),
                   ),
@@ -825,16 +892,16 @@ class __YTFlagsOptionsState extends State<_YTFlagsOptions> {
             ),
             NamidaPopupWrapper(
               child: NamidaPopupWrapper(
-                childrenDefault: () => _dataSaverMobileChildren,
+                childrenDefault: () => _dataSaverMobileChildren(() => setState(() {})),
                 child: CustomListTile(
                   icon: Broken.chart_1,
                   title: 'data_saver_mode_(mobile)'.toUpperCase(),
                   trailing: NamidaPopupWrapper(
-                    childrenDefault: () => _dataSaverMobileChildren,
+                    childrenDefault: () => _dataSaverMobileChildren(() => setState(() {})),
                     child: ObxO(
                       rx: settings.youtube.dataSaverModeMobile,
                       builder: (context, dataSaverModeMobile) => Text(
-                        dataSaverModeMobile.name,
+                        dataSaverModeMobile.toText(),
                       ),
                     ),
                   ),

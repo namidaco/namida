@@ -18,6 +18,7 @@ import 'package:youtipie/core/extensions.dart';
 import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -28,6 +29,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -42,6 +44,7 @@ import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
@@ -793,6 +796,20 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                               return SuperListView(
                                 padding: const EdgeInsets.symmetric(vertical: 12.0),
                                 children: [
+                                  Obx(
+                                    (context) {
+                                      final hasHighConnection = ConnectivityController.inst.hasHighConnection;
+                                      final rx = hasHighConnection ? settings.youtube.dataSaverMode : settings.youtube.dataSaverModeMobile;
+                                      final value = rx.valueR;
+                                      final isOff = value == DataSaverMode.off;
+                                      return _MPQualityButton(
+                                        title: lang.DATA_SAVER,
+                                        onTap: () => YoutubeSettings.openDataSaverConfigureDialog(),
+                                        subtitle: isOff ? '' : value.toText(),
+                                        icon: Broken.blur,
+                                      );
+                                    },
+                                  ),
                                   if (currentId == null || currentId.isEmpty)
                                     _MPQualityButton(
                                       title: lang.SEARCH,

@@ -523,6 +523,16 @@ extension LibraryImageSourceUtils on LibraryImageSource {
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 }
 
+extension DataSaverModeUtils on DataSaverMode {
+  String toText() {
+    return switch (this) {
+      DataSaverMode.off => lang.DISABLE,
+      DataSaverMode.medium => lang.MEDIUM,
+      DataSaverMode.extreme => lang.EXTREME,
+    };
+  }
+}
+
 extension OnTrackTileSwapActionsUtils on OnTrackTileSwapActions {
   String toText() => _NamidaConverters.inst.getTitle(this);
 

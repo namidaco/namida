@@ -1283,6 +1283,25 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         MapEntry(
                                           null,
                                           Obx(
+                                            (context) {
+                                              final hasHighConnection = ConnectivityController.inst.hasHighConnection;
+                                              final rx = hasHighConnection ? settings.youtube.dataSaverMode : settings.youtube.dataSaverModeMobile;
+                                              final value = rx.valueR;
+                                              final isOff = value == DataSaverMode.off;
+                                              return _getQualityChip(
+                                                title: lang.DATA_SAVER,
+                                                onPlay: (isSelected) => YoutubeSettings.openDataSaverConfigureDialog(),
+                                                selected: false,
+                                                isCached: false,
+                                                thirdLine: isOff ? null : value.toText(),
+                                                icon: Broken.blur,
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                        MapEntry(
+                                          null,
+                                          Obx(
                                             (context) => _getQualityChip(
                                               title: lang.AUDIO_ONLY,
                                               onPlay: (isSelected) {
@@ -1445,7 +1464,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                   if (Player.inst.currentVideoStream.valueR == null &&
                                                       Player.inst.currentCachedVideo.valueR == null &&
                                                       !dataSaverMode.canFetchNetworkVideoStream) {
-                                                    secondaryIcon = Broken.magicpen;
+                                                    secondaryIcon = Broken.blur;
                                                   }
                                                 }
                                               }

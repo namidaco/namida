@@ -302,7 +302,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
             final videoBlockedByIcon = switch (videoBlockedBy) {
               VideoFetchBlockedBy.cachePriority => Broken.cpu,
               VideoFetchBlockedBy.noNetwork => Broken.global_refresh,
-              VideoFetchBlockedBy.dataSaver => Broken.chart_1,
+              VideoFetchBlockedBy.dataSaver => Broken.blur,
               VideoFetchBlockedBy.playbackSource => Broken.scroll,
               null => null,
             };
