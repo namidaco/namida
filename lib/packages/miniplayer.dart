@@ -805,8 +805,8 @@ class _TrackImage extends StatelessWidget {
         key: Key(track.pathToImage),
         track: track,
         path: track.pathToImage,
-        thumbnailSize: context.width,
-        compressed: false,
+        thumbnailSize: maxWidth,
+        compressed: MiniPlayerController.inst.animation.value == 0,
         borderRadius: 6.0 + brMultiplier(8.0.multipliedRadius) * (maxWidth * 0.004),
         fadeMilliSeconds: 0,
         forceSquared: settings.forceSquaredTrackThumbnail.value,
@@ -835,16 +835,15 @@ class _YoutubeIDImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = context.width;
     return LayoutWidthProvider(
       builder: (context, maxWidth) => YoutubeThumbnail(
         type: ThumbnailType.video,
         key: Key(video.id),
         videoId: video.id,
-        width: width,
+        width: maxWidth,
         forceSquared: settings.forceSquaredTrackThumbnail.value,
         isImportantInCache: true,
-        compressed: false,
+        compressed: MiniPlayerController.inst.animation.value == 0,
         preferLowerRes: false,
         fadeMilliSeconds: 0,
         borderRadius: 6.0 + brMultiplier(8.0.multipliedRadius) * (maxWidth * 0.004),

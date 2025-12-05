@@ -213,19 +213,23 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12.0),
-            YTDownloadOptionFolderListTile(
-              maxTrailingWidth: context.width * 0.2,
-              visualDensity: visualDensity,
-              playlistName: widget.playlistName.translatePlaylistName(),
-              initialFolder: _groupName.value.groupName,
-              onDownloadGroupNameChanged: (newGroupName) {
-                _groupName.value = DownloadTaskGroupName(groupName: newGroupName);
-                _folderController.currentState?.onGroupNameChanged(newGroupName);
-              },
-              onDownloadFolderAdded: (newFolderName) {
-                _folderController.currentState?.onFolderAdd(newFolderName);
-              },
+            Padding(
+              padding: const EdgeInsets.only(left: 16.0, right: 12.0),
+              child: YTDownloadOptionFolderListTile(
+                maxTrailingWidth: context.width * 0.2,
+                visualDensity: visualDensity,
+                playlistName: widget.playlistName.translatePlaylistName(),
+                initialFolder: _groupName.value.groupName,
+                onDownloadGroupNameChanged: (newGroupName) {
+                  _groupName.value = DownloadTaskGroupName(groupName: newGroupName);
+                  _folderController.currentState?.onGroupNameChanged(newGroupName);
+                },
+                onDownloadFolderAdded: (newFolderName) {
+                  _folderController.currentState?.onFolderAdd(newFolderName);
+                },
+              ),
             ),
+            const SizedBox(height: 6.0),
             ObxO(
               rx: settings.youtube.autoExtractVideoTagsFromInfo,
               builder: (context, autoExtractVideoTagsFromInfo) => CustomSwitchListTile(
