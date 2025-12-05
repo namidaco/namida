@@ -376,11 +376,19 @@ class NamidaBgBlur extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!enabled || (disableIfBlur0 && blur == 0)) return child;
-    return BackdropFilter(
+    Widget blurredWidget = BackdropFilter(
       backdropGroupKey: _groupKey,
       filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur, tileMode: NamidaBlur.kDefaultTileMode),
       child: child,
     );
+    final topArea = WindowController.instance?.windowTitleBarHeightIfActive;
+    if (topArea != null) {
+      // -- ensure window title bar is not blurred
+      blurredWidget = ClipRect(
+        child: blurredWidget,
+      );
+    }
+    return blurredWidget;
   }
 }
 
