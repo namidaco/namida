@@ -9,7 +9,6 @@ import 'package:flutter_volume_controller/flutter_volume_controller.dart' show F
 import 'package:native_device_orientation/native_device_orientation.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
-import 'package:youtipie/class/sponsorblock_segment.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/endscreens/endscreen_item_base.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
@@ -39,14 +38,13 @@ import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/youtube/class/sponsorblock.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
-import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
+import 'package:namida/youtube/widgets/sponsor_block_button.dart';
 import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
@@ -57,6 +55,7 @@ class NamidaVideoControls extends StatefulWidget {
   final VoidCallback? onMinimizeTap;
   final bool isFullScreen;
   final bool isLocal;
+  final bool forceEnableSponsorBlock;
 
   const NamidaVideoControls({
     super.key,
@@ -65,6 +64,7 @@ class NamidaVideoControls extends StatefulWidget {
     required this.onMinimizeTap,
     required this.isFullScreen,
     required this.isLocal,
+    this.forceEnableSponsorBlock = true,
   });
 
   @override
@@ -790,7 +790,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               alignment: AlignmentDirectional.centerEnd,
               child: Padding(
                 padding: EdgeInsetsDirectional.only(bottom: bottomPadding + 2.0),
-                child: _SkipSponsorButton(
+                child: SkipSponsorButton(
                   itemsColor: itemsColor,
                 ),
               ),
@@ -2014,7 +2014,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     ],
                   ),
                 ),
-              ),
+              )
+            else if (widget.forceEnableSponsorBlock)
+              skipSponsorButton,
           ],
         ),
       ),
@@ -2596,158 +2598,6 @@ class _VideoIdToTitleWidgetState extends State<_VideoTitleSubtitleWidget> {
             style: textTheme.displaySmall?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.7)),
           ),
       ],
-    );
-  }
-}
-
-class _SkipSponsorButton extends StatefulWidget {
-  final Color itemsColor;
-  const _SkipSponsorButton({required this.itemsColor});
-
-  @override
-  State<_SkipSponsorButton> createState() => __SkipSponsorButtonState();
-}
-
-class __SkipSponsorButtonState extends State<_SkipSponsorButton> {
-  SponsorBlockSegment? _currentSegment;
-
-  void _onPositionChange() {
-    final posMS = Player.inst.nowPlayingPosition.value;
-    final segments = SponsorBlockController.inst.currentSegments.value;
-    SponsorBlockSegment? newSegment;
-    if (segments != null) {
-      if (segments.segments.isNotEmpty) {
-        // -- minor perf boost
-        if ((segments.firstMS != null && posMS >= segments.firstMS!) && //
-            (segments.lastMS != null && posMS <= segments.lastMS!)) {
-          final minDur = settings.youtube.sponsorBlockSettings.value.minimumSegmentDurationMS;
-          for (final s in segments.segments) {
-            if (minDur > 0 ? s.durationMS > minDur : true) {
-              if (posMS >= s.segmentStartMS && posMS <= s.segmentEndMS && (posMS <= s.segmentStartMS + settings.youtube.sponsorBlockSettings.value.hideSkipButtonAfterMS)) {
-                newSegment = s;
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      if (newSegment == null) {
-        final poiHighlight = segments.poi_highlight;
-        if (poiHighlight != null) {
-          if (posMS <= settings.youtube.sponsorBlockSettings.value.hideSkipButtonAfterMS) {
-            // -- only show in start of video
-            newSegment = poiHighlight;
-          }
-        }
-      }
-    }
-    if (_currentSegment?.uuid != newSegment?.uuid) {
-      if (newSegment == null) {
-        setState(() => _currentSegment = null);
-      } else {
-        final didAutoSkip = SponsorBlockController.inst.autoSkipIfEnabled(newSegment);
-        if (!didAutoSkip) {
-          if (SponsorBlockController.inst.canShowSkipButton(newSegment)) {
-            setState(() => _currentSegment = newSegment);
-          }
-        }
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    _onPositionChange();
-    Player.inst.nowPlayingPosition.addListener(_onPositionChange);
-    SponsorBlockController.inst.currentSegments.addListener(_onPositionChange);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    Player.inst.nowPlayingPosition.removeListener(_onPositionChange);
-    SponsorBlockController.inst.currentSegments.removeListener(_onPositionChange);
-    super.dispose();
-  }
-
-  void _onSkipTap() {
-    final segment = _currentSegment;
-    if (segment == null) return;
-    SponsorBlockController.inst.skipSegment(segment);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final segment = _currentSegment;
-    final config = segment == null ? null : SponsorBlockController.inst.getConfigForSegment(segment.category);
-    final textTheme = context.textTheme;
-    final itemsColor = widget.itemsColor;
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 150),
-      reverseDuration: const Duration(milliseconds: 200),
-      child: segment == null || config == null || config.action == SponsorBlockAction.disabled
-          ? const SizedBox(
-              key: ValueKey('button_hidden'),
-            )
-          : NamidaBgBlurClipped(
-              key: ValueKey('button_shown'),
-              blur: 3.0,
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.horizontal(left: Radius.circular(6.0.multipliedRadius)),
-                border: Border(
-                  right: BorderSide(
-                    color: config.color,
-                  ),
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(6.0),
-                child: TapDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: _onSkipTap,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(width: 2.0),
-                      Icon(
-                        Broken.forward,
-                        size: 18.0,
-                        color: itemsColor,
-                      ),
-                      const SizedBox(width: 4.0),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            lang.SKIP,
-                            style: textTheme.displayMedium?.copyWith(
-                              fontSize: 14.0,
-                              color: itemsColor,
-                            ),
-                          ),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: context.width * 0.3),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                segment.category.sponsorCategoryToText(),
-                                style: textTheme.displaySmall?.copyWith(
-                                  fontSize: 11.0,
-                                  color: itemsColor,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 2.0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
     );
   }
 }

@@ -695,22 +695,46 @@ class _AnimatingThumnailWidget extends StatelessWidget {
         builder: (context, userScaleMultiplier) => ObxO(
           rx: Player.inst.videoPlayerInfo,
           builder: (context, videoInfo) {
-            final videoOrImage = videoInfo != null && videoInfo.isInitialized
-                ? AnimatedBuilder(
-                    animation: NamidaMiniPlayerBase.clampedAnimationBCP,
-                    child: DoubleTapDetector(
-                      onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(isLocal: isLocal),
-                      child: NamidaAspectRatio(
-                        aspectRatio: videoInfo.aspectRatio,
-                        child: Texture(textureId: videoInfo.textureId),
-                      ),
+            final videoOrImage = Stack(
+              alignment: Alignment.center,
+              children: [
+                videoInfo != null && videoInfo.isInitialized
+                    ? AnimatedBuilder(
+                        animation: NamidaMiniPlayerBase.clampedAnimationBCP,
+                        child: DoubleTapDetector(
+                          onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(isLocal: isLocal),
+                          child: NamidaAspectRatio(
+                            aspectRatio: videoInfo.aspectRatio,
+                            child: Texture(textureId: videoInfo.textureId),
+                          ),
+                        ),
+                        builder: (context, child) => BorderRadiusClip(
+                          borderRadius: BorderRadius.circular(6.0.multipliedRadius + (brMultiplier(8.0.multipliedRadius) * NamidaMiniPlayerBase.clampedAnimationBCP.value)),
+                          child: child!,
+                        ),
+                      )
+                    : fallback,
+                if (!isLocal)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: ObxO(
+                      rx: settings.youtube.sponsorBlockSettings,
+                      builder: (context, sponsorblock) => sponsorblock.enabled
+                          ? Align(
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: Padding(
+                                padding: EdgeInsetsDirectional.only(bottom: 16.0),
+                                child: SkipSponsorButton(
+                                  itemsColor: Colors.white.withAlpha(200),
+                                ),
+                              ),
+                            )
+                          : const SizedBox(),
                     ),
-                    builder: (context, child) => BorderRadiusClip(
-                      borderRadius: BorderRadius.circular(6.0.multipliedRadius + (brMultiplier(8.0.multipliedRadius) * NamidaMiniPlayerBase.clampedAnimationBCP.value)),
-                      child: child!,
-                    ),
-                  )
-                : fallback;
+                  ),
+              ],
+            );
 
             return ObxO(
               rx: settings.enableLyrics,

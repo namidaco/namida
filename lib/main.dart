@@ -617,6 +617,7 @@ class _NamidaState extends State<Namida> {
                   key: Key('pip_widget_child'),
                   isFullScreen: true,
                   showControls: false,
+                  forceEnableSponsorBlock: false,
                   onMinimizeTap: null,
                   isLocal: true,
                 ),
