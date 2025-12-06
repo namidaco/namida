@@ -47,7 +47,7 @@ class SponsorBlockSettings {
   bool get enabled => _enabled ?? true;
   bool get trackSkipCount => _trackSkipCount ?? true;
   String? get serverAddress => _serverAddress;
-  int get hideSkipButtonAfterMS => _hideSkipButtonAfterMS ?? 3000;
+  int get hideSkipButtonAfterMS => _hideSkipButtonAfterMS ?? 4000;
   int get minimumSegmentDurationMS => _minimumSegmentDurationMS ?? 0;
   Map<SponsorBlockCategory, SponsorBlockCategoryConfig> get configs => _configs;
 

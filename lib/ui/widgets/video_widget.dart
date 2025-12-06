@@ -1488,6 +1488,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                       : StackedIcon(
                                                           baseIcon: icon,
                                                           secondaryIcon: secondaryIcon,
+                                                          margin: 0.0,
                                                           iconSize: 16.0,
                                                           secondaryIconSize: 8.0,
                                                           baseIconColor: itemsColor,

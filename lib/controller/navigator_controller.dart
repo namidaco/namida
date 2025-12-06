@@ -881,7 +881,7 @@ class _CustomModalBottomSheetRoute<T> extends ModalBottomSheetRoute<T> {
         builder: (context, snapshot) {
           final didAnimate = snapshot.connectionState == ConnectionState.done;
           return TweenAnimationBuilder(
-            duration: const Duration(milliseconds: 400),
+            duration: const Duration(milliseconds: 300),
             tween: DoubleTween(begin: 0, end: didAnimate ? 1 : 0),
             builder: (context, value, _) => NamidaBgBlur(
               enabled: true,

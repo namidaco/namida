@@ -103,6 +103,13 @@ class _YTCommentCardState extends State<YTCommentCard> {
     );
   }
 
+  void _openChannelPage() {
+    final channelId = widget.comment?.author?.channelId;
+    if (channelId != null) {
+      YTChannelSubpage(channelID: channelId).navigate();
+    }
+  }
+
   List<NamidaPopupItem> _getCommentPopupItems() {
     final comment = widget.comment;
     final activeChannel = YoutubeAccountController.current.activeAccountChannel.value;
@@ -190,12 +197,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
       NamidaPopupItem(
         icon: Broken.user,
         title: lang.GO_TO_CHANNEL,
-        onTap: () {
-          final channelId = comment?.author?.channelId;
-          if (channelId != null) {
-            YTChannelSubpage(channelID: channelId).navigate();
-          }
-        },
+        onTap: _openChannelPage,
       ),
       if (editCommentOrReply != null) editCommentOrReply,
       if (deleteCommentOrReply != null) deleteCommentOrReply,
@@ -267,18 +269,21 @@ class _YTCommentCardState extends State<YTCommentCard> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        NamidaDummyContainer(
-                          width: thumbSize,
-                          height: thumbSize,
-                          isCircle: true,
-                          shimmerEnabled: uploaderAvatar == null,
-                          child: YoutubeThumbnail(
-                            type: ThumbnailType.channel,
-                            key: Key(uploaderAvatar ?? ''),
-                            isImportantInCache: false,
-                            customUrl: uploaderAvatar,
+                        TapDetector(
+                          onTap: _openChannelPage,
+                          child: NamidaDummyContainer(
                             width: thumbSize,
+                            height: thumbSize,
                             isCircle: true,
+                            shimmerEnabled: uploaderAvatar == null,
+                            child: YoutubeThumbnail(
+                              type: ThumbnailType.channel,
+                              key: Key(uploaderAvatar ?? ''),
+                              isImportantInCache: false,
+                              customUrl: uploaderAvatar,
+                              width: thumbSize,
+                              isCircle: true,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10.0),

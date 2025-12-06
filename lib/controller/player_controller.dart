@@ -144,7 +144,7 @@ class Player {
   StreamSubscription? _notificationClickedSub;
 
   Future<void> initializePlayer() async {
-    if (Platform.isWindows || Platform.isMacOS) {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       _audioHandler = NamidaAudioVideoHandler();
     } else {
       _audioHandler = await AudioService.init(
