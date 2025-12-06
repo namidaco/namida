@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:just_audio/just_audio.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
@@ -467,15 +466,11 @@ class TrackInfoListTile extends StatelessWidget {
   });
 
   void _copyField(BuildContext context) {
-    if (value == '' || value == '?') return;
-
-    Clipboard.setData(ClipboardData(text: value));
-    snackyy(
-      title: 'Copied $title',
-      message: value,
+    NamidaUtils.copyToClipboard(
+      title: title,
+      content: value,
       leftBarIndicatorColor: context.theme.colorScheme.primary,
       altDesign: true,
-      top: false,
     );
   }
 

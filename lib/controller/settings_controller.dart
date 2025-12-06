@@ -227,9 +227,12 @@ class _SettingsController with SettingsFileWriter {
   final ytMostPlayedCustomDateRange = DateRange.dummy().obs;
   final ytMostPlayedCustomisStartOfDay = true.obs;
 
+  final onTrackSwipeLeft = TrackExecuteActions.playafter.obs;
+  final onTrackSwipeRight = TrackExecuteActions.openinfo.obs;
+  final artworkTapAction = TrackExecuteActions.none.obs;
+  final artworkLongPressAction = TrackExecuteActions.none.obs;
+
   /// Track Items
-  final onTrackSwipeLeft = OnTrackTileSwapActions.playafter.obs;
-  final onTrackSwipeRight = OnTrackTileSwapActions.openinfo.obs;
   final displayThirdRow = true.obs;
   final displayThirdItemInEachRow = false.obs;
   final trackTileSeparator = '•'.obs;
@@ -389,7 +392,7 @@ class _SettingsController with SettingsFileWriter {
     ];
     mediaItemsTrackSorting.value[MediaType.track] = [SortType.firstListen, SortType.title];
     trackPlayMode.value = TrackPlayMode.selectedTrack;
-    onTrackSwipeLeft.value = OnTrackTileSwapActions.playafter;
+    onTrackSwipeLeft.value = TrackExecuteActions.playafter;
     downloadFilesKeepCachedVersions.value = false;
     downloadAudioOnly.value = true;
     trackItem.value = {
@@ -621,9 +624,12 @@ class _SettingsController with SettingsFileWriter {
       ytMostPlayedCustomDateRange.value = json['ytMostPlayedCustomDateRange'] != null ? DateRange.fromJson(json['ytMostPlayedCustomDateRange']) : ytMostPlayedCustomDateRange.value;
       ytMostPlayedCustomisStartOfDay.value = json['ytMostPlayedCustomisStartOfDay'] ?? ytMostPlayedCustomisStartOfDay.value;
 
+      onTrackSwipeLeft.value = TrackExecuteActions.values.getEnum(json['onTrackSwipeLeft']) ?? onTrackSwipeLeft.value;
+      onTrackSwipeRight.value = TrackExecuteActions.values.getEnum(json['onTrackSwipeRight']) ?? onTrackSwipeRight.value;
+      artworkTapAction.value = TrackExecuteActions.values.getEnum(json['artworkTapAction']) ?? artworkTapAction.value;
+      artworkLongPressAction.value = TrackExecuteActions.values.getEnum(json['artworkLongPressAction']) ?? artworkLongPressAction.value;
+
       /// Track Items
-      onTrackSwipeLeft.value = OnTrackTileSwapActions.values.getEnum(json['onTrackSwipeLeft']) ?? onTrackSwipeLeft.value;
-      onTrackSwipeRight.value = OnTrackTileSwapActions.values.getEnum(json['onTrackSwipeRight']) ?? onTrackSwipeRight.value;
       displayThirdRow.value = json['displayThirdRow'] ?? displayThirdRow.value;
       displayThirdItemInEachRow.value = json['displayThirdItemInEachRow'] ?? displayThirdItemInEachRow.value;
       trackTileSeparator.value = json['trackTileSeparator'] ?? trackTileSeparator.value;
@@ -845,9 +851,12 @@ class _SettingsController with SettingsFileWriter {
         'ytMostPlayedCustomDateRange': ytMostPlayedCustomDateRange.value.toJson(),
         'ytMostPlayedCustomisStartOfDay': ytMostPlayedCustomisStartOfDay.value,
 
-        /// Track Items
         'onTrackSwipeLeft': onTrackSwipeLeft.value.name,
         'onTrackSwipeRight': onTrackSwipeRight.value.name,
+        'artworkTapAction': artworkTapAction.value.name,
+        'artworkLongPressAction': artworkLongPressAction.value.name,
+
+        /// Track Items
         'displayThirdRow': displayThirdRow.value,
         'displayThirdItemInEachRow': displayThirdItemInEachRow.value,
         'trackTileSeparator': trackTileSeparator.value,
@@ -937,8 +946,10 @@ class _SettingsController with SettingsFileWriter {
     bool? playlistSortReversed,
     GroupSortType? ytPlaylistSort,
     bool? ytPlaylistSortReversed,
-    OnTrackTileSwapActions? onTrackSwipeLeft,
-    OnTrackTileSwapActions? onTrackSwipeRight,
+    TrackExecuteActions? onTrackSwipeLeft,
+    TrackExecuteActions? onTrackSwipeRight,
+    TrackExecuteActions? artworkTapAction,
+    TrackExecuteActions? artworkLongPressAction,
     bool? displayThirdRow,
     bool? displayThirdItemInEachRow,
     String? trackTileSeparator,
@@ -1123,6 +1134,8 @@ class _SettingsController with SettingsFileWriter {
     if (ytPlaylistSortReversed != null) this.ytPlaylistSortReversed.value = ytPlaylistSortReversed;
     if (onTrackSwipeLeft != null) this.onTrackSwipeLeft.value = onTrackSwipeLeft;
     if (onTrackSwipeRight != null) this.onTrackSwipeRight.value = onTrackSwipeRight;
+    if (artworkTapAction != null) this.artworkTapAction.value = artworkTapAction;
+    if (artworkLongPressAction != null) this.artworkLongPressAction.value = artworkLongPressAction;
     if (displayThirdRow != null) this.displayThirdRow.value = displayThirdRow;
     if (displayThirdItemInEachRow != null) this.displayThirdItemInEachRow.value = displayThirdItemInEachRow;
     if (trackTileSeparator != null) this.trackTileSeparator.value = trackTileSeparator;

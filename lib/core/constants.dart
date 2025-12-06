@@ -19,11 +19,14 @@ import 'package:namida/class/lang.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 
 class NamidaDeviceInfo {
@@ -131,6 +134,48 @@ abstract class NamidaLinkRegex {
   );
 }
 
+class NamidaUtils {
+  NamidaUtils._();
+
+  static Future<void> shareFiles(Iterable<String> paths) async {
+    await Share.shareXFiles(paths.map((e) => XFile(e)).toList());
+  }
+
+  static Future<void> shareUri(String url) async {
+    if (Platform.isWindows) {
+      await shareText(url);
+    } else {
+      await Share.shareUri(Uri.parse(url));
+    }
+  }
+
+  static Future<void> shareText(String text) async {
+    await Share.share(text);
+  }
+
+  static void copyToClipboard({
+    String? title,
+    required String content,
+    String? message,
+    Color? leftBarIndicatorColor,
+    int? maxLinesMessage,
+    bool altDesign = false,
+  }) {
+    if (content == '' || content == '?') return;
+
+    Clipboard.setData(ClipboardData(text: content));
+
+    snackyy(
+      title: title == null || title.isEmpty ? lang.COPIED_TO_CLIPBOARD : '${lang.COPIED_TO_CLIPBOARD}: $title',
+      message: message ?? content,
+      leftBarIndicatorColor: leftBarIndicatorColor ?? CurrentColor.inst.color,
+      maxLinesMessage: maxLinesMessage,
+      altDesign: altDesign,
+      top: false,
+    );
+  }
+}
+
 class NamidaLinkUtils {
   NamidaLinkUtils._();
 
@@ -219,22 +264,6 @@ class NamidaLinkUtils {
       return NamidaLinkRegex.youtubePlaylistsLinkRegex.firstMatch(playlistUrl)?.group(1);
     } catch (_) {}
     return null;
-  }
-
-  static Future<void> shareFiles(Iterable<String> paths) async {
-    await Share.shareXFiles(paths.map((e) => XFile(e)).toList());
-  }
-
-  static Future<void> shareUri(String url) async {
-    if (Platform.isWindows) {
-      await shareText(url);
-    } else {
-      await Share.shareUri(Uri.parse(url));
-    }
-  }
-
-  static Future<void> shareText(String text) async {
-    await Share.share(text);
   }
 }
 

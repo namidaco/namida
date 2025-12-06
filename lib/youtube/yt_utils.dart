@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/comments/comment_info_item.dart';
@@ -361,13 +360,11 @@ class YTUtils {
     }
 
     void copy(String text) {
-      Clipboard.setData(ClipboardData(text: text));
-      snackyy(
-        title: lang.COPIED_TO_CLIPBOARD,
+      NamidaUtils.copyToClipboard(
+        content: text,
         message: text.replaceAll('\n', ' '),
         maxLinesMessage: 2,
         leftBarIndicatorColor: CurrentColor.inst.miniplayerColor,
-        top: false,
       );
       NamidaNavigator.inst.closeDialog();
     }
@@ -425,13 +422,9 @@ class YTUtils {
       onTap: () {
         final videoLink = YTUrlUtils.buildVideoUrl(videoId);
         final text = videoLink;
-        Clipboard.setData(ClipboardData(text: text));
-        snackyy(
-          title: lang.COPIED_TO_CLIPBOARD,
-          message: text,
+        NamidaUtils.copyToClipboard(
+          content: text,
           maxLinesMessage: 2,
-          leftBarIndicatorColor: CurrentColor.inst.color,
-          top: false,
         );
       },
       onLongPress: () => YTUtils.showCopyItemsDialog(videoId),
@@ -451,7 +444,7 @@ class YTUtils {
             iconSize: 18.0,
             onPressed: () {
               final videoLink = YTUrlUtils.buildVideoUrl(videoId);
-              NamidaLinkUtils.shareUri(videoLink);
+              NamidaUtils.shareUri(videoLink);
             },
           )
         ],
@@ -1076,11 +1069,8 @@ class YTUtils {
       int? timeStampSeconds = withTimestamp ? Player.inst.nowPlayingPosition.value ~/ 1000 : null;
       timeStampSeconds = timeStampSeconds.toIf(null, 0);
       String finalUrl = YTUrlUtils.buildVideoUrl(videoId, timestampSeconds: timeStampSeconds);
-      Clipboard.setData(ClipboardData(text: finalUrl));
-      snackyy(
-        title: lang.COPIED_TO_CLIPBOARD,
-        message: finalUrl,
-        top: false,
+      NamidaUtils.copyToClipboard(
+        content: finalUrl,
         maxLinesMessage: 2,
         leftBarIndicatorColor: CurrentColor.inst.miniplayerColor,
       );

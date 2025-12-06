@@ -203,170 +203,16 @@ Future<void> showGeneralPopupDialog(
   Rx<TrackStats>? statsWrapper;
   final firstTrack = tracks.firstOrNull;
   if (firstTrack != null) {
-    statsWrapper = TrackStats(
-      track: firstTrack,
-      rating: firstTrack.effectiveRating,
-      tags: firstTrack.effectiveTags,
-      moods: firstTrack.effectiveMoods,
-      lastPositionInMs: firstTrack.lastPlayedPositionInMs ?? 0,
-    ).obs;
+    statsWrapper = TrackStats.buildEffective(firstTrack).obs;
   }
 
-  void setTrackStatsDialog() async {
-    if (statsWrapper == null) return;
-    if (firstTrack == null) return;
-    final stats = statsWrapper.value;
-
-    final initialRating = stats.rating;
-    final initialMoods = stats.moods?.join(', ');
-    final initialTags = stats.tags?.join(', ');
-
-    final ratingController = TextEditingController(text: initialRating == 0 ? null : initialRating.toString());
-    final moodsController = TextEditingController(text: initialMoods);
-    final tagsController = TextEditingController(text: initialTags);
-
-    final icColor = iconColor.value;
-
-    final isEditing = false.obs;
-
-    Widget getItemChip({
-      required ThemeData theme,
-      required TextEditingController controller,
-      String? subtitle,
-      required String hintText,
-      required String labelText,
-      required IconData icon,
-      bool number = false,
-    }) {
-      const iconSize = 24.0;
-      const iconRightPadding = 8.0;
-      Widget fieldWidget = Row(
-        children: [
-          Icon(
-            icon,
-            size: iconSize,
-            color: icColor,
-          ),
-          const SizedBox(width: iconRightPadding),
-          Expanded(
-            child: CustomTagTextField(
-              controller: controller,
-              hintText: hintText,
-              labelText: labelText,
-              keyboardType: number ? TextInputType.number : null,
-            ),
-          ),
-        ],
-      );
-      if (subtitle != null) {
-        fieldWidget = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            fieldWidget,
-            const SizedBox(height: 4.0),
-            Padding(
-              padding: const EdgeInsets.only(left: iconSize + iconRightPadding),
-              child: Text(
-                subtitle,
-                style: theme.textTheme.displaySmall,
-              ),
-            ),
-          ],
-        );
-      }
-      return fieldWidget;
-    }
-
-    await openDialog(
-      onDisposing: () {
-        ratingController.dispose();
-        moodsController.dispose();
-        tagsController.dispose();
-        isEditing.close();
-      },
-      (theme) => CustomBlurryDialog(
-        title: lang.CONFIGURE,
-        actions: [
-          const CancelButton(),
-          ObxO(
-            rx: isEditing,
-            builder: (context, editing) => AnimatedEnabled(
-              enabled: !editing,
-              child: NamidaButton(
-                text: lang.SAVE,
-                onPressed: () async {
-                  isEditing.value = true;
-                  await NamidaTaggerController.inst.updateTracksMetadata(
-                    tracks: [firstTrack],
-                    editedTags: {
-                      TagField.rating: ratingController.text,
-                      TagField.mood: moodsController.text,
-                      TagField.tags: tagsController.text,
-                    },
-                    onStatsEdit: (newStats) {
-                      statsWrapper!.value = newStats;
-                    },
-                    onEdit: (didUpdate, error, _) {
-                      if (!didUpdate) {
-                        var msg = lang.METADATA_EDIT_FAILED;
-                        if (error != null) msg += '\n$error';
-                        snackyy(title: lang.WARNING, message: msg, isError: true);
-                      }
-                    },
-                    keepFileDates: true,
-                    trimWhiteSpaces: false, // we did here
-                  ).ignoreError();
-                  isEditing.value = false;
-                  NamidaNavigator.inst.closeDialog();
-                },
-              ),
-            ),
-          ),
-        ],
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: namida.height * 0.6),
-          child: SuperListView(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0),
-            shrinkWrap: true,
-            children: [
-              // -- moods
-              const SizedBox(height: 12.0),
-              getItemChip(
-                theme: theme,
-                controller: moodsController,
-                hintText: initialMoods ?? '',
-                labelText: lang.SET_MOODS,
-                icon: Broken.smileys,
-                subtitle: lang.SET_MOODS_SUBTITLE,
-              ),
-
-              // -- tags
-              const SizedBox(height: 24.0),
-              getItemChip(
-                theme: theme,
-                controller: tagsController,
-                hintText: initialTags ?? '',
-                labelText: lang.SET_TAGS,
-                icon: Broken.ticket_discount,
-                subtitle: lang.SET_MOODS_SUBTITLE,
-              ),
-
-              // -- rating
-              const SizedBox(height: 24.0),
-              getItemChip(
-                theme: theme,
-                controller: ratingController,
-                hintText: initialRating.toString(),
-                labelText: lang.SET_RATING,
-                icon: Broken.grammerly,
-                number: true,
-              ),
-
-              const SizedBox(height: 4.0),
-            ],
-          ),
-        ),
-      ),
+  void setTrackStatsDialog() {
+    showSetTrackStatsDialog(
+      firstTrack: firstTrack,
+      stats: statsWrapper!.value,
+      onEdit: (newStat) => statsWrapper!.value = newStat,
+      colorScheme: colorDelightened.value,
+      iconColor: iconColor.value,
     );
   }
 
@@ -1216,7 +1062,7 @@ Future<void> showGeneralPopupDialog(
                                   ),
                                   onTap: () async {
                                     isLoadingFilesToShare.value = true;
-                                    await NamidaLinkUtils.shareFiles(tracksExisting.mapped((e) => e.path));
+                                    await NamidaUtils.shareFiles(tracksExisting.mapped((e) => e.path));
                                     isLoadingFilesToShare.value = false;
                                     NamidaNavigator.inst.closeDialog();
                                   },
@@ -1401,7 +1247,7 @@ Future<void> showGeneralPopupDialog(
                                         () => lang.SHARE,
                                         () async {
                                           isLoadingFilesToShare.value = true;
-                                          await NamidaLinkUtils.shareFiles(tracksExisting.mapped((e) => e.path));
+                                          await NamidaUtils.shareFiles(tracksExisting.mapped((e) => e.path));
                                           isLoadingFilesToShare.value = false;
                                           NamidaNavigator.inst.closeDialog();
                                         },
@@ -1757,4 +1603,164 @@ class _ArtworkManager extends StatelessWidget {
       },
     );
   }
+}
+
+void showSetTrackStatsDialog({
+  required Track? firstTrack,
+  required TrackStats stats,
+  void Function(TrackStats newStat)? onEdit,
+  Color? iconColor,
+  Color? colorScheme,
+}) async {
+  if (firstTrack == null) return;
+
+  final initialRating = stats.rating;
+  final initialMoods = stats.moods?.join(', ');
+  final initialTags = stats.tags?.join(', ');
+
+  final ratingController = TextEditingController(text: initialRating == 0 ? null : initialRating.toString());
+  final moodsController = TextEditingController(text: initialMoods);
+  final tagsController = TextEditingController(text: initialTags);
+
+  final isEditing = false.obs;
+
+  Widget getItemChip({
+    required ThemeData theme,
+    required TextEditingController controller,
+    String? subtitle,
+    required String hintText,
+    required String labelText,
+    required IconData icon,
+    bool number = false,
+  }) {
+    const iconSize = 24.0;
+    const iconRightPadding = 8.0;
+    Widget fieldWidget = Row(
+      children: [
+        Icon(
+          icon,
+          size: iconSize,
+          color: iconColor,
+        ),
+        const SizedBox(width: iconRightPadding),
+        Expanded(
+          child: CustomTagTextField(
+            controller: controller,
+            hintText: hintText,
+            labelText: labelText,
+            keyboardType: number ? TextInputType.number : null,
+          ),
+        ),
+      ],
+    );
+    if (subtitle != null) {
+      fieldWidget = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          fieldWidget,
+          const SizedBox(height: 4.0),
+          Padding(
+            padding: const EdgeInsets.only(left: iconSize + iconRightPadding),
+            child: Text(
+              subtitle,
+              style: theme.textTheme.displaySmall,
+            ),
+          ),
+        ],
+      );
+    }
+    return fieldWidget;
+  }
+
+  await NamidaNavigator.inst.navigateDialog(
+    colorScheme: colorScheme,
+    lighterDialogColor: true,
+    onDisposing: () {
+      ratingController.dispose();
+      moodsController.dispose();
+      tagsController.dispose();
+      isEditing.close();
+    },
+    dialogBuilder: (theme) => CustomBlurryDialog(
+      title: lang.CONFIGURE,
+      actions: [
+        const CancelButton(),
+        ObxO(
+          rx: isEditing,
+          builder: (context, editing) => AnimatedEnabled(
+            enabled: !editing,
+            child: NamidaButton(
+              text: lang.SAVE,
+              onPressed: () async {
+                isEditing.value = true;
+                await NamidaTaggerController.inst.updateTracksMetadata(
+                  tracks: [firstTrack],
+                  editedTags: {
+                    TagField.rating: ratingController.text,
+                    TagField.mood: moodsController.text,
+                    TagField.tags: tagsController.text,
+                  },
+                  onStatsEdit: onEdit,
+                  onEdit: (didUpdate, error, _) {
+                    if (!didUpdate) {
+                      var msg = lang.METADATA_EDIT_FAILED;
+                      if (error != null) msg += '\n$error';
+                      snackyy(title: lang.WARNING, message: msg, isError: true);
+                    }
+                  },
+                  keepFileDates: true,
+                  trimWhiteSpaces: false, // we did here
+                ).ignoreError();
+                isEditing.value = false;
+                NamidaNavigator.inst.closeDialog();
+              },
+            ),
+          ),
+        ),
+      ],
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: namida.height * 0.6),
+        child: SuperListView(
+          padding: const EdgeInsets.symmetric(horizontal: 6.0),
+          shrinkWrap: true,
+          children: [
+            // -- moods
+            const SizedBox(height: 12.0),
+            getItemChip(
+              theme: theme,
+              controller: moodsController,
+              hintText: initialMoods ?? '',
+              labelText: lang.SET_MOODS,
+              icon: Broken.smileys,
+              subtitle: lang.SET_MOODS_SUBTITLE,
+            ),
+
+            // -- tags
+            const SizedBox(height: 24.0),
+            getItemChip(
+              theme: theme,
+              controller: tagsController,
+              hintText: initialTags ?? '',
+              labelText: lang.SET_TAGS,
+              icon: Broken.ticket_discount,
+              subtitle: lang.SET_MOODS_SUBTITLE,
+            ),
+
+            // -- rating
+            const SizedBox(height: 24.0),
+            getItemChip(
+              theme: theme,
+              controller: ratingController,
+              hintText: initialRating.toString(),
+              labelText: lang.SET_RATING,
+              icon: Broken.grammerly,
+              number: true,
+            ),
+
+            const SizedBox(height: 4.0),
+          ],
+        ),
+      ),
+    ),
+  );
 }

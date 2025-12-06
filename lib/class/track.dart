@@ -105,6 +105,16 @@ class TrackStats extends PlayableItemStats {
     );
   }
 
+  factory TrackStats.buildEffective(Track track) {
+    return TrackStats(
+      track: track,
+      rating: track.effectiveRating,
+      tags: track.effectiveTags,
+      moods: track.effectiveMoods,
+      lastPositionInMs: track.lastPlayedPositionInMs ?? 0,
+    );
+  }
+
   Map<String, dynamic>? toJsonWithoutTrack() => super.toJson();
 
   @override

@@ -4233,13 +4233,21 @@ class NamidaTabView extends StatefulWidget {
   });
 
   @override
-  State<NamidaTabView> createState() => _NamidaTabViewState();
+  State<NamidaTabView> createState() => NamidaTabViewState();
 }
 
-class _NamidaTabViewState extends State<NamidaTabView> with SingleTickerProviderStateMixin {
+class NamidaTabViewState extends State<NamidaTabView> with SingleTickerProviderStateMixin {
   late TabController controller;
 
   void fn() => widget.onIndexChanged(controller.index);
+
+  void animateToTab(int index) {
+    controller.animateTo(index);
+  }
+
+  void jumpToTab(int index) {
+    controller.animateTo(index, duration: Duration.zero);
+  }
 
   @override
   void initState() {
@@ -5582,7 +5590,7 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
 }
 
 class SwipeQueueAddTileInfo {
-  final QueueSourceBase queueSource; // TODO: remove?
+  final QueueSourceBase queueSource;
   final String? heroTag;
   final String? videoTitle;
 
@@ -5591,6 +5599,17 @@ class SwipeQueueAddTileInfo {
     required this.heroTag,
     this.videoTitle,
   });
+
+  Color? get getCurrentColor => queueSource == QueueSourceYoutubeID.playerQueue || queueSource == QueueSourceYoutubeID.playerQueue //
+      ? CurrentColor.inst.miniplayerColor
+      : CurrentColor.inst.color;
+
+  void copyToClipboard(String text) {
+    NamidaUtils.copyToClipboard(
+      content: text,
+      leftBarIndicatorColor: getCurrentColor,
+    );
+  }
 }
 
 class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
@@ -5628,7 +5647,7 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
       onDismissed: (direction) {
         final swipedLeft = direction == DismissDirection.endToStart;
         final action = swipedLeft ? settings.onTrackSwipeLeft.value : settings.onTrackSwipeRight.value;
-        if (action == OnTrackTileSwapActions.none) return;
+        if (action == TrackExecuteActions.none) return;
         action.execute(
           item,
           info: infoCallback(),
@@ -6241,33 +6260,35 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
     required this.themeColor,
   });
 
+  void openInFullscreen() async {
+    final imgFile = await imageFile();
+    if (imgFile == null) return;
+    NamidaNavigator.inst.navigateDialog(
+      scale: 1.0,
+      blackBg: true,
+      dialog: LongPressDetector(
+        onLongPress: () async {
+          final saveDirPath = await onSave(imgFile);
+          NamidaOnTaps.inst.showSavedImageInSnack(saveDirPath, themeColor?.call());
+        },
+        child: PhotoView(
+          heroAttributes: heroTag == null ? null : PhotoViewHeroAttributes(tag: heroTag!),
+          gaplessPlayback: true,
+          tightMode: true,
+          minScale: PhotoViewComputedScale.contained,
+          loadingBuilder: (context, event) => artwork,
+          backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+          filterQuality: FilterQuality.high,
+          imageProvider: FileImage(imgFile),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return TapDetector(
-      onTap: () async {
-        final imgFile = await imageFile();
-        if (imgFile == null) return;
-        NamidaNavigator.inst.navigateDialog(
-          scale: 1.0,
-          blackBg: true,
-          dialog: LongPressDetector(
-            onLongPress: () async {
-              final saveDirPath = await onSave(imgFile);
-              NamidaOnTaps.inst.showSavedImageInSnack(saveDirPath, themeColor?.call());
-            },
-            child: PhotoView(
-              heroAttributes: heroTag == null ? null : PhotoViewHeroAttributes(tag: heroTag!),
-              gaplessPlayback: true,
-              tightMode: true,
-              minScale: PhotoViewComputedScale.contained,
-              loadingBuilder: (context, event) => artwork,
-              backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-              filterQuality: FilterQuality.high,
-              imageProvider: FileImage(imgFile),
-            ),
-          ),
-        );
-      },
+      onTap: openInFullscreen,
       child: artwork,
     );
   }

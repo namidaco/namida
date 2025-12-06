@@ -108,8 +108,8 @@ class VideoTilePropertiesProvider extends StatelessWidget {
                 comingFromQueue: comingFromQueue,
                 configs: configs,
                 canHaveDuplicates: canHaveDuplicates,
-                allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != OnTrackTileSwapActions.none,
-                allowSwipeRight: !comingFromQueue && onTrackSwipeRight != OnTrackTileSwapActions.none,
+                allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
+                allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
               );
               return builder(properties);
             },

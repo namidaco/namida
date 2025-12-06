@@ -26,7 +26,7 @@ class LyricsLineModel {
 
   List<LyricSpanInfo>? _defaultSpanList;
 
-  get defaultSpanList => _defaultSpanList ??= [
+  List<LyricSpanInfo> get defaultSpanList => _defaultSpanList ??= [
         LyricSpanInfo()
           ..duration = (endTime ?? 0) - (startTime ?? 0)
           ..start = startTime ?? 0

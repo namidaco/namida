@@ -85,6 +85,8 @@ class MiniplayerInfoData<E, S> {
   final Future<bool> Function(bool isLiked) onLikeTap;
   final void Function() onShowAddToPlaylistDialog;
   final void Function(TapUpDetails details) onMenuOpen;
+  final void Function() onTextLongTap;
+  final bool enableTextLongTap;
   final IconData likedIcon;
   final IconData normalIcon;
   final YtVideoLikeManager? ytLikeManager;
@@ -100,6 +102,8 @@ class MiniplayerInfoData<E, S> {
     required this.onLikeTap,
     required this.onShowAddToPlaylistDialog,
     required this.onMenuOpen,
+    required this.onTextLongTap,
+    this.enableTextLongTap = false,
     required this.likedIcon,
     required this.normalIcon,
     this.ytLikeManager,
@@ -1110,8 +1114,20 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                   final imageEmptyRightSpace = screenSize.width - imageSize;
                   final imageLeftOffset = ((imageEmptyRightSpace / 2) - imagePadding.left - rightInset) * bcp;
 
-                  final currentImage = widget.currentImageBuilder(currentItem, (borderRadius) => borderRadius.br, _imageHeightActual == null ? null : (imageMaxHeightPre * 0.7));
+                  Widget currentImage = widget.currentImageBuilder(currentItem, (borderRadius) => borderRadius.br, _imageHeightActual == null ? null : (imageMaxHeightPre * 0.7));
 
+                  if (settings.artworkTapAction.value != TrackExecuteActions.none) {
+                    currentImage = TapDetector(
+                      onTap: () => settings.artworkTapAction.value.executePlayingItem(currentItem),
+                      child: currentImage,
+                    );
+                  }
+                  if (settings.artworkLongPressAction.value != TrackExecuteActions.none) {
+                    currentImage = LongPressDetector(
+                      onLongPress: () => settings.artworkLongPressAction.value.executePlayingItem(currentItem),
+                      child: currentImage,
+                    );
+                  }
                   return Stack(
                     children: [
                       /// MiniPlayer Body
@@ -1524,31 +1540,31 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                           padding: imagePadding,
                                           child: Padding(
                                             padding: EdgeInsets.all(12.0 * (1 - bcp)),
-                                            child: LongPressDetector(
-                                              onLongPress: () => Lyrics.inst.lrcViewKey.currentState?.enterFullScreen(),
-                                              child: ObxO(
-                                                rx: settings.artworkGestureDoubleTapLRC,
-                                                builder: (context, artworkGestureDoubleTapLRC) {
-                                                  if (artworkGestureDoubleTapLRC) {
-                                                    return ObxO(
-                                                      rx: Lyrics.inst.currentLyricsLRC,
-                                                      builder: (context, currentLyricsLRC) {
-                                                        // -- only when lrc view is not visible, to prevent other gestures delaying.
-                                                        return DoubleTapDetector(
-                                                          onDoubleTap: currentLyricsLRC == null
-                                                              ? () {
-                                                                  settings.save(enableLyrics: !settings.enableLyrics.value);
-                                                                  Lyrics.inst.updateLyrics(currentItem);
-                                                                }
-                                                              : null,
+                                            child: ObxO(
+                                              rx: settings.artworkGestureDoubleTapLRC,
+                                              builder: (context, artworkGestureDoubleTapLRC) {
+                                                if (artworkGestureDoubleTapLRC) {
+                                                  return ObxO(
+                                                    rx: Lyrics.inst.currentLyricsLRC,
+                                                    builder: (context, currentLyricsLRC) {
+                                                      // -- only when lrc view is not visible, to prevent other gestures delaying.
+                                                      return DoubleTapDetector(
+                                                        onDoubleTap: currentLyricsLRC == null
+                                                            ? () {
+                                                                settings.save(enableLyrics: !settings.enableLyrics.value);
+                                                                Lyrics.inst.updateLyrics(currentItem);
+                                                              }
+                                                            : null,
+                                                        child: LongPressDetector(
+                                                          onLongPress: () => Lyrics.inst.lrcViewKey.currentState?.enterFullScreen(),
                                                           child: currentImage,
-                                                        );
-                                                      },
-                                                    );
-                                                  }
-                                                  return currentImage;
-                                                },
-                                              ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  );
+                                                }
+                                                return currentImage;
+                                              },
                                             ),
                                           ),
                                         ),
@@ -1699,6 +1715,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
                         padding: EdgeInsets.only(right: (32.0.spaceX + (82.0.spaceX * (1 - bcp) * (1 - qp)) + (60.0.spaceX * qp))),
                         child: InkWell(
                           onTapUp: bcp == 1 ? textData.onMenuOpen : null,
+                          onLongPress: textData.enableTextLongTap && bcp == 1 ? textData.onTextLongTap : null,
                           highlightColor: Color.alphaBlend(theme.scaffoldBackgroundColor.withAlpha(20), theme.highlightColor),
                           borderRadius: BorderRadius.circular(12.0.multipliedRadius.br),
                           child: Padding(

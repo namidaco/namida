@@ -100,21 +100,19 @@ class SearchPage extends StatelessWidget {
     final textTheme = theme.textTheme;
     return BackgroundWrapper(
       child: NamidaTabView(
-        initialIndex: switch (ScrollSearchController.inst.currentSearchType.value) {
-          SearchType.localTracks => 0,
-          SearchType.youtube => 1,
-          SearchType.localVideos => 2,
-        },
+        key: ScrollSearchController.inst.tabViewKey,
+        initialIndex: ScrollSearchController.inst.currentSearchType.value.index,
         onIndexChanged: (index) async {
-          switch (index) {
-            case 0:
+          final type = SearchType.values[index];
+          switch (type) {
+            case SearchType.localTracks:
               ScrollSearchController.inst.currentSearchType.value = SearchType.localTracks;
               final srchTxt = ScrollSearchController.inst.searchTextEditingController.text;
               ClipboardController.inst.updateTextInControllerEmpty(srchTxt == '');
               await SearchSortController.inst.prepareResources();
               SearchSortController.inst.searchAll(srchTxt);
               break;
-            case 1:
+            case SearchType.youtube:
               ScrollSearchController.inst.currentSearchType.value = SearchType.youtube;
               final searchValue = ScrollSearchController.inst.ytSearchKey.currentState?.currentSearchText;
               if (SearchSortController.inst.lastSearchText != searchValue) {
@@ -122,6 +120,7 @@ class SearchPage extends StatelessWidget {
                 ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: SearchSortController.inst.lastSearchText);
               }
               break;
+            case SearchType.localVideos:
           }
         },
         tabs: [

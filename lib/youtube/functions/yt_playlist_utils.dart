@@ -557,7 +557,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         title: lang.SHARE,
         onTap: () {
           final url = this.buildUrl();
-          NamidaLinkUtils.shareUri(url);
+          NamidaUtils.shareUri(url);
         },
       ),
       if (displayDownloadItem)

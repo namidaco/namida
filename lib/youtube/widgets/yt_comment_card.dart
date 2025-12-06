@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:youtipie/class/comments/comment_info_item.dart';
 import 'package:youtipie/class/comments/comment_info_item_base.dart';
@@ -12,6 +11,7 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -180,7 +180,10 @@ class _YTCommentCardState extends State<YTCommentCard> {
         onTap: () {
           final rawText = comment?.content.rawText;
           if (rawText != null) {
-            Clipboard.setData(ClipboardData(text: rawText));
+            NamidaUtils.copyToClipboard(
+              content: rawText,
+              maxLinesMessage: 2,
+            );
           }
         },
       ),

@@ -76,12 +76,9 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
   }
 
   void _copyUrlToClipboard(String url) {
-    Clipboard.setData(ClipboardData(text: url));
-    snackyy(
-      title: lang.COPIED_TO_CLIPBOARD,
-      message: url,
+    NamidaUtils.copyToClipboard(
+      content: url,
       leftBarIndicatorColor: context.theme.colorScheme.primary,
-      top: false,
     );
   }
 

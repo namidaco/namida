@@ -2,14 +2,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:lrc/lrc.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_base.dart';
@@ -432,14 +430,11 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                     iconSize: 20.0,
                                     onPressed: () {
                                       final text = l.lyrics;
-                                      Clipboard.setData(ClipboardData(text: text));
-                                      snackyy(
-                                        title: lang.COPIED_TO_CLIPBOARD,
+                                      NamidaUtils.copyToClipboard(
+                                        content: text,
                                         message: text.replaceAll('\n', ' '),
                                         maxLinesMessage: 2,
-                                        leftBarIndicatorColor: CurrentColor.inst.color,
                                         altDesign: true,
-                                        top: false,
                                       );
                                     },
                                   ),

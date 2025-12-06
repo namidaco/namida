@@ -73,7 +73,7 @@ extension YoutubeIDUtils on YoutubeID {
 
 extension YoutubeIDSUtils on List<YoutubeID> {
   Future<void> shareVideos() async {
-    await NamidaLinkUtils.shareText(map((e) => "${YTUrlUtils.buildVideoUrl(e.id)} - ${e.dateAddedMS.dateAndClockFormattedOriginal}\n").join());
+    await NamidaUtils.shareText(map((e) => "${YTUrlUtils.buildVideoUrl(e.id)} - ${e.dateAddedMS.dateAndClockFormattedOriginal}\n").join());
   }
 
   int getTotalListenCount() {

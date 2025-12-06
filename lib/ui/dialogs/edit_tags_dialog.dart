@@ -40,11 +40,11 @@ final _editingInProgress = <String, bool>{}.obs;
 /// - Android 13 (API 33): Internal ✓, External ✓
 ///
 /// TODO: Implement [Android <= 9] SD Card Editing Using SAF (Storage Access Framework).
-Future<void> showEditTracksTagsDialog(List<Track> tracks, Color? colorScheme) async {
+Future<void> showEditTracksTagsDialog(List<Track> tracks, Color? colorScheme, {bool instantEditArtwork = false}) async {
   if (tracks.length == 1) {
-    _editSingleTrackTagsDialog(tracks.first, colorScheme);
+    _editSingleTrackTagsDialog(tracks.first, colorScheme, instantEditArtwork: instantEditArtwork);
   } else {
-    _editMultipleTracksTags(tracks.uniqued());
+    _editMultipleTracksTags(tracks.uniqued(), instantEditArtwork: instantEditArtwork);
   }
 }
 
@@ -216,7 +216,7 @@ Widget get _getKeepDatesWidget => ObxO(
       ),
     );
 
-Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
+Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme, {bool instantEditArtwork = false}) async {
   if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
 
   final color = Colors.transparent.obso;
@@ -319,6 +319,22 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
   }
 
   final formKey = GlobalKey<FormState>();
+
+  Future<void> onArtworkEditTap() async {
+    final pickedFile = await NamidaFileBrowser.pickFile(note: lang.EDIT_ARTWORK, memeType: NamidaStorageFileMemeType.image);
+    final path = pickedFile?.path ?? '';
+    if (pickedFile != null && path != '') {
+      currentImagePath.value = path;
+      canEditTags.value = true;
+    }
+  }
+
+  if (instantEditArtwork) {
+    // -- ensure dialog opened first
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => onArtworkEditTap(),
+    );
+  }
 
   await NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
@@ -547,14 +563,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
                                               bottom: 0,
                                               right: 0,
                                               child: NamidaBlurryContainer(
-                                                onTap: () async {
-                                                  final pickedFile = await NamidaFileBrowser.pickFile(note: lang.EDIT_ARTWORK, memeType: NamidaStorageFileMemeType.image);
-                                                  final path = pickedFile?.path ?? '';
-                                                  if (pickedFile != null && path != '') {
-                                                    currentImagePath.value = path;
-                                                    canEditTags.value = true;
-                                                  }
-                                                },
+                                                onTap: onArtworkEditTap,
                                                 borderRadius: BorderRadius.only(topLeft: Radius.circular(12.0.multipliedRadius)),
                                                 child: const Icon(Broken.edit_2),
                                               ),
@@ -657,7 +666,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme) async {
   );
 }
 
-Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
+Future<void> _editMultipleTracksTags(List<Track> tracksPre, {bool instantEditArtwork = false}) async {
   if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
 
   final tracksGoingToBeEditedRx = <Track, bool>{for (final t in tracksPre) t: true}.obs;
@@ -765,6 +774,22 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
   }
 
   final formKey = GlobalKey<FormState>();
+
+  Future<void> onArtworkEditTap() async {
+    final pickedFile = await NamidaFileBrowser.pickFile(note: lang.EDIT_ARTWORK, memeType: NamidaStorageFileMemeType.image);
+    final path = pickedFile?.path ?? '';
+    if (pickedFile != null && path != '') {
+      currentImagePath.value = path;
+      canEditTags.value = true;
+    }
+  }
+
+  if (instantEditArtwork) {
+    // -- ensure dialog opened first
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => onArtworkEditTap(),
+    );
+  }
 
   await NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
@@ -1132,14 +1157,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre) async {
                                           width: namida.width,
                                           child: NamidaButton(
                                             text: lang.EDIT_ARTWORK,
-                                            onPressed: () async {
-                                              final pickedFile = await NamidaFileBrowser.pickFile(note: lang.EDIT_ARTWORK, memeType: NamidaStorageFileMemeType.image);
-                                              final path = pickedFile?.path ?? '';
-                                              if (pickedFile != null && path != '') {
-                                                currentImagePath.value = path;
-                                                canEditTags.value = true;
-                                              }
-                                            },
+                                            onPressed: onArtworkEditTap,
                                           ),
                                         ),
                                       ],

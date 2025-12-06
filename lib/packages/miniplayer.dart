@@ -33,6 +33,7 @@ import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
+import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -43,6 +44,8 @@ import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
+import 'package:namida/youtube/widgets/sponsor_block_button.dart';
+import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/youtube_miniplayer.dart';
@@ -168,6 +171,11 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         source: QueueSource.playerQueue,
         heroTag: TrackTile.obtainHeroTag(trackWithDate, track, -1, true),
       );
+  static void openInfoMenu(TrackWithDate? trackWithDate, Track track) => showTrackInfoDialog(
+        track,
+        true,
+        heroTag: TrackTile.obtainHeroTag(trackWithDate, track, -1, true),
+      );
 
   static MiniplayerInfoData<Track, SortType> textBuilder(Playable playable) {
     String firstLine = '';
@@ -197,6 +205,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       onLikeTap: (isLiked) async => PlaylistController.inst.favouriteButtonOnPressed(track),
       onShowAddToPlaylistDialog: () => showAddToPlaylistDialog([track]),
       onMenuOpen: (_) => openMenu(playable.trackWithDate, track),
+      onTextLongTap: () => openInfoMenu(playable.trackWithDate, track),
       likedIcon: Broken.heart_tick,
       normalIcon: Broken.heart,
     );
@@ -431,6 +440,14 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     );
   }
 
+  static void openInfoMenu(BuildContext context, YoutubeID video) {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: VideoInfoDialog(
+        videoId: video.id,
+      ),
+    );
+  }
+
   static MiniplayerInfoData<String, YTSortType> textBuilder(BuildContext context, Playable playbale) {
     final video = playbale as YoutubeID;
     String firstLine = '';
@@ -451,6 +468,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
       onLikeTap: (isLiked) async => YoutubePlaylistController.inst.favouriteButtonOnPressed(video.id),
       onShowAddToPlaylistDialog: () => showAddToPlaylistSheet(ids: [video.id], idsNamesLookup: {}),
       onMenuOpen: (d) => openMenu(context, video, d),
+      onTextLongTap: () => openInfoMenu(context, video),
       likedIcon: Broken.like_filled,
       normalIcon: Broken.like_1,
       ytLikeManager: _videoLikeManager,

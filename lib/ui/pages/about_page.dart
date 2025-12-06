@@ -433,7 +433,7 @@ class _AboutPageState extends State<AboutPage> {
                     onTap: () async {
                       final taggerLogsFileSize = await File(AppPaths.LOGS_TAGGER).fileSize();
                       final goodTaggerLogsFile = taggerLogsFileSize != null && taggerLogsFileSize > 0;
-                      NamidaLinkUtils.shareFiles(
+                      NamidaUtils.shareFiles(
                         [
                           AppPaths.LOGS,
                           if (goodTaggerLogsFile) AppPaths.LOGS_TAGGER,

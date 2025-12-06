@@ -359,6 +359,7 @@ abstract class LanguageKeys {
   String get KEEP_SCREEN_AWAKE_WHEN => _getKey('KEEP_SCREEN_AWAKE_WHEN');
   String get KILL_PLAYER_AFTER_DISMISSING_APP => _getKey('KILL_PLAYER_AFTER_DISMISSING_APP');
   String get LANGUAGE => _getKey('LANGUAGE');
+  String get LEFT_ACTION => _getKey('LEFT_ACTION');
   String get LIBRARY_TABS_REORDER => _getKey('LIBRARY_TABS_REORDER');
   String get LIBRARY_TABS => _getKey('LIBRARY_TABS');
   String get LIKE => _getKey('LIKE');
@@ -369,6 +370,7 @@ abstract class LanguageKeys {
   String get LOAD_ALL => _getKey('LOAD_ALL');
   String get LOCAL => _getKey('LOCAL');
   String get LOCAL_VIDEO_MATCHING => _getKey('LOCAL_VIDEO_MATCHING');
+  String get LONG_PRESS_ACTION => _getKey('LONG_PRESS_ACTION');
   String get LONG_PRESS_THE_LYRICS_TO_ENTER_FULLSCREEN => _getKey('LONG_PRESS_THE_LYRICS_TO_ENTER_FULLSCREEN');
   String get LOST_MEMORIES => _getKey('LOST_MEMORIES');
   String get LOST_MEMORIES_SUBTITLE => _getKey('LOST_MEMORIES_SUBTITLE');
@@ -605,6 +607,7 @@ abstract class LanguageKeys {
   String get RESUME_IF_WAS_PAUSED_BY_VOLUME => _getKey('RESUME_IF_WAS_PAUSED_BY_VOLUME');
   String get RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN => _getKey('RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN');
   String get REVERSE_ORDER => _getKey('REVERSE_ORDER');
+  String get RIGHT_ACTION => _getKey('RIGHT_ACTION');
   String get RINGTONE => _getKey('RINGTONE');
   String get SAME_DIRECTORY_ONLY => _getKey('SAME_DIRECTORY_ONLY');
   String get SAMPLE => _getKey('SAMPLE');
@@ -702,11 +705,13 @@ abstract class LanguageKeys {
   String get SUPPORT => _getKey('SUPPORT');
   String get SUPREMACY => _getKey('SUPREMACY');
   String get SUSSY_BAKA => _getKey('SUSSY_BAKA');
+  String get SWIPE_ACTIONS => _getKey('SWIPE_ACTIONS');
   String get SWIPE_TO_OPEN_DRAWER => _getKey('SWIPE_TO_OPEN_DRAWER');
   String get SYNCED => _getKey('SYNCED');
   String get SYNOPSIS => _getKey('SYNOPSIS');
   String get TAG_FIELDS => _getKey('TAG_FIELDS');
   String get TAGS => _getKey('TAGS');
+  String get TAP_ACTION => _getKey('TAP_ACTION');
   String get TAP_TO_SEEK => _getKey('TAP_TO_SEEK');
   String get THEME_MODE_DARK => _getKey('THEME_MODE_DARK');
   String get THEME_MODE_LIGHT => _getKey('THEME_MODE_LIGHT');

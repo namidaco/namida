@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/extensions.dart';
+import 'package:youtipie/core/url_utils.dart';
 
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/count_per_row.dart';
@@ -22,11 +24,13 @@ import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -34,6 +38,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/version_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -46,7 +51,10 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
+import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
+import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/folders_page.dart';
@@ -66,9 +74,12 @@ import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as ytplc;
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
+import 'package:namida/youtube/functions/video_listens_dialog.dart';
 import 'package:namida/youtube/pages/youtube_home_view.dart';
+import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/widgets/video_info_dialog.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 extension MediaTypeUtils on MediaType {
@@ -533,20 +544,82 @@ extension DataSaverModeUtils on DataSaverMode {
   }
 }
 
-extension OnTrackTileSwapActionsUtils on OnTrackTileSwapActions {
-  String toText() => _NamidaConverters.inst.getTitle(this);
+extension TrackExecuteActionsUtils on TrackExecuteActions {
+  String toText() {
+    return switch (this) {
+      TrackExecuteActions.none => lang.NONE,
+      TrackExecuteActions.playnext => lang.PLAY_NEXT,
+      TrackExecuteActions.playlast => lang.PLAY_LAST,
+      TrackExecuteActions.playafter => lang.PLAY_AFTER,
+      TrackExecuteActions.addtoplaylist => lang.ADD_TO_PLAYLIST,
+      TrackExecuteActions.openinfo => lang.INFO,
+      TrackExecuteActions.openArtwork => "${lang.ARTWORK} (${lang.OPEN})",
+      TrackExecuteActions.editArtwork => lang.EDIT_ARTWORK,
+      TrackExecuteActions.saveArtwork => "${lang.ARTWORK} (${lang.SAVE})",
+      TrackExecuteActions.editTags => lang.EDIT_TAGS,
+      TrackExecuteActions.setRating => lang.SET_RATING,
+      TrackExecuteActions.openListens => lang.TOTAL_LISTENS,
+      TrackExecuteActions.goToAlbum => lang.GO_TO_ALBUM,
+      TrackExecuteActions.goToArtist => lang.GO_TO_ARTIST,
+      TrackExecuteActions.goToFolder => lang.GO_TO_FOLDER,
+      TrackExecuteActions.copyTitle => "${lang.COPY} (${lang.TITLE})",
+      TrackExecuteActions.copyArtist => "${lang.COPY} (${lang.ARTIST})",
+      TrackExecuteActions.copyArtistAndTitle => "${lang.COPY} (${lang.ARTIST} + ${lang.TITLE})",
+      TrackExecuteActions.copyYTLink => "${lang.COPY} (${lang.LINK})",
+      TrackExecuteActions.searchYTSimilar => lang.SEARCH_YOUTUBE,
+    };
+  }
 
-  void execute(Playable item, {required SwipeQueueAddTileInfo info}) {
+  IconData toIcon() {
+    return switch (this) {
+      TrackExecuteActions.none => Broken.cd,
+      TrackExecuteActions.playnext => Broken.next,
+      TrackExecuteActions.playlast => Broken.play_cricle,
+      TrackExecuteActions.playafter => Broken.hierarchy_square,
+      TrackExecuteActions.addtoplaylist => Broken.music_library_2,
+      TrackExecuteActions.openinfo => Broken.info_circle,
+      TrackExecuteActions.openArtwork => Broken.gallery,
+      TrackExecuteActions.editArtwork => Broken.gallery_edit,
+      TrackExecuteActions.saveArtwork => Broken.gallery_import,
+      TrackExecuteActions.editTags => Broken.edit,
+      TrackExecuteActions.setRating => Broken.grammerly,
+      TrackExecuteActions.openListens => Broken.math,
+      TrackExecuteActions.goToAlbum => Broken.music_dashboard,
+      TrackExecuteActions.goToArtist => Broken.profile_2user,
+      TrackExecuteActions.goToFolder => Broken.folder,
+      TrackExecuteActions.copyTitle => Broken.copy,
+      TrackExecuteActions.copyArtist => Broken.copy,
+      TrackExecuteActions.copyArtistAndTitle => Broken.copy,
+      TrackExecuteActions.copyYTLink => Broken.copy,
+      TrackExecuteActions.searchYTSimilar => Broken.search_normal_1,
+    };
+  }
+
+  void executePlayingItem(Playable currentItem) {
+    final queueSource = currentItem.execute(
+      selectable: (_) => QueueSource.playerQueue,
+      youtubeID: (_) => QueueSourceYoutubeID.playerQueue,
+    ) as QueueSourceBase;
+    this.execute(
+      currentItem,
+      info: SwipeQueueAddTileInfo(
+        queueSource: queueSource,
+        heroTag: null,
+      ),
+    );
+  }
+
+  void execute(Playable item, {required SwipeQueueAddTileInfo info}) async {
     switch (this) {
-      case OnTrackTileSwapActions.none:
+      case TrackExecuteActions.none:
         return;
-      case OnTrackTileSwapActions.playnext:
+      case TrackExecuteActions.playnext:
         Player.inst.addToQueue([item], insertNext: true);
-      case OnTrackTileSwapActions.playlast:
+      case TrackExecuteActions.playlast:
         Player.inst.addToQueue([item], insertNext: false);
-      case OnTrackTileSwapActions.playafter:
+      case TrackExecuteActions.playafter:
         Player.inst.addToQueue([item], insertAfterLatest: true);
-      case OnTrackTileSwapActions.addtoplaylist:
+      case TrackExecuteActions.addtoplaylist:
         item.execute(
           selectable: (finalItem) {
             showAddToPlaylistDialog([finalItem.track]);
@@ -555,7 +628,7 @@ extension OnTrackTileSwapActionsUtils on OnTrackTileSwapActions {
             showAddToPlaylistSheet(ids: [finalItem.id], idsNamesLookup: {finalItem.id: info.videoTitle});
           },
         );
-      case OnTrackTileSwapActions.openinfo:
+      case TrackExecuteActions.openinfo:
         item.execute(
           selectable: (finalItem) {
             showTrackInfoDialog(
@@ -572,6 +645,203 @@ extension OnTrackTileSwapActionsUtils on OnTrackTileSwapActions {
             );
           },
         );
+
+      case TrackExecuteActions.openArtwork:
+        item.execute(
+          selectable: (finalItem) {
+            final track = finalItem.track;
+            final details = NamidaArtworkExpandableToFullscreen(
+              artwork: const SizedBox(),
+              heroTag: info.heroTag,
+              imageFile: () => File(track.pathToImage),
+              onSave: (_) => EditDeleteController.inst.saveTrackArtworkToStorage(track),
+              themeColor: null,
+            );
+            details.openInFullscreen();
+          },
+          youtubeID: (finalItem) {
+            final videoId = finalItem.id;
+            final details = NamidaArtworkExpandableToFullscreen(
+              artwork: const SizedBox(),
+              heroTag: null,
+              imageFile: () => ThumbnailManager.inst.getYoutubeThumbnailFromCache(
+                id: videoId,
+                type: ThumbnailType.video,
+                isTemp: null,
+              ),
+              onSave: (_) => YTUtils.copyThumbnailToStorage(videoId),
+              themeColor: null,
+            );
+            details.openInFullscreen();
+          },
+        );
+
+      case TrackExecuteActions.saveArtwork:
+        item.execute(
+          selectable: (finalItem) async {
+            final saveDirPath = await EditDeleteController.inst.saveTrackArtworkToStorage(finalItem.track);
+            NamidaOnTaps.inst.showSavedImageInSnack(saveDirPath, null);
+          },
+          youtubeID: (finalItem) async {
+            final saveDirPath = await YTUtils.copyThumbnailToStorage(finalItem.id);
+            NamidaOnTaps.inst.showSavedImageInSnack(saveDirPath, null);
+          },
+        );
+      case TrackExecuteActions.editTags:
+        item.execute(
+          selectable: (finalItem) {
+            showEditTracksTagsDialog([finalItem.track], null);
+          },
+          youtubeID: (finalItem) {},
+        );
+      case TrackExecuteActions.editArtwork:
+        item.execute(
+          selectable: (finalItem) {
+            showEditTracksTagsDialog([finalItem.track], null, instantEditArtwork: true);
+          },
+          youtubeID: (finalItem) {},
+        );
+
+      case TrackExecuteActions.setRating:
+        item.execute(
+          selectable: (finalItem) {
+            showSetTrackStatsDialog(
+              firstTrack: finalItem.track,
+              stats: TrackStats.buildEffective(finalItem.track),
+            );
+          },
+          youtubeID: (finalItem) {},
+        );
+      case TrackExecuteActions.openListens:
+        item.execute(
+          selectable: (finalItem) {
+            showTrackListensDialog(finalItem.track);
+          },
+          youtubeID: (finalItem) {
+            showVideoListensDialog(finalItem.id);
+          },
+        );
+
+      case TrackExecuteActions.goToAlbum:
+        item.execute(
+          selectable: (finalItem) {
+            NamidaOnTaps.inst.onAlbumTap(finalItem.track.album);
+          },
+          youtubeID: (finalItem) {},
+        );
+
+      case TrackExecuteActions.goToArtist:
+        item.execute(
+          selectable: (finalItem) {
+            final artist = finalItem.track.artistsList.firstOrNull;
+            if (artist != null) {
+              NamidaOnTaps.inst.onArtistTap(artist, MediaType.artist);
+            }
+          },
+          youtubeID: (finalItem) async {
+            final channelId = await YoutubeInfoController.utils.getVideoChannelID(finalItem.id);
+            if (channelId != null) {
+              YTChannelSubpage(channelID: channelId).navigate();
+            }
+          },
+        );
+
+      case TrackExecuteActions.goToFolder:
+        item.execute(
+          selectable: (finalItem) {
+            final track = finalItem.track;
+            final folder = track.folder;
+            NamidaOnTaps.inst.onFolderTapNavigate(folder, trackToScrollTo: track);
+          },
+          youtubeID: (finalItem) {},
+        );
+
+      case TrackExecuteActions.copyTitle:
+        item.execute(
+          selectable: (finalItem) {
+            final title = finalItem.track.title;
+            info.copyToClipboard(title);
+          },
+          youtubeID: (finalItem) async {
+            final title = await YoutubeInfoController.utils.getVideoName(finalItem.id);
+            if (title != null) {
+              info.copyToClipboard(title);
+            }
+          },
+        );
+      case TrackExecuteActions.copyArtist:
+        item.execute(
+          selectable: (finalItem) {
+            final artist = finalItem.track.originalArtist;
+            info.copyToClipboard(artist);
+          },
+          youtubeID: (finalItem) async {
+            final artist = await YoutubeInfoController.utils.getVideoChannelName(finalItem.id);
+            if (artist != null) {
+              info.copyToClipboard(artist);
+            }
+          },
+        );
+      case TrackExecuteActions.copyArtistAndTitle:
+        item.execute(
+          selectable: (finalItem) {
+            final title = finalItem.track.title;
+            final artist = finalItem.track.originalArtist;
+            info.copyToClipboard("$artist - $title");
+          },
+          youtubeID: (finalItem) async {
+            final title = await YoutubeInfoController.utils.getVideoName(finalItem.id);
+            final artist = await YoutubeInfoController.utils.getVideoChannelName(finalItem.id);
+            if (title?.isNotEmpty == true || artist?.isNotEmpty == true) {
+              info.copyToClipboard("${artist ?? ''} - ${title ?? ''}");
+            }
+          },
+        );
+      case TrackExecuteActions.copyYTLink:
+        item.execute(
+          selectable: (finalItem) {
+            final link = finalItem.track.youtubeLink;
+            if (link.isNotEmpty) {
+              info.copyToClipboard(link);
+            } else {
+              snackyy(title: lang.ERROR, message: lang.COULDNT_OPEN_YT_LINK, top: false);
+            }
+          },
+          youtubeID: (finalItem) async {
+            final videoLink = YTUrlUtils.buildVideoUrl(finalItem.id);
+            info.copyToClipboard(videoLink);
+          },
+        );
+      case TrackExecuteActions.searchYTSimilar:
+        final text = await item.execute<FutureOr<String>>(
+          selectable: (finalItem) {
+            final title = finalItem.track.title;
+            final artist = finalItem.track.originalArtist;
+            return "$artist - $title";
+          },
+          youtubeID: (finalItem) async {
+            final title = await YoutubeInfoController.utils.getVideoName(finalItem.id);
+            final artist = await YoutubeInfoController.utils.getVideoChannelName(finalItem.id);
+            if (title?.isNotEmpty == true || artist?.isNotEmpty == true) {
+              return "${artist ?? ''} - ${title ?? ''}";
+            }
+            return '';
+          },
+        );
+        if (text != null && text.isNotEmpty) {
+          MiniPlayerController.inst.snapToMini();
+          MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false); // -- useless really
+          // -- all these steps are important..
+          final searchController = ScrollSearchController.inst;
+          searchController.currentSearchType.value = SearchType.youtube;
+          searchController.searchTextEditingController.text = text;
+          searchController.latestSubmittedYTSearch.value = text;
+          SearchSortController.inst.lastSearchText = text;
+          searchController.showSearchMenu();
+          searchController.tabViewKey.currentState?.jumpToTab(SearchType.youtube.index);
+          searchController.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
+          searchController.ytSearchKey.currentState?.fetchSearch(customText: text);
+        }
     }
     VibratorController.verylight();
   }
@@ -1570,14 +1840,6 @@ class _NamidaConverters {
         TrackPlayMode.trackAlbum: lang.TRACK_PLAY_MODE_TRACK_ALBUM,
         TrackPlayMode.trackArtist: lang.TRACK_PLAY_MODE_TRACK_ARTIST,
         TrackPlayMode.trackGenre: lang.TRACK_PLAY_MODE_TRACK_GENRE,
-      },
-      OnTrackTileSwapActions: {
-        OnTrackTileSwapActions.none: lang.NONE,
-        OnTrackTileSwapActions.playnext: lang.PLAY_NEXT,
-        OnTrackTileSwapActions.playlast: lang.PLAY_LAST,
-        OnTrackTileSwapActions.playafter: lang.PLAY_AFTER,
-        OnTrackTileSwapActions.addtoplaylist: lang.ADD_TO_PLAYLIST,
-        OnTrackTileSwapActions.openinfo: lang.INFO,
       },
       InsertionSortingType: {
         InsertionSortingType.listenCount: lang.TOTAL_LISTENS,

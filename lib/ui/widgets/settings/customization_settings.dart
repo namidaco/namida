@@ -47,7 +47,9 @@ enum _CustomizationSettingsKeys {
   forceSquaredTrackThumb,
   sizeOfTrackThumb,
   heightOfTrackTile,
-  onSwiping,
+  SWIPEACTIONS,
+  swipeLeftAction,
+  swipeRightAction,
   displayThirdRow,
   displayThirdItemInRow,
   displayFavButtonInTrackTile,
@@ -62,7 +64,11 @@ enum _CustomizationSettingsKeys {
   thumbAnimationIntensityLyrics,
   thumbAnimationIntensityMinimized,
   thumbInverseAnimation,
-  artworkGesture,
+  ARTWORKGESTURES,
+  scaleMultiplier,
+  doubleTapLyrics,
+  artworkTapAction,
+  artworkLongPressAction,
   waveformBarsCount,
   displayAudioInfo,
   displayArtistBeforeTitle,
@@ -99,7 +105,9 @@ class CustomizationSettings extends SettingSubpageProvider {
         _CustomizationSettingsKeys.forceSquaredTrackThumb: [lang.FORCE_SQUARED_TRACK_THUMBNAIL],
         _CustomizationSettingsKeys.sizeOfTrackThumb: [lang.TRACK_THUMBNAIL_SIZE_IN_LIST],
         _CustomizationSettingsKeys.heightOfTrackTile: [lang.HEIGHT_OF_TRACK_TILE],
-        _CustomizationSettingsKeys.onSwiping: [lang.ON_SWIPING],
+        _CustomizationSettingsKeys.SWIPEACTIONS: [lang.SWIPE_ACTIONS, lang.ON_SWIPING, lang.LEFT_ACTION, lang.RIGHT_ACTION],
+        _CustomizationSettingsKeys.swipeLeftAction: [lang.SWIPE_ACTIONS, lang.LEFT_ACTION],
+        _CustomizationSettingsKeys.swipeRightAction: [lang.SWIPE_ACTIONS, lang.RIGHT_ACTION],
         _CustomizationSettingsKeys.displayThirdRow: [lang.DISPLAY_THIRD_ROW_IN_TRACK_TILE],
         _CustomizationSettingsKeys.displayThirdItemInRow: [lang.DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE],
         _CustomizationSettingsKeys.displayFavButtonInTrackTile: [lang.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE],
@@ -114,7 +122,11 @@ class CustomizationSettings extends SettingSubpageProvider {
         _CustomizationSettingsKeys.thumbAnimationIntensityLyrics: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.LYRICS],
         _CustomizationSettingsKeys.thumbAnimationIntensityMinimized: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.MINIMIZED_MINIPLAYER],
         _CustomizationSettingsKeys.thumbInverseAnimation: [lang.ANIMATING_THUMBNAIL_INVERSED, lang.ANIMATING_THUMBNAIL_INVERSED_SUBTITLE],
-        _CustomizationSettingsKeys.artworkGesture: [lang.ARTWORK_GESTURES],
+        _CustomizationSettingsKeys.ARTWORKGESTURES: [lang.ARTWORK_GESTURES],
+        _CustomizationSettingsKeys.scaleMultiplier: [lang.SCALE_MULTIPLIER],
+        _CustomizationSettingsKeys.doubleTapLyrics: [lang.DOUBLE_TAP_TO_TOGGLE_LYRICS],
+        _CustomizationSettingsKeys.artworkTapAction: [lang.TAP_ACTION, lang.ARTWORK],
+        _CustomizationSettingsKeys.artworkLongPressAction: [lang.LONG_PRESS_ACTION, lang.ARTWORK],
         _CustomizationSettingsKeys.waveformBarsCount: [lang.WAVEFORM_BARS_COUNT],
         _CustomizationSettingsKeys.displayAudioInfo: [lang.DISPLAY_AUDIO_INFO_IN_MINIPLAYER],
         _CustomizationSettingsKeys.displayArtistBeforeTitle: [lang.DISPLAY_ARTIST_BEFORE_TITLE],
@@ -347,41 +359,89 @@ class CustomizationSettings extends SettingSubpageProvider {
     );
   }
 
-  void _onSwipingTap() {
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
-        title: lang.ON_SWIPING,
-        actions: [
-          NamidaButton(
-            onPressed: NamidaNavigator.inst.closeDialog,
-            text: lang.DONE,
+  Widget _getSwipeActionTileWidget({
+    required BuildContext context,
+    required _CustomizationSettingsKeys key,
+    bool excludePlayerActions = false,
+    required String title,
+    required IconData icon,
+    required Rx<TrackExecuteActions> rx,
+    required void Function(TrackExecuteActions newItem) onSave,
+    VisualDensity visualDensity = VisualDensity.compact,
+  }) {
+    List<MapEntry<void Function()?, Widget>> getChildren() {
+      var values = TrackExecuteActions.values;
+      if (excludePlayerActions) {
+        final newValues = <TrackExecuteActions>[];
+        for (final v in values) {
+          if (v == TrackExecuteActions.playnext || v == TrackExecuteActions.playlast || v == TrackExecuteActions.playafter) {
+            // -- exclude
+          } else {
+            newValues.add(v);
+          }
+        }
+        values = newValues;
+      }
+
+      return [
+        ...values.map(
+          (e) {
+            void onTap() {
+              onSave(e);
+              NamidaNavigator.inst.popMenu();
+            }
+
+            return MapEntry(
+              onTap,
+              ObxO(
+                rx: rx,
+                builder: (context, value) => NamidaInkWell(
+                  margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                  borderRadius: 6.0,
+                  bgColor: value == e ? context.theme.cardColor : null,
+                  onTap: onTap,
+                  child: Row(
+                    children: [
+                      Icon(
+                        e.toIcon(),
+                        size: 18.0,
+                      ),
+                      const SizedBox(width: 6.0),
+                      Text(
+                        e.toText(),
+                        style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ];
+    }
+
+    return getItemWrapper(
+      key: key,
+      child: NamidaPopupWrapper(
+        children: getChildren,
+        child: CustomListTile(
+          visualDensity: visualDensity,
+          bgColor: getBgColor(key),
+          icon: icon,
+          title: title,
+          trailing: NamidaPopupWrapper(
+            children: getChildren,
+            child: ObxO(
+              rx: rx,
+              builder: (context, value) => Text(
+                value.toText(),
+                style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
+                textAlign: TextAlign.end,
+              ),
+            ),
           ),
-        ],
-        child: Column(
-          children: [
-            ObxO(
-              rx: settings.onTrackSwipeLeft,
-              builder: (context, onTrackSwipeLeft) => CustomListTile(
-                icon: Broken.arrow_left_1,
-                title: onTrackSwipeLeft.toText(),
-                onTap: () {
-                  final next = settings.onTrackSwipeLeft.value.nextElement(OnTrackTileSwapActions.values);
-                  settings.save(onTrackSwipeLeft: next);
-                },
-              ),
-            ),
-            ObxO(
-              rx: settings.onTrackSwipeRight,
-              builder: (context, onTrackSwipeRight) => CustomListTile(
-                icon: Broken.arrow_right,
-                title: onTrackSwipeRight.toText(),
-                onTap: () {
-                  final next = settings.onTrackSwipeRight.value.nextElement(OnTrackTileSwapActions.values);
-                  settings.save(onTrackSwipeRight: next);
-                },
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -645,12 +705,32 @@ class CustomizationSettings extends SettingSubpageProvider {
             ),
           ),
           getItemWrapper(
-            key: _CustomizationSettingsKeys.onSwiping,
-            child: CustomListTile(
-              bgColor: getBgColor(_CustomizationSettingsKeys.onSwiping),
+            key: _CustomizationSettingsKeys.SWIPEACTIONS,
+            child: NamidaExpansionTile(
+              bgColor: getBgColor(_CustomizationSettingsKeys.SWIPEACTIONS),
+              initiallyExpanded: true,
               icon: Broken.arrow_swap_horizontal,
-              title: lang.ON_SWIPING,
-              onTap: _onSwipingTap,
+              iconColor: context.defaultIconColor(),
+              titleText: lang.SWIPE_ACTIONS,
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+              children: [
+                _getSwipeActionTileWidget(
+                  context: context,
+                  key: _CustomizationSettingsKeys.swipeLeftAction,
+                  title: lang.LEFT_ACTION,
+                  icon: Broken.arrow_left_1,
+                  rx: settings.onTrackSwipeLeft,
+                  onSave: (newItem) => settings.save(onTrackSwipeLeft: newItem),
+                ),
+                _getSwipeActionTileWidget(
+                  context: context,
+                  key: _CustomizationSettingsKeys.swipeRightAction,
+                  title: lang.RIGHT_ACTION,
+                  icon: Broken.arrow_right,
+                  rx: settings.onTrackSwipeRight,
+                  onSave: (newItem) => settings.save(onTrackSwipeRight: newItem),
+                ),
+              ],
             ),
           ),
           getItemWrapper(
@@ -915,74 +995,77 @@ class CustomizationSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          NamidaExpansionTile(
-            bgColor: getBgColor(_CustomizationSettingsKeys.THUMBANIMATIONINTENSITY),
-            initiallyExpanded: true,
-            icon: Broken.flash,
-            iconColor: context.defaultIconColor(),
-            titleText: lang.ANIMATING_THUMBNAIL_INTENSITY,
-            childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0),
-            children: [
-              getItemWrapper(
-                key: _CustomizationSettingsKeys.thumbAnimationIntensityExpanded,
-                child: Obx(
-                  (context) => CustomListTile(
-                    visualDensity: VisualDensity.compact,
-                    bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityExpanded),
-                    icon: Broken.flash,
-                    title: lang.EXPANDED_MINIPLAYER,
-                    trailing: NamidaWheelSlider(
-                      max: 25,
-                      initValue: settings.animatingThumbnailIntensity.valueR,
-                      onValueChanged: (val) => settings.save(animatingThumbnailIntensity: val),
-                      text: "${(settings.animatingThumbnailIntensity.valueR * 4).toStringAsFixed(0)}%",
+          getItemWrapper(
+            key: _CustomizationSettingsKeys.THUMBANIMATIONINTENSITY,
+            child: NamidaExpansionTile(
+              bgColor: getBgColor(_CustomizationSettingsKeys.THUMBANIMATIONINTENSITY),
+              initiallyExpanded: true,
+              icon: Broken.flash,
+              iconColor: context.defaultIconColor(),
+              titleText: lang.ANIMATING_THUMBNAIL_INTENSITY,
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+              children: [
+                getItemWrapper(
+                  key: _CustomizationSettingsKeys.thumbAnimationIntensityExpanded,
+                  child: Obx(
+                    (context) => CustomListTile(
+                      visualDensity: VisualDensity.compact,
+                      bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityExpanded),
+                      icon: Broken.flash,
+                      title: lang.EXPANDED_MINIPLAYER,
+                      trailing: NamidaWheelSlider(
+                        max: 25,
+                        initValue: settings.animatingThumbnailIntensity.valueR,
+                        onValueChanged: (val) => settings.save(animatingThumbnailIntensity: val),
+                        text: "${(settings.animatingThumbnailIntensity.valueR * 4).toStringAsFixed(0)}%",
+                      ),
                     ),
                   ),
                 ),
-              ),
-              getItemWrapper(
-                key: _CustomizationSettingsKeys.thumbAnimationIntensityLyrics,
-                child: Obx(
-                  (context) => CustomListTile(
-                    visualDensity: VisualDensity.compact,
-                    bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityLyrics),
-                    leading: const StackedIcon(
-                      baseIcon: Broken.flash,
-                      secondaryIcon: Broken.document,
-                      secondaryIconSize: 10.0,
-                    ),
-                    title: lang.LYRICS,
-                    trailing: NamidaWheelSlider(
-                      max: 25,
-                      initValue: settings.animatingThumbnailIntensityLyrics.valueR,
-                      onValueChanged: (val) => settings.save(animatingThumbnailIntensityLyrics: val),
-                      text: "${(settings.animatingThumbnailIntensityLyrics.valueR * 4).toStringAsFixed(0)}%",
-                    ),
-                  ),
-                ),
-              ),
-              getItemWrapper(
-                key: _CustomizationSettingsKeys.thumbAnimationIntensityMinimized,
-                child: Obx(
-                  (context) => CustomListTile(
-                    visualDensity: VisualDensity.compact,
-                    bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityMinimized),
-                    leading: const StackedIcon(
-                      baseIcon: Broken.flash,
-                      secondaryIcon: Broken.arrow_square_down,
-                      secondaryIconSize: 11.0,
-                    ),
-                    title: lang.MINIMIZED_MINIPLAYER,
-                    trailing: NamidaWheelSlider(
-                      max: 25,
-                      initValue: settings.animatingThumbnailIntensityMinimized.valueR,
-                      onValueChanged: (val) => settings.save(animatingThumbnailIntensityMinimized: val),
-                      text: "${(settings.animatingThumbnailIntensityMinimized.valueR * 4).toStringAsFixed(0)}%",
+                getItemWrapper(
+                  key: _CustomizationSettingsKeys.thumbAnimationIntensityLyrics,
+                  child: Obx(
+                    (context) => CustomListTile(
+                      visualDensity: VisualDensity.compact,
+                      bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityLyrics),
+                      leading: const StackedIcon(
+                        baseIcon: Broken.flash,
+                        secondaryIcon: Broken.document,
+                        secondaryIconSize: 10.0,
+                      ),
+                      title: lang.LYRICS,
+                      trailing: NamidaWheelSlider(
+                        max: 25,
+                        initValue: settings.animatingThumbnailIntensityLyrics.valueR,
+                        onValueChanged: (val) => settings.save(animatingThumbnailIntensityLyrics: val),
+                        text: "${(settings.animatingThumbnailIntensityLyrics.valueR * 4).toStringAsFixed(0)}%",
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                getItemWrapper(
+                  key: _CustomizationSettingsKeys.thumbAnimationIntensityMinimized,
+                  child: Obx(
+                    (context) => CustomListTile(
+                      visualDensity: VisualDensity.compact,
+                      bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityMinimized),
+                      leading: const StackedIcon(
+                        baseIcon: Broken.flash,
+                        secondaryIcon: Broken.arrow_square_down,
+                        secondaryIconSize: 11.0,
+                      ),
+                      title: lang.MINIMIZED_MINIPLAYER,
+                      trailing: NamidaWheelSlider(
+                        max: 25,
+                        initValue: settings.animatingThumbnailIntensityMinimized.valueR,
+                        onValueChanged: (val) => settings.save(animatingThumbnailIntensityMinimized: val),
+                        text: "${(settings.animatingThumbnailIntensityMinimized.valueR * 4).toStringAsFixed(0)}%",
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           getItemWrapper(
             key: _CustomizationSettingsKeys.thumbInverseAnimation,
@@ -1000,8 +1083,9 @@ class CustomizationSettings extends SettingSubpageProvider {
             ),
           ),
           getItemWrapper(
-            key: _CustomizationSettingsKeys.artworkGesture,
+            key: _CustomizationSettingsKeys.ARTWORKGESTURES,
             child: NamidaExpansionTile(
+              bgColor: getBgColor(_CustomizationSettingsKeys.ARTWORKGESTURES),
               icon: Broken.gallery,
               iconColor: context.defaultIconColor(),
               initiallyExpanded: true,
@@ -1018,6 +1102,8 @@ class CustomizationSettings extends SettingSubpageProvider {
                       settings.save(
                         artworkGestureDoubleTapLRC: true,
                         animatingThumbnailScaleMultiplier: 1.0,
+                        artworkTapAction: TrackExecuteActions.none,
+                        artworkLongPressAction: TrackExecuteActions.none,
                       );
                     },
                   ),
@@ -1027,38 +1113,64 @@ class CustomizationSettings extends SettingSubpageProvider {
                 ],
               ),
               children: [
-                ObxO(
-                  rx: settings.animatingThumbnailScaleMultiplier,
-                  builder: (context, animatingThumbnailScaleMultiplier) {
-                    final valueHundred = (animatingThumbnailScaleMultiplier * 100).round();
-                    return CustomListTile(
-                      visualDensity: VisualDensity.compact,
-                      icon: Broken.maximize,
-                      title: lang.SCALE_MULTIPLIER,
-                      trailing: NamidaWheelSlider(
-                        min: 50,
-                        max: 150,
-                        initValue: valueHundred,
-                        onValueChanged: (val) => settings.save(animatingThumbnailScaleMultiplier: val / 100),
-                        text: "$valueHundred%",
-                      ),
-                    );
-                  },
-                ),
-                Obx(
-                  (context) => CustomSwitchListTile(
-                    visualDensity: VisualDensity.compact,
-                    leading: const StackedIcon(
-                      baseIcon: Broken.document,
-                      secondaryIcon: Broken.blend_2,
-                      secondaryIconSize: 12.0,
-                    ),
-                    title: lang.DOUBLE_TAP_TO_TOGGLE_LYRICS,
-                    value: settings.artworkGestureDoubleTapLRC.valueR,
-                    onChanged: (value) {
-                      settings.save(artworkGestureDoubleTapLRC: !value);
+                getItemWrapper(
+                  key: _CustomizationSettingsKeys.scaleMultiplier,
+                  child: ObxO(
+                    rx: settings.animatingThumbnailScaleMultiplier,
+                    builder: (context, animatingThumbnailScaleMultiplier) {
+                      final valueHundred = (animatingThumbnailScaleMultiplier * 100).round();
+                      return CustomListTile(
+                        visualDensity: VisualDensity.compact,
+                        bgColor: getBgColor(_CustomizationSettingsKeys.scaleMultiplier),
+                        icon: Broken.maximize,
+                        title: lang.SCALE_MULTIPLIER,
+                        trailing: NamidaWheelSlider(
+                          min: 50,
+                          max: 150,
+                          initValue: valueHundred,
+                          onValueChanged: (val) => settings.save(animatingThumbnailScaleMultiplier: val / 100),
+                          text: "$valueHundred%",
+                        ),
+                      );
                     },
                   ),
+                ),
+                getItemWrapper(
+                  key: _CustomizationSettingsKeys.doubleTapLyrics,
+                  child: Obx(
+                    (context) => CustomSwitchListTile(
+                      visualDensity: VisualDensity.compact,
+                      bgColor: getBgColor(_CustomizationSettingsKeys.doubleTapLyrics),
+                      leading: const StackedIcon(
+                        baseIcon: Broken.document,
+                        secondaryIcon: Broken.blend_2,
+                        secondaryIconSize: 12.0,
+                      ),
+                      title: lang.DOUBLE_TAP_TO_TOGGLE_LYRICS,
+                      value: settings.artworkGestureDoubleTapLRC.valueR,
+                      onChanged: (value) {
+                        settings.save(artworkGestureDoubleTapLRC: !value);
+                      },
+                    ),
+                  ),
+                ),
+                _getSwipeActionTileWidget(
+                  context: context,
+                  key: _CustomizationSettingsKeys.artworkTapAction,
+                  excludePlayerActions: true,
+                  title: lang.TAP_ACTION,
+                  icon: Broken.cd,
+                  rx: settings.artworkTapAction,
+                  onSave: (newItem) => settings.save(artworkTapAction: newItem),
+                ),
+                _getSwipeActionTileWidget(
+                  context: context,
+                  key: _CustomizationSettingsKeys.artworkLongPressAction,
+                  excludePlayerActions: true,
+                  title: lang.LONG_PRESS_ACTION,
+                  icon: Broken.story,
+                  rx: settings.artworkLongPressAction,
+                  onSave: (newItem) => settings.save(artworkLongPressAction: newItem),
                 ),
                 const SizedBox(height: 6.0),
               ],

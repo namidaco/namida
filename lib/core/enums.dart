@@ -474,13 +474,28 @@ enum YTVisibleMixesPlaces {
   relatedVideos,
 }
 
-enum OnTrackTileSwapActions {
+enum TrackExecuteActions {
   none,
   playnext,
   playlast,
   playafter,
   addtoplaylist,
   openinfo,
+
+  openArtwork,
+  editArtwork,
+  saveArtwork,
+  editTags,
+  setRating,
+  openListens,
+  goToAlbum,
+  goToArtist,
+  goToFolder,
+  copyTitle,
+  copyArtist,
+  copyArtistAndTitle,
+  copyYTLink,
+  searchYTSimilar,
 }
 
 enum CacheVideoPriority {

@@ -102,8 +102,8 @@ class TrackTilePropertiesProvider extends StatelessWidget {
                                   currentPlayingTrack: currentPlayingTrack,
                                   currentPlayingIndex: currentPlayingIndex,
                                   isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
-                                  allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != OnTrackTileSwapActions.none,
-                                  allowSwipeRight: !comingFromQueue && onTrackSwipeRight != OnTrackTileSwapActions.none,
+                                  allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
+                                  allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
                                 );
                                 return builder(properties);
                               },

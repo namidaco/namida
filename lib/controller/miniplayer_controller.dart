@@ -255,7 +255,7 @@ class MiniPlayerController {
 
   bool _isInsideQueue() => _offset >= maxOffset * 2 && (queueScrollController.positions.isNotEmpty && queueScrollController.positions.first.pixels > 0.0);
 
-  bool _canMiniminzeMiniplayer(double dy) {
+  bool _canMinimizeMiniplayer(double dy) {
     if (_miniplayerIsWideScreen && animation.value <= 1 && dy > 0) {
       // -- moving down while miniplayer is always shown
       return false;
@@ -267,7 +267,7 @@ class MiniPlayerController {
     if (_isModifyingQueue) return;
     if (event.position.dy >= screenSize.height - _deadSpace) return;
 
-    if (!_canMiniminzeMiniplayer(event.delta.dy)) return;
+    if (!_canMinimizeMiniplayer(event.delta.dy)) return;
 
     _velocity.addPosition(event.timeStamp, event.position);
 
@@ -298,7 +298,7 @@ class MiniPlayerController {
     if (_isModifyingQueue) return;
     if (details.globalPosition.dy > screenSize.height - _deadSpace) return;
     if (_offset > maxOffset) return;
-    if (!_canMiniminzeMiniplayer(details.delta.dy)) return;
+    if (!_canMinimizeMiniplayer(details.delta.dy)) return;
 
     _offset -= details.primaryDelta ?? 0;
     _offset = _offset.clampDouble(-_headRoom, maxOffset * 2 + _headRoom / 2);
