@@ -250,7 +250,7 @@ Animating Thumbnail        |  Recommends & Listens
 ### Permission Note:
 
 #### The permissions namida uses and why:
-> - `WAKE_LOCK` & `FOREGROUND_SERVICE`: keep app alive for media playback.
+> - `WAKE_LOCK` & `FOREGROUND_SERVICE` & `FOREGROUND_SERVICE_MEDIA_PLAYBACK`: keep app alive for media playback.
 > - `INTERNET`: for many stuff like artist/album images, streaming & downloading, etc.
 > - `READ_EXTERNAL_STORAGE` (Android ≤ 12): list files from indexer folders only.
 > - `READ_MEDIA_AUDIO` (Android 13+): list audio files from indexer folders only.
