@@ -6263,24 +6263,20 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
   void openInFullscreen() async {
     final imgFile = await imageFile();
     if (imgFile == null) return;
+
     NamidaNavigator.inst.navigateDialog(
       scale: 1.0,
       blackBg: true,
-      dialog: LongPressDetector(
-        onLongPress: () async {
+      dialog: NamidaArtworkFullscreen(
+        title: '',
+        artwork: artwork,
+        imgFile: imgFile,
+        heroTag: heroTag,
+        save: () async {
           final saveDirPath = await onSave(imgFile);
           NamidaOnTaps.inst.showSavedImageInSnack(saveDirPath, themeColor?.call());
         },
-        child: PhotoView(
-          heroAttributes: heroTag == null ? null : PhotoViewHeroAttributes(tag: heroTag!),
-          gaplessPlayback: true,
-          tightMode: true,
-          minScale: PhotoViewComputedScale.contained,
-          loadingBuilder: (context, event) => artwork,
-          backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-          filterQuality: FilterQuality.high,
-          imageProvider: FileImage(imgFile),
-        ),
+        close: NamidaNavigator.inst.closeDialog,
       ),
     );
   }
@@ -6290,6 +6286,132 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
     return TapDetector(
       onTap: openInFullscreen,
       child: artwork,
+    );
+  }
+}
+
+class NamidaArtworkFullscreen extends StatefulWidget {
+  final String title;
+  final Widget artwork;
+  final File imgFile;
+  final String? heroTag;
+  final void Function() save;
+  final void Function() close;
+
+  const NamidaArtworkFullscreen({
+    super.key,
+    required this.title,
+    required this.artwork,
+    required this.imgFile,
+    required this.heroTag,
+    required this.save,
+    required this.close,
+  });
+
+  @override
+  State<NamidaArtworkFullscreen> createState() => _NamidaArtworkFullscreenState();
+}
+
+class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
+  bool _showTopBar = false;
+  double _heighestTopPadding = 0;
+
+  @override
+  void initState() {
+    NamidaNavigator.setSystemUIImmersiveMode(true);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    NamidaNavigator.setSystemUIImmersiveMode(false);
+    super.dispose();
+  }
+
+  void _toggleAppBars() {
+    final newShow = !_showTopBar;
+    if (newShow != _showTopBar) {
+      setState(() => _showTopBar = newShow);
+      NamidaNavigator.setSystemUIImmersiveMode(!newShow);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final heroTag = widget.heroTag;
+    final topPadding = context.padding.top;
+    if (topPadding > _heighestTopPadding) _heighestTopPadding = topPadding;
+    return Stack(
+      alignment: AlignmentGeometry.center,
+      children: [
+        LongPressDetector(
+          onLongPress: widget.save,
+          child: PhotoView(
+            heroAttributes: heroTag == null ? null : PhotoViewHeroAttributes(tag: heroTag),
+            gaplessPlayback: true,
+            onTapUp: (context, details, controllerValue) {
+              _toggleAppBars();
+            },
+            tightMode: true,
+            minScale: PhotoViewComputedScale.contained,
+            loadingBuilder: (context, event) => widget.artwork,
+            backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+            filterQuality: FilterQuality.high,
+            imageProvider: FileImage(widget.imgFile),
+          ),
+        ),
+        Positioned(
+          top: 0,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 150),
+            opacity: _showTopBar ? 1.0 : 0.0,
+            child: IgnorePointer(
+              ignoring: !_showTopBar,
+              child: SizedBox(
+                width: context.width,
+                child: ColoredBox(
+                  color: context.theme.scaffoldBackgroundColor,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      top: 12.0 + _heighestTopPadding,
+                      bottom: 12.0,
+                      left: 8.0,
+                      right: 8.0,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: NamidaIconButton(
+                            icon: Broken.arrow_left_2,
+                            onPressed: widget.close,
+                          ),
+                        ),
+                        Expanded(
+                          child: widget.title.isEmpty
+                              ? const SizedBox()
+                              : Text(
+                                  widget.title,
+                                  style: context.textTheme.displayMedium,
+                                ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: NamidaIconButton(
+                            icon: Broken.gallery_import,
+                            onPressed: widget.save,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
