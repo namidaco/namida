@@ -48,7 +48,7 @@ class _NamidaChannelWindows extends NamidaChannel {
 
   @override
   Future<int> getPlatformSdk() async {
-    return 0;
+    return 1;
   }
 
   @override

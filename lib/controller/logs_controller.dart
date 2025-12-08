@@ -11,12 +11,12 @@ import 'package:namida/core/extensions.dart';
 final logger = _Log();
 
 class _Log {
-  static Logger _logger = _createLogger(Level.all);
+  static Logger _logger = _createNewLogger(Level.all);
 
-  static Logger _createLogger(Level? level) {
+  static Logger _createNewLogger(Level? level) {
     final filter = kDebugMode ? DevelopmentFilter() : ProductionFilter();
-    final logsFile = File(AppPaths.LOGS);
-    return _logger = Logger(
+    final logsFile = AppDirs.USER_DATA.isEmpty ? File(AppPaths.LOGS_FALLBACK) : File(AppPaths.LOGS);
+    return Logger(
       level: level,
       filter: filter,
       printer: PrettyPrinter(
@@ -33,7 +33,7 @@ class _Log {
 
   Logger updateLogger(Level? level) {
     _logger.close();
-    return _createLogger(level);
+    return _logger = _createNewLogger(level);
   }
 
   void error(

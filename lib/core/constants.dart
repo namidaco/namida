@@ -22,6 +22,7 @@ import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -30,7 +31,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 
 class NamidaDeviceInfo {
-  static int sdkVersion = 21;
+  static int sdkVersion = -1;
 
   static String? _deviceId;
 
@@ -508,6 +509,22 @@ class AppPaths {
   static final VIDEOS_CACHE_OLD = _join(_USER_DATA, 'cache_videos.json');
   // ---------
 
+  static Future<List<String>> getAllExistingLogFiles() async {
+    final existingPaths = <String>[];
+    for (final p in [
+      AppPaths.LOGS,
+      AppPaths.LOGS_FALLBACK,
+      AppPaths.LOGS_TAGGER,
+    ]) {
+      final size = await File(p).fileSize();
+      if (size != null && size > 0) {
+        existingPaths.add(p);
+      }
+    }
+    return existingPaths;
+  }
+
+  static String get LOGS_FALLBACK => _getFallbackLogsFilePath();
   static String get LOGS => _getLogsFile('');
   static String get LOGS_TAGGER => _getLogsFile('_tagger');
 
@@ -520,6 +537,17 @@ class AppPaths {
     final info = NamidaDeviceInfo.packageInfo;
     if (info == null) return null;
     return '_${info.version}_${info.buildNumber}';
+  }
+
+  static String _getFallbackLogsFilePath() {
+    return NamidaPlatformBuilder.init(
+      android: () => '/storage/emulated/0/Documents/namida_logs.txt',
+      windows: () {
+        final home = NamidaPlatformBuilder.windowsNamidaHome;
+        if (home != null && home.isNotEmpty) return FileParts.joinPath(home, 'Logs', 'namida_logs.txt');
+        return FileParts.joinPath(Directory.systemTemp.path, 'namida_logs.txt');
+      },
+    );
   }
 
   static final TOTAL_LISTEN_TIME = _join(_USER_DATA, 'total_listen.txt');

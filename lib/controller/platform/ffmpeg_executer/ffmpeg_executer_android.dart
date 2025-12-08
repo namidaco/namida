@@ -3,8 +3,8 @@ part of 'ffmpeg_executer.dart';
 class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
   @override
   void init() {
-    FFmpegKitConfig.disableLogs();
-    FFmpegKitConfig.setSessionHistorySize(99);
+    FFmpegKitConfig.disableLogs().catchError(logger.report);
+    FFmpegKitConfig.setSessionHistorySize(99).catchError(logger.report);
   }
 
   @override

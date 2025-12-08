@@ -61,8 +61,8 @@ class _NamidaChannelAndroid extends NamidaChannel {
 
   @override
   Future<int> getPlatformSdk() async {
-    final version = await _channel.invokeMethod<int?>('sdk');
-    return version ?? 0;
+    final version = await _channel.invokeMethod<int>('sdk');
+    return version!; // if null, the thrown exception is catched and retried eitherways.
   }
 
   @override

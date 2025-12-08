@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 
 import 'package:path/path.dart' as p;
 
+import 'package:namida/class/file_parts.dart';
+
 class NamidaPlatformBuilder {
   static T init<T>({
     required T Function() android,
@@ -30,5 +32,12 @@ class NamidaPlatformBuilder {
     } else {
       return p.join(processDir, 'bin');
     }
+  }
+
+  static String? get windowsUserHome => Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'];
+  static String? get windowsNamidaHome {
+    final home = windowsUserHome;
+    if (home == null) return null;
+    return FileParts.joinPath(home, '.namida');
   }
 }

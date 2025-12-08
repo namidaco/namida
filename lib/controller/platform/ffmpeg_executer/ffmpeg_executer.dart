@@ -9,6 +9,7 @@ import 'package:ffmpeg_kit_flutter/ffprobe_kit.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:namida/base/ports_provider.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/platform/base.dart';
 
 part 'ffmpeg_executer_android.dart';

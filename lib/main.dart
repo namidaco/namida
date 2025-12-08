@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
 import 'package:http_cache_stream/http_cache_stream.dart';
@@ -69,7 +70,11 @@ import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 
 void main(List<String> args) {
   runZonedGuarded(
-    _mainAppInitialization,
+    () async {
+      final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+      FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+      runApp(const Namida());
+    },
     (error, stack) => logger.error(error.runtimeType, e: error, st: stack),
     zoneValues: {
       'args': args,
@@ -77,9 +82,8 @@ void main(List<String> args) {
   );
 }
 
-void _mainAppInitialization() async {
+Future<bool> _mainAppInitialization() async {
   List<String>? args;
-  WidgetsFlutterBinding.ensureInitialized();
 
   /// if `true`:
   /// 1. onboarding screen will show
@@ -87,6 +91,24 @@ void _mainAppInitialization() async {
   bool shouldShowOnBoarding = false;
 
   try {
+    if (Platform.isAndroid) {
+      // -- its not just obtaining sdk version.. we are making sure method channels are properly initialized on native side
+      // -- cuz it can throw on some devices
+      int tryCount = 0;
+      while (NamidaDeviceInfo.sdkVersion < 0) {
+        tryCount++;
+        try {
+          NamidaDeviceInfo.sdkVersion = await NamidaChannel.inst.getPlatformSdk();
+        } catch (_) {
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
+        if (tryCount > 200) {
+          // 200*200ms = 40s
+          exit(1);
+        }
+      }
+    }
+
     await [
       WindowController.instance?.init(),
       SMTCController.instance?.init(),
@@ -118,7 +140,6 @@ void _mainAppInitialization() async {
 
     NamicoDBWrapper.initialize();
 
-    late final List<String> paths;
     Future<void> fetchAppData() async {
       final appDatas = await NamidaStorage.inst.getStorageDirectoriesAppData();
       AppDirs.USER_DATA = NamidaStorage.inst.getUserDataDirectory(appDatas);
@@ -128,7 +149,10 @@ void _mainAppInitialization() async {
 
     Future<void> fetchRootDir() async {
       Directory? dir;
-      for (final fn in [pp.getApplicationSupportDirectory, pp.getApplicationDocumentsDirectory]) {
+      for (final fn in [
+        pp.getApplicationSupportDirectory,
+        pp.getApplicationDocumentsDirectory,
+      ]) {
         try {
           dir = await fn();
         } catch (_) {}
@@ -141,6 +165,8 @@ void _mainAppInitialization() async {
       }
       AppDirs.ROOT_DIR = path ?? '';
     }
+
+    var paths = <String>[];
 
     await [
       NamidaChannel.inst.getPlatformSdk().then((sdk) => NamidaDeviceInfo.sdkVersion = sdk),
@@ -229,14 +255,13 @@ void _mainAppInitialization() async {
     logger.error('_mainAppInitialization 2', e: e, st: st);
   }
 
-  runApp(Namida(shouldShowOnBoarding: shouldShowOnBoarding));
-
   if (args != null && args.isNotEmpty) {
     _NamidaReceiveIntentManager.executeReceivedItems(args, (p) => p, (p) => p);
   }
+  return shouldShowOnBoarding;
 }
 
-Future<void> _mainInitialization(bool shouldShowOnBoarding) async {
+Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
   try {
     _initializeIntenties();
     _initLifeCycle();
@@ -278,7 +303,7 @@ Future<void> _mainInitialization(bool shouldShowOnBoarding) async {
     _clearIntentCachedFiles(); // clearing files cached by intents
     // CurrentColor.inst.generateAllColorPalettes();
   } catch (e, st) {
-    logger.error('_mainInitialization', e: e, st: st);
+    logger.error('_secondaryAppInitialization', e: e, st: st);
   }
 }
 
@@ -454,8 +479,7 @@ Future<bool> requestManageStoragePermission({bool request = true, bool showError
 BuildContext get rootContext => namida.rootNavigatorKey.currentContext!;
 
 class Namida extends StatefulWidget {
-  final bool shouldShowOnBoarding;
-  const Namida({super.key, required this.shouldShowOnBoarding});
+  const Namida({super.key});
 
   @override
   State<Namida> createState() => _NamidaState();
@@ -506,12 +530,22 @@ class _NamidaState extends State<Namida> {
         ),
       );
 
+  bool? _shouldShowOnBoarding;
+
   @override
   void initState() {
     super.initState();
+    _initStuff();
+  }
+
+  Future<void> _initStuff() async {
+    final shouldShowOnBoarding = await _mainAppInitialization();
+    setState(() => _shouldShowOnBoarding = shouldShowOnBoarding);
+
+    FlutterNativeSplash.remove();
     Timer(
       Duration.zero,
-      () => _mainInitialization(widget.shouldShowOnBoarding),
+      () => _secondaryAppInitialization(shouldShowOnBoarding),
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _refreshSystemBarsColors());
@@ -527,8 +561,11 @@ class _NamidaState extends State<Namida> {
 
   @override
   Widget build(BuildContext context) {
+    final shouldShowOnBoarding = _shouldShowOnBoarding;
+    if (shouldShowOnBoarding == null) return const SizedBox();
+
     final shouldAddEdgeAbsorbers = Platform.isAndroid || Platform.isIOS;
-    final mainPageWrapper = MainPageWrapper(shouldShowOnBoarding: widget.shouldShowOnBoarding);
+    final mainPageWrapper = MainPageWrapper(shouldShowOnBoarding: shouldShowOnBoarding);
     Widget finalApp = Directionality(
       textDirection: TextDirection.ltr,
       child: ObxO(

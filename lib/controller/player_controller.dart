@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:audio_service/audio_service.dart';
@@ -190,18 +191,26 @@ class Player {
           case NotificationTapAction.openApp:
             break;
           case NotificationTapAction.openMiniplayer:
-            MiniPlayerController.inst.snapToExpanded();
-            final ytMiniplayer = MiniPlayerController.inst.ytMiniplayerKey.currentState;
-            if (ytMiniplayer != null && ytMiniplayer.isExpanded == false) ytMiniplayer.animateToState(true);
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) {
+                MiniPlayerController.inst.snapToExpanded();
+                final ytMiniplayer = MiniPlayerController.inst.ytMiniplayerKey.currentState;
+                if (ytMiniplayer != null && ytMiniplayer.isExpanded == false) ytMiniplayer.animateToState(true);
+              },
+            );
             break;
           case NotificationTapAction.openQueue:
-            MiniPlayerController.inst.snapToQueue();
-            final ytMiniplayer = MiniPlayerController.inst.ytMiniplayerKey.currentState;
-            if (ytMiniplayer != null && ytMiniplayer.isExpanded == false) ytMiniplayer.animateToState(true);
-            Future.delayed(const Duration(milliseconds: 100), () {
-              final ytQueue = NamidaNavigator.inst.ytQueueSheetKey.currentState;
-              if (ytQueue != null && ytQueue.isOpened == false) ytQueue.openSheet();
-            });
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) {
+                MiniPlayerController.inst.snapToQueue();
+                final ytMiniplayer = MiniPlayerController.inst.ytMiniplayerKey.currentState;
+                if (ytMiniplayer != null && ytMiniplayer.isExpanded == false) ytMiniplayer.animateToState(true);
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  final ytQueue = NamidaNavigator.inst.ytQueueSheetKey.currentState;
+                  if (ytQueue != null && ytQueue.isOpened == false) ytQueue.openSheet();
+                });
+              },
+            );
 
             break;
         }

@@ -23,6 +23,7 @@ import com.ryanheise.audioservice.AudioServicePlugin
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.Log;
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
@@ -48,15 +49,25 @@ class NamidaMainActivity : FlutterActivity() {
     }
 
   override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+    super.configureFlutterEngine(flutterEngine)
+
     currentLifecycle = lifecycle
 
-    flutterEngine.plugins.add(FAudioTagger())
+    try {
+      flutterEngine.plugins.add(FAudioTagger());
+    } catch (e: Exception) {
+      Log.e("NamidaMainActivity", "Error registering plugin FAudioTagger, com.msob7y.namida.FAudioTagger", e);
+    }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       pipBuilder = PictureInPictureParams.Builder()
     }
 
-    // GeneratedPluginRegistrant.registerWith(flutterEngine)
+    
+    registerNamidaChannels(flutterEngine)
+  }
+
+  private fun registerNamidaChannels(@NonNull flutterEngine: FlutterEngine) {
     val messenger = flutterEngine.dartExecutor.binaryMessenger
     channel = MethodChannel(messenger, CHANNELNAME)
 

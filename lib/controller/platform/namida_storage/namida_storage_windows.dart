@@ -5,9 +5,7 @@ class _NamidaStorageWindows extends NamidaStorage {
 
   @override
   String getUserDataDirectory(List<String> appDataDirectories) {
-    final home = Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'];
-    if (home != null && home.isNotEmpty) return FileParts.joinPath(home, '.namida');
-    return appDataDirectories.firstOrNull ?? '';
+    return NamidaPlatformBuilder.windowsNamidaHome ?? appDataDirectories.firstOrNull ?? '';
   }
 
   @override

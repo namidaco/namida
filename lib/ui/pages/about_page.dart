@@ -1,7 +1,5 @@
 // ignore_for_file: implementation_imports, depend_on_referenced_packages
 
-import 'dart:io';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -416,29 +414,19 @@ class _AboutPageState extends State<AboutPage> {
                       icon: Broken.direct_send,
                       tooltip: () => AppSocial.EMAIL,
                       onPressed: () async {
-                        final taggerLogsFileSize = await File(AppPaths.LOGS_TAGGER).fileSize();
-                        final goodTaggerLogsFile = taggerLogsFileSize != null && taggerLogsFileSize > 0;
+                        final attachments = await AppPaths.getAllExistingLogFiles();
                         final mailOptions = MailOptions(
                           body: 'pls look at this report im beggin u pls solve my issue pls i wa-',
                           subject: 'Namida Logs Report',
                           recipients: [AppSocial.EMAIL],
-                          attachments: [
-                            AppPaths.LOGS,
-                            if (goodTaggerLogsFile) AppPaths.LOGS_TAGGER,
-                          ],
+                          attachments: attachments,
                         );
                         await FlutterMailer.send(mailOptions);
                       },
                     ),
                     onTap: () async {
-                      final taggerLogsFileSize = await File(AppPaths.LOGS_TAGGER).fileSize();
-                      final goodTaggerLogsFile = taggerLogsFileSize != null && taggerLogsFileSize > 0;
-                      NamidaUtils.shareFiles(
-                        [
-                          AppPaths.LOGS,
-                          if (goodTaggerLogsFile) AppPaths.LOGS_TAGGER,
-                        ],
-                      );
+                      final filePaths = await AppPaths.getAllExistingLogFiles();
+                      NamidaUtils.shareFiles(filePaths);
                     },
                   )
                 ],
