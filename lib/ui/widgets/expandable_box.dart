@@ -14,13 +14,14 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 
 class ExpandableBox extends StatefulWidget {
   final bool isBarVisible;
-  final bool showSearchBox;
+  final bool? initialShowSearchBox;
   final bool displayloadingIndicator;
-  final void Function() onFilterIconTap;
+  final bool Function(bool newShow) onSearchBoxVisibilityChange;
   final String leftText;
   final void Function() onCloseButtonPressed;
   final SortByMenu sortByMenuWidget;
-  final CustomTextFiled Function() textField;
+  final CustomTextFiled textField;
+  final double? textFieldHeight;
   final ChangeGridCountWidget? gridWidget;
   final List<Widget>? leftWidgets;
   final bool enableHero;
@@ -28,13 +29,14 @@ class ExpandableBox extends StatefulWidget {
   const ExpandableBox({
     super.key,
     required this.isBarVisible,
-    required this.showSearchBox,
+    this.initialShowSearchBox,
     this.displayloadingIndicator = false,
-    required this.onFilterIconTap,
+    required this.onSearchBoxVisibilityChange,
     required this.leftText,
     required this.onCloseButtonPressed,
     required this.sortByMenuWidget,
     required this.textField,
+    this.textFieldHeight = 46.0,
     this.gridWidget,
     this.leftWidgets,
     required this.enableHero,
@@ -45,40 +47,55 @@ class ExpandableBox extends StatefulWidget {
 }
 
 class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late bool _latestShowSearchBox;
+  final _canShowSearchBoxRx = false.obs;
 
   @override
   void initState() {
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-      value: widget.showSearchBox ? 1.0 : 0.0,
-    );
-    _latestShowSearchBox = widget.showSearchBox;
+    try {
+      _canShowSearchBoxRx.value = widget.initialShowSearchBox ?? widget.textField.textFieldController?.text.isNotEmpty == true;
+    } catch (_) {
+      // -- text field disposed
+      _canShowSearchBoxRx.value = false;
+    }
     super.initState();
   }
 
   @override
-  void didUpdateWidget(covariant ExpandableBox oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (widget.showSearchBox != _latestShowSearchBox) {
-      _latestShowSearchBox = widget.showSearchBox;
-      _controller.animateTo(widget.showSearchBox ? 1.0 : 0.0);
-    }
+  void dispose() {
+    _canShowSearchBoxRx.close();
+    super.dispose();
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void _onFilterIconTap([bool? newShow]) {
+    newShow ??= !_canShowSearchBoxRx.value;
+    final accept = widget.onSearchBoxVisibilityChange(newShow);
+    if (accept) {
+      _canShowSearchBoxRx.value = newShow;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
     final leftWidgets = widget.leftWidgets;
+    final textFieldRow = Row(
+      children: [
+        const SizedBox(width: 12.0),
+        Expanded(
+          child: widget.textField,
+        ),
+        const SizedBox(width: 12.0),
+        NamidaIconButton(
+          onPressed: () {
+            widget.onCloseButtonPressed();
+            _onFilterIconTap(false);
+            ScrollSearchController.inst.unfocusKeyboard();
+          },
+          icon: Broken.close_circle,
+        ),
+        const SizedBox(width: 8.0),
+      ],
+    );
     return NamidaHero(
       enabled: widget.enableHero,
       tag: 'ExpandableBox',
@@ -146,7 +163,7 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                                 NamidaIconButton(
                                   horizontalPadding: 6.0,
                                   icon: Broken.filter_search,
-                                  onPressed: widget.onFilterIconTap,
+                                  onPressed: _onFilterIconTap,
                                   iconSize: 20.0,
                                 ),
                                 const SizedBox(width: 6.0),
@@ -159,37 +176,17 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                   ),
                 ),
               ),
-              FadeIgnoreTransition(
-                completelyKillWhenPossible: true,
-                opacity: _controller,
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 12.0),
-                      Expanded(
-                        child: widget.textField(),
-                      ),
-                      const SizedBox(width: 12.0),
-                      NamidaIconButton(
-                        onPressed: () {
-                          widget.onCloseButtonPressed();
-                          ScrollSearchController.inst.unfocusKeyboard();
-                        },
-                        icon: Broken.close_circle,
-                      ),
-                      const SizedBox(width: 8.0),
-                    ],
+              ObxO(
+                rx: _canShowSearchBoxRx,
+                builder: (context, canShowSearchBox) => AnimatedShow(
+                  duration: const Duration(milliseconds: 250),
+                  show: canShowSearchBox,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: textFieldRow,
                   ),
-                  builder: (context, child) {
-                    return SizedBox(
-                      height: _controller.value * 58.0,
-                      child: child!,
-                    );
-                  },
                 ),
               ),
-              if (widget.showSearchBox) const SizedBox(height: 8.0)
             ],
           );
         },
@@ -232,11 +229,14 @@ class SortByMenu extends StatelessWidget {
   final Widget Function() popupMenuChild;
   final String title;
   final bool isCurrentlyReversed;
+  final void Function()? onSortTap;
   final void Function()? onReverseIconTap;
+
   const SortByMenu({
     super.key,
     required this.popupMenuChild,
     required this.title,
+    this.onSortTap,
     this.onReverseIconTap,
     required this.isCurrentlyReversed,
   });
@@ -250,19 +250,20 @@ class SortByMenu extends StatelessWidget {
           style: const ButtonStyle(
             visualDensity: VisualDensity.compact,
           ),
+          onPressed: onSortTap ??
+              () => showMenu(
+                    color: theme.appBarTheme.backgroundColor,
+                    context: context,
+                    position: RelativeRect.fromLTRB(context.width, kExpandableBoxHeight + 8.0, 0, 0),
+                    constraints: BoxConstraints(maxHeight: context.height * 0.6),
+                    items: [
+                      PopupMenuItem(
+                        padding: const EdgeInsets.symmetric(vertical: 0.0),
+                        child: popupMenuChild(),
+                      ),
+                    ],
+                  ),
           child: NamidaButtonText(title, style: const TextStyle(fontSize: 14.5)),
-          onPressed: () => showMenu(
-            color: theme.appBarTheme.backgroundColor,
-            context: context,
-            position: RelativeRect.fromLTRB(context.width, kExpandableBoxHeight + 8.0, 0, 0),
-            constraints: BoxConstraints(maxHeight: context.height * 0.6),
-            items: [
-              PopupMenuItem(
-                padding: const EdgeInsets.symmetric(vertical: 0.0),
-                child: popupMenuChild(),
-              ),
-            ],
-          ),
         ),
         NamidaIconButton(
           horizontalPadding: 0.0,

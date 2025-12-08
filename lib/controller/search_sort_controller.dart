@@ -6,8 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/base/ports_provider.dart';
+import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/class/folder.dart';
-import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -327,28 +327,7 @@ class SearchSortController {
   }
 
   Map<String, dynamic> generateTrackSearchIsolateParams(SendPort sendPort) {
-    final params = {
-      'tracks': Indexer.inst.allTracksMappedByPath.values
-          .map((e) => {
-                'title': e.title,
-                'artist': e.originalArtist,
-                'album': e.album,
-                'albumArtist': e.albumArtist,
-                'genre': e.originalGenre,
-                'composer': e.composer,
-                'year': e.year,
-                'comment': e.comment,
-                'path': e.path,
-                'v': e.isVideo,
-              })
-          .toList(),
-      'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
-      'genresSplitConfig': GenresSplitConfig.settings().toMap(),
-      'filters': settings.trackSearchFilter.value,
-      'cleanup': _shouldCleanup,
-      'sendPort': sendPort,
-    };
-    return params;
+    return TracksSearchWrapper.generateParams(sendPort, Indexer.inst.allTracksMappedByPath.values);
   }
 
   Future<SendPort> _preparePlaylistPorts() async {
@@ -445,107 +424,13 @@ class SearchSortController {
   }
 
   static void searchTracksIsolate(Map params) {
-    final tracks = params['tracks'] as List<Map>;
-    final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
-    final genresSplitConfig = GenresSplitConfig.fromMap(params['genresSplitConfig']);
-    final tsf = params['filters'] as List<TrackSearchFilter>;
-    final cleanup = params['cleanup'] as bool;
     final sendPort = params['sendPort'] as SendPort;
 
     final receivePort = ReceivePort();
 
     sendPort.send(receivePort.sendPort);
 
-    final tsfMap = <TrackSearchFilter, bool>{};
-    tsf.loop((f) => tsfMap[f] = true);
-
-    final stitle = tsfMap[TrackSearchFilter.title] ?? true;
-    final sfilename = tsfMap[TrackSearchFilter.filename] ?? true;
-    final sfolder = tsfMap[TrackSearchFilter.folder] ?? false;
-    final salbum = tsfMap[TrackSearchFilter.album] ?? true;
-    final salbumartist = tsfMap[TrackSearchFilter.albumartist] ?? false;
-    final sartist = tsfMap[TrackSearchFilter.artist] ?? true;
-    final sgenre = tsfMap[TrackSearchFilter.genre] ?? false;
-    final scomposer = tsfMap[TrackSearchFilter.composer] ?? false;
-    final scomment = tsfMap[TrackSearchFilter.comment] ?? false;
-    final syear = tsfMap[TrackSearchFilter.year] ?? false;
-
-    final textCleanedForSearch = _functionOfCleanup(cleanup);
-    final textNonCleanedForSearch = cleanup ? _functionOfCleanup(false) : null;
-
-    List<String> mapListCleanedAndNonCleaned(List<String> splitted) {
-      final allParts = <String>[];
-      allParts.addAll(splitted.map((e) => textCleanedForSearch(e)));
-      if (textNonCleanedForSearch != null) {
-        for (int i = 0; i < splitted.length; i++) {
-          var s = textNonCleanedForSearch(splitted[i]);
-          if (!allParts.contains(s)) {
-            allParts.add(s);
-          }
-        }
-      }
-      return allParts;
-    }
-
-    List<String> splitTextCleanedAndNonCleaned(String text) {
-      final splitted = text.split(' ');
-      return mapListCleanedAndNonCleaned(splitted);
-    }
-
-    List<String>? splitThis(String? property, bool split) {
-      if (!split || property == null) return null;
-      return splitTextCleanedAndNonCleaned(property);
-    }
-
-    final tracksExtended = <({
-      String path,
-      List<String>? splitTitle,
-      List<String>? splitFilename,
-      List<String>? splitFolder,
-      List<String>? splitAlbum,
-      List<String>? splitAlbumArtist,
-      List<String>? splitArtist,
-      List<String>? splitGenre,
-      List<String>? splitComposer,
-      List<String>? splitComment,
-      List<String>? year,
-      bool isVideo,
-    })>[];
-    for (int i = 0; i < tracks.length; i++) {
-      var trMap = tracks[i];
-      final path = trMap['path'] as String;
-      tracksExtended.add(
-        (
-          path: path,
-          splitTitle: splitThis(trMap['title'], stitle),
-          splitFilename: splitThis(path.getFilename, sfilename),
-          splitFolder: splitThis(Track.explicit(path).folderName, sfolder),
-          splitAlbum: splitThis(trMap['album'], salbum),
-          splitAlbumArtist: splitThis(trMap['albumArtist'], salbumartist),
-          splitArtist: sartist
-              ? mapListCleanedAndNonCleaned(
-                  Indexer.splitArtist(
-                    title: trMap['title'],
-                    originalArtist: trMap['artist'],
-                    config: artistsSplitConfig,
-                  ),
-                )
-              : [],
-          splitGenre: sgenre
-              ? mapListCleanedAndNonCleaned(
-                  Indexer.splitGenre(
-                    trMap['genre'],
-                    config: genresSplitConfig,
-                  ),
-                )
-              : [],
-          splitComposer: splitThis(trMap['composer'], scomposer),
-          splitComment: splitThis(trMap['comment'], scomment),
-          year: mapListCleanedAndNonCleaned([trMap['year'].toString()]),
-          isVideo: trMap['v'] == true,
-        ),
-      );
-    }
+    final searchWrapper = TracksSearchWrapper.init(params);
 
     StreamSubscription? streamSub;
     streamSub = receivePort.listen((p) {
@@ -558,48 +443,7 @@ class SearchSortController {
       final text = p['text'] as String;
       final temp = p['temp'] as bool;
 
-      final lctext = textCleanedForSearch(text);
-      final lctextNonCleaned = textNonCleanedForSearch == null ? null : textNonCleanedForSearch(text);
-      final lctextSplit = splitTextCleanedAndNonCleaned(text);
-
-      bool isMatch(List<String>? propertySplit) {
-        if (propertySplit == null) return false;
-
-        final match1 = lctextSplit.every((element) => propertySplit.any((p) => p.contains(element)));
-        if (match1) return true;
-
-        if (cleanup) {
-          // cleanup means symbols and *spaces* are ignored.
-          final propertyJoined = propertySplit.join();
-
-          final match2 = propertyJoined.contains(lctext);
-          if (match2) return true;
-
-          if (lctextNonCleaned != null) {
-            final match3 = propertyJoined.contains(lctextNonCleaned);
-            if (match3) return true;
-          }
-        }
-
-        return false;
-      }
-
-      final result = <Track>[];
-      tracksExtended.loop((trExt) {
-        if ((stitle && isMatch(trExt.splitTitle)) ||
-            (sfolder && isMatch(trExt.splitFolder)) ||
-            (sfilename && isMatch(trExt.splitFilename)) ||
-            (salbum && isMatch(trExt.splitAlbum)) ||
-            (salbumartist && isMatch(trExt.splitAlbumArtist)) ||
-            (sartist && isMatch(trExt.splitArtist)) ||
-            (sgenre && isMatch(trExt.splitGenre)) ||
-            (scomposer && isMatch(trExt.splitComposer)) ||
-            (scomment && isMatch(trExt.splitComment)) ||
-            (syear && isMatch(trExt.year))) {
-          result.add(Track.decide(trExt.path, trExt.isVideo));
-        }
-      });
-
+      final result = searchWrapper.filter(text);
       sendPort.send((result, temp, text));
     });
 

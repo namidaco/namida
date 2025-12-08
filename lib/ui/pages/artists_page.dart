@@ -131,7 +131,6 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                             )
                           : null,
                       isBarVisible: LibraryTab.artists.isBarVisible.valueR,
-                      showSearchBox: LibraryTab.artists.isSearchBoxVisible.valueR,
                       leftText: customType != null ? artistLeftText : '',
                       leftWidgets: customType != null
                           ? null
@@ -157,7 +156,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                                 ),
                               ),
                             ],
-                      onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.artists),
+                      onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(LibraryTab.artists, newShow),
                       onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.artists),
                       sortByMenuWidget: SortByMenu(
                         title: sort.toText(),
@@ -165,8 +164,8 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                         isCurrentlyReversed: sortReverse,
                         onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !settings.artistSortReversed.value),
                       ),
-                      textField: () => CustomTextFiled(
-                        textFieldController: LibraryTab.artists.textSearchController,
+                      textField: CustomTextFiled(
+                        textFieldController: LibraryTab.artists.textSearchControllerUI,
                         textFieldHintText: lang.FILTER_ARTISTS,
                         onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, settings.activeArtistType.value),
                       ),

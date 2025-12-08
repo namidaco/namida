@@ -76,7 +76,6 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                 return ExpandableBox(
                   enableHero: false,
                   isBarVisible: LibraryTab.tracks.isBarVisible.valueR,
-                  showSearchBox: LibraryTab.tracks.isSearchBoxVisible.valueR,
                   displayloadingIndicator: Indexer.inst.isIndexing.valueR,
                   leftWidgets: [
                     NamidaIconButton(
@@ -95,7 +94,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                     const SizedBox(width: 10.0),
                   ],
                   leftText: leftText,
-                  onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.tracks),
+                  onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(LibraryTab.tracks, newShow),
                   onCloseButtonPressed: () {
                     ScrollSearchController.inst.clearSearchTextField(LibraryTab.tracks);
                   },
@@ -107,8 +106,8 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                       SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse[MediaType.track] == true));
                     },
                   ),
-                  textField: () => CustomTextFiled(
-                    textFieldController: LibraryTab.tracks.textSearchController,
+                  textField: CustomTextFiled(
+                    textFieldController: LibraryTab.tracks.textSearchControllerUI,
                     textFieldHintText: lang.FILTER_TRACKS,
                     onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.track),
                   ),

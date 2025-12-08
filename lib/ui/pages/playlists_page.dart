@@ -286,9 +286,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                               tab: LibraryTab.playlists,
                             ),
                       isBarVisible: LibraryTab.playlists.isBarVisible.valueR,
-                      showSearchBox: LibraryTab.playlists.isSearchBoxVisible.valueR,
                       leftText: leftText,
-                      onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.playlists),
+                      onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(LibraryTab.playlists, newShow),
                       onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.playlists),
                       sortByMenuWidget: SortByMenu(
                         title: settings.playlistSort.valueR.toText(),
@@ -296,8 +295,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                         isCurrentlyReversed: settings.playlistSortReversed.valueR,
                         onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
                       ),
-                      textField: () => CustomTextFiled(
-                        textFieldController: LibraryTab.playlists.textSearchController,
+                      textField: CustomTextFiled(
+                        textFieldController: LibraryTab.playlists.textSearchControllerUI,
                         textFieldHintText: lang.FILTER_PLAYLISTS,
                         onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.playlist),
                       ),

@@ -78,7 +78,6 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                             )
                           : null,
                       isBarVisible: LibraryTab.albums.isBarVisible.valueR,
-                      showSearchBox: LibraryTab.albums.isSearchBoxVisible.valueR,
                       leftText: '',
                       leftWidgets: [
                         NamidaPopupWrapper(
@@ -102,7 +101,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                           ),
                         ),
                       ],
-                      onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.albums),
+                      onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(LibraryTab.albums, newShow),
                       onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.albums),
                       sortByMenuWidget: SortByMenu(
                         title: sort.toText(),
@@ -110,8 +109,8 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                         isCurrentlyReversed: sortReverse,
                         onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
                       ),
-                      textField: () => CustomTextFiled(
-                        textFieldController: LibraryTab.albums.textSearchController,
+                      textField: CustomTextFiled(
+                        textFieldController: LibraryTab.albums.textSearchControllerUI,
                         textFieldHintText: lang.FILTER_ALBUMS,
                         onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.album),
                       ),

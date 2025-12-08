@@ -69,9 +69,8 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                       tab: LibraryTab.genres,
                     ),
                     isBarVisible: LibraryTab.genres.isBarVisible.valueR,
-                    showSearchBox: LibraryTab.genres.isSearchBoxVisible.valueR,
                     leftText: leftText,
-                    onFilterIconTap: () => ScrollSearchController.inst.switchSearchBoxVisibilty(LibraryTab.genres),
+                    onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(LibraryTab.genres, newShow),
                     onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.genres),
                     sortByMenuWidget: SortByMenu(
                       title: sort.toText(),
@@ -79,8 +78,8 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                       isCurrentlyReversed: sortReverse,
                       onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
                     ),
-                    textField: () => CustomTextFiled(
-                      textFieldController: LibraryTab.genres.textSearchController,
+                    textField: CustomTextFiled(
+                      textFieldController: LibraryTab.genres.textSearchControllerUI,
                       textFieldHintText: lang.FILTER_GENRES,
                       onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.genre),
                     ),

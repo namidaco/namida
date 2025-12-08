@@ -2043,7 +2043,7 @@ class SubpageInfoContainer extends StatelessWidget {
 
     return Container(
       alignment: Alignment.topCenter,
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0, bottom: 4.0),
       margin: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
       height: height,
       child: LayoutWidthHeightProvider(
@@ -2961,10 +2961,12 @@ class NamidaListView extends StatelessWidget {
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
   final Widget? header;
+  final Widget? stickyHeader;
   final Widget Function(double maxWidth)? infoBox;
   final List<Widget>? widgetsInColumn;
   final double? listBottomPadding;
   final double? itemExtent;
+  final fr.ItemExtentBuilder? itemExtentBuilder;
   final ScrollController? scrollController;
   final int itemCount;
   final ScrollPhysics? physics;
@@ -2975,6 +2977,7 @@ class NamidaListView extends StatelessWidget {
     super.key,
     this.listBuilder,
     this.header,
+    this.stickyHeader,
     this.infoBox,
     this.widgetsInColumn,
     this.listBottomPadding,
@@ -2983,6 +2986,7 @@ class NamidaListView extends StatelessWidget {
     required this.itemBuilder,
     required this.itemCount,
     required this.itemExtent,
+    this.itemExtentBuilder,
     this.scrollController,
     this.onReorderStart,
     this.onReorderEnd,
@@ -2996,6 +3000,7 @@ class NamidaListView extends StatelessWidget {
     final list = onReorder != null
         ? NamidaSliverReorderableList(
             itemExtent: itemExtent,
+            itemExtentBuilder: itemExtentBuilder,
             itemBuilder: itemBuilder,
             itemCount: itemCount,
             onReorder: onReorder!,
@@ -3009,15 +3014,22 @@ class NamidaListView extends StatelessWidget {
                 itemBuilder: itemBuilder,
                 itemCount: itemCount,
               )
-            : SuperSliverList.builder(
-                itemBuilder: itemBuilder,
-                itemCount: itemCount,
-              );
+            : itemExtentBuilder != null
+                ? SliverVariedExtentList.builder(
+                    itemExtentBuilder: itemExtentBuilder!,
+                    itemBuilder: itemBuilder,
+                    itemCount: itemCount,
+                  )
+                : SuperSliverList.builder(
+                    itemBuilder: itemBuilder,
+                    itemCount: itemCount,
+                  );
     return NamidaListViewRaw(
       scrollController: scrollController,
       scrollConfig: scrollConfig,
       scrollStep: scrollStep,
       header: header,
+      stickyHeader: stickyHeader,
       infoBox: infoBox,
       slivers: [list],
       builder: listBuilder ??
@@ -3040,6 +3052,7 @@ class NamidaListViewRaw extends StatefulWidget {
   final Widget Function(Widget list)? builder;
   final Widget Function(double maxWidth)? infoBox;
   final Widget? header;
+  final Widget? stickyHeader;
   final Widget? footer;
 
   /// defaults to [Dimensions.globalBottomPaddingTotalR]
@@ -3057,6 +3070,7 @@ class NamidaListViewRaw extends StatefulWidget {
     this.builder,
     this.infoBox,
     this.header,
+    this.stickyHeader,
     this.footer,
     this.listBottomPadding,
     this.scrollController,
@@ -3105,6 +3119,7 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
 
     final showSubpageInfoAtSide = Dimensions.inst.showSubpageInfoAtSideContext(context);
     final displayHeaderAtTop = widget.header != null;
+    final displayStickyHeaderAtTop = widget.stickyHeader != null;
     final displayInfoBoxAtTop = widget.infoBox != null && !showSubpageInfoAtSide;
     final displayInfoBoxAtSide = widget.infoBox != null && showSubpageInfoAtSide;
     Widget listW = ClipRect(
@@ -3126,6 +3141,13 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
               padding: displayInfoBoxAtTop ? EdgeInsets.zero : headerPadding,
               sliver: SliverToBoxAdapter(
                 child: widget.header,
+              ),
+            ),
+          if (displayStickyHeaderAtTop)
+            SliverPadding(
+              padding: displayInfoBoxAtTop ? EdgeInsets.zero : headerPadding,
+              sliver: PinnedHeaderSliver(
+                child: widget.stickyHeader,
               ),
             ),
           SliverPadding(
@@ -3223,11 +3245,11 @@ class NamidaTracksList extends StatelessWidget {
   final List<Selectable>? queue;
   final int queueLength;
   final Widget Function(BuildContext context, int i)? itemBuilder;
+  final fr.ItemExtentBuilder? itemExtentBuilder;
   final Widget? header;
   final Widget Function(double maxWidth)? infoBox;
   final Widget? footer;
   final List<Widget>? widgetsInColumn;
-  final EdgeInsetsGeometry? paddingAfterHeader;
   final ScrollController? scrollController;
   final double? listBottomPadding;
   final bool Function()? isTrackSelectable;
@@ -3243,11 +3265,11 @@ class NamidaTracksList extends StatelessWidget {
     super.key,
     this.queue,
     this.itemBuilder,
+    this.itemExtentBuilder,
     this.header,
     required this.infoBox,
     this.footer,
     this.widgetsInColumn,
-    this.paddingAfterHeader,
     this.scrollController,
     this.listBottomPadding,
     required this.queueLength,
@@ -3272,6 +3294,7 @@ class NamidaTracksList extends StatelessWidget {
           scrollController: scrollController,
           itemCount: queueLength,
           itemExtent: Dimensions.inst.trackTileItemExtent,
+          itemExtentBuilder: itemExtentBuilder,
           listBottomPadding: listBottomPadding,
           physics: physics,
           scrollConfig: scrollConfig,
@@ -4130,6 +4153,7 @@ class NamidaPopupWrapper extends StatelessWidget {
       Offset.zero & overlay.size,
     );
     await NamidaNavigator.inst.showMenu(
+      // ignore: use_build_context_synchronously
       context: context,
       position: position,
       items: await convertItems(context),

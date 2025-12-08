@@ -5,7 +5,9 @@ import 'package:history_manager/history_manager.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
 import 'package:namida/base/history_days_rebuilder.dart';
+import 'package:namida/base/ports_provider.dart';
 import 'package:namida/base/pull_to_refresh.dart';
+import 'package:namida/base/tracks_search_widget_mixin.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -95,6 +97,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
     const dayHeaderHeight = kHistoryDayHeaderHeight;
     final dayHeaderBgColor = Color.alphaBlend(theme.cardTheme.color!.withAlpha(140), theme.scaffoldBackgroundColor);
     final dayHeaderSideColor = CurrentColor.inst.color;
+
     final dayHeaderShadowColor = Color.alphaBlend(theme.shadowColor.withAlpha(140), theme.scaffoldBackgroundColor).withValues(alpha: 0.4);
 
     final daysLength = historyDays.length;
@@ -496,15 +499,18 @@ class NormalPlaylistTracksPage extends StatefulWidget with NamidaRouteWidget {
   State<NormalPlaylistTracksPage> createState() => _NormalPlaylistTracksPageState();
 }
 
-class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> with TickerProviderStateMixin, PullToRefreshMixin {
-  late final _scrollController = ScrollController();
-  late String? _playlistM3uPath = PlaylistController.inst.getPlaylist(widget.playlistName)?.m3uPath;
+class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
+    with TickerProviderStateMixin, PullToRefreshMixin, PortsProvider<Map<String, dynamic>>, TracksSearchWidgetMixin<NormalPlaylistTracksPage> {
+  @override
+  Iterable<TrackExtended> getTracksExtended() {
+    final playlist = PlaylistController.inst.getPlaylist(widget.playlistName);
+    return playlist?.tracks.map((e) => e.track.toTrackExt()) ?? [];
+  }
 
   @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
+  RxBaseCore listChangesListenerRx() => PlaylistController.inst.playlistsMap;
+
+  late String? _playlistM3uPath = PlaylistController.inst.getPlaylist(widget.playlistName)?.m3uPath;
 
   @override
   Widget build(BuildContext context) {
@@ -525,7 +531,8 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
           final tracksWithDate = playlist.tracks;
           if (tracksWithDate.isEmpty) return EmptyPlaylistSubpage(playlist: playlist);
 
-          final tracks = tracksWithDate.toTracks();
+          final sort = playlist.sortsType?.firstOrNull;
+          final sortReverse = playlist.sortReverse;
 
           return ObxO(
             rx: PlaylistController.inst.canReorderItems,
@@ -538,35 +545,61 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
                 selectable: () => !PlaylistController.inst.canReorderItems.value,
               ),
               builder: (properties) => NamidaListView(
-                scrollController: _scrollController,
-                itemCount: tracks.length,
-                itemExtent: Dimensions.inst.trackTileItemExtent,
+                scrollController: scrollController,
+                itemCount: tracksWithDate.length,
                 infoBox: (maxWidth) => SubpageInfoContainer(
+                  bottomPadding: 0.0,
                   maxWidth: maxWidth,
                   source: playlist.toQueueSource(),
                   title: playlist.name.translatePlaylistName(),
-                  subtitle: "${[
-                    tracks.displayTrackKeyword,
-                    tracks.totalDurationFormatted,
-                  ].join(' - ')}\n${playlist.creationDate.dateFormatted}",
+                  subtitle: playlist.creationDate.dateFormatted,
                   thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
                   heroTag: 'playlist_${playlist.name}',
                   imageBuilder: (size) => MultiArtworkContainer(
                     heroTag: 'playlist_${playlist.name}',
                     size: size,
-                    tracks: tracks.toImageTracks(),
+                    tracks: tracksWithDate.toImageTracks(),
                     artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
                   ),
-                  tracksFn: () => tracks,
+                  tracksFn: () => tracksWithDate,
                 ),
                 onReorderStart: (index) => super.enablePullToRefresh = false,
                 onReorderEnd: (index) => super.enablePullToRefresh = true,
-                onReorder: (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
+                onReorder: isSearching ? null : (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
+                header: TracksSearchWidgetBoxBase(
+                  state: this,
+                  leftText: [
+                    tracksWithDate.displayTrackKeyword,
+                    tracksWithDate.totalDurationFormatted,
+                  ].join(' - '),
+                  sort: sort,
+                  sortReverse: sortReverse,
+                  onSortTap: () => NamidaOnTaps.inst.onPlaylistSubPageTracksSortIconTap(
+                    playlist.name,
+                    PlaylistController.inst,
+                    SortType.values,
+                    (sort) => sort.toText(),
+                  ),
+                  onReverseIconTap: (newSortReserve) {
+                    PlaylistController.inst.updatePropertyInPlaylist(playlist.name, itemsSortReverse: newSortReserve);
+                    PlaylistController.inst.resetCanReorder();
+                  },
+                ),
+                itemExtent: null,
+                itemExtentBuilder: (i, dimensions) {
+                  if (shouldHideIndex(i)) return 0;
+                  return Dimensions.inst.trackTileItemExtent;
+                },
                 itemBuilder: (context, i) {
                   final trackWithDate = tracksWithDate[i];
+                  final key = Key("Diss_$i$trackWithDate");
+
+                  if (shouldHideIndex(i)) {
+                    return SizedBox(key: key);
+                  }
 
                   return FadeDismissible(
-                    key: Key("Diss_$i$trackWithDate"),
+                    key: key,
                     draggableRx: PlaylistController.inst.canReorderItems,
                     onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTracksFromPlaylist(playlist.name, [trackWithDate]),
                     onTopWidget: Positioned(
@@ -607,7 +640,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage> wit
         child: _playlistM3uPath != null
             ? Listener(
                 onPointerMove: (event) {
-                  onPointerMove(_scrollController, event);
+                  onPointerMove(scrollController, event);
                 },
                 onPointerUp: (event) async {
                   final m3uPath = _playlistM3uPath;

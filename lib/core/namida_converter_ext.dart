@@ -1331,30 +1331,6 @@ extension RouteUtils on NamidaRoute {
 
     final queue = route == RouteType.SUBPAGE_queueTracks ? name?.getQueue() : null;
 
-    MediaType? sortingTracksMediaType;
-    switch (route) {
-      case RouteType.SUBPAGE_albumTracks:
-        sortingTracksMediaType = MediaType.album;
-        break;
-      case RouteType.SUBPAGE_artistTracks:
-        sortingTracksMediaType = MediaType.artist;
-      case RouteType.SUBPAGE_albumArtistTracks:
-        sortingTracksMediaType = MediaType.albumArtist;
-      case RouteType.SUBPAGE_composerTracks:
-        sortingTracksMediaType = MediaType.composer;
-        break;
-      case RouteType.SUBPAGE_genreTracks:
-        sortingTracksMediaType = MediaType.genre;
-        break;
-      // -- sorting icon is displayed in folder page itself
-      // case RouteType.PAGE_folders:
-      //   sortingTracksMediaType = MediaType.folder;
-      //   break;
-
-      default:
-        null;
-    }
-
     final showMainMenu = route == RouteType.SUBPAGE_albumTracks ||
         route == RouteType.SUBPAGE_artistTracks ||
         route == RouteType.SUBPAGE_albumArtistTracks ||
@@ -1410,37 +1386,20 @@ extension RouteUtils on NamidaRoute {
         ),
         shouldShow: queue != null,
       ),
+
       _getAnimatedCrossFade(
         child: NamidaAppBarIcon(
           icon: Broken.sort,
           onPressed: () {
-            NamidaOnTaps.inst.onSubPageTracksSortIconTap(sortingTracksMediaType!);
+            NamidaOnTaps.inst.onPlaylistSubPageTracksSortIconTap(
+              name ?? '',
+              ytplc.YoutubePlaylistController.inst,
+              YTSortType.values,
+              (sort) => sort.toText(),
+            );
           },
         ),
-        shouldShow: sortingTracksMediaType != null,
-      ),
-      _getAnimatedCrossFade(
-        child: NamidaAppBarIcon(
-          icon: Broken.sort,
-          onPressed: () {
-            if (route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE) {
-              NamidaOnTaps.inst.onPlaylistSubPageTracksSortIconTap(
-                name ?? '',
-                ytplc.YoutubePlaylistController.inst,
-                YTSortType.values,
-                (sort) => sort.toText(),
-              );
-            } else {
-              NamidaOnTaps.inst.onPlaylistSubPageTracksSortIconTap(
-                name ?? '',
-                PlaylistController.inst,
-                SortType.values,
-                (sort) => sort.toText(),
-              );
-            }
-          },
-        ),
-        shouldShow: route == RouteType.SUBPAGE_playlistTracks || route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE,
+        shouldShow: route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE,
       ),
 
       _getAnimatedCrossFade(
