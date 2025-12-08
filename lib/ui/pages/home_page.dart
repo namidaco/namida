@@ -803,33 +803,36 @@ class _AlbumsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final itemCount = albums.length;
     return SliverToBoxAdapter(
-      child: _HorizontalList(
-        isLoading: isLoading,
-        homepageItem: homepageItem,
-        title: title,
-        leading: StackedIcon(
-          baseIcon: mainIcon,
-          secondaryIcon: Broken.music_dashboard,
+      child: ObxO(
+        rx: Indexer.inst.mainMapAlbums.rx,
+        builder: (context, value) => _HorizontalList(
+          isLoading: isLoading,
+          homepageItem: homepageItem,
+          title: title,
+          leading: StackedIcon(
+            baseIcon: mainIcon,
+            secondaryIcon: Broken.music_dashboard,
+          ),
+          height: 150.0 + 12.0,
+          itemCount: itemCount,
+          itemExtent: 98.0,
+          itemBuilder: (context, index) {
+            final albumId = albums[index];
+            return AlbumCard(
+              key: ValueKey(albumId),
+              dummyCard: isLoading,
+              homepageItem: homepageItem,
+              displayIcon: !isLoading,
+              compact: true,
+              identifier: albumId ?? '',
+              album: albumId?.getAlbumTracks() ?? [],
+              staggered: false,
+              extraInfo: listens == null ? null : "${listens!(albumId)}",
+              forceExtraInfoAtTopRight: true,
+              additionalHeroTag: "$title$index",
+            );
+          },
         ),
-        height: 150.0 + 12.0,
-        itemCount: itemCount,
-        itemExtent: 98.0,
-        itemBuilder: (context, index) {
-          final albumId = albums[index];
-          return AlbumCard(
-            key: ValueKey(albumId),
-            dummyCard: isLoading,
-            homepageItem: homepageItem,
-            displayIcon: !isLoading,
-            compact: true,
-            identifier: albumId ?? '',
-            album: albumId?.getAlbumTracks() ?? [],
-            staggered: false,
-            extraInfo: listens == null ? null : "${listens!(albumId)}",
-            forceExtraInfoAtTopRight: true,
-            additionalHeroTag: "$title$index",
-          );
-        },
       ),
     );
   }
@@ -857,29 +860,32 @@ class _ArtistsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final itemCount = artists.length;
     return SliverToBoxAdapter(
-      child: _HorizontalList(
-        isLoading: isLoading,
-        homepageItem: homepageItem,
-        title: title,
-        leading: StackedIcon(
-          baseIcon: mainIcon,
-          secondaryIcon: Broken.user,
+      child: ObxO(
+        rx: Indexer.inst.mainMapArtists.rx,
+        builder: (context, value) => _HorizontalList(
+          isLoading: isLoading,
+          homepageItem: homepageItem,
+          title: title,
+          leading: StackedIcon(
+            baseIcon: mainIcon,
+            secondaryIcon: Broken.user,
+          ),
+          height: 124.0,
+          itemCount: itemCount,
+          itemExtent: 86.0,
+          itemBuilder: (context, index) {
+            final a = artists[index];
+            return ArtistCard(
+              homepageItem: homepageItem,
+              displayIcon: !isLoading,
+              name: a ?? '',
+              artist: a?.getArtistTracks() ?? [],
+              bottomCenterText: isLoading || listens == null ? null : "${listens!(a)}",
+              additionalHeroTag: "$title$index",
+              type: MediaType.artist,
+            );
+          },
         ),
-        height: 124.0,
-        itemCount: itemCount,
-        itemExtent: 86.0,
-        itemBuilder: (context, index) {
-          final a = artists[index];
-          return ArtistCard(
-            homepageItem: homepageItem,
-            displayIcon: !isLoading,
-            name: a ?? '',
-            artist: a?.getArtistTracks() ?? [],
-            bottomCenterText: isLoading || listens == null ? null : "${listens!(a)}",
-            additionalHeroTag: "$title$index",
-            type: MediaType.artist,
-          );
-        },
       ),
     );
   }
