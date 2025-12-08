@@ -289,6 +289,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                       leftText: leftText,
                       onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(LibraryTab.playlists, newShow),
                       onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.playlists),
+                      disableSorting: tracksToAdd != null && tracksToAdd.isNotEmpty,
                       sortByMenuWidget: SortByMenu(
                         title: settings.playlistSort.valueR.toText(),
                         popupMenuChild: () => const SortByMenuPlaylist(),
@@ -494,6 +495,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                               final sortTextIsUseless = sort == GroupSortType.title || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
                               final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolverPlaylist(sort);
 
+                              late final existingStatus = <String, bool>{};
+                              late final sortedIndices = <String, int>{};
+
                               return ObxPrefer(
                                 enabled: sort.requiresHistory,
                                 rx: HistoryController.inst.topTracksMapListens,
@@ -501,94 +505,113 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                   rx: PlaylistController.inst.playlistsMap,
                                   builder: (context, playlistsMap) => ObxO(
                                     rx: SearchSortController.inst.playlistSearchList,
-                                    builder: (context, playlistSearchList) => countPerRowResolved == 1
-                                        ? SliverFixedExtentList.builder(
-                                            itemCount: playlistSearchList.length,
-                                            itemExtent: Dimensions.playlistTileItemExtent,
-                                            itemBuilder: (context, i) {
-                                              final key = playlistSearchList[i];
-                                              final playlist = playlistsMap[key]!;
+                                    builder: (context, playlistSearchListPre) {
+                                      List<String> playlistSearchList;
+                                      if (tracksToAdd != null && tracksToAdd.isNotEmpty) {
+                                        // -- put playlists having the tracks at first
+                                        final playlistSearchListSorted = <String>[];
+                                        final shouldReSort = existingStatus.isEmpty; // sort only once, so that refresh won't make them jump around
 
-                                              bool? allTracksExist;
-                                              if (tracksToAdd != null && tracksToAdd.isNotEmpty) {
-                                                allTracksExist = tracksToAdd.every((trackToAdd) => playlist.tracks.firstWhereEff((e) => e.track == trackToAdd) != null);
-                                              }
-
-                                              final extraText = extraTextResolver?.call(playlist);
-                                              return AnimatingTile(
-                                                position: i,
-                                                shouldAnimate: _shouldAnimate,
-                                                child: PlaylistTile(
-                                                  enableHero: enableHero,
-                                                  playlistName: key,
-                                                  onTap: tracksToAdd != null
-                                                      ? () {
-                                                          _onAddToPlaylist(playlist: playlist, allTracksExist: allTracksExist == true, allowAddingEverything: true);
-                                                        }
-                                                      : () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
-                                                  checkmarkStatus: allTracksExist,
-                                                  extraText: extraText, // dont fallback to prevent confusion
-                                                ),
-                                              );
-                                            },
-                                          )
-                                        : countPerRowResolved > 1
-                                            ? SliverGrid.builder(
-                                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                                  crossAxisCount: countPerRowResolved,
-                                                  childAspectRatio: 0.8,
-                                                  mainAxisSpacing: 8.0,
-                                                ),
-                                                itemCount: playlistSearchList.length,
-                                                itemBuilder: (context, i) {
-                                                  final key = playlistSearchList[i];
-                                                  final playlist = playlistsMap[key]!;
-                                                  final extraText = extraTextResolver?.call(playlist);
-                                                  return AnimatingGrid(
-                                                    columnCount: playlistSearchList.length,
-                                                    position: i,
-                                                    shouldAnimate: _shouldAnimate,
-                                                    child: MultiArtworkCard(
-                                                      enableHero: enableHero,
-                                                      heroTag: 'playlist_${playlist.name}',
-                                                      tracks: playlist.tracks.toTracks(),
-                                                      name: playlist.name.translatePlaylistName(),
-                                                      countPerRow: widget.countPerRow,
-                                                      showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
-                                                      onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
-                                                      artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
-                                                      widgetsInStack: [
-                                                        if (playlist.m3uPath != null)
-                                                          Positioned(
-                                                            bottom: 8.0,
-                                                            right: 8.0,
-                                                            child: NamidaTooltip(
-                                                              message: () => "${lang.M3U_PLAYLIST}\n${playlist.m3uPath?.formatPath()}",
-                                                              child: const Icon(Broken.music_filter, size: 18.0),
-                                                            ),
-                                                          ),
-                                                        if (extraText != null && extraText.isNotEmpty)
-                                                          Positioned(
-                                                            top: 0,
-                                                            right: 0,
-                                                            child: NamidaBlurryContainer(
-                                                              child: Text(
-                                                                extraText,
-                                                                style: textTheme.displaySmall?.copyWith(
-                                                                  fontSize: 12.0,
-                                                                  fontWeight: FontWeight.bold,
-                                                                ),
-                                                                softWrap: false,
-                                                                overflow: TextOverflow.fade,
+                                        for (final key in playlistSearchListPre) {
+                                          playlistSearchListSorted.add(key);
+                                          final playlist = playlistsMap[key]!;
+                                          final allTracksExist = tracksToAdd.every((trackToAdd) => playlist.tracks.firstWhereEff((e) => e.track == trackToAdd) != null);
+                                          existingStatus[key] = allTracksExist;
+                                        }
+                                        playlistSearchListSorted.sortBy((key) => sortedIndices[key] ?? (existingStatus[key] == true ? -2 : -1));
+                                        if (shouldReSort) {
+                                          for (var i = 0; i < playlistSearchListSorted.length; i++) {
+                                            sortedIndices[playlistSearchListSorted[i]] = i;
+                                          }
+                                        }
+                                        playlistSearchList = playlistSearchListSorted;
+                                      } else {
+                                        playlistSearchList = playlistSearchListPre;
+                                      }
+                                      return countPerRowResolved == 1
+                                          ? SliverFixedExtentList.builder(
+                                              itemCount: playlistSearchList.length,
+                                              itemExtent: Dimensions.playlistTileItemExtent,
+                                              itemBuilder: (context, i) {
+                                                final key = playlistSearchList[i];
+                                                final playlist = playlistsMap[key]!;
+                                                final allTracksExist = existingStatus[key];
+                                                final extraText = extraTextResolver?.call(playlist);
+                                                return AnimatingTile(
+                                                  position: i,
+                                                  shouldAnimate: _shouldAnimate,
+                                                  child: PlaylistTile(
+                                                    enableHero: enableHero,
+                                                    playlistName: key,
+                                                    onTap: tracksToAdd != null
+                                                        ? () {
+                                                            _onAddToPlaylist(playlist: playlist, allTracksExist: allTracksExist == true, allowAddingEverything: true);
+                                                          }
+                                                        : () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
+                                                    checkmarkStatus: allTracksExist,
+                                                    extraText: extraText, // dont fallback to prevent confusion
+                                                  ),
+                                                );
+                                              },
+                                            )
+                                          : countPerRowResolved > 1
+                                              ? SliverGrid.builder(
+                                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                    crossAxisCount: countPerRowResolved,
+                                                    childAspectRatio: 0.8,
+                                                    mainAxisSpacing: 8.0,
+                                                  ),
+                                                  itemCount: playlistSearchList.length,
+                                                  itemBuilder: (context, i) {
+                                                    final key = playlistSearchList[i];
+                                                    final playlist = playlistsMap[key]!;
+                                                    final extraText = extraTextResolver?.call(playlist);
+                                                    return AnimatingGrid(
+                                                      columnCount: playlistSearchList.length,
+                                                      position: i,
+                                                      shouldAnimate: _shouldAnimate,
+                                                      child: MultiArtworkCard(
+                                                        enableHero: enableHero,
+                                                        heroTag: 'playlist_${playlist.name}',
+                                                        tracks: playlist.tracks.toTracks(),
+                                                        name: playlist.name.translatePlaylistName(),
+                                                        countPerRow: widget.countPerRow,
+                                                        showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
+                                                        onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
+                                                        artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
+                                                        widgetsInStack: [
+                                                          if (playlist.m3uPath != null)
+                                                            Positioned(
+                                                              bottom: 8.0,
+                                                              right: 8.0,
+                                                              child: NamidaTooltip(
+                                                                message: () => "${lang.M3U_PLAYLIST}\n${playlist.m3uPath?.formatPath()}",
+                                                                child: const Icon(Broken.music_filter, size: 18.0),
                                                               ),
                                                             ),
-                                                          ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                },
-                                              )
-                                            : const SizedBox(),
+                                                          if (extraText != null && extraText.isNotEmpty)
+                                                            Positioned(
+                                                              top: 0,
+                                                              right: 0,
+                                                              child: NamidaBlurryContainer(
+                                                                child: Text(
+                                                                  extraText,
+                                                                  style: textTheme.displaySmall?.copyWith(
+                                                                    fontSize: 12.0,
+                                                                    fontWeight: FontWeight.bold,
+                                                                  ),
+                                                                  softWrap: false,
+                                                                  overflow: TextOverflow.fade,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  },
+                                                )
+                                              : const SizedBox();
+                                    },
                                   ),
                                 ),
                               );

@@ -21,6 +21,7 @@ class ExpandableBox extends StatefulWidget {
   final void Function() onCloseButtonPressed;
   final SortByMenu sortByMenuWidget;
   final CustomTextFiled textField;
+  final bool disableSorting;
   final double? textFieldHeight;
   final ChangeGridCountWidget? gridWidget;
   final List<Widget>? leftWidgets;
@@ -36,6 +37,7 @@ class ExpandableBox extends StatefulWidget {
     required this.onCloseButtonPressed,
     required this.sortByMenuWidget,
     required this.textField,
+    this.disableSorting = false,
     this.textFieldHeight = 46.0,
     this.gridWidget,
     this.leftWidgets,
@@ -158,8 +160,8 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                               children: [
                                 if (widget.gridWidget != null) widget.gridWidget!,
                                 const SizedBox(width: 4.0),
-                                widget.sortByMenuWidget,
-                                const SizedBox(width: 6.0),
+                                if (!widget.disableSorting) widget.sortByMenuWidget,
+                                if (!widget.disableSorting) const SizedBox(width: 6.0),
                                 NamidaIconButton(
                                   horizontalPadding: 6.0,
                                   icon: Broken.filter_search,

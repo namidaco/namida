@@ -38,12 +38,14 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
 
   final Iterable<String> idsToAdd;
   final bool displayMenu;
+  final bool disableSorting;
   final bool? minimalView;
 
   const YoutubePlaylistsView({
     super.key,
     this.idsToAdd = const <String>[],
     this.displayMenu = true,
+    this.disableSorting = false,
     this.minimalView,
   });
 
@@ -234,123 +236,136 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                         title: "${lang.PLAYLISTS} - ${YoutubePlaylistController.inst.playlistsMap.length}",
                         icon: Broken.music_library_2,
                         trailing: const SizedBox(),
-                        subtitleWidget: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            NamidaPopupWrapper(
-                              useRootNavigator: true,
-                              children: () => [
-                                MapEntry(
-                                  null,
-                                  Column(
-                                    children: [
-                                      ListTileWithCheckMark(
-                                        activeRx: settings.ytPlaylistSortReversed,
-                                        onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(reverse: !settings.ytPlaylistSortReversed.value),
-                                      ),
-                                      ...[
-                                        GroupSortType.title,
-                                        GroupSortType.creationDate,
-                                        GroupSortType.modifiedDate,
-                                        GroupSortType.numberOfTracks,
-                                        GroupSortType.playCount,
-                                        GroupSortType.firstListen,
-                                        GroupSortType.latestPlayed,
-                                        GroupSortType.shuffle,
-                                      ].map(
-                                        (e) => ObxO(
-                                          rx: settings.ytPlaylistSort,
-                                          builder: (context, ytPlaylistSort) => SmallListTile(
-                                            title: e.toText(),
-                                            active: ytPlaylistSort == e,
-                                            onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(sortBy: e),
-                                          ),
+                        subtitleWidget: disableSorting
+                            ? null
+                            : Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  NamidaPopupWrapper(
+                                    useRootNavigator: true,
+                                    children: () => [
+                                      MapEntry(
+                                        null,
+                                        Column(
+                                          children: [
+                                            ListTileWithCheckMark(
+                                              activeRx: settings.ytPlaylistSortReversed,
+                                              onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(reverse: !settings.ytPlaylistSortReversed.value),
+                                            ),
+                                            ...[
+                                              GroupSortType.title,
+                                              GroupSortType.creationDate,
+                                              GroupSortType.modifiedDate,
+                                              GroupSortType.numberOfTracks,
+                                              GroupSortType.playCount,
+                                              GroupSortType.firstListen,
+                                              GroupSortType.latestPlayed,
+                                              GroupSortType.shuffle,
+                                            ].map(
+                                              (e) => ObxO(
+                                                rx: settings.ytPlaylistSort,
+                                                builder: (context, ytPlaylistSort) => SmallListTile(
+                                                  title: e.toText(),
+                                                  active: ytPlaylistSort == e,
+                                                  onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(sortBy: e),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
+                                    child: ObxO(
+                                      rx: settings.ytPlaylistSort,
+                                      builder: (context, ytPlaylistSort) => Text(
+                                        ytPlaylistSort.toText(),
+                                        style: textTheme.displaySmall?.copyWith(
+                                          color: theme.colorScheme.secondary,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ],
-                              child: ObxO(
-                                rx: settings.ytPlaylistSort,
-                                builder: (context, ytPlaylistSort) => Text(
-                                  ytPlaylistSort.toText(),
-                                  style: textTheme.displaySmall?.copyWith(
-                                    color: theme.colorScheme.secondary,
+                                  const SizedBox(width: 4.0),
+                                  NamidaInkWell(
+                                    onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(reverse: !settings.ytPlaylistSortReversed.value),
+                                    child: ObxO(
+                                      rx: settings.ytPlaylistSortReversed,
+                                      builder: (context, ytPlaylistSortReversed) => Icon(
+                                        ytPlaylistSortReversed ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                                        size: 16.0,
+                                        color: theme.colorScheme.secondary,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(width: 4.0),
-                            NamidaInkWell(
-                              onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(reverse: !settings.ytPlaylistSortReversed.value),
-                              child: ObxO(
-                                rx: settings.ytPlaylistSortReversed,
-                                builder: (context, ytPlaylistSortReversed) => Icon(
-                                  ytPlaylistSortReversed ? Broken.arrow_up_3 : Broken.arrow_down_2,
-                                  size: 16.0,
-                                  color: theme.colorScheme.secondary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 4.0),
+                  NamidaInkWellButton(
+                    icon: Broken.add_circle,
+                    text: lang.CREATE,
+                    borderRadius: 8.0,
+                    onTap: YTUtils.showCreateLocalYTPlaylistSheet,
+                  ),
+                  SizedBox(width: 6.0),
                   ObxO(
                     rx: YoutubeImportController.inst.isImportingPlaylists,
-                    builder: (context, isImportingPlaylists) => NamidaInkWellButton(
-                      icon: Broken.add_circle,
-                      text: lang.IMPORT,
-                      enabled: !isImportingPlaylists,
-                      onTap: () {
-                        NamidaNavigator.inst.navigateDialog(
-                          dialog: CustomBlurryDialog(
-                            title: lang.NOTE,
-                            normalTitleStyle: true,
-                            bodyText:
-                                'Importing takeout playlists works by picking a single playlists directory, or a main directory that contains multiple takeouts, in that case playlists will be merged and video-sorted by date added',
-                            actions: [
-                              NamidaButton(
-                                onPressed: () async {
-                                  NamidaNavigator.inst.closeDialog();
+                    builder: (context, isImportingPlaylists) => Tooltip(
+                      message: lang.IMPORT,
+                      child: NamidaInkWellButton(
+                        icon: Broken.import_2,
+                        text: '',
+                        enabled: !isImportingPlaylists,
+                        borderRadius: 8.0,
+                        onTap: () {
+                          NamidaNavigator.inst.navigateDialog(
+                            dialog: CustomBlurryDialog(
+                              title: lang.NOTE,
+                              normalTitleStyle: true,
+                              bodyText:
+                                  'Importing takeout playlists works by picking a single playlists directory, or a main directory that contains multiple takeouts, in that case playlists will be merged and video-sorted by date added',
+                              actions: [
+                                NamidaButton(
+                                  onPressed: () async {
+                                    NamidaNavigator.inst.closeDialog();
 
-                                  final dirPath = await NamidaFileBrowser.getDirectory(note: 'choose playlist directory from a google takeout');
-                                  if (dirPath == null) return;
+                                    final dirPath = await NamidaFileBrowser.getDirectory(note: 'choose playlist directory from a google takeout');
+                                    if (dirPath == null) return;
 
-                                  final details = await YoutubeImportController.inst.importPlaylists(dirPath);
-                                  if (details == null) {
+                                    final details = await YoutubeImportController.inst.importPlaylists(dirPath);
+                                    if (details == null) {
+                                      snackyy(
+                                        icon: Broken.forbidden,
+                                        message: "Operation Canceled",
+                                      );
+                                      return;
+                                    }
+                                    if (details.totalCount <= 0) {
+                                      snackyy(
+                                        icon: Broken.danger,
+                                        message: "Failed to import\nPlease choose a valid playlists directory taken from google takeout",
+                                        isError: true,
+                                      );
+                                      return;
+                                    }
+
+                                    final importedSucessText = lang.IMPORTED_N_PLAYLISTS_SUCCESSFULLY.replaceFirst('_NUM_', '${details.countAfterMerging}');
+                                    final detailsText = 'Total Count: ${details.totalCount} | Merged Count: ${details.mergedCount} | Final Count: ${details.countAfterMerging}';
                                     snackyy(
-                                      icon: Broken.forbidden,
-                                      message: "Operation Canceled",
+                                      icon: Broken.copy_success,
+                                      message: '$importedSucessText\n$detailsText',
+                                      borderColor: Colors.green.withValues(alpha: 0.8),
                                     );
-                                    return;
-                                  }
-                                  if (details.totalCount <= 0) {
-                                    snackyy(
-                                      icon: Broken.danger,
-                                      message: "Failed to import\nPlease choose a valid playlists directory taken from google takeout",
-                                      isError: true,
-                                    );
-                                    return;
-                                  }
-
-                                  final importedSucessText = lang.IMPORTED_N_PLAYLISTS_SUCCESSFULLY.replaceFirst('_NUM_', '${details.countAfterMerging}');
-                                  final detailsText = 'Total Count: ${details.totalCount} | Merged Count: ${details.mergedCount} | Final Count: ${details.countAfterMerging}';
-                                  snackyy(
-                                    icon: Broken.copy_success,
-                                    message: '$importedSucessText\n$detailsText',
-                                    borderColor: Colors.green.withValues(alpha: 0.8),
-                                  );
-                                },
-                                text: lang.PICK_FROM_STORAGE,
-                              )
-                            ],
-                          ),
-                        );
-                      },
+                                  },
+                                  text: lang.PICK_FROM_STORAGE,
+                                )
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(width: 4.0),
@@ -368,6 +383,7 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                   if (idsToAdd.isNotEmpty) {
                     allIdsExist = idsToAdd.every(favouritesPlaylist.isSubItemFavourite);
                   }
+
                   return YoutubeCard(
                     thumbnailType: ThumbnailType.playlist,
                     isImageImportantInCache: true,
@@ -413,23 +429,45 @@ class YoutubePlaylistsView extends StatelessWidget with NamidaRouteWidget {
                   sort == GroupSortType.creationDate;
               final extraTextResolver = sortTextIsUseless ? null : YoutubePlaylistController.inst.getGroupSortExtraTextResolverPlaylist(sort);
 
+              late final existingStatus = <String, bool>{};
+              late final sortedIndices = <String, int>{};
+
               return ObxPrefer(
                 enabled: sort.requiresHistory,
                 rx: YoutubeHistoryController.inst.topTracksMapListens,
                 builder: (context, _) => Obx(
                   (context) {
                     final playlistsMap = YoutubePlaylistController.inst.playlistsMap.valueR;
-                    final playlistsNames = playlistsMap.keys.toList();
+
+                    List<String> playlistsNames;
+                    if (idsToAdd.isNotEmpty) {
+                      // -- put playlists having the tracks at first
+                      final playlistsNamesSorted = <String>[];
+                      final shouldReSort = existingStatus.isEmpty; // sort only once, so that refresh won't make them jump around
+
+                      for (final key in playlistsMap.keys) {
+                        playlistsNamesSorted.add(key);
+                        final playlist = playlistsMap[key]!;
+                        final allTracksExist = idsToAdd.every((idToAdd) => playlist.tracks.firstWhereEff((e) => e.id == idToAdd) != null);
+                        existingStatus[key] = allTracksExist;
+                      }
+                      playlistsNamesSorted.sortBy((key) => sortedIndices[key] ?? (existingStatus[key] == true ? -2 : -1));
+                      if (shouldReSort) {
+                        for (var i = 0; i < playlistsNamesSorted.length; i++) {
+                          sortedIndices[playlistsNamesSorted[i]] = i;
+                        }
+                      }
+                      playlistsNames = playlistsNamesSorted;
+                    } else {
+                      playlistsNames = playlistsMap.keys.toList();
+                    }
                     return SliverFixedExtentList.builder(
                       itemExtent: playlistsItemExtent,
                       itemCount: playlistsNames.length,
                       itemBuilder: (context, index) {
                         final name = playlistsNames[index];
                         final playlist = playlistsMap[name]!;
-                        bool? allIdsExist;
-                        if (idsToAdd.isNotEmpty) {
-                          allIdsExist = idsToAdd.every((idToAdd) => playlist.tracks.firstWhereEff((e) => e.id == idToAdd) != null);
-                        }
+                        final allIdsExist = existingStatus[name];
 
                         final extraText = extraTextResolver?.call(playlist);
 

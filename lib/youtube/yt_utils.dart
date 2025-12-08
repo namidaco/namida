@@ -989,6 +989,21 @@ class YTUtils {
     );
   }
 
+  static void showCreateLocalYTPlaylistSheet() async {
+    final text = await showNamidaBottomSheetWithTextField(
+      title: lang.CONFIGURE,
+      textfieldConfig: BottomSheetTextFieldConfig(
+        initalControllerText: '',
+        hintText: '',
+        labelText: lang.NAME,
+        validator: (value) => YoutubePlaylistController.inst.validatePlaylistName(value),
+      ),
+      buttonText: lang.ADD,
+      onButtonTap: (text) => true,
+    );
+    if (text != null) YoutubePlaylistController.inst.addNewPlaylist(text);
+  }
+
   static void showFilenameBuilderOutputSheet({
     required String groupName,
     required bool showEditTags,

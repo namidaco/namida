@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/class/color_m.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
@@ -80,16 +81,31 @@ class YoutubeCard extends StatelessWidget {
 
     final channelThumbSize = 0.25 * thumbnailHeight * thumbnailWidthPercentage;
 
+    late final borderSide = BorderSide(
+      width: 2.0,
+      color: context.theme.colorScheme.secondary.withValues(alpha: 0.5),
+    );
+    final decoration = checkmarkStatus == true
+        ? BoxDecoration(
+            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+            border: Border(
+              left: borderSide,
+              bottom: borderSide,
+            ),
+          )
+        : null;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: verticalPadding * 0.5, horizontal: 8.0),
       child: Stack(
         alignment: Alignment.bottomRight,
         children: [
           NamidaInkWell(
+            animationDurationMS: checkmarkStatus != null ? 200 : 0,
             bgColor: theme.cardColor,
             borderRadius: borderRadius,
             onTap: onTap,
             height: thumbnailHeight + verticalPadding,
+            decoration: decoration ?? const BoxDecoration(),
             child: Row(
               children: [
                 const SizedBox(width: 4.0),

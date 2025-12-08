@@ -25,6 +25,7 @@ import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as p
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/youtube_playlists_view.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 void showAddToPlaylistSheet({
   required Iterable<String> ids,
@@ -106,7 +107,11 @@ void showAddToPlaylistSheet({
                         ),
                       ),
                       Expanded(
-                        child: YoutubePlaylistsView(idsToAdd: ids, displayMenu: false),
+                        child: YoutubePlaylistsView(
+                          idsToAdd: ids,
+                          displayMenu: false,
+                          disableSorting: true,
+                        ),
                       ),
                       const SizedBox(height: 6.0),
                       Row(
@@ -118,6 +123,7 @@ void showAddToPlaylistSheet({
                               bgColor: CurrentColor.inst.color.withAlpha(40),
                               height: 48.0,
                               borderRadius: 12.0,
+                              onTap: YTUtils.showCreateLocalYTPlaylistSheet,
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -129,20 +135,6 @@ void showAddToPlaylistSheet({
                                   ),
                                 ],
                               ),
-                              onTap: () async {
-                                final text = await showNamidaBottomSheetWithTextField(
-                                  title: lang.CONFIGURE,
-                                  textfieldConfig: BottomSheetTextFieldConfig(
-                                    initalControllerText: '',
-                                    hintText: '',
-                                    labelText: lang.NAME,
-                                    validator: (value) => pc.YoutubePlaylistController.inst.validatePlaylistName(value),
-                                  ),
-                                  buttonText: lang.ADD,
-                                  onButtonTap: (text) => true,
-                                );
-                                if (text != null) pc.YoutubePlaylistController.inst.addNewPlaylist(text);
-                              },
                             ),
                           ),
                           const SizedBox(width: 12.0),
@@ -345,6 +337,10 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
     } else {
       showBorder = _newContainsVideo[pl.playlistId] == true;
     }
+    late final borderSide = BorderSide(
+      width: 2.0,
+      color: theme.colorScheme.secondary.withValues(alpha: 0.5),
+    );
     return NamidaLoadingSwitcher(
       showLoading: false,
       builder: (loadingController) => NamidaInkWell(
@@ -355,14 +351,8 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
         decoration: BoxDecoration(
           border: showBorder
               ? Border(
-                  left: BorderSide(
-                    width: 2.0,
-                    color: theme.colorScheme.secondary.withValues(alpha: 0.5),
-                  ),
-                  bottom: BorderSide(
-                    width: 2.0,
-                    color: theme.colorScheme.secondary.withValues(alpha: 0.5),
-                  ),
+                  left: borderSide,
+                  bottom: borderSide,
                 )
               : null,
         ),
