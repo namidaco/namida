@@ -1670,6 +1670,7 @@ class _NamidaConverters {
         GroupSortType.creationDate: lang.DATE_CREATED,
         GroupSortType.modifiedDate: lang.DATE_MODIFIED,
         GroupSortType.shuffle: lang.SHUFFLE,
+        GroupSortType.custom: lang.CUSTOM,
       },
       TrackTileItem: {
         TrackTileItem.none: lang.NONE,

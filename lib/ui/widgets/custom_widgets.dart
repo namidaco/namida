@@ -3492,6 +3492,7 @@ class NamidaInkWellButton extends StatelessWidget {
   final double paddingMultiplier;
   final Widget? leading;
   final Widget? trailing;
+  final BoxDecoration decoration;
 
   const NamidaInkWellButton({
     super.key,
@@ -3509,6 +3510,7 @@ class NamidaInkWellButton extends StatelessWidget {
     this.paddingMultiplier = 1.0,
     this.leading,
     this.trailing,
+    this.decoration = const BoxDecoration(),
   });
 
   @override
@@ -3527,6 +3529,7 @@ class NamidaInkWellButton extends StatelessWidget {
           borderRadius: borderRadius * sizeMultiplier,
           padding: EdgeInsets.symmetric(horizontal: 12.0 * sizeMultiplier * paddingMultiplier, vertical: 6.0 * sizeMultiplier * paddingMultiplier),
           bgColor: bgColor ?? theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
+          decoration: decoration,
           onTap: onTap,
           enableSecondaryTap: false,
           child: Row(

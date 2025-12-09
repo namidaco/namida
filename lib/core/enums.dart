@@ -50,7 +50,9 @@ enum GroupSortType {
   albumsCount,
   creationDate,
   modifiedDate,
-  shuffle;
+  shuffle,
+  custom,
+  ;
 
   bool get requiresHistory => this == GroupSortType.playCount || this == GroupSortType.latestPlayed || this == GroupSortType.firstListen;
 }

@@ -625,6 +625,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   String get playlistsArtworksDirectory => AppDirs.PLAYLISTS_ARTWORKS;
 
   @override
+  String get playlistsMetadataDirectory => AppDirs.PLAYLISTS_METADATA;
+
+  @override
   String get favouritePlaylistPath => AppPaths.FAVOURITES_PLAYLIST;
 
   @override

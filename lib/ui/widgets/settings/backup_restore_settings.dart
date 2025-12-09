@@ -270,7 +270,9 @@ class BackupAndRestore extends SettingSubpageProvider {
                       return ObxO(
                         rx: settings.backupItemslist,
                         builder: (context, backupItemslist) {
-                          bool isActive(List<AppPathsBackupEnum> items) => items.every((element) => backupItemslist.contains(element));
+                          backupItemslist ??= AppPathsBackupEnumCategories.everything;
+
+                          bool isActive(List<AppPathsBackupEnum> items) => items.every((element) => backupItemslist!.contains(element));
 
                           void onItemTap(List<AppPathsBackupEnum> items) {
                             if (isActive(items)) {
@@ -372,9 +374,10 @@ class BackupAndRestore extends SettingSubpageProvider {
                       NamidaButton(
                         text: lang.CREATE_BACKUP,
                         onPressed: () {
-                          if (settings.backupItemslist.value.isNotEmpty) {
+                          final items = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
+                          if (items.isNotEmpty) {
                             NamidaNavigator.inst.closeDialog();
-                            final rawPaths = settings.backupItemslist.value.map((e) => e.resolve()).toList();
+                            final rawPaths = items.map((e) => e.resolve()).toList();
                             BackupController.inst.createBackupFile(rawPaths);
                           }
                         },

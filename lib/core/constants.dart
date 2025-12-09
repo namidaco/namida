@@ -305,6 +305,7 @@ enum AppPathsBackupEnum {
   HISTORY_PLAYLIST(true),
   PLAYLISTS(true),
   PLAYLISTS_ARTWORKS(true),
+  PLAYLISTS_METADATA(true),
   QUEUES(true),
   ARTWORKS(true),
   ARTWORKS_ARTISTS(true),
@@ -323,6 +324,7 @@ enum AppPathsBackupEnum {
 
   YT_PLAYLISTS(true),
   YT_PLAYLISTS_ARTWORKS(true),
+  YT_PLAYLISTS_METADATA(true),
   YT_HISTORY_PLAYLIST(true),
   YT_THUMBNAILS(true),
   YT_THUMBNAILS_CHANNELS(true),
@@ -363,6 +365,7 @@ enum AppPathsBackupEnum {
       AppPathsBackupEnum.HISTORY_PLAYLIST => AppDirs.HISTORY_PLAYLIST,
       AppPathsBackupEnum.PLAYLISTS => AppDirs.PLAYLISTS,
       AppPathsBackupEnum.PLAYLISTS_ARTWORKS => AppDirs.PLAYLISTS_ARTWORKS,
+      AppPathsBackupEnum.PLAYLISTS_METADATA => AppDirs.PLAYLISTS_METADATA,
       AppPathsBackupEnum.QUEUES => AppDirs.QUEUES,
       AppPathsBackupEnum.ARTWORKS => AppDirs.ARTWORKS,
       AppPathsBackupEnum.ARTWORKS_ARTISTS => AppDirs.ARTWORKS_ARTISTS,
@@ -377,6 +380,7 @@ enum AppPathsBackupEnum {
       AppPathsBackupEnum.YOUTIPIE_CACHE => AppDirs.YOUTIPIE_CACHE,
       AppPathsBackupEnum.YT_PLAYLISTS => AppDirs.YT_PLAYLISTS,
       AppPathsBackupEnum.YT_PLAYLISTS_ARTWORKS => AppDirs.YT_PLAYLISTS_ARTWORKS,
+      AppPathsBackupEnum.YT_PLAYLISTS_METADATA => AppDirs.YT_PLAYLISTS_METADATA,
       AppPathsBackupEnum.YT_HISTORY_PLAYLIST => AppDirs.YT_HISTORY_PLAYLIST,
       AppPathsBackupEnum.YT_THUMBNAILS => AppDirs.YT_THUMBNAILS,
       AppPathsBackupEnum.YT_THUMBNAILS_CHANNELS => AppDirs.YT_THUMBNAILS_CHANNELS,
@@ -389,6 +393,20 @@ enum AppPathsBackupEnum {
 
 class AppPathsBackupEnumCategories {
   const AppPathsBackupEnumCategories._();
+
+  static final everything = [
+    ...AppPathsBackupEnumCategories.database,
+    ...AppPathsBackupEnumCategories.database_yt,
+    ...AppPathsBackupEnumCategories.settings,
+    ...AppPathsBackupEnumCategories.history,
+    ...AppPathsBackupEnumCategories.history_yt,
+    ...AppPathsBackupEnumCategories.playlists,
+    ...AppPathsBackupEnumCategories.playlists_yt,
+    ...AppPathsBackupEnumCategories.queues,
+    ...AppPathsBackupEnumCategories.lyrics,
+    ...AppPathsBackupEnumCategories.palette,
+    ...AppPathsBackupEnumCategories.palette_yt,
+  ];
 
   static List<AppPathsBackupEnum> database = [
     AppPathsBackupEnum.TRACKS_OLD,
@@ -411,11 +429,13 @@ class AppPathsBackupEnumCategories {
   static List<AppPathsBackupEnum> playlists = [
     AppPathsBackupEnum.PLAYLISTS,
     AppPathsBackupEnum.PLAYLISTS_ARTWORKS,
+    AppPathsBackupEnum.PLAYLISTS_METADATA,
     AppPathsBackupEnum.FAVOURITES_PLAYLIST,
   ];
   static List<AppPathsBackupEnum> playlists_yt = [
     AppPathsBackupEnum.YT_PLAYLISTS,
     AppPathsBackupEnum.YT_PLAYLISTS_ARTWORKS,
+    AppPathsBackupEnum.YT_PLAYLISTS_METADATA,
     AppPathsBackupEnum.YT_LIKES_PLAYLIST,
   ];
 
@@ -579,6 +599,7 @@ class AppDirs {
   static final HISTORY_PLAYLIST = _join(USER_DATA, 'History');
   static final PLAYLISTS = _join(USER_DATA, 'Playlists');
   static final PLAYLISTS_ARTWORKS = _join(USER_DATA, 'Playlists Artworks');
+  static final PLAYLISTS_METADATA = _join(USER_DATA, 'Playlists Metadata');
   static final QUEUES = _join(USER_DATA, 'Queues');
   static final ARTWORKS = _join(USER_DATA, 'Artworks'); // extracted audio artworks
   static final ARTWORKS_ARTISTS = _join(USER_DATA, 'Artworks Artists');
@@ -609,6 +630,7 @@ class AppDirs {
 
   static final YT_PLAYLISTS = _join(YOUTUBE_MAIN_DIRECTORY, 'Youtube Playlists');
   static final YT_PLAYLISTS_ARTWORKS = _join(YOUTUBE_MAIN_DIRECTORY, 'Youtube Playlists Artworks');
+  static final YT_PLAYLISTS_METADATA = _join(YOUTUBE_MAIN_DIRECTORY, 'Youtube Playlists Metadata');
   static final YT_HISTORY_PLAYLIST = _join(YOUTUBE_MAIN_DIRECTORY, 'Youtube History');
   static final YT_THUMBNAILS = _join(YOUTUBE_MAIN_DIRECTORY, 'YTThumbnails');
   static final YT_THUMBNAILS_CHANNELS = _join(YOUTUBE_MAIN_DIRECTORY, 'YTThumbnails Channels');

@@ -138,19 +138,7 @@ class _SettingsController with SettingsFileWriter {
   final enableFoldersHierarchyVideos = true.obs;
   final displayArtistBeforeTitle = true.obs;
   final heatmapListensView = false.obs;
-  final RxList<AppPathsBackupEnum> backupItemslist = [
-    ...AppPathsBackupEnumCategories.database,
-    ...AppPathsBackupEnumCategories.database_yt,
-    ...AppPathsBackupEnumCategories.settings,
-    ...AppPathsBackupEnumCategories.history,
-    ...AppPathsBackupEnumCategories.history_yt,
-    ...AppPathsBackupEnumCategories.playlists,
-    ...AppPathsBackupEnumCategories.playlists_yt,
-    ...AppPathsBackupEnumCategories.queues,
-    ...AppPathsBackupEnumCategories.lyrics,
-    ...AppPathsBackupEnumCategories.palette,
-    ...AppPathsBackupEnumCategories.palette_yt,
-  ].obs;
+  final backupItemslist = Rxn<List<AppPathsBackupEnum>>();
   final enableVideoPlayback = true.obs;
   final enableLyrics = false.obs;
   final lyricsSource = LyricsSource.auto.obs;
@@ -789,7 +777,7 @@ class _SettingsController with SettingsFileWriter {
         'enableFoldersHierarchyVideos': enableFoldersHierarchyVideos.value,
         'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
         'heatmapListensView': heatmapListensView.value,
-        'backupItemslist_v2': backupItemslist.value.map((e) => e.name).toList(),
+        'backupItemslist_v2': backupItemslist.value?.map((e) => e.name).toList(),
         'enableVideoPlayback': enableVideoPlayback.value,
         'enableLyrics': enableLyrics.value,
         'lyricsSource': lyricsSource.value.name,
@@ -1194,11 +1182,13 @@ class _SettingsController with SettingsFileWriter {
     if (displayArtistBeforeTitle != null) this.displayArtistBeforeTitle.value = displayArtistBeforeTitle;
     if (heatmapListensView != null) this.heatmapListensView.value = heatmapListensView;
     if (backupItemslist != null) {
+      this.backupItemslist.value ??= AppPathsBackupEnumCategories.everything;
       backupItemslist.loop((d) {
-        if (!this.backupItemslist.contains(d)) {
-          this.backupItemslist.add(d);
+        if (!this.backupItemslist.value!.contains(d)) {
+          this.backupItemslist.value!.add(d);
         }
       });
+      this.backupItemslist.refresh();
     }
     if (youtubeVideoQualities != null) {
       youtubeVideoQualities.loop((q) {
@@ -1337,7 +1327,7 @@ class _SettingsController with SettingsFileWriter {
     MediaType? activeSearchMediaTypes1,
     AlbumIdentifier? albumIdentifiers1,
     List<AlbumIdentifier>? albumIdentifiersAll,
-    String? backupItemslist1,
+    AppPathsBackupEnum? backupItemslist1,
     List<AppPathsBackupEnum>? backupItemslistAll,
     String? youtubeVideoQualities1,
     List<AppPathsBackupEnum>? youtubeVideoQualitiesAll,
@@ -1369,8 +1359,14 @@ class _SettingsController with SettingsFileWriter {
     if (activeSearchMediaTypes1 != null) activeSearchMediaTypes.remove(activeSearchMediaTypes1);
     if (albumIdentifiers1 != null) albumIdentifiers.remove(albumIdentifiers1);
     if (albumIdentifiersAll != null) albumIdentifiersAll.loop((t) => albumIdentifiers.remove(t));
-    if (backupItemslist1 != null) backupItemslist.remove(backupItemslist1);
-    if (backupItemslistAll != null) backupItemslistAll.loop((t) => backupItemslist.remove(t));
+    if (backupItemslist1 != null) {
+      backupItemslist.value?.remove(backupItemslist1);
+      backupItemslist.refresh();
+    }
+    if (backupItemslistAll != null) {
+      backupItemslistAll.loop((t) => backupItemslist.value?.remove(t));
+      backupItemslist.refresh();
+    }
     if (youtubeVideoQualities1 != null) youtubeVideoQualities.remove(youtubeVideoQualities1);
     if (youtubeVideoQualitiesAll != null) youtubeVideoQualitiesAll.loop((t) => youtubeVideoQualities.remove(t));
     if (tagFieldsToEdit1 != null) tagFieldsToEdit.remove(tagFieldsToEdit1);

@@ -349,6 +349,7 @@ class SortByMenuPlaylist extends StatelessWidget {
           GroupSortType.firstListen,
           GroupSortType.latestPlayed,
           GroupSortType.shuffle,
+          GroupSortType.custom,
         ].map(
           (e) => ObxO(
             rx: settings.playlistSort,

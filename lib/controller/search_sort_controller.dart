@@ -230,6 +230,7 @@ class SearchSortController {
         GroupSortType.modifiedDate => (tracks) => playlist?.modifiedDate.dateFormatted ?? '',
         // ----
         GroupSortType.shuffle => null,
+        GroupSortType.custom => null,
       };
 
   String? Function(LocalPlaylist playlist)? getGroupSortExtraTextResolverPlaylist(GroupSortType sort) => switch (sort) {
@@ -254,6 +255,7 @@ class SearchSortController {
         GroupSortType.modifiedDate => (playlist) => playlist.modifiedDate.dateFormatted,
         // ----
         GroupSortType.shuffle => null,
+        GroupSortType.custom => null,
       };
 
   bool? _preparedResources;
@@ -976,12 +978,17 @@ class SearchSortController {
   }
 
   /// Sorts Playlists and Saves automatically to settings
-  void _sortPlaylists({GroupSortType? sortBy, bool? reverse}) {
+  void _sortPlaylists({GroupSortType? sortBy, bool? reverse, Map<String, int>? customIndicesOrder}) {
     sortBy ??= settings.playlistSort.value;
     reverse ??= settings.playlistSortReversed.value;
 
     final playlistList = playlistsMap.entries.toList();
     void sortThis(Comparable Function(MapEntry<String, LocalPlaylist> p) comparable) => reverse! ? playlistList.sortByReverse(comparable) : playlistList.sortBy(comparable);
+
+    final customIndicesOrder = PlaylistController.inst.customIndicesOrderRx.value;
+    if (sortBy == GroupSortType.custom && customIndicesOrder == null) {
+      sortBy = GroupSortType.title;
+    }
 
     switch (sortBy) {
       case GroupSortType.title:
@@ -1010,6 +1017,13 @@ class SearchSortController {
         break;
       case GroupSortType.shuffle:
         playlistList.shuffle();
+        break;
+      case GroupSortType.custom:
+        final indices = <String, int>{};
+        for (int i = 0; i < customIndicesOrder!.length; i++) {
+          indices[customIndicesOrder[i]] = i;
+        }
+        sortThis((p) => indices[p.key] ?? (playlistList.length - 1));
         break;
 
       default:

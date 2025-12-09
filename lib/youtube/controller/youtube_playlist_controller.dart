@@ -118,14 +118,19 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     reverse ??= settings.ytPlaylistSortReversed.value;
 
     final playlistList = playlistsMap.entries.toList();
-    _performSortYTPlaylists(playlistList, sortBy: sortBy, reverse: reverse);
+    _performSortYTPlaylists(playlistList, sortBy: sortBy, reverse: reverse, customIndicesOrder: customIndicesOrderRx.value);
     playlistsMap.assignAllEntries(playlistList);
 
     settings.save(ytPlaylistSort: sortBy, ytPlaylistSortReversed: reverse);
   }
 
-  static void _performSortYTPlaylists(List<MapEntry<String, YoutubePlaylist>> playlistList, {required GroupSortType sortBy, required bool reverse}) {
+  static void _performSortYTPlaylists(List<MapEntry<String, YoutubePlaylist>> playlistList,
+      {required GroupSortType sortBy, required bool reverse, required List<String>? customIndicesOrder}) {
     void sortThis(Comparable Function(MapEntry<String, YoutubePlaylist> p) comparable) => reverse ? playlistList.sortByReverse(comparable) : playlistList.sortBy(comparable);
+
+    if (sortBy == GroupSortType.custom && customIndicesOrder == null) {
+      sortBy = GroupSortType.title;
+    }
 
     switch (sortBy) {
       case GroupSortType.title:
@@ -151,6 +156,13 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
         break;
       case GroupSortType.shuffle:
         playlistList.shuffle();
+        break;
+      case GroupSortType.custom:
+        final indices = <String, int>{};
+        for (int i = 0; i < customIndicesOrder!.length; i++) {
+          indices[customIndicesOrder[i]] = i;
+        }
+        sortThis((p) => indices[p.key] ?? (playlistList.length - 1));
         break;
 
       default:
@@ -208,6 +220,9 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   String get playlistsArtworksDirectory => AppDirs.YT_PLAYLISTS_ARTWORKS;
 
   @override
+  String get playlistsMetadataDirectory => AppDirs.YT_PLAYLISTS_METADATA;
+
+  @override
   bool get sortAfterPreparing => false;
 
   @override
@@ -219,6 +234,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
       path: playlistsDirectory,
       sortBy: settings.ytPlaylistSort.value,
       reverse: settings.ytPlaylistSortReversed.value,
+      customIndicesOrder: customIndicesOrderRx.value,
     );
 
     return await _readPlaylistFilesCompute.thready(params);
@@ -252,7 +268,8 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
         } catch (_) {}
       }
     }
-    _performSortYTPlaylists(entries, sortBy: params.sortBy, reverse: params.reverse);
+
+    _performSortYTPlaylists(entries, sortBy: params.sortBy, reverse: params.reverse, customIndicesOrder: params.customIndicesOrder);
     return Map<String, YoutubePlaylist>.fromEntries(entries);
   }
 
@@ -292,6 +309,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
         GroupSortType.latestPlayed => (p) => p.tracks.getLatestListen()?.dateFormattedOriginal ?? '',
         GroupSortType.duration => null,
         GroupSortType.shuffle => null,
+        GroupSortType.custom => null,
 
         // -- local tracks
         GroupSortType.album => null,
@@ -332,10 +350,12 @@ class _ReadPlaylistFilesParams {
   final String path;
   final GroupSortType sortBy;
   final bool reverse;
+  final List<String>? customIndicesOrder;
 
   const _ReadPlaylistFilesParams({
     required this.path,
     required this.sortBy,
     required this.reverse,
+    required this.customIndicesOrder,
   });
 }

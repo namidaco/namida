@@ -121,12 +121,14 @@ class BackupController {
           AppPaths.CACHE_VIDEOS_PRIORITY.file.path,
           AppDirs.PLAYLISTS,
           AppDirs.PLAYLISTS_ARTWORKS,
+          AppDirs.PLAYLISTS_METADATA,
           AppDirs.HISTORY_PLAYLIST,
           AppDirs.QUEUES,
           AppDirs.YT_DOWNLOAD_TASKS,
           AppDirs.YT_STATS,
           AppDirs.YT_PLAYLISTS,
           AppDirs.YT_PLAYLISTS_ARTWORKS,
+          AppDirs.YT_PLAYLISTS_METADATA,
           AppDirs.YT_HISTORY_PLAYLIST,
         ];
         await createBackupFile(itemsToBackup, fileSuffix: " - auto");
