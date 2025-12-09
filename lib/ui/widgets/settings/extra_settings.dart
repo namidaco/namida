@@ -15,6 +15,7 @@ import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -27,10 +28,10 @@ import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
-enum _ExtraSettingsKeys {
+enum _ExtraSettingsKeys with SettingKeysBase {
   collapsedTiles,
   bottomNavBar,
-  pip,
+  pip(NamidaFeaturesAvailablity.android),
   foldersHierarchy,
   fabType,
   defaultLibraryTab,
@@ -44,12 +45,17 @@ enum _ExtraSettingsKeys {
   imageSource,
   imageSourceAlbum,
   imageSourceArtist,
-  immersiveMode,
+  immersiveMode(NamidaFeaturesAvailablity.android),
   swipeToOpenDrawer,
   alwaysExpandedSearchbar,
   enableClipboardMonitoring,
   vibrationType,
   extractAllPalettes,
+  ;
+
+  @override
+  final NamidaFeaturesAvailablity? availability;
+  const _ExtraSettingsKeys([this.availability]);
 }
 
 class ExtrasSettings extends SettingSubpageProvider {
@@ -59,7 +65,7 @@ class ExtrasSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.extra;
 
   @override
-  Map<Enum, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> get lookupMap => {
         _ExtraSettingsKeys.collapsedTiles: [lang.USE_COLLAPSED_SETTING_TILES],
         _ExtraSettingsKeys.bottomNavBar: [lang.ENABLE_BOTTOM_NAV_BAR, lang.ENABLE_BOTTOM_NAV_BAR_SUBTITLE],
         _ExtraSettingsKeys.pip: [lang.ENABLE_PICTURE_IN_PICTURE],
@@ -193,22 +199,21 @@ class ExtrasSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          if (NamidaFeaturesVisibility.methodSetCanEnterPip)
-            getItemWrapper(
-              key: _ExtraSettingsKeys.pip,
-              child: Obx(
-                (context) => CustomSwitchListTile(
-                  bgColor: getBgColor(_ExtraSettingsKeys.pip),
-                  icon: Broken.screenmirroring,
-                  title: lang.ENABLE_PICTURE_IN_PICTURE,
-                  value: settings.enablePip.valueR,
-                  onChanged: (isTrue) {
-                    settings.save(enablePip: !isTrue);
-                    NamidaChannel.inst.setCanEnterPip(!isTrue);
-                  },
-                ),
+          getItemWrapper(
+            key: _ExtraSettingsKeys.pip,
+            child: Obx(
+              (context) => CustomSwitchListTile(
+                bgColor: getBgColor(_ExtraSettingsKeys.pip),
+                icon: Broken.screenmirroring,
+                title: lang.ENABLE_PICTURE_IN_PICTURE,
+                value: settings.enablePip.valueR,
+                onChanged: (isTrue) {
+                  settings.save(enablePip: !isTrue);
+                  NamidaChannel.inst.setCanEnterPip(!isTrue);
+                },
               ),
             ),
+          ),
           getItemWrapper(
             key: _ExtraSettingsKeys.foldersHierarchy,
             child: Obx(
@@ -706,24 +711,23 @@ class ExtrasSettings extends SettingSubpageProvider {
             ),
           ),
 
-          if (NamidaFeaturesVisibility.showToggleImmersiveMode)
-            getItemWrapper(
-              key: _ExtraSettingsKeys.immersiveMode,
-              child: Obx(
-                (context) => CustomSwitchListTile(
-                  bgColor: getBgColor(_ExtraSettingsKeys.immersiveMode),
-                  icon: Broken.external_drive,
-                  title: lang.IMMERSIVE_MODE,
-                  subtitle: lang.IMMERSIVE_MODE_SUBTITLE,
-                  value: settings.hideStatusBarInExpandedMiniplayer.valueR,
-                  onChanged: (isTrue) {
-                    final newValue = !isTrue;
-                    settings.save(hideStatusBarInExpandedMiniplayer: newValue);
-                    MiniPlayerController.inst.setImmersiveMode(newValue);
-                  },
-                ),
+          getItemWrapper(
+            key: _ExtraSettingsKeys.immersiveMode,
+            child: Obx(
+              (context) => CustomSwitchListTile(
+                bgColor: getBgColor(_ExtraSettingsKeys.immersiveMode),
+                icon: Broken.external_drive,
+                title: lang.IMMERSIVE_MODE,
+                subtitle: lang.IMMERSIVE_MODE_SUBTITLE,
+                value: settings.hideStatusBarInExpandedMiniplayer.valueR,
+                onChanged: (isTrue) {
+                  final newValue = !isTrue;
+                  settings.save(hideStatusBarInExpandedMiniplayer: newValue);
+                  MiniPlayerController.inst.setImmersiveMode(newValue);
+                },
               ),
             ),
+          ),
           getItemWrapper(
             key: _ExtraSettingsKeys.swipeToOpenDrawer,
             child: Obx(

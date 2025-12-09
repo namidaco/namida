@@ -10,6 +10,7 @@ import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -26,8 +27,9 @@ import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 
-enum _YoutubeSettingKeys {
+enum _YoutubeSettingKeys with SettingKeysBase {
   manageYourAccounts,
+  sponsorBlock,
   youtubeStyleMiniplayer,
   rememberAudioOnly,
   showShortsIn,
@@ -42,10 +44,14 @@ enum _YoutubeSettingKeys {
   dimIntensity,
   downloadsMetadataTags,
   downloadLocation,
-  downloadNotifications,
+  downloadNotifications(NamidaFeaturesAvailablity.windows),
   onOpeningYTLink,
   seekbar,
-  sponsorBlock,
+  ;
+
+  @override
+  final NamidaFeaturesAvailablity? availability;
+  const _YoutubeSettingKeys([this.availability]);
 }
 
 class YoutubeSettings extends SettingSubpageProvider {
@@ -55,8 +61,9 @@ class YoutubeSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.youtube;
 
   @override
-  Map<Enum, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> get lookupMap => {
         _YoutubeSettingKeys.manageYourAccounts: [lang.MANAGE_YOUR_ACCOUNTS],
+        _YoutubeSettingKeys.sponsorBlock: [lang.SPONSORBLOCK, lang.SKIP_SPONSOR_SEGMENTS_IN_VIDEOS],
         _YoutubeSettingKeys.youtubeStyleMiniplayer: [lang.YOUTUBE_STYLE_MINIPLAYER],
         _YoutubeSettingKeys.rememberAudioOnly: [lang.REMEMBER_AUDIO_ONLY_MODE],
         _YoutubeSettingKeys.showShortsIn: [lang.SHOW_SHORT_VIDEOS_IN],
@@ -72,9 +79,8 @@ class YoutubeSettings extends SettingSubpageProvider {
         _YoutubeSettingKeys.seekbar: [lang.SEEKBAR, lang.TAP_TO_SEEK, lang.DRAG_TO_SEEK],
         _YoutubeSettingKeys.downloadsMetadataTags: [lang.DOWNLOADS_METADATA_TAGS, lang.DOWNLOADS_METADATA_TAGS_SUBTITLE],
         _YoutubeSettingKeys.downloadLocation: [lang.DEFAULT_DOWNLOAD_LOCATION],
-        _YoutubeSettingKeys.downloadNotifications: [lang.NOTIFICATIONS],
+        _YoutubeSettingKeys.downloadNotifications: [lang.NOTIFICATIONS, lang.DOWNLOADS],
         _YoutubeSettingKeys.onOpeningYTLink: [lang.ON_OPENING_YOUTUBE_LINK],
-        _YoutubeSettingKeys.sponsorBlock: [lang.SPONSORBLOCK, lang.SKIP_SPONSOR_SEGMENTS_IN_VIDEOS],
       };
 
   void _showYTFlagsDialog() {
@@ -589,22 +595,21 @@ class YoutubeSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          if (NamidaFeaturesVisibility.showDownloadNotifications)
-            getItemWrapper(
-              key: _YoutubeSettingKeys.downloadNotifications,
-              child: NamidaPopupWrapper(
-                childrenDefault: () => _notificationsChildren,
-                child: ObxO(
-                  rx: settings.youtube.downloadNotifications,
-                  builder: (context, downloadNotifications) => CustomListTile(
-                    bgColor: getBgColor(_YoutubeSettingKeys.downloadNotifications),
-                    icon: Broken.notification_bing,
-                    title: '${lang.DOWNLOADS} -> ${lang.NOTIFICATIONS}',
-                    trailingText: downloadNotifications.toText(),
-                  ),
+          getItemWrapper(
+            key: _YoutubeSettingKeys.downloadNotifications,
+            child: NamidaPopupWrapper(
+              childrenDefault: () => _notificationsChildren,
+              child: ObxO(
+                rx: settings.youtube.downloadNotifications,
+                builder: (context, downloadNotifications) => CustomListTile(
+                  bgColor: getBgColor(_YoutubeSettingKeys.downloadNotifications),
+                  icon: Broken.notification_bing,
+                  title: '${lang.DOWNLOADS} -> ${lang.NOTIFICATIONS}',
+                  trailingText: downloadNotifications.toText(),
                 ),
               ),
             ),
+          ),
           getItemWrapper(
             key: _YoutubeSettingKeys.onOpeningYTLink,
             child: Obx(

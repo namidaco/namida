@@ -8,7 +8,7 @@ import 'package:namida/core/extensions.dart';
 
 abstract class SettingSubpageProvider extends StatelessWidget {
   SettingSubpageEnum get settingPage;
-  Map<Enum, List<String>> get lookupMap;
+  Map<SettingKeysBase, List<String>> get lookupMap;
   final Enum? initialItem;
 
   const SettingSubpageProvider({super.key, this.initialItem});
@@ -22,6 +22,11 @@ abstract class SettingSubpageProvider extends StatelessWidget {
   }
 
   Widget getItemWrapper({required Enum key, required Widget child}) {
+    final availability = (key as SettingKeysBase).availability;
+
+    final isAvailable = availability?.resolve();
+    if (isAvailable == false) return const SizedBox();
+
     return Stack(
       key: getSettingWidgetGlobalKey(key),
       children: [

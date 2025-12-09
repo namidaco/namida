@@ -459,6 +459,7 @@ abstract class LanguageKeys {
   String get NORMALIZE_AUDIO => _getKey('NORMALIZE_AUDIO');
   String get NORMALIZE_AUDIO_SUBTITLE => _getKey('NORMALIZE_AUDIO_SUBTITLE');
   String get NOTIFICATION => _getKey('NOTIFICATION');
+  String get NOT_AVAILABLE_FOR_YOUR_DEVICE => _getKey('NOT_AVAILABLE_FOR_YOUR_DEVICE');
   String get NO_CHANGES_FOUND => _getKey('NO_CHANGES_FOUND');
   String get NO_ENOUGH_TRACKS => _getKey('NO_ENOUGH_TRACKS');
   String get NO_EXCLUDED_FOLDERS => _getKey('NO_EXCLUDED_FOLDERS');

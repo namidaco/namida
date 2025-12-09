@@ -11,6 +11,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -27,7 +28,7 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
-enum _IndexerSettingsKeys {
+enum _IndexerSettingsKeys with SettingKeysBase {
   preventDuplicatedTracks,
   respectNoMedia,
   extractFtArtist,
@@ -38,7 +39,7 @@ enum _IndexerSettingsKeys {
   genreSeparators,
   minimumFileSize,
   minimumTrackDur,
-  useMediaStore,
+  useMediaStore(NamidaFeaturesAvailablity.android),
   includeVideos,
   refreshOnStartup,
   missingTracks,
@@ -46,6 +47,11 @@ enum _IndexerSettingsKeys {
   refreshLibrary,
   foldersToScan,
   foldersToExclude,
+  ;
+
+  @override
+  final NamidaFeaturesAvailablity? availability;
+  const _IndexerSettingsKeys([this.availability]);
 }
 
 class IndexerSettings extends SettingSubpageProvider {
@@ -55,7 +61,7 @@ class IndexerSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.indexer;
 
   @override
-  Map<Enum, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> get lookupMap => {
         _IndexerSettingsKeys.preventDuplicatedTracks: [lang.PREVENT_DUPLICATED_TRACKS, lang.PREVENT_DUPLICATED_TRACKS_SUBTITLE],
         _IndexerSettingsKeys.respectNoMedia: [lang.RESPECT_NO_MEDIA, lang.RESPECT_NO_MEDIA_SUBTITLE],
         _IndexerSettingsKeys.extractFtArtist: [lang.EXTRACT_FEAT_ARTIST, lang.EXTRACT_FEAT_ARTIST_SUBTITLE],
@@ -94,8 +100,7 @@ class IndexerSettings extends SettingSubpageProvider {
     );
   }
 
-  Widget? getMediaStoreWidget() {
-    if (!NamidaFeaturesVisibility.showToggleMediaStore) return null;
+  Widget getMediaStoreWidget() {
     return getItemWrapper(
       key: _IndexerSettingsKeys.useMediaStore,
       child: Obx(
@@ -621,7 +626,7 @@ class IndexerSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          if (useMediaStoreWidget != null) useMediaStoreWidget,
+          useMediaStoreWidget,
           includeVideosWidget,
           getItemWrapper(
             key: _IndexerSettingsKeys.refreshOnStartup,

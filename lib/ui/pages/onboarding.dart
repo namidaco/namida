@@ -182,7 +182,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                   languageTile,
                                   performanceTile,
                                   libraryTabsTile,
-                                  if (useMediaStore != null) useMediaStore,
+                                  useMediaStore,
                                   includeVideosWidget,
                                   groupArtworksByAlbum,
                                   foldersToScan,

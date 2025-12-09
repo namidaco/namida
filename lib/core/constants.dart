@@ -846,17 +846,44 @@ extension PathTypeUtils on String {
   bool isVideo() => NamidaFileExtensionsWrapper.video.isPathValid(this);
 }
 
+enum NamidaFeaturesAvailablity {
+  android('Android'),
+  windows('Windows'),
+  android13and_plus('Android 13+'), // >= 33
+  android12and_plus('Android S/12+'), // >= 31
+  android12and_below('Android <= 12'), // <= 32
+  android11and_plus('Android 11+'), // >=30
+  android11and_below('Android <= 11'), // <=30
+  ;
+
+  final String text;
+  const NamidaFeaturesAvailablity(this.text);
+
+  bool resolve() {
+    final isAndroid = NamidaFeaturesVisibility._isAndroid;
+    return switch (this) {
+      NamidaFeaturesAvailablity.android => isAndroid,
+      NamidaFeaturesAvailablity.windows => NamidaFeaturesVisibility._isWindows,
+      NamidaFeaturesAvailablity.android13and_plus => isAndroid && NamidaDeviceInfo.sdkVersion >= 33,
+      NamidaFeaturesAvailablity.android12and_plus => isAndroid && NamidaDeviceInfo.sdkVersion >= 31,
+      NamidaFeaturesAvailablity.android12and_below => isAndroid && NamidaDeviceInfo.sdkVersion <= 32,
+      NamidaFeaturesAvailablity.android11and_plus => isAndroid && NamidaDeviceInfo.sdkVersion >= 30,
+      NamidaFeaturesAvailablity.android11and_below => isAndroid && NamidaDeviceInfo.sdkVersion <= 30,
+    };
+  }
+}
+
 class NamidaFeaturesVisibility {
   static final _platform = defaultTargetPlatform;
   static final _isAndroid = _platform == TargetPlatform.android;
   static final _isWindows = _platform == TargetPlatform.windows;
 
-  static final wallpaperColors = _isAndroid && NamidaDeviceInfo.sdkVersion >= 31;
-  static final displayArtworkOnLockscreen = _isAndroid && NamidaDeviceInfo.sdkVersion < 33;
+  static final wallpaperColors = NamidaFeaturesAvailablity.android12and_plus.resolve();
+  static final displayArtworkOnLockscreen = NamidaFeaturesAvailablity.android12and_below.resolve();
   static final displayFavButtonInNotif = _isAndroid;
-  static final displayFavButtonInNotifMightCauseIssue = displayFavButtonInNotif && NamidaDeviceInfo.sdkVersion < 31;
+  static final displayFavButtonInNotifMightCauseIssue = displayFavButtonInNotif && NamidaFeaturesAvailablity.android11and_below.resolve();
   static final displayStopButtonInNotif = _isAndroid;
-  static final shouldRequestManageAllFilesPermission = _isAndroid && NamidaDeviceInfo.sdkVersion >= 30;
+  static final shouldRequestManageAllFilesPermission = NamidaFeaturesAvailablity.android11and_plus.resolve();
   static final displayAppIcons = _isAndroid;
   static final showEqualizerBands = _isAndroid;
   static final showToggleMediaStore = onAudioQueryAvailable;

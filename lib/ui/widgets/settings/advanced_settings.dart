@@ -16,6 +16,7 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -33,7 +34,7 @@ import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
-enum _AdvancedSettingKeys {
+enum _AdvancedSettingKeys with SettingKeysBase {
   performanceMode,
   rescanVideos,
   removeSourceHistory,
@@ -55,7 +56,7 @@ class AdvancedSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.advanced;
 
   @override
-  Map<Enum, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> get lookupMap => {
         _AdvancedSettingKeys.performanceMode: [lang.PERFORMANCE_MODE],
         _AdvancedSettingKeys.rescanVideos: [lang.RESCAN_VIDEOS],
         _AdvancedSettingKeys.removeSourceHistory: [lang.REMOVE_SOURCE_FROM_HISTORY],

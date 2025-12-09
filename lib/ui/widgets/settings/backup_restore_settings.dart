@@ -10,6 +10,7 @@ import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -23,7 +24,7 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
-enum _BackupAndRestoreKeys {
+enum _BackupAndRestoreKeys with SettingKeysBase {
   create,
   restore,
   defaultLocation,
@@ -40,7 +41,7 @@ class BackupAndRestore extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.backupRestore;
 
   @override
-  Map<Enum, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> get lookupMap => {
         _BackupAndRestoreKeys.create: [lang.CREATE_BACKUP],
         _BackupAndRestoreKeys.restore: [lang.RESTORE_BACKUP],
         _BackupAndRestoreKeys.defaultLocation: [lang.DEFAULT_BACKUP_LOCATION],

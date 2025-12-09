@@ -9,6 +9,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -25,21 +26,21 @@ import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
-enum _PlaybackSettingsKeys {
+enum _PlaybackSettingsKeys with SettingKeysBase {
   enableVideoPlayback,
   videoSource,
   videoQuality,
   localVideoMatching,
   keepScreenAwake,
-  displayFavButtonInNotif,
-  displayStopButtonInNotif,
-  displayArtworkOnLockscreen,
+  displayFavButtonInNotif(NamidaFeaturesAvailablity.android),
+  displayStopButtonInNotif(NamidaFeaturesAvailablity.android),
+  displayArtworkOnLockscreen(NamidaFeaturesAvailablity.android12and_below),
   killPlayerAfterDismissing,
-  onNotificationTap,
+  onNotificationTap(NamidaFeaturesAvailablity.android),
   dismissibleMiniplayer,
   replayGain,
-  skipSilence,
-  gaplessPlayback,
+  skipSilence(NamidaFeaturesAvailablity.android),
+  gaplessPlayback(NamidaFeaturesAvailablity.android),
   crossfade,
   fadeEffectOnPlayPause,
   autoPlayOnNextPrev,
@@ -51,6 +52,11 @@ enum _PlaybackSettingsKeys {
   seekDuration,
   minimumTrackDurToRestoreLastPosition,
   countListenAfter,
+  ;
+
+  @override
+  final NamidaFeaturesAvailablity? availability;
+  const _PlaybackSettingsKeys([this.availability]);
 }
 
 class PlaybackSettings extends SettingSubpageProvider {
@@ -61,13 +67,14 @@ class PlaybackSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.playback;
 
   @override
-  Map<Enum, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> get lookupMap => {
         _PlaybackSettingsKeys.enableVideoPlayback: [lang.ENABLE_VIDEO_PLAYBACK],
         _PlaybackSettingsKeys.videoSource: [lang.VIDEO_PLAYBACK_SOURCE],
         _PlaybackSettingsKeys.videoQuality: [lang.VIDEO_QUALITY],
         _PlaybackSettingsKeys.localVideoMatching: [lang.LOCAL_VIDEO_MATCHING],
         _PlaybackSettingsKeys.keepScreenAwake: [lang.KEEP_SCREEN_AWAKE_WHEN],
         _PlaybackSettingsKeys.displayFavButtonInNotif: [lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION],
+        _PlaybackSettingsKeys.displayStopButtonInNotif: [lang.DISPLAY_STOP_BUTTON_IN_NOTIFICATION],
         _PlaybackSettingsKeys.displayArtworkOnLockscreen: [lang.DISPLAY_ARTWORK_ON_LOCKSCREEN],
         _PlaybackSettingsKeys.killPlayerAfterDismissing: [lang.KILL_PLAYER_AFTER_DISMISSING_APP],
         _PlaybackSettingsKeys.onNotificationTap: [lang.ON_NOTIFICATION_TAP],
@@ -507,60 +514,57 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
         ),
       ),
-      if (NamidaFeaturesVisibility.displayFavButtonInNotif)
-        getItemWrapper(
-          key: _PlaybackSettingsKeys.displayFavButtonInNotif,
-          child: Obx(
-            (context) => CustomSwitchListTile(
-              bgColor: getBgColor(_PlaybackSettingsKeys.displayFavButtonInNotif),
-              title: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION,
-              icon: Broken.heart_tick,
-              value: settings.displayFavouriteButtonInNotification.valueR,
-              onChanged: (val) {
-                settings.save(displayFavouriteButtonInNotification: !val);
-                Player.inst.refreshNotification();
-                if (!val && NamidaFeaturesVisibility.displayFavButtonInNotifMightCauseIssue) {
-                  snackyy(title: lang.NOTE, message: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
-                }
-              },
-            ),
+      getItemWrapper(
+        key: _PlaybackSettingsKeys.displayFavButtonInNotif,
+        child: Obx(
+          (context) => CustomSwitchListTile(
+            bgColor: getBgColor(_PlaybackSettingsKeys.displayFavButtonInNotif),
+            title: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION,
+            icon: Broken.heart_tick,
+            value: settings.displayFavouriteButtonInNotification.valueR,
+            onChanged: (val) {
+              settings.save(displayFavouriteButtonInNotification: !val);
+              Player.inst.refreshNotification();
+              if (!val && NamidaFeaturesVisibility.displayFavButtonInNotifMightCauseIssue) {
+                snackyy(title: lang.NOTE, message: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
+              }
+            },
           ),
         ),
-      if (NamidaFeaturesVisibility.displayStopButtonInNotif)
-        getItemWrapper(
-          key: _PlaybackSettingsKeys.displayStopButtonInNotif,
-          child: Obx(
-            (context) => CustomSwitchListTile(
-              bgColor: getBgColor(_PlaybackSettingsKeys.displayStopButtonInNotif),
-              title: lang.DISPLAY_STOP_BUTTON_IN_NOTIFICATION,
-              icon: Broken.close_circle,
-              value: settings.displayStopButtonInNotification.valueR,
-              onChanged: (val) {
-                settings.save(displayStopButtonInNotification: !val);
-                Player.inst.refreshNotification();
-              },
-            ),
+      ),
+      getItemWrapper(
+        key: _PlaybackSettingsKeys.displayStopButtonInNotif,
+        child: Obx(
+          (context) => CustomSwitchListTile(
+            bgColor: getBgColor(_PlaybackSettingsKeys.displayStopButtonInNotif),
+            title: lang.DISPLAY_STOP_BUTTON_IN_NOTIFICATION,
+            icon: Broken.close_circle,
+            value: settings.displayStopButtonInNotification.valueR,
+            onChanged: (val) {
+              settings.save(displayStopButtonInNotification: !val);
+              Player.inst.refreshNotification();
+            },
           ),
         ),
-      if (NamidaFeaturesVisibility.displayArtworkOnLockscreen)
-        getItemWrapper(
-          key: _PlaybackSettingsKeys.displayArtworkOnLockscreen,
-          child: Obx(
-            (context) => CustomSwitchListTile(
-              bgColor: getBgColor(_PlaybackSettingsKeys.displayArtworkOnLockscreen),
-              title: lang.DISPLAY_ARTWORK_ON_LOCKSCREEN,
-              leading: const StackedIcon(
-                baseIcon: Broken.gallery,
-                secondaryIcon: Broken.lock_circle,
-              ),
-              value: settings.player.lockscreenArtwork.valueR,
-              onChanged: (val) {
-                settings.player.save(lockscreenArtwork: !val);
-                AudioService.setLockScreenArtwork(!val).then((_) => Player.inst.refreshNotification());
-              },
+      ),
+      getItemWrapper(
+        key: _PlaybackSettingsKeys.displayArtworkOnLockscreen,
+        child: Obx(
+          (context) => CustomSwitchListTile(
+            bgColor: getBgColor(_PlaybackSettingsKeys.displayArtworkOnLockscreen),
+            title: lang.DISPLAY_ARTWORK_ON_LOCKSCREEN,
+            leading: const StackedIcon(
+              baseIcon: Broken.gallery,
+              secondaryIcon: Broken.lock_circle,
             ),
+            value: settings.player.lockscreenArtwork.valueR,
+            onChanged: (val) {
+              settings.player.save(lockscreenArtwork: !val);
+              AudioService.setLockScreenArtwork(!val).then((_) => Player.inst.refreshNotification());
+            },
           ),
         ),
+      ),
       getItemWrapper(
         key: _PlaybackSettingsKeys.killPlayerAfterDismissing,
         child: Obx(
@@ -576,22 +580,21 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
         ),
       ),
-      if (NamidaFeaturesVisibility.methodOnNotificationTapAction)
-        getItemWrapper(
-          key: _PlaybackSettingsKeys.onNotificationTap,
-          child: Obx(
-            (context) => CustomListTile(
-              bgColor: getBgColor(_PlaybackSettingsKeys.onNotificationTap),
-              title: lang.ON_NOTIFICATION_TAP,
-              trailingText: settings.onNotificationTapAction.valueR.toText(),
-              icon: Broken.card,
-              onTap: () {
-                final element = settings.onNotificationTapAction.value.nextElement(NotificationTapAction.values);
-                settings.save(onNotificationTapAction: element);
-              },
-            ),
+      getItemWrapper(
+        key: _PlaybackSettingsKeys.onNotificationTap,
+        child: Obx(
+          (context) => CustomListTile(
+            bgColor: getBgColor(_PlaybackSettingsKeys.onNotificationTap),
+            title: lang.ON_NOTIFICATION_TAP,
+            trailingText: settings.onNotificationTapAction.valueR.toText(),
+            icon: Broken.card,
+            onTap: () {
+              final element = settings.onNotificationTapAction.value.nextElement(NotificationTapAction.values);
+              settings.save(onNotificationTapAction: element);
+            },
           ),
         ),
+      ),
 
       getItemWrapper(
         key: _PlaybackSettingsKeys.dismissibleMiniplayer,
@@ -624,22 +627,21 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
         ),
       ),
-      if (NamidaFeaturesVisibility.gaplessPlaybackAvailable)
-        getItemWrapper(
-          key: _PlaybackSettingsKeys.gaplessPlayback,
-          child: Obx(
-            (context) => CustomSwitchListTile(
-              bgColor: getBgColor(_PlaybackSettingsKeys.gaplessPlayback),
-              icon: Broken.blend_2,
-              title: "${lang.GAPLESS_PLAYBACK} (${lang.BETA})",
-              onChanged: (value) {
-                settings.player.save(enableGaplessPlayback: !value);
-                Player.inst.resetGaplessPlaybackData();
-              },
-              value: settings.player.enableGaplessPlayback.valueR,
-            ),
+      getItemWrapper(
+        key: _PlaybackSettingsKeys.gaplessPlayback,
+        child: Obx(
+          (context) => CustomSwitchListTile(
+            bgColor: getBgColor(_PlaybackSettingsKeys.gaplessPlayback),
+            icon: Broken.blend_2,
+            title: "${lang.GAPLESS_PLAYBACK} (${lang.BETA})",
+            onChanged: (value) {
+              settings.player.save(enableGaplessPlayback: !value);
+              Player.inst.resetGaplessPlaybackData();
+            },
+            value: settings.player.enableGaplessPlayback.valueR,
           ),
         ),
+      ),
 
       // -- Crossfade
       getItemWrapper(

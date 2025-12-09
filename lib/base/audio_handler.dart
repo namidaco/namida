@@ -2176,7 +2176,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   MediaControlsProvider get mediaControls => _mediaControls;
-  static final _mediaControls = Platform.isAndroid && NamidaDeviceInfo.sdkVersion >= 33
+  static final _mediaControls = Platform.isAndroid && NamidaFeaturesAvailablity.android13and_plus.resolve()
       ? MediaControlsProvider.android13plus() // can crash on android below 13
       : MediaControlsProvider.main();
 

@@ -13,6 +13,7 @@ import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -27,15 +28,20 @@ import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 
-enum _ThemeSettingsKeys {
+enum _ThemeSettingsKeys with SettingKeysBase {
   themeMode,
   autoColoring,
-  wallpaperColors,
+  wallpaperColors(NamidaFeaturesAvailablity.android12and_plus),
   forceMiniplayerColors,
   pitchBlack,
   defaultColor,
   defaultColorDark,
   language,
+  ;
+
+  @override
+  final NamidaFeaturesAvailablity? availability;
+  const _ThemeSettingsKeys([this.availability]);
 }
 
 class ThemeSetting extends SettingSubpageProvider {
@@ -45,7 +51,7 @@ class ThemeSetting extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.theme;
 
   @override
-  Map<Enum, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> get lookupMap => {
         _ThemeSettingsKeys.themeMode: [lang.THEME_MODE],
         _ThemeSettingsKeys.autoColoring: [lang.AUTO_COLORING, lang.AUTO_COLORING_SUBTITLE],
         _ThemeSettingsKeys.wallpaperColors: [lang.PICK_COLORS_FROM_DEVICE_WALLPAPER],
@@ -233,25 +239,22 @@ class ThemeSetting extends SettingSubpageProvider {
           children: [
             getThemeTile(),
             getAutoColoringTile(),
-
-            // Android S/12+
-            if (NamidaFeaturesVisibility.wallpaperColors)
-              getItemWrapper(
-                key: _ThemeSettingsKeys.wallpaperColors,
-                child: Obx(
-                  (context) => CustomSwitchListTile(
-                    bgColor: getBgColor(_ThemeSettingsKeys.wallpaperColors),
-                    enabled: settings.autoColor.valueR,
-                    icon: Broken.gallery_import,
-                    title: lang.PICK_COLORS_FROM_DEVICE_WALLPAPER,
-                    value: settings.pickColorsFromDeviceWallpaper.valueR,
-                    onChanged: (isTrue) {
-                      settings.save(pickColorsFromDeviceWallpaper: !isTrue);
-                      _refreshColorCurrentPlayingItem();
-                    },
-                  ),
+            getItemWrapper(
+              key: _ThemeSettingsKeys.wallpaperColors,
+              child: Obx(
+                (context) => CustomSwitchListTile(
+                  bgColor: getBgColor(_ThemeSettingsKeys.wallpaperColors),
+                  enabled: settings.autoColor.valueR,
+                  icon: Broken.gallery_import,
+                  title: lang.PICK_COLORS_FROM_DEVICE_WALLPAPER,
+                  value: settings.pickColorsFromDeviceWallpaper.valueR,
+                  onChanged: (isTrue) {
+                    settings.save(pickColorsFromDeviceWallpaper: !isTrue);
+                    _refreshColorCurrentPlayingItem();
+                  },
                 ),
               ),
+            ),
             getItemWrapper(
               key: _ThemeSettingsKeys.forceMiniplayerColors,
               child: Obx(

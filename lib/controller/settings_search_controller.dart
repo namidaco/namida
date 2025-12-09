@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -17,6 +18,10 @@ import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
+
+mixin SettingKeysBase {
+  NamidaFeaturesAvailablity? get availability => null;
+}
 
 extension _SettSearcherUtils on SettingSubpageEnum {
   CustomCollapsedListTile? toSettingSubPageDetails({Enum? initialItem}) {
@@ -102,7 +107,7 @@ class SettingsSearchController {
   SettingsSearchController._internal();
 
   final _map = <SettingSubpageEnum, Map<int, GlobalKey>>{};
-  var _allWidgets = <(SettingSubpageProvider, Map<Enum, List<String>>)>[];
+  var _allWidgets = <(SettingSubpageProvider, Map<SettingKeysBase, List<String>>)>[];
   final searchResults = <SettingSubpageEnum, List<SettingSearchResultItem>>{}.obs;
   final subpagesDetails = <SettingSubpageEnum, CustomCollapsedListTile?>{};
 
@@ -165,7 +170,7 @@ class SettingsSearchController {
             p,
             SettingSearchResultItem(
               page: p,
-              key: e.key,
+              key: e.key as Enum,
               titles: e.value,
             ),
           );

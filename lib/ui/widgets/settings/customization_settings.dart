@@ -9,6 +9,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -24,7 +25,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
-enum _CustomizationSettingsKeys {
+enum _CustomizationSettingsKeys with SettingKeysBase {
   enableBlur,
   enableGlow,
   enableParallax,
@@ -72,7 +73,12 @@ enum _CustomizationSettingsKeys {
   waveformBarsCount,
   displayAudioInfo,
   displayArtistBeforeTitle,
-  appIcons,
+  appIcons(NamidaFeaturesAvailablity.android),
+  ;
+
+  @override
+  final NamidaFeaturesAvailablity? availability;
+  const _CustomizationSettingsKeys([this.availability]);
 }
 
 class CustomizationSettings extends SettingSubpageProvider {
@@ -82,7 +88,7 @@ class CustomizationSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.customization;
 
   @override
-  Map<Enum, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> get lookupMap => {
         _CustomizationSettingsKeys.enableBlur: [lang.ENABLE_BLUR_EFFECT],
         _CustomizationSettingsKeys.enableGlow: [lang.ENABLE_GLOW_EFFECT],
         _CustomizationSettingsKeys.enableParallax: [lang.ENABLE_PARALLAX_EFFECT],
@@ -342,18 +348,22 @@ class CustomizationSettings extends SettingSubpageProvider {
           _getAlbumCustomizationsTile(),
           _getTrackTileCustomizationsTile(context),
           _getMiniplayerCustomizationsTile(context),
-          if (NamidaFeaturesVisibility.displayAppIcons) NamidaContainerDivider(),
-          if (NamidaFeaturesVisibility.displayAppIcons)
-            getItemWrapper(
-              key: _CustomizationSettingsKeys.appIcons,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: getBgColor(_CustomizationSettingsKeys.appIcons),
-                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+          getItemWrapper(
+            key: _CustomizationSettingsKeys.appIcons,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const NamidaContainerDivider(),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: getBgColor(_CustomizationSettingsKeys.appIcons),
+                    borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                  ),
+                  child: const _AppIconWidgetRow(),
                 ),
-                child: const _AppIconWidgetRow(),
-              ),
+              ],
             ),
+          ),
         ],
       ),
     );
