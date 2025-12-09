@@ -262,36 +262,33 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                   NamidaPopupWrapper(
                                     useRootNavigator: true,
                                     children: () => [
-                                      MapEntry(
-                                        null,
-                                        Column(
-                                          children: [
-                                            ListTileWithCheckMark(
-                                              activeRx: settings.ytPlaylistSortReversed,
-                                              onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(reverse: !settings.ytPlaylistSortReversed.value),
-                                            ),
-                                            ...[
-                                              GroupSortType.title,
-                                              GroupSortType.creationDate,
-                                              GroupSortType.modifiedDate,
-                                              GroupSortType.numberOfTracks,
-                                              GroupSortType.playCount,
-                                              GroupSortType.firstListen,
-                                              GroupSortType.latestPlayed,
-                                              GroupSortType.shuffle,
-                                              GroupSortType.custom,
-                                            ].map(
-                                              (e) => ObxO(
-                                                rx: settings.ytPlaylistSort,
-                                                builder: (context, ytPlaylistSort) => SmallListTile(
-                                                  title: e.toText(),
-                                                  active: ytPlaylistSort == e,
-                                                  onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(sortBy: e),
-                                                ),
+                                      Column(
+                                        children: [
+                                          ListTileWithCheckMark(
+                                            activeRx: settings.ytPlaylistSortReversed,
+                                            onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(reverse: !settings.ytPlaylistSortReversed.value),
+                                          ),
+                                          ...[
+                                            GroupSortType.title,
+                                            GroupSortType.creationDate,
+                                            GroupSortType.modifiedDate,
+                                            GroupSortType.numberOfTracks,
+                                            GroupSortType.playCount,
+                                            GroupSortType.firstListen,
+                                            GroupSortType.latestPlayed,
+                                            GroupSortType.shuffle,
+                                            GroupSortType.custom,
+                                          ].map(
+                                            (e) => ObxO(
+                                              rx: settings.ytPlaylistSort,
+                                              builder: (context, ytPlaylistSort) => SmallListTile(
+                                                title: e.toText(),
+                                                active: ytPlaylistSort == e,
+                                                onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(sortBy: e),
                                               ),
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                     child: ObxO(

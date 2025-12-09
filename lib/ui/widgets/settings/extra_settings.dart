@@ -797,29 +797,26 @@ class ExtrasSettings extends SettingSubpageProvider {
                         NamidaNavigator.inst.popMenu();
                       }
 
-                      return MapEntry(
-                        onTap,
-                        ObxO(
-                          rx: settings.vibrationType,
-                          builder: (context, vibrationType) => NamidaInkWell(
-                            margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                            borderRadius: 6.0,
-                            bgColor: vibrationType == e ? theme.cardColor : null,
-                            onTap: onTap,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  e.toIcon(),
-                                  size: 16.0,
-                                ),
-                                const SizedBox(width: 6.0),
-                                Text(
-                                  e.toText(),
-                                  style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                                ),
-                              ],
-                            ),
+                      return ObxO(
+                        rx: settings.vibrationType,
+                        builder: (context, vibrationType) => NamidaInkWell(
+                          margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                          borderRadius: 6.0,
+                          bgColor: vibrationType == e ? theme.cardColor : null,
+                          onTap: onTap,
+                          child: Row(
+                            children: [
+                              Icon(
+                                e.toIcon(),
+                                size: 16.0,
+                              ),
+                              const SizedBox(width: 6.0),
+                              Text(
+                                e.toText(),
+                                style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                              ),
+                            ],
                           ),
                         ),
                       );

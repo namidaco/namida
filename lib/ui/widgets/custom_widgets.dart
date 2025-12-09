@@ -56,9 +56,12 @@ import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_tooltip.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/popup_wrapper.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 
 import 'custom_reorderable_list.dart';
+
+export 'popup_wrapper.dart';
 
 class NamidaReordererableListener extends StatelessWidget {
   final int index;
@@ -959,6 +962,7 @@ class ListTileWithCheckMark extends StatelessWidget {
   final double? iconSize;
   final bool dense;
   final bool expanded;
+  final double borderRadius;
 
   const ListTileWithCheckMark({
     super.key,
@@ -974,6 +978,7 @@ class ListTileWithCheckMark extends StatelessWidget {
     this.iconSize,
     this.dense = false,
     this.expanded = true,
+    this.borderRadius = 14.0,
   });
 
   @override
@@ -981,7 +986,7 @@ class ListTileWithCheckMark extends StatelessWidget {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     final tileAlpha = context.isDarkMode ? 5 : 20;
-    final br = BorderRadius.circular(14.0.multipliedRadius);
+    final br = BorderRadius.circular(borderRadius.multipliedRadius);
     final titleWidgetFinal = Padding(
       padding: EdgeInsets.symmetric(horizontal: dense ? 10.0 : 14.0),
       child: Column(
@@ -3999,223 +4004,6 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
   }
 }
 
-class NamidaPopupItem {
-  final IconData icon;
-  final IconData? secondaryIcon;
-  final String title;
-  final Widget Function(TextStyle? style)? titleBuilder;
-  final String subtitle;
-  final void Function() onTap;
-  final void Function()? onLongPress;
-  final bool enabled;
-  final bool oneLinedSub;
-  final Widget? trailing;
-
-  const NamidaPopupItem({
-    required this.icon,
-    this.secondaryIcon,
-    required this.title,
-    this.titleBuilder,
-    this.subtitle = '',
-    required this.onTap,
-    this.onLongPress,
-    this.enabled = true,
-    this.oneLinedSub = false,
-    this.trailing,
-  });
-}
-
-class NamidaPopupWrapper extends StatelessWidget {
-  final Widget child;
-  final FutureOr<List<MapEntry<VoidCallback?, Widget>>> Function()? children;
-  final FutureOr<List<NamidaPopupItem>> Function()? childrenDefault;
-  final bool childrenAfterChildrenDefault;
-  final VoidCallback? onTap;
-  final VoidCallback? onPop;
-  final bool openOnTap;
-  final bool openOnLongPress;
-  final bool useRootNavigator;
-
-  const NamidaPopupWrapper({
-    super.key,
-    this.child = const MoreIcon(),
-    this.children,
-    this.childrenAfterChildrenDefault = true,
-    this.childrenDefault,
-    this.onTap,
-    this.onPop,
-    this.openOnTap = true,
-    this.openOnLongPress = true,
-    this.useRootNavigator = true,
-  });
-
-  void popMenu({bool handleClosing = true}) {
-    onPop?.call();
-    NamidaNavigator.inst.popMenu(handleClosing: handleClosing);
-  }
-
-  Iterable<PopupMenuItemExtended> _mapChildren(List<MapEntry<VoidCallback?, Widget>> children) {
-    return children.map(
-      (e) => PopupMenuItemExtended(
-        onTap: e.key,
-        height: 12.0, // this minimum. widget will expand if needed
-        padding: EdgeInsets.zero,
-        child: e.key == null
-            ? e.value
-            : IgnorePointer(
-                ignoring: true, // to keep showing click mouse/etc
-                child: e.value,
-              ),
-      ),
-    );
-  }
-
-  FutureOr<List<PopupMenuEntry<dynamic>>> convertItems(BuildContext context) async {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    return [
-      if (children != null && !childrenAfterChildrenDefault) ..._mapChildren(await children!()),
-      if (childrenDefault != null)
-        ...(await childrenDefault!()).map(
-          (e) {
-            final titleStyle = textTheme.displayMedium?.copyWith(color: e.enabled ? null : textTheme.displayMedium?.color?.withValues(alpha: 0.4));
-            Widget popupItem = Row(
-              children: [
-                e.secondaryIcon != null
-                    ? StackedIcon(
-                        baseIcon: e.icon,
-                        iconSize: 20.0,
-                        secondaryIcon: e.secondaryIcon,
-                        baseIconColor: theme.iconTheme.color?.withValues(alpha: 0.8),
-                        secondaryIconColor: theme.iconTheme.color?.withValues(alpha: 0.8),
-                        secondaryIconSize: 11.0,
-                      )
-                    : Icon(
-                        e.icon,
-                        size: 20.0,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 2.0,
-                            color: Color(0x10202020),
-                          ),
-                        ],
-                        color: theme.iconTheme.color?.withValues(alpha: 0.8),
-                      ),
-                const SizedBox(width: 6.0),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      e.titleBuilder?.call(titleStyle) ??
-                          Text(
-                            e.title,
-                            style: titleStyle,
-                          ),
-                      if (e.subtitle != '')
-                        Text(
-                          e.subtitle,
-                          style: textTheme.displaySmall,
-                          maxLines: e.oneLinedSub ? 1 : null,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
-                  ),
-                ),
-                if (e.trailing != null) SizedBox(width: 6.0),
-                if (e.trailing != null) e.trailing!,
-              ],
-            );
-            if (e.onLongPress != null) {
-              popupItem = LongPressDetector(
-                enableSecondaryTap: true,
-                onLongPress: e.onLongPress,
-                child: popupItem,
-              );
-            }
-            return PopupMenuItem(
-              height: 42.0,
-              onTap: e.onTap,
-              enabled: e.enabled,
-              child: popupItem,
-            );
-          },
-        ),
-      if (children != null && childrenAfterChildrenDefault) ..._mapChildren(await children!()),
-    ];
-  }
-
-  void _showPopupMenu(BuildContext context) async {
-    final RenderBox button = context.findRenderObject()! as RenderBox;
-    final RenderBox overlay = Navigator.of(context, rootNavigator: useRootNavigator).overlay!.context.findRenderObject()! as RenderBox;
-    const offset = Offset(0.0, 24.0);
-    final RelativeRect position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        button.localToGlobal(offset, ancestor: overlay),
-        button.localToGlobal(button.size.bottomRight(Offset.zero) + offset, ancestor: overlay),
-      ),
-      Offset.zero & overlay.size,
-    );
-    await NamidaNavigator.inst.showMenu(
-      // ignore: use_build_context_synchronously
-      context: context,
-      position: position,
-      items: await convertItems(context),
-    );
-    if (context.mounted) {
-      popMenu(handleClosing: false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TapDetector(
-      onTap: () {
-        if (onTap != null) onTap!();
-        if (openOnTap) {
-          _showPopupMenu(context);
-        }
-      },
-      child: LongPressDetector(
-        enableSecondaryTap: true,
-        onLongPress: openOnLongPress ? () => _showPopupMenu(context) : null,
-        child: ColoredBox(
-          color: Colors.transparent,
-          child: MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: child,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class PopupMenuItemExtended<T> extends PopupMenuItem<T> {
-  const PopupMenuItemExtended({
-    super.key,
-    super.value,
-    super.onTap,
-    super.enabled = true,
-    super.height = kMinInteractiveDimension,
-    super.padding,
-    super.textStyle,
-    super.labelTextStyle,
-    super.mouseCursor,
-    required super.child,
-  });
-
-  @override
-  PopupMenuItemStateExtended<T, PopupMenuItemExtended<T>> createState() => PopupMenuItemStateExtended<T, PopupMenuItemExtended<T>>();
-}
-
-class PopupMenuItemStateExtended<T, W extends PopupMenuItem<T>> extends PopupMenuItemState<T, W> {
-  @override
-  @protected
-  void handleTap() {
-    widget.onTap?.call();
-  }
-}
-
 class NamidaAspectRatio extends StatelessWidget {
   final double? aspectRatio;
   final Widget child;
@@ -4399,12 +4187,21 @@ class NamidaScrollbar extends StatelessWidget {
   final ScrollController? controller;
   final Widget child;
   final double scrollStep;
-  const NamidaScrollbar({super.key, required this.controller, required this.child, this.scrollStep = 0});
+  final bool showOnStart;
+
+  const NamidaScrollbar({
+    super.key,
+    required this.controller,
+    required this.child,
+    this.scrollStep = 0,
+    this.showOnStart = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return CupertinoScrollbar(
       controller: controller,
+      showOnStart: showOnStart,
       scrollStep: scrollStep,
       onThumbLongPressStart: () => isScrollbarThumbDragging = true,
       onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
@@ -4414,8 +4211,9 @@ class NamidaScrollbar extends StatelessWidget {
 }
 
 class NamidaScrollbarWithController extends StatefulWidget {
+  final bool showOnStart;
   final Widget Function(ScrollController sc) child;
-  const NamidaScrollbarWithController({super.key, required this.child});
+  const NamidaScrollbarWithController({super.key, this.showOnStart = false, required this.child});
 
   @override
   State<NamidaScrollbarWithController> createState() => _NamidaScrollbarWithControllerState();
@@ -4439,6 +4237,9 @@ class _NamidaScrollbarWithControllerState extends State<NamidaScrollbarWithContr
   Widget build(BuildContext context) {
     return CupertinoScrollbar(
       controller: _sc,
+      showOnStart: widget.showOnStart,
+      thickness: 4.0,
+      thicknessWhileDragging: 9.0,
       onThumbLongPressStart: () => isScrollbarThumbDragging = true,
       onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
       child: widget.child(_sc),
@@ -4692,7 +4493,7 @@ class QueueUtilsRow extends StatelessWidget {
           onLongPressStart: (details) async {
             Widget buildButton(String title, IconData icon, bool isShuffleAll) {
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: tileVPadding),
+                padding: const EdgeInsets.symmetric(vertical: tileVPadding, horizontal: 8.0),
                 child: ObxO(
                   rx: settings.player.shuffleAllTracks,
                   builder: (context, shuffleAllTracks) => SizedBox(
@@ -4712,22 +4513,14 @@ class QueueUtilsRow extends StatelessWidget {
               );
             }
 
-            await showMenu(
-              context: context,
-              position: RelativeRect.fromLTRB(
-                details.globalPosition.dx,
-                details.globalPosition.dy - kQueueBottomRowHeight - (tileHeight + tileVPadding * 2) * 2,
-                details.globalPosition.dx,
-                details.globalPosition.dy,
-              ),
-              items: [
-                PopupMenuItem(
-                  child: buildButton(lang.SHUFFLE_NEXT, Broken.forward, false),
-                ),
-                PopupMenuItem(
-                  child: buildButton(lang.SHUFFLE_ALL, Broken.task, true),
-                ),
+            final menu = NamidaPopupWrapper(
+              children: () => [
+                buildButton(lang.SHUFFLE_NEXT, Broken.forward, false),
+                buildButton(lang.SHUFFLE_ALL, Broken.task, true),
               ],
+            );
+            menu.showPopupMenu(
+              context,
             );
           },
           child: NamidaButton(
@@ -5473,7 +5266,10 @@ class SetVideosPriorityChipController {
   BuildContext? _currentContext;
 
   void showMenu() {
-    _menuWrapperFn?.call()?._showPopupMenu(_currentContext!);
+    final menuWrapper = _menuWrapperFn?.call();
+    if (menuWrapper != null) {
+      menuWrapper.showPopupMenu(_currentContext!);
+    }
   }
 }
 
@@ -5548,32 +5344,26 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
         ? NamidaPopupWrapper(
             childrenAfterChildrenDefault: false,
             children: () => [
-              MapEntry(
-                null,
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Broken.info_circle,
-                        size: 14.0,
-                      ),
-                      const SizedBox(width: 6.0),
-                      Text(
-                        lang.PRIORITY,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: textTheme.displaySmall,
-                      ),
-                    ],
-                  ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Broken.info_circle,
+                      size: 14.0,
+                    ),
+                    const SizedBox(width: 6.0),
+                    Text(
+                      lang.PRIORITY,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.displaySmall,
+                    ),
+                  ],
                 ),
               ),
-              MapEntry(
-                null,
-                const NamidaContainerDivider(),
-              ),
+              const NamidaContainerDivider(),
             ],
             childrenDefault: () => CacheVideoPriority.values
                 .map(

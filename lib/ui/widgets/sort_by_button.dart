@@ -9,92 +9,94 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/expandable_box.dart';
 
-class SortByMenuTracks extends StatelessWidget {
-  const SortByMenuTracks({super.key});
+class SortByMenuTracks with SortByMenuBase {
+  const SortByMenuTracks();
 
   @override
-  Widget build(BuildContext context) {
+  List<Widget> children(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    return Column(
-      children: [
-        NamidaInkWell(
-          borderRadius: 10.0,
-          margin: EdgeInsets.symmetric(horizontal: 6.0),
-          padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
-          onTap: () {
-            Navigator.of(context).pop();
-            NamidaOnTaps.inst.onSubPageTracksSortIconTap(MediaType.track);
-          },
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Expanded(
-                child: Text(
-                  lang.ADVANCED,
-                  style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                  softWrap: false,
-                  overflow: TextOverflow.fade,
-                ),
+    return [
+      NamidaInkWell(
+        borderRadius: 10.0,
+        margin: EdgeInsets.symmetric(horizontal: 6.0),
+        padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+        bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
+        onTap: () {
+          Navigator.of(context).pop();
+          NamidaOnTaps.inst.onSubPageTracksSortIconTap(MediaType.track);
+        },
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+              child: Text(
+                lang.ADVANCED,
+                style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                softWrap: false,
+                overflow: TextOverflow.fade,
               ),
-              Icon(
-                Broken.sort,
-                size: 20.0,
-              ),
-            ],
-          ),
-        ),
-        NamidaContainerDivider(
-          margin: EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
-        ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4.0),
-          child: ObxO(
-            rx: settings.mediaItemsTrackSortingReverse,
-            builder: (context, mediaItemsTrackSortingReverse) => ListTileWithCheckMark(
-              active: mediaItemsTrackSortingReverse[MediaType.track] == true,
-              onTap: () {
-                SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse[MediaType.track] == true));
-              },
             ),
-          ),
-        ),
-        ...[
-          SortType.title,
-          SortType.album,
-          SortType.artistsList,
-          SortType.albumArtist,
-          SortType.composer,
-          SortType.genresList,
-          SortType.year,
-          SortType.dateAdded,
-          SortType.dateModified,
-          SortType.bitrate,
-          SortType.trackNo,
-          SortType.discNo,
-          SortType.filename,
-          SortType.duration,
-          SortType.sampleRate,
-          SortType.size,
-          SortType.rating,
-          SortType.latestPlayed,
-          SortType.mostPlayed,
-          SortType.firstListen,
-          SortType.shuffle,
-        ].map(
-          (e) => ObxO(
-            rx: settings.mediaItemsTrackSorting,
-            builder: (context, mediaItemsTrackSorting) => SmallListTile(
-              title: e.toText(),
-              active: mediaItemsTrackSorting[MediaType.track]?.firstOrNull == e,
-              onTap: () => SearchSortController.inst.sortMedia(MediaType.track, sortBy: e, forceSingleSorting: true),
+            Icon(
+              Broken.sort,
+              size: 20.0,
             ),
+          ],
+        ),
+      ),
+      NamidaContainerDivider(
+        margin: EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
+      ),
+      Padding(
+        padding: EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
+        child: ObxO(
+          rx: settings.mediaItemsTrackSortingReverse,
+          builder: (context, mediaItemsTrackSortingReverse) => ListTileWithCheckMark(
+            borderRadius: 10.0,
+            active: mediaItemsTrackSortingReverse[MediaType.track] == true,
+            onTap: () {
+              SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse[MediaType.track] == true));
+            },
           ),
         ),
-      ],
-    );
+      ),
+      ...[
+        SortType.title,
+        SortType.album,
+        SortType.artistsList,
+        SortType.albumArtist,
+        SortType.composer,
+        SortType.genresList,
+        SortType.year,
+        SortType.dateAdded,
+        SortType.dateModified,
+        SortType.bitrate,
+        SortType.trackNo,
+        SortType.discNo,
+        SortType.filename,
+        SortType.duration,
+        SortType.sampleRate,
+        SortType.size,
+        SortType.rating,
+        SortType.latestPlayed,
+        SortType.mostPlayed,
+        SortType.firstListen,
+        SortType.shuffle,
+      ].map(
+        (e) => ObxO(
+          rx: settings.mediaItemsTrackSorting,
+          builder: (context, mediaItemsTrackSorting) => SmallListTile(
+            borderRadius: 12.0,
+            visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+            title: e.toText(),
+            active: mediaItemsTrackSorting[MediaType.track]?.firstOrNull == e,
+            onTap: () => SearchSortController.inst.sortMedia(MediaType.track, sortBy: e, forceSingleSorting: true),
+          ),
+        ),
+      ),
+    ];
   }
 }
 
@@ -114,8 +116,9 @@ class SortByMenuTracksSearch extends StatelessWidget {
             return Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  padding: const EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
                   child: ListTileWithCheckMark(
+                    borderRadius: 10.0,
                     icon: Broken.arrow_swap_horizontal,
                     title: lang.AUTO,
                     activeRx: settings.tracksSortSearchIsAuto,
@@ -125,7 +128,6 @@ class SortByMenuTracksSearch extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(height: 4.0),
                 TapDetector(
                   onTap: isAuto ? () {} : null,
                   child: ColoredBox(
@@ -138,8 +140,9 @@ class SortByMenuTracksSearch extends StatelessWidget {
                         child: Column(
                           children: [
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              padding: const EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
                               child: ListTileWithCheckMark(
+                                borderRadius: 10.0,
                                 active: isAuto ? settings.mediaItemsTrackSortingReverse.valueR[MediaType.track] == true : reversed,
                                 onTap: () {
                                   SearchSortController.inst.sortTracksSearch(reverse: !reversed);
@@ -170,6 +173,8 @@ class SortByMenuTracksSearch extends StatelessWidget {
                               SortType.shuffle,
                             ].map(
                               (e) => SmallListTile(
+                                borderRadius: 12.0,
+                                visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
                                 title: e.toText(),
                                 active: (isAuto ? settings.mediaItemsTrackSorting[MediaType.track]?.firstOrNull : tracksSortSearch) == e,
                                 onTap: () {
@@ -192,16 +197,15 @@ class SortByMenuTracksSearch extends StatelessWidget {
   }
 }
 
-class SortByMenuAlbums extends StatelessWidget {
-  const SortByMenuAlbums({super.key});
+class SortByMenuAlbums with SortByMenuBase {
+  const SortByMenuAlbums();
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
+  List<Widget> children(BuildContext context) => [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4.0),
+          padding: EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
           child: ListTileWithCheckMark(
+            borderRadius: 10.0,
             activeRx: settings.albumSortReversed,
             onTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
           ),
@@ -224,74 +228,74 @@ class SortByMenuAlbums extends StatelessWidget {
           (e) => ObxO(
             rx: settings.albumSort,
             builder: (context, albumsort) => SmallListTile(
+              borderRadius: 12.0,
+              visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
               title: e.toText(),
               active: albumsort == e,
               onTap: () => SearchSortController.inst.sortMedia(MediaType.album, groupSortBy: e),
             ),
           ),
         ),
-      ],
-    );
-  }
+      ];
 }
 
-class SortByMenuArtists extends StatelessWidget {
-  const SortByMenuArtists({super.key});
+class SortByMenuArtists with SortByMenuBase {
+  const SortByMenuArtists();
 
   @override
-  Widget build(BuildContext context) {
+  List<Widget> children(BuildContext context) {
     final artistType = settings.activeArtistType.value;
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4.0),
-          child: ListTileWithCheckMark(
-            activeRx: settings.artistSortReversed,
-            onTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !settings.artistSortReversed.value),
+    return [
+      Padding(
+        padding: EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
+        child: ListTileWithCheckMark(
+          borderRadius: 10.0,
+          activeRx: settings.artistSortReversed,
+          onTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !settings.artistSortReversed.value),
+        ),
+      ),
+      ...[
+        artistType == MediaType.albumArtist
+            ? GroupSortType.albumArtist
+            : artistType == MediaType.composer
+                ? GroupSortType.composer
+                : GroupSortType.artistsList,
+        GroupSortType.numberOfTracks,
+        GroupSortType.playCount,
+        GroupSortType.firstListen,
+        GroupSortType.latestPlayed,
+        GroupSortType.albumsCount,
+        GroupSortType.duration,
+        GroupSortType.genresList,
+        GroupSortType.album,
+        GroupSortType.year,
+        GroupSortType.dateModified,
+        GroupSortType.shuffle,
+      ].map(
+        (e) => ObxO(
+          rx: settings.artistSort,
+          builder: (context, artistSort) => SmallListTile(
+            borderRadius: 12.0,
+            visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+            title: e.toText(),
+            active: artistSort == e,
+            onTap: () => SearchSortController.inst.sortMedia(MediaType.artist, groupSortBy: e),
           ),
         ),
-        ...[
-          artistType == MediaType.albumArtist
-              ? GroupSortType.albumArtist
-              : artistType == MediaType.composer
-                  ? GroupSortType.composer
-                  : GroupSortType.artistsList,
-          GroupSortType.numberOfTracks,
-          GroupSortType.playCount,
-          GroupSortType.firstListen,
-          GroupSortType.latestPlayed,
-          GroupSortType.albumsCount,
-          GroupSortType.duration,
-          GroupSortType.genresList,
-          GroupSortType.album,
-          GroupSortType.year,
-          GroupSortType.dateModified,
-          GroupSortType.shuffle,
-        ].map(
-          (e) => ObxO(
-            rx: settings.artistSort,
-            builder: (context, artistSort) => SmallListTile(
-              title: e.toText(),
-              active: artistSort == e,
-              onTap: () => SearchSortController.inst.sortMedia(MediaType.artist, groupSortBy: e),
-            ),
-          ),
-        ),
-      ],
-    );
+      ),
+    ];
   }
 }
 
-class SortByMenuGenres extends StatelessWidget {
-  const SortByMenuGenres({super.key});
+class SortByMenuGenres with SortByMenuBase {
+  const SortByMenuGenres();
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
+  List<Widget> children(BuildContext context) => [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4.0),
+          padding: EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
           child: ListTileWithCheckMark(
+            borderRadius: 10.0,
             activeRx: settings.genreSortReversed,
             onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
           ),
@@ -314,27 +318,26 @@ class SortByMenuGenres extends StatelessWidget {
           (e) => ObxO(
             rx: settings.genreSort,
             builder: (context, genreSort) => SmallListTile(
+              borderRadius: 12.0,
+              visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
               title: e.toText(),
               active: genreSort == e,
               onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, groupSortBy: e),
             ),
           ),
         ),
-      ],
-    );
-  }
+      ];
 }
 
-class SortByMenuPlaylist extends StatelessWidget {
-  const SortByMenuPlaylist({super.key});
+class SortByMenuPlaylist with SortByMenuBase {
+  const SortByMenuPlaylist();
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
+  List<Widget> children(BuildContext context) => [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 4.0),
+          padding: EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
           child: ListTileWithCheckMark(
+            borderRadius: 10.0,
             activeRx: settings.playlistSortReversed,
             onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
           ),
@@ -354,13 +357,13 @@ class SortByMenuPlaylist extends StatelessWidget {
           (e) => ObxO(
             rx: settings.playlistSort,
             builder: (context, playlistSort) => SmallListTile(
+              borderRadius: 12.0,
+              visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
               title: e.toText(),
               active: playlistSort == e,
               onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, groupSortBy: e),
             ),
           ),
         ),
-      ],
-    );
-  }
+      ];
 }

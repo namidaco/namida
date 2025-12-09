@@ -74,7 +74,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                     onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.genres),
                     sortByMenuWidget: SortByMenu(
                       title: sort.toText(),
-                      popupMenuChild: () => const SortByMenuGenres(),
+                      popupMenuChild: const SortByMenuGenres(),
                       isCurrentlyReversed: sortReverse,
                       onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
                     ),

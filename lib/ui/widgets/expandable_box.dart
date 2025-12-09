@@ -227,8 +227,20 @@ class CustomTextFiled extends StatelessWidget {
   }
 }
 
+mixin SortByMenuBase {
+  List<Widget> children(BuildContext context);
+}
+
+class SortByMenuCustom with SortByMenuBase {
+  final List<Widget> Function(BuildContext context) childrenCallback;
+  const SortByMenuCustom({required this.childrenCallback});
+
+  @override
+  List<Widget> children(BuildContext context) => childrenCallback(context);
+}
+
 class SortByMenu extends StatelessWidget {
-  final Widget Function() popupMenuChild;
+  final SortByMenuBase? popupMenuChild;
   final String title;
   final bool isCurrentlyReversed;
   final void Function()? onSortTap;
@@ -245,7 +257,6 @@ class SortByMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return Row(
       children: [
         TextButton(
@@ -253,18 +264,9 @@ class SortByMenu extends StatelessWidget {
             visualDensity: VisualDensity.compact,
           ),
           onPressed: onSortTap ??
-              () => showMenu(
-                    color: theme.appBarTheme.backgroundColor,
-                    context: context,
-                    position: RelativeRect.fromLTRB(context.width, kExpandableBoxHeight + 8.0, 0, 0),
-                    constraints: BoxConstraints(maxHeight: context.height * 0.6),
-                    items: [
-                      PopupMenuItem(
-                        padding: const EdgeInsets.symmetric(vertical: 0.0),
-                        child: popupMenuChild(),
-                      ),
-                    ],
-                  ),
+              () => NamidaPopupWrapper(
+                    children: () => popupMenuChild?.children(context) ?? [],
+                  ).showPopupMenu(context),
           child: NamidaButtonText(title, style: const TextStyle(fontSize: 14.5)),
         ),
         NamidaIconButton(

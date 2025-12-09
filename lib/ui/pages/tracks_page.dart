@@ -100,7 +100,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   },
                   sortByMenuWidget: SortByMenu(
                     title: settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull?.toText() ?? '',
-                    popupMenuChild: () => const SortByMenuTracks(),
+                    popupMenuChild: const SortByMenuTracks(),
                     isCurrentlyReversed: settings.mediaItemsTrackSortingReverse.valueR[MediaType.track] == true,
                     onReverseIconTap: () {
                       SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse[MediaType.track] == true));

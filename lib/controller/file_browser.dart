@@ -1207,37 +1207,41 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                     Obx(
                       (context) => SortByMenu(
                         title: _sortTypeToName[settings.fileBrowserSort.valueR] ?? '',
-                        popupMenuChild: () {
-                          Widget getTile(IconData icon, String title, FileBrowserSortType sort) {
-                            return ObxO(
-                              rx: settings.fileBrowserSort,
-                              builder: (context, currentSort) => SmallListTile(
-                                visualDensity: const VisualDensity(horizontal: -4, vertical: -3.5),
-                                trailing: Padding(
-                                  padding: const EdgeInsets.only(right: 4.0),
-                                  child: Icon(icon, size: 20.0),
+                        popupMenuChild: SortByMenuCustom(
+                          childrenCallback: (context) {
+                            Widget getTile(IconData icon, String title, FileBrowserSortType sort) {
+                              return ObxO(
+                                rx: settings.fileBrowserSort,
+                                builder: (context, currentSort) => SmallListTile(
+                                  borderRadius: 12.0,
+                                  visualDensity: const VisualDensity(horizontal: -4, vertical: -3.5),
+                                  trailing: Padding(
+                                    padding: const EdgeInsets.only(right: 4.0),
+                                    child: Icon(icon, size: 20.0),
+                                  ),
+                                  title: title,
+                                  active: currentSort == sort,
+                                  onTap: () => _sortItems(sort, null),
                                 ),
-                                title: title,
-                                active: currentSort == sort,
-                                onTap: () => _sortItems(sort, null),
-                              ),
-                            );
-                          }
+                              );
+                            }
 
-                          return Column(
-                            children: [
-                              ListTileWithCheckMark(
-                                activeRx: settings.fileBrowserSortReversed,
-                                onTap: () => _sortItems(null, !settings.fileBrowserSortReversed.value),
+                            return [
+                              Padding(
+                                padding: const EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
+                                child: ListTileWithCheckMark(
+                                  borderRadius: 10.0,
+                                  activeRx: settings.fileBrowserSortReversed,
+                                  onTap: () => _sortItems(null, !settings.fileBrowserSortReversed.value),
+                                ),
                               ),
-                              const SizedBox(height: 8.0),
                               getTile(Broken.text, lang.FILE_NAME, FileBrowserSortType.name),
                               getTile(Broken.calendar, lang.DATE, FileBrowserSortType.dateModified),
                               getTile(Broken.document_code, lang.EXTENSION, FileBrowserSortType.type),
                               getTile(Broken.math, lang.SIZE, FileBrowserSortType.size),
-                            ],
-                          );
-                        },
+                            ];
+                          },
+                        ),
                         isCurrentlyReversed: settings.fileBrowserSortReversed.valueR,
                         onReverseIconTap: () => _sortItems(null, !settings.fileBrowserSortReversed.value),
                       ),

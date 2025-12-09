@@ -422,7 +422,8 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     final vidstreams = await YoutubeInfoController.video.fetchVideoStreamsCache(video.id);
     final videoTitle = vidpage?.videoInfo?.title ?? vidstreams?.info?.title;
     final videoChannelId = vidpage?.channelInfo?.id ?? vidstreams?.info?.channelId;
-    final popUpItems = await NamidaPopupWrapper(
+
+    final menu = NamidaPopupWrapper(
       childrenDefault: () => YTUtils.getVideoCardMenuItemsForCurrentlyPlaying(
         queueSource: QueueSourceYoutubeID.playerQueue,
         numberOfRepeats: _numberOfRepeats,
@@ -432,12 +433,8 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         displayGoToChannel: true,
         displayCopyUrl: true,
       ),
-    ).convertItems(context);
-    NamidaNavigator.inst.showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(details.globalPosition.dx, details.globalPosition.dy, 0, 0),
-      items: popUpItems,
     );
+    menu.showPopupMenu(context);
   }
 
   static void openInfoMenu(BuildContext context, YoutubeID video) {

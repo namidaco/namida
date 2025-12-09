@@ -212,7 +212,7 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
         ],
         sortByMenuWidget: SortByMenu(
           title: sort?.toText() ?? lang.CUSTOM,
-          popupMenuChild: () => const SizedBox(),
+          popupMenuChild: null,
           onSortTap: onSortTap,
           isCurrentlyReversed: sortReverse,
           onReverseIconTap: () {

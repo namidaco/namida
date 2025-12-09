@@ -304,7 +304,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                       disableSorting: tracksToAdd != null && tracksToAdd.isNotEmpty,
                       sortByMenuWidget: SortByMenu(
                         title: settings.playlistSort.valueR.toText(),
-                        popupMenuChild: () => const SortByMenuPlaylist(),
+                        popupMenuChild: const SortByMenuPlaylist(),
                         isCurrentlyReversed: settings.playlistSortReversed.valueR,
                         onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
                       ),

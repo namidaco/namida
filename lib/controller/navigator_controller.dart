@@ -72,26 +72,11 @@ class NamidaNavigator {
   static const _defaultRouteAnimationDurMS = 400;
   static const kDefaultDialogDurationMS = 300;
 
-  Future<T?> showMenu<T>({
-    required BuildContext context,
-    required RelativeRect position,
-    required List<PopupMenuEntry<T>> items,
-  }) async {
+  Future<T?> showMenu<T>({required PopupRoute<T> route, bool useRootNavigator = true}) async {
     ScrollSearchController.inst.unfocusKeyboard();
     _openedNumbersManager.incrementMenus();
-
-    return material.showMenu(
-      useRootNavigator: true,
-      popUpAnimationStyle: material.AnimationStyle(
-        duration: const Duration(milliseconds: 300),
-        reverseDuration: const Duration(milliseconds: 200),
-        curve: material.Curves.easeOutQuart,
-        reverseCurve: material.Curves.easeInOutQuad,
-      ),
-      context: context,
-      position: position,
-      items: items,
-    );
+    final key = useRootNavigator ? _rootNav : navKey;
+    return key.currentState?.push(route);
   }
 
   void popMenu({bool handleClosing = true}) {

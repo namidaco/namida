@@ -147,20 +147,17 @@ class PlaybackSettings extends SettingSubpageProvider {
                   }
                 }
 
-                return MapEntry(
-                  onTap,
-                  ObxO(
-                    rx: settings.player.replayGainType,
-                    builder: (context, replayGainType) => NamidaInkWell(
-                      margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                      borderRadius: 6.0,
-                      bgColor: replayGainType == e ? context.theme.cardColor : null,
-                      onTap: onTap,
-                      child: Text(
-                        e.toText(),
-                        style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                      ),
+                return ObxO(
+                  rx: settings.player.replayGainType,
+                  builder: (context, replayGainType) => NamidaInkWell(
+                    margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                    borderRadius: 6.0,
+                    bgColor: replayGainType == e ? context.theme.cardColor : null,
+                    onTap: onTap,
+                    child: Text(
+                      e.toText(),
+                      style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
                     ),
                   ),
                 );

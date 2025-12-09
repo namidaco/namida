@@ -379,7 +379,7 @@ class CustomizationSettings extends SettingSubpageProvider {
     required void Function(TrackExecuteActions newItem) onSave,
     VisualDensity visualDensity = VisualDensity.compact,
   }) {
-    List<MapEntry<void Function()?, Widget>> getChildren() {
+    List<Widget> getChildren() {
       var values = TrackExecuteActions.values;
       if (excludePlayerActions) {
         final newValues = <TrackExecuteActions>[];
@@ -401,29 +401,26 @@ class CustomizationSettings extends SettingSubpageProvider {
               NamidaNavigator.inst.popMenu();
             }
 
-            return MapEntry(
-              onTap,
-              ObxO(
-                rx: rx,
-                builder: (context, value) => NamidaInkWell(
-                  margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                  borderRadius: 6.0,
-                  bgColor: value == e ? context.theme.cardColor : null,
-                  onTap: onTap,
-                  child: Row(
-                    children: [
-                      Icon(
-                        e.toIcon(),
-                        size: 18.0,
-                      ),
-                      const SizedBox(width: 6.0),
-                      Text(
-                        e.toText(),
-                        style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                      ),
-                    ],
-                  ),
+            return ObxO(
+              rx: rx,
+              builder: (context, value) => NamidaInkWell(
+                margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                borderRadius: 6.0,
+                bgColor: value == e ? context.theme.cardColor : null,
+                onTap: onTap,
+                child: Row(
+                  children: [
+                    Icon(
+                      e.toIcon(),
+                      size: 18.0,
+                    ),
+                    const SizedBox(width: 6.0),
+                    Text(
+                      e.toText(),
+                      style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                    ),
+                  ],
                 ),
               ),
             );

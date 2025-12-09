@@ -160,7 +160,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                       onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.artists),
                       sortByMenuWidget: SortByMenu(
                         title: sort.toText(),
-                        popupMenuChild: () => const SortByMenuArtists(),
+                        popupMenuChild: const SortByMenuArtists(),
                         isCurrentlyReversed: sortReverse,
                         onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !settings.artistSortReversed.value),
                       ),

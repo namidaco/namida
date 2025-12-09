@@ -105,7 +105,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                       onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.albums),
                       sortByMenuWidget: SortByMenu(
                         title: sort.toText(),
-                        popupMenuChild: () => const SortByMenuAlbums(),
+                        popupMenuChild: const SortByMenuAlbums(),
                         isCurrentlyReversed: sortReverse,
                         onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
                       ),
@@ -220,26 +220,23 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
     );
   }
 
-  List<MapEntry<VoidCallback?, Widget>> _getSinglesAndAlbumsToggles() {
-    MapEntry<VoidCallback?, Widget> buildTile(AlbumType type, IconData icon, String title) {
+  List<Widget> _getSinglesAndAlbumsToggles() {
+    Widget buildTile(AlbumType type, IconData icon, String title) {
       void onTap() {
         final wasActive = settings.activeAlbumTypes.value[type] ?? true;
         settings.updateActiveAlbumTypes(type, !wasActive);
         SearchSortController.inst.searchMedia(LibraryTab.albums.textSearchController?.text ?? '', MediaType.album);
       }
 
-      return MapEntry(
-        onTap,
-        Padding(
-          padding: const EdgeInsets.all(3.0),
-          child: ObxO(
-            rx: settings.activeAlbumTypes,
-            builder: (context, activeAlbumTypes) => ListTileWithCheckMark(
-              icon: icon,
-              title: title,
-              active: activeAlbumTypes[type] ?? true,
-              onTap: onTap,
-            ),
+      return Padding(
+        padding: const EdgeInsets.all(3.0),
+        child: ObxO(
+          rx: settings.activeAlbumTypes,
+          builder: (context, activeAlbumTypes) => ListTileWithCheckMark(
+            icon: icon,
+            title: title,
+            active: activeAlbumTypes[type] ?? true,
+            onTap: onTap,
           ),
         ),
       );
