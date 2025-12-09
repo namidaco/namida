@@ -397,7 +397,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                     const SizedBox(width: 4.0),
                     Obx(
                       (context) => NamidaInkWellButton(
-                        icon: Broken.add_circle,
+                        icon: Broken.import_2,
                         text: lang.IMPORT,
                         enabled: !YoutubeImportController.inst.isImportingSubscriptions.valueR,
                         onTap: _onSubscriptionFileImportTap,
@@ -414,7 +414,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                       child: Obx(
                         (context) => NamidaInkWellButton(
                           sizeMultiplier: 2.0,
-                          icon: Broken.add_circle,
+                          icon: Broken.import_2,
                           text: lang.IMPORT,
                           enabled: !YoutubeImportController.inst.isImportingSubscriptions.valueR,
                           onTap: _onSubscriptionFileImportTap,

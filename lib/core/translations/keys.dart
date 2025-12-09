@@ -137,6 +137,7 @@ abstract class LanguageKeys {
   String get CUSTOMIZATIONS_SUBTITLE => _getKey('CUSTOMIZATIONS_SUBTITLE');
   String get CUSTOMIZATIONS => _getKey('CUSTOMIZATIONS');
   String get DATABASE => _getKey('DATABASE');
+  String get DATA_IS_PROVIDED_BY_NAME => _getKey('DATA_IS_PROVIDED_BY_NAME');
   String get DATA_SAVER => _getKey('DATA_SAVER');
   String get DATA_SAVER_MODE => _getKey('DATA_SAVER_MODE');
   String get DATE_ADDED => _getKey('DATE_ADDED');
@@ -359,6 +360,7 @@ abstract class LanguageKeys {
   String get KEEP_SCREEN_AWAKE_WHEN => _getKey('KEEP_SCREEN_AWAKE_WHEN');
   String get KILL_PLAYER_AFTER_DISMISSING_APP => _getKey('KILL_PLAYER_AFTER_DISMISSING_APP');
   String get LANGUAGE => _getKey('LANGUAGE');
+  String get LEARN_MORE => _getKey('LEARN_MORE');
   String get LEFT_ACTION => _getKey('LEFT_ACTION');
   String get LIBRARY_TABS_REORDER => _getKey('LIBRARY_TABS_REORDER');
   String get LIBRARY_TABS => _getKey('LIBRARY_TABS');

@@ -530,7 +530,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                     itemBuilder: (context, i) {
                                       final name = customIndicesOrderList[i];
                                       return NamidaReordererableListener(
-                                        durationMs: 0,
                                         key: ValueKey(i),
                                         index: i,
                                         child: InkWell(

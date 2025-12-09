@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:filepicker_windows/filepicker_windows.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 
-import 'package:namida/class/file_parts.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/core/constants.dart';

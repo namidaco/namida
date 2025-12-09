@@ -653,6 +653,15 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     }
   }
 
+  void _onPointerUpCancel() {
+    _isPointerDown = false;
+    _disableSliders = false;
+    _startVolumeSwipeTimer();
+    _startBrightnessDimTimer();
+    _isEndCardsVisibleTimer?.cancel();
+    _isEndCardsVisible.value = true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
@@ -812,13 +821,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           _isEndCardsVisible.value = false;
         });
       },
-      onPointerUp: (event) {
-        _isPointerDown = false;
-        _disableSliders = false;
-        _startVolumeSwipeTimer();
-        _startBrightnessDimTimer();
-        _isEndCardsVisibleTimer?.cancel();
-        _isEndCardsVisible.value = true;
+      onPointerUp: (_) {
+        _onPointerUpCancel();
+      },
+      onPointerCancel: (_) {
+        _onPointerUpCancel();
       },
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,

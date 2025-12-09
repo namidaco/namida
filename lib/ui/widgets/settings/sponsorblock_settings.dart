@@ -8,6 +8,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -175,7 +176,12 @@ class SponsorBlockSettingsPage extends StatelessWidget with NamidaRouteWidget {
           CustomListTile(
             icon: Broken.info_circle,
             title: lang.ABOUT,
-            subtitle: _currentConfigValue.defaultServerAddress.replaceFirst('https://', ''),
+            subtitle:
+                "${lang.DATA_IS_PROVIDED_BY_NAME.replaceFirst('_NAME_', _currentConfigValue.defaultServerAddress.replaceFirst('https://', '').addDQuotation())}. ${lang.LEARN_MORE}",
+            trailing: Icon(
+              Broken.export_1,
+              size: 18.0,
+            ),
             onTap: () => NamidaLinkUtils.openLink(_currentConfigValue.defaultServerAddress),
           ),
         ],
