@@ -466,7 +466,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                 ),
           pullToRefreshWidget,
           Positioned(
-            bottom: Dimensions.inst.globalBottomPaddingTotalR,
+            bottom: Dimensions.globalBottomPaddingTotal,
             right: 12.0,
             child: _isUpdatingPaths
                 ? DecoratedBox(

@@ -434,7 +434,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                     Builder(
                       builder: (context) {
                         return SizedBox(
-                          height: Dimensions.inst.globalBottomPaddingTotalR + context.viewInsets.bottom,
+                          height: Dimensions.globalBottomPaddingTotal + context.viewInsets.bottom,
                         );
                       },
                     )

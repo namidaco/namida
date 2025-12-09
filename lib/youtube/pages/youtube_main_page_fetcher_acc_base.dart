@@ -359,7 +359,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
       );
     }
 
-    final pagePadding = EdgeInsets.only(top: widget.topPadding, bottom: widget.bottomPadding ?? Dimensions.inst.globalBottomPaddingTotalR);
+    final pagePadding = EdgeInsets.only(top: widget.topPadding, bottom: widget.bottomPadding ?? Dimensions.globalBottomPaddingTotal);
 
     final EdgeInsets firstPadding;
     final EdgeInsets lastPadding;

@@ -205,7 +205,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                             child: SuperListView.separated(
                               separatorBuilder: (context, index) => const SizedBox(height: 8.0),
                               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0).add(
-                                EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR + 48.0), // 'Add account' button
+                                const EdgeInsets.only(bottom: Dimensions.globalBottomPaddingTotal + 48.0), // 'Add account' button
                               ),
                               itemCount: signedInAccounts.length,
                               itemBuilder: (context, index) {
@@ -265,9 +265,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                   right: 0,
                   left: 0,
                   child: Padding(
-                    padding: EdgeInsets.only(
-                      bottom: Dimensions.inst.globalBottomPaddingTotalR,
-                    ),
+                    padding: const EdgeInsets.only(bottom: Dimensions.globalBottomPaddingTotal),
                     child: Align(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,

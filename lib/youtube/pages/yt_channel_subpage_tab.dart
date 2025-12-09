@@ -175,7 +175,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                 shrinkWrap: true,
                                 primary: false,
                                 physics: const NeverScrollableScrollPhysics(),
-                                padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR),
+                                padding: const EdgeInsets.only(bottom: Dimensions.globalBottomPaddingTotal),
                                 itemCount: 10,
                                 itemBuilder: (context, index) {
                                   return const YoutubeVideoCardDummy(

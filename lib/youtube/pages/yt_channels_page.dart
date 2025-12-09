@@ -567,7 +567,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                       Expanded(
                         child: ListView.builder(
                           controller: _horizontalListController,
-                          padding: EdgeInsets.only(right: Dimensions.inst.globalBottomPaddingFABR + 12.0),
+                          padding: EdgeInsets.only(right: kFABSize + 12.0),
                           scrollDirection: Axis.horizontal,
                           itemCount: totalIDsLength,
                           itemExtent: _thumbSize + horizontalPadding * 2,

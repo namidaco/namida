@@ -93,6 +93,8 @@ class Dimensions {
     return globalBottomPaddingFABR + globalBottomPaddingEffectiveR;
   }
 
+  static const globalBottomPaddingTotal = kFABSize + _kMiniplayerBottomPadding + 12.0;
+
   bool shouldAlbumBeSquared(BuildContext context) {
     final countPerRow = settings.mediaGridCounts.value.get(LibraryTab.albums);
     final albumGridCount = countPerRow.resolve(context);
@@ -160,8 +162,8 @@ class Dimensions {
   }
 }
 
-EdgeInsets get kBottomPaddingInsets => EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR);
-SizedBox get kBottomPaddingWidget => SizedBox(height: Dimensions.inst.globalBottomPaddingTotalR);
+const kBottomPaddingInsets = EdgeInsets.only(bottom: Dimensions.globalBottomPaddingTotal);
+const kBottomPaddingWidget = SizedBox(height: Dimensions.globalBottomPaddingTotal);
 SliverPadding get kBottomPaddingWidgetSliver => SliverPadding(padding: kBottomPaddingInsets);
 
 // ---- Constant Values ----

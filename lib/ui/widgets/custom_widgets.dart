@@ -3055,7 +3055,7 @@ class NamidaListViewRaw extends StatefulWidget {
   final Widget? stickyHeader;
   final Widget? footer;
 
-  /// defaults to [Dimensions.globalBottomPaddingTotalR]
+  /// defaults to [Dimensions.globalBottomPaddingTotal]
   final double? listBottomPadding;
   final ScrollController? scrollController;
   final ScrollPhysics? physics;
@@ -3108,7 +3108,7 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
       (start, end) = (end, start);
     }
 
-    final padding = EdgeInsets.only(bottom: this.widget.listBottomPadding ?? Dimensions.inst.globalBottomPaddingTotalR);
+    final padding = EdgeInsets.only(bottom: this.widget.listBottomPadding ?? Dimensions.globalBottomPaddingTotal);
     final EdgeInsets startPadding, endPadding, listPadding;
     (startPadding, endPadding, listPadding) = switch (widget.scrollDirection) {
       Axis.horizontal || Axis.vertical when (start ?? end) == null => (EdgeInsets.zero, EdgeInsets.zero, padding),
