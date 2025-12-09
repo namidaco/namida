@@ -126,11 +126,15 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
         '8',
         if (samplesPerSecond != null) ...[
           '--pixels-per-second',
-          '$samplesPerSecond',
+          '${samplesPerSecond * 0.5}',
         ],
       ];
       List<dynamic>? extractDataListFromProcess(ProcessResult result) {
-        return jsonDecode(result.stdout)?['data'] as List?;
+        try {
+          return jsonDecode(result.stdout)?['data'] as List?;
+        } catch (_) {
+          return null;
+        }
       }
 
       List<dynamic>? data;
@@ -173,20 +177,28 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
       }
       if (convertedFilePath != null) File(convertedFilePath).delete().catchError((_) => File(''));
 
-      final finalList = data?.cast<num>() ?? [];
-      final combinedList = <num>[];
-      final maxLength = finalList.length % 2 == 0 ? finalList.length : finalList.length - 1; // ensure even number for pair combination
-      for (int i = 0; i < maxLength; i += 2) {
-        final left = finalList[i].abs();
-        final right = finalList[i + 1].abs();
-        final combined = left > right ? left : right;
-        final finalnumber = combined * multiplier;
-        combinedList.add(finalnumber);
+      final cacheFileSink = cacheFile?.openWrite(mode: FileMode.writeOnly);
+
+      try {
+        final finalList = data?.cast<num>() ?? [];
+        final combinedList = <num>[];
+        final maxLength = finalList.length % 2 == 0 ? finalList.length : finalList.length - 1; // ensure even number for pair combination
+
+        for (int i = 0; i < maxLength; i += 2) {
+          final left = finalList[i].abs();
+          final right = finalList[i + 1].abs();
+          final combined = left > right ? left : right;
+          final finalnumber = combined * multiplier;
+          combinedList.add(finalnumber);
+          cacheFileSink?.writeln(finalnumber);
+        }
+        sendPort.send([token, combinedList]);
+      } catch (e) {
+        sendPort.send([token, <num>[], e]);
+      } finally {
+        await cacheFileSink?.flush();
+        await cacheFileSink?.close();
       }
-
-      sendPort.send([token, combinedList]);
-
-      if (cacheFile != null && combinedList.isNotEmpty) unawaited(cacheFile.writeAsString(combinedList.join('\n')));
     });
 
     sendPort.send(null); // prepared
@@ -194,11 +206,16 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
 
   @override
   void onResult(result) {
+    result as List;
     final token = result[0] as int;
     final completer = _completers[token];
     if (completer != null && completer.isCompleted == false) {
       completer.complete(result[1]);
       _completers.remove(token); // dereferencing
+    }
+    if (result.length > 2) {
+      final error = result[2];
+      logger.error('_WaveformWindowsIsolateManager.onResult', e: error);
     }
   }
 }
