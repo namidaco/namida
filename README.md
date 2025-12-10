@@ -21,9 +21,17 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 <a href="https://github.com/namidaco/namida/releases">
 [![](https://img.shields.io/endpoint?url=https://ghloc.vercel.app/api/namidaco/namida/badge?style=flat&logo=dart&logoColor=aqua&label=Total%20Lines&color=darkturquoise)](https://ghloc.vercel.app/namidaco/namida?branch=main)
 </a>
-<a href="https://translate.codeberg.org/engage/namida-translations/">
-<img src="https://translate.codeberg.org/widget/namida-translations/namicomp/svg-badge.svg" alt="Translation status" />
-</a>
+
+<div style="display:flex; gap:8px; align-items:center;">
+  <a href="https://github.com/namidaco/namida/releases/latest">
+    <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" height="75">
+  </a>
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida/">
+    <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50">
+  </a>
+</div>
+
+
 
 # Sections:
 
@@ -68,10 +76,10 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 ## Streaming & Youtube
 
 - Best Video & Audio Quality
-- Audio Only Mode
+- Audio Only & Data Saver Mode
 - Support Downloads, Caching & Offline Playback
 - Video View with gestures support (swipe to control volume, double tap to seek, swipe up/pinch in to enter fullscreen, etc)
-- Edit tags for downloads
+- Tags config for downloads
 - Optional Auto title/artist/album extraction for downloads and scrobbling
 - Downloads output filename builder (similar to yt-dlp)
 
@@ -243,9 +251,44 @@ Animating Thumbnail        |  Recommends & Listens
 
 - Namida is available for 
   - **Android** (stable/beta) 
-  - **Windows** (beta) <sub>`new`</sub> 
-- Stable downloads: [stable-releases](https://github.com/namidaco/namida/releases)
-- Beta downloads: [beta-releases](https://github.com/namidaco/namida-snapshots/releases)
+  - **Windows** (beta) <sub>`new`</sub>
+
+<div align="center">
+
+<table>
+
+<tr>
+  <th><div align="center">Stable</div></th>
+  <th><div align="center">Beta</div></th>
+</tr>
+
+<tr>
+<td align="center" width="200">
+  <div style="display:flex; flex-direction:column; align-items:center;">
+    <a href="https://github.com/namidaco/namida/releases/latest">
+      <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" height="75">
+    </a>
+    <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida/">
+      <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50" style="margin-top:8px;">
+    </a>
+  </div>
+</td>
+
+<td align="center" width="200">
+  <div style="display:flex; flex-direction:column; align-items:center;">
+    <a href="https://github.com/namidaco/namida-snapshots/releases/latest">
+      <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" height="75">
+    </a>
+    <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida-snapshots/">
+      <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50" style="margin-top:8px;">
+    </a>
+  </div>
+</td>
+</tr>
+</table>
+
+</div>
+
 
 ### Permission Note:
 
@@ -286,24 +329,23 @@ Animating Thumbnail        |  Recommends & Listens
 > ###### thanks [@sujxl24](https://github.com/sujxl24) for the monet version
 
 # Contribute
-- You can help translating Namida to your language on [translation repo](https://github.com/namidaco/namida-translations)
-- Building is not currently possible, see why on https://github.com/namidaco/namida/issues/37#issuecomment-1780341883
+- You can help translating Namida to your language on [Translation Repo](https://github.com/namidaco/namida-translations)
+- Building is not currently directly possible, see why on https://github.com/namidaco/namida/issues/37#issuecomment-1780341883
+
+<!-- [![Translation status](https://translate.codeberg.org/widget/namida-translations/namicomponent/horizontal-auto.svg)](https://translate.codeberg.org/engage/namida-translations/) -->
+
 
 # Donate
 
 - Donation will help improve namida and will show appreciation.
 
 <a href="https://www.buymeacoffee.com/namidaco" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 42px;" ></a>
+<a href="https://ko-fi.com/namidaco" target="_blank"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Ko-fi" style="height: 42px;" ></a>
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U7U0PF2L5)
 
-> Bitcoin (BEP20): 0x95b2834c84def92860df773d8b3d80d4c296d748
+> Bitcoin/ETH/USDT (BEP20): `0x95b2834c84def92860df773d8b3d80d4c296d748`
 
-> ETH/MATIC (BEP20): 0x95b2834c84def92860df773d8b3d80d4c296d748
-
-> USDT (BEP20): 0x95b2834c84def92860df773d8b3d80d4c296d748
-
-- Don't forget to 🌟 star the repo if you like the project.
+- Don't forget to 🌟 star the repo if you like the project ^^
 
 # Social
 - join us on our platforms for updates, tips, discussion & ideas
