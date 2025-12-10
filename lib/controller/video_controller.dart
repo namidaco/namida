@@ -355,7 +355,7 @@ class VideoController {
 
     if (returnEarly) return erabaretaVideo;
 
-    if (erabaretaVideo == null) {
+    if (erabaretaVideo == null && trackYTID.isNotEmpty) {
       if (vpsInSettings == VideoPlaybackSource.local) {
         configToUpdate.videoBlockedByType.value = VideoFetchBlockedBy.playbackSource;
       } else if (!ConnectivityController.inst.hasConnection) {
@@ -593,6 +593,8 @@ class VideoController {
       if (videoNameContainsTitleAndArtist || videoNameContainsTitleAndGenre) possibleLocal.add(vpath);
     }
 
+    final goodId = trExtYTID.isNotEmpty && trExtYTID.length == 11;
+
     void matchYTID(String videoName, String vpath, bool ensureSameDir) {
       if (ensureSameDir) {
         if (vpath.getDirectoryPath != pathDirectoryPath) return;
@@ -607,7 +609,7 @@ class VideoController {
           final videoName = vp.getFilenameWOExt;
           matchFileName(videoName, vp, shouldCheckSameDir);
           matchTitleAndArtist(videoName, vp, shouldCheckSameDir);
-          matchYTID(videoName, vp, shouldCheckSameDir);
+          if (goodId) matchYTID(videoName, vp, shouldCheckSameDir);
         }
         break;
 
@@ -625,9 +627,11 @@ class VideoController {
         }
         break;
       case LocalVideoMatchingType.youtubeID:
-        for (final vp in _allVideoPaths) {
-          final videoName = vp.getFilenameWOExt;
-          matchYTID(videoName, vp, shouldCheckSameDir);
+        if (goodId) {
+          for (final vp in _allVideoPaths) {
+            final videoName = vp.getFilenameWOExt;
+            matchYTID(videoName, vp, shouldCheckSameDir);
+          }
         }
         break;
     }
