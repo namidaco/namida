@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -23,6 +23,7 @@ class NamidaPopupWrapper extends StatelessWidget {
   final bool openOnTap;
   final bool openOnLongPress;
   final bool useRootNavigator;
+  final Listenable? refreshListenable;
 
   const NamidaPopupWrapper({
     super.key,
@@ -35,6 +36,7 @@ class NamidaPopupWrapper extends StatelessWidget {
     this.openOnTap = true,
     this.openOnLongPress = true,
     this.useRootNavigator = true,
+    this.refreshListenable,
   });
 
   void popMenu({bool handleClosing = true}) {
@@ -103,8 +105,9 @@ class NamidaPopupWrapper extends StatelessWidget {
                   ],
                 ),
               ),
-              if (e.trailing != null) SizedBox(width: 6.0),
+              if (e.trailing != null) const SizedBox(width: 6.0),
               if (e.trailing != null) e.trailing!,
+              const SizedBox(width: 2.0),
             ],
           ),
         );
@@ -177,6 +180,7 @@ class NamidaPopupWrapper extends StatelessWidget {
     final bgColor = context.theme.popupMenuTheme.color ?? context.theme.colorScheme.surface;
     return CustomPopup(
       openOnTap: openOnTap,
+      onTap: onTap,
       openOnLongPress: openOnLongPress,
       rootNavigator: useRootNavigator,
       contentPadding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
@@ -185,6 +189,7 @@ class NamidaPopupWrapper extends StatelessWidget {
       arrowColor: bgColor,
       backgroundColor: bgColor,
       content: () => _getMenuContent(context),
+      refreshListenable: refreshListenable,
       child: ColoredBox(
         color: Colors.transparent,
         child: MouseRegion(

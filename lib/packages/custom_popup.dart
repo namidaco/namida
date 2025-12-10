@@ -10,13 +10,14 @@ enum _ArrowDirection { top, bottom }
 enum PopupPosition { auto, top, bottom }
 
 const double _kMenuMaxWidth = 5.0 * _kMenuWidthStep;
-const double _kMenuMinWidth = 2.0 * _kMenuWidthStep;
+const double _kMenuMinWidth = 2.5 * _kMenuWidthStep;
 const double _kMenuWidthStep = 56.0;
 
 class CustomPopup extends StatefulWidget {
   final GlobalKey? anchorKey;
   final FutureOr<Widget> Function() content;
   final Widget child;
+  final Listenable? refreshListenable;
   final void Function()? onTap;
   final bool openOnTap;
   final bool openOnLongPress;
@@ -38,6 +39,7 @@ class CustomPopup extends StatefulWidget {
     super.key,
     required this.content,
     required this.child,
+    this.refreshListenable,
     this.onTap,
     this.anchorKey,
     this.openOnTap = true,
@@ -53,8 +55,8 @@ class CustomPopup extends StatefulWidget {
     this.onAfterPopup,
     this.rootNavigator = false,
     this.position = PopupPosition.bottom,
-    this.animationDuration = const Duration(milliseconds: 150),
-    this.animationCurve = Curves.easeInOut,
+    this.animationDuration = const Duration(milliseconds: 80),
+    this.animationCurve = Curves.easeInOutQuart,
   });
 
   @override
@@ -92,6 +94,23 @@ class CustomPopup extends StatefulWidget {
 }
 
 class CustomPopupState extends State<CustomPopup> {
+  @override
+  void initState() {
+    widget.refreshListenable?.addListener(_reOpenMenu);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget.refreshListenable?.removeListener(_reOpenMenu);
+    super.dispose();
+  }
+
+  void _reOpenMenu() {
+    NamidaNavigator.inst.popMenu();
+    show();
+  }
+
   void show() {
     widget.show(context);
   }
@@ -333,14 +352,14 @@ class _PopupRoute extends PopupRoute<void> {
       leftEdge -= rightEdge - _viewportRect.right;
     }
     final center = targetRect.center.dx - leftEdge - arrowRect.center.dx;
-    // Prevent the arrow from extending beyond the padding of the popover
-    if (center + arrowRect.center.dx > childRect.width - 15) {
-      _arrowHorizontal = center - 15;
-    } else if (center < 15) {
-      _arrowHorizontal = 15;
-    } else {
-      _arrowHorizontal = center;
-    }
+
+    final leftSafeZone = (contentRadius ?? 0) + 15.0;
+    final rightSafeZone = (contentRadius ?? 0) + 15.0;
+
+    final minPosition = leftSafeZone;
+    final maxPosition = childRect.width - rightSafeZone - arrowRect.width;
+
+    _arrowHorizontal = center.clamp(minPosition, maxPosition);
 
     _scaleAlignDx = (_arrowHorizontal + arrowRect.center.dx) / childRect.width;
   }
@@ -360,7 +379,8 @@ class _PopupRoute extends PopupRoute<void> {
       _scaleAlignDy = 1;
     } else {
       // Simple check: if child would go below viewport, adjust _top upwards
-      _top = targetRect.bottom - max(0, mediaQuery.padding.bottom + 32.0);
+      _top = targetRect.bottom - mediaQuery.padding.bottom - 32.0;
+      _top = _top! + mediaQuery.padding.top;
 
       // Check if bottom of child would be outside viewport
       final childBottom = _top! + childRect.height;

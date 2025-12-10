@@ -470,10 +470,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     Lyrics.inst.resetLyrics();
     WaveformController.inst.resetWaveform();
     CurrentColor.inst.resetCurrentPlayingTrack();
-
-    VideoController.inst.currentVideo.value = null;
-    VideoController.inst.currentVideoConfig.currentYTStreams.value = null;
-    VideoController.inst.currentVideoConfig.currentPossibleLocalVideos.clear();
+    VideoController.inst.currentVideoConfig.resetAll();
 
     YoutubeInfoController.current.resetAll();
 
@@ -698,6 +695,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     videoPlayerInfo.value = null;
     Lyrics.inst.resetLyrics();
     WaveformController.inst.resetWaveform();
+    VideoController.inst.currentVideoConfig.resetAll();
+
     WaveformController.inst.generateWaveform(
       path: tr.path,
       duration: Duration(milliseconds: tr.durationMS),

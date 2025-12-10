@@ -75,6 +75,7 @@ class NamidaNavigator {
   Future<T?> showMenu<T>({required PopupRoute<T> route, bool useRootNavigator = true}) async {
     ScrollSearchController.inst.unfocusKeyboard();
     _openedNumbersManager.incrementMenus();
+
     final key = useRootNavigator ? _rootNav : navKey;
     return key.currentState?.push(route);
   }

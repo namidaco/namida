@@ -38,6 +38,7 @@ import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -461,12 +462,14 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     required void Function(bool isSelected) onPlay,
     required bool selected,
     required bool isCached,
+    Widget? trailing,
+    bool popOnTap = true,
   }) {
     final textTheme = context.textTheme;
     return NamidaInkWell(
       onTap: () {
         _startTimer();
-        Navigator.of(context).pop();
+        if (popOnTap) Navigator.of(context).pop();
         onPlay(selected);
       },
       decoration: const BoxDecoration(),
@@ -502,6 +505,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 ),
             ],
           ),
+          if (trailing != null) trailing,
         ],
       ),
     );
@@ -1249,10 +1253,18 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       _resetTimer();
                                       setControlsVisibily(true);
                                     },
+                                    refreshListenable: widget.isLocal ? VideoController.inst.currentVideoConfig.currentYTStreams : YoutubeInfoController.current.currentYTStreams,
                                     children: () {
                                       VideoStreamsResult? streams;
+                                      Selectable? currentSelectable;
+                                      String? currentLocalVideoId;
                                       if (widget.isLocal) {
                                         streams = VideoController.inst.currentVideoConfig.currentYTStreams.value;
+                                        final currentItem = Player.inst.currentItem.value;
+                                        if (currentItem is Selectable) {
+                                          currentSelectable = currentItem;
+                                          currentLocalVideoId = currentItem.track.youtubeID;
+                                        }
                                       } else {
                                         streams = YoutubeInfoController.current.currentYTStreams.value;
                                       }
@@ -1310,6 +1322,35 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             icon: Broken.musicnote,
                                           ),
                                         ),
+                                        if (currentSelectable != null)
+                                          if (currentLocalVideoId == null || currentLocalVideoId.isEmpty)
+                                            _getQualityChip(
+                                              title: lang.SEARCH,
+                                              icon: Broken.search_normal,
+                                              selected: false,
+                                              isCached: false,
+                                              popOnTap: false,
+                                              onPlay: (isSelected) {
+                                                showSetYTLinkCommentDialog(
+                                                  [currentSelectable!.track],
+                                                  CurrentColor.inst.miniplayerColor,
+                                                  autoOpenSearch: true,
+                                                );
+                                              },
+                                            )
+                                          else
+                                            ObxO(
+                                              rx: VideoController.inst.currentVideoConfig.isLoadingCurrentYTStreams,
+                                              builder: (context, isLoadingMore) => _getQualityChip(
+                                                title: lang.CHECK_FOR_MORE,
+                                                icon: Broken.chart,
+                                                trailing: isLoadingMore ? const LoadingIndicator() : null,
+                                                selected: false,
+                                                isCached: false,
+                                                popOnTap: false,
+                                                onPlay: (_) => VideoController.inst.fetchYTQualitiesForCurrent(currentSelectable!.track),
+                                              ),
+                                            ),
                                         ...cachedQualities.map(
                                           (element) => Obx(
                                             (context) => _getQualityChip(

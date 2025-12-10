@@ -289,12 +289,7 @@ class VideoController {
   Future<NamidaVideo?> updateCurrentVideo(Track? track, {bool returnEarly = false, CurrentVideoConfig? configToUpdate}) async {
     configToUpdate ??= this.currentVideoConfig;
 
-    configToUpdate.currentVideo.value = null;
-    configToUpdate.currentPossibleLocalVideos.value.clear();
-    configToUpdate.isNoVideosAvailable.value = false;
-    configToUpdate.videoBlockedByType.value = null;
-    configToUpdate.currentDownloadedBytes.value = null;
-    configToUpdate.currentYTStreams.value = null;
+    configToUpdate.resetAll();
     if (track == null || track == kDummyTrack) return null;
     if (!settings.enableVideoPlayback.value) return null;
     if (track is Video) {
@@ -441,9 +436,14 @@ class VideoController {
     return initialTrack.path == current.track.path;
   }
 
-  Future<void> fetchYTQualities(Track track) async {
+  Future<void> fetchYTQualitiesForCurrent(Track track) async {
+    if (currentVideoConfig.isLoadingCurrentYTStreams.value) return; // if different track, the value would be reset already
+    currentVideoConfig.isLoadingCurrentYTStreams.value = true;
     final streamsResult = await YoutubeInfoController.video.fetchVideoStreams(track.youtubeID, forceRequest: false);
-    if (_canExecuteForCurrentTrackOnly(track)) currentVideoConfig.currentYTStreams.value = streamsResult;
+    if (_canExecuteForCurrentTrackOnly(track)) {
+      currentVideoConfig.currentYTStreams.value = streamsResult;
+      currentVideoConfig.isLoadingCurrentYTStreams.value = false;
+    }
   }
 
   Future<NamidaVideo?> getVideoFromYoutubeAndUpdate(
@@ -1005,6 +1005,7 @@ class CurrentVideoConfig {
   final currentVideo = Rxn<NamidaVideo>();
   final currentPossibleLocalVideos = <NamidaVideo>[].obs;
   final currentYTStreams = Rxn<VideoStreamsResult>();
+  final isLoadingCurrentYTStreams = false.obs;
   final currentDownloadedBytes = Rxn<int>();
 
   /// Indicates that [updateCurrentVideo] didn't find any matching video.
@@ -1015,9 +1016,20 @@ class CurrentVideoConfig {
     currentVideo.value = other.currentVideo.value;
     currentPossibleLocalVideos.value = other.currentPossibleLocalVideos.value;
     currentYTStreams.value = other.currentYTStreams.value;
+    isLoadingCurrentYTStreams.value = other.isLoadingCurrentYTStreams.value;
     currentDownloadedBytes.value = other.currentDownloadedBytes.value;
     isNoVideosAvailable.value = other.isNoVideosAvailable.value;
     videoBlockedByType.value = other.videoBlockedByType.value;
+  }
+
+  void resetAll() {
+    currentVideo.value = null;
+    currentPossibleLocalVideos.clear();
+    currentYTStreams.value = null;
+    isLoadingCurrentYTStreams.value = false;
+    currentDownloadedBytes.value = null;
+    isNoVideosAvailable.value = false;
+    videoBlockedByType.value = null;
   }
 }
 

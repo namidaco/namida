@@ -4203,6 +4203,7 @@ class NamidaScrollbar extends StatelessWidget {
       controller: controller,
       showOnStart: showOnStart,
       scrollStep: scrollStep,
+      thicknessWhileDragging: 9.0,
       onThumbLongPressStart: () => isScrollbarThumbDragging = true,
       onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
       child: child,
@@ -4238,7 +4239,6 @@ class _NamidaScrollbarWithControllerState extends State<NamidaScrollbarWithContr
     return CupertinoScrollbar(
       controller: _sc,
       showOnStart: widget.showOnStart,
-      thickness: 4.0,
       thicknessWhileDragging: 9.0,
       onThumbLongPressStart: () => isScrollbarThumbDragging = true,
       onThumbLongPressEnd: () => isScrollbarThumbDragging = false,

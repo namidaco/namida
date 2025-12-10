@@ -243,7 +243,6 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
 
 class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
   final isMenuOpened = false.obs;
-  final isLoadingMore = false.obs;
   static const animationDuration = Duration(milliseconds: 150);
 
   double? _imageHeightMultiplier;
@@ -262,7 +261,6 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
   @override
   void dispose() {
     isMenuOpened.close();
-    isLoadingMore.close();
     Player.inst.videoPlayerInfo.removeListener(_videoInfoListener);
     super.dispose();
   }
@@ -772,12 +770,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                           .withoutWebmIfNeccessaryOrExperimentalCodecs(allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs)
                                           .isEmpty ??
                                       true)) {
-                                if (!isLoadingMore.value) {
-                                  isLoadingMore.value = true;
-                                  focusedMenuOptions.loadQualities!(currentItem).whenComplete(
-                                    () => isLoadingMore.value = false,
-                                  );
-                                }
+                                focusedMenuOptions.loadQualities!(currentItem);
                               }
                             }
                             return canOpen;
@@ -797,6 +790,8 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                               final availableVideos = focusedMenuOptions.localVideos.valueR;
                               final ytVideos = focusedMenuOptions.streams.valueR?.videoStreams
                                   .withoutWebmIfNeccessaryOrExperimentalCodecs(allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs);
+
+                              final currentVideoConfig = VideoController.inst.currentVideoConfig;
                               return SuperListView(
                                 padding: const EdgeInsets.symmetric(vertical: 12.0),
                                 children: [
@@ -828,14 +823,8 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                       title: lang.CHECK_FOR_MORE,
                                       icon: Broken.chart,
                                       bgColor: null,
-                                      trailing: isLoadingMore.valueR ? const LoadingIndicator() : null,
-                                      onTap: () async {
-                                        if (!isLoadingMore.value) {
-                                          isLoadingMore.value = true;
-                                          await focusedMenuOptions.loadQualities!(currentItem);
-                                          isLoadingMore.value = false;
-                                        }
-                                      },
+                                      trailing: currentVideoConfig.isLoadingCurrentYTStreams.valueR ? const LoadingIndicator() : null,
+                                      onTap: () => focusedMenuOptions.loadQualities!(currentItem),
                                     ),
                                   ...availableVideos.map(
                                     (element) {
@@ -864,7 +853,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                       );
                                     },
                                   ),
-                                  const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 6.0)),
+                                  const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
                                   ...?ytVideos?.map(
                                     (element) {
                                       final currentId = focusedMenuOptions.currentId(currentItem);
@@ -1884,46 +1873,49 @@ class _MPQualityButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
-    return NamidaInkWell(
-      margin: EdgeInsets.symmetric(horizontal: 12.0.spaceX, vertical: 4.0.spaceY),
-      padding: EdgeInsets.all(padding),
-      onTap: onTap,
-      borderRadius: 8.0.br,
-      width: context.width,
-      bgColor: bgColor,
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 18.0.size,
-          ),
-          SizedBox(width: 6.0.spaceX),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: textTheme.displayMedium?.copyWith(
-                    fontSize: 13.0.fontSize,
-                  ),
-                ),
-                if (subtitle != '')
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 42.0),
+      child: NamidaInkWell(
+        margin: EdgeInsets.symmetric(horizontal: 12.0.spaceX, vertical: 4.0.spaceY),
+        padding: EdgeInsets.all(padding),
+        onTap: onTap,
+        borderRadius: 8.0.br,
+        width: context.width,
+        bgColor: bgColor,
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 18.0.size,
+            ),
+            SizedBox(width: 6.0.spaceX),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    subtitle,
-                    style: textTheme.displaySmall?.copyWith(
+                    title,
+                    style: textTheme.displayMedium?.copyWith(
                       fontSize: 13.0.fontSize,
                     ),
                   ),
-              ],
+                  if (subtitle != '')
+                    Text(
+                      subtitle,
+                      style: textTheme.displaySmall?.copyWith(
+                        fontSize: 13.0.fontSize,
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          if (trailing != null) ...[
-            SizedBox(width: 4.0.spaceX),
-            trailing!,
-            SizedBox(width: 4.0.spaceX),
+            if (trailing != null) ...[
+              SizedBox(width: 4.0.spaceX),
+              trailing!,
+              SizedBox(width: 4.0.spaceX),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

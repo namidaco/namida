@@ -354,7 +354,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           });
         },
         currentId: (item) => (item as Selectable).track.youtubeID,
-        loadQualities: (item) async => await VideoController.inst.fetchYTQualities((item as Selectable).track),
+        loadQualities: (item) => VideoController.inst.fetchYTQualitiesForCurrent((item as Selectable).track),
         localVideos: VideoController.inst.currentVideoConfig.currentPossibleLocalVideos,
         streams: VideoController.inst.currentVideoConfig.currentYTStreams,
         onLocalVideoTap: (item, video) async {
