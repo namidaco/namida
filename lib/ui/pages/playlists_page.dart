@@ -531,6 +531,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                       final name = customIndicesOrderList[i];
                                       return NamidaReordererableListener(
                                         key: ValueKey(i),
+                                        durationMs: 100,
                                         index: i,
                                         child: InkWell(
                                           onTap: () {},

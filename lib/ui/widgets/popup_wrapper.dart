@@ -15,6 +15,7 @@ part '../../../packages/custom_popup.dart';
 
 class NamidaPopupWrapper extends StatelessWidget {
   final Widget child;
+  final PopupMenuController? controller;
   final FutureOr<List<Widget>> Function()? children;
   final FutureOr<List<NamidaPopupItem>> Function()? childrenDefault;
   final bool childrenAfterChildrenDefault;
@@ -27,6 +28,7 @@ class NamidaPopupWrapper extends StatelessWidget {
 
   const NamidaPopupWrapper({
     super.key,
+    this.controller,
     this.child = const MoreIcon(),
     this.children,
     this.childrenAfterChildrenDefault = true,
@@ -179,6 +181,7 @@ class NamidaPopupWrapper extends StatelessWidget {
   CustomPopup _toCustomPopup(BuildContext context) {
     final bgColor = context.theme.popupMenuTheme.color ?? context.theme.colorScheme.surface;
     return CustomPopup(
+      controller: controller,
       openOnTap: openOnTap,
       onTap: onTap,
       openOnLongPress: openOnLongPress,

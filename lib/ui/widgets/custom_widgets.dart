@@ -4199,6 +4199,7 @@ class NamidaScrollbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (controller == null) return child;
     return CupertinoScrollbar(
       controller: controller,
       showOnStart: showOnStart,

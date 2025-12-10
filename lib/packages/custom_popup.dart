@@ -14,6 +14,7 @@ const double _kMenuMinWidth = 2.5 * _kMenuWidthStep;
 const double _kMenuWidthStep = 56.0;
 
 class CustomPopup extends StatefulWidget {
+  final PopupMenuController? controller;
   final GlobalKey? anchorKey;
   final FutureOr<Widget> Function() content;
   final Widget child;
@@ -37,6 +38,7 @@ class CustomPopup extends StatefulWidget {
 
   const CustomPopup({
     super.key,
+    this.controller,
     required this.content,
     required this.child,
     this.refreshListenable,
@@ -62,7 +64,7 @@ class CustomPopup extends StatefulWidget {
   @override
   State<CustomPopup> createState() => CustomPopupState();
 
-  void show(BuildContext context) async {
+  Future<void> show(BuildContext context) async {
     final anchor = anchorKey?.currentContext ?? context;
     final renderBox = anchor.findRenderObject() as RenderBox?;
 
@@ -71,46 +73,34 @@ class CustomPopup extends StatefulWidget {
 
     onBeforePopup?.call();
 
-    NamidaNavigator.inst
-        .showMenu(
-          route: _PopupRoute(
-            mediaQuery: MediaQuery.of(context),
-            targetRect: offset & renderBox.paintBounds.size,
-            backgroundColor: backgroundColor,
-            arrowColor: arrowColor,
-            showArrow: showArrow,
-            barriersColor: barrierColor,
-            contentPadding: contentPadding,
-            contentRadius: contentRadius,
-            contentDecoration: contentDecoration,
-            position: position,
-            animationDuration: animationDuration,
-            animationCurve: animationCurve,
-            child: await content(),
-          ),
-        )
-        .then((value) => onAfterPopup?.call());
+    await NamidaNavigator.inst.showMenu(
+      route: _PopupRoute(
+        menuController: controller,
+        targetRect: offset & renderBox.paintBounds.size,
+        backgroundColor: backgroundColor,
+        arrowColor: arrowColor,
+        showArrow: showArrow,
+        barriersColor: barrierColor,
+        contentPadding: contentPadding,
+        contentRadius: contentRadius,
+        contentDecoration: contentDecoration,
+        position: position,
+        animationDuration: animationDuration,
+        animationCurve: animationCurve,
+        refreshListenable: refreshListenable,
+        reOpenMenuCallback: () {
+          NamidaNavigator.inst.popMenu();
+          show(context);
+        },
+        child: await content(),
+      ),
+    );
+
+    onAfterPopup?.call();
   }
 }
 
 class CustomPopupState extends State<CustomPopup> {
-  @override
-  void initState() {
-    widget.refreshListenable?.addListener(_reOpenMenu);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    widget.refreshListenable?.removeListener(_reOpenMenu);
-    super.dispose();
-  }
-
-  void _reOpenMenu() {
-    NamidaNavigator.inst.popMenu();
-    show();
-  }
-
   void show() {
     widget.show(context);
   }
@@ -203,8 +193,8 @@ class _PopupContent extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: arrowDirection == _ArrowDirection.top ? 2 : null,
-          bottom: arrowDirection == _ArrowDirection.bottom ? 2 : null,
+          top: arrowDirection == _ArrowDirection.top ? 4.0 : null,
+          bottom: arrowDirection == _ArrowDirection.bottom ? 4.0 : null,
           left: arrowHorizontal,
           child: RotatedBox(
             key: arrowKey,
@@ -245,12 +235,30 @@ class _TrianglePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
-    return true;
+    return false;
+  }
+}
+
+class PopupMenuController {
+  PopupMenuController();
+
+  _PopupRoute? _instance;
+
+  void addListenable(Listenable listenable) {
+    _instance?.addListenable(listenable);
+  }
+
+  void removeListenable(Listenable listenable) {
+    _instance?.removeListenable(listenable);
+  }
+
+  void reOpenMenu() {
+    _instance?.reOpenMenuCallback();
   }
 }
 
 class _PopupRoute extends PopupRoute<void> {
-  final MediaQueryData mediaQuery;
+  final PopupMenuController? menuController;
   final Rect targetRect;
   final PopupPosition position;
   final Widget child;
@@ -274,6 +282,8 @@ class _PopupRoute extends PopupRoute<void> {
   final EdgeInsets contentPadding;
   final double? contentRadius;
   final BoxDecoration? contentDecoration;
+  final Listenable? refreshListenable;
+  final void Function() reOpenMenuCallback;
 
   double _maxHeight = _viewportRect.height;
   _ArrowDirection? _arrowDirection;
@@ -286,10 +296,10 @@ class _PopupRoute extends PopupRoute<void> {
   double? _right;
 
   _PopupRoute({
+    this.menuController,
     super.settings,
     super.filter,
     super.traversalEdgeBehavior,
-    required this.mediaQuery,
     required this.child,
     required this.targetRect,
     this.backgroundColor,
@@ -301,7 +311,9 @@ class _PopupRoute extends PopupRoute<void> {
     this.contentDecoration,
     this.position = PopupPosition.auto,
     required this.animationDuration,
-    this.animationCurve = Curves.easeInOut,
+    this.animationCurve = Curves.fastEaseInToSlowEaseOut,
+    this.refreshListenable,
+    required this.reOpenMenuCallback,
   });
 
   @override
@@ -324,6 +336,44 @@ class _PopupRoute extends PopupRoute<void> {
       super.offstage = false;
     });
     return super.didPush();
+  }
+
+  @override
+  void install() {
+    super.install();
+
+    menuController?._instance = this;
+
+    if (refreshListenable != null) {
+      addListenable(refreshListenable!);
+    }
+  }
+
+  @override
+  void didComplete(void result) {
+    super.didComplete(result);
+
+    if (refreshListenable != null) {
+      // -- prefer removing it before the animation ends
+      removeListenable(refreshListenable!);
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (refreshListenable != null) {
+      // -- just in case didComplete was not called for idk reasons
+      removeListenable(refreshListenable!);
+    }
+  }
+
+  void addListenable(Listenable listenable) {
+    listenable.addListener(reOpenMenuCallback);
+  }
+
+  void removeListenable(Listenable listenable) {
+    listenable.removeListener(reOpenMenuCallback);
   }
 
   Rect? _getRect(GlobalKey key) {
@@ -379,8 +429,8 @@ class _PopupRoute extends PopupRoute<void> {
       _scaleAlignDy = 1;
     } else {
       // Simple check: if child would go below viewport, adjust _top upwards
-      _top = targetRect.bottom - mediaQuery.padding.bottom - 32.0;
-      _top = _top! + mediaQuery.padding.top;
+      _top = targetRect.bottom - Screen.bottomBar - 42.0;
+      _top = _top! + _viewportRect.top;
 
       // Check if bottom of child would be outside viewport
       final childBottom = _top! + childRect.height;

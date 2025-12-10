@@ -2282,6 +2282,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
   int? _lastEndCardTimestamp;
   bool _canShowAnyEndcard = false;
   late final _fetchedPlaylistsCompleters = <String, Completer<void>?>{};
+  late final _fetchedPlaylistsControllers = <String, PopupMenuController?>{};
   late final _fetchedPlaylists = <String, YoutiPiePlaylistResultBase?>{};
 
   void _onEndcardsChanged() {
@@ -2437,6 +2438,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
               (fetchedPlaylist) {
                 _fetchedPlaylists[item.basicInfo.id] = fetchedPlaylist;
                 completer.complete();
+                _fetchedPlaylistsControllers[item.basicInfo.id]?.reOpenMenu();
               },
             );
           }
@@ -2501,10 +2503,13 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
                         final url = e.thumbnails.pick()?.url;
                         final width = e.display.width * maxWidth;
 
+                        final controller = e is EndScreenItemPlaylist ? _fetchedPlaylistsControllers[e.basicInfo.id] ??= PopupMenuController() : null;
+
                         return Positioned(
                           left: leftPadding,
                           top: topPadding,
                           child: NamidaPopupWrapper(
+                            controller: controller,
                             openOnTap: true,
                             openOnLongPress: true,
                             children: e is EndScreenItemVideo ? () => _getCustomChildrenVideo(e) : null,

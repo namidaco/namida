@@ -473,6 +473,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                         final creationDateText = playlist.creationDate.dateFormattedOriginal;
                         return NamidaReordererableListener(
                           key: ValueKey(i),
+                          durationMs: 100,
                           index: i,
                           child: InkWell(
                             onTap: () {},

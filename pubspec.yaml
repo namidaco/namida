@@ -158,7 +158,7 @@ dependencies:
       path: packages/smtc_windows
   windows_taskbar: ^1.1.2
   super_drag_and_drop: ^0.9.1
-  windows_single_instance: ^1.0.1
+  windows_single_instance: ^1.1.0
   super_hot_key: 
     git:
       url: https://github.com/MSOB7YY/super_native_extensions
