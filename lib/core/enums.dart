@@ -3,7 +3,7 @@
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/core/constants.dart';
 
-export 'package:basic_audio_handler/basic_audio_handler.dart' show RepeatMode, InterruptionType, InterruptionAction;
+export 'package:basic_audio_handler/basic_audio_handler.dart' show PlayerRepeatMode, InterruptionType, InterruptionAction;
 export 'package:history_manager/history_manager.dart' show TrackSource;
 
 enum SortType {

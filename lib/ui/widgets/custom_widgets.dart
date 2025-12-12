@@ -4555,7 +4555,7 @@ class RepeatModeIconButton extends StatelessWidget {
   });
 
   void _switchMode() {
-    final e = settings.player.repeatMode.value.nextElement(RepeatMode.values);
+    final e = settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values);
     settings.player.save(repeatMode: e);
   }
 
@@ -4583,7 +4583,7 @@ class RepeatModeIconButton extends StatelessWidget {
               size: iconSize,
               color: iconColor,
             ),
-            if (repeatMode == RepeatMode.forNtimes)
+            if (repeatMode == PlayerRepeatMode.forNtimes)
               ObxO(
                 rx: Player.inst.numberOfRepeats,
                 builder: (context, numberOfRepeats) => Text(

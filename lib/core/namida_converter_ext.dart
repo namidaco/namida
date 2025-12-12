@@ -489,11 +489,11 @@ extension FFMPEGTagFieldUtilsC on String {
   IconData ffmpegTagToIcon() => _NamidaConverters.inst.ffmpegTagFieldIcon(this);
 }
 
-extension PlayerRepeatModeUtils on RepeatMode {
+extension PlayerRepeatModeUtils on PlayerRepeatMode {
   String buildText() {
     final repeat = settings.player.repeatMode.value;
     String tooltip = repeat.toRawText();
-    if (repeat == RepeatMode.forNtimes) {
+    if (repeat == PlayerRepeatMode.forNtimes) {
       tooltip = tooltip.replaceFirst('_NUM_', '${Player.inst.numberOfRepeats.value}');
     }
     return tooltip;
@@ -1576,11 +1576,11 @@ class _NamidaConverters {
         InterruptionType.shouldDuck: lang.SHOULD_DUCK,
         InterruptionType.unknown: lang.OTHERS,
       },
-      RepeatMode: {
-        RepeatMode.none: lang.REPEAT_MODE_NONE,
-        RepeatMode.one: lang.REPEAT_MODE_ONE,
-        RepeatMode.all: lang.REPEAT_MODE_ALL,
-        RepeatMode.forNtimes: lang.REPEAT_FOR_N_TIMES,
+      PlayerRepeatMode: {
+        PlayerRepeatMode.none: lang.REPEAT_MODE_NONE,
+        PlayerRepeatMode.one: lang.REPEAT_MODE_ONE,
+        PlayerRepeatMode.all: lang.REPEAT_MODE_ALL,
+        PlayerRepeatMode.forNtimes: lang.REPEAT_FOR_N_TIMES,
       },
       LibraryTab: {
         LibraryTab.albums: lang.ALBUMS,
@@ -1975,11 +1975,11 @@ class _NamidaConverters {
         InterruptionType.shouldDuck: Broken.volume_low_1,
         InterruptionType.unknown: Broken.status,
       },
-      RepeatMode: {
-        RepeatMode.none: Broken.repeate_music,
-        RepeatMode.one: Broken.repeate_one,
-        RepeatMode.all: Broken.repeat,
-        RepeatMode.forNtimes: Broken.status,
+      PlayerRepeatMode: {
+        PlayerRepeatMode.none: Broken.repeate_music,
+        PlayerRepeatMode.one: Broken.repeate_one,
+        PlayerRepeatMode.all: Broken.repeat,
+        PlayerRepeatMode.forNtimes: Broken.status,
       },
       ThemeMode: {
         ThemeMode.light: Broken.sun_1,

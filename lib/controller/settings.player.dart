@@ -31,7 +31,7 @@ class _PlayerSettings with SettingsFileWriter {
   final resumeAfterOnVolume0Pause = true.obs;
   final resumeAfterWasInterrupted = true.obs;
   final jumpToFirstTrackAfterFinishingQueue = false.obs;
-  final repeatMode = RepeatMode.none.obs;
+  final repeatMode = PlayerRepeatMode.none.obs;
   final infiniyQueueOnNextPrevious = true.obs;
   final displayRemainingDurInsteadOfTotal = false.obs;
   final displayActualPositionWhenSeeking = false.obs;
@@ -75,7 +75,7 @@ class _PlayerSettings with SettingsFileWriter {
     bool? resumeAfterOnVolume0Pause,
     bool? resumeAfterWasInterrupted,
     bool? jumpToFirstTrackAfterFinishingQueue,
-    RepeatMode? repeatMode,
+    PlayerRepeatMode? repeatMode,
     KillAppMode? killAfterDismissingApp,
     bool? lockscreenArtwork,
     ReplayGainType? replayGainType,
@@ -163,7 +163,7 @@ class _PlayerSettings with SettingsFileWriter {
       resumeAfterOnVolume0Pause.value = json['resumeAfterOnVolume0Pause'] ?? resumeAfterOnVolume0Pause.value;
       resumeAfterWasInterrupted.value = json['resumeAfterWasInterrupted'] ?? resumeAfterWasInterrupted.value;
       jumpToFirstTrackAfterFinishingQueue.value = json['jumpToFirstTrackAfterFinishingQueue'] ?? jumpToFirstTrackAfterFinishingQueue.value;
-      repeatMode.value = RepeatMode.values.getEnum(json['repeatMode']) ?? repeatMode.value;
+      repeatMode.value = PlayerRepeatMode.values.getEnum(json['repeatMode']) ?? repeatMode.value;
       infiniyQueueOnNextPrevious.value = json['infiniyQueueOnNextPrevious'] ?? infiniyQueueOnNextPrevious.value;
       displayRemainingDurInsteadOfTotal.value = json['displayRemainingDurInsteadOfTotal'] ?? displayRemainingDurInsteadOfTotal.value;
       displayActualPositionWhenSeeking.value = json['displayActualPositionWhenSeeking'] ?? displayActualPositionWhenSeeking.value;

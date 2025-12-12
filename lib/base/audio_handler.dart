@@ -315,13 +315,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final repeat = settings.player.repeatMode.value;
       final repeatText = repeat.buildText();
       final repeatIcoName = switch (repeat) {
-        RepeatMode.none => 'repeate-music',
-        RepeatMode.one => 'repeate-one',
-        RepeatMode.forNtimes => 'status',
-        RepeatMode.all => 'repeat',
+        PlayerRepeatMode.none => 'repeate-music',
+        PlayerRepeatMode.one => 'repeate-one',
+        PlayerRepeatMode.forNtimes => 'status',
+        PlayerRepeatMode.all => 'repeat',
       };
       void onRepeatPress() {
-        final e = settings.player.repeatMode.value.nextElement(RepeatMode.values);
+        final e = settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values);
         settings.player.save(repeatMode: e);
         _refreshWindowsTaskbar(_willPlayWhenReady, null);
       }
@@ -1812,7 +1812,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  void onRepeatModeChange(RepeatMode repeatMode) {
+  void onRepeatModeChange(PlayerRepeatMode repeatMode) {
     settings.player.save(repeatMode: repeatMode);
   }
 
@@ -1912,7 +1912,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get playerPauseOnVolume0 => settings.player.pauseOnVolume0.value;
 
   @override
-  RepeatMode get playerRepeatMode => settings.player.repeatMode.value;
+  PlayerRepeatMode get playerRepeatMode => settings.player.repeatMode.value;
 
   @override
   bool get playerResumeAfterOnVolume0Pause => settings.player.resumeAfterOnVolume0Pause.value;
