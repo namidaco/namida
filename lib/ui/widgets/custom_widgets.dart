@@ -28,6 +28,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.dart';
@@ -6142,7 +6143,7 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
 
   @override
   void dispose() {
-    NamidaNavigator.setSystemUIImmersiveMode(false);
+    MiniPlayerController.inst.setImmersiveMode(null); // let that decide
     super.dispose();
   }
 

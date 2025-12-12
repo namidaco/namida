@@ -725,7 +725,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       case TrackExecuteActions.goToAlbum:
         item.execute(
           selectable: (finalItem) {
-            NamidaOnTaps.inst.onAlbumTap(finalItem.track.album);
+            NamidaOnTaps.inst.onAlbumTap(finalItem.track.albumIdentifier);
           },
           youtubeID: (finalItem) {},
         );

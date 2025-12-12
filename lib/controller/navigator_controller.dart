@@ -72,12 +72,11 @@ class NamidaNavigator {
   static const _defaultRouteAnimationDurMS = 400;
   static const kDefaultDialogDurationMS = 300;
 
-  Future<T?> showMenu<T>({required PopupRoute<T> route, bool useRootNavigator = true}) async {
+  Future<T?> showMenu<T>({required PopupRoute<T> route}) async {
     ScrollSearchController.inst.unfocusKeyboard();
     _openedNumbersManager.incrementMenus();
 
-    final key = useRootNavigator ? _rootNav : navKey;
-    return key.currentState?.push(route);
+    return _rootNav.currentState?.push(route);
   }
 
   void popMenu({bool handleClosing = true}) {

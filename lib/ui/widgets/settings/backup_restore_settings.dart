@@ -200,6 +200,19 @@ class BackupAndRestore extends SettingSubpageProvider {
     }
   }
 
+  void _ensureNewBackupItemsIncluded(List<AppPathsBackupEnum> items) {
+    int includedCount = 0;
+    for (final item in items) {
+      final isIncluded = settings.backupItemslist.value!.contains(item);
+      if (isIncluded) includedCount++;
+    }
+    if (includedCount > 0 && includedCount < items.length) {
+      // -- if a new item was added in an update while old
+      // -- settings still apply, this should fix it
+      settings.save(backupItemslist: items);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
@@ -260,6 +273,8 @@ class BackupAndRestore extends SettingSubpageProvider {
                   bool youtubeForceFollowItems = false,
                   required List<AppPathsBackupEnum> youtubeItems,
                 }) {
+                  _ensureNewBackupItemsIncluded(items);
+                  _ensureNewBackupItemsIncluded(youtubeItems);
                   return Obx(
                     (context) {
                       final localRes = getItemsSize(items, sizesMap.valueR);
@@ -273,7 +288,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                         builder: (context, backupItemslist) {
                           backupItemslist ??= AppPathsBackupEnumCategories.everything;
 
-                          bool isActive(List<AppPathsBackupEnum> items) => items.every((element) => backupItemslist!.contains(element));
+                          bool isActive(List<AppPathsBackupEnum> items) => items.any((element) => backupItemslist!.contains(element));
 
                           void onItemTap(List<AppPathsBackupEnum> items) {
                             if (isActive(items)) {
@@ -345,7 +360,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                   icon: null,
                                   onPressed: () {
                                     if (youtubeAvailable) {
-                                      onItemTap(youtubeItems);
+                                      onItemTap(youtubeForceFollowItems ? items : youtubeItems);
                                     }
                                   },
                                   child: StackedIcon(
@@ -372,16 +387,22 @@ class BackupAndRestore extends SettingSubpageProvider {
                     title: lang.CREATE_BACKUP,
                     actions: [
                       const CancelButton(),
-                      NamidaButton(
-                        text: lang.CREATE_BACKUP,
-                        onPressed: () {
-                          final items = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
-                          if (items.isNotEmpty) {
-                            NamidaNavigator.inst.closeDialog();
-                            final rawPaths = items.map((e) => e.resolve()).toList();
-                            BackupController.inst.createBackupFile(rawPaths);
-                          }
-                        },
+                      ObxO(
+                        rx: settings.backupItemslist,
+                        builder: (context, backupItemslist) => AnimatedEnabled(
+                          enabled: backupItemslist?.isNotEmpty == true,
+                          child: NamidaButton(
+                            text: lang.CREATE_BACKUP,
+                            onPressed: () {
+                              final items = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
+                              if (items.isNotEmpty) {
+                                NamidaNavigator.inst.closeDialog();
+                                final rawPaths = items.map((e) => e.resolve()).toList();
+                                BackupController.inst.createBackupFile(rawPaths);
+                              }
+                            },
+                          ),
+                        ),
                       ),
                     ],
                     child: SizedBox(
@@ -396,7 +417,6 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeAvailable: true,
                               youtubeItems: AppPathsBackupEnumCategories.database_yt,
                             ),
-                            const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.PLAYLISTS,
                               icon: Broken.music_library_2,
@@ -404,7 +424,6 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeAvailable: true,
                               youtubeItems: AppPathsBackupEnumCategories.playlists_yt,
                             ),
-                            const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.HISTORY,
                               icon: Broken.refresh,
@@ -412,7 +431,6 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeAvailable: true,
                               youtubeItems: AppPathsBackupEnumCategories.history_yt,
                             ),
-                            const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.SETTINGS,
                               icon: Broken.setting,
@@ -420,7 +438,6 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeAvailable: false,
                               youtubeItems: [],
                             ),
-                            const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.LYRICS,
                               icon: Broken.document,
@@ -428,7 +445,6 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeAvailable: false,
                               youtubeItems: [],
                             ),
-                            const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.QUEUES,
                               icon: Broken.driver,
@@ -436,7 +452,6 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeAvailable: false,
                               youtubeItems: [],
                             ),
-                            const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.COLOR_PALETTES,
                               icon: Broken.colorfilter,
@@ -445,7 +460,6 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeForceFollowItems: false,
                               youtubeItems: AppPathsBackupEnumCategories.palette_yt,
                             ),
-                            const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.VIDEO_CACHE,
                               icon: Broken.video,
@@ -454,7 +468,6 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeForceFollowItems: true,
                               youtubeItems: [],
                             ),
-                            const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.AUDIO_CACHE,
                               icon: Broken.audio_square,
@@ -463,7 +476,6 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeForceFollowItems: true,
                               youtubeItems: [],
                             ),
-                            const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.ARTWORKS,
                               icon: Broken.image,
@@ -471,7 +483,6 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeAvailable: false,
                               youtubeItems: [],
                             ),
-                            const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.THUMBNAILS,
                               icon: Broken.image,
@@ -479,7 +490,6 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeAvailable: true,
                               youtubeItems: AppPathsBackupEnumCategories.thumbnails_yt,
                             ),
-                            const SizedBox(height: 12.0),
                             getItemWidget(
                               title: lang.METADATA_CACHE,
                               icon: Broken.message_text,
@@ -488,7 +498,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeForceFollowItems: true,
                               youtubeItems: [],
                             ),
-                          ],
+                          ].addSeparators(separator: const SizedBox(height: 8.0)).toList(),
                         ),
                       ),
                     ),

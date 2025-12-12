@@ -31,7 +31,6 @@ class CustomPopup extends StatefulWidget {
   final BoxDecoration? contentDecoration;
   final VoidCallback? onBeforePopup;
   final VoidCallback? onAfterPopup;
-  final bool rootNavigator;
   final PopupPosition position;
   final Duration animationDuration;
   final Curve animationCurve;
@@ -55,7 +54,6 @@ class CustomPopup extends StatefulWidget {
     this.contentDecoration,
     this.onBeforePopup,
     this.onAfterPopup,
-    this.rootNavigator = false,
     this.position = PopupPosition.bottom,
     this.animationDuration = const Duration(milliseconds: 80),
     this.animationCurve = Curves.easeInOutQuart,

@@ -67,7 +67,7 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Ma
                   maxWidth: maxWidth,
                   title: name,
                   source: QueueSource.genre,
-                  subtitle: tracks.take(10).map((e) => e.originalArtist).join(', '),
+                  subtitle: tracks.map((e) => e.originalArtist).takeUnique(10).join(', '),
                   heroTag: 'genre_$name',
                   imageBuilder: (size) => MultiArtworkContainer(
                     size: size,

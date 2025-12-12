@@ -169,7 +169,6 @@ Future<bool> _mainAppInitialization() async {
     var paths = <String>[];
 
     await [
-      NamidaChannel.inst.getPlatformSdk().then((sdk) => NamidaDeviceInfo.sdkVersion = sdk),
       fetchAppData(),
       fetchRootDir(),
       NamidaStorage.inst.getStorageDirectories().then((value) => paths = value),

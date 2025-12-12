@@ -469,7 +469,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     return NamidaInkWell(
       onTap: () {
         _startTimer();
-        if (popOnTap) Navigator.of(context).pop();
+        if (popOnTap) NamidaNavigator.inst.popMenu();
         onPlay(selected);
       },
       decoration: const BoxDecoration(),
@@ -1079,6 +1079,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                 if (!isSelected) {
                                                   Player.inst.setPlayerSpeed(speed);
                                                   settings.player.save(speed: speed);
+                                                  NamidaNavigator.inst.popMenu();
                                                 }
                                               },
                                               decoration: const BoxDecoration(),
@@ -1103,7 +1104,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       NamidaInkWell(
                                         onTap: () {
                                           _startTimer();
-                                          Navigator.of(context).pop();
+                                          NamidaNavigator.inst.popMenu();
                                           NamidaNavigator.inst.navigateDialog(dialog: const _SpeedsEditorDialog());
                                         },
                                         decoration: const BoxDecoration(),

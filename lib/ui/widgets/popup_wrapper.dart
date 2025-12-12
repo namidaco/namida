@@ -23,7 +23,6 @@ class NamidaPopupWrapper extends StatelessWidget {
   final VoidCallback? onPop;
   final bool openOnTap;
   final bool openOnLongPress;
-  final bool useRootNavigator;
   final Listenable? refreshListenable;
 
   const NamidaPopupWrapper({
@@ -37,7 +36,6 @@ class NamidaPopupWrapper extends StatelessWidget {
     this.onPop,
     this.openOnTap = true,
     this.openOnLongPress = true,
-    this.useRootNavigator = true,
     this.refreshListenable,
   });
 
@@ -185,7 +183,6 @@ class NamidaPopupWrapper extends StatelessWidget {
       openOnTap: openOnTap,
       onTap: onTap,
       openOnLongPress: openOnLongPress,
-      rootNavigator: useRootNavigator,
       contentPadding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
       contentRadius: 12.0.multipliedRadius,
       position: PopupPosition.bottom,

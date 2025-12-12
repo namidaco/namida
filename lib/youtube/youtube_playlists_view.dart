@@ -260,7 +260,6 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   NamidaPopupWrapper(
-                                    useRootNavigator: true,
                                     children: () => [
                                       Column(
                                         children: [

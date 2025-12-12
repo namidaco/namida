@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -25,7 +26,7 @@ class SortByMenuTracks with SortByMenuBase {
         padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
         onTap: () {
-          Navigator.of(context).pop();
+          NamidaNavigator.inst.popMenu();
           NamidaOnTaps.inst.onSubPageTracksSortIconTap(MediaType.track);
         },
         child: Row(

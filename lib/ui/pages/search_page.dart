@@ -412,7 +412,6 @@ class SearchPage extends StatelessWidget {
                                                   crossAxisAlignment: CrossAxisAlignment.center,
                                                   children: [
                                                     NamidaPopupWrapper(
-                                                      useRootNavigator: false,
                                                       children: () => const [SortByMenuTracksSearch()],
                                                       child: NamidaInkWell(
                                                         child: Obx(

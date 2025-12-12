@@ -696,6 +696,18 @@ extension IterableExtensions<E> on Iterable<E> {
     }
     return false;
   }
+
+  List<E> takeUnique(int count) {
+    final uniqueSet = <E>{};
+    final finalList = <E>[];
+    for (final e in this) {
+      if (uniqueSet.add(e)) {
+        finalList.add(e);
+        if (finalList.length >= count) break;
+      }
+    }
+    return finalList;
+  }
 }
 
 extension DirectoryUtils on Directory {
