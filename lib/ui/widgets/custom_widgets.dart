@@ -2569,6 +2569,8 @@ class FadeDismissible extends StatefulWidget {
   final RxBase<bool>? draggableRx;
   final Widget? onTopWidget;
   final bool removeOnDismiss;
+  final Widget Function()? leftWidget;
+  final Widget Function()? rightWidget;
 
   /// value multiplied by the animation.
   /// 0.0 means top friction, 1.0 means normal friction & >1 means more lose friction
@@ -2593,6 +2595,8 @@ class FadeDismissible extends StatefulWidget {
     this.draggableRx,
     this.onTopWidget,
     this.removeOnDismiss = true,
+    this.leftWidget,
+    this.rightWidget,
     this.friction = 1.0,
   });
 
@@ -2662,14 +2666,7 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
     await _animation.animateTo(0, duration: widget.settleDuration, curve: widget.settleCurve);
   }
 
-  Widget buildChild(bool draggable, Widget child, double maxWidth) {
-    final fadeAnimation = _animation.drive(
-      widget.friction == 1.0
-          ? Animatable.fromCallback((value) => 1 - value.abs())
-          : Animatable.fromCallback(
-              (value) => 1 - (value * widget.friction).abs().clampDouble(0, 1),
-            ),
-    );
+  Widget buildChild(bool draggable, Widget child, double maxWidth, Animation<double> fadeAnimation) {
     return HorizontalDragDetector(
       onStart: !draggable
           ? null
@@ -2755,12 +2752,63 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
             ],
           )
         : widget.child;
-    return widget.draggableRx != null
+
+    final fadeAnimation = _animation.drive(
+      widget.friction == 1.0
+          ? Animatable.fromCallback((value) => 1 - value.abs())
+          : Animatable.fromCallback(
+              (value) => 1 - (value * widget.friction).abs().clampDouble(0, 1),
+            ),
+    );
+    Widget dismissibleChild = widget.draggableRx != null
         ? ObxO(
             rx: widget.draggableRx!,
-            builder: (context, value) => buildChild(value && widget.direction != DismissDirection.none, child, maxWidth),
+            builder: (context, value) => buildChild(value && widget.direction != DismissDirection.none, child, maxWidth, fadeAnimation),
           )
-        : buildChild(_draggable && widget.direction != DismissDirection.none, child, maxWidth);
+        : buildChild(_draggable && widget.direction != DismissDirection.none, child, maxWidth, fadeAnimation);
+
+    if (widget.leftWidget != null || widget.rightWidget != null) {
+      final reverseFadeAnimation = ReverseAnimation(fadeAnimation);
+      Widget? leftWidget;
+      Widget? rightWidget;
+      dismissibleChild = Stack(
+        alignment: AlignmentGeometry.center,
+        children: [
+          if (widget.leftWidget != null)
+            Positioned(
+              left: 0.0,
+              child: AnimatedBuilder(
+                animation: _animation,
+                builder: (context, _) {
+                  final p = _animation.value;
+                  if (p <= 0) return const SizedBox();
+                  return leftWidget ??= FadeTransition(
+                    opacity: reverseFadeAnimation,
+                    child: widget.leftWidget!(),
+                  );
+                },
+              ),
+            ),
+          if (widget.rightWidget != null)
+            Positioned(
+              right: 0.0,
+              child: AnimatedBuilder(
+                animation: _animation,
+                builder: (context, _) {
+                  final p = _animation.value;
+                  if (p >= 0) return const SizedBox();
+                  return rightWidget ??= FadeTransition(
+                    opacity: reverseFadeAnimation,
+                    child: widget.rightWidget!(),
+                  );
+                },
+              ),
+            ),
+          dismissibleChild,
+        ],
+      );
+    }
+    return dismissibleChild;
   }
 }
 
@@ -5472,7 +5520,57 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
           info: infoCallback(),
         );
       },
+      leftWidget: () => _SwipeQueueActionBox(
+        isLeft: true,
+        action: settings.onTrackSwipeRight.value,
+      ),
+      rightWidget: () => _SwipeQueueActionBox(
+        isLeft: false,
+        action: settings.onTrackSwipeLeft.value,
+      ),
       child: child,
+    );
+  }
+}
+
+class _SwipeQueueActionBox extends StatelessWidget {
+  final bool isLeft;
+  final TrackExecuteActions action;
+  const _SwipeQueueActionBox({required this.isLeft, required this.action});
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = Radius.circular(8.0.multipliedRadius);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.horizontal(
+          left: isLeft ? Radius.zero : radius,
+          right: isLeft ? radius : Radius.zero,
+        ),
+        color: context.theme.cardColor,
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: context.width * 0.25),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                action.toIcon(),
+                size: 22.0,
+              ),
+              SizedBox(height: 4.0),
+              Text(
+                action.toText(),
+                style: context.textTheme.displaySmall,
+                softWrap: false,
+                overflow: TextOverflow.fade,
+              )
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
