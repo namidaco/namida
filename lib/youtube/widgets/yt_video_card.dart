@@ -10,6 +10,7 @@ import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -87,8 +88,11 @@ class YoutubeVideoCard extends StatelessWidget {
 
     final percentageWatched = video.percentageWatched;
 
-    final firstBadge = video.badges?.firstOrNull;
+    final smallBoxText = video.durSeconds?.secondsLabel;
+    final firstBadge = smallBoxText == null || smallBoxText.isEmpty ? video.badges?.firstOrNull : null;
 
+    final enableGifThumbnails = settings.youtube.enableGifThumbnails;
+    final thumbnailGifUrl = enableGifThumbnails ? video.thumbnailGifUrl : null;
     Widget finalChild = NamidaPopupWrapper(
       openOnTap: false,
       childrenDefault: getMenuItems,
@@ -100,8 +104,8 @@ class YoutubeVideoCard extends StatelessWidget {
         thumbnailHeight: thumbnailHeight,
         isImageImportantInCache: isImageImportantInCache,
         borderRadius: 12.0,
-        videoId: videoId,
-        thumbnailUrl: null,
+        videoId: thumbnailGifUrl != null ? null : videoId,
+        thumbnailUrl: thumbnailGifUrl,
         shimmerEnabled: false,
         title: video.title,
         subtitle: [
@@ -122,7 +126,7 @@ class YoutubeVideoCard extends StatelessWidget {
                 queueSource: properties.configs.queueSource,
               );
             },
-        smallBoxText: video.durSeconds?.secondsLabel,
+        smallBoxText: smallBoxText,
         bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(videoId: videoId, context: context),
         menuChildrenDefault: getMenuItems,
         extractColor: false,

@@ -40,6 +40,7 @@ class _YoutubeSettings with SettingsFileWriter {
   bool whiteVideoBGInLightMode = false;
   bool enableDimInLightMode = true;
   bool allowExperimentalCodecs = false;
+  bool enableGifThumbnails = false;
 
   final sponsorBlockSettings = SponsorBlockSettings().obs;
 
@@ -72,6 +73,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? whiteVideoBGInLightMode,
     bool? enableDimInLightMode,
     bool? allowExperimentalCodecs,
+    bool? enableGifThumbnails,
   }) {
     if (showChannelWatermarkFullscreen != null) this.showChannelWatermarkFullscreen.value = showChannelWatermarkFullscreen;
     if (showVideoEndcards != null) this.showVideoEndcards.value = showVideoEndcards;
@@ -102,6 +104,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (whiteVideoBGInLightMode != null) this.whiteVideoBGInLightMode = whiteVideoBGInLightMode;
     if (enableDimInLightMode != null) this.enableDimInLightMode = enableDimInLightMode;
     if (allowExperimentalCodecs != null) this.allowExperimentalCodecs = allowExperimentalCodecs;
+    if (enableGifThumbnails != null) this.enableGifThumbnails = enableGifThumbnails;
     _writeToStorage();
   }
 
@@ -177,6 +180,7 @@ class _YoutubeSettings with SettingsFileWriter {
       whiteVideoBGInLightMode = json['whiteVideoBGInLightMode'] ?? whiteVideoBGInLightMode;
       enableDimInLightMode = json['enableDimInLightMode'] ?? enableDimInLightMode;
       allowExperimentalCodecs = json['allowExperimentalCodecs'] ?? allowExperimentalCodecs;
+      enableGifThumbnails = json['enableGifThumbnails'] ?? enableGifThumbnails;
     } catch (e, st) {
       printy(e, isError: true);
       logger.report(e, st);
@@ -215,6 +219,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'whiteVideoBGInLightMode': whiteVideoBGInLightMode,
         'enableDimInLightMode': enableDimInLightMode,
         'allowExperimentalCodecs': allowExperimentalCodecs,
+        'enableGifThumbnails': enableGifThumbnails,
       };
 
   Future<void> _writeToStorage() => writeToStorage();

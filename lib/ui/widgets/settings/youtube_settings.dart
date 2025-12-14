@@ -877,41 +877,11 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
               title: 'allow_experimental_codecs'.toUpperCase(),
               subtitle: 'av1 & vp9',
             ),
-            NamidaPopupWrapper(
-              child: NamidaPopupWrapper(
-                childrenDefault: () => _dataSaverChildren(() => setState(() {})),
-                child: CustomListTile(
-                  icon: Broken.wifi_square,
-                  title: 'data_saver_mode'.toUpperCase(),
-                  trailing: NamidaPopupWrapper(
-                    childrenDefault: () => _dataSaverChildren(() => setState(() {})),
-                    child: ObxO(
-                      rx: settings.youtube.dataSaverMode,
-                      builder: (context, dataSaverMode) => Text(
-                        dataSaverMode.toText(),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            NamidaPopupWrapper(
-              child: NamidaPopupWrapper(
-                childrenDefault: () => _dataSaverMobileChildren(() => setState(() {})),
-                child: CustomListTile(
-                  icon: Broken.chart_1,
-                  title: 'data_saver_mode_(mobile)'.toUpperCase(),
-                  trailing: NamidaPopupWrapper(
-                    childrenDefault: () => _dataSaverMobileChildren(() => setState(() {})),
-                    child: ObxO(
-                      rx: settings.youtube.dataSaverModeMobile,
-                      builder: (context, dataSaverModeMobile) => Text(
-                        dataSaverModeMobile.toText(),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            CustomSwitchListTile(
+              icon: Broken.video_horizontal,
+              value: settings.youtube.enableGifThumbnails,
+              onChanged: (isTrue) => setState(() => settings.youtube.save(enableGifThumbnails: !isTrue)),
+              title: 'enable_gif_thumbnails'.toUpperCase(),
             ),
             CustomListTile(
               leading: StackedIcon(
