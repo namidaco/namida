@@ -21,6 +21,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/ui/widgets/settings/return_youtube_dislike_settings.dart';
 import 'package:namida/ui/widgets/settings/sponsorblock_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -30,6 +31,7 @@ import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 enum _YoutubeSettingKeys with SettingKeysBase {
   manageYourAccounts,
   sponsorBlock,
+  ryd,
   youtubeStyleMiniplayer,
   rememberAudioOnly,
   showShortsIn,
@@ -64,6 +66,7 @@ class YoutubeSettings extends SettingSubpageProvider {
   Map<SettingKeysBase, List<String>> get lookupMap => {
         _YoutubeSettingKeys.manageYourAccounts: [lang.MANAGE_YOUR_ACCOUNTS],
         _YoutubeSettingKeys.sponsorBlock: [lang.SPONSORBLOCK, lang.SKIP_SPONSOR_SEGMENTS_IN_VIDEOS],
+        _YoutubeSettingKeys.ryd: [lang.RETURN_YOUTUBE_DISLIKE],
         _YoutubeSettingKeys.youtubeStyleMiniplayer: [lang.YOUTUBE_STYLE_MINIPLAYER],
         _YoutubeSettingKeys.rememberAudioOnly: [lang.REMEMBER_AUDIO_ONLY_MODE],
         _YoutubeSettingKeys.showShortsIn: [lang.SHOW_SHORT_VIDEOS_IN],
@@ -235,6 +238,21 @@ class YoutubeSettings extends SettingSubpageProvider {
                 SettingsSubPage(
                   title: lang.SPONSORBLOCK,
                   child: const SponsorBlockSettingsPage(),
+                ).navigate();
+              },
+            ),
+          ),
+          getItemWrapper(
+            key: _YoutubeSettingKeys.ryd,
+            child: CustomListTile(
+              bgColor: getBgColor(_YoutubeSettingKeys.ryd),
+              icon: Broken.dislike,
+              title: lang.RETURN_YOUTUBE_DISLIKE,
+              trailing: const Icon(Broken.arrow_right_3),
+              onTap: () {
+                SettingsSubPage(
+                  title: lang.RETURN_YOUTUBE_DISLIKE,
+                  child: const ReturnYoutubeDislikeSettingsPage(),
                 ).navigate();
               },
             ),

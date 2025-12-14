@@ -605,42 +605,43 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                                           flex: 4,
                                                                                           fit: FlexFit.tight,
                                                                                           child: ObxO(
-                                                                                            rx: _videoLikeManager.currentVideoLikeStatus,
-                                                                                            builder: (context, currentLikeStatus) {
-                                                                                              final isUserDisLiked = currentLikeStatus == LikeStatus.disliked;
-                                                                                              const int? videoDislikeCount =
-                                                                                                  null; // should have a value if ReturnYoutubeDislikes implemented.
-                                                                                              return ObxO(
-                                                                                                rx: _isTitleExpanded,
-                                                                                                builder: (context, isTitleExpanded) => SmallYTActionButton(
-                                                                                                  title: (videoDislikeCount ?? 0) < 1
-                                                                                                      ? lang.DISLIKE
-                                                                                                      : videoDislikeCount?.formatDecimalShort(isTitleExpanded) ?? '?',
-                                                                                                  icon: Broken.dislike,
-                                                                                                  smallIconWidget: NamidaLoadingSwitcher(
-                                                                                                    size: 24.0,
-                                                                                                    builder: (loadingController) => NamidaRawLikeButton(
-                                                                                                      isLiked: isUserDisLiked,
-                                                                                                      likedIcon: Broken.dislike_filled,
-                                                                                                      normalIcon: Broken.dislike,
-                                                                                                      disabledColor: mainTheme.iconTheme.color,
+                                                                                            rx: YoutubeInfoController.current.currentDislikeCount,
+                                                                                            builder: (context, videoDislikeCount) => ObxO(
+                                                                                              rx: _videoLikeManager.currentVideoLikeStatus,
+                                                                                              builder: (context, currentLikeStatus) {
+                                                                                                final isUserDisLiked = currentLikeStatus == LikeStatus.disliked;
+                                                                                                return ObxO(
+                                                                                                  rx: _isTitleExpanded,
+                                                                                                  builder: (context, isTitleExpanded) => SmallYTActionButton(
+                                                                                                    title: (videoDislikeCount ?? 0) < 1
+                                                                                                        ? lang.DISLIKE
+                                                                                                        : videoDislikeCount?.formatDecimalShort(isTitleExpanded) ?? '?',
+                                                                                                    icon: Broken.dislike,
+                                                                                                    smallIconWidget: NamidaLoadingSwitcher(
                                                                                                       size: 24.0,
-                                                                                                      onTap: (isDisLiked) async {
-                                                                                                        return _videoLikeManager.onDisLikeClicked(
-                                                                                                          YTVideoLikeParamters(
-                                                                                                            isActive: isDisLiked,
-                                                                                                            action: isDisLiked ? LikeAction.removeDislike : LikeAction.addDislike,
-                                                                                                            onStart: loadingController.startLoading,
-                                                                                                            onEnd: loadingController.stopLoading,
-                                                                                                          ),
-                                                                                                        );
-                                                                                                      },
+                                                                                                      builder: (loadingController) => NamidaRawLikeButton(
+                                                                                                        isLiked: isUserDisLiked,
+                                                                                                        likedIcon: Broken.dislike_filled,
+                                                                                                        normalIcon: Broken.dislike,
+                                                                                                        disabledColor: mainTheme.iconTheme.color,
+                                                                                                        size: 24.0,
+                                                                                                        onTap: (isDisLiked) async {
+                                                                                                          return _videoLikeManager.onDisLikeClicked(
+                                                                                                            YTVideoLikeParamters(
+                                                                                                              isActive: isDisLiked,
+                                                                                                              action: isDisLiked ? LikeAction.removeDislike : LikeAction.addDislike,
+                                                                                                              onStart: loadingController.startLoading,
+                                                                                                              onEnd: loadingController.stopLoading,
+                                                                                                            ),
+                                                                                                          );
+                                                                                                        },
+                                                                                                      ),
                                                                                                     ),
+                                                                                                    onPressed: () {},
                                                                                                   ),
-                                                                                                  onPressed: () {},
-                                                                                                ),
-                                                                                              );
-                                                                                            },
+                                                                                                );
+                                                                                              },
+                                                                                            ),
                                                                                           ),
                                                                                         ),
                                                                                         const SizedBox(width: 2.0),

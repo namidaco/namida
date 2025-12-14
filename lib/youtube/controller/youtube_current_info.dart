@@ -6,8 +6,10 @@ class _YoutubeCurrentInfoController {
   RelatedVideosRequestParams get _relatedVideosParams => const RelatedVideosRequestParams.allowAll(); // -- from settings
   bool get _canShowComments => settings.youtube.youtubeStyleMiniplayer.value;
   bool get _personzaliedRelatedVideos => settings.youtube.personalizedRelatedVideos.value;
+  bool get _dislikeCountEnabled => settings.youtube.ryd.value.enabled;
 
   RxBaseCore<YoutiPieVideoPageResult?> get currentVideoPage => _currentVideoPage;
+  RxBaseCore<int?> get currentDislikeCount => _currentDislikeCount;
   RxBaseCore<VideoStreamInfo?> get currentStreamInfo => _currentStreamInfo;
   RxBaseCore<YoutiPieChannelPageResult?> get currentChannelPage => _currentChannelPage;
   RxBaseCore<YoutiPieRelatedVideosResult?> get currentRelatedVideos => _currentRelatedVideos;
@@ -24,6 +26,7 @@ class _YoutubeCurrentInfoController {
   final currentCachedQualities = <NamidaVideo>[].obs;
 
   final _currentVideoPage = Rxn<YoutiPieVideoPageResult>();
+  final _currentDislikeCount = Rxn<int>();
   final _currentStreamInfo = Rxn<VideoStreamInfo>();
   final _currentChannelPage = Rxn<YoutiPieChannelPageResult>();
   final _currentRelatedVideos = Rxn<YoutiPieRelatedVideosResult>();
@@ -45,6 +48,7 @@ class _YoutubeCurrentInfoController {
   void resetAll() {
     currentCachedQualities.clear();
     _currentVideoPage.value = null;
+    _currentDislikeCount.value = null;
     _currentStreamInfo.value = null;
     _currentChannelPage.value = null;
     _currentRelatedVideos.value = null;
@@ -78,6 +82,15 @@ class _YoutubeCurrentInfoController {
     final vidPageCached = await vidcache.read();
     if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentVideoPage.value = vidPageCached;
+
+    if (_dislikeCountEnabled) {
+      final ryd = YoutiPie.cacheBuilder.forReturnYoutubeDislike(videoId: videoId);
+      final rydCached = await ryd.read();
+      if (!_canSafelyModifyMetadata(videoId)) return false;
+      _currentDislikeCount.value = rydCached?.dislikes;
+    } else {
+      _currentDislikeCount.value = null;
+    }
 
     final streamInfo = YoutiPie.cacheBuilder.forVideoStreams(videoId: videoId);
     final streamInfoCached = await streamInfo.read();
@@ -122,12 +135,14 @@ class _YoutubeCurrentInfoController {
     }
     if (!requestPage && !requestComments) {
       if (!_personzaliedRelatedVideos) _fetchAndUpdateRelatedVideos(videoId);
+      if (_dislikeCountEnabled) fetchAndUpdateDislikeCount(videoId);
       return;
     }
 
     if (requestPage) {
       if (onVideoPageReset != null) onVideoPageReset!(); // jumps miniplayer to top
       _currentVideoPage.value = null;
+      _currentDislikeCount.value = null;
       _currentRelatedVideos.value = null;
       _currentChannelPage.value = null;
     }
@@ -154,6 +169,10 @@ class _YoutubeCurrentInfoController {
           },
         );
       }
+    }
+
+    if (_dislikeCountEnabled) {
+      fetchAndUpdateDislikeCount(videoId);
     }
 
     if (_canSafelyModifyMetadata(videoId)) {
@@ -194,6 +213,17 @@ class _YoutubeCurrentInfoController {
     if (_canSafelyModifyMetadata(videoId)) {
       _currentRelatedVideos.value = relatedVideos;
     }
+  }
+
+  Future<void> fetchAndUpdateDislikeCount(String videoId) async {
+    final dislikeInfo = await YoutubeInfoController.returnyoutubedislike.fetchDislikes(videoId);
+    if (_canSafelyModifyMetadata(videoId)) {
+      _currentDislikeCount.value = dislikeInfo?.dislikes;
+    }
+  }
+
+  void clearCurrentDislikeCount() {
+    _currentDislikeCount.value = null;
   }
 
   /// -- Specify [newSortType] to force refresh. otherwise fetches next.

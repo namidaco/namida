@@ -43,6 +43,7 @@ class _YoutubeSettings with SettingsFileWriter {
   bool enableGifThumbnails = false;
 
   final sponsorBlockSettings = SponsorBlockSettings().obs;
+  final ryd = ReturnYoutubeDislikeSettings().obs;
 
   void save({
     bool? showChannelWatermarkFullscreen,
@@ -67,6 +68,7 @@ class _YoutubeSettings with SettingsFileWriter {
     String? downloadFilenameBuilder,
     DownloadNotifications? downloadNotifications,
     SponsorBlockSettings? sponsorBlockSettings,
+    ReturnYoutubeDislikeSettings? ryd,
     bool? markVideoWatched,
     InnertubeClients? innertubeClient,
     bool setDefaultInnertubeClient = false,
@@ -98,6 +100,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (downloadFilenameBuilder != null) this.downloadFilenameBuilder.value = downloadFilenameBuilder;
     if (downloadNotifications != null) this.downloadNotifications.value = downloadNotifications;
     if (sponsorBlockSettings != null) this.sponsorBlockSettings.value = sponsorBlockSettings;
+    if (ryd != null) this.ryd.value = ryd;
 
     if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
     if (innertubeClient != null || setDefaultInnertubeClient) this.innertubeClient = innertubeClient;
@@ -167,6 +170,7 @@ class _YoutubeSettings with SettingsFileWriter {
       downloadFilenameBuilder.value = json['downloadFilenameBuilder'] ?? downloadFilenameBuilder.value;
       downloadNotifications.value = DownloadNotifications.values.getEnum(json['downloadNotifications']) ?? downloadNotifications.value;
       sponsorBlockSettings.value = SponsorBlockSettings.fromJson(json['sponsorBlockSettings']);
+      ryd.value = ReturnYoutubeDislikeSettings.fromJson(json['ryd']);
 
       final initialDefaultMetadataTagsInStorage = (json['initialDefaultMetadataTags'] as Map?);
       if (initialDefaultMetadataTagsInStorage != null) {
@@ -213,6 +217,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'downloadFilenameBuilder': downloadFilenameBuilder.value,
         'downloadNotifications': downloadNotifications.value.name,
         'sponsorBlockSettings': sponsorBlockSettings.value.toJson(),
+        'ryd': ryd.value.toJson(),
         'initialDefaultMetadataTags': initialDefaultMetadataTags,
         'markVideoWatched': markVideoWatched,
         'innertubeClient': innertubeClient?.name,
