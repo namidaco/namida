@@ -183,12 +183,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
             if (isFav)
               MediaControlButton(
                 color = iconsColor,
-                drawableRes =
-                com.ryanheise
-                  .audioservice
-                  .R
-                  .drawable
-                  .audio_service_fast_forward,
+                drawableRes = com.msob7y.namida.R.drawable.heart,
                 contentDescription = "Favourite",
                 keyEvent = KeyEvent.KEYCODE_MEDIA_FAST_FORWARD,
                 additionalModifier = additionalModifier
@@ -196,8 +191,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
             else
               MediaControlButton(
                 color = iconsColor,
-                drawableRes =
-                com.ryanheise.audioservice.R.drawable.audio_service_fast_rewind,
+                drawableRes = com.msob7y.namida.R.drawable.unheart,
                 contentDescription = "Unfavourite",
                 keyEvent = KeyEvent.KEYCODE_MEDIA_REWIND,
                 additionalModifier = additionalModifier
@@ -206,7 +200,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
             HorizontalSpace(4)
             MediaControlButton(
               color = iconsColor,
-              drawableRes = com.ryanheise.audioservice.R.drawable.audio_service_skip_previous,
+              drawableRes = com.msob7y.namida.R.drawable.previous,
               contentDescription = "Previous",
               keyEvent = KeyEvent.KEYCODE_MEDIA_PREVIOUS,
               additionalModifier = additionalModifier
@@ -215,7 +209,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
             if (isPlaying)
               MediaControlButton(
                 color = iconsColor,
-                drawableRes = com.ryanheise.audioservice.R.drawable.audio_service_pause,
+                drawableRes = com.msob7y.namida.R.drawable.pause,
                 contentDescription = "Pause",
                 keyEvent = KeyEvent.KEYCODE_MEDIA_PAUSE,
                 additionalModifier = additionalModifier
@@ -224,7 +218,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
               MediaControlButton(
                 color = iconsColor,
                 drawableRes =
-                com.ryanheise.audioservice.R.drawable.audio_service_play_arrow,
+                com.msob7y.namida.R.drawable.play,
                 contentDescription = "Play",
                 keyEvent = KeyEvent.KEYCODE_MEDIA_PLAY,
                 additionalModifier = additionalModifier
@@ -232,7 +226,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
             HorizontalSpace(4)
             MediaControlButton(
               color = iconsColor,
-              drawableRes = com.ryanheise.audioservice.R.drawable.audio_service_skip_next,
+              drawableRes = com.msob7y.namida.R.drawable.next,
               contentDescription = "Next",
               keyEvent = KeyEvent.KEYCODE_MEDIA_NEXT,
               additionalModifier = additionalModifier
