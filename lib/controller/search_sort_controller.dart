@@ -9,7 +9,6 @@ import 'package:namida/base/ports_provider.dart';
 import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
-import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -23,7 +22,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 
-class SearchSortController {
+class SearchSortController extends SearchPortsProvider {
   static SearchSortController get inst => _instance;
   static final SearchSortController _instance = SearchSortController._internal();
   SearchSortController._internal();
@@ -73,14 +72,7 @@ class SearchSortController {
   RxList<String> get folderSearchTemp => _searchMapTemp[MediaType.folder]!;
   RxList<String> get folderVideosSearchTemp => _searchMapTemp[MediaType.folderVideo]!;
 
-  RxList<Track> get tracksInfoList => Indexer.inst.tracksInfoList;
-  Map<String, List<Track>> get mainMapFolder {
-    return Indexer.inst.mainMapFolders.map((key, value) => MapEntry(key.path, value));
-  }
-
-  Map<String, List<Video>> get mainMapFolderVideos {
-    return Indexer.inst.mainMapFoldersVideos.map((key, value) => MapEntry(key.path, value));
-  }
+  RxList<Track> get _tracksInfoList => Indexer.inst.tracksInfoList;
 
   RxMap<String, LocalPlaylist> get playlistsMap => PlaylistController.inst.playlistsMap;
 
@@ -268,43 +260,43 @@ class SearchSortController {
 
     runningSearchesTempCount.value = runningSearchesTempCount.value + 1;
 
-    final mainMapArtists = Indexer.inst.mainMapArtists.value.keys;
-    final mainMapAA = Indexer.inst.mainMapAlbumArtists.value.keys;
-    final mainMapComposers = Indexer.inst.mainMapComposer.value.keys;
-
-    final mainMapAlbums = Indexer.inst.mainMapAlbums.value.keys;
-    final mainMapGenres = Indexer.inst.mainMapGenres.value.keys;
-
-    Future prepareOrDispose(MediaType type, Future<dynamic> Function() prepareFn) {
-      if (enabledSearches[type] ?? false) {
+    Future prepareOrDispose(MediaType type, Future<SendPortWithCachedMessage> Function() prepareFn) {
+      if ((enabledSearches[type] ?? false) && type != MediaType.track) {
         return prepareFn();
       } else {
-        return SearchPortsProvider.inst.closePorts(type);
+        return super.closePorts(type);
       }
     }
 
-    await Future.wait([
-      _prepareTracksPorts(),
-      prepareOrDispose(MediaType.album, () => _prepareMediaPorts(mainMapAlbums, MediaType.album)),
-      prepareOrDispose(MediaType.artist, () => _prepareMediaPorts(mainMapArtists, MediaType.artist)),
-      prepareOrDispose(MediaType.albumArtist, () => _prepareMediaPorts(mainMapAA, MediaType.albumArtist)),
-      prepareOrDispose(MediaType.composer, () => _prepareMediaPorts(mainMapComposers, MediaType.composer)),
-      prepareOrDispose(MediaType.genre, () => _prepareMediaPorts(mainMapGenres, MediaType.genre)),
-      prepareOrDispose(MediaType.playlist, () => _preparePlaylistPorts()),
-      prepareOrDispose(MediaType.folder, () => _prepareMediaPorts(mainMapFolder.keys, MediaType.folder)),
-      prepareOrDispose(MediaType.folderVideo, () => _prepareMediaPorts(mainMapFolderVideos.keys, MediaType.folderVideo)),
-    ]);
+    await Future.wait(MediaType.values.map((e) => prepareOrDispose(e, mediaTypeToPrepareFn(e))));
+
     runningSearchesTempCount.value = runningSearchesTempCount.value - 1;
   }
 
   void disposeResources() {
     _preparedResources = false;
-    SearchPortsProvider.inst.disposeAll();
+    super.disposeAll();
   }
 
-  Future<SendPort> _prepareTracksPorts() async {
-    return await SearchPortsProvider.inst.preparePorts(
+  @override
+  Future<SendPortWithCachedMessage> Function() mediaTypeToPrepareFn(MediaType type) {
+    return switch (type) {
+      MediaType.album => () => _prepareMediaPorts(Indexer.inst.mainMapAlbums.value.keys, MediaType.album),
+      MediaType.artist => () => _prepareMediaPorts(Indexer.inst.mainMapArtists.value.keys, MediaType.artist),
+      MediaType.albumArtist => () => _prepareMediaPorts(Indexer.inst.mainMapAlbumArtists.value.keys, MediaType.albumArtist),
+      MediaType.composer => () => _prepareMediaPorts(Indexer.inst.mainMapComposer.value.keys, MediaType.composer),
+      MediaType.genre => () => _prepareMediaPorts(Indexer.inst.mainMapGenres.value.keys, MediaType.genre),
+      MediaType.folder => () => _prepareMediaPorts(Indexer.inst.mainMapFolders.mapToPaths(), MediaType.folder),
+      MediaType.folderVideo => () => _prepareMediaPorts(Indexer.inst.mainMapFoldersVideos.mapToPaths(), MediaType.folderVideo),
+      MediaType.track => _prepareTracksPorts,
+      MediaType.playlist => _preparePlaylistPorts,
+    };
+  }
+
+  Future<SendPortWithCachedMessage> _prepareTracksPorts() async {
+    return await super.preparePorts(
       type: MediaType.track,
+      portRefreshListener: _tracksInfoList,
       onResult: (result) {
         runningSearchesTempCount.value = runningSearchesTempCount.value - 1;
         if (result == null) return; // -- prepared
@@ -329,12 +321,14 @@ class SearchSortController {
   }
 
   Map<String, dynamic> generateTrackSearchIsolateParams(SendPort sendPort) {
-    return TracksSearchWrapper.generateParams(sendPort, Indexer.inst.allTracksMappedByPath.values);
+    final tracks = _tracksInfoList.value.map((e) => e.toTrackExt());
+    return TracksSearchWrapper.generateParams(sendPort, tracks);
   }
 
-  Future<SendPort> _preparePlaylistPorts() async {
-    return await SearchPortsProvider.inst.preparePorts(
+  Future<SendPortWithCachedMessage> _preparePlaylistPorts() async {
+    return await super.preparePorts(
       type: MediaType.playlist,
+      portRefreshListener: playlistsMap,
       onResult: (result) {
         runningSearchesTempCount.value = runningSearchesTempCount.value - 1;
         if (result == null) return; // -- prepared
@@ -367,9 +361,20 @@ class SearchSortController {
     );
   }
 
-  Future<SendPort> _prepareMediaPorts(Iterable<String> keysList, MediaType type) async {
-    return await SearchPortsProvider.inst.preparePorts(
+  Future<SendPortWithCachedMessage> _prepareMediaPorts(Iterable<String> keysList, MediaType type) async {
+    return await super.preparePorts(
       type: type,
+      portRefreshListener: switch (type) {
+        MediaType.album => Indexer.inst.mainMapAlbums.rx,
+        MediaType.artist => Indexer.inst.mainMapArtists.rx,
+        MediaType.albumArtist => Indexer.inst.mainMapAlbumArtists.rx,
+        MediaType.composer => Indexer.inst.mainMapComposer.rx,
+        MediaType.genre => Indexer.inst.mainMapGenres.rx,
+        MediaType.folder => Indexer.inst.mainMapFolders,
+        MediaType.folderVideo => Indexer.inst.mainMapFoldersVideos,
+        MediaType.track => null,
+        MediaType.playlist => null,
+      },
       onResult: (result) {
         runningSearchesTempCount.value = runningSearchesTempCount.value - 1;
         if (result == null) return; // -- prepared
@@ -381,7 +386,7 @@ class SearchSortController {
         if (isTemp) {
           if (fetchedQuery == lastSearchText) {
             _searchMapTemp[type]?.value = r.$1;
-            sortMedia(type);
+            // sortMedia(type);
           }
         } else {
           List<String> keysList;
@@ -410,11 +415,12 @@ class SearchSortController {
 
   void searchTracks(String text, {bool temp = false}) async {
     if (text == '') {
+      super.closePorts(MediaType.track);
       if (temp) {
         trackSearchTemp.clear();
       } else {
         LibraryTab.tracks.textSearchController?.clear();
-        trackSearchList.assignAll(tracksInfoList.value);
+        trackSearchList.assignAll(_tracksInfoList.value);
       }
       return;
     }
@@ -470,27 +476,20 @@ class SearchSortController {
   }
 
   void _searchMediaType({required MediaType type, required String text, bool temp = false}) async {
-    Iterable<String> keys = [];
-    switch (type) {
-      case MediaType.album:
-        keys = Indexer.inst.mainMapAlbums.value.keys;
-      case MediaType.artist:
-        keys = Indexer.inst.mainMapArtists.value.keys;
-      case MediaType.albumArtist:
-        keys = Indexer.inst.mainMapAlbumArtists.value.keys;
-      case MediaType.composer:
-        keys = Indexer.inst.mainMapComposer.value.keys;
-      case MediaType.genre:
-        keys = Indexer.inst.mainMapGenres.value.keys;
-      case MediaType.folder:
-        keys = mainMapFolder.keys;
-      case MediaType.folderVideo:
-        keys = mainMapFolderVideos.keys;
-      default:
-        null;
-    }
+    final Iterable<String> keys = switch (type) {
+      MediaType.album => Indexer.inst.mainMapAlbums.value.keys,
+      MediaType.artist => Indexer.inst.mainMapArtists.value.keys,
+      MediaType.albumArtist => Indexer.inst.mainMapAlbumArtists.value.keys,
+      MediaType.composer => Indexer.inst.mainMapComposer.value.keys,
+      MediaType.genre => Indexer.inst.mainMapGenres.value.keys,
+      MediaType.folder => Indexer.inst.mainMapFolders.mapToPaths(),
+      MediaType.folderVideo => Indexer.inst.mainMapFoldersVideos.mapToPaths(),
+      MediaType.track => <String>[],
+      MediaType.playlist => <String>[],
+    };
 
     if (text == '') {
+      super.closePorts(type);
       if (temp) {
         _searchMapTemp[type]?.clear();
       } else {
@@ -516,6 +515,7 @@ class SearchSortController {
 
   void _searchPlaylists(String text, {bool temp = false}) async {
     if (text == '') {
+      super.closePorts(MediaType.playlist);
       if (temp) {
         playlistSearchTemp.clear();
       } else {
@@ -675,7 +675,7 @@ class SearchSortController {
       _sortTracksRaw(
         sortBy: sortBy,
         reverse: reverse ?? false,
-        list: tracksInfoList.value,
+        list: _tracksInfoList.value,
         onDone: (sortType, isReverse) {
           searchTracks(LibraryTab.tracks.textSearchController?.text ?? '');
         },
@@ -695,6 +695,8 @@ class SearchSortController {
       );
       Indexer.inst.sortMediaTracksSubLists([MediaType.track]);
     }
+
+    _tracksInfoList.refresh();
   }
 
   void sortTracksSearch({SortType? sortBy, bool? reverse, bool canSkipSorting = false}) {
@@ -852,6 +854,7 @@ class SearchSortController {
     sortAlbumsListRaw(albumsList, sortBy, reverse);
 
     finalMap.value.assignAllEntries(albumsList);
+    finalMap.refresh();
 
     settings.save(albumSort: sortBy, albumSortReversed: reverse);
 
@@ -938,6 +941,7 @@ class SearchSortController {
     }
 
     finalMap.value.assignAllEntries(artistsList);
+    finalMap.refresh();
 
     settings.save(artistSort: sortBy, artistSortReversed: reverse);
 
@@ -972,6 +976,7 @@ class SearchSortController {
     }
 
     finalMap.value.assignAllEntries(genresList);
+    finalMap.refresh();
 
     settings.save(genreSort: sortBy, genreSortReversed: reverse);
     _searchMediaType(type: MediaType.genre, text: LibraryTab.genres.textSearchController?.text ?? '');
@@ -1030,7 +1035,8 @@ class SearchSortController {
         null;
     }
 
-    playlistsMap.assignAllEntries(playlistList);
+    playlistsMap.value.assignAllEntries(playlistList);
+    playlistsMap.refresh();
 
     settings.save(playlistSort: sortBy, playlistSortReversed: reverse);
 
@@ -1115,5 +1121,11 @@ class SearchSortController {
 
   static String Function(String text) _functionOfCleanup(bool enableSearchCleanup) {
     return (String textToClean) => enableSearchCleanup ? textToClean.cleanUpForComparison : textToClean.toLowerCase();
+  }
+}
+
+extension _FolderMapExt<T> on RxMap<Folder, List<T>> {
+  Iterable<String> mapToPaths() {
+    return value.keys.map((key) => key.path);
   }
 }

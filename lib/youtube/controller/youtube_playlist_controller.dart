@@ -200,7 +200,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   }
 
   @override
-  void onPlaylistRemovedFromMap(YoutubePlaylist playlist) {
+  void onPlaylistRemovedFromMap(List<String> names) {
     // -- the ui uses the playlist map directly. this can be used to remove from other lists if required.
   }
 

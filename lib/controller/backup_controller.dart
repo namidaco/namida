@@ -403,12 +403,12 @@ class BackupController {
 
     VideoController.inst.initialize();
 
-    PlaylistController.inst.prepareAllPlaylists();
+    PlaylistController.inst.prepareAllPlaylists().whenComplete(PlaylistController.inst.ensureCustomOrderValid);
     HistoryController.inst.prepareHistoryFile().then((_) => Indexer.inst.sortMediaTracksAndSubListsAfterHistoryPrepared());
     await PlaylistController.inst.prepareDefaultPlaylistsFileAsync();
     // await QueueController.inst.prepareLatestQueueSync();
 
-    YoutubePlaylistController.inst.prepareAllPlaylists();
+    YoutubePlaylistController.inst.prepareAllPlaylists().whenComplete(YoutubePlaylistController.inst.ensureCustomOrderValid);
     YoutubeHistoryController.inst.prepareHistoryFile();
     await YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync();
     YoutubeInfoController.utils.fillBackupInfoMap(); // for history videos info.

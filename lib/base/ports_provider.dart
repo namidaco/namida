@@ -43,6 +43,7 @@ mixin PortsProvider<E> {
   }
 
   static bool isDisposeMessage(dynamic message) => message == _PortsProviderDisposeMessage;
+  static void sendDisposeMessage(SendPort port) => port.send(_PortsProviderDisposeMessage);
 
   @protected
   Future<void> disposePort({bool resetCompleter = true}) async {
@@ -113,37 +114,5 @@ mixin PortsProvider<E> {
     await _initializingCompleter?.future;
     _isInitialized = true;
     onPreparing(true);
-  }
-}
-
-mixin PortsProviderBase {
-  StreamSubscription? _streamSub;
-
-  @protected
-  Future<void> disposePort(PortsComm port) async {
-    port.items.close();
-    _streamSub?.cancel();
-    (await port.search.future).send(_PortsProviderDisposeMessage);
-  }
-
-  Future<SendPort> preparePortBase({
-    required PortsComm? portN,
-    required Future<PortsComm> Function() onPortNull,
-    required void Function(dynamic result) onResult,
-    required Future<void> Function(SendPort itemsSendPort) isolateFunction,
-    bool force = false,
-  }) async {
-    if (portN != null && !force) return await portN.search.future;
-
-    final port = await onPortNull();
-    _streamSub = port.items.listen((result) {
-      if (result is SendPort) {
-        port.search.completeIfWasnt(result);
-      } else {
-        onResult(result);
-      }
-    });
-    await isolateFunction(port.items.sendPort);
-    return await port.search.future;
   }
 }

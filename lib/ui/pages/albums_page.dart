@@ -50,6 +50,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
     final scrollController = LibraryTab.albums.scrollController;
     final countPerRowResolved = countPerRow.resolve(context);
     final artistTypeColor = context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.8);
+    final isCustomList = albumIdentifiers != null;
 
     return BackgroundWrapper(
       child: NamidaScrollbar(
@@ -103,6 +104,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                       ],
                       onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(LibraryTab.albums, newShow),
                       onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(LibraryTab.albums),
+                      disableSorting: isCustomList,
                       sortByMenuWidget: SortByMenu(
                         title: sort.toText(),
                         popupMenuChild: const SortByMenuAlbums(),

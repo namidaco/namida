@@ -220,24 +220,18 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     return listy;
   }
 
-  void removeM3UPlaylists() {
-    final keysToRemove = <String>[];
+  void removeM3UPlaylists([bool Function(String name)? additionalTest]) {
+    final namesToRemove = <String>[];
     for (final e in playlistsMap.value.entries) {
       final isM3U = e.value.m3uPath?.isNotEmpty == true;
-      if (isM3U) keysToRemove.add(e.key);
+      if (isM3U) {
+        if (additionalTest == null || additionalTest(e.key)) {
+          namesToRemove.add(e.key);
+        }
+      }
     }
-    if (keysToRemove.isNotEmpty) {
-      keysToRemove.loop(
-        (key) {
-          final pl = playlistsMap.value[key]!;
-          final canRemove = canRemovePlaylist(pl);
-          if (canRemove) {
-            onPlaylistRemovedFromMap(pl);
-            playlistsMap.value.remove(key);
-          }
-        },
-      );
-      playlistsMap.refresh();
+    if (namesToRemove.isNotEmpty) {
+      removePlaylists(namesToRemove);
     }
   }
 
@@ -283,7 +277,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
       // -- removing old m3u playlists (only if preparing all)
       if (forPaths.isEmpty) {
-        removeM3UPlaylists();
+        removeM3UPlaylists((name) => !paths.containsKey(name));
       }
 
       for (final e in paths.entries) {
@@ -292,13 +286,24 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           final m3uPath = e.value.$1;
           final trs = e.value.$3;
           final creationDate = (await File(m3uPath).stat()).creationDate.millisecondsSinceEpoch;
-          this.addNewPlaylist(
-            plName,
-            tracks: trs,
-            m3uPath: addAsM3U ? m3uPath : null,
-            creationDate: creationDate,
-            actionIfAlreadyExists: PlaylistAddDuplicateAction.deleteAndCreateNewPlaylist,
-          );
+          final plAlreadyExisting = playlistsMap.value[plName];
+          if (plAlreadyExisting != null) {
+            this.updatePropertyInPlaylist(
+              plName,
+              tracksRaw: trs,
+              convertItem: (e, dateAdded) => TrackWithDate(dateAdded: dateAdded, track: e),
+              m3uPath: addAsM3U ? m3uPath : null,
+              creationDate: creationDate,
+            );
+          } else {
+            this.addNewPlaylist(
+              plName,
+              tracks: trs,
+              m3uPath: addAsM3U ? m3uPath : null,
+              creationDate: creationDate,
+              actionIfAlreadyExists: PlaylistAddDuplicateAction.deleteAndCreateNewPlaylist, // we already check here tho
+            );
+          }
 
           _ensureM3UArtUrlObtained(plName, e.value.$1, e.value.$2);
         } catch (_) {}
@@ -670,9 +675,13 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   }
 
   @override
-  void onPlaylistRemovedFromMap(LocalPlaylist playlist) {
-    final plIndex = SearchSortController.inst.playlistSearchList.value.indexWhere((element) => playlist.name == element);
-    if (plIndex > -1) SearchSortController.inst.playlistSearchList.removeAt(plIndex);
+  void onPlaylistRemovedFromMap(List<String> names) {
+    final searchList = SearchSortController.inst.playlistSearchList;
+    for (final nameToRemove in names) {
+      final plIndex = searchList.value.indexWhere((element) => nameToRemove == element);
+      if (plIndex > -1) searchList.value.removeAt(plIndex);
+    }
+    searchList.refresh();
   }
 
   /// Navigate back in case the current route is this playlist.
