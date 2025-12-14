@@ -470,11 +470,14 @@ class CurrentColor {
     if (imageFile == null && bytes == null) return [];
 
     const defaultTimeout = Duration(seconds: 5);
-    final imageProvider = (bytes == null ? FileImage(imageFile!) : MemoryImage(bytes)) as ImageProvider;
+    final imageProvider = ResizeImage(
+      (bytes == null ? FileImage(imageFile!) : MemoryImage(bytes)) as ImageProvider,
+      height: 240,
+    );
     if (!useIsolate) {
       final result = await PaletteGenerator.fromImageProvider(
         imageProvider,
-        filters: [],
+        filters: const [],
         maximumColorCount: 28,
         timeout: defaultTimeout,
       );
@@ -511,7 +514,7 @@ class CurrentColor {
   }
 
   static Future<List<Color>> _extractPaletteGeneratorCompute(EncodedImage encimg) async {
-    final result = await PaletteGenerator.fromByteData(encimg, filters: [avoidRedBlackWhitePaletteFilter], maximumColorCount: 28);
+    final result = await PaletteGenerator.fromByteData(encimg, filters: const [], maximumColorCount: 28);
     return result.colors.toList();
   }
 
