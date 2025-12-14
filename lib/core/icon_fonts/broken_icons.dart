@@ -1,21 +1,15 @@
-// Place fonts/broken.ttf in your fonts/ directory and
-// add the following to your pubspec.yaml
-// flutter:
-//   fonts:
-//    - family: broken
-//      fonts:
-//       - asset: fonts/broken.ttf
 // ignore_for_file: constant_identifier_names
 
 import 'package:flutter/widgets.dart';
 
 class Broken {
-  Broken._();
+  const Broken._();
 
   static const String _fontFamilyFilled = 'broken_filled';
 
   static const IconData dislike_filled = IconData(0xe900, fontFamily: _fontFamilyFilled);
   static const IconData like_filled = IconData(0xe901, fontFamily: _fontFamilyFilled);
+  static const IconData heart_filled = IconData(0xe902, fontFamily: _fontFamilyFilled);
 
   static const String _fontFamily = 'broken';
 

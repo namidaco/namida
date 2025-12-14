@@ -206,7 +206,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       onShowAddToPlaylistDialog: () => showAddToPlaylistDialog([track]),
       onMenuOpen: (_) => openMenu(playable.trackWithDate, track),
       onTextLongTap: () => openInfoMenu(playable.trackWithDate, track),
-      likedIcon: Broken.heart_tick,
+      likedIcon: Broken.heart_filled,
       normalIcon: Broken.heart,
     );
   }

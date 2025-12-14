@@ -501,7 +501,7 @@ class YTUtils {
     if (showFavouritesTile) {
       final isFavourite = YoutubePlaylistController.inst.favouritesPlaylist.isSubItemFavourite(videoId);
       favouriteItem = NamidaPopupItem(
-        icon: isFavourite ? Broken.heart_tick : Broken.heart,
+        icon: isFavourite ? Broken.heart_filled : Broken.heart,
         title: lang.FAVOURITES,
         onTap: () => YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId),
       );

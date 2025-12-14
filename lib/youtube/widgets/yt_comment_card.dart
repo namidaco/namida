@@ -349,9 +349,9 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                       if (isHearted) ...[
                                         const SizedBox(width: 4.0),
                                         const Icon(
-                                          Broken.heart_tick,
-                                          size: 14.0,
-                                          color: Color.fromARGB(210, 233, 80, 112),
+                                          Broken.heart_filled,
+                                          size: 12.0,
+                                          color: Color.fromARGB(190, 233, 80, 112),
                                         ),
                                       ],
                                     ],
@@ -626,9 +626,9 @@ class YTCommentCardCompact extends StatelessWidget {
                           if (isHearted) ...[
                             const SizedBox(width: 4.0),
                             const Icon(
-                              Broken.heart_tick,
-                              size: 14.0,
-                              color: Color.fromARGB(210, 233, 80, 112),
+                              Broken.heart_filled,
+                              size: 12.0,
+                              color: Color.fromARGB(190, 233, 80, 112),
                             ),
                           ],
                           if (isPinned) ...[

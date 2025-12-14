@@ -1750,7 +1750,7 @@ class NamidaRawLikeButton extends StatelessWidget {
     required this.isLiked,
     required this.onTap,
     this.padding = EdgeInsets.zero,
-    this.likedIcon = Broken.heart_tick,
+    this.likedIcon = Broken.heart_filled,
     this.normalIcon = Broken.heart,
   });
 

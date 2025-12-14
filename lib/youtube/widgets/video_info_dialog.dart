@@ -384,7 +384,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                 rx: YoutubePlaylistController.inst.favouritesPlaylist,
                 builder: (context, favouritesPlaylist) => NamidaRawLikeButton(
                   size: 18.0,
-                  likedIcon: Broken.heart_tick,
+                  likedIcon: Broken.heart_filled,
                   normalIcon: Broken.heart,
                   disabledColor: headerIconColor,
                   isLiked: favouritesPlaylist.isSubItemFavourite(videoId),
