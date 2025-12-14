@@ -414,7 +414,10 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                             children: [
                               Row(
                                 children: [
-                                  Icon(l.file == null ? Broken.document_download : Broken.document, size: 18.0),
+                                  Icon(
+                                    l.file == null ? Broken.document_download : Broken.document,
+                                    size: 18.0,
+                                  ),
                                   const SizedBox(width: 8.0),
                                   Expanded(
                                     child: Text(
@@ -463,53 +466,57 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                 ],
                               ),
                               const SizedBox(height: 8.0),
-                              Stack(
-                                children: [
-                                  NamidaInkWell(
-                                    borderRadius: 8.0,
-                                    bgColor: namida.theme.cardColor,
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: expandedLyrics.valueR == l
-                                        ? Text(
-                                            l.lyrics,
-                                            style: namida.textTheme.displaySmall,
-                                          )
-                                        : Text(
-                                            l.lyrics,
-                                            maxLines: 12,
-                                            overflow: TextOverflow.fade,
-                                            style: namida.textTheme.displaySmall,
-                                          ),
-                                  ),
-                                  Positioned(
-                                    bottom: 4.0,
-                                    right: 4.0,
-                                    child: Container(
-                                      clipBehavior: Clip.antiAlias,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            blurRadius: 4.0,
-                                            color: namida.theme.scaffoldBackgroundColor,
-                                          ),
-                                        ],
-                                      ),
-                                      child: NamidaIconButton(
-                                        padding: const EdgeInsets.all(4.0),
-                                        icon: Broken.maximize_circle,
-                                        iconSize: 16.0,
-                                        onPressed: () {
-                                          if (expandedLyrics.value == l) {
-                                            expandedLyrics.value = null;
-                                          } else {
-                                            expandedLyrics.value = l;
-                                          }
-                                        },
-                                      ),
+                              SizedBox(
+                                width: context.width,
+                                child: Stack(
+                                  children: [
+                                    NamidaInkWell(
+                                      width: context.width,
+                                      borderRadius: 8.0,
+                                      bgColor: namida.theme.cardColor,
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: expandedLyrics.valueR == l
+                                          ? Text(
+                                              l.lyrics,
+                                              style: namida.textTheme.displaySmall,
+                                            )
+                                          : Text(
+                                              l.lyrics,
+                                              maxLines: 12,
+                                              overflow: TextOverflow.fade,
+                                              style: namida.textTheme.displaySmall,
+                                            ),
                                     ),
-                                  )
-                                ],
+                                    Positioned(
+                                      bottom: 4.0,
+                                      right: 4.0,
+                                      child: Container(
+                                        clipBehavior: Clip.antiAlias,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              blurRadius: 4.0,
+                                              color: namida.theme.scaffoldBackgroundColor,
+                                            ),
+                                          ],
+                                        ),
+                                        child: NamidaIconButton(
+                                          padding: const EdgeInsets.all(4.0),
+                                          icon: Broken.maximize_circle,
+                                          iconSize: 16.0,
+                                          onPressed: () {
+                                            if (expandedLyrics.value == l) {
+                                              expandedLyrics.value = null;
+                                            } else {
+                                              expandedLyrics.value = l;
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                ),
                               ),
                             ],
                           ),

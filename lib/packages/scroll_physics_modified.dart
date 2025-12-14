@@ -90,6 +90,17 @@ class BouncingScrollPhysicsModified extends ScrollPhysics {
         case ScrollDecelerationRate.normal:
           constantDeceleration = 200;
       }
+
+      // --- smoothes overscroll
+      final double overscrollPastStart = math.max(position.minScrollExtent - position.pixels, 0.0);
+      final double overscrollPastEnd = math.max(position.pixels - position.maxScrollExtent, 0.0);
+      final bool easing = (overscrollPastStart > 0.0 && position.pixels < 0.0) || (overscrollPastEnd > 0.0 && position.pixels > 0.0);
+      if (easing) {
+        double dampingFactor = 0.7; // Damping coefficient
+        double distance = (overscrollPastStart > 0.0) ? overscrollPastStart : overscrollPastEnd;
+        velocity *= math.exp(-dampingFactor * distance);
+      }
+
       return BouncingScrollSimulation(
           spring: spring,
           position: position.pixels,
