@@ -10,6 +10,7 @@ class ReturnYoutubeDislikeSettings {
   factory ReturnYoutubeDislikeSettings() => ReturnYoutubeDislikeSettings.custom(null);
 
   bool get enabled => _enabled ?? false;
+  bool get sendVotesEnabled => enabled;
 
   final bool? _enabled;
 

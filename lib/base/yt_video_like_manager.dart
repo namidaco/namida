@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:youtipie/class/videos/video_result.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 class YTVideoLikeParamters {
   final bool isActive;
@@ -88,7 +92,19 @@ class YtVideoLikeManager {
     parameters.onEnd();
 
     if (res == true) {
-      currentVideoLikeStatus.value = currentVideoLikeStatus.value = parameters.action.toExpectedStatus();
+      if (settings.youtube.ryd.value.sendVotesEnabled) {
+        unawaited(
+          YoutubeInfoController.returnyoutubedislike
+              .sendVoteAction(
+                p.videoId,
+                parameters.action,
+              )
+              .ignoreError(),
+        );
+      }
+
+      final newExpectedStatus = parameters.action.toExpectedStatus();
+      currentVideoLikeStatus.value = newExpectedStatus;
       return !parameters.isActive;
     }
 
