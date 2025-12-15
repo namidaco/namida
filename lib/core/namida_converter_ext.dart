@@ -16,7 +16,6 @@ import 'package:youtipie/core/url_utils.dart';
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/faudiomodel.dart';
-import 'package:namida/class/folder.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/queue.dart';
@@ -90,6 +89,7 @@ extension MediaTypeUtils on MediaType {
       MediaType.artist || MediaType.albumArtist || MediaType.composer => LibraryTab.artists,
       MediaType.genre => LibraryTab.genres,
       MediaType.folder => LibraryTab.folders,
+      MediaType.folderMusic => LibraryTab.foldersMusic,
       MediaType.folderVideo => LibraryTab.foldersVideos,
       MediaType.playlist => LibraryTab.playlists,
     };
@@ -105,6 +105,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.genres => MediaType.genre,
       LibraryTab.playlists => MediaType.playlist,
       LibraryTab.folders => MediaType.folder,
+      LibraryTab.foldersMusic => MediaType.folderMusic,
       LibraryTab.foldersVideos => MediaType.folderVideo,
       LibraryTab.home => null,
       LibraryTab.search => null,
@@ -138,7 +139,8 @@ extension LibraryTabUtils on LibraryTab {
           animateTiles: animateTiles,
           enableHero: enableHero,
         ),
-      LibraryTab.folders => FoldersPage.tracks(),
+      LibraryTab.folders => FoldersPage.tracksAndVideos(),
+      LibraryTab.foldersMusic => FoldersPage.tracks(),
       LibraryTab.foldersVideos => FoldersPage.videos(),
       LibraryTab.home => const HomePage(),
       LibraryTab.youtube => const YouTubeHomeView(),
@@ -751,7 +753,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
           selectable: (finalItem) {
             final track = finalItem.track;
             final folder = track.folder;
-            NamidaOnTaps.inst.onFolderTapNavigate(folder, trackToScrollTo: track);
+            NamidaOnTaps.inst.onFolderTapNavigate(folder, null, trackToScrollTo: track);
           },
           youtubeID: (finalItem) {},
         );
@@ -1162,6 +1164,7 @@ extension RouteUtils on NamidaRoute {
     return switch (route) {
       RouteType.PAGE_allTracks => QueueSource.allTracks,
       RouteType.PAGE_folders => QueueSource.folder,
+      RouteType.PAGE_folders_music => QueueSource.folderMusic,
       RouteType.PAGE_folders_videos => QueueSource.folderVideos,
       RouteType.SUBPAGE_albumTracks => QueueSource.album,
       RouteType.SUBPAGE_artistTracks => QueueSource.artist,
@@ -1182,8 +1185,9 @@ extension RouteUtils on NamidaRoute {
   Iterable<Selectable> tracksInside() {
     return switch (route) {
           RouteType.PAGE_allTracks => SearchSortController.inst.trackSearchList.value,
-          RouteType.PAGE_folders => FoldersController.tracks.currentFolder.value?.tracks(),
-          RouteType.PAGE_folders_videos => FoldersController.videos.currentFolder.value?.tracks(),
+          RouteType.PAGE_folders => FoldersController.tracksAndVideos.currentFolderTracksList,
+          RouteType.PAGE_folders_music => FoldersController.tracks.currentFolderTracksList,
+          RouteType.PAGE_folders_videos => FoldersController.videos.currentFolderTracksList,
           RouteType.SUBPAGE_albumTracks => name?.getAlbumTracks(),
           RouteType.SUBPAGE_artistTracks => name?.getArtistTracks(),
           RouteType.SUBPAGE_albumArtistTracks => name?.getAlbumArtistTracks(),
@@ -1207,8 +1211,9 @@ extension RouteUtils on NamidaRoute {
   Iterable<Selectable> tracksInsideReactive() {
     return switch (route) {
           RouteType.PAGE_allTracks => SearchSortController.inst.trackSearchList.valueR,
-          RouteType.PAGE_folders => FoldersController.tracks.currentFolder.valueR?.tracks(),
-          RouteType.PAGE_folders_videos => FoldersController.videos.currentFolder.valueR?.tracks(),
+          RouteType.PAGE_folders => FoldersController.tracksAndVideos.currentFolderTracksList,
+          RouteType.PAGE_folders_music => FoldersController.tracks.currentFolderTracksList,
+          RouteType.PAGE_folders_videos => FoldersController.videos.currentFolderTracksList,
           RouteType.SUBPAGE_mostPlayedTracks =>
             HistoryController.inst.currentTopTracksMapListensReactive(HistoryController.inst.currentMostPlayedTimeRange.valueR).valueR.keysSortedByValue,
           RouteType.SUBPAGE_albumTracks => _registerAndReturn(name?.getAlbumTracks(), () => Indexer.inst.mainMapAlbums.valueR),
@@ -1589,7 +1594,8 @@ class _NamidaConverters {
         LibraryTab.genres: lang.GENRES,
         LibraryTab.playlists: lang.PLAYLISTS,
         LibraryTab.folders: lang.FOLDERS,
-        LibraryTab.foldersVideos: lang.VIDEOS,
+        LibraryTab.foldersMusic: "${lang.FOLDERS}: ${lang.TRACKS}",
+        LibraryTab.foldersVideos: "${lang.FOLDERS}: ${lang.VIDEOS}",
         LibraryTab.home: lang.HOME,
         LibraryTab.search: lang.SEARCH,
         LibraryTab.youtube: lang.YOUTUBE,
@@ -1603,7 +1609,8 @@ class _NamidaConverters {
         MediaType.genre: lang.GENRES,
         MediaType.playlist: lang.PLAYLISTS,
         MediaType.folder: lang.FOLDERS,
-        MediaType.folderVideo: lang.VIDEOS,
+        MediaType.folderMusic: "${lang.FOLDERS}: ${lang.TRACKS}",
+        MediaType.folderVideo: "${lang.FOLDERS}: ${lang.VIDEOS}",
       },
       AlbumIdentifier: {
         AlbumIdentifier.albumName: lang.NAME,
@@ -1718,7 +1725,8 @@ class _NamidaConverters {
         QueueSource.history: lang.HISTORY,
         QueueSource.mostPlayed: lang.MOST_PLAYED,
         QueueSource.folder: lang.FOLDER,
-        QueueSource.folderVideos: lang.VIDEOS,
+        QueueSource.folderMusic: "${lang.FOLDER} (${lang.TRACKS})",
+        QueueSource.folderVideos: "${lang.FOLDER} (${lang.VIDEOS})",
         QueueSource.search: lang.SEARCH,
         QueueSource.playerQueue: lang.QUEUE,
         QueueSource.queuePage: lang.QUEUES,
@@ -1993,6 +2001,7 @@ class _NamidaConverters {
         LibraryTab.genres: Broken.smileys,
         LibraryTab.playlists: Broken.music_library_2,
         LibraryTab.folders: Broken.folder,
+        LibraryTab.foldersMusic: Broken.folder_2,
         LibraryTab.foldersVideos: Broken.video_play,
         LibraryTab.home: Broken.home_2,
         LibraryTab.search: Broken.search_normal_1,

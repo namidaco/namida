@@ -11,12 +11,24 @@ import 'package:namida/core/utils.dart';
 class LibraryGroup<T extends Track> {
   bool didFill = false;
 
+  void updateFrom(LibraryGroup other) {
+    mainMapAlbums.update(other.mainMapAlbums);
+    mainMapArtists.update(other.mainMapArtists);
+    mainMapAlbumArtists.update(other.mainMapAlbumArtists);
+    mainMapComposer.update(other.mainMapComposer);
+    mainMapGenres.update(other.mainMapGenres);
+    mainMapFoldersTracksAndVideos.value = other.mainMapFoldersTracksAndVideos.value as Map<Folder, List<T>>;
+    mainMapFoldersTracks.value = other.mainMapFoldersTracks.value as Map<Folder, List<T>>;
+    mainMapFoldersVideos.value = other.mainMapFoldersVideos.value;
+  }
+
   final mainMapAlbums = LibraryItemMap();
   final mainMapArtists = LibraryItemMap();
   final mainMapAlbumArtists = LibraryItemMap();
   final mainMapComposer = LibraryItemMap();
   final mainMapGenres = LibraryItemMap();
-  final mainMapFolders = <Folder, List<T>>{}.obs;
+  final mainMapFoldersTracksAndVideos = <Folder, List<T>>{}.obs;
+  final mainMapFoldersTracks = <Folder, List<T>>{}.obs;
   final mainMapFoldersVideos = <VideoFolder, List<Video>>{}.obs;
 
   void fillAll(List<T> allTracks, TrackExtended Function(T tr) trackToExtended, List<AlbumIdentifier> albumIdentifier) {
@@ -25,7 +37,8 @@ class LibraryGroup<T extends Track> {
     final mainMapAlbumArtists = this.mainMapAlbumArtists.value;
     final mainMapComposer = this.mainMapComposer.value;
     final mainMapGenres = this.mainMapGenres.value;
-    final mainMapFolders = this.mainMapFolders.value;
+    final mainMapFoldersTracksAndVideos = this.mainMapFoldersTracksAndVideos.value;
+    final mainMapFoldersTracks = this.mainMapFoldersTracks.value;
     final mainMapFoldersVideos = this.mainMapFoldersVideos.value;
 
     mainMapAlbums.clear();
@@ -33,7 +46,8 @@ class LibraryGroup<T extends Track> {
     mainMapAlbumArtists.clear();
     mainMapComposer.clear();
     mainMapGenres.clear();
-    mainMapFolders.clear();
+    mainMapFoldersTracksAndVideos.clear();
+    mainMapFoldersTracks.clear();
     mainMapFoldersVideos.clear();
 
     allTracks.loop(
@@ -60,7 +74,8 @@ class LibraryGroup<T extends Track> {
         });
 
         // -- Assigning Folders
-        tr is Video ? mainMapFoldersVideos.addForce(tr.folder, tr) : mainMapFolders.addForce(tr.folder, tr);
+        tr is Video ? mainMapFoldersVideos.addForce(tr.folder, tr) : mainMapFoldersTracks.addForce(tr.folder, tr);
+        mainMapFoldersTracksAndVideos.addForce(tr.folder, tr);
       },
     );
 
@@ -73,7 +88,8 @@ class LibraryGroup<T extends Track> {
     this.mainMapAlbumArtists.refresh();
     this.mainMapComposer.refresh();
     this.mainMapGenres.refresh();
-    this.mainMapFolders.refresh();
+    this.mainMapFoldersTracksAndVideos.refresh();
+    this.mainMapFoldersTracks.refresh();
     this.mainMapFoldersVideos.refresh();
   }
 
@@ -142,9 +158,10 @@ class LibraryGroup<T extends Track> {
       MediaType.albumArtist => mainMapAlbumArtists.value.values as Iterable<List<T>>,
       MediaType.composer => mainMapComposer.value.values as Iterable<List<T>>,
       MediaType.genre => mainMapGenres.value.values as Iterable<List<T>>,
-      MediaType.folder => mainMapFolders.values,
+      MediaType.folder => mainMapFoldersTracksAndVideos.values,
+      MediaType.folderMusic => mainMapFoldersTracks.values,
       MediaType.folderVideo => mainMapFoldersVideos.values as Iterable<List<T>>,
-      _ => null,
+      MediaType.playlist => null,
     };
   }
 }

@@ -155,14 +155,13 @@ class NamidaOnTaps {
     return const MostPlayedTracksPage().navigate();
   }
 
-  Future<void> onFolderTapNavigate(Folder folder, {Track? trackToScrollTo}) async {
-    if (folder is VideoFolder) {
-      ScrollSearchController.inst.animatePageController(LibraryTab.foldersVideos);
-      FoldersController.videos.stepIn(folder, trackToScrollTo: trackToScrollTo);
-    } else {
-      ScrollSearchController.inst.animatePageController(LibraryTab.folders);
-      FoldersController.tracks.stepIn(folder, trackToScrollTo: trackToScrollTo);
+  Future<void> onFolderTapNavigate(Folder folder, FoldersController? controller, {Track? trackToScrollTo}) async {
+    if (controller == null) {
+      final isVideo = folder is VideoFolder;
+      controller = isVideo ? FoldersController.videos : FoldersController.tracks;
     }
+    ScrollSearchController.inst.animatePageController(controller.libraryTab);
+    controller.stepIn(folder, trackToScrollTo: trackToScrollTo);
   }
 
   Future<void> onQueueTap(Queue queue) async {
@@ -238,6 +237,7 @@ class NamidaOnTaps {
       MediaType.artist: [SortType.year, SortType.title],
       MediaType.genre: [SortType.year, SortType.title],
       MediaType.folder: [SortType.filename],
+      MediaType.folderMusic: [SortType.filename],
       MediaType.folderVideo: [SortType.filename],
     };
     return _onSubPageSortIconTap<SortType>(

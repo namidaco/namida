@@ -299,6 +299,7 @@ class _SettingsController with SettingsFileWriter {
     MediaType.composer: [SortType.year, SortType.title],
     MediaType.genre: [SortType.year, SortType.title],
     MediaType.folder: [SortType.filename],
+    MediaType.folderMusic: [SortType.filename],
     MediaType.folderVideo: [SortType.filename],
   }.obs;
 
@@ -308,6 +309,7 @@ class _SettingsController with SettingsFileWriter {
     MediaType.artist: false,
     MediaType.genre: false,
     MediaType.folder: false,
+    MediaType.folderMusic: false,
     MediaType.folderVideo: false,
   }.obs;
 

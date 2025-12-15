@@ -19,4 +19,8 @@ class LibraryItemMap {
     _rxMap.value.clear();
     refresh();
   }
+
+  void update(LibraryItemMap other) {
+    _rxMap.value = other.value;
+  }
 }

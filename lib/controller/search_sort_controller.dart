@@ -36,7 +36,7 @@ class SearchSortController extends SearchPortsProvider {
       composerSearchTemp.isNotEmpty ||
       genreSearchTemp.isNotEmpty ||
       playlistSearchTemp.isNotEmpty ||
-      folderSearchTemp.isNotEmpty ||
+      folderTracksSearchTemp.isNotEmpty ||
       folderVideosSearchTemp.isNotEmpty);
 
   final RxList<Track> trackSearchList = <Track>[].obs;
@@ -59,6 +59,7 @@ class SearchSortController extends SearchPortsProvider {
     MediaType.composer: <String>[].obs,
     MediaType.genre: <String>[].obs,
     MediaType.folder: <String>[].obs,
+    MediaType.folderMusic: <String>[].obs,
     MediaType.folderVideo: <String>[].obs,
   };
 
@@ -69,7 +70,7 @@ class SearchSortController extends SearchPortsProvider {
   RxList<String> get albumArtistSearchTemp => _searchMapTemp[MediaType.albumArtist]!;
   RxList<String> get composerSearchTemp => _searchMapTemp[MediaType.composer]!;
   RxList<String> get genreSearchTemp => _searchMapTemp[MediaType.genre]!;
-  RxList<String> get folderSearchTemp => _searchMapTemp[MediaType.folder]!;
+  RxList<String> get folderTracksSearchTemp => _searchMapTemp[MediaType.folderMusic]!;
   RxList<String> get folderVideosSearchTemp => _searchMapTemp[MediaType.folderVideo]!;
 
   RxList<Track> get _tracksInfoList => Indexer.inst.tracksInfoList;
@@ -286,7 +287,8 @@ class SearchSortController extends SearchPortsProvider {
       MediaType.albumArtist => () => _prepareMediaPorts(Indexer.inst.mainMapAlbumArtists.value.keys, MediaType.albumArtist),
       MediaType.composer => () => _prepareMediaPorts(Indexer.inst.mainMapComposer.value.keys, MediaType.composer),
       MediaType.genre => () => _prepareMediaPorts(Indexer.inst.mainMapGenres.value.keys, MediaType.genre),
-      MediaType.folder => () => _prepareMediaPorts(Indexer.inst.mainMapFolders.mapToPaths(), MediaType.folder),
+      MediaType.folder => () => _prepareMediaPorts(Indexer.inst.mainMapFoldersTracksAndVideos.mapToPaths(), MediaType.folder),
+      MediaType.folderMusic => () => _prepareMediaPorts(Indexer.inst.mainMapFoldersTracks.mapToPaths(), MediaType.folderMusic),
       MediaType.folderVideo => () => _prepareMediaPorts(Indexer.inst.mainMapFoldersVideos.mapToPaths(), MediaType.folderVideo),
       MediaType.track => _prepareTracksPorts,
       MediaType.playlist => _preparePlaylistPorts,
@@ -370,7 +372,8 @@ class SearchSortController extends SearchPortsProvider {
         MediaType.albumArtist => Indexer.inst.mainMapAlbumArtists.rx,
         MediaType.composer => Indexer.inst.mainMapComposer.rx,
         MediaType.genre => Indexer.inst.mainMapGenres.rx,
-        MediaType.folder => Indexer.inst.mainMapFolders,
+        MediaType.folder => Indexer.inst.mainMapFoldersTracksAndVideos,
+        MediaType.folderMusic => Indexer.inst.mainMapFoldersTracks,
         MediaType.folderVideo => Indexer.inst.mainMapFoldersVideos,
         MediaType.track => null,
         MediaType.playlist => null,
@@ -404,7 +407,7 @@ class SearchSortController extends SearchPortsProvider {
         final params = {
           'keys': keysList.toList(),
           'cleanup': _shouldCleanup,
-          'keyIsPath': type == MediaType.folder || type == MediaType.folderVideo,
+          'keyIsPath': type == MediaType.folderMusic || type == MediaType.folderVideo || type == MediaType.folder,
           'sendPort': itemsSendPort,
         };
 
@@ -482,7 +485,8 @@ class SearchSortController extends SearchPortsProvider {
       MediaType.albumArtist => Indexer.inst.mainMapAlbumArtists.value.keys,
       MediaType.composer => Indexer.inst.mainMapComposer.value.keys,
       MediaType.genre => Indexer.inst.mainMapGenres.value.keys,
-      MediaType.folder => Indexer.inst.mainMapFolders.mapToPaths(),
+      MediaType.folder => Indexer.inst.mainMapFoldersTracksAndVideos.mapToPaths(),
+      MediaType.folderMusic => Indexer.inst.mainMapFoldersTracks.mapToPaths(),
       MediaType.folderVideo => Indexer.inst.mainMapFoldersVideos.mapToPaths(),
       MediaType.track => <String>[],
       MediaType.playlist => <String>[],

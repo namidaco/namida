@@ -280,6 +280,7 @@ class NamidaDialogs {
     required List<Track> tracks,
   }) async {
     if (isTracksRecursive) VibratorController.medium();
+    final queueSource = controller.queueSource;
     await showGeneralPopupDialog(
       tracks,
       folder.folderName,
@@ -287,7 +288,7 @@ class NamidaDialogs {
         tracks.displayTrackKeyword,
         tracks.totalDurationFormatted,
       ].join(' • '),
-      folder is VideoFolder ? QueueSource.folderVideos : QueueSource.folder,
+      queueSource,
       thirdLineText: tracks.totalSizeFormatted,
       trailingIcon: isTracksRecursive ? Broken.cards : Broken.card,
     );

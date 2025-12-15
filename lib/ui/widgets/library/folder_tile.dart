@@ -65,7 +65,7 @@ class _FolderTileState extends State<FolderTile> {
     bool isRecursive = widget.isTracksRecursive;
     List<Track> tracks = this.widget.tracks;
     if (preferRecursive == false && widget.isTracksRecursive) {
-      final newDirectTracks = widget.folder.tracks();
+      final newDirectTracks = widget.controller.folderToTracks(widget.folder) ?? [];
       if (newDirectTracks.isNotEmpty) {
         isRecursive = false;
         tracks = newDirectTracks;
@@ -144,7 +144,7 @@ class _FolderTileState extends State<FolderTile> {
       child: NamidaInkWell(
         bgColor: theme.cardColor,
         borderRadius: 10.0,
-        onTap: widget.folder.navigate,
+        onTap: () => widget.controller.stepIn(widget.folder),
         onLongPress: _showFolderDialog,
         enableSecondaryTap: true,
         child: Padding(

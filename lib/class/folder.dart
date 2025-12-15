@@ -3,7 +3,6 @@
 import 'dart:io';
 
 import 'package:namida/class/track.dart';
-import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -13,7 +12,7 @@ class VideoFolder extends Folder {
   VideoFolder.explicit(super.path) : super.explicit();
 
   @override
-  String toString() => "VideoFolder(path: $path, tracks: ${tracks().length})";
+  String toString() => "VideoFolder(path: $path, tracks: ${tracksDedicated().length})";
 }
 
 class Folder {
@@ -81,16 +80,8 @@ class Folder {
 }
 
 extension FolderUtils<T extends Folder, E extends Track> on T {
-  Map<T, List<E>> get _mainFoldersMap {
-    return this is VideoFolder ? Indexer.inst.mainMapFoldersVideos.value as Map<T, List<E>> : Indexer.inst.mainMapFolders.value as Map<T, List<E>>;
-  }
-
-  FoldersController get _controller {
-    return this is VideoFolder ? FoldersController.videos : FoldersController.tracks;
-  }
-
-  void navigate() {
-    _controller.stepIn(this);
+  Map<T, List<E>> get _mainFoldersMapDedicated {
+    return this is VideoFolder ? Indexer.inst.mainMapFoldersVideos.value as Map<T, List<E>> : Indexer.inst.mainMapFoldersTracks.value as Map<T, List<E>>;
   }
 
   T get parent {
@@ -104,7 +95,7 @@ extension FolderUtils<T extends Folder, E extends Track> on T {
   bool get hasSimilarFolderNames {
     int count = 0;
     var thisfolderLower = folderName.toLowerCase();
-    for (final k in _mainFoldersMap.keys) {
+    for (final k in _mainFoldersMapDedicated.keys) {
       if (k.folderName.toLowerCase() == thisfolderLower) {
         count++;
         if (count > 1) return true;
@@ -131,5 +122,5 @@ extension FolderUtils<T extends Folder, E extends Track> on T {
     return null;
   }
 
-  List<E> tracks() => _mainFoldersMap[this] ?? [];
+  List<E> tracksDedicated() => _mainFoldersMapDedicated[this] ?? [];
 }

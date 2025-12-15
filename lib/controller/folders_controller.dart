@@ -1,22 +1,47 @@
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
-class FoldersController<T extends Folder> {
-  static final FoldersController<Folder> tracks = FoldersController<Folder>._(LibraryTab.folders, FoldersPageConfig.tracks());
-  static final FoldersController<VideoFolder> videos = FoldersController<VideoFolder>._(LibraryTab.foldersVideos, FoldersPageConfig.videos());
-  FoldersController._(this._tab, this._config);
+class FoldersController<T extends Folder, E extends Track> {
+  static final FoldersController<Folder, Track> tracksAndVideos = FoldersController<Folder, Track>._(
+    Indexer.inst.mainMapFoldersTracksAndVideos,
+    LibraryTab.folders,
+    FoldersPageConfig.tracksAndVideos(),
+  );
+  static final FoldersController<Folder, Track> tracks = FoldersController<Folder, Track>._(
+    Indexer.inst.mainMapFoldersTracks,
+    LibraryTab.foldersMusic,
+    FoldersPageConfig.tracks(),
+  );
+  static final FoldersController<VideoFolder, Video> videos = FoldersController<VideoFolder, Video>._(
+    Indexer.inst.mainMapFoldersVideos,
+    LibraryTab.foldersVideos,
+    FoldersPageConfig.videos(),
+  );
+  FoldersController._(this._foldersMap, this._tab, this._config);
 
+  RxBaseCore<Map<T, List<E>>> get foldersMap => _foldersMap;
+  LibraryTab get libraryTab => _tab;
+  QueueSource get queueSource => _config.queueSource;
+
+  final RxMap<T, List<E>> _foldersMap;
   final LibraryTab _tab;
   final FoldersPageConfig _config;
 
   final Rxn<T> currentFolder = Rxn<T>();
 
   final RxList<T> currentFolderslist = <T>[].obs;
+  List<E>? get currentFolderTracksList => folderToTracks(currentFolder.value);
+
+  List<E>? folderToTracks(T? folder) {
+    return folder == null ? null : _foldersMap.value[folder];
+  }
 
   int? currentNodeFoldersCount(T folder, {bool recursive = false, bool preferRecursiveForRootFolders = false}) {
     if (preferRecursiveForRootFolders) {
@@ -27,13 +52,13 @@ class FoldersController<T extends Folder> {
         _pathsTreeMapRoot.getFoldersCountInsideFolder(folder, recursive: recursive);
   }
 
-  List<Track> getNodeTracks(T folder, {bool recursive = false}) {
+  List<E> getNodeTracks(T folder, {bool recursive = false}) {
     return _pathsTreeMapCurrent?.getTracksCountInsideFolder(folder, recursive: recursive) ?? //
         _pathsTreeMapRoot.getTracksCountInsideFolder(folder, recursive: recursive);
   }
 
-  var _pathsTreeMapRoot = _FolderNode<T>(null, null);
-  _FolderNode<T>? _pathsTreeMapCurrent;
+  late var _pathsTreeMapRoot = _FolderNode<T, E>(null, null, folderToTracks);
+  _FolderNode<T, E>? _pathsTreeMapCurrent;
 
   /// Even with this logic, root paths are invincible.
   final isHome = true.obs;
@@ -43,7 +68,7 @@ class FoldersController<T extends Folder> {
 
   /// Highlights the track that is meant to be navigated to after calling [stepIn].
   final indexToScrollTo = Rxn<int>();
-  Track? _trackToScrollTo;
+  E? _trackToScrollTo;
 
   final _latestScrollOffset = <T?, double>{};
 
@@ -51,7 +76,7 @@ class FoldersController<T extends Folder> {
     currentFolderslist.refresh(); // refreshes folders
     currentFolder.refresh(); // refreshes tracks
     if (_trackToScrollTo != null && currentFolder.value != null) {
-      indexToScrollTo.value = currentFolder.value!.tracks().indexOf(_trackToScrollTo!);
+      indexToScrollTo.value = folderToTracks(currentFolder.value as T)?.indexOf(_trackToScrollTo!);
     }
   }
 
@@ -61,7 +86,7 @@ class FoldersController<T extends Folder> {
     return !stepOut();
   }
 
-  void stepIn(T? folder, {Track? trackToScrollTo, double jumpTo = 0, bool isFromStepOut = false}) {
+  void stepIn(T? folder, {E? trackToScrollTo, double jumpTo = 0, bool isFromStepOut = false}) {
     if (folder == null || folder.path == '') {
       isHome.value = true;
       _pathsTreeMapCurrent = null;
@@ -69,7 +94,7 @@ class FoldersController<T extends Folder> {
 
     final treeMap = _pathsTreeMapCurrent ??= _pathsTreeMapRoot;
 
-    _FolderNode<T>? nextNode;
+    _FolderNode<T, E>? nextNode;
     if (folder != null) {
       nextNode = treeMap.children[folder] ?? _pathsTreeMapRoot.lookup(folder);
     }
@@ -88,7 +113,7 @@ class FoldersController<T extends Folder> {
       isHome.value = false;
 
       final upcomingFolders = nextNode.foldersList;
-      if (upcomingFolders.length == 1 && folder?.tracks().isEmpty == true) {
+      if (upcomingFolders.length == 1 && folderToTracks(folder)?.isEmpty == true) {
         stepIn(upcomingFolders.first);
         return;
       }
@@ -100,7 +125,7 @@ class FoldersController<T extends Folder> {
     currentFolder.value = folder;
 
     if (trackToScrollTo != null) {
-      indexToScrollTo.value = folder?.tracks().indexOf(trackToScrollTo);
+      indexToScrollTo.value = folderToTracks(folder)?.indexOf(trackToScrollTo);
       _trackToScrollTo = trackToScrollTo;
     } else {
       indexToScrollTo.value = null;
@@ -121,7 +146,7 @@ class FoldersController<T extends Folder> {
       do {
         folderToStepIn = _pathsTreeMapCurrent?.parent;
         _pathsTreeMapCurrent = _pathsTreeMapCurrent?.parentNode;
-      } while (_pathsTreeMapCurrent != null && _pathsTreeMapCurrent?.children.keys.length == 1 && (folderToStepIn?.parent.tracks().isEmpty != false));
+      } while (_pathsTreeMapCurrent != null && _pathsTreeMapCurrent?.children.keys.length == 1 && (folderToTracks(folderToStepIn?.parent)?.isEmpty != false));
     }
 
     folderToStepIn = _pathsTreeMapCurrent?.parent;
@@ -168,8 +193,8 @@ class FoldersController<T extends Folder> {
   }
 
   /// Generates missing folders in between
-  void onMapChanged<E extends Track>(Map<T, List<E>> map) {
-    _pathsTreeMapRoot = _FolderNode<T>(null, null); // -- vip to properly refill nodes in new sort order
+  void onMapChanged(Map<T, List<E>> map) {
+    _pathsTreeMapRoot = _FolderNode<T, E>(null, null, folderToTracks); // -- vip to properly refill nodes in new sort order
     final res = _buildAdvancedPathTree(_pathsTreeMapRoot, map.keys);
     _pathsTreeMapRoot = res.$1;
     _pathsTreeMapCurrent ??= _pathsTreeMapRoot;
@@ -180,7 +205,7 @@ class FoldersController<T extends Folder> {
     stepIn(_pathsTreeMapCurrent?.parent);
   }
 
-  void _sortMap(Map<T, List<dynamic>> map, _FolderNode<T> rootNode) {
+  void _sortMap(Map<T, List<dynamic>> map, _FolderNode<T, E> rootNode) {
     final folderToNameCompare = settings.ignoreCommonPrefixForTypes.value.contains(TrackSearchFilter.folder)
         ? (T folder) => folder.folderName.toLowerCase().ignoreCommonPrefixes()
         : (T folder) => folder.folderName.toLowerCase();
@@ -207,14 +232,14 @@ class FoldersController<T extends Folder> {
     refreshAfterSorting();
   }
 
-  (_FolderNode<T>, List<T>) _buildAdvancedPathTree(_FolderNode<T> root, Iterable<T> folders) {
+  (_FolderNode<T, E>, List<T>) _buildAdvancedPathTree(_FolderNode<T, E> root, Iterable<T> folders) {
     final allFolders = <T>[];
     for (final folder in folders) {
       var current = root;
       folder.performInbetweenFoldersBuild(
         (f) {
           allFolders.add(f);
-          final newNode = current.children.putIfAbsent(f, () => _FolderNode<T>(current, f));
+          final newNode = current.children.putIfAbsent(f, () => _FolderNode<T, E>(current, f, folderToTracks));
           current = newNode;
         },
       );
@@ -313,18 +338,33 @@ class _ParsedResult {
 }
 
 class FoldersPageConfig {
+  final QueueSource queueSource;
   final Rx<String?> defaultFolderStartupLocation;
   final Rx<bool> enableFoldersHierarchy;
   final void Function() onDefaultStartupFolderChanged;
 
   const FoldersPageConfig._({
+    required this.queueSource,
     required this.defaultFolderStartupLocation,
     required this.enableFoldersHierarchy,
     required this.onDefaultStartupFolderChanged,
   });
 
+  factory FoldersPageConfig.tracksAndVideos() {
+    return FoldersPageConfig._(
+      queueSource: QueueSource.folder,
+      defaultFolderStartupLocation: settings.defaultFolderStartupLocation, // same settings
+      enableFoldersHierarchy: settings.enableFoldersHierarchy, // same settings
+      onDefaultStartupFolderChanged: () {
+        settings.save(
+          defaultFolderStartupLocation: FoldersController.tracksAndVideos.currentFolder.value?.path ?? '',
+        );
+      },
+    );
+  }
   factory FoldersPageConfig.tracks() {
     return FoldersPageConfig._(
+      queueSource: QueueSource.folderMusic,
       defaultFolderStartupLocation: settings.defaultFolderStartupLocation,
       enableFoldersHierarchy: settings.enableFoldersHierarchy,
       onDefaultStartupFolderChanged: () {
@@ -336,6 +376,7 @@ class FoldersPageConfig {
   }
   factory FoldersPageConfig.videos() {
     return FoldersPageConfig._(
+      queueSource: QueueSource.folderVideos,
       defaultFolderStartupLocation: settings.defaultFolderStartupLocationVideos,
       enableFoldersHierarchy: settings.enableFoldersHierarchyVideos,
       onDefaultStartupFolderChanged: () {
@@ -347,18 +388,19 @@ class FoldersPageConfig {
   }
 }
 
-class _FolderNode<T extends Folder> {
-  final _FolderNode<T>? parentNode;
+class _FolderNode<T extends Folder, E extends Track> {
+  final _FolderNode<T, E>? parentNode;
   final T? parent;
-  _FolderNode(this.parentNode, this.parent);
+  final List<E>? Function(T? folder) folderToTracks;
+  _FolderNode(this.parentNode, this.parent, this.folderToTracks);
 
-  final children = <T, _FolderNode<T>>{};
+  final children = <T, _FolderNode<T, E>>{};
 
   late final foldersList = children.keys.toList();
 
   /// Efficient lookup for a folder. this operation is O(n) where n is the folder path splits count.
-  _FolderNode<T>? lookup(T folder) {
-    _FolderNode<T> current = this;
+  _FolderNode<T, E>? lookup(T folder) {
+    _FolderNode<T, E> current = this;
     final mainInMap = children[folder];
     if (mainInMap != null) return current;
 
@@ -381,7 +423,7 @@ class _FolderNode<T extends Folder> {
     if (node != null) {
       if (recursive) {
         int totalCount = -1; // bcz recursive counts current
-        _walkKeysRescursive(node, (_) {
+        _walkKeysRescursive<Null, T, E>(node, (_) {
           totalCount++;
           return null;
         });
@@ -393,8 +435,8 @@ class _FolderNode<T extends Folder> {
     return null;
   }
 
-  List<Track> getTracksCountInsideFolder(T folder, {bool recursive = false}) {
-    if (!recursive) return folder.tracks();
+  List<E> getTracksCountInsideFolder(T folder, {bool recursive = false}) {
+    if (!recursive) return folderToTracks(folder) ?? [];
 
     final parentNode = lookup(folder);
 
@@ -402,31 +444,31 @@ class _FolderNode<T extends Folder> {
 
     if (node == null) return [];
 
-    final allTracks = <Track>[];
-    allTracks.addAll(folder.tracks());
-    _walkKeysRescursive(node, (folder) {
-      allTracks.addAll(folder.tracks());
+    final allTracks = <E>[];
+    allTracks.addAll(folderToTracks(folder) ?? []);
+    _walkKeysRescursive<Null, T, E>(node, (folder) {
+      allTracks.addAll(folderToTracks(folder) ?? []);
       return null;
     });
 
     return allTracks;
   }
 
-  static R? _walkKeysRescursive<R, T extends Folder>(_FolderNode<T> node, R? Function(T item) callback) {
+  static R? _walkKeysRescursive<R, T extends Folder, E extends Track>(_FolderNode<T, E> node, R? Function(T item) callback) {
     for (final subNodeEntry in node.children.entries) {
       R? res = callback(subNodeEntry.key);
-      res ??= _walkKeysRescursive(subNodeEntry.value, callback);
+      res ??= _walkKeysRescursive<R, T, E>(subNodeEntry.value, callback);
       if (res != null) return res;
     }
     return null;
   }
 
-  static R? _walkChildrenRescursive<R, T extends Folder>(_FolderNode<T> node, R? Function(Map<T, _FolderNode<T>> children) callback) {
+  static R? _walkChildrenRescursive<R, T extends Folder, E extends Track>(_FolderNode<T, E> node, R? Function(Map<T, _FolderNode<T, E>> children) callback) {
     R? resMain = callback(node.children);
     if (resMain != null) return resMain;
 
     for (final subNodeEntry in node.children.values) {
-      final res = _walkChildrenRescursive(subNodeEntry, callback);
+      final res = _walkChildrenRescursive<R, T, E>(subNodeEntry, callback);
       if (res != null) return res;
     }
     return null;

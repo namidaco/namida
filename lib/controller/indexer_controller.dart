@@ -69,13 +69,14 @@ class Indexer<T extends Track> {
 
   final artworksSizeInStorage = 0.obs;
 
-  var mainMapsGroup = LibraryGroup<T>();
+  final mainMapsGroup = LibraryGroup<T>();
   LibraryItemMap get mainMapAlbums => mainMapsGroup.mainMapAlbums;
   LibraryItemMap get mainMapArtists => mainMapsGroup.mainMapArtists;
   LibraryItemMap get mainMapAlbumArtists => mainMapsGroup.mainMapAlbumArtists;
   LibraryItemMap get mainMapComposer => mainMapsGroup.mainMapComposer;
   LibraryItemMap get mainMapGenres => mainMapsGroup.mainMapGenres;
-  RxMap<Folder, List<T>> get mainMapFolders => mainMapsGroup.mainMapFolders;
+  RxMap<Folder, List<T>> get mainMapFoldersTracksAndVideos => mainMapsGroup.mainMapFoldersTracksAndVideos;
+  RxMap<Folder, List<T>> get mainMapFoldersTracks => mainMapsGroup.mainMapFoldersTracks;
   RxMap<VideoFolder, List<Video>> get mainMapFoldersVideos => mainMapsGroup.mainMapFoldersVideos;
 
   LibraryItemMap getArtistMapFor(MediaType type) {
@@ -354,7 +355,8 @@ class Indexer<T extends Track> {
     this.mainMapsGroup.fillAll(tracksInfoList.value, (tr) => tr.toTrackExt(), settings.albumIdentifiers.value);
     await this.mainMapsGroup.sortAll(mediaSorters, settings.mediaItemsTrackSortingReverse.value, tracksInfoList.value);
     this.mainMapsGroup.refreshAll();
-    FoldersController.tracks.onMapChanged(mainMapFolders.value);
+    FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos.value);
+    FoldersController.tracks.onMapChanged(mainMapFoldersTracks.value);
     FoldersController.videos.onMapChanged(mainMapFoldersVideos.value);
     _refreshMediaTracksSubListsAfterSort(mediaSorters.keys);
 
@@ -375,7 +377,8 @@ class Indexer<T extends Track> {
         MediaType.track => () => SearchSortController.inst.searchTracks(LibraryTab.tracks.textSearchController?.text ?? ''),
         MediaType.album || MediaType.artist || MediaType.albumArtist || MediaType.composer || MediaType.genre => () =>
             SearchSortController.inst.searchMedia(e.toLibraryTab().textSearchController?.text ?? '', e),
-        MediaType.folder => FoldersController.tracks.refreshAfterSorting,
+        MediaType.folder => FoldersController.tracksAndVideos.refreshAfterSorting,
+        MediaType.folderMusic => FoldersController.tracks.refreshAfterSorting,
         MediaType.folderVideo => FoldersController.videos.refreshAfterSorting,
         _ => null,
       };
@@ -412,6 +415,7 @@ class Indexer<T extends Track> {
           MediaType.genre => settings.genreSort.value.requiresHistory,
           MediaType.playlist => settings.playlistSort.value.requiresHistory,
           MediaType.folder => false,
+          MediaType.folderMusic => false,
           MediaType.folderVideo => false,
         };
         if (sortRequiresHistory) SearchSortController.inst.sortMedia(e);
@@ -434,7 +438,8 @@ class Indexer<T extends Track> {
     trExt.genresList.loop((genre) {
       mainMapGenres.value[genre]?.remove(tr);
     });
-    tr is Video ? mainMapFoldersVideos[tr.folder]?.remove(tr) : mainMapFolders[tr.folder]?.remove(tr);
+    tr is Video ? mainMapFoldersVideos[tr.folder]?.remove(tr) : mainMapFoldersTracks[tr.folder]?.remove(tr);
+    mainMapFoldersTracksAndVideos[tr.folder]?.remove(tr);
 
     _currentFileNamesMap.remove(tr.filename);
   }
@@ -445,7 +450,8 @@ class Indexer<T extends Track> {
     final mainMapAlbumArtists = this.mainMapAlbumArtists.value;
     final mainMapComposer = this.mainMapComposer.value;
     final mainMapGenres = this.mainMapGenres.value;
-    final mainMapFolders = this.mainMapFolders.value;
+    final mainMapFoldersTracksAndVideos = this.mainMapFoldersTracksAndVideos.value;
+    final mainMapFoldersTracks = this.mainMapFoldersTracks.value;
     final mainMapFoldersVideos = this.mainMapFoldersVideos.value;
 
     final addedItemsLists = <MediaType, ({Map<dynamic, List<dynamic>> map, List<dynamic> newKeys, Set<dynamic> modifiedKeys})>{
@@ -454,7 +460,8 @@ class Indexer<T extends Track> {
       MediaType.albumArtist: (map: mainMapAlbumArtists, newKeys: [], modifiedKeys: {}),
       MediaType.composer: (map: mainMapComposer, newKeys: [], modifiedKeys: {}),
       MediaType.genre: (map: mainMapGenres, newKeys: [], modifiedKeys: {}),
-      MediaType.folder: (map: mainMapFolders, newKeys: [], modifiedKeys: {}),
+      MediaType.folder: (map: mainMapFoldersTracksAndVideos, newKeys: [], modifiedKeys: {}),
+      MediaType.folderMusic: (map: mainMapFoldersTracks, newKeys: [], modifiedKeys: {}),
       MediaType.folderVideo: (map: mainMapFoldersVideos, newKeys: [], modifiedKeys: {}),
     };
 
@@ -531,7 +538,9 @@ class Indexer<T extends Track> {
       // -- Assigning Folders
       newTrack is Video
           ? addCustom(MediaType.folderVideo, mainMapFoldersVideos, oldTrack?.folder, newTrack.folder, newTrack)
-          : addCustom(MediaType.folder, mainMapFolders, oldTrack?.folder, newTrack.folder, newTrack);
+          : addCustom(MediaType.folderMusic, mainMapFoldersTracks, oldTrack?.folder, newTrack.folder, newTrack);
+
+      addCustom(MediaType.folder, mainMapFoldersTracksAndVideos, oldTrack?.folder, newTrack.folder, newTrack);
     }
 
     for (final sec in addedItemsLists.entries) {
@@ -558,7 +567,8 @@ class Indexer<T extends Track> {
       }
     }
 
-    if (addedItemsLists[MediaType.folder]?.newKeys.isNotEmpty == true) FoldersController.tracks.onMapChanged(mainMapFolders);
+    if (addedItemsLists[MediaType.folder]?.newKeys.isNotEmpty == true) FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos);
+    if (addedItemsLists[MediaType.folderMusic]?.newKeys.isNotEmpty == true) FoldersController.tracks.onMapChanged(mainMapFoldersTracks);
     if (addedItemsLists[MediaType.folderVideo]?.newKeys.isNotEmpty == true) FoldersController.videos.onMapChanged(mainMapFoldersVideos);
   }
 
@@ -814,10 +824,12 @@ class Indexer<T extends Track> {
     this.mainMapAlbumArtists.refresh();
     this.mainMapComposer.refresh();
     this.mainMapGenres.refresh();
-    this.mainMapFolders.refresh();
+    this.mainMapFoldersTracksAndVideos.refresh();
+    this.mainMapFoldersTracks.refresh();
     this.mainMapFoldersVideos.refresh();
     SearchSortController.inst.trackSearchList.refresh();
     SearchSortController.inst.trackSearchTemp.refresh();
+    FoldersController.tracksAndVideos.currentFolder.refresh();
     FoldersController.tracks.currentFolder.refresh();
     FoldersController.videos.currentFolder.refresh();
     recentlyDeltedFileWrite.flush().then((_) => recentlyDeltedFileWrite.close());
@@ -1297,10 +1309,11 @@ class Indexer<T extends Track> {
         tracksRecievePort.sendPort,
       ]).then(
         (libraryGroup) async {
-          mainMapsGroup = libraryGroup as LibraryGroup<T>;
-          mainMapsGroup.refreshAll();
-          FoldersController.tracks.onMapChanged(mainMapFolders.value);
+          mainMapsGroup.updateFrom(libraryGroup);
+          FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos.value);
+          FoldersController.tracks.onMapChanged(mainMapFoldersTracks.value);
           FoldersController.videos.onMapChanged(mainMapFoldersVideos.value);
+          FoldersController.tracksAndVideos.onFirstLoad();
           FoldersController.tracks.onFirstLoad();
           FoldersController.videos.onFirstLoad();
           _refreshMediaTracksSubListsAfterSort(mediaSorters.keys);

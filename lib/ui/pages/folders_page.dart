@@ -6,7 +6,6 @@ import 'package:namida/class/folder.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/folders_controller.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -27,11 +26,9 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
   final MediaType Function() mediaType;
   final FoldersPageConfig config;
   final QueueSource _queueSource;
-  final RxMap<F, List<T>> _foldersMap;
 
   const FoldersPage._(
-    this._queueSource,
-    this._foldersMap, {
+    this._queueSource, {
     super.key,
     required this.route,
     required this.foldersController,
@@ -40,20 +37,28 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
     required this.config,
   });
 
-  factory FoldersPage.tracks({Key? key}) => FoldersPage._(
+  factory FoldersPage.tracksAndVideos({Key? key}) => FoldersPage._(
         QueueSource.folder,
-        Indexer.inst.mainMapFolders as RxMap<F, List<T>>,
         key: key,
         route: RouteType.PAGE_folders,
-        foldersController: FoldersController.tracks,
+        foldersController: FoldersController.tracksAndVideos,
         tab: LibraryTab.folders,
         mediaType: () => MediaType.folder,
+        config: FoldersPageConfig.tracksAndVideos(),
+      );
+
+  factory FoldersPage.tracks({Key? key}) => FoldersPage._(
+        QueueSource.folderMusic,
+        key: key,
+        route: RouteType.PAGE_folders_music,
+        foldersController: FoldersController.tracks,
+        tab: LibraryTab.foldersMusic,
+        mediaType: () => MediaType.folderMusic,
         config: FoldersPageConfig.tracks(),
       );
 
   factory FoldersPage.videos({Key? key}) => FoldersPage._(
         QueueSource.folderVideos,
-        Indexer.inst.mainMapFoldersVideos as RxMap<F, List<T>>,
         key: key,
         route: RouteType.PAGE_folders_videos,
         foldersController: FoldersController.videos,
@@ -70,6 +75,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
     final highlighedColor = theme.colorScheme.onSurface.withAlpha(40);
     const scrollToIconSize = 24.0;
     const scrollToiconBottomPaddingSliver = SliverPadding(padding: EdgeInsets.only(bottom: scrollToIconSize * 2));
+
     return BackgroundWrapper(
       child: ObxO(
         rx: foldersController.indexToScrollTo,
@@ -136,7 +142,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                 builder: (context, isHome) => ObxO(
                                   rx: foldersController.currentFolder,
                                   builder: (context, currentFolder) {
-                                    final folderTracks = currentFolder?.tracks() ?? [];
+                                    final folderTracks = foldersController.folderToTracks(currentFolder) ?? [];
                                     return CustomScrollView(
                                       controller: scrollController,
                                       slivers: [
@@ -217,15 +223,15 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                 builder: (context, isInside) => ObxO(
                                   rx: foldersController.currentFolder,
                                   builder: (context, currentFolder) {
-                                    final folderTracks = currentFolder?.tracks() ?? [];
+                                    final folderTracks = foldersController.folderToTracks(currentFolder) ?? [];
                                     return CustomScrollView(
                                       controller: scrollController,
                                       slivers: [
                                         if (!isInside)
                                           ObxO(
-                                            rx: _foldersMap,
-                                            builder: (context, mainMapFolders) {
-                                              final mainMapFoldersKeys = _foldersMap.keys.toList();
+                                            rx: foldersController.foldersMap,
+                                            builder: (context, mainMap) {
+                                              final mainMapFoldersKeys = mainMap.keys.toList();
                                               return SuperSliverList.builder(
                                                 itemCount: mainMapFoldersKeys.length,
                                                 itemBuilder: (context, i) {

@@ -533,6 +533,9 @@ class NamidaNavigator {
     final route = currentRoute?.route;
     if (route != null) {
       if (route == RouteType.PAGE_folders) {
+        final canIgoBackPls = FoldersController.tracksAndVideos.onBackButton();
+        if (!canIgoBackPls) return;
+      } else if (route == RouteType.PAGE_folders_music) {
         final canIgoBackPls = FoldersController.tracks.onBackButton();
         if (!canIgoBackPls) return;
       } else if (route == RouteType.PAGE_folders_videos) {

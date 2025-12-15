@@ -1016,7 +1016,7 @@ Future<void> showGeneralPopupDialog(
                                   icon: availableFolders.first is VideoFolder ? Broken.video_play : Broken.folder,
                                   onTap: () {
                                     NamidaNavigator.inst.closeDialog();
-                                    NamidaOnTaps.inst.onFolderTapNavigate(availableFolders.first, trackToScrollTo: tracks.first);
+                                    NamidaOnTaps.inst.onFolderTapNavigate(availableFolders.first, null, trackToScrollTo: tracks.first);
                                   },
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -1036,7 +1036,7 @@ Future<void> showGeneralPopupDialog(
                                       IconButton(
                                         tooltip: lang.ADD_MORE_FROM_THIS_FOLDER,
                                         onPressed: () {
-                                          final tracks = availableFolders.first.tracks();
+                                          final tracks = availableFolders.first.tracksDedicated();
                                           Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreFolder);
                                         },
                                         icon: const Icon(

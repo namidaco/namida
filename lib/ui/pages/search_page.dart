@@ -134,57 +134,61 @@ class SearchPage extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    ...MediaType.values.map(
-                      (e) => Obx(
-                        (context) {
-                          final list = settings.activeSearchMediaTypes.valueR;
-                          final isActive = list.contains(e);
-                          final isForcelyEnabled = e == MediaType.track;
-                          return NamidaOpacity(
-                            opacity: isForcelyEnabled ? 0.6 : 1.0,
-                            child: NamidaInkWell(
-                              bgColor: isActive ? theme.colorScheme.secondary.withValues(alpha: 0.12) : null,
-                              borderRadius: 8.0,
-                              onTap: () async {
-                                if (isForcelyEnabled) return;
-                                if (isActive) {
-                                  settings.removeFromList(activeSearchMediaTypes1: e);
-                                } else {
-                                  settings.save(activeSearchMediaTypes: [e]);
-                                  await SearchSortController.inst.prepareResources();
-                                  SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
-                                }
-                              },
-                              margin: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 12.0),
-                              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: theme.colorScheme.secondary.withValues(alpha: 0.7),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    e.toText(),
-                                    style: textTheme.displayMedium?.copyWith(
+                    ...MediaType.values
+                        .where(
+                          (element) => element != MediaType.folder,
+                        )
+                        .map(
+                          (e) => Obx(
+                            (context) {
+                              final list = settings.activeSearchMediaTypes.valueR;
+                              final isActive = list.contains(e);
+                              final isForcelyEnabled = e == MediaType.track;
+                              return NamidaOpacity(
+                                opacity: isForcelyEnabled ? 0.6 : 1.0,
+                                child: NamidaInkWell(
+                                  bgColor: isActive ? theme.colorScheme.secondary.withValues(alpha: 0.12) : null,
+                                  borderRadius: 8.0,
+                                  onTap: () async {
+                                    if (isForcelyEnabled) return;
+                                    if (isActive) {
+                                      settings.removeFromList(activeSearchMediaTypes1: e);
+                                    } else {
+                                      settings.save(activeSearchMediaTypes: [e]);
+                                      await SearchSortController.inst.prepareResources();
+                                      SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
+                                    }
+                                  },
+                                  margin: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 12.0),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
                                       color: theme.colorScheme.secondary.withValues(alpha: 0.7),
+                                      width: 1.5,
                                     ),
                                   ),
-                                  const SizedBox(width: 8.0),
-                                  NamidaCheckMark(
-                                    size: 12.0,
-                                    active: isActive,
-                                    activeColor: theme.colorScheme.secondary.withValues(alpha: 0.7),
-                                    inactiveColor: theme.colorScheme.secondary.withValues(alpha: 0.7),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        e.toText(),
+                                        style: textTheme.displayMedium?.copyWith(
+                                          color: theme.colorScheme.secondary.withValues(alpha: 0.7),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8.0),
+                                      NamidaCheckMark(
+                                        size: 12.0,
+                                        active: isActive,
+                                        activeColor: theme.colorScheme.secondary.withValues(alpha: 0.7),
+                                        inactiveColor: theme.colorScheme.secondary.withValues(alpha: 0.7),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                   ],
                 ),
               ),
@@ -218,12 +222,15 @@ class SearchPage extends StatelessWidget {
                                     final composerSearchTemp = !activeList.contains(MediaType.composer) ? null : SearchSortController.inst.composerSearchTemp.valueR;
                                     final genreSearchTemp = !activeList.contains(MediaType.genre) ? null : SearchSortController.inst.genreSearchTemp.valueR;
                                     final playlistSearchTemp = !activeList.contains(MediaType.playlist) ? null : SearchSortController.inst.playlistSearchTemp.valueR;
-                                    final folderSearchTemp = !activeList.contains(MediaType.folder)
+
+                                    final isFolderTracksSearchActive = activeList.contains(MediaType.folderMusic) || activeList.contains(MediaType.folder);
+                                    final isFolderVideosSearchActive = activeList.contains(MediaType.folderVideo) || activeList.contains(MediaType.folder);
+                                    final folderSearchTemp = !isFolderTracksSearchActive
                                         ? null
-                                        : SearchSortController.inst.folderSearchTemp.valueR.where((f) => Folder.explicit(f).tracks().isNotEmpty).toList();
-                                    final folderVideosSearchTemp = !activeList.contains(MediaType.folderVideo)
+                                        : SearchSortController.inst.folderTracksSearchTemp.valueR.where((f) => Folder.explicit(f).tracksDedicated().isNotEmpty).toList();
+                                    final folderVideosSearchTemp = !isFolderVideosSearchActive
                                         ? null
-                                        : SearchSortController.inst.folderVideosSearchTemp.valueR.where((f) => VideoFolder.explicit(f).tracks().isNotEmpty).toList();
+                                        : SearchSortController.inst.folderVideosSearchTemp.valueR.where((f) => VideoFolder.explicit(f).tracksDedicated().isNotEmpty).toList();
 
                                     return CustomScrollView(
                                       controller: sc,
@@ -367,7 +374,7 @@ class SearchPage extends StatelessWidget {
                                             list: folderSearchTemp,
                                             builder: (item) {
                                               final folder = Folder.explicit(item);
-                                              final tracks = folder.tracks();
+                                              final tracks = folder.tracksDedicated();
                                               return _FolderSmallCard(
                                                 folder: folder,
                                                 controller: FoldersController.tracks,
@@ -390,7 +397,7 @@ class SearchPage extends StatelessWidget {
                                             list: folderVideosSearchTemp,
                                             builder: (item) {
                                               final folder = VideoFolder.explicit(item);
-                                              final tracks = folder.tracks();
+                                              final tracks = folder.tracksDedicated();
                                               return _FolderSmallCard(
                                                 folder: folder,
                                                 controller: FoldersController.videos,
@@ -506,7 +513,12 @@ class _FolderSmallCard extends StatelessWidget {
   final Folder folder;
   final FoldersController controller;
   final List<Track> tracks;
-  const _FolderSmallCard({required this.folder, required this.controller, required this.tracks});
+
+  const _FolderSmallCard({
+    required this.folder,
+    required this.controller,
+    required this.tracks,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -517,10 +529,10 @@ class _FolderSmallCard extends StatelessWidget {
       child: NamidaInkWell(
         margin: const EdgeInsets.only(left: 6.0),
         padding: const EdgeInsets.symmetric(vertical: 4.0),
-        onTap: () => NamidaOnTaps.inst.onFolderTapNavigate(folder),
+        onTap: () => NamidaOnTaps.inst.onFolderTapNavigate(folder, controller),
         onLongPress: () => NamidaDialogs.inst.showFolderDialog(
           folder: folder,
-          tracks: folder.tracks(),
+          tracks: tracks,
           controller: controller,
           isTracksRecursive: false,
         ),
