@@ -36,6 +36,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smtc_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
+import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
@@ -522,6 +523,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       onAssigningCurrentItem: onAssigningCurrentItem,
       onRestructuringQueue: () {
         if (playWhenReady.value && !isPlaying.value) play();
+        VibratorController.light();
       },
       canRestructureQueueOnly: canRestructureQueueOnly ??
           (currentItem, itemToPlay) {
