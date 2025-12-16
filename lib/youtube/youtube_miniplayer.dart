@@ -572,6 +572,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                   },
                                   onExpandedStateChange: (isExpanded) {
                                     MiniPlayerController.inst.setImmersiveMode(null);
+                                    HeatMapListener.onMiniplayerExpandedStateChange(isExpanded);
                                   },
                                   onAlternativePercentageExecute: () {
                                     VideoController.inst.toggleFullScreenVideoView(

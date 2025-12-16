@@ -1,8 +1,10 @@
-import 'package:flutter/foundation.dart';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/sponsorblock_segment.dart';
 import 'package:youtipie/class/streams/stream_segments.dart';
+import 'package:youtipie/class/videos/video_heat_map.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -12,6 +14,7 @@ import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/youtube/class/sponsorblock.dart';
 import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -60,6 +63,8 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
 
   late AnimationController _animation;
 
+  late final _shouldListenToHeatMap = widget.showBufferBars;
+
   @override
   void initState() {
     super.initState();
@@ -67,12 +72,14 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
       vsync: this,
       duration: const Duration(milliseconds: 200),
     );
+    if (_shouldListenToHeatMap) HeatMapListener.instance.startListening();
   }
 
   @override
   void dispose() {
     _animation.dispose();
     _seekPercentage.close();
+    if (_shouldListenToHeatMap) HeatMapListener.instance.stopListening();
     super.dispose();
   }
 
@@ -169,6 +176,10 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     const progressBarHeightExtraHeight = 2.0;
     const seekTextExtraMargin = SeekReadyDimensions.seekTextExtraMargin;
 
+    const heatMapWidget = _HeatMapWidget();
+
+    final progressBarBottomPosition = barHeight / 2 - (progressBarHeight / 2);
+
     final progressColor = widget.useReducedProgressColor
         ? Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor).withValues(alpha: 0.8)
         : CurrentColor.inst.miniplayerColor.withValues(alpha: 0.8);
@@ -225,6 +236,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
               )
             : null;
         return Stack(
+          clipBehavior: Clip.none,
           alignment: Alignment.centerLeft,
           children: [
             // -- hittest
@@ -296,100 +308,135 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                 ),
               ),
             ),
+            if (widget.showBufferBars)
+              ObxO(
+                rx: settings.youtube.enableHeatMap,
+                builder: (context, enabled) => !enabled
+                    ? const SizedBox()
+                    : Positioned(
+                        bottom: progressBarBottomPosition + progressBarHeight,
+                        left: 0,
+                        right: 0,
+                        child: AnimatedBuilder(
+                          animation: _animation,
+                          builder: (context, _) {
+                            final p = _animation.value;
+                            final height = p < 0.8 ? 0.0 : _HeatMapWidget.kBarHeight;
+                            return AnimatedSizedBox(
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeInOutQuart,
+                              animateWidth: false,
+                              height: height,
+                              child: heatMapWidget,
+                            );
+                          },
+                        ),
+                      ),
+              ),
 
             // -- current seek
-            Obx(
-              (context) {
-                final nowPlayingPosition = Player.inst.nowPlayingPositionR;
-                final itemDurMS = _currentDurationR.inMilliseconds;
-                final seek = (_seekPercentage.valueR * itemDurMS).round();
+            ObxO(
+              rx: HeatMapListener.detailsRx,
+              builder: (context, details) {
+                final isHeatMapActive = details != null;
+                final heatMapCurrentHeight = isHeatMapActive ? _HeatMapWidget.kBarHeight : 0.0;
+                return Obx(
+                  (context) {
+                    final nowPlayingPosition = Player.inst.nowPlayingPositionR;
+                    final itemDurMS = _currentDurationR.inMilliseconds;
+                    final seek = (_seekPercentage.valueR * itemDurMS).round();
 
-                String finalText;
-                if (_currentSeekStuckWord != '') {
-                  finalText = _currentSeekStuckWord;
-                } else if (settings.player.displayActualPositionWhenSeeking.value) {
-                  int seekClamped = seek;
-                  seekClamped = seekClamped.withMinimum(0);
-                  seekClamped = seekClamped.withMaximum(itemDurMS);
-                  finalText = " ${seekClamped.milliSecondsLabel} ";
-                } else {
-                  final diffInMs = seek - nowPlayingPosition;
-                  final plusOrMinus = diffInMs < 0 ? '' : '+';
-                  final seekText = diffInMs.milliSecondsLabel;
-                  finalText = " $plusOrMinus$seekText ";
-                }
+                    String finalText;
+                    if (_currentSeekStuckWord != '') {
+                      finalText = _currentSeekStuckWord;
+                    } else if (settings.player.displayActualPositionWhenSeeking.value) {
+                      int seekClamped = seek;
+                      seekClamped = seekClamped.withMinimum(0);
+                      seekClamped = seekClamped.withMaximum(itemDurMS);
+                      finalText = " ${seekClamped.milliSecondsLabel} ";
+                    } else {
+                      final diffInMs = seek - nowPlayingPosition;
+                      final plusOrMinus = diffInMs < 0 ? '' : '+';
+                      final seekText = diffInMs.milliSecondsLabel;
+                      finalText = " $plusOrMinus$seekText ";
+                    }
 
-                String? landingSegmentTitle;
-                final streamSegments = YoutubeInfoController.current.currentVideoPage.value?.streamSegments;
-                if (streamSegments != null && streamSegments.isNotEmpty) {
-                  final landingSegment = streamSegments.lastWhereEff((e) => e.startSeconds != null && seek >= (e.startSeconds! * 1000));
-                  landingSegmentTitle = landingSegment?.title;
-                }
-                final isGoodSegmentTitle = landingSegmentTitle != null && landingSegmentTitle.isNotEmpty;
-                final extraBottomPadding = isGoodSegmentTitle ? 4.0 : 0.0;
-                final seekTextWidth = isGoodSegmentTitle ? 44.0 * 2 : 44.0;
-                return Transform.translate(
-                  offset: Offset((maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5).clampDouble(seekTextExtraMargin, maxWidth - seekTextWidth - seekTextExtraMargin), -12.0),
-                  child: AnimatedBuilder(
-                    animation: _animation,
-                    child: Padding(
-                      padding: EdgeInsets.only(bottom: 12.0 + extraBottomPadding),
-                      child: Container(
-                        width: seekTextWidth,
-                        padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
-                        decoration: BoxDecoration(
-                          color: theme.scaffoldBackgroundColor,
-                          borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                        ),
-                        child: isGoodSegmentTitle
-                            ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    landingSegmentTitle,
-                                    style: textTheme.displaySmall,
-                                    textAlign: TextAlign.center,
-                                    softWrap: false,
-                                    overflow: TextOverflow.fade,
-                                  ),
-                                  Text(
-                                    finalText,
-                                    style: textTheme.displaySmall,
-                                    textAlign: TextAlign.center,
-                                    softWrap: false,
-                                    overflow: TextOverflow.fade,
-                                  ),
-                                ],
-                              )
-                            : FittedBox(
-                                child: Text(
-                                  finalText,
-                                  style: textTheme.displaySmall,
-                                ),
-                              ),
+                    String? landingSegmentTitle;
+                    final streamSegments = YoutubeInfoController.current.currentVideoPage.value?.streamSegments;
+                    if (streamSegments != null && streamSegments.isNotEmpty) {
+                      final landingSegment = streamSegments.lastWhereEff((e) => e.startSeconds != null && seek >= (e.startSeconds! * 1000));
+                      landingSegmentTitle = landingSegment?.title;
+                    }
+                    final isGoodSegmentTitle = landingSegmentTitle != null && landingSegmentTitle.isNotEmpty;
+                    final extraBottomPadding = isGoodSegmentTitle ? 4.0 : 0.0;
+                    final seekTextWidth = isGoodSegmentTitle ? 44.0 * 2 : 44.0;
+                    return Transform.translate(
+                      offset: Offset(
+                        (maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5).clampDouble(seekTextExtraMargin, maxWidth - seekTextWidth - seekTextExtraMargin),
+                        -(12.0.withMinimum(heatMapCurrentHeight)),
                       ),
-                    ),
-                    builder: (context, child) {
-                      final p = _animation.value;
-                      if (p <= 0) return const SizedBox();
-
-                      return Transform.scale(
-                        scale: p,
-                        child: SlideTransition(
-                          position: Tween<Offset>(begin: const Offset(0, 2), end: const Offset(0, 0.0)).animate(_animation),
-                          child: child,
+                      child: AnimatedBuilder(
+                        animation: _animation,
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 12.0 + extraBottomPadding),
+                          child: Container(
+                            width: seekTextWidth,
+                            padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                            decoration: BoxDecoration(
+                              color: theme.scaffoldBackgroundColor,
+                              borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                            ),
+                            child: isGoodSegmentTitle
+                                ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        landingSegmentTitle,
+                                        style: textTheme.displaySmall,
+                                        textAlign: TextAlign.center,
+                                        softWrap: false,
+                                        overflow: TextOverflow.fade,
+                                      ),
+                                      Text(
+                                        finalText,
+                                        style: textTheme.displaySmall,
+                                        textAlign: TextAlign.center,
+                                        softWrap: false,
+                                        overflow: TextOverflow.fade,
+                                      ),
+                                    ],
+                                  )
+                                : FittedBox(
+                                    child: Text(
+                                      finalText,
+                                      style: textTheme.displaySmall,
+                                    ),
+                                  ),
+                          ),
                         ),
-                      );
-                    },
-                  ),
+                        builder: (context, child) {
+                          final p = _animation.value;
+                          if (p <= 0) return const SizedBox();
+
+                          return Transform.scale(
+                            scale: p,
+                            child: SlideTransition(
+                              position: Tween<Offset>(begin: const Offset(0, 2), end: const Offset(0, 0.0)).animate(_animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
                 );
               },
             ),
 
             // -- progress bar
             Positioned(
-              bottom: barHeight / 2 - (progressBarHeight / 2),
+              bottom: progressBarBottomPosition,
               child: _SeekBarSegmentCutter(
                 maxWidth: maxWidth,
                 child: AnimatedBuilder(
@@ -750,5 +797,265 @@ class _SegmentClipper extends CustomClipper<Path> {
   }
 
   @override
-  bool shouldReclip(covariant _SegmentClipper oldClipper) => maxWidth != oldClipper.maxWidth || durationMs != oldClipper.durationMs || !listEquals(segments, oldClipper.segments);
+  bool shouldReclip(covariant _SegmentClipper oldClipper) => maxWidth != oldClipper.maxWidth || durationMs != oldClipper.durationMs || segments != oldClipper.segments;
+}
+
+class _HeatMapWidget extends StatefulWidget {
+  const _HeatMapWidget();
+
+  static const kBarHeight = 48.0;
+
+  @override
+  State<_HeatMapWidget> createState() => _HeatMapWidgetState();
+}
+
+class _HeatMapWidgetState extends State<_HeatMapWidget> {
+  @override
+  void initState() {
+    HeatMapListener.instance.startListening();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    HeatMapListener.instance.stopListening();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: SizedBox(
+        height: _HeatMapWidget.kBarHeight,
+        child: ObxO(
+          rx: HeatMapListener.detailsRx,
+          builder: (context, details) {
+            if (details == null) return const SizedBox();
+            return RepaintBoundary(
+              child: CustomPaint(
+                key: const ValueKey('shown'),
+                painter: SmoothLinePainter(
+                  colors: const [
+                    Color(0xDDFFFFFF),
+                    Color(0x4DFFFFFF),
+                  ],
+                  heatMap: details.heatMap,
+                  totalDurationMS: details.durMs,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class HeatMapListener {
+  static HeatMapListener instance = _instance ??= HeatMapListener._();
+  static HeatMapListener? _instance;
+  HeatMapListener._();
+
+  static final detailsRx = Rxn<({List<YoutiPieVideoHeatMap> heatMap, int durMs})>();
+
+  int _listenersCount = 0;
+  void startListening() {
+    if (_listenersCount == 0) {
+      _init();
+    }
+    _listenersCount++;
+  }
+
+  void stopListening() {
+    _listenersCount--;
+
+    if (_listenersCount <= 0) {
+      _dispose();
+      // _instance = null; // dont
+    }
+  }
+
+  void _init() {
+    _reEvaluate();
+    YoutubeInfoController.current.currentVideoPage.addListener(_reEvaluate);
+    Player.inst.currentItemDuration.addListener(_reEvaluate);
+    settings.youtube.enableHeatMap.addListener(_reEvaluate);
+  }
+
+  void _dispose() {
+    YoutubeInfoController.current.currentVideoPage.removeListener(_reEvaluate);
+    Player.inst.currentItemDuration.removeListener(_reEvaluate);
+    settings.youtube.enableHeatMap.removeListener(_reEvaluate);
+  }
+
+  bool _isMiniplayerExpanded = false;
+  void _reEvaluate() {
+    if (_isMiniplayerExpanded && settings.youtube.enableHeatMap.value) {
+      final page = YoutubeInfoController.current.currentVideoPage.value;
+      final heatMap = page?.heatMap;
+      if (heatMap != null && heatMap.isNotEmpty) {
+        final dur = Player.inst.currentItemDuration.value;
+        final durMs = dur?.inMilliseconds ?? 0;
+        if (durMs > 0) {
+          detailsRx.value = (heatMap: heatMap, durMs: durMs);
+          return;
+        }
+      }
+    }
+
+    detailsRx.value = null;
+  }
+
+  static void onMiniplayerExpandedStateChange(bool isExpanded) {
+    final inst = _instance;
+    if (inst == null) return; // alr disposed
+    inst._isMiniplayerExpanded = isExpanded;
+    inst._reEvaluate();
+  }
+}
+
+class SmoothLinePainter extends CustomPainter {
+  final List<Color> colors;
+  final Color? strokeOnTopColor;
+  final int totalDurationMS;
+  final List<YoutiPieVideoHeatMap> heatMap;
+  final double smoothness;
+
+  const SmoothLinePainter({
+    required this.colors,
+    this.strokeOnTopColor,
+    required this.heatMap,
+    required this.totalDurationMS,
+    this.smoothness = 1.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (heatMap.isEmpty) return;
+
+    final path = Path();
+
+    double yMin = double.infinity;
+    double yMax = double.negativeInfinity;
+    for (final segment in heatMap) {
+      if (segment.intensity < yMin) yMin = segment.intensity;
+      if (segment.intensity > yMax) yMax = segment.intensity;
+    }
+    final yHeight = yMax - yMin;
+
+    // -- control points at segment midpoints
+    final controlPoints = <Offset>[];
+
+    for (int i = 0; i < heatMap.length; i++) {
+      final segment = heatMap[i];
+      final segmentEndMS = segment.startMS + segment.durationMS;
+
+      // -- X position (time based)
+      final xStart = (segment.startMS / totalDurationMS) * size.width;
+      final xMid = ((segment.startMS + segment.durationMS / 2) / totalDurationMS) * size.width;
+      final xEnd = (segmentEndMS / totalDurationMS) * size.width;
+
+      // -- Y position (intensity based)
+      var yValue = size.height - ((segment.intensity - yMin) / (yHeight == 0 ? 1 : yHeight)) * size.height * 0.8;
+      yValue *= 0.95; // -- go slightly up
+
+      controlPoints.add(Offset(xMid, yValue));
+
+      // -- start and end points for first and last segments
+      if (i == 0) {
+        path.moveTo(xStart, size.height);
+        controlPoints.insert(0, Offset(xStart, size.height));
+      } else if (i == heatMap.length - 1) {
+        controlPoints.add(Offset(xEnd, size.height));
+      }
+    }
+
+    final blurredPoints = _applyGaussianBlur(controlPoints, 1).toList();
+    _drawSmoothBezier(path, blurredPoints, smoothness);
+
+    // -- close the path back to start
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    final gradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: colors,
+    );
+
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..shader = gradient.createShader(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+      );
+
+    canvas.drawPath(path, paint);
+
+    if (strokeOnTopColor != null) {
+      final strokePaint = Paint()
+        ..color = strokeOnTopColor!
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0;
+
+      final strokePath = Path();
+      _drawSmoothBezier(strokePath, controlPoints, smoothness);
+      canvas.drawPath(strokePath, strokePaint);
+    }
+  }
+
+  void _drawSmoothBezier(Path path, List<Offset> points, double smoothness) {
+    if (points.length < 2) return;
+
+    path.moveTo(points[0].dx, points[0].dy);
+
+    for (int i = 0; i < points.length - 1; i++) {
+      final p0 = i > 0 ? points[i - 1] : points[i];
+      final p1 = points[i];
+      final p2 = points[i + 1];
+      final p3 = i < points.length - 2 ? points[i + 2] : p2;
+
+      final tension = 0.25 * smoothness;
+
+      // control point 1 (from p1 towards p2)
+      final cp1x = p1.dx + (p2.dx - p0.dx) * tension;
+      final cp1y = p1.dy + (p2.dy - p0.dy) * tension;
+
+      // control point 2 (from p2 towards p1)
+      final cp2x = p2.dx - (p3.dx - p1.dx) * tension;
+      final cp2y = p2.dy - (p3.dy - p1.dy) * tension;
+
+      path.cubicTo(cp1x, cp1y, cp2x, cp2y, p2.dx, p2.dy);
+    }
+  }
+
+  Iterable<Offset> _applyGaussianBlur(List<Offset> points, double sigma) sync* {
+    if (points.length < 3) {
+      yield* points;
+      return;
+    }
+
+    final kernelSize = 3;
+
+    for (int i = 0; i < points.length; i++) {
+      var sumY = 0.0;
+      var weightSum = 0.0;
+
+      for (int j = -kernelSize; j <= kernelSize; j++) {
+        final index = i + j;
+        if (index >= 0 && index < points.length) {
+          final weight = math.exp(-(j * j) / (2 * sigma * sigma));
+          sumY += points[index].dy * weight;
+          weightSum += weight;
+        }
+      }
+
+      final blurredY = sumY / weightSum;
+      yield Offset(points[i].dx, blurredY);
+    }
+  }
+
+  @override
+  bool shouldRepaint(SmoothLinePainter old) =>
+      colors != old.colors || strokeOnTopColor != old.strokeOnTopColor || totalDurationMS != old.totalDurationMS || heatMap != old.heatMap || smoothness != old.smoothness;
 }

@@ -901,6 +901,15 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
               onChanged: (isTrue) => setState(() => settings.youtube.save(enableGifThumbnails: !isTrue)),
               title: 'enable_gif_thumbnails'.toUpperCase(),
             ),
+            ObxO(
+              rx: settings.youtube.enableHeatMap,
+              builder: (context, enableHeatMap) => CustomSwitchListTile(
+                icon: Broken.wind_2,
+                value: enableHeatMap,
+                onChanged: (isTrue) => settings.youtube.save(enableHeatMap: !isTrue),
+                title: 'enable_seek_heatmap'.toUpperCase(),
+              ),
+            ),
             CustomListTile(
               leading: StackedIcon(
                 baseIcon: Broken.code_1,
