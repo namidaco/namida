@@ -812,6 +812,68 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           : const SizedBox(),
     );
 
+    late final queueOrderChip = Obx(
+      (context) {
+        final queueL = Player.inst.currentQueue.valueR.length;
+        if (queueL <= 1) return const SizedBox();
+        return NamidaBgBlurClipped(
+          blur: 3.0,
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.2),
+            borderRadius: borr8,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(6.0),
+            child: Obx(
+              (context) => Text(
+                "${Player.inst.currentIndex.valueR + 1}/$queueL",
+                style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600, color: itemsColor),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    final currentSegmentsChip = ObxO(
+      rx: YoutubeInfoController.current.currentVideoPage,
+      builder: (context, page) {
+        final streamSegments = page?.streamSegments;
+        if (streamSegments != null && streamSegments.isNotEmpty) {
+          return ObxO(
+            rx: Player.inst.nowPlayingPosition,
+            builder: (context, currentPositionMS) {
+              final currentSegment = streamSegments.lastWhereEff((e) => e.startSeconds != null && currentPositionMS >= (e.startSeconds! * 1000));
+              if (currentSegment != null && currentSegment.title.isNotEmpty) {
+                return NamidaBgBlurClipped(
+                  blur: 3.0,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    borderRadius: borr8,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6.0),
+                    child: Text(
+                      currentSegment.title,
+                      style: textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 11.0,
+                        color: itemsColor,
+                      ),
+                      softWrap: false,
+                      overflow: TextOverflow.fade,
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox();
+            },
+          );
+        }
+        return const SizedBox();
+      },
+    );
+
     Widget videoControlsWidget = Listener(
       onPointerDown: (event) {
         _pointerDownedOnRight = event.position.dx > maxWidth / 2;
@@ -1709,31 +1771,15 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           const SizedBox(width: 4.0),
                                           if (widget.isFullScreen) ...[
                                             // -- queue order
-                                            Obx(
-                                              (context) {
-                                                final queueL = Player.inst.currentQueue.valueR.length;
-                                                if (queueL <= 1) return const SizedBox();
-                                                return NamidaBgBlurClipped(
-                                                  blur: 3.0,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.black.withValues(alpha: 0.2),
-                                                    borderRadius: borr8,
-                                                  ),
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(6.0),
-                                                    child: Obx(
-                                                      (context) => Text(
-                                                        "${Player.inst.currentIndex.valueR + 1}/$queueL",
-                                                        style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600, color: itemsColor),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
+                                            queueOrderChip,
                                             const SizedBox(width: 4.0),
                                           ],
-                                          const Spacer(),
+                                          Expanded(
+                                            child: Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: currentSegmentsChip,
+                                            ),
+                                          ),
                                           const SizedBox(width: 4.0),
                                           NamidaBgBlurClipped(
                                             blur: 3.0,

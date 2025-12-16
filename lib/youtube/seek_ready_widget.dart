@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/sponsorblock_segment.dart';
+import 'package:youtipie/class/streams/stream_segments.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -12,6 +14,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/sponsorblock.dart';
 import 'package:namida/youtube/controller/sponsorblock_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 class SeekReadyDimensions {
   static const barHeight = 32.0;
@@ -19,7 +22,6 @@ class SeekReadyDimensions {
   static const halfCircle = circleWidth / 2;
   static const progressBarHeight = 2;
   static const progressBarHeightFullscreen = 3;
-  static const seekTextWidth = 42.0;
   static const seekTextExtraMargin = 8.0;
 }
 
@@ -165,18 +167,15 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     const halfCircle = SeekReadyDimensions.halfCircle;
     final progressBarHeight = fullscreen ? SeekReadyDimensions.progressBarHeightFullscreen : SeekReadyDimensions.progressBarHeight;
     const progressBarHeightExtraHeight = 2.0;
-    const seekTextWidth = SeekReadyDimensions.seekTextWidth;
     const seekTextExtraMargin = SeekReadyDimensions.seekTextExtraMargin;
 
     final progressColor = widget.useReducedProgressColor
         ? Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor).withValues(alpha: 0.8)
         : CurrentColor.inst.miniplayerColor.withValues(alpha: 0.8);
     final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(theme.secondaryHeaderColor.withValues(alpha: 0.25), theme.scaffoldBackgroundColor);
-    final bufferColor = widget.showBufferBars
-        ? fullscreen
-            ? miniplayerBGColor.invert()
-            : Color.alphaBlend(progressColor.withValues(alpha: 0.25), miniplayerBGColor.invert().withValues(alpha: 0.5)).withValues(alpha: 0.5)
-        : null;
+    final bufferColorOg =
+        fullscreen ? miniplayerBGColor.invert() : Color.alphaBlend(progressColor.withValues(alpha: 0.25), miniplayerBGColor.invert().withValues(alpha: 0.5)).withValues(alpha: 0.5);
+    final bufferColor = widget.showBufferBars ? bufferColorOg : null;
 
     final circleWidget = AnimatedBuilder(
       animation: _animation,
@@ -320,28 +319,63 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                   finalText = " $plusOrMinus$seekText ";
                 }
 
+                String? landingSegmentTitle;
+                final streamSegments = YoutubeInfoController.current.currentVideoPage.value?.streamSegments;
+                if (streamSegments != null && streamSegments.isNotEmpty) {
+                  final landingSegment = streamSegments.lastWhereEff((e) => e.startSeconds != null && seek >= (e.startSeconds! * 1000));
+                  landingSegmentTitle = landingSegment?.title;
+                }
+                final isGoodSegmentTitle = landingSegmentTitle != null && landingSegmentTitle.isNotEmpty;
+                final extraBottomPadding = isGoodSegmentTitle ? 4.0 : 0.0;
+                final seekTextWidth = isGoodSegmentTitle ? 44.0 * 2 : 44.0;
                 return Transform.translate(
                   offset: Offset((maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5).clampDouble(seekTextExtraMargin, maxWidth - seekTextWidth - seekTextExtraMargin), -12.0),
                   child: AnimatedBuilder(
                     animation: _animation,
-                    child: Container(
-                      width: seekTextWidth,
-                      margin: const EdgeInsets.only(bottom: 12.0),
-                      padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
-                      decoration: BoxDecoration(
-                        color: theme.scaffoldBackgroundColor,
-                        borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                      ),
-                      child: FittedBox(
-                        child: Text(
-                          finalText,
-                          style: textTheme.displaySmall,
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 12.0 + extraBottomPadding),
+                      child: Container(
+                        width: seekTextWidth,
+                        padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackgroundColor,
+                          borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                         ),
+                        child: isGoodSegmentTitle
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    landingSegmentTitle,
+                                    style: textTheme.displaySmall,
+                                    textAlign: TextAlign.center,
+                                    softWrap: false,
+                                    overflow: TextOverflow.fade,
+                                  ),
+                                  Text(
+                                    finalText,
+                                    style: textTheme.displaySmall,
+                                    textAlign: TextAlign.center,
+                                    softWrap: false,
+                                    overflow: TextOverflow.fade,
+                                  ),
+                                ],
+                              )
+                            : FittedBox(
+                                child: Text(
+                                  finalText,
+                                  style: textTheme.displaySmall,
+                                ),
+                              ),
                       ),
                     ),
                     builder: (context, child) {
+                      final p = _animation.value;
+                      if (p <= 0) return const SizedBox();
+
                       return Transform.scale(
-                        scale: _animation.value,
+                        scale: p,
                         child: SlideTransition(
                           position: Tween<Offset>(begin: const Offset(0, 2), end: const Offset(0, 0.0)).animate(_animation),
                           child: child,
@@ -356,84 +390,114 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
             // -- progress bar
             Positioned(
               bottom: barHeight / 2 - (progressBarHeight / 2),
-              child: AnimatedBuilder(
-                animation: _animation,
-                child: Obx((context) {
-                  final durMS = Player.inst.getCurrentVideoDurationR.inMilliseconds;
-                  final currentPositionMS = Player.inst.nowPlayingPositionR;
-                  final buffered = Player.inst.buffered.valueR;
-                  final videoCached = Player.inst.currentCachedVideo.valueR != null;
-                  final audioCached = widget.isLocal || Player.inst.currentCachedAudio.valueR != null;
-                  return SizedBox(
-                    width: maxWidth,
-                    child: Stack(
-                      alignment: Alignment.centerLeft,
-                      children: [
-                        if (widget.showBufferBars)
-                          if (fullscreen || videoCached || audioCached)
+              child: _SeekBarSegmentCutter(
+                maxWidth: maxWidth,
+                child: AnimatedBuilder(
+                  animation: _animation,
+                  child: Obx((context) {
+                    final durMS = Player.inst.getCurrentVideoDurationR.inMilliseconds;
+                    final currentPositionMS = Player.inst.nowPlayingPositionR;
+                    final buffered = Player.inst.buffered.valueR;
+                    final videoCached = Player.inst.currentCachedVideo.valueR != null;
+                    final audioCached = widget.isLocal || Player.inst.currentCachedAudio.valueR != null;
+                    return SizedBox(
+                      width: maxWidth,
+                      child: Stack(
+                        alignment: Alignment.centerLeft,
+                        children: [
+                          // make sure there is something to show off segment cuts
+                          if (!fullscreen)
+                            // may as well check for !(videoCached || audioCached)
+                            // but extra is better, the !fullscreen is bcz it shows 0.3 opacity already
+                            ObxO(
+                              rx: YoutubeInfoController.current.currentVideoPage,
+                              builder: (context, page) {
+                                final streamSegments = page?.streamSegments;
+                                if (streamSegments != null && streamSegments.isNotEmpty) {
+                                  return Positioned(
+                                    left: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: bufferColorOg.withValues(alpha: 0.12),
+                                        borderRadius: const BorderRadius.all(
+                                          Radius.circular(6.0),
+                                        ),
+                                      ),
+                                      child: SizedBox(width: maxWidth),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox();
+                              },
+                            ),
+                          if (widget.showBufferBars)
+                            if (fullscreen || videoCached || audioCached)
+                              Positioned(
+                                left: 0,
+                                top: 0,
+                                bottom: 0,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: bufferColor?.withValues(alpha: fullscreen ? 0.3 : 0.1),
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(6.0),
+                                    ),
+                                  ),
+                                  child: SizedBox(width: maxWidth),
+                                ),
+                              ),
+                          if (widget.showBufferBars)
                             Positioned(
                               left: 0,
                               top: 0,
                               bottom: 0,
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
-                                  color: bufferColor?.withValues(alpha: fullscreen ? 0.3 : 0.1),
+                                  color: bufferColor?.withValues(alpha: fullscreen ? 0.8 : 0.2),
                                   borderRadius: const BorderRadius.all(
                                     Radius.circular(6.0),
                                   ),
                                 ),
-                                child: SizedBox(width: maxWidth),
+                                child: SizedBox(
+                                  width: maxWidth *
+                                      ((videoCached && audioCached) || (audioCached && settings.youtube.isAudioOnlyMode.valueR)
+                                          ? 1.0
+                                          : buffered > Duration.zero && durMS > 0
+                                              ? buffered.inMilliseconds / durMS
+                                              : 0.0),
+                                ),
                               ),
                             ),
-                        if (widget.showBufferBars)
+                          if (sponsorblockWidget != null) sponsorblockWidget,
                           Positioned(
                             left: 0,
                             top: 0,
                             bottom: 0,
                             child: DecoratedBox(
                               decoration: BoxDecoration(
-                                color: bufferColor?.withValues(alpha: fullscreen ? 0.8 : 0.2),
+                                color: progressColor,
                                 borderRadius: const BorderRadius.all(
                                   Radius.circular(6.0),
                                 ),
                               ),
                               child: SizedBox(
-                                width: maxWidth *
-                                    ((videoCached && audioCached) || (audioCached && settings.youtube.isAudioOnlyMode.valueR)
-                                        ? 1.0
-                                        : buffered > Duration.zero && durMS > 0
-                                            ? buffered.inMilliseconds / durMS
-                                            : 0.0),
+                                width: durMS == 0 ? 0 : (maxWidth * (currentPositionMS / durMS)),
                               ),
                             ),
                           ),
-                        if (sponsorblockWidget != null) sponsorblockWidget,
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: progressColor,
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(6.0),
-                              ),
-                            ),
-                            child: SizedBox(
-                              width: durMS == 0 ? 0 : (maxWidth * (currentPositionMS / durMS)),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-                builder: (context, child) {
-                  return SizedBox(
-                    height: progressBarHeight + progressBarHeightExtraHeight * _animation.value,
-                    child: child!,
-                  );
-                },
+                        ],
+                      ),
+                    );
+                  }),
+                  builder: (context, child) {
+                    return SizedBox(
+                      height: progressBarHeight + progressBarHeightExtraHeight * _animation.value,
+                      child: child!,
+                    );
+                  },
+                ),
               ),
             ),
 
@@ -584,4 +648,107 @@ class _SponsorBlockSegmentsBarState extends State<_SponsorBlockSegmentsBar> {
       },
     );
   }
+}
+
+class _SeekBarSegmentCutter extends StatefulWidget {
+  final double maxWidth;
+  final Widget child;
+  const _SeekBarSegmentCutter({required this.maxWidth, required this.child});
+
+  @override
+  State<_SeekBarSegmentCutter> createState() => _SeekBarSegmentCutterState();
+}
+
+class _SeekBarSegmentCutterState extends State<_SeekBarSegmentCutter> {
+  int _videoDurationMS = 0;
+
+  void _onCurrentItemDurationChange() {
+    final currentItemDur = Player.inst.currentItemDuration.value?.inMilliseconds;
+    if (_videoDurationMS == currentItemDur) return;
+    if (mounted) {
+      setState(() {
+        _videoDurationMS = currentItemDur ?? 0;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    _onCurrentItemDurationChange();
+    Player.inst.currentItemDuration.addListener(_onCurrentItemDurationChange);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    Player.inst.currentItemDuration.removeListener(_onCurrentItemDurationChange);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: YoutubeInfoController.current.currentVideoPage,
+      builder: (context, page) {
+        final streamSegments = page?.streamSegments;
+        if (streamSegments != null && streamSegments.isNotEmpty) {
+          final durationMs = _videoDurationMS;
+          if (durationMs > 0) {
+            return ClipPath(
+              clipper: _SegmentClipper(
+                maxWidth: widget.maxWidth,
+                segments: streamSegments,
+                durationMs: durationMs,
+              ),
+              child: widget.child,
+            );
+          }
+        }
+        return widget.child;
+      },
+    );
+  }
+}
+
+class _SegmentClipper extends CustomClipper<Path> {
+  final int durationMs;
+  final double maxWidth;
+  final List<StreamSegment> segments;
+
+  const _SegmentClipper({
+    required this.durationMs,
+    required this.maxWidth,
+    required this.segments,
+  });
+
+  static const _cutWidth = 3.0;
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    double previousEnd = 0.0;
+
+    for (final s in segments) {
+      final startSeconds = s.startSeconds;
+      if (startSeconds != null && startSeconds > 0) {
+        final startLeft = ((startSeconds * 1000) / durationMs) * maxWidth;
+        final segmentEnd = startLeft;
+        if (startLeft < size.width) {
+          if (startLeft > previousEnd) {
+            path.addRect(Rect.fromLTRB(previousEnd, 0, startLeft - _cutWidth, size.height));
+          }
+        }
+        previousEnd = segmentEnd;
+      }
+    }
+
+    if (previousEnd < size.width) {
+      path.addRect(Rect.fromLTRB(previousEnd, 0, size.width, size.height));
+    }
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant _SegmentClipper oldClipper) => maxWidth != oldClipper.maxWidth || durationMs != oldClipper.durationMs || !listEquals(segments, oldClipper.segments);
 }
