@@ -198,7 +198,7 @@ class ScrollSearchController {
   }
 
   void clearSearchTextField(LibraryTab libraryTab) {
-    SearchSortController.inst.searchMedia('', libraryTab.toMediaType());
+    SearchSortController.inst.disposeMediaResources(libraryTab.toMediaType());
     _closeTextController(libraryTab);
   }
 }

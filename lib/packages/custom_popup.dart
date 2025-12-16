@@ -55,7 +55,7 @@ class CustomPopup extends StatefulWidget {
     this.onBeforePopup,
     this.onAfterPopup,
     this.position = PopupPosition.bottom,
-    this.animationDuration = const Duration(milliseconds: 80),
+    this.animationDuration = const Duration(milliseconds: 100),
     this.animationCurve = Curves.easeInOutQuart,
   });
 
@@ -434,9 +434,9 @@ class _PopupRoute extends PopupRoute<void> {
       final childBottom = _top! + childRect.height;
       if (childBottom > _viewportRect.bottom) {
         // Move _top up by the overflow amount
+        _scaleAlignDy = 2 * ((childBottom / _viewportRect.height) - 1.0);
         _top = _top! - (childBottom - _viewportRect.bottom + 32.0);
         _arrowDirection = null; // inaccurate arrow
-        _scaleAlignDy = 0;
       } else {
         _arrowDirection = _ArrowDirection.top;
         _scaleAlignDy = 0;

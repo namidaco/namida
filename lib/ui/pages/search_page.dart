@@ -153,6 +153,7 @@ class SearchPage extends StatelessWidget {
                                     if (isForcelyEnabled) return;
                                     if (isActive) {
                                       settings.removeFromList(activeSearchMediaTypes1: e);
+                                      await SearchSortController.inst.disposeMediaResources(e);
                                     } else {
                                       settings.save(activeSearchMediaTypes: [e]);
                                       await SearchSortController.inst.prepareResources();

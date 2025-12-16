@@ -9,7 +9,6 @@ import 'package:flutter_volume_controller/flutter_volume_controller.dart' show F
 import 'package:native_device_orientation/native_device_orientation.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
-import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/endscreens/endscreen_item_base.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/core/enum.dart';
@@ -631,15 +630,17 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   StreamSubscription<NativeDeviceOrientation>? _deviceOrientationCommunicatorStreamSub;
   void _setupDeviceOrientationListener() {
-    _deviceOrientationCommunicatorStreamSub?.cancel();
-    final stream = NativeDeviceOrientationCommunicator().onOrientationChanged();
-    _deviceOrientationCommunicatorStreamSub = stream.listen(
-      (event) {
-        if (mounted) {
-          setState(() => _deviceInsets = EdgeInsets.zero);
-        }
-      },
-    );
+    if (Platform.isAndroid || Platform.isIOS) {
+      _deviceOrientationCommunicatorStreamSub?.cancel();
+      final stream = NativeDeviceOrientationCommunicator().onOrientationChanged();
+      _deviceOrientationCommunicatorStreamSub = stream.listen(
+        (event) {
+          if (mounted) {
+            setState(() => _deviceInsets = EdgeInsets.zero);
+          }
+        },
+      );
+    }
   }
 
   bool _didDeviceInsetsChange(EdgeInsets newDeviceInsets) {
@@ -1222,21 +1223,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       ),
                                     ),
                                   ),
+                                  // ===== Audio Language Chip =====
                                   ObxO(
                                       rx: YoutubeInfoController.current.currentYTStreams,
                                       builder: (context, streams) {
-                                        final currentYTAudioStreams = streams?.audioStreams;
-                                        if (currentYTAudioStreams == null || currentYTAudioStreams.isEmpty) return const SizedBox();
-                                        final audioStreamsAll = List<AudioStream>.from(currentYTAudioStreams); // check below
-                                        final streamsMap = <String, AudioStream>{}; // {language: audiostream}
-                                        audioStreamsAll.sortBy((e) => e.audioTrack?.displayName ?? '');
-                                        audioStreamsAll.loop((e) {
-                                          if (!e.isWebm) {
-                                            final langCode = e.audioTrack?.langCode;
-                                            if (langCode != null) streamsMap[langCode] = e;
-                                          }
-                                        });
-                                        if (streamsMap.keys.length <= 1) return const SizedBox();
+                                        final streamsMap = streams?.audioStreamsOrganizedByLanguage;
+                                        if (streamsMap == null || streamsMap.keys.length <= 1) return const SizedBox();
 
                                         return NamidaPopupWrapper(
                                           openOnTap: true,
@@ -1295,12 +1287,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                   (context) {
                                                     final displayName =
                                                         Player.inst.currentAudioStream.valueR?.audioTrack?.displayName ?? Player.inst.currentCachedAudio.valueR?.langaugeName;
-                                                    return displayName == null || displayName == ''
-                                                        ? const SizedBox()
-                                                        : Text(
-                                                            displayName,
-                                                            style: textTheme.displaySmall?.copyWith(color: itemsColor),
-                                                          );
+                                                    return Text(
+                                                      displayName ?? '?',
+                                                      style: textTheme.displaySmall?.copyWith(color: itemsColor),
+                                                    );
                                                   },
                                                 ),
                                               ),

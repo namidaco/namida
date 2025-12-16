@@ -99,6 +99,11 @@ class SearchSortController extends SearchPortsProvider {
     }
   }
 
+  Future<void> disposeMediaResources(MediaType? media) async {
+    if (media == null) return;
+    return super.closePorts(media);
+  }
+
   void searchMedia(String text, MediaType? media) {
     switch (media) {
       case MediaType.track:
@@ -262,7 +267,7 @@ class SearchSortController extends SearchPortsProvider {
     runningSearchesTempCount.value = runningSearchesTempCount.value + 1;
 
     Future prepareOrDispose(MediaType type, Future<SendPortWithCachedMessage> Function() prepareFn) {
-      if ((enabledSearches[type] ?? false) && type != MediaType.track) {
+      if (enabledSearches[type] ?? false) {
         return prepareFn();
       } else {
         return super.closePorts(type);
@@ -418,7 +423,6 @@ class SearchSortController extends SearchPortsProvider {
 
   void searchTracks(String text, {bool temp = false}) async {
     if (text == '') {
-      super.closePorts(MediaType.track);
       if (temp) {
         trackSearchTemp.clear();
       } else {
@@ -493,7 +497,6 @@ class SearchSortController extends SearchPortsProvider {
     };
 
     if (text == '') {
-      super.closePorts(type);
       if (temp) {
         _searchMapTemp[type]?.clear();
       } else {
@@ -519,7 +522,6 @@ class SearchSortController extends SearchPortsProvider {
 
   void _searchPlaylists(String text, {bool temp = false}) async {
     if (text == '') {
-      super.closePorts(MediaType.playlist);
       if (temp) {
         playlistSearchTemp.clear();
       } else {

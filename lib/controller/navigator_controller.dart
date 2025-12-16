@@ -465,13 +465,22 @@ class NamidaNavigator {
     if (_shouldUpdateSubpagesColors) page.updateColorScheme();
 
     navKey.currentState?.popUntil((r) => r.isFirst);
-
-    await navKey.currentState?.pushPageReplacement(
-      page,
-      durationInMs: durationMs,
-      transition: transition,
-      maintainState: true,
-    );
+    try {
+      await navKey.currentState?.pushPageReplacement(
+        page,
+        durationInMs: durationMs,
+        transition: transition,
+        maintainState: true,
+      );
+    } on StateError catch (_) {
+      // -- no route was there yet, simple push now
+      await navKey.currentState?.pushPage(
+        page,
+        durationInMs: durationMs,
+        transition: transition,
+        maintainState: true,
+      );
+    }
   }
 
   Future<void> back({bool waitForAnimation = false}) async {

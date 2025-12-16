@@ -43,10 +43,8 @@ abstract class SearchPortsProvider {
 
   Future<SendPortWithCachedMessage> Function() mediaTypeToPrepareFn(MediaType type);
 
-  void disposeAll() async {
-    final ports = _ports.values.whereType<_PortsCommWithListener>().toList();
-    _ports.clear();
-    await ports.loopAsync(_closePortAndRemoveListener);
+  Future<void> disposeAll() async {
+    await Future.wait(MediaType.values.map(closePorts));
   }
 
   Future<void> closePorts(MediaType type) async {
