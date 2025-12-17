@@ -19,9 +19,12 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Color? colorScheme}) async {
+void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Color? colorScheme}) {
+  final ogYearDate = DateTime.tryParse(track.year.toString())?.millisecondsSinceEpoch.dateFormattedOriginal;
+  final subtitle = ogYearDate ?? track.year.yearFormatted;
   showListensDialog(
     datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : HistoryController.inst.topTracksMapListens.value[track] ?? [],
+    subtitle: subtitle,
     colorScheme: colorScheme,
     colorSchemeFunction: () => CurrentColor.inst.getTrackDelightnedColor(track, null, useIsolate: true),
     colorSchemeFunctionSync: () => CurrentColor.inst.getTrackDelightnedColorSync(track, null, useIsolate: true),
@@ -31,6 +34,7 @@ void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Co
 
 void showListensDialog({
   required List<int> datesOfListen,
+  required String? subtitle,
   required Future<Color?> Function()? colorSchemeFunction,
   required Color? Function()? colorSchemeFunctionSync,
   required Color? colorScheme,
@@ -96,6 +100,21 @@ void showListensDialog({
               theme: theme,
               normalTitleStyle: true,
               title: lang.TOTAL_LISTENS,
+              titleWidgetInPadding: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    lang.TOTAL_LISTENS,
+                    style: theme.textTheme.displayLarge,
+                  ),
+                  if (subtitle != null && subtitle.isNotEmpty)
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.displaySmall,
+                    ),
+                ],
+              ),
               trailingWidgets: [
                 Text(
                   '${datesOfListen.length}',

@@ -5,14 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 void showVideoListensDialog(String videoId, {List<int> datesOfListen = const [], Color? colorScheme}) async {
+  final releaseDate = await YoutubeInfoController.utils.getVideoReleaseDate(videoId);
+  final subtitle = releaseDate?.millisecondsSinceEpoch.dateAndClockFormattedOriginal;
   showListensDialog(
     datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : YoutubeHistoryController.inst.topTracksMapListens.value[videoId] ?? [],
+    subtitle: subtitle,
     colorScheme: colorScheme,
     colorSchemeFunction: () async {
       final image = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(id: videoId, type: ThumbnailType.video);
