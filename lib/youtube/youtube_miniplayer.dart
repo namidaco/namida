@@ -955,6 +955,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                           normalIcon: Broken.like_1,
                                           disabledColor: mainTheme.iconTheme.color,
                                           size: 24.0,
+                                          removeConfirmationAction: null, // manually managed
                                           onTap: (isLiked) {
                                             return _videoLikeManager.onLikeClicked(
                                               YTVideoLikeParamters(
@@ -995,6 +996,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                             normalIcon: Broken.dislike,
                                             disabledColor: mainTheme.iconTheme.color,
                                             size: 24.0,
+                                            removeConfirmationAction: null, // manually managed
                                             onTap: (isDisLiked) async {
                                               return _videoLikeManager.onDisLikeClicked(
                                                 YTVideoLikeParamters(

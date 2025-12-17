@@ -444,6 +444,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                               likedIcon: Broken.like_filled,
                                               normalIcon: Broken.like_1,
                                               size: 16.0,
+                                              removeConfirmationAction: null, // manually managed
                                               onTap: (isLiked) async {
                                                 return _onChangeLikeStatus(
                                                   isLiked,
@@ -476,6 +477,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                               likedIcon: Broken.dislike_filled,
                                               normalIcon: Broken.dislike,
                                               size: 16.0,
+                                              removeConfirmationAction: null,
                                               onTap: (isDisLiked) async {
                                                 return _onChangeLikeStatus(
                                                   isDisLiked,

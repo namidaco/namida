@@ -1760,6 +1760,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                         likedIcon: textData.likedIcon,
                                         normalIcon: textData.normalIcon,
                                         size: 32.0.size,
+                                        removeConfirmationAction: null, // manually managed
                                         onTap: (isLiked) async {
                                           return ytLikeManager.onLikeClicked(
                                             YTVideoLikeParamters(
@@ -1780,6 +1781,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                     size: 32.0.size,
                                     likedIcon: textData.likedIcon,
                                     normalIcon: textData.normalIcon,
+                                    removeConfirmationAction: lang.REMOVE_FROM_FAVOURITES,
                                     isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
                                     onTap: textData.onLikeTap,
                                   ),

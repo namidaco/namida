@@ -353,6 +353,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                 enabledColor: headerIconColor,
                                 disabledColor: headerIconColor,
                                 size: 18.0,
+                                removeConfirmationAction: null, // manually managed
                                 onTap: (isLiked) {
                                   return _videoLikeManager.onLikeClicked(
                                     YTVideoLikeParamters(
@@ -387,6 +388,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                   likedIcon: Broken.heart_filled,
                   normalIcon: Broken.heart,
                   disabledColor: headerIconColor,
+                  removeConfirmationAction: lang.REMOVE_FROM_FAVOURITES,
                   isLiked: favouritesPlaylist.isSubItemFavourite(videoId),
                   onTap: (isLiked) async => YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId),
                 ),

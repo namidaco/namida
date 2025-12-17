@@ -1738,6 +1738,7 @@ class NamidaRawLikeButton extends StatelessWidget {
   final Color? disabledColor;
   final bool? isLiked;
   final EdgeInsetsGeometry padding;
+  final String? removeConfirmationAction;
   final Future<bool> Function(bool isLiked)? onTap;
   final IconData likedIcon;
   final IconData normalIcon;
@@ -1748,11 +1749,34 @@ class NamidaRawLikeButton extends StatelessWidget {
     this.enabledColor,
     this.disabledColor,
     required this.isLiked,
+    required this.removeConfirmationAction,
     required this.onTap,
     this.padding = EdgeInsets.zero,
     this.likedIcon = Broken.heart_filled,
     this.normalIcon = Broken.heart,
   });
+
+  Future<bool> _confirmSomething(String action) async {
+    bool confirmed = false;
+    await NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        isWarning: true,
+        normalTitleStyle: true,
+        bodyText: lang.CONFIRM,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: action.toUpperCase(),
+            onPressed: () async {
+              confirmed = true;
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+      ),
+    );
+    return confirmed;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1773,7 +1797,13 @@ class NamidaRawLikeButton extends StatelessWidget {
           end: theme.colorScheme.tertiary,
         ),
         isLiked: isLiked,
-        onTap: onTap,
+        onTap: (isLiked) async {
+          if (isLiked && removeConfirmationAction != null) {
+            final confirmed = await _confirmSomething(removeConfirmationAction!);
+            if (!confirmed) return isLiked;
+          }
+          return await onTap?.call(isLiked);
+        },
         likeBuilder: (value) => value
             ? Icon(
                 likedIcon,
@@ -1811,6 +1841,7 @@ class NamidaLocalLikeButton extends StatelessWidget {
         enabledColor: color,
         disabledColor: color,
         isLiked: favouritesPlaylist.isSubItemFavourite(track),
+        removeConfirmationAction: lang.REMOVE_FROM_FAVOURITES,
         onTap: (isLiked) async => PlaylistController.inst.favouriteButtonOnPressed(track),
       ),
     );

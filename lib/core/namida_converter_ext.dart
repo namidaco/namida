@@ -1387,6 +1387,7 @@ extension RouteUtils on NamidaRoute {
         child: NamidaRawLikeButton(
           padding: const EdgeInsets.symmetric(horizontal: 3.0),
           isLiked: queue?.isFav,
+          removeConfirmationAction: lang.REMOVE_FROM_FAVOURITES,
           onTap: (isLiked) async => await QueueController.inst.toggleFavButton(queue!),
         ),
         shouldShow: queue != null,
