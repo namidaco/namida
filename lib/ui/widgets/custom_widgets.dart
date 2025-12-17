@@ -2762,7 +2762,7 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
         ),
         builder: (context, child) {
           final p = _animation.value;
-          // if (p == 0) return child!; // causes unecessary rebuilds
+          // if (p == 0) return child!; // causes unnecessary rebuilds
           return Transform.translate(
             offset: p == 0 ? Offset.zero : Offset(p * widget.friction * maxWidth, 0),
             child: child!,
@@ -2799,7 +2799,7 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
         : buildChild(_draggable && widget.direction != DismissDirection.none, child, maxWidth, fadeAnimation);
 
     if (widget.leftWidget != null || widget.rightWidget != null) {
-      final reverseFadeAnimation = ReverseAnimation(fadeAnimation);
+      final reverseFadeAnimation = ReverseAnimation(fadeAnimation.drive(Animatable.fromCallback((value) => (value * 1.5 - 0.5).clampDouble(0, 1))));
       Widget? leftWidget;
       Widget? rightWidget;
       dismissibleChild = Stack(
@@ -5540,7 +5540,7 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
                   ? DismissDirection.startToEnd
                   : DismissDirection.none,
       removeOnDismiss: false,
-      dismissThreshold: 0.1,
+      dismissThreshold: 0.15,
       friction: 0.58,
       onDismissed: (direction) {
         final swipedLeft = direction == DismissDirection.endToStart;

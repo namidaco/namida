@@ -831,136 +831,141 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
       width: context.width,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: context.height * 0.6),
-        child: SuperListView(
-          padding: EdgeInsets.zero,
-          shrinkWrap: true,
-          children: [
-            CustomSwitchListTile(
-              leading: StackedIcon(
-                baseIcon: Broken.video,
-                secondaryIcon: Broken.tick_circle,
-                secondaryIconSize: 12.0,
+        child: NamidaScrollbarWithController(
+          showOnStart: true,
+          child: (c) => SuperListView(
+            controller: c,
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            children: [
+              CustomSwitchListTile(
+                leading: StackedIcon(
+                  baseIcon: Broken.video,
+                  secondaryIcon: Broken.tick_circle,
+                  secondaryIconSize: 12.0,
+                ),
+                value: settings.youtube.markVideoWatched,
+                onChanged: (isTrue) => setState(() => settings.youtube.save(markVideoWatched: !isTrue)),
+                title: 'mark_video_watched'.toUpperCase(),
               ),
-              value: settings.youtube.markVideoWatched,
-              onChanged: (isTrue) => setState(() => settings.youtube.save(markVideoWatched: !isTrue)),
-              title: 'mark_video_watched'.toUpperCase(),
-            ),
-            CustomSwitchListTile(
-              leading: StackedIcon(
-                baseIcon: Broken.document_text_1,
-                secondaryIcon: Broken.export_1,
-                secondaryIconSize: 12.0,
+              CustomSwitchListTile(
+                leading: StackedIcon(
+                  baseIcon: Broken.document_text_1,
+                  secondaryIcon: Broken.export_1,
+                  secondaryIconSize: 12.0,
+                ),
+                value: settings.youtube.fallbackExtractInfoDescription.value,
+                onChanged: (isTrue) => setState(() => settings.youtube.save(fallbackExtractInfoDescription: !isTrue)),
+                title: 'try_extract_tags_info_from_description'.toUpperCase(),
               ),
-              value: settings.youtube.fallbackExtractInfoDescription.value,
-              onChanged: (isTrue) => setState(() => settings.youtube.save(fallbackExtractInfoDescription: !isTrue)),
-              title: 'try_extract_tags_info_from_description'.toUpperCase(),
-            ),
-            NamidaPopupWrapper(
-              child: NamidaPopupWrapper(
-                childrenDefault: () => _innertubeChildren,
-                child: CustomListTile(
-                  icon: Broken.cpu,
-                  title: 'innertube_client'.toUpperCase(),
-                  trailing: NamidaPopupWrapper(
-                    childrenDefault: () => _innertubeChildren,
-                    child: Text(settings.youtube.innertubeClient?.name ?? lang.DEFAULT),
+              NamidaPopupWrapper(
+                child: NamidaPopupWrapper(
+                  childrenDefault: () => _innertubeChildren,
+                  child: CustomListTile(
+                    icon: Broken.cpu,
+                    title: 'innertube_client'.toUpperCase(),
+                    trailing: NamidaPopupWrapper(
+                      childrenDefault: () => _innertubeChildren,
+                      child: Text(settings.youtube.innertubeClient?.name ?? lang.DEFAULT),
+                    ),
                   ),
                 ),
               ),
-            ),
-            CustomSwitchListTile(
-              icon: Broken.sun_1,
-              value: settings.youtube.whiteVideoBGInLightMode,
-              onChanged: (isTrue) => setState(() => settings.youtube.save(whiteVideoBGInLightMode: !isTrue)),
-              title: 'white_video_bg_in_light_mode'.toUpperCase(),
-            ),
-            CustomSwitchListTile(
-              leading: StackedIcon(
-                baseIcon: Broken.sun_1,
-                secondaryIcon: Broken.moon,
-                secondaryIconSize: 12.0,
+              CustomSwitchListTile(
+                icon: Broken.sun_1,
+                value: settings.youtube.whiteVideoBGInLightMode,
+                onChanged: (isTrue) => setState(() => settings.youtube.save(whiteVideoBGInLightMode: !isTrue)),
+                title: 'white_video_bg_in_light_mode'.toUpperCase(),
               ),
-              value: settings.youtube.enableDimInLightMode,
-              onChanged: (isTrue) => setState(() => settings.youtube.save(enableDimInLightMode: !isTrue)),
-              title: 'enable_dim_in_light_mode'.toUpperCase(),
-            ),
-            CustomSwitchListTile(
-              leading: StackedIcon(
-                baseIcon: Broken.story,
-                secondaryIcon: Broken.cpu_charge,
-                secondaryIconSize: 12.0,
+              CustomSwitchListTile(
+                leading: StackedIcon(
+                  baseIcon: Broken.sun_1,
+                  secondaryIcon: Broken.moon,
+                  secondaryIconSize: 12.0,
+                ),
+                value: settings.youtube.enableDimInLightMode,
+                onChanged: (isTrue) => setState(() => settings.youtube.save(enableDimInLightMode: !isTrue)),
+                title: 'enable_dim_in_light_mode'.toUpperCase(),
               ),
-              value: settings.youtube.allowExperimentalCodecs,
-              onChanged: (isTrue) => setState(() => settings.youtube.save(allowExperimentalCodecs: !isTrue)),
-              title: 'allow_experimental_codecs'.toUpperCase(),
-              subtitle: 'av1 & vp9',
-            ),
-            CustomSwitchListTile(
-              icon: Broken.video_horizontal,
-              value: settings.youtube.enableGifThumbnails,
-              onChanged: (isTrue) => setState(() => settings.youtube.save(enableGifThumbnails: !isTrue)),
-              title: 'enable_gif_thumbnails'.toUpperCase(),
-            ),
-            ObxO(
-              rx: settings.youtube.enableHeatMap,
-              builder: (context, enableHeatMap) => CustomSwitchListTile(
-                icon: Broken.wind_2,
-                value: enableHeatMap,
-                onChanged: (isTrue) => settings.youtube.save(enableHeatMap: !isTrue),
-                title: 'enable_seek_heatmap'.toUpperCase(),
+              CustomSwitchListTile(
+                leading: StackedIcon(
+                  baseIcon: Broken.story,
+                  secondaryIcon: Broken.cpu_charge,
+                  secondaryIconSize: 12.0,
+                ),
+                value: settings.youtube.allowExperimentalCodecs,
+                onChanged: (isTrue) => setState(() => settings.youtube.save(allowExperimentalCodecs: !isTrue)),
+                title: 'allow_experimental_codecs'.toUpperCase(),
+                subtitle: 'av1 & vp9',
               ),
-            ),
-            CustomListTile(
-              leading: StackedIcon(
-                baseIcon: Broken.code_1,
-                secondaryIcon: Broken.refresh,
-                secondaryIconSize: 12.0,
+              CustomSwitchListTile(
+                icon: Broken.video_horizontal,
+                value: settings.youtube.enableGifThumbnails,
+                onChanged: (isTrue) => setState(() => settings.youtube.save(enableGifThumbnails: !isTrue)),
+                title: 'enable_gif_thumbnails'.toUpperCase(),
               ),
-              enabled: !isRefreshingJsPlayer,
-              title: 'refresh_js_player'.toUpperCase(),
-              subtitle: _jsPlayerVersion,
-              trailing: isRefreshingJsPlayer ? const LoadingIndicator() : null,
-              onTap: () async {
-                setState(() {
-                  isRefreshingJsPlayer = true;
-                  _jsPlayerVersion = '?';
-                });
-                await YoutubeInfoController.video.forceRefreshJSPlayer();
-                if (mounted) {
+              ObxO(
+                rx: settings.youtube.enableHeatMap,
+                builder: (context, enableHeatMap) => CustomSwitchListTile(
+                  icon: Broken.wind_2,
+                  value: enableHeatMap,
+                  onChanged: (isTrue) => settings.youtube.save(enableHeatMap: !isTrue),
+                  title: 'enable_seek_heatmap'.toUpperCase(),
+                ),
+              ),
+              CustomListTile(
+                leading: StackedIcon(
+                  baseIcon: Broken.code_1,
+                  secondaryIcon: Broken.refresh,
+                  secondaryIconSize: 12.0,
+                ),
+                enabled: !isRefreshingJsPlayer,
+                title: 'refresh_js_player'.toUpperCase(),
+                subtitle: _jsPlayerVersion,
+                trailing: isRefreshingJsPlayer ? const LoadingIndicator() : null,
+                onTap: () async {
                   setState(() {
-                    isRefreshingJsPlayer = false;
-                    _refreshJSPlayerVersion();
+                    isRefreshingJsPlayer = true;
+                    _jsPlayerVersion = '?';
                   });
-                }
-              },
-            ),
-            CustomListTile(
-              icon: Broken.hierarchy_square,
-              title: 'copy_yt_history_to_local_history'.toUpperCase(),
-              onTap: () {
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    isWarning: true,
-                    normalTitleStyle: true,
-                    bodyText: lang.CONFIRM,
-                    actions: [
-                      const CancelButton(),
-                      NamidaButton(
-                        text: lang.CONFIRM.toUpperCase(),
-                        onPressed: () async {
-                          await NamidaNavigator.inst.closeDialog(2);
-                          final totalAndActual = await JsonToHistoryParser.inst.copyYTHistoryContentToLocalHistory(matchAll: true);
-                          final total = totalAndActual.$1;
-                          final actual = totalAndActual.$2;
-                          snackyy(message: '${lang.TOTAL_TRACKS.capitalizeFirst()}: ${total.displayTrackKeyword} | ${lang.ADDED.capitalizeFirst()}: ${actual.displayTrackKeyword}');
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
+                  await YoutubeInfoController.video.forceRefreshJSPlayer();
+                  if (mounted) {
+                    setState(() {
+                      isRefreshingJsPlayer = false;
+                      _refreshJSPlayerVersion();
+                    });
+                  }
+                },
+              ),
+              CustomListTile(
+                icon: Broken.hierarchy_square,
+                title: 'copy_yt_history_to_local_history'.toUpperCase(),
+                onTap: () {
+                  NamidaNavigator.inst.navigateDialog(
+                    dialog: CustomBlurryDialog(
+                      isWarning: true,
+                      normalTitleStyle: true,
+                      bodyText: lang.CONFIRM,
+                      actions: [
+                        const CancelButton(),
+                        NamidaButton(
+                          text: lang.CONFIRM.toUpperCase(),
+                          onPressed: () async {
+                            await NamidaNavigator.inst.closeDialog(2);
+                            final totalAndActual = await JsonToHistoryParser.inst.copyYTHistoryContentToLocalHistory(matchAll: true);
+                            final total = totalAndActual.$1;
+                            final actual = totalAndActual.$2;
+                            snackyy(
+                                message: '${lang.TOTAL_TRACKS.capitalizeFirst()}: ${total.displayTrackKeyword} | ${lang.ADDED.capitalizeFirst()}: ${actual.displayTrackKeyword}');
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

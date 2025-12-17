@@ -262,8 +262,6 @@ class CustomizationSettings extends SettingSubpageProvider {
                 title: lang.DATE_TIME_FORMAT,
                 trailingText: settings.dateTimeFormat.valueR,
                 onTap: () async {
-                  final scrollController = ScrollController();
-
                   await showSettingDialogWithTextField(
                     title: lang.DATE_TIME_FORMAT,
                     icon: Broken.calendar_edit,
@@ -272,51 +270,31 @@ class CustomizationSettings extends SettingSubpageProvider {
                       height: namida.height * 0.4,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 58.0),
-                        child: Stack(
-                          children: [
-                            SingleChildScrollView(
-                              controller: scrollController,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ...kDefaultDateTimeStrings.entries.map(
-                                    (e) => SmallListTile(
-                                      title: e.value,
-                                      active: settings.dateTimeFormat.value == e.key,
-                                      onTap: () {
-                                        settings.save(dateTimeFormat: e.key);
-                                        TrackTileManager.onTrackItemPropChange();
-                                        NamidaNavigator.inst.closeDialog();
-                                      },
-                                    ),
+                        child: NamidaScrollbarWithController(
+                          showOnStart: true,
+                          child: (c) => SingleChildScrollView(
+                            controller: c,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ...kDefaultDateTimeStrings.entries.map(
+                                  (e) => SmallListTile(
+                                    title: e.value,
+                                    active: settings.dateTimeFormat.value == e.key,
+                                    onTap: () {
+                                      settings.save(dateTimeFormat: e.key);
+                                      TrackTileManager.onTrackItemPropChange();
+                                      NamidaNavigator.inst.closeDialog();
+                                    },
                                   ),
-                                ],
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 20,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(8.0),
-                                decoration: BoxDecoration(color: namida.theme.cardTheme.color, shape: BoxShape.circle),
-                                child: NamidaIconButton(
-                                  icon: Broken.arrow_circle_down,
-                                  onPressed: () {
-                                    scrollController.animateTo(
-                                      scrollController.position.maxScrollExtent,
-                                      duration: const Duration(milliseconds: 300),
-                                      curve: Curves.easeInOut,
-                                    );
-                                  },
                                 ),
-                              ),
-                            )
-                          ],
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   );
-                  scrollController.disposeAfterAnimation();
                 },
               ),
             ),
@@ -925,6 +903,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                         const NamidaRawLikeButton(
                           size: 20.0,
                           isLiked: null,
+                          removeConfirmationAction: null,
                           onTap: null,
                         ),
                       ]
