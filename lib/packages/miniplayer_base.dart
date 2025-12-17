@@ -1111,12 +1111,22 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                       child: currentImage,
                     );
                   }
-                  if (settings.artworkLongPressAction.value != TrackExecuteActions.none) {
-                    currentImage = LongPressDetector(
-                      onLongPress: () => settings.artworkLongPressAction.value.executePlayingItem(currentItem),
-                      child: currentImage,
-                    );
-                  }
+
+                  currentImage = LongPressDetector(
+                    onLongPress: () {
+                      final lrcState = Lyrics.inst.lrcViewKey.currentState;
+                      if (lrcState != null) {
+                        lrcState.enterFullScreen();
+                        return;
+                      }
+                      final longPressAction = settings.artworkLongPressAction.value;
+                      if (longPressAction != TrackExecuteActions.none) {
+                        longPressAction.executePlayingItem(currentItem);
+                      }
+                    },
+                    child: currentImage,
+                  );
+
                   return Stack(
                     children: [
                       /// MiniPlayer Body
@@ -1544,10 +1554,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                                                 Lyrics.inst.updateLyrics(currentItem);
                                                               }
                                                             : null,
-                                                        child: LongPressDetector(
-                                                          onLongPress: () => Lyrics.inst.lrcViewKey.currentState?.enterFullScreen(),
-                                                          child: currentImage,
-                                                        ),
+                                                        child: currentImage,
                                                       );
                                                     },
                                                   );
