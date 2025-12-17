@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -131,10 +133,11 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                   heroTag: 'artist_${widget.name}',
                   imageBuilder: (size) {
                     final info = NetworkArtworkInfo.artist(widget.name);
+                    final tracksPathToImage = tracks.pathToImage;
                     final artworkPre = NetworkArtwork.orLocal(
-                      key: Key(tracks.pathToImage),
+                      key: Key(tracksPathToImage),
                       info: info,
-                      path: tracks.pathToImage,
+                      path: tracksPathToImage,
                       track: tracks.trackOfImage,
                       thumbnailSize: size,
                       fit: BoxFit.cover,
@@ -146,7 +149,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                     final artwork = NamidaArtworkExpandableToFullscreen(
                       artwork: artworkPre,
                       heroTag: 'artist_${widget.name}',
-                      imageFile: () => info.toArtworkIfExistsAndValidAndEnabled(),
+                      imageFile: () => info.toArtworkIfExistsAndValidAndEnabled() ?? File(tracksPathToImage),
                       onSave: (imgFile) => EditDeleteController.inst.saveImageToStorage(imgFile),
                       themeColor: null,
                     );

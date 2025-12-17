@@ -6210,7 +6210,7 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
 
   void openInFullscreen() async {
     final imgFile = await imageFile();
-    if (imgFile == null) return;
+    if (imgFile == null || !(await imgFile.exists())) return;
 
     NamidaNavigator.inst.navigateDialog(
       scale: 1.0,

@@ -130,7 +130,7 @@ class ThumbnailManager {
     if (id == null && customUrl == null) return null;
 
     if (isTemp == null) {
-      // -- check for both is temp == null
+      // -- check for both if temp == null
       final file1 = imageUrlToCacheFile(id: id, url: customUrl, isTemp: false, type: type);
       if (file1 != null && await file1.exists()) return file1;
       final file2 = imageUrlToCacheFile(id: id, url: customUrl, isTemp: true, type: type);
