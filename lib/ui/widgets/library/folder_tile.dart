@@ -4,6 +4,7 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/folders_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
@@ -139,6 +140,8 @@ class _FolderTileState extends State<FolderTile> {
       if (subtitleSecondPart != null) ...subtitleSecondPart,
     ];
 
+    final thumbnailCoverPath = Indexer.inst.getFallbackFolderArtworkPath(folderPath: widget.folder.path);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin, right: Dimensions.tileBottomMargin, left: Dimensions.tileBottomMargin),
       child: NamidaInkWell(
@@ -167,20 +170,30 @@ class _FolderTileState extends State<FolderTile> {
                         Positioned(
                           child: Padding(
                             padding: const EdgeInsets.only(top: 8.0),
-                            child: widget.tracks.isEmpty && widget.dirInsideCount > 0
-                                ? Icon(
-                                    Broken.folder_open,
-                                    size: thumbSize,
-                                  )
-                                : ArtworkWidget(
-                                    key: ValueKey(widget.tracks.firstOrNull),
-                                    track: widget.tracks.firstOrNull,
+                            child: thumbnailCoverPath != null
+                                ? ArtworkWidget(
+                                    key: ValueKey(thumbnailCoverPath),
+                                    track: widget.tracks.firstOrNull, // fallback
                                     blur: 3.0,
                                     borderRadius: 5.0,
                                     thumbnailSize: thumbSize,
-                                    path: widget.tracks.firstOrNull?.pathToImage,
+                                    path: thumbnailCoverPath,
                                     forceSquared: true,
-                                  ),
+                                  )
+                                : widget.tracks.isEmpty && widget.dirInsideCount > 0
+                                    ? Icon(
+                                        Broken.folder_open,
+                                        size: thumbSize,
+                                      )
+                                    : ArtworkWidget(
+                                        key: ValueKey(widget.tracks.firstOrNull),
+                                        track: widget.tracks.firstOrNull,
+                                        blur: 3.0,
+                                        borderRadius: 5.0,
+                                        thumbnailSize: thumbSize,
+                                        path: widget.tracks.firstOrNull?.pathToImage,
+                                        forceSquared: true,
+                                      ),
                           ),
                         ),
                       ],
