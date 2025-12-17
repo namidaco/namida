@@ -1,3 +1,4 @@
+import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/sponsorblock_segment.dart';
 import 'package:youtipie/class/sponsorblock_segments_result.dart';
 
@@ -57,8 +58,8 @@ class SponsorBlockController {
     _latestFetchedCategoriesNames = null;
   }
 
-  Future<void> updateSegments(String videoId) async {
-    if (_latestFetchedVideoId == videoId) return;
+  Future<void> updateSegments(String videoId, {bool forceRequest = false}) async {
+    if (_latestFetchedVideoId == videoId && !forceRequest) return;
     _latestFetchedVideoId = videoId;
 
     final categoriesNames = settings.youtube.sponsorBlockSettings.value.activeCategoriesNames;
@@ -74,6 +75,7 @@ class SponsorBlockController {
       videoId,
       categories: categoriesNames,
       serverAddress: settings.youtube.sponsorBlockSettings.value.serverAddress,
+      details: forceRequest ? ExecuteDetails.forceRequest() : null,
     );
 
     currentSegments.value = newSegments;

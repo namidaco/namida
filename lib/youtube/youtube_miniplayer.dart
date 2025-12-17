@@ -39,6 +39,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -1036,11 +1037,19 @@ class _YTPlayerInnerPage extends StatelessWidget {
                               child: SmallYTActionButton(
                                 title: lang.REFRESH,
                                 icon: Broken.refresh,
-                                onPressed: () async => await YoutubeInfoController.current.updateVideoPage(
-                                  currentId,
-                                  requestPage: true,
-                                  requestComments: true,
-                                ),
+                                onPressed: () async {
+                                  await YoutubeInfoController.current.updateVideoPage(
+                                    currentId,
+                                    requestPage: true,
+                                    requestComments: true,
+                                  );
+                                  if (settings.youtube.sponsorBlockSettings.value.enabled) {
+                                    await SponsorBlockController.inst.updateSegments(
+                                      currentId,
+                                      forceRequest: true,
+                                    );
+                                  }
+                                },
                               ),
                             ),
                             const SizedBox(width: 2.0),
