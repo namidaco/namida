@@ -174,8 +174,8 @@ class NamidaNavigator {
   bool? _latestIsAppLight;
 
   /// optimized to set only if its different from the previous value.
-  void setSystemUIOverlayStyleCustom(bool isAppLight) {
-    if (_latestIsAppLight == isAppLight) return;
+  void setSystemUIOverlayStyleCustom(bool isAppLight, {bool forceRefresh = false}) {
+    if (_latestIsAppLight == isAppLight && !forceRefresh) return;
     _latestIsAppLight = isAppLight;
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(

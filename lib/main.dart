@@ -359,6 +359,14 @@ void _initLifeCycle() {
   });
 
   NamidaChannel.inst.addOnResume(CurrentColor.inst.refreshColorsAfterResumeApp);
+  NamidaChannel.inst.addOnResume(() {
+    final context = namida.context;
+    if (context != null) {
+      try {
+        _NamidaState.refreshSystemBarsColors(context, forceRefresh: true);
+      } catch (_) {}
+    }
+  });
   NamidaChannel.inst.addOnResume(WaveformController.inst.calculateUIWaveform);
   NamidaChannel.inst.addOnResume(() async => FlutterDisplayMode.setHighRefreshRate().ignoreError());
 }
@@ -551,11 +559,15 @@ class _NamidaState extends State<Namida> {
     settings.themeMode.addListener(_refreshSystemBarsColors);
   }
 
-  void _refreshSystemBarsColors() {
+  static void refreshSystemBarsColors(BuildContext context, {bool forceRefresh = false}) {
     final mode = settings.themeMode.value;
     final platformBrightness = MediaQuery.platformBrightnessOf(context);
     final isLight = mode.isLight(platformBrightness);
-    NamidaNavigator.inst.setSystemUIOverlayStyleCustom(isLight);
+    NamidaNavigator.inst.setSystemUIOverlayStyleCustom(isLight, forceRefresh: forceRefresh);
+  }
+
+  void _refreshSystemBarsColors() {
+    return refreshSystemBarsColors(context);
   }
 
   @override
