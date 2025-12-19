@@ -147,6 +147,8 @@ class NamidaMainActivity : FlutterActivity() {
 						"hollow" -> LauncherIcon.HOLLOW
 						"monet" -> LauncherIcon.MONET
 						"glowy" -> LauncherIcon.GLOWY
+						"shade" -> LauncherIcon.SHADE
+						"mini" -> LauncherIcon.MINI
 						"spooky" -> LauncherIcon.SPOOKY
 						"namiween" -> LauncherIcon.NAMIWEEN
 						"space" -> LauncherIcon.SPACE
@@ -172,6 +174,8 @@ class NamidaMainActivity : FlutterActivity() {
 						"hollow" -> LauncherIcon.HOLLOW
 						"monet" -> LauncherIcon.MONET
 						"glowy" -> LauncherIcon.GLOWY
+						"shade" -> LauncherIcon.SHADE
+						"mini" -> LauncherIcon.MINI
 						"spooky" -> LauncherIcon.SPOOKY
 						"namiween" -> LauncherIcon.NAMIWEEN
 						"space" -> LauncherIcon.SPACE

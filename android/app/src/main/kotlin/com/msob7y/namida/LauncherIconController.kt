@@ -57,6 +57,8 @@ enum class LauncherIcon(
 	HOLLOW("HollowIcon", R.mipmap.ic_launcher_hollow),
 	MONET("MonetIcon", R.mipmap.ic_launcher_monet),
 	GLOWY("GlowyIcon", R.mipmap.ic_launcher_glowy),
+	SHADE("ShadeIcon", R.mipmap.ic_launcher_shade),
+	MINI("MiniIcon", R.mipmap.ic_launcher_mini),
 	SPOOKY("SpookyIcon", R.mipmap.ic_launcher_spooky),
 	NAMIWEEN("NamiweenIcon", R.mipmap.ic_launcher_namiween),
 	SPACE("SpaceIcon", R.mipmap.ic_launcher_space),

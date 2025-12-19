@@ -280,6 +280,20 @@ final _appIcons = [
     ],
   ),
   _IconDetails.create(
+    'shade',
+    ext: _ImgExtension.png,
+    authorInfos: [
+      _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+  _IconDetails.create(
+    'mini',
+    ext: _ImgExtension.png,
+    authorInfos: [
+      _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+  _IconDetails.create(
     'spooky',
     ext: _ImgExtension.webp,
     authorInfos: [

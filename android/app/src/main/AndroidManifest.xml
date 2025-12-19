@@ -112,6 +112,36 @@
 
 		<activity-alias
             android:enabled="false"
+            android:name="com.msob7y.namida.ShadeIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_shade"
+            android:roundIcon="@mipmap/ic_launcher_shade"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+		<activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.MiniIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_mini"
+            android:roundIcon="@mipmap/ic_launcher_mini"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+		<activity-alias
+            android:enabled="false"
             android:name="com.msob7y.namida.SpookyIcon"
             android:targetActivity=".NamidaMainActivity"
             android:icon="@mipmap/ic_launcher_spooky"

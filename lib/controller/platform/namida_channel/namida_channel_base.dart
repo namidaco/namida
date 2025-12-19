@@ -81,6 +81,8 @@ enum NamidaAppIcons {
 	hollow("assets/namida_icon_hollow.png", [AuthorInfo("wispy", null, AuthorPlatform.discord, null)]),
 	monet("assets/namida_icon_monet.png", [AuthorInfo("Sujal", null, AuthorPlatform.telegram, null)]),
 	glowy("assets/namida_icon_glowy.webp", [AuthorInfo("Sujal", null, AuthorPlatform.telegram, null)]),
+	shade("assets/namida_icon_shade.png", [AuthorInfo("شاكور", null, AuthorPlatform.discord, null)]),
+	mini("assets/namida_icon_mini.png", [AuthorInfo("شاكور", null, AuthorPlatform.discord, null)]),
 	spooky("assets/namida_icon_spooky.webp", [AuthorInfo("Miguquis", null, AuthorPlatform.discord, AuthorAIModel.gemini)]),
 	namiween("assets/namida_icon_namiween.webp", [AuthorInfo("𐔌 . ⋮ Reggie .ᐟ ֹ ₊ ꒱", null, AuthorPlatform.discord, AuthorAIModel.unknown)]),
 	space("assets/namida_icon_space.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
