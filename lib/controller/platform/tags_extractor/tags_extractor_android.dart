@@ -266,33 +266,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
           ? <String, String?>{
               FFMPEGTagField.comment: oldComment == null || oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
             }
-          : <String, String?>{
-              FFMPEGTagField.title: newTags.title,
-              FFMPEGTagField.artist: newTags.artist,
-              FFMPEGTagField.album: newTags.album,
-              FFMPEGTagField.albumArtist: newTags.albumArtist,
-              FFMPEGTagField.composer: newTags.composer,
-              FFMPEGTagField.genre: newTags.genre,
-              FFMPEGTagField.year: newTags.year,
-              FFMPEGTagField.trackNumber: newTags.trackNumber,
-              FFMPEGTagField.discNumber: newTags.discNumber,
-              FFMPEGTagField.trackTotal: newTags.trackTotal,
-              FFMPEGTagField.discTotal: newTags.discTotal,
-              FFMPEGTagField.comment: newTags.comment,
-              FFMPEGTagField.description: newTags.description,
-              FFMPEGTagField.synopsis: newTags.synopsis,
-              FFMPEGTagField.lyrics: newTags.lyrics,
-              FFMPEGTagField.remixer: newTags.remixer,
-              FFMPEGTagField.lyricist: newTags.lyricist,
-              FFMPEGTagField.language: newTags.language,
-              FFMPEGTagField.recordLabel: newTags.recordLabel,
-              FFMPEGTagField.country: newTags.country,
-
-              // -- TESTED NOT WORKING. disabling to prevent unwanted fields corruption etc.
-              // FFMPEGTagField.mood: editedTags[TagField.mood],
-              // FFMPEGTagField.tags: editedTags[TagField.tags],
-              // FFMPEGTagField.rating: editedTags[TagField.rating],
-            };
+          : FFMPEGTagField.createTagsMapfromFTag(newTags);
       didUpdate = await ffmpegController.editMetadata(
         path: path,
         tagsMap: ffmpegTagsMap,

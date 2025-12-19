@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
@@ -9,6 +10,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -114,7 +116,58 @@ class NamidaFFMPEG {
       '-i',
       tempFile.path,
     ];
-    for (final e in tagsMap.entries) {
+
+    final oldTagsToApply = <String, String>{};
+    final oldMetadata = await extractMetadata(tempFile.path);
+
+    const opusEtcFormats = {'opus', 'ogg', 'oga'};
+
+    bool isOpusEtc() {
+      if (oldMetadata == null) return false;
+      final formatName = oldMetadata.format?.formatName;
+      if (formatName != null && opusEtcFormats.contains(formatName.toLowerCase())) {
+        return true;
+      }
+      final oldMetadataStreams = oldMetadata.streams;
+      if (oldMetadataStreams != null) {
+        for (final stream in oldMetadataStreams) {
+          final streamName = stream.codecName;
+          if (streamName != null && opusEtcFormats.contains(streamName.toLowerCase())) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    if (isOpusEtc()) {
+      // -- overwriting tags for opus is not supported, we need to remove all first (-map_metadata -1) and write all combined
+      final tags = oldMetadata?.toFAudioModel(artwork: null).tags;
+      if (tags != null) {
+        final oldTags = FFMPEGTagField.createTagsMapfromFTag(tags);
+        for (final e in oldTags.entries) {
+          if (tagsMap[e.key] != null) continue;
+
+          final val = e.value;
+          if (val != null) {
+            oldTagsToApply[e.key] = val;
+          }
+        }
+      }
+
+      if (oldTagsToApply.isNotEmpty) {
+        params.addAll(
+          [
+            '-map_metadata',
+            '-1',
+            '-disposition:v',
+            'attached_pic',
+          ],
+        );
+      }
+    }
+
+    for (final e in tagsMap.entries.followedBy(oldTagsToApply.entries)) {
       final val = e.value;
       if (val != null) {
         final valueCleaned = val.replaceAll('"', r'\"');
@@ -122,6 +175,7 @@ class NamidaFFMPEG {
         params.add('${e.key}=$valueCleaned');
       }
     }
+
     params.addAll([
       '-id3v2_version',
       '3',
@@ -134,6 +188,7 @@ class NamidaFFMPEG {
     ]);
 
     final didExecute = await _executer.ffmpegExecute(params);
+
     // -- restoring original stats.
     if (originalStats != null) {
       await setFileStats(originalFile, originalStats);
@@ -153,13 +208,14 @@ class NamidaFFMPEG {
     }
 
     final codecParams = compress ? ['-filter:v', 'scale=-2:250', '-an'] : ['-c', 'copy'];
-    final didSuccess = await _executer.ffmpegExecute(['-i', audioPath, '-map', '0:v', '-map', '-0:V', ...codecParams, '-y', thumbnailSavePath]);
-    if (didSuccess) {
-      return File(thumbnailSavePath);
-    } else {
-      final didSuccess = await _executer.ffmpegExecute(['-i', audioPath, '-an', '-c:v', 'copy', '-y', thumbnailSavePath]);
-      return didSuccess ? File(thumbnailSavePath) : null;
-    }
+
+    bool didSuccess = await _executer.ffmpegExecute(['-i', audioPath, '-map', '0:v', '-map', '-0:V', ...codecParams, '-y', thumbnailSavePath]);
+    if (didSuccess) return File(thumbnailSavePath);
+
+    didSuccess = await _executer.ffmpegExecute(['-i', audioPath, '-an', '-c:v', 'copy', '-y', thumbnailSavePath]);
+    if (didSuccess) return File(thumbnailSavePath);
+
+    return null;
   }
 
   Future<bool> editAudioThumbnail({
@@ -184,13 +240,15 @@ class NamidaFFMPEG {
       thumbnailPath,
       '-map',
       '0:a?',
+      '-map',
+      '1:v',
       if (isVideoFile) ...[
         '-map',
         '0:v:0?',
       ],
       '-map',
       '1',
-      '-codec',
+      '-c',
       'copy',
       isVideoFile ? '-disposition:v:1' : '-disposition:v:0',
       'attached_pic',
@@ -512,6 +570,36 @@ class FFMPEGTagField {
     rating,
     tags,
   ];
+
+  static Map<String, String?> createTagsMapfromFTag(FTags newTags) {
+    return <String, String?>{
+      FFMPEGTagField.title: newTags.title,
+      FFMPEGTagField.artist: newTags.artist,
+      FFMPEGTagField.album: newTags.album,
+      FFMPEGTagField.albumArtist: newTags.albumArtist,
+      FFMPEGTagField.composer: newTags.composer,
+      FFMPEGTagField.genre: newTags.genre,
+      FFMPEGTagField.year: newTags.year,
+      FFMPEGTagField.trackNumber: newTags.trackNumber,
+      FFMPEGTagField.discNumber: newTags.discNumber,
+      FFMPEGTagField.trackTotal: newTags.trackTotal,
+      FFMPEGTagField.discTotal: newTags.discTotal,
+      FFMPEGTagField.comment: newTags.comment,
+      FFMPEGTagField.description: newTags.description,
+      FFMPEGTagField.synopsis: newTags.synopsis,
+      FFMPEGTagField.lyrics: newTags.lyrics,
+      FFMPEGTagField.remixer: newTags.remixer,
+      FFMPEGTagField.lyricist: newTags.lyricist,
+      FFMPEGTagField.language: newTags.language,
+      FFMPEGTagField.recordLabel: newTags.recordLabel,
+      FFMPEGTagField.country: newTags.country,
+
+      // -- TESTED NOT WORKING. disabling to prevent unwanted fields corruption etc.
+      // FFMPEGTagField.mood: editedTags[TagField.mood],
+      // FFMPEGTagField.tags: editedTags[TagField.tags],
+      // FFMPEGTagField.rating: editedTags[TagField.rating],
+    };
+  }
 }
 
 class OperationProgress {
