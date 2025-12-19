@@ -438,7 +438,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
             // -- progress bar
             Positioned(
               bottom: progressBarBottomPosition,
-              child: _SeekBarSegmentCutter(
+              child: _SeekBarSegmentCutterIfEnabled(
                 maxWidth: maxWidth,
                 child: AnimatedBuilder(
                   animation: _animation,
@@ -694,6 +694,25 @@ class _SponsorBlockSegmentsBarState extends State<_SponsorBlockSegmentsBar> {
           ),
         );
       },
+    );
+  }
+}
+
+class _SeekBarSegmentCutterIfEnabled extends StatelessWidget {
+  final double maxWidth;
+  final Widget child;
+  const _SeekBarSegmentCutterIfEnabled({required this.maxWidth, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.youtube.enableStreamSegments,
+      builder: (context, enabled) => enabled
+          ? _SeekBarSegmentCutter(
+              maxWidth: maxWidth,
+              child: child,
+            )
+          : child,
     );
   }
 }

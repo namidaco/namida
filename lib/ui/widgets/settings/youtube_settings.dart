@@ -905,6 +905,15 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                 title: 'enable_gif_thumbnails'.toUpperCase(),
               ),
               ObxO(
+                rx: settings.youtube.enableStreamSegments,
+                builder: (context, enableStreamSegments) => CustomSwitchListTile(
+                  icon: Broken.weight_1,
+                  value: enableStreamSegments,
+                  onChanged: (isTrue) => settings.youtube.save(enableStreamSegments: !isTrue),
+                  title: 'enable_stream_segments'.toUpperCase(),
+                ),
+              ),
+              ObxO(
                 rx: settings.youtube.enableHeatMap,
                 builder: (context, enableHeatMap) => CustomSwitchListTile(
                   icon: Broken.wind_2,

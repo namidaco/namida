@@ -26,6 +26,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final dataSaverModeMobile = DataSaverMode.medium.obs;
   final rememberAudioOnly = false.obs;
   final topComments = true.obs;
+  final enableStreamSegments = true.obs;
   final enableHeatMap = true.obs;
   final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
   final tapToSeek = YTSeekActionMode.expandedMiniplayer.obs;
@@ -61,6 +62,7 @@ class _YoutubeSettings with SettingsFileWriter {
     DataSaverMode? dataSaverModeMobile,
     bool? rememberAudioOnly,
     bool? topComments,
+    bool? enableStreamSegments,
     bool? enableHeatMap,
     bool? autoExtractVideoTagsFromInfo,
     bool? fallbackExtractInfoDescription,
@@ -94,6 +96,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (dataSaverModeMobile != null) this.dataSaverModeMobile.value = dataSaverModeMobile;
     if (rememberAudioOnly != null) this.rememberAudioOnly.value = rememberAudioOnly;
     if (topComments != null) this.topComments.value = topComments;
+    if (enableStreamSegments != null) this.enableStreamSegments.value = enableStreamSegments;
     if (enableHeatMap != null) this.enableHeatMap.value = enableHeatMap;
     if (autoExtractVideoTagsFromInfo != null) this.autoExtractVideoTagsFromInfo.value = autoExtractVideoTagsFromInfo;
     if (fallbackExtractInfoDescription != null) this.fallbackExtractInfoDescription.value = fallbackExtractInfoDescription;
@@ -164,6 +167,7 @@ class _YoutubeSettings with SettingsFileWriter {
       dataSaverMode.value = DataSaverMode.values.getEnum(json['dataSaverMode']) ?? dataSaverMode.value;
       dataSaverModeMobile.value = DataSaverMode.values.getEnum(json['dataSaverModeMobile']) ?? dataSaverModeMobile.value;
       topComments.value = json['topComments'] ?? topComments.value;
+      enableStreamSegments.value = json['enableStreamSegments'] ?? enableStreamSegments.value;
       enableHeatMap.value = json['enableHeatMap'] ?? enableHeatMap.value;
       onYoutubeLinkOpen.value = OnYoutubeLinkOpenAction.values.getEnum(json['onYoutubeLinkOpen']) ?? onYoutubeLinkOpen.value;
       tapToSeek.value = YTSeekActionMode.values.getEnum(json['tapToSeek']) ?? tapToSeek.value;
@@ -213,6 +217,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'dataSaverModeMobile': dataSaverModeMobile.value.name,
         'rememberAudioOnly': rememberAudioOnly.value,
         'topComments': topComments.value,
+        'enableStreamSegments': enableStreamSegments.value,
         'enableHeatMap': enableHeatMap.value,
         'onYoutubeLinkOpen': onYoutubeLinkOpen.value.name,
         'tapToSeek': tapToSeek.value.name,
