@@ -279,9 +279,9 @@ class SearchSortController extends SearchPortsProvider {
     runningSearchesTempCount.value = runningSearchesTempCount.value - 1;
   }
 
-  void disposeResources() {
+  Future<void> disposeResources() async {
     _preparedResources = false;
-    super.disposeAll();
+    await super.disposeAll().ignoreError();
   }
 
   @override
@@ -303,7 +303,6 @@ class SearchSortController extends SearchPortsProvider {
   Future<SendPortWithCachedMessage> _prepareTracksPorts() async {
     return await super.preparePorts(
       type: MediaType.track,
-      portRefreshListener: _tracksInfoList,
       onResult: (result) {
         runningSearchesTempCount.value = runningSearchesTempCount.value - 1;
         if (result == null) return; // -- prepared
@@ -335,7 +334,6 @@ class SearchSortController extends SearchPortsProvider {
   Future<SendPortWithCachedMessage> _preparePlaylistPorts() async {
     return await super.preparePorts(
       type: MediaType.playlist,
-      portRefreshListener: playlistsMap,
       onResult: (result) {
         runningSearchesTempCount.value = runningSearchesTempCount.value - 1;
         if (result == null) return; // -- prepared
@@ -371,18 +369,6 @@ class SearchSortController extends SearchPortsProvider {
   Future<SendPortWithCachedMessage> _prepareMediaPorts(Iterable<String> keysList, MediaType type) async {
     return await super.preparePorts(
       type: type,
-      portRefreshListener: switch (type) {
-        MediaType.album => Indexer.inst.mainMapAlbums.rx,
-        MediaType.artist => Indexer.inst.mainMapArtists.rx,
-        MediaType.albumArtist => Indexer.inst.mainMapAlbumArtists.rx,
-        MediaType.composer => Indexer.inst.mainMapComposer.rx,
-        MediaType.genre => Indexer.inst.mainMapGenres.rx,
-        MediaType.folder => Indexer.inst.mainMapFoldersTracksAndVideos,
-        MediaType.folderMusic => Indexer.inst.mainMapFoldersTracks,
-        MediaType.folderVideo => Indexer.inst.mainMapFoldersVideos,
-        MediaType.track => null,
-        MediaType.playlist => null,
-      },
       onResult: (result) {
         runningSearchesTempCount.value = runningSearchesTempCount.value - 1;
         if (result == null) return; // -- prepared
@@ -666,6 +652,7 @@ class SearchSortController extends SearchPortsProvider {
       default:
         null;
     }
+    SearchSortController.inst.refreshPortsIfNecessary();
   }
 
   /// Sorts Tracks and Saves automatically to settings

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:youtipie/class/sponsorblock_segment.dart';
 import 'package:youtipie/class/streams/stream_segments.dart';
 import 'package:youtipie/class/videos/video_heat_map.dart';
+import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -364,7 +365,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                     String? landingSegmentTitle;
                     final streamSegments = YoutubeInfoController.current.currentVideoPage.value?.streamSegments;
                     if (streamSegments != null && streamSegments.isNotEmpty) {
-                      final landingSegment = streamSegments.lastWhereEff((e) => e.startSeconds != null && seek >= (e.startSeconds! * 1000));
+                      final landingSegment = streamSegments.findByMillisecond(seek);
                       landingSegmentTitle = landingSegment?.title;
                     }
                     final isGoodSegmentTitle = landingSegmentTitle != null && landingSegmentTitle.isNotEmpty;
@@ -836,8 +837,8 @@ class _HeatMapWidgetState extends State<_HeatMapWidget> {
                 key: const ValueKey('shown'),
                 painter: SmoothLinePainter(
                   colors: const [
-                    Color(0xDDFFFFFF),
-                    Color(0x4DFFFFFF),
+                    Color(0xCDFFFFFF),
+                    Color(0x3DFFFFFF),
                   ],
                   heatMap: details.heatMap,
                   totalDurationMS: details.durMs,
@@ -932,6 +933,7 @@ class SmoothLinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (heatMap.isEmpty) return;
+    if (size.height == 0) return;
 
     final path = Path();
 

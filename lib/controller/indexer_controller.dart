@@ -833,6 +833,8 @@ class Indexer<T extends Track> {
     FoldersController.tracks.currentFolder.refresh();
     FoldersController.videos.currentFolder.refresh();
     recentlyDeltedFileWrite.flush().then((_) => recentlyDeltedFileWrite.close());
+
+    SearchSortController.inst.refreshPortsIfNecessary();
   }
 
   Future<void> reindexTracks({
@@ -904,6 +906,8 @@ class Indexer<T extends Track> {
     Player.inst.refreshNotification();
     _sortAndRefreshTracks();
     onFinish(finalNewOldTracks.length);
+
+    SearchSortController.inst.refreshPortsIfNecessary();
   }
 
   Future<void> updateTrackMetadata({
@@ -938,6 +942,8 @@ class Indexer<T extends Track> {
     _addTheseTracksToAlbumGenreArtistEtc(finalNewOldTracks);
     _sortAndRefreshTracks();
     tracksInfoList.refresh();
+
+    SearchSortController.inst.refreshPortsIfNecessary();
     final globalSearchText = ScrollSearchController.inst.searchTextEditingController.text;
     if (globalSearchText.isNotEmpty) SearchSortController.inst.searchAll(globalSearchText);
   }
@@ -969,6 +975,7 @@ class Indexer<T extends Track> {
       _addTrackToLists(trext, model.tags.artwork);
       _addTheseTracksToAlbumGenreArtistEtc({trext: null});
       // _sortAndRefreshTracks();
+      SearchSortController.inst.refreshPortsIfNecessary();
       return trext.asTrack() as T;
     }
 
@@ -1039,6 +1046,9 @@ class Indexer<T extends Track> {
     _sortAndRefreshTracks();
 
     finalTracks.sortBy((e) => orderLookup[e.path] ?? 0);
+
+    SearchSortController.inst.refreshPortsIfNecessary();
+
     return finalTracks;
   }
 
@@ -1058,7 +1068,9 @@ class Indexer<T extends Track> {
     _clearTracksDBAndReOpen();
     allTracksMappedByYTID.clear();
     _currentFileNamesMap.clear();
+
     SearchSortController.inst.sortMedia(MediaType.track);
+    SearchSortController.inst.refreshPortsIfNecessary();
   }
 
   void _resetCounters() {
@@ -1195,6 +1207,7 @@ class Indexer<T extends Track> {
     _sortAndRefreshTracks();
     _createDefaultNamidaArtworkIfRequired();
     TrackTileManager.onTrackItemPropChange();
+    SearchSortController.inst.refreshPortsIfNecessary();
   }
 
   Future<void> updateTrackDuration(Track track, Duration dur) async {
@@ -1318,7 +1331,7 @@ class Indexer<T extends Track> {
           FoldersController.videos.onFirstLoad();
           _refreshMediaTracksSubListsAfterSort(mediaSorters.keys);
 
-          SearchSortController.inst.disposeResources(); // -- vip to refresh filtering
+          SearchSortController.inst.refreshPortsIfNecessary(); // -- vip to refresh filtering
         },
       ),
       handleRecieveTracks(),

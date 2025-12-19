@@ -1,28 +1,11 @@
 import 'dart:async';
 import 'dart:isolate';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/utils.dart';
-
-class _PortsCommWithListener {
-  final PortsComm comm;
-  final RxBaseCore? rx;
-  final void Function() listener;
-
-  _PortsCommWithListener(
-    this.comm,
-    this.rx,
-    this.listener,
-  ) {
-    rx?.addListener(listener);
-  }
-
-  void dispose() {
-    rx?.removeListener(listener);
-  }
-}
 
 class SendPortWithCachedMessage {
   final SendPort sendPort;
@@ -37,12 +20,13 @@ class SendPortWithCachedMessage {
 }
 
 abstract class SearchPortsProvider {
-  final _ports = <MediaType, _PortsCommWithListener?>{};
+  final _ports = <MediaType, PortsComm?>{};
   final _sendPorts = <MediaType, SendPortWithCachedMessage?>{};
   final _sendPortsStreamSubs = <MediaType, StreamSubscription?>{};
 
   Future<SendPortWithCachedMessage> Function() mediaTypeToPrepareFn(MediaType type);
 
+  @protected
   Future<void> disposeAll() async {
     await Future.wait(MediaType.values.map(closePorts));
   }
@@ -58,9 +42,7 @@ abstract class SearchPortsProvider {
     _sendPorts[type] = null;
   }
 
-  Future<void> _closePortAndRemoveListener(_PortsCommWithListener portWrapper) async {
-    portWrapper.dispose(); // remove listener
-    final port = portWrapper.comm;
+  Future<void> _closePortAndRemoveListener(PortsComm port) async {
     port.items.close();
     final sendPort = await port.search.future;
     PortsProvider.sendDisposeMessage(sendPort);
@@ -68,19 +50,16 @@ abstract class SearchPortsProvider {
 
   Future<SendPortWithCachedMessage> preparePorts({
     required MediaType type,
-    required RxBaseCore? portRefreshListener,
     required void Function(dynamic result) onResult,
     required Future<void> Function(SendPort itemsSendPort) isolateFunction,
     bool force = false,
   }) async {
     final sendPort = await preparePortBase(
       type: type,
-      portN: _ports[type]?.comm,
+      portN: _ports[type],
       onPortNull: () async {
         await closePorts(type);
-        final newPort = _PortsCommWithListener((items: ReceivePort(), search: Completer<SendPort>()), portRefreshListener, () => _reopenPortOnMainListChanges(type));
-        _ports[type] = newPort;
-        return newPort.comm;
+        return _ports[type] ??= (items: ReceivePort(), search: Completer<SendPort>());
       },
       onResult: onResult,
       isolateFunction: isolateFunction,
@@ -110,11 +89,24 @@ abstract class SearchPortsProvider {
     return await port.search.future;
   }
 
-  void _reopenPortOnMainListChanges(MediaType type) async {
+  Future<void> refreshPortIfNecessary(MediaType type) async {
+    await _reopenPortOnMainListChanges(type);
+  }
+
+  Future<void> refreshPortsIfNecessary() async {
+    final activeTypes = _sendPorts.keys.toList();
+    await Future.wait(activeTypes.map(_reopenPortOnMainListChanges));
+  }
+
+  Future<void> _reopenPortOnMainListChanges(MediaType type) async {
+    final wasActive = _ports[type] != null;
     final cachedMsg = _sendPorts[type]?._latestMessage;
     await closePorts(type);
-    final prepareFn = mediaTypeToPrepareFn(type);
-    await prepareFn();
-    if (cachedMsg != null) _sendPorts[type]?.send(cachedMsg);
+
+    if (wasActive && cachedMsg != null) {
+      final prepareFn = mediaTypeToPrepareFn(type);
+      await prepareFn();
+      _sendPorts[type]?.send(cachedMsg);
+    }
   }
 }
