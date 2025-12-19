@@ -41,6 +41,7 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
@@ -844,7 +845,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           return ObxO(
             rx: Player.inst.nowPlayingPosition,
             builder: (context, currentPositionMS) {
-              final currentSegment = streamSegments.lastWhereEff((e) => e.startSeconds != null && currentPositionMS >= (e.startSeconds! * 1000));
+              final currentSegment = streamSegments.findByMillisecond(currentPositionMS);
               if (currentSegment != null && currentSegment.title.isNotEmpty) {
                 return NamidaBgBlurClipped(
                   blur: 3.0,
@@ -852,17 +853,28 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     color: Colors.black.withValues(alpha: 0.2),
                     borderRadius: borr8,
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(6.0),
-                    child: Text(
-                      currentSegment.title,
-                      style: textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 11.0,
-                        color: itemsColor,
+                  child: TapDetector(
+                    onTap: () async {
+                      final startSeconds = currentSegment.startSeconds;
+                      if (startSeconds != null) {
+                        if (widget.isFullScreen) {
+                          await NamidaNavigator.inst.exitFullScreen();
+                        }
+                        YoutubeMiniplayerUiController.inst.ensureSegmentsVisible();
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: Text(
+                        currentSegment.title,
+                        style: textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 11.0,
+                          color: itemsColor,
+                        ),
+                        softWrap: false,
+                        overflow: TextOverflow.fade,
                       ),
-                      softWrap: false,
-                      overflow: TextOverflow.fade,
                     ),
                   ),
                 );

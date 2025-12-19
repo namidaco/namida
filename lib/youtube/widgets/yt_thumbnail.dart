@@ -304,7 +304,7 @@ class YtThumbnailOverlayBox extends StatelessWidget {
               if (icon != null)
                 Icon(
                   icon,
-                  size: 15.0,
+                  size: 13.0,
                   color: Colors.white.withValues(alpha: 0.8),
                 ),
               if (text != null && icon != null) const SizedBox(width: 2.0),

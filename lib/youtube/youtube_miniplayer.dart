@@ -7,6 +7,7 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/channels/channel_info.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
+import 'package:youtipie/class/streams/stream_segments.dart';
 import 'package:youtipie/class/videos/video_info.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/core/enum.dart';
@@ -132,6 +133,12 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     _isTitleExpanded.value = false;
   }
 
+  final _expansibleController = ExpansibleController();
+
+  void openDescription() {
+    _expansibleController.expand();
+  }
+
   final _videoLikeManager = YtVideoLikeManager(pageRx: YoutubeInfoController.current.currentVideoPage);
 
   @override
@@ -156,6 +163,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     _shouldShowGlowUnderVideo.close();
     _isQueueFullyExpanded.close();
     _videoLikeManager.dispose();
+    _expansibleController.dispose();
     super.dispose();
   }
 
@@ -322,10 +330,30 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                             final description = videoInfo?.description;
                             final descriptionWidget = description == null
                                 ? null
-                                : YoutubeDescriptionWidget(
-                                    videoId: currentId,
-                                    content: description,
+                                : Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                                    child: YoutubeDescriptionWidget(
+                                      videoId: currentId,
+                                      content: description,
+                                    ),
                                   );
+
+                            final segments = page?.streamSegments;
+                            final segmentsRow = segments != null && segments.isNotEmpty
+                                ? _StreamSegmentsRow(
+                                    videoId: currentId,
+                                    segments: segments,
+                                  )
+                                : null;
+                            final epansionTileChildren = descriptionWidget != null || segmentsRow != null
+                                ? [
+                                    const SizedBox(height: 12.0),
+                                    if (segmentsRow != null) segmentsRow,
+                                    if (segmentsRow != null && descriptionWidget != null) const SizedBox(height: 12.0),
+                                    if (descriptionWidget != null) descriptionWidget,
+                                    const SizedBox(height: 12.0),
+                                  ]
+                                : null;
 
                             final defaultIconColor = context.defaultIconColor(CurrentColor.inst.miniplayerColor);
 
@@ -412,7 +440,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                                   uploadDateAgo: uploadDateAgo,
                                                                   maxWidth: maxWidth,
                                                                   videoViewCount: videoViewCount,
-                                                                  descriptionWidget: descriptionWidget,
+                                                                  expansibleController: _expansibleController,
+                                                                  epansionTileChildren: epansionTileChildren,
                                                                   videoLikeManager: _videoLikeManager,
                                                                   videoInfo: videoInfo,
                                                                   currentIdTask: currentIdTask,
@@ -713,7 +742,8 @@ class _YTPlayerInnerPage extends StatelessWidget {
   final String? uploadDateAgo;
   final double maxWidth;
   final int? videoViewCount;
-  final YoutubeDescriptionWidget? descriptionWidget;
+  final ExpansibleController? expansibleController;
+  final List<Widget>? epansionTileChildren;
   final YtVideoLikeManager _videoLikeManager;
   final YoutiPieVideoInfo? videoInfo;
   final DownloadTaskVideoId currentIdTask;
@@ -746,7 +776,8 @@ class _YTPlayerInnerPage extends StatelessWidget {
     required this.maxWidth,
     required this.shimmerEnabledDummyContainer,
     required this.videoViewCount,
-    required this.descriptionWidget,
+    required this.expansibleController,
+    required this.epansionTileChildren,
     required YtVideoLikeManager videoLikeManager,
     required this.videoInfo,
     required this.currentIdTask,
@@ -804,6 +835,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                       shimmerDelayMS: 250,
                       shimmerEnabled: shimmerEnabled && videoTitle == null,
                       child: ExpansionTile(
+                        controller: expansibleController,
                         // key: Key(currentId),
                         backgroundColor: Colors.transparent,
                         collapsedShape: const Border(),
@@ -817,7 +849,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                         collapsedTextColor: mainTheme.colorScheme.onSurface,
                         iconColor: Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(40), mainTheme.colorScheme.onSurface),
                         collapsedIconColor: mainTheme.colorScheme.onSurface,
-                        childrenPadding: const EdgeInsets.all(18.0),
+                        childrenPadding: EdgeInsets.zero,
                         onExpansionChanged: (value) => _isTitleExpanded.value = value,
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -905,9 +937,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                             );
                           },
                         ),
-                        children: [
-                          if (descriptionWidget != null) descriptionWidget!,
-                        ],
+                        children: epansionTileChildren ?? const <Widget>[],
                       ),
                     ),
                   ),
@@ -1590,6 +1620,134 @@ class _YTPlayerInnerPage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _StreamSegmentsRow extends StatefulWidget {
+  final String videoId;
+  final List<StreamSegment> segments;
+  const _StreamSegmentsRow({required this.segments, required this.videoId});
+
+  @override
+  State<_StreamSegmentsRow> createState() => _StreamSegmentsRowState();
+}
+
+class _StreamSegmentsRowState extends State<_StreamSegmentsRow> {
+  StreamSegment? _currentSegment;
+  late final _controller = ScrollController();
+
+  final _segmentKeys = <StreamSegment, GlobalKey>{};
+
+  @override
+  void initState() {
+    for (final s in widget.segments) {
+      _segmentKeys[s] = GlobalKey();
+    }
+    _onPlayerPositionChange();
+    Player.inst.nowPlayingPosition.addListener(_onPlayerPositionChange);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    Player.inst.nowPlayingPosition.removeListener(_onPlayerPositionChange);
+    super.dispose();
+  }
+
+  void _onPlayerPositionChange() {
+    final currentPositionMS = Player.inst.nowPlayingPosition.value;
+    final currentSegment = widget.segments.findByMillisecond(currentPositionMS);
+
+    if (_currentSegment != currentSegment) {
+      if (mounted) {
+        setState(() => _currentSegment = currentSegment);
+        if (currentSegment != null) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) {
+              final context = _segmentKeys[currentSegment]?.currentContext;
+              if (context != null) {
+                _controller.position.ensureVisible(
+                  context.findRenderObject()!,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.fastEaseInToSlowEaseOut,
+                  alignment: 0.4,
+                );
+              }
+            },
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final thumbWidth = (context.width * 0.2).withMaximum(128.0);
+    const thumbHorizontalPadding = 1.0;
+    final currentSegment = _currentSegment;
+    return SingleChildScrollView(
+      controller: _controller,
+      padding: EdgeInsets.symmetric(horizontal: 8.0),
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: widget.segments.map(
+          (e) {
+            final url = e.thumbnail?.url;
+            final isCurrentSegment = e == currentSegment;
+            return NamidaInkWell(
+              key: _segmentKeys[e],
+              animationDurationMS: 200,
+              borderRadius: 6.0,
+              width: thumbWidth + thumbHorizontalPadding * 2,
+              bgColor: isCurrentSegment ? context.theme.colorScheme.secondaryContainer : context.theme.cardColor.withValues(alpha: 0.4),
+              onTap: () {
+                final startSeconds = e.startSeconds;
+                if (startSeconds != null) {
+                  Player.inst.seek(Duration(milliseconds: (startSeconds * 1000) + 1));
+                }
+              },
+              margin: const EdgeInsets.symmetric(horizontal: 2.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(thumbHorizontalPadding),
+                    child: YoutubeThumbnail(
+                      type: ThumbnailType.video,
+                      key: Key('${widget.videoId}_$url'),
+                      borderRadius: 6.0,
+                      isImportantInCache: false,
+                      width: thumbWidth,
+                      height: thumbWidth * 9 / 16,
+                      videoId: widget.videoId,
+                      preferLowerRes: true,
+                      customUrl: url,
+                      smallBoxText: e.startSeconds?.secondsLabel,
+                      smallBoxIcon: isCurrentSegment ? Broken.play : null,
+                      forceSquared: true,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 1.0, left: 4.0, bottom: 3.0),
+                    child: Text(
+                      e.title,
+                      style: context.textTheme.displaySmall?.copyWith(
+                        fontSize: 11.0,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      softWrap: false,
+                      overflow: TextOverflow.fade,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ).toList(),
       ),
     );
   }

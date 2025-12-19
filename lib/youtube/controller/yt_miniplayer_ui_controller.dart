@@ -24,4 +24,8 @@ class YoutubeMiniplayerUiController {
   void resetGlowUnderVideo() {
     ytMiniplayerKey.currentState?.resetGlowUnderVideo();
   }
+
+  void ensureSegmentsVisible() {
+    ytMiniplayerKey.currentState?.openDescription();
+  }
 }
