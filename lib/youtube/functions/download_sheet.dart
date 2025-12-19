@@ -59,8 +59,8 @@ Future<void> showDownloadVideoBottomSheet({
   totalLength ??= initialItemConfig?.totalLength;
   streamInfoItem ??= initialItemConfig?.streamInfoItem;
 
-  final showAudioWebm = false.obs;
-  final showVideoWebm = false.obs;
+  final showAudioWebm = settings.youtube.preferOpusFormat.obs;
+  final showVideoWebm = settings.youtube.allowExperimentalCodecs.obs;
   final isLoadingInfoRx = Rx<bool>(true);
   final isLoadingStreamsRx = Rx<bool>(true);
   final streamResultRx = Rxn<VideoStreamsResult>();
@@ -174,7 +174,8 @@ Future<void> showDownloadVideoBottomSheet({
     final sInfo = streams?.info;
     if (sInfo != null) videoInfo.value = sInfo;
 
-    selectedAudioOnlyStream.value = streamResultRx.value?.audioStreams.firstNonWebm();
+    final audioStreams = streamResultRx.value?.audioStreams;
+    selectedAudioOnlyStream.value = YoutubeController.getPreferredAudioStream(audioStreams);
     if (selectedAudioOnlyStream.value == null) {
       selectedAudioOnlyStream.value = streams?.audioStreams.firstOrNull;
       if (selectedAudioOnlyStream.value?.isWebm == true) {
@@ -325,6 +326,7 @@ Future<void> showDownloadVideoBottomSheet({
     final Widget? leading,
     final TextStyle? style,
     required final bool hasWebm,
+    required final bool webmIconEnabled,
     required final void Function()? onSussyIconTap,
     required final void Function() onCloseIconTap,
   }) {
@@ -355,8 +357,17 @@ Future<void> showDownloadVideoBottomSheet({
               verticalPadding: 6.0,
               horizontalPadding: 6.0,
               iconSize: 20.0,
-              icon: Broken.video_octagon,
+              icon: webmIconEnabled ? null : Broken.video_octagon,
               onPressed: onSussyIconTap,
+              child: webmIconEnabled
+                  ? StackedIcon(
+                      baseIcon: Broken.video_octagon,
+                      secondaryIcon: Broken.cpu,
+                      baseIconColor: context.theme.colorScheme.secondary,
+                      iconSize: 20.0,
+                      secondaryIconSize: 13.0,
+                    )
+                  : null,
             ),
           NamidaIconButton(
             verticalPadding: 6.0,
@@ -569,6 +580,7 @@ Future<void> showDownloadVideoBottomSheet({
                                     children: [
                                       Obx(
                                         (context) {
+                                          final webmIconEnabled = showAudioWebm.valueR;
                                           final e = selectedAudioOnlyStream.valueR;
                                           final subtitle = e == null ? null : "${e.bitrateText()} • ${e.codecInfo.container} • ${e.sizeInBytes.fileSizeFormatted}";
                                           return getTextWidget(
@@ -576,6 +588,7 @@ Future<void> showDownloadVideoBottomSheet({
                                             title: lang.AUDIO,
                                             subtitle: subtitle,
                                             icon: Broken.audio_square,
+                                            webmIconEnabled: webmIconEnabled,
                                             onCloseIconTap: () {
                                               selectedAudioOnlyStream.value = null;
                                               onAudioSelectionChanged();
@@ -631,12 +644,14 @@ Future<void> showDownloadVideoBottomSheet({
                                       ObxO(
                                         rx: selectedVideoOnlyStream,
                                         builder: (context, vostream) {
+                                          final webmIconEnabled = showAudioWebm.valueR;
                                           final subtitle = vostream == null ? null : "${vostream.qualityLabel} • ${vostream.sizeInBytes.fileSizeFormatted}";
                                           return getTextWidget(
                                             hasWebm: hasVideoWebm,
                                             title: lang.VIDEO,
                                             subtitle: subtitle,
                                             icon: Broken.video_square,
+                                            webmIconEnabled: webmIconEnabled,
                                             onCloseIconTap: () {
                                               selectedVideoOnlyStream.value = null;
                                               onVideoSelectionChanged();

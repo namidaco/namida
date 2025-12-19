@@ -899,6 +899,17 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                 subtitle: 'av1 & vp9',
               ),
               CustomSwitchListTile(
+                leading: StackedIcon(
+                  baseIcon: Broken.audio_square,
+                  secondaryIcon: Broken.cpu_charge,
+                  secondaryIconSize: 12.0,
+                ),
+                value: settings.youtube.preferOpusFormat,
+                onChanged: (isTrue) => setState(() => settings.youtube.save(preferOpusFormat: !isTrue)),
+                title: 'prefer_opus_format'.toUpperCase(),
+                subtitle: 'opus/webm',
+              ),
+              CustomSwitchListTile(
                 icon: Broken.video_horizontal,
                 value: settings.youtube.enableGifThumbnails,
                 onChanged: (isTrue) => setState(() => settings.youtube.save(enableGifThumbnails: !isTrue)),

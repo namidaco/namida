@@ -168,11 +168,30 @@ class YoutubeController {
     YTOnGoingFinishedDownloads.inst.refreshList();
   }
 
-  AudioStream? getPreferredAudioStream(List<AudioStream> audiostreams) {
-    return audiostreams.firstWhereEff((e) => !e.isWebm && e.audioTrack?.langCode == 'en') ?? audiostreams.firstWhereEff((e) => !e.isWebm) ?? audiostreams.firstOrNull;
+  static AudioStream? getPreferredAudioStream(List<AudioStream>? audiostreams) {
+    if (audiostreams == null) return null;
+    final preferOpusFormat = settings.youtube.preferOpusFormat;
+
+    AudioStream? firstWhereEffIterable(Iterable<AudioStream> streams, bool Function(AudioStream s) test) {
+      for (final s in streams) {
+        if (test(s)) return s;
+      }
+      return null;
+    }
+
+    Iterable<AudioStream> filtered;
+    if (preferOpusFormat) {
+      filtered = audiostreams.where((e) => e.isWebm);
+    } else {
+      filtered = audiostreams.where((e) => !e.isWebm);
+    }
+    return firstWhereEffIterable(filtered, (e) => e.audioTrack?.isDefault == true) ?? //
+        firstWhereEffIterable(filtered, (e) => e.audioTrack?.langCode == 'en') ??
+        filtered.firstOrNull ??
+        audiostreams.firstOrNull;
   }
 
-  VideoStream? getPreferredStreamQuality(List<VideoStream> streams, {List<String> qualities = const [], bool preferIncludeWebm = false}) {
+  static VideoStream? getPreferredStreamQuality(List<VideoStream> streams, {List<String> qualities = const [], bool preferIncludeWebm = false}) {
     if (streams.isEmpty) return null;
     final allowExperimentalCodecs = settings.youtube.allowExperimentalCodecs;
 
@@ -637,7 +656,7 @@ class YoutubeController {
             config.audioStream = audios.firstWhereEff((e) => e.itag.toString() == config.prefferedAudioQualityID);
           }
           if (config.audioStream == null || config.audioStream?.buildUrl()?.host.isNotEmpty != true) {
-            config.audioStream = audios.firstNonWebm() ?? audios.firstOrNull;
+            config.audioStream = getPreferredAudioStream(audios) ?? audios.firstOrNull;
           }
         }
 

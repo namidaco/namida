@@ -13,7 +13,6 @@ import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
-import 'package:youtipie/core/extensions.dart' show StreamFilterUtils;
 
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/custom_mpv_player.dart';
@@ -894,7 +893,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           AudioStream? audioStream = currentAudioStream.value;
           if (audioStream == null) {
             final streamRes = mainStreams?.audioStreams;
-            if (streamRes != null) audioStream = YoutubeController.inst.getPreferredAudioStream(streamRes);
+            if (streamRes != null) audioStream = YoutubeController.getPreferredAudioStream(streamRes);
           }
           if (audioStream != null) {
             final url = audioStream.buildUrl();
@@ -955,7 +954,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         if (newStreams != null) YoutubeInfoController.current.currentYTStreams.value = newStreams;
         VideoStream? sameStream = newStreams?.videoStreams.firstWhereEff((e) => e.itag == stream.itag);
         if (sameStream == null && newStreams != null) {
-          sameStream = YoutubeController.inst.getPreferredStreamQuality(newStreams.videoStreams, preferIncludeWebm: false);
+          sameStream = YoutubeController.getPreferredStreamQuality(newStreams.videoStreams, preferIncludeWebm: false);
         }
 
         if (sameStream != null) {
@@ -1039,7 +1038,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
         if (checkInterrupted()) return;
         if (newStreams != null) YoutubeInfoController.current.currentYTStreams.value = newStreams;
-        final sameStream = newStreams?.audioStreams.firstWhereEff((e) => e.itag == stream.itag) ?? newStreams?.audioStreams.firstNonWebm();
+        final sameStream = newStreams?.audioStreams.firstWhereEff((e) => e.itag == stream.itag) ?? YoutubeController.getPreferredAudioStream(newStreams?.audioStreams);
 
         if (sameStream != null) {
           try {
@@ -1492,7 +1491,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
         if (useMixedStream) {
           UriSource? finalMixedSource;
-          final prefferedMixedStream = YoutubeController.inst.getPreferredStreamQuality(mixedStreams, preferIncludeWebm: false);
+          final prefferedMixedStream = YoutubeController.getPreferredStreamQuality(mixedStreams, preferIncludeWebm: false);
 
           currentVideoStream.value = prefferedMixedStream;
           if (prefferedMixedStream != null) {
@@ -1539,7 +1538,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           _isCurrentAudioFromCache = cachedAudioSet != null;
 
           // -- setting audio
-          final prefferedAudioStream = YoutubeController.inst.getPreferredAudioStream(audiostreams);
+          final prefferedAudioStream = YoutubeController.getPreferredAudioStream(audiostreams);
           bool isAudioStreamRequiredBetterThanCachedSet = cachedAudioSet == null
               ? true
               : prefferedAudioStream == null
@@ -1567,7 +1566,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               videoStreams.isNotEmpty &&
               ConnectivityController.inst.dataSaverMode.canFetchNetworkVideoStreamShortContent(await YoutubeInfoController.utils.isShortContent(item.id))) {
             if (cachedVideoSet != null ? _allowSwitchingVideoStreamIfCachedPlaying : true) {
-              final prefferedVideoStream = YoutubeController.inst.getPreferredStreamQuality(videoStreams, preferIncludeWebm: false);
+              final prefferedVideoStream = YoutubeController.getPreferredStreamQuality(videoStreams, preferIncludeWebm: false);
               bool isVideoStreamRequiredBetterThanCachedSet = cachedVideoSet == null
                   ? true
                   : prefferedVideoStream == null

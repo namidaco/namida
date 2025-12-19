@@ -42,6 +42,7 @@ class _YoutubeSettings with SettingsFileWriter {
   bool whiteVideoBGInLightMode = false;
   bool enableDimInLightMode = true;
   bool allowExperimentalCodecs = false;
+  bool preferOpusFormat = false;
   bool enableGifThumbnails = false;
 
   final sponsorBlockSettings = SponsorBlockSettings().obs;
@@ -79,6 +80,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? whiteVideoBGInLightMode,
     bool? enableDimInLightMode,
     bool? allowExperimentalCodecs,
+    bool? preferOpusFormat,
     bool? enableGifThumbnails,
   }) {
     if (showChannelWatermarkFullscreen != null) this.showChannelWatermarkFullscreen.value = showChannelWatermarkFullscreen;
@@ -113,6 +115,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (whiteVideoBGInLightMode != null) this.whiteVideoBGInLightMode = whiteVideoBGInLightMode;
     if (enableDimInLightMode != null) this.enableDimInLightMode = enableDimInLightMode;
     if (allowExperimentalCodecs != null) this.allowExperimentalCodecs = allowExperimentalCodecs;
+    if (preferOpusFormat != null) this.preferOpusFormat = preferOpusFormat;
     if (enableGifThumbnails != null) this.enableGifThumbnails = enableGifThumbnails;
     _writeToStorage();
   }
@@ -192,6 +195,7 @@ class _YoutubeSettings with SettingsFileWriter {
       whiteVideoBGInLightMode = json['whiteVideoBGInLightMode'] ?? whiteVideoBGInLightMode;
       enableDimInLightMode = json['enableDimInLightMode'] ?? enableDimInLightMode;
       allowExperimentalCodecs = json['allowExperimentalCodecs'] ?? allowExperimentalCodecs;
+      preferOpusFormat = json['preferOpusFormat'] ?? preferOpusFormat;
       enableGifThumbnails = json['enableGifThumbnails'] ?? enableGifThumbnails;
     } catch (e, st) {
       printy(e, isError: true);
@@ -234,6 +238,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'whiteVideoBGInLightMode': whiteVideoBGInLightMode,
         'enableDimInLightMode': enableDimInLightMode,
         'allowExperimentalCodecs': allowExperimentalCodecs,
+        'preferOpusFormat': preferOpusFormat,
         'enableGifThumbnails': enableGifThumbnails,
       };
 

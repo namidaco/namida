@@ -498,7 +498,7 @@ class VideoController {
       // expired null or true
       mainStreams = await YoutubeInfoController.video.fetchVideoStreams(id);
       if (mainStreams != null) {
-        final newStreamToUse = mainStreams.videoStreams.firstWhereEff((e) => e.itag == stream?.itag) ?? YoutubeController.inst.getPreferredStreamQuality(mainStreams.videoStreams);
+        final newStreamToUse = mainStreams.videoStreams.firstWhereEff((e) => e.itag == stream?.itag) ?? YoutubeController.getPreferredStreamQuality(mainStreams.videoStreams);
         streamToUse = newStreamToUse;
       }
     }
