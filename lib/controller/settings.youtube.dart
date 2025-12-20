@@ -3,6 +3,12 @@ part of 'settings_controller.dart';
 class _YoutubeSettings with SettingsFileWriter {
   _YoutubeSettings._internal();
 
+  int get kMaxDaysForPageCacheDuration => kDefaultMaxDaysForPageCacheDuration;
+  int get kMinutesInMaxDaysForPageCache => kDefaultMinutesInMaxDaysForPageCache;
+
+  static const int kDefaultMaxDaysForPageCacheDuration = 90;
+  static const int kDefaultMinutesInMaxDaysForPageCache = kDefaultMaxDaysForPageCacheDuration * (24 * 60);
+
   String get defaultFilenameBuilder => _defaultFilenameBuilder;
 
   static const _defaultFilenameBuilder = '[%(playlist_autonumber)s] %(video_title)s [(%(channel)s)].%(ext)s';
@@ -44,6 +50,7 @@ class _YoutubeSettings with SettingsFileWriter {
   bool allowExperimentalCodecs = false;
   bool preferOpusFormat = false;
   bool enableGifThumbnails = false;
+  int maxPageCacheDurationMin = kDefaultMaxDaysForPageCacheDuration;
 
   final sponsorBlockSettings = SponsorBlockSettings().obs;
   final ryd = ReturnYoutubeDislikeSettings().obs;
@@ -82,6 +89,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? allowExperimentalCodecs,
     bool? preferOpusFormat,
     bool? enableGifThumbnails,
+    int? maxPageCacheDurationMin,
   }) {
     if (showChannelWatermarkFullscreen != null) this.showChannelWatermarkFullscreen.value = showChannelWatermarkFullscreen;
     if (showVideoEndcards != null) this.showVideoEndcards.value = showVideoEndcards;
@@ -117,6 +125,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (allowExperimentalCodecs != null) this.allowExperimentalCodecs = allowExperimentalCodecs;
     if (preferOpusFormat != null) this.preferOpusFormat = preferOpusFormat;
     if (enableGifThumbnails != null) this.enableGifThumbnails = enableGifThumbnails;
+    if (maxPageCacheDurationMin != null) this.maxPageCacheDurationMin = maxPageCacheDurationMin;
     _writeToStorage();
   }
 
@@ -197,6 +206,7 @@ class _YoutubeSettings with SettingsFileWriter {
       allowExperimentalCodecs = json['allowExperimentalCodecs'] ?? allowExperimentalCodecs;
       preferOpusFormat = json['preferOpusFormat'] ?? preferOpusFormat;
       enableGifThumbnails = json['enableGifThumbnails'] ?? enableGifThumbnails;
+      maxPageCacheDurationMin = json['maxPageCacheDurationMin'] ?? maxPageCacheDurationMin;
     } catch (e, st) {
       printy(e, isError: true);
       logger.report(e, st);
@@ -240,6 +250,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'allowExperimentalCodecs': allowExperimentalCodecs,
         'preferOpusFormat': preferOpusFormat,
         'enableGifThumbnails': enableGifThumbnails,
+        'maxPageCacheDurationMin': maxPageCacheDurationMin,
       };
 
   Future<void> _writeToStorage() => writeToStorage();

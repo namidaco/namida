@@ -133,13 +133,36 @@ class _YoutubeCurrentInfoController {
       );
       return;
     }
+
+    bool resetCurrentInfoOnFetch = true;
+
+    final currentPage = _currentVideoPage.value;
+    final maxCacheDurationMin = settings.youtube.maxPageCacheDurationMin;
+
+    if (!requestPage) {
+      // -- force set to true if cache duration invalid
+      if (maxCacheDurationMin > 0) {
+        if (maxCacheDurationMin > settings.youtube.kMinutesInMaxDaysForPageCache) {
+          // -- always invalid
+          requestPage = true;
+          resetCurrentInfoOnFetch = false;
+        } else {
+          final timestamp = currentPage?.timestamp;
+          if (timestamp == null || DateTime.now().difference(timestamp).inMinutes > maxCacheDurationMin) {
+            requestPage = true;
+            resetCurrentInfoOnFetch = false;
+          }
+        }
+      }
+    }
+
     if (!requestPage && !requestComments) {
       if (!_personzaliedRelatedVideos) _fetchAndUpdateRelatedVideos(videoId);
       if (_dislikeCountEnabled) fetchAndUpdateDislikeCount(videoId);
       return;
     }
 
-    if (requestPage) {
+    if (requestPage && resetCurrentInfoOnFetch) {
       if (onVideoPageReset != null) onVideoPageReset!(); // jumps miniplayer to top
       _currentVideoPage.value = null;
       _currentDislikeCount.value = null;
@@ -154,9 +177,9 @@ class _YoutubeCurrentInfoController {
 
     commentsSort ??= YoutubeMiniplayerUiController.inst.currentCommentSort.value;
 
-    _isLoadingVideoPage.value = true;
+    if (resetCurrentInfoOnFetch) _isLoadingVideoPage.value = true;
     final page = await YoutubeInfoController.video.fetchVideoPage(videoId, details: ExecuteDetails.forceRequest());
-    _isLoadingVideoPage.value = false;
+    if (resetCurrentInfoOnFetch) _isLoadingVideoPage.value = false;
 
     if (page != null) {
       final chId = page.channelInfo?.id ?? await YoutubeInfoController.utils.getVideoChannelID(videoId);

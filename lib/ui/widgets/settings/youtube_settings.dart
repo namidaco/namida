@@ -827,6 +827,7 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
 
   @override
   Widget build(BuildContext context) {
+    final maxPageCacheDurationMin = settings.youtube.maxPageCacheDurationMin;
     return SizedBox(
       width: context.width,
       child: ConstrainedBox(
@@ -934,6 +935,30 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                 ),
               ),
               CustomListTile(
+                icon: Broken.driver_refresh,
+                title: 'max_page_cache_duration_validity'.toUpperCase(),
+                onTap: () {
+                  NamidaNavigator.inst.navigateDialog(
+                    dialog: _MaxPageCacheDurationDialog(
+                      icon: Broken.driver_refresh,
+                      title: 'max_page_cache_duration_validity'.toUpperCase(),
+                      onSave: (minutesTotal) {
+                        setState(() => settings.youtube.save(maxPageCacheDurationMin: minutesTotal));
+                      },
+                    ),
+                  );
+                },
+                trailingText: maxPageCacheDurationMin < 0
+                    ? 'always valid'
+                    : maxPageCacheDurationMin > settings.youtube.kMinutesInMaxDaysForPageCache
+                        ? 'always invalid'
+                        : maxPageCacheDurationMin > 24 * 60
+                            ? '${(maxPageCacheDurationMin / 24 / 60).toStringAsFixed(1)} days'
+                            : maxPageCacheDurationMin > 60
+                                ? '${(maxPageCacheDurationMin / 60).toStringAsFixed(1)} hours'
+                                : '$maxPageCacheDurationMin min',
+              ),
+              CustomListTile(
                 leading: StackedIcon(
                   baseIcon: Broken.code_1,
                   secondaryIcon: Broken.refresh,
@@ -986,6 +1011,145 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MaxPageCacheDurationDialog extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final void Function(int minutesTotal) onSave;
+
+  const _MaxPageCacheDurationDialog({
+    required this.title,
+    required this.icon,
+    required this.onSave,
+  });
+
+  @override
+  State<_MaxPageCacheDurationDialog> createState() => _MaxPageCacheDurationDialogState();
+}
+
+class _MaxPageCacheDurationDialogState extends State<_MaxPageCacheDurationDialog> {
+  static int get maxDays => settings.youtube.kMaxDaysForPageCacheDuration;
+  static const maxHours = 24;
+  static const maxMinutes = 60;
+
+  final daysRx = 0.obs;
+  final hoursRx = 0.obs;
+  final minutesRx = 0.obs;
+
+  @override
+  void initState() {
+    final int initial = settings.youtube.maxPageCacheDurationMin;
+    if (initial < 0) {
+      minutesRx.value = -1;
+    } else {
+      if (initial > settings.youtube.kMinutesInMaxDaysForPageCache) {
+        // -- keep hours and mins at 0
+        daysRx.value = _MaxPageCacheDurationDialogState.maxDays + 1;
+      } else {
+        daysRx.value = (initial / (24 * 60)).round();
+        hoursRx.value = ((initial % (24 * 60)) / 60).round();
+        minutesRx.value = (initial % 60).round();
+      }
+    }
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final maxDays = _MaxPageCacheDurationDialogState.maxDays;
+    return CustomBlurryDialog(
+      title: widget.title,
+      icon: widget.icon,
+      normalTitleStyle: true,
+      actions: [
+        const CancelButton(),
+        NamidaButton(
+          text: lang.SAVE,
+          onPressed: () {
+            final minutesTotal = daysRx.value > _MaxPageCacheDurationDialogState.maxDays
+                ? settings.youtube.kMinutesInMaxDaysForPageCache + 1
+                : minutesRx.value < 0
+                    ? -1
+                    : (minutesRx.value) + (hoursRx.value * 60) + (daysRx.value * 60 * 24);
+            widget.onSave(minutesTotal);
+            NamidaNavigator.inst.closeDialog();
+          },
+        )
+      ],
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 32.0),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Days',
+                  style: context.textTheme.displayMedium,
+                ),
+                const SizedBox(width: 12.0),
+                ObxO(
+                  rx: daysRx,
+                  builder: (context, days) => NamidaWheelSlider(
+                    max: maxDays + 1,
+                    stepper: 1,
+                    initValue: days,
+                    onValueChanged: (val) => daysRx.value = val,
+                    text: days > maxDays ? 'always invalid' : "$days days",
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12.0),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Hours',
+                  style: context.textTheme.displayMedium,
+                ),
+                const SizedBox(width: 12.0),
+                ObxO(
+                  rx: hoursRx,
+                  builder: (context, hours) => NamidaWheelSlider(
+                    max: maxHours,
+                    stepper: 1,
+                    initValue: hours,
+                    onValueChanged: (val) => hoursRx.value = val,
+                    text: "$hours hours",
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12.0),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Minutes',
+                  style: context.textTheme.displayMedium,
+                ),
+                const SizedBox(width: 12.0),
+                ObxO(
+                  rx: minutesRx,
+                  builder: (context, minutes) => NamidaWheelSlider(
+                    max: maxMinutes + 1,
+                    stepper: 1,
+                    initValue: minutes < 0 ? 0 : minutes,
+                    onValueChanged: (val) => minutesRx.value = val - 1,
+                    text: minutes < 0 ? 'always valid' : "$minutes min",
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
