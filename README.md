@@ -338,7 +338,10 @@ Animating Thumbnail        |  Recommends & Listens
   - [Telegram (Updates)](https://t.me/namida_official)
   - [Telegram (Chat)](https://t.me/+FmdfsgKoGmM1ZGFk)
   - [Discord](https://discord.gg/WeY7DTVChT)
-- ⚠️ there are no websites for namidaco/namida other than github & telegram, we are not resposible for downloading from other sources.
+
+> [!WARNING]
+> There are no websites for namidaco/namida other than GitHub & Telegram,
+> we are not resposible for downloading from other sources.
 
 # LICENSE
 
