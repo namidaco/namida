@@ -1098,6 +1098,7 @@ class DirsFileFilter {
     final coversNames = imageExtensions != null && imageExtensions.extensions.isNotEmpty
         ? {
             "folder": true,
+            "foldercover": true,
             "front": true,
             "cover": true,
             "thumbnail": true,

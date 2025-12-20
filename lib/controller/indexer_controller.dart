@@ -414,9 +414,9 @@ class Indexer<T extends Track> {
           MediaType.composer => settings.artistSort.value.requiresHistory,
           MediaType.genre => settings.genreSort.value.requiresHistory,
           MediaType.playlist => settings.playlistSort.value.requiresHistory,
-          MediaType.folder => false,
-          MediaType.folderMusic => false,
-          MediaType.folderVideo => false,
+          MediaType.folder => settings.mediaItemsTrackSorting.value[MediaType.folder]?.firstOrNull?.requiresHistory ?? false,
+          MediaType.folderMusic => settings.mediaItemsTrackSorting.value[MediaType.folderMusic]?.firstOrNull?.requiresHistory ?? false,
+          MediaType.folderVideo => settings.mediaItemsTrackSorting.value[MediaType.folderVideo]?.firstOrNull?.requiresHistory ?? false,
         };
         if (sortRequiresHistory) SearchSortController.inst.sortMedia(e);
       }
@@ -1323,12 +1323,15 @@ class Indexer<T extends Track> {
       ]).then(
         (libraryGroup) async {
           mainMapsGroup.updateFrom(libraryGroup);
+
           FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos.value);
-          FoldersController.tracks.onMapChanged(mainMapFoldersTracks.value);
-          FoldersController.videos.onMapChanged(mainMapFoldersVideos.value);
           FoldersController.tracksAndVideos.onFirstLoad();
+
+          FoldersController.tracks.onMapChanged(mainMapFoldersTracks.value);
           FoldersController.tracks.onFirstLoad();
+          FoldersController.videos.onMapChanged(mainMapFoldersVideos.value);
           FoldersController.videos.onFirstLoad();
+
           _refreshMediaTracksSubListsAfterSort(mediaSorters.keys);
 
           SearchSortController.inst.refreshPortsIfNecessary(); // -- vip to refresh filtering

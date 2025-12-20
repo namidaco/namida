@@ -9,6 +9,7 @@ import 'package:youtipie/class/result_wrapper/playlist_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
+import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item_user.dart';
 import 'package:youtipie/youtipie.dart';
 
@@ -439,7 +440,7 @@ class YTHostedPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
     required String playlistId,
     required this.userPlaylist,
   })  : playlist = _EmptyPlaylistResult(playlistId: playlistId),
-        isMixPlaylist = playlistId.startsWith('RD') && playlistId.length == 13;
+        isMixPlaylist = PlaylistInfoItem.isMixPlaylist(playlistId);
 
   @override
   State<YTHostedPlaylistSubpage> createState() => _YTHostedPlaylistSubpageState();

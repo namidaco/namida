@@ -857,9 +857,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     onTap: () async {
                       final startSeconds = currentSegment.startSeconds;
                       if (startSeconds != null) {
-                        if (widget.isFullScreen) {
-                          await NamidaNavigator.inst.exitFullScreen();
-                        }
                         YoutubeMiniplayerUiController.inst.ensureSegmentsVisible();
                       }
                     },

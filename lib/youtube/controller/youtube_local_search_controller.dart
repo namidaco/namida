@@ -51,6 +51,7 @@ class YTLocalSearchController with PortsProvider<Map> {
   }
 
   void _sortStreams(List<StreamInfoItem> streams) {
+    if (streams.isEmpty) return; // cuz empty might be const
     switch (_sortType) {
       case YTLocalSearchSortType.mostPlayed:
         streams.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.length ?? 0);

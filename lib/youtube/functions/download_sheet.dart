@@ -644,7 +644,7 @@ Future<void> showDownloadVideoBottomSheet({
                                       ObxO(
                                         rx: selectedVideoOnlyStream,
                                         builder: (context, vostream) {
-                                          final webmIconEnabled = showAudioWebm.valueR;
+                                          final webmIconEnabled = showVideoWebm.valueR;
                                           final subtitle = vostream == null ? null : "${vostream.qualityLabel} • ${vostream.sizeInBytes.fileSizeFormatted}";
                                           return getTextWidget(
                                             hasWebm: hasVideoWebm,

@@ -224,7 +224,9 @@ class ExtrasSettings extends SettingSubpageProvider {
                 value: settings.enableFoldersHierarchy.valueR,
                 onChanged: (p0) {
                   settings.save(enableFoldersHierarchy: !p0);
+                  FoldersController.tracksAndVideos.onFoldersHierarchyChanged(!p0);
                   FoldersController.tracks.onFoldersHierarchyChanged(!p0);
+                  FoldersController.videos.onFoldersHierarchyChanged(!p0);
                 },
               ),
             ),
