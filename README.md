@@ -1,6 +1,6 @@
 <link rel="stylesheet" href="styles.css" />
 
-# <div style="margin-right: 18px; margin-top: 18px; display:flex; vertical-align: middle; align-items: center; max-width: 100%;"><img src="some stuff/namida.png" width="82" style="margin-right: 18px;">Namida</div>
+# <div align="center"><img src="some stuff/namida.png" width="82"><br/>Namida</div>
 
 A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in Flutter
 
