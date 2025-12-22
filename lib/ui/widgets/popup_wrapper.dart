@@ -49,7 +49,11 @@ class NamidaPopupWrapper extends StatelessWidget {
       (e) => ConstrainedBox(
         constraints: BoxConstraints(minHeight: 12.0),
         child: Align(
-          child: e,
+          alignment: Alignment.centerLeft,
+          child: SizedBox(
+            width: double.infinity,
+            child: e,
+          ),
         ),
       ),
     );

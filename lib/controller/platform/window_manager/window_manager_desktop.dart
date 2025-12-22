@@ -118,12 +118,6 @@ class _NamidaWindowListener with WindowListener {
   void onWindowMoved() async {
     await _saveBounds();
   }
-
-  @override
-  void onWindowClose() {
-    // -- sometimes namida is not killed on some devices
-    exit(0);
-  }
 }
 
 class _CustomScreenListener extends ScreenListener {

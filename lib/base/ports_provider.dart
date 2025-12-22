@@ -27,6 +27,13 @@ class IsolateFunctionReturnBuild<T> {
 }
 
 mixin PortsProvider<E> {
+  static final _activePortsProviders = <PortsProvider, bool>{};
+  static Future<void> disposeAll() async {
+    final providers = _activePortsProviders.keys.toList();
+    _activePortsProviders.clear();
+    await providers.map((e) => e.disposePort()).executeAllAndSilentReportErrors();
+  }
+
   bool get isInitialized => _isInitialized ?? false;
 
   Completer<SendPort>? _portCompleter;
@@ -47,10 +54,11 @@ mixin PortsProvider<E> {
 
   @protected
   Future<void> disposePort({bool resetCompleter = true}) async {
+    _activePortsProviders.remove(this);
     _recievePort?.close();
     _streamSub?.cancel();
     await sendPort(_PortsProviderDisposeMessage);
-    _isolate?.kill();
+    _isolate?.kill(priority: Isolate.immediate);
     _isInitialized = false;
     onPreparing(false);
     if (resetCompleter) _initializingCompleter = null;
@@ -69,6 +77,7 @@ mixin PortsProvider<E> {
 
     _initializingCompleter = Completer<void>(); // set early to prevent double init
     await disposePort(resetCompleter: false);
+    _activePortsProviders[this] = true;
     final portCompleter = _portCompleter = Completer<SendPort>();
     _recievePort = ReceivePort();
     _streamSub = _recievePort?.listen((result) {

@@ -22,6 +22,7 @@ import 'package:rhttp/rhttp.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 
+import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/backup_controller.dart';
@@ -39,6 +40,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/smtc_controller.dart';
@@ -490,6 +492,15 @@ class Namida extends StatefulWidget {
 
   @override
   State<Namida> createState() => _NamidaState();
+
+  static Future<void> disposeAllResources() async {
+    YoutubeInfoController.dispose();
+    await [
+      PortsProvider.disposeAll(),
+      SearchSortController.inst.disposeResources(),
+      NamicoDBWrapper.dispose(),
+    ].executeAllAndSilentReportErrors();
+  }
 }
 
 class _NamidaState extends State<Namida> {

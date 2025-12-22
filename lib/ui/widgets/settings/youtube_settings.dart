@@ -1051,9 +1051,9 @@ class _MaxPageCacheDurationDialogState extends State<_MaxPageCacheDurationDialog
         // -- keep hours and mins at 0
         daysRx.value = _MaxPageCacheDurationDialogState.maxDays + 1;
       } else {
-        daysRx.value = (initial / (24 * 60)).round();
-        hoursRx.value = ((initial % (24 * 60)) / 60).round();
-        minutesRx.value = (initial % 60).round();
+        daysRx.value = (initial / (24 * 60)).floor();
+        hoursRx.value = ((initial % (24 * 60)) / 60).floor();
+        minutesRx.value = (initial % 60).floor();
       }
     }
     super.initState();

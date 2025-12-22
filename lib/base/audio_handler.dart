@@ -663,7 +663,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final isVideo = item is Video;
     final tr = item.track;
     duration ??= Duration(milliseconds: tr.durationMS);
-    final configToUpdate = CurrentVideoConfig();
+    configToUpdate ??= CurrentVideoConfig();
     final initialVideo = await VideoController.inst.updateCurrentVideo(tr, returnEarly: true, configToUpdate: configToUpdate);
     final videoOptions = !settings.enableVideoPlayback.value
         ? null

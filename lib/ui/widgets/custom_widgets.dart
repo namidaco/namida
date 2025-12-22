@@ -5540,7 +5540,7 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
                   ? DismissDirection.startToEnd
                   : DismissDirection.none,
       removeOnDismiss: false,
-      dismissThreshold: 0.15,
+      dismissThreshold: 0.12,
       friction: 0.58,
       onDismissed: (direction) {
         final swipedLeft = direction == DismissDirection.endToStart;

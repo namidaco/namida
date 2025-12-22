@@ -913,7 +913,7 @@ class _TextWithFadingProgress extends StatelessWidget {
                     text: textPart,
                     style: textStyle, // dont dim here
                   ),
-                  textAlign: textAlign,
+                  textAlign: TextAlign.start, // -- otherwise multi-part word will appear split
                   // -- fixes artifacts with shader
                   textHeightBehavior: const TextHeightBehavior(
                     applyHeightToFirstAscent: false,

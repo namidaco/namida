@@ -588,7 +588,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     return settings.enableM3USync.value;
   }
 
-  Timer? writeTimer;
+  final _m3uWriteTimers = <String, Timer>{};
 
   @override
   FutureOr<void> onPlaylistTracksChanged(LocalPlaylist playlist) async {
@@ -600,15 +600,18 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         // -- using IOSink sometimes produces errors when succesively opened/closed
         // -- not ideal for cases where u constantly add/remove tracks
         // -- so we save with only 2 seconds limit.
+
+        final writeTimer = _m3uWriteTimers[m3uPath];
         writeTimer?.cancel();
-        writeTimer = null;
-        writeTimer = Timer(const Duration(seconds: 2), () async {
+        _m3uWriteTimers[m3uPath] = Timer(const Duration(seconds: 2), () async {
           await _saveM3UPlaylistToFile.thready({
             'path': m3uPath,
             'tracks': playlist.tracks,
             'infoMap': _pathsM3ULookup,
             'artworkUrl': _artworkUrlForM3uInfoMap[playlist.m3uPath ?? ''],
           });
+          _m3uWriteTimers[m3uPath]?.cancel();
+          _m3uWriteTimers.remove(m3uPath);
         });
       }
     }

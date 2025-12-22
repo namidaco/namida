@@ -293,7 +293,7 @@ class _SettingsController with SettingsFileWriter {
 
   final mediaItemsTrackSorting = <MediaType, List<SortType>>{
     MediaType.track: [SortType.title, SortType.year, SortType.album],
-    MediaType.album: [SortType.trackNo, SortType.year, SortType.title],
+    MediaType.album: [SortType.discNo, SortType.trackNo, SortType.year, SortType.title],
     MediaType.artist: [SortType.year, SortType.title],
     MediaType.albumArtist: [SortType.year, SortType.title],
     MediaType.composer: [SortType.year, SortType.title],

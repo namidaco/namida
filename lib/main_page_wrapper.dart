@@ -571,7 +571,11 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                 ),
                 WindowCaptionButton.close(
                   brightness: brightness,
-                  onPressed: windowManager.close,
+                  onPressed: () async {
+                    await Namida.disposeAllResources();
+                    await windowManager.close();
+                    await windowManager.destroy();
+                  },
                 ),
               ],
             ),

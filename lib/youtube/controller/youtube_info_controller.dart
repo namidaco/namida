@@ -113,6 +113,10 @@ class YoutubeInfoController {
     _initCompleter.complete();
   }
 
+  static void dispose() {
+    YoutiPie.dispose();
+  }
+
   static final current = _YoutubeCurrentInfoController._();
   static final utils = _YoutubeInfoUtils._();
 }
