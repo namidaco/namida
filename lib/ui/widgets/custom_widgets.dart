@@ -4279,7 +4279,7 @@ class NamidaScrollbar extends StatelessWidget {
     super.key,
     required this.controller,
     required this.child,
-    this.scrollStep = 0,
+    this.scrollStep = 0.0,
     this.showOnStart = false,
   });
 
@@ -4290,7 +4290,10 @@ class NamidaScrollbar extends StatelessWidget {
       controller: controller,
       showOnStart: showOnStart,
       scrollStep: scrollStep,
-      thicknessWhileDragging: 9.0,
+      thicknessWhileDragging: 8.5,
+      minInteractiveSize: 60.0,
+      pressDuration: const Duration(milliseconds: 80),
+      tapToScroll: () => settings.extra.tapToScroll == true,
       onThumbLongPressStart: () => isScrollbarThumbDragging = true,
       onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
       child: child,
@@ -4300,8 +4303,14 @@ class NamidaScrollbar extends StatelessWidget {
 
 class NamidaScrollbarWithController extends StatefulWidget {
   final bool showOnStart;
+  final double scrollStep;
   final Widget Function(ScrollController sc) child;
-  const NamidaScrollbarWithController({super.key, this.showOnStart = false, required this.child});
+  const NamidaScrollbarWithController({
+    super.key,
+    this.showOnStart = false,
+    this.scrollStep = 0.0,
+    required this.child,
+  });
 
   @override
   State<NamidaScrollbarWithController> createState() => _NamidaScrollbarWithControllerState();
@@ -4323,12 +4332,10 @@ class _NamidaScrollbarWithControllerState extends State<NamidaScrollbarWithContr
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoScrollbar(
+    return NamidaScrollbar(
       controller: _sc,
       showOnStart: widget.showOnStart,
-      thicknessWhileDragging: 9.0,
-      onThumbLongPressStart: () => isScrollbarThumbDragging = true,
-      onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
+      scrollStep: widget.scrollStep,
       child: widget.child(_sc),
     );
   }

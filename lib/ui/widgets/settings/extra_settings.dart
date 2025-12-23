@@ -165,6 +165,23 @@ class ExtrasSettings extends SettingSubpageProvider {
         ),
       );
 
+  void _showExtrasFlagsDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        icon: Broken.flag,
+        title: lang.CONFIGURE,
+        normalTitleStyle: true,
+        actions: [
+          NamidaButton(
+            text: lang.DONE,
+            onPressed: NamidaNavigator.inst.closeDialog,
+          ),
+        ],
+        child: const _ExtrasFlagsOptions(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -173,6 +190,11 @@ class ExtrasSettings extends SettingSubpageProvider {
       title: lang.EXTRAS,
       subtitle: lang.EXTRAS_SUBTITLE,
       icon: Broken.command_square,
+      trailing: NamidaIconButton(
+        icon: Broken.flag,
+        tooltip: () => lang.REFRESH_LIBRARY,
+        onPressed: _showExtrasFlagsDialog,
+      ),
       child: Column(
         children: <Widget>[
           getItemWrapper(
@@ -1103,6 +1125,45 @@ class _LoadingIndicatorState extends State<LoadingIndicator> with SingleTickerPr
           decoration: BoxDecoration(
             color: widget.circleColor ?? context.textTheme.displayMedium?.color,
             borderRadius: BorderRadius.circular(30.0),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExtrasFlagsOptions extends StatefulWidget {
+  const _ExtrasFlagsOptions();
+
+  @override
+  State<_ExtrasFlagsOptions> createState() => _ExtrasFlagsOptionsState();
+}
+
+class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: context.width,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: context.height * 0.6),
+        child: NamidaScrollbarWithController(
+          showOnStart: true,
+          child: (c) => SuperSmoothListView(
+            controller: c,
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            children: [
+              CustomSwitchListTile(
+                leading: StackedIcon(
+                  baseIcon: Broken.row_vertical,
+                  secondaryIcon: Broken.cd,
+                  secondaryIconSize: 12.0,
+                ),
+                value: settings.extra.tapToScroll ?? false,
+                onChanged: (isTrue) => setState(() => settings.extra.save(tapToScroll: !isTrue)),
+                title: 'tap_to_scroll'.toUpperCase(),
+              ),
+            ],
           ),
         ),
       ),

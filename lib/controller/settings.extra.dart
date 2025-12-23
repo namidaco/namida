@@ -8,6 +8,8 @@ class _ExtraSettings with SettingsFileWriter {
   final autoLibraryTab = true.obs;
   final ytInitialHomePage = YTHomePages.playlists.obs;
 
+  bool? tapToScroll;
+
   int lastPlayedIndex = 0;
 
   int ytAddToPlaylistsTabIndex = 0;
@@ -17,6 +19,7 @@ class _ExtraSettings with SettingsFileWriter {
     LibraryTab? staticLibraryTab,
     bool? autoLibraryTab,
     YTHomePages? ytInitialHomePage,
+    bool? tapToScroll,
     int? lastPlayedIndex,
     int? ytAddToPlaylistsTabIndex,
   }) {
@@ -24,6 +27,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (staticLibraryTab != null) this.staticLibraryTab.value = staticLibraryTab;
     if (autoLibraryTab != null) this.autoLibraryTab.value = autoLibraryTab;
     if (ytInitialHomePage != null) this.ytInitialHomePage.value = ytInitialHomePage;
+    if (tapToScroll != null) this.tapToScroll = tapToScroll;
     if (lastPlayedIndex != null) this.lastPlayedIndex = lastPlayedIndex;
     if (ytAddToPlaylistsTabIndex != null) this.ytAddToPlaylistsTabIndex = ytAddToPlaylistsTabIndex;
     _writeToStorage();
@@ -48,6 +52,7 @@ class _ExtraSettings with SettingsFileWriter {
       autoLibraryTab.value = autoLibraryTabFinal;
       ytInitialHomePage.value = YTHomePages.values.getEnum(json['ytInitialHomePage']) ?? ytInitialHomePage.value;
 
+      tapToScroll = json['tapToScroll'] ?? tapToScroll;
       lastPlayedIndex = json['lastPlayedIndex'] ?? lastPlayedIndex;
       ytAddToPlaylistsTabIndex = json['ytAddToPlaylistsTabIndex'] ?? ytAddToPlaylistsTabIndex;
     } catch (e, st) {
@@ -62,6 +67,7 @@ class _ExtraSettings with SettingsFileWriter {
         'staticLibraryTab': staticLibraryTab.value.name,
         'autoLibraryTab': autoLibraryTab.value,
         'ytInitialHomePage': ytInitialHomePage.value.name,
+        if (tapToScroll != null) 'tapToScroll': tapToScroll,
         'lastPlayedIndex': lastPlayedIndex,
         'ytAddToPlaylistsTabIndex': ytAddToPlaylistsTabIndex,
       };
