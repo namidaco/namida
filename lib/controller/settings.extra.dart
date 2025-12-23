@@ -11,6 +11,7 @@ class _ExtraSettings with SettingsFileWriter {
   bool? tapToScroll;
   bool? floatingArtworkEffect;
   bool? tiltingCardsEffect;
+  bool? mediaWaveHaptic;
 
   int lastPlayedIndex = 0;
 
@@ -24,6 +25,7 @@ class _ExtraSettings with SettingsFileWriter {
     bool? tapToScroll,
     bool? floatingArtworkEffect,
     bool? tiltingCardsEffect,
+    bool? mediaWaveHaptic,
     int? lastPlayedIndex,
     int? ytAddToPlaylistsTabIndex,
   }) {
@@ -34,6 +36,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (tapToScroll != null) this.tapToScroll = tapToScroll;
     if (floatingArtworkEffect != null) this.floatingArtworkEffect = floatingArtworkEffect;
     if (tiltingCardsEffect != null) this.tiltingCardsEffect = tiltingCardsEffect;
+    if (mediaWaveHaptic != null) this.mediaWaveHaptic = mediaWaveHaptic;
     if (lastPlayedIndex != null) this.lastPlayedIndex = lastPlayedIndex;
     if (ytAddToPlaylistsTabIndex != null) this.ytAddToPlaylistsTabIndex = ytAddToPlaylistsTabIndex;
     _writeToStorage();
@@ -61,6 +64,7 @@ class _ExtraSettings with SettingsFileWriter {
       tapToScroll = json['tapToScroll'] ?? tapToScroll;
       floatingArtworkEffect = json['floatingArtworkEffect'] ?? floatingArtworkEffect;
       tiltingCardsEffect = json['tiltingCardsEffect'] ?? tiltingCardsEffect;
+      mediaWaveHaptic = json['mediaWaveHaptic'] ?? mediaWaveHaptic;
       lastPlayedIndex = json['lastPlayedIndex'] ?? lastPlayedIndex;
       ytAddToPlaylistsTabIndex = json['ytAddToPlaylistsTabIndex'] ?? ytAddToPlaylistsTabIndex;
     } catch (e, st) {
@@ -78,6 +82,7 @@ class _ExtraSettings with SettingsFileWriter {
         if (tapToScroll != null) 'tapToScroll': tapToScroll,
         if (floatingArtworkEffect != null) 'floatingArtworkEffect': floatingArtworkEffect,
         if (tiltingCardsEffect != null) 'tiltingCardsEffect': tiltingCardsEffect,
+        if (mediaWaveHaptic != null) 'mediaWaveHaptic': mediaWaveHaptic,
         'lastPlayedIndex': lastPlayedIndex,
         'ytAddToPlaylistsTabIndex': ytAddToPlaylistsTabIndex,
       };

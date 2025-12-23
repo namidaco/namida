@@ -27,6 +27,8 @@ class VibratorController {
     };
   }
 
+  static VibratorInterfaceHapticFeedback get interfaceHapticIgnoreSettings => _intHaptic;
+
   static Future<void>? verylight() => _interface?.verylight();
   static Future<void>? light() => _interface?.light();
   static Future<void>? medium() => _interface?.medium();

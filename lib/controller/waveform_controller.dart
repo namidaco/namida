@@ -1,5 +1,7 @@
 import 'package:namida/controller/platform/waveform_extractor/waveform_extractor.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
@@ -128,7 +130,40 @@ class WaveformController {
     final dynamicScale = posInMap > _currentScaleMaxIndex ? 0.01 : _currentScaleLookup[posInMap];
     final finalScale = dynamicScale * intensity * 0.00005;
     if (finalScale.isNaN || finalScale > 0.3) return 0.01;
+
+    if (settings.extra.mediaWaveHaptic == true) {
+      _vibrateHaptic(finalScale);
+    }
+
     return finalScale;
+  }
+
+  void _vibrateHaptic(double scale) {
+    if (Player.inst.isPlaying.value == false) return;
+    if (scale > 0) {
+      final haptic = VibratorController.interfaceHapticIgnoreSettings;
+      if (scale < 0.01) {
+        haptic.light();
+      } else if (scale < 0.03) {
+        haptic.light();
+        haptic.light();
+        haptic.light();
+      } else if (scale < 0.06) {
+        haptic.light();
+        haptic.medium();
+        haptic.medium();
+        haptic.light();
+      } else if (scale < 0.10) {
+        haptic.medium();
+        haptic.high();
+        haptic.high();
+        haptic.medium();
+      } else {
+        haptic.high();
+        haptic.high();
+        haptic.high();
+      }
+    }
   }
 
   final _waveformExtractor = WaveformExtractor.platform()..init();

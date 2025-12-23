@@ -1179,6 +1179,14 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   title: 'tilting_cards_effect'.toUpperCase(),
                   subtitle: lang.PERFORMANCE_NOTE,
                 ),
+              if (NamidaFeaturesVisibility.mediaWaveHaptic)
+                CustomSwitchListTile(
+                  icon: Broken.watch_status,
+                  value: settings.extra.mediaWaveHaptic ?? false,
+                  onChanged: (isTrue) => setState(() => settings.extra.save(mediaWaveHaptic: !isTrue)),
+                  title: 'media_wave_haptic'.toUpperCase(),
+                  subtitle: 'Haptic feedback following the rhythm.\n${lang.PERFORMANCE_NOTE}',
+                ),
             ],
           ),
         ),
