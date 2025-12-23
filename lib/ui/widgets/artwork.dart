@@ -385,8 +385,8 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       ),
     );
 
-    if (widget.allowFloating) {
-      if (NamidaFeaturesVisibility.floatingArtworkEffect) {
+    if (NamidaFeaturesVisibility.floatingArtworkEffect) {
+      if (widget.allowFloating) {
         if (settings.extra.floatingArtworkEffect == true) {
           artwork = _EncapsulateWithFloatingTilt(
             compressed: widget.compressed,
@@ -400,23 +400,19 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   }
 }
 
-class _EncapsulateWithFloatingTilt extends StatefulWidget {
+class _EncapsulateWithFloatingTilt extends StatelessWidget {
   final bool compressed;
   final Widget child;
   const _EncapsulateWithFloatingTilt({super.key, required this.compressed, required this.child});
 
   @override
-  State<_EncapsulateWithFloatingTilt> createState() => __EncapsulateWithFloatingTiltState();
-}
-
-class __EncapsulateWithFloatingTiltState extends State<_EncapsulateWithFloatingTilt> {
-  @override
   Widget build(BuildContext context) {
-    final config = widget.compressed // (non expanded)
+    final config = compressed // (non expanded)
         ? const TiltConfig(
             angle: 2.0,
             sensorFactor: 0.5,
             sensorRevertFactor: 0.1,
+            enableGestureTouch: false,
             enableOutsideAreaMove: false,
             enableReverse: false,
             controllerMoveDuration: Duration(milliseconds: 200),
@@ -430,6 +426,7 @@ class __EncapsulateWithFloatingTiltState extends State<_EncapsulateWithFloatingT
             angle: 8.0,
             sensorFactor: 4.0,
             sensorRevertFactor: 0.02,
+            enableGestureTouch: false,
             enableOutsideAreaMove: false,
             enableReverse: false,
             controllerMoveDuration: Duration(milliseconds: 200),
@@ -439,22 +436,20 @@ class __EncapsulateWithFloatingTiltState extends State<_EncapsulateWithFloatingT
             enterDuration: Duration(milliseconds: 800),
             controllerLeaveDuration: Duration(milliseconds: 200),
           );
-    return IgnorePointer(
-      child: Tilt(
-        clipBehavior: Clip.none,
-        tiltConfig: config,
-        fps: 60,
-        lightConfig: const LightConfig(disable: true, color: Colors.transparent),
-        shadowConfig: const ShadowConfig(disable: true, color: Colors.transparent),
-        childLayout: ChildLayout(
-          inner: [
-            TiltParallax(
-              child: widget.child,
-            ),
-          ],
-        ),
-        child: const SizedBox(),
+    return Tilt(
+      clipBehavior: Clip.none,
+      tiltConfig: config,
+      fps: 60,
+      lightConfig: const LightConfig(disable: true, color: Colors.transparent),
+      shadowConfig: const ShadowConfig(disable: true, color: Colors.transparent),
+      childLayout: ChildLayout(
+        inner: [
+          TiltParallax(
+            child: child,
+          ),
+        ],
       ),
+      child: const SizedBox(),
     );
   }
 }

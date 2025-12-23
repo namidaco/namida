@@ -48,7 +48,7 @@ enum _ExtraSettingsKeys with SettingKeysBase {
   swipeToOpenDrawer,
   alwaysExpandedSearchbar,
   enableClipboardMonitoring,
-  vibrationType,
+  vibrationType(NamidaFeaturesAvailablity.android),
   extractAllPalettes,
   ;
 

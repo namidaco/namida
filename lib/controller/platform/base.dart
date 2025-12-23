@@ -14,12 +14,12 @@ class NamidaPlatformBuilder {
     T Function()? ios,
     T Function()? macos,
   }) {
-    return switch (Platform.operatingSystem) {
-      'android' => android(),
-      'windows' => windows(),
-      'linux' when linux != null => linux(),
-      'ios' when ios != null => ios(),
-      'macos' when macos != null => macos(),
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android => android(),
+      TargetPlatform.windows => windows(),
+      TargetPlatform.linux when linux != null => linux(),
+      TargetPlatform.iOS when ios != null => ios(),
+      TargetPlatform.macOS when macos != null => macos(),
       _ => throw UnimplementedError(),
     };
   }

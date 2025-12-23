@@ -246,7 +246,13 @@ Future<bool> _mainAppInitialization() async {
       ConnectivityController.inst.initialize(),
       FlutterDisplayMode.setHighRefreshRate().ignoreError(), // ignore cuz whatever
       NamidaNavigator.setSystemUIImmersiveMode(false),
-      Rhttp.init().then((_) => RhttpCompatibleClient.create().then((client) => HttpCacheManager.init(config: _HttpCacheCustomCacheConfig._(client)))),
+      Rhttp.init().then(
+        (_) async {
+          final client = await RhttpCompatibleClient.create();
+          final config = _HttpCacheCustomCacheConfig._(client);
+          await HttpCacheManager.init(config: config).ignoreError();
+        },
+      ),
       ytInfoInitSyncItemsCompleter.future,
     ].executeAllAndSilentReportErrors();
 
@@ -496,6 +502,7 @@ class Namida extends StatefulWidget {
   static Future<void> disposeAllResources() async {
     YoutubeInfoController.dispose();
     await [
+      Player.inst.pause().whenComplete(Player.inst.dispose),
       PortsProvider.disposeAll(),
       SearchSortController.inst.disposeResources(),
       NamicoDBWrapper.dispose(),
