@@ -237,7 +237,7 @@ Future<bool> _mainAppInitialization() async {
     }
 
     await [
-      if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(startupBoost: true),
+      if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(startupBoost: true).whenComplete(Player.inst.refreshNotification),
       Language.initialize(),
       Player.inst.initializePlayer().whenComplete(prepareLatestQueue),
       PlaylistController.inst.prepareDefaultPlaylistsFileAsync(),

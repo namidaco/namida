@@ -160,19 +160,19 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                 _importPlaylists(keepSynced: false, pickFolder: false);
               },
             ),
-            // CustomListTile(
-            //   visualDensity: VisualDensity.compact,
-            //   icon: Broken.add_circle,
-            //   title: lang.CREATE,
-            //   subtitle: lang.CREATE_NEW_PLAYLIST,
-            //   onTap: () {
-            //     _closeDialog();
-            //     showSettingDialogWithTextField(
-            //       title: lang.CREATE_NEW_PLAYLIST,
-            //       addNewPlaylist: true,
-            //     );
-            //   },
-            // ),
+            CustomListTile(
+              visualDensity: VisualDensity.compact,
+              icon: Broken.add_circle,
+              title: lang.CREATE,
+              subtitle: lang.CREATE_NEW_PLAYLIST,
+              onTap: () {
+                _closeDialog();
+                showSettingDialogWithTextField(
+                  title: lang.CREATE_NEW_PLAYLIST,
+                  addNewPlaylist: true,
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -352,18 +352,18 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                         iconSize: 20.0,
                                         onPressed: _onAddPlaylistsTap,
                                       ),
-                                      const SizedBox(width: 8.0),
-                                      NamidaButton(
-                                        icon: Broken.pen_add,
-                                        text: lang.CREATE,
-                                        iconSize: 19.0,
-                                        onPressed: () {
-                                          showSettingDialogWithTextField(
-                                            title: lang.CREATE_NEW_PLAYLIST,
-                                            addNewPlaylist: true,
-                                          );
-                                        },
-                                      ),
+                                      // const SizedBox(width: 8.0),
+                                      // NamidaButton(
+                                      //   icon: Broken.pen_add,
+                                      //   text: lang.CREATE,
+                                      //   iconSize: 19.0,
+                                      //   onPressed: () {
+                                      //     showSettingDialogWithTextField(
+                                      //       title: lang.CREATE_NEW_PLAYLIST,
+                                      //       addNewPlaylist: true,
+                                      //     );
+                                      //   },
+                                      // ),
                                       const SizedBox(width: 8.0),
                                       NamidaButton(
                                         icon: Broken.edit_2,

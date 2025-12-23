@@ -263,44 +263,46 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                   bottom: 0,
                   right: 0,
                   left: 0,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: Dimensions.globalBottomPaddingTotal),
-                    child: Align(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ObxO(
-                            rx: YoutubeAccountController.signInProgress,
-                            builder: (context, loginProgress) => Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: loginProgress != null
-                                  ? [
-                                      NamidaInkWellButton(
-                                        enabled: false,
-                                        text: loginProgress.name.toUpperCase(),
-                                        icon: null,
-                                        sizeMultiplier: 1.0,
-                                      ),
-                                    ]
-                                  : [
-                                      NamidaInkWellButton(
-                                        onTap: () => _onSignInTap(context, forceSignIn: true),
-                                        text: lang.ADD_ACCOUNT,
-                                        icon: Broken.user_add,
-                                        sizeMultiplier: 1.2,
-                                      ),
-                                    ],
+                  child: Obx(
+                    (context) => Padding(
+                      padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR),
+                      child: Align(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ObxO(
+                              rx: YoutubeAccountController.signInProgress,
+                              builder: (context, loginProgress) => Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: loginProgress != null
+                                    ? [
+                                        NamidaInkWellButton(
+                                          enabled: false,
+                                          text: loginProgress.name.toUpperCase(),
+                                          icon: null,
+                                          sizeMultiplier: 1.0,
+                                        ),
+                                      ]
+                                    : [
+                                        NamidaInkWellButton(
+                                          onTap: () => _onSignInTap(context, forceSignIn: true),
+                                          text: lang.ADD_ACCOUNT,
+                                          icon: Broken.user_add,
+                                          sizeMultiplier: 1.2,
+                                        ),
+                                      ],
+                              ),
                             ),
-                          ),
-                          if (currentChannel != null) SizedBox(width: 4.0),
-                          if (currentChannel != null)
-                            NamidaInkWellButton(
-                              text: '',
-                              onTap: () => _onConfigureTap(context),
-                              icon: Broken.setting_3,
-                              iconSize: 22.0,
-                            ),
-                        ],
+                            if (currentChannel != null) SizedBox(width: 4.0),
+                            if (currentChannel != null)
+                              NamidaInkWellButton(
+                                text: '',
+                                onTap: () => _onConfigureTap(context),
+                                icon: Broken.setting_3,
+                                iconSize: 22.0,
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

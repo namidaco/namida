@@ -463,118 +463,120 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                   ),
                 ),
           pullToRefreshWidget,
-          Positioned(
-            bottom: Dimensions.globalBottomPaddingTotal,
-            right: 12.0,
-            child: _isUpdatingPaths
-                ? DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                      color: theme.cardColor,
-                      boxShadow: [
-                        BoxShadow(
-                          color: theme.shadowColor,
-                          blurRadius: 6.0,
-                          offset: const Offset(0, 4.0),
+          Obx(
+            (context) => Positioned(
+              bottom: Dimensions.inst.globalBottomPaddingTotalR,
+              right: 12.0,
+              child: _isUpdatingPaths
+                  ? DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                        color: theme.cardColor,
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.shadowColor,
+                            blurRadius: 6.0,
+                            offset: const Offset(0, 4.0),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: ThreeArchedCircle(
+                          size: 36.0,
+                          color: theme.colorScheme.secondary,
+                        ),
+                      ),
+                    )
+                  : Row(
+                      children: [
+                        Obx(
+                          (context) {
+                            final allSelected =
+                                _selectedTracksToUpdate.isNotEmpty && _missingTracksPaths.every((e) => _missingTracksSuggestions[e] == null || _selectedTracksToUpdate[e] == true);
+                            return FloatingActionButton.small(
+                              heroTag: 'indexer_missing_tracks_fab_hero_small',
+                              tooltip: lang.SELECT_ALL,
+                              backgroundColor: allSelected ? CurrentColor.inst.color.withValues(alpha: 1.0) : theme.disabledColor.withValues(alpha: 1.0),
+                              child: Icon(
+                                allSelected ? Broken.tick_square : Broken.task_square,
+                                color: Colors.white.withValues(alpha: 0.8),
+                              ),
+                              onPressed: () {
+                                final allSelected = _selectedTracksToUpdate.isNotEmpty &&
+                                    _missingTracksPaths.every((e) => _missingTracksSuggestions[e] == null || _selectedTracksToUpdate[e] == true);
+                                if (allSelected) {
+                                  _selectedTracksToUpdate.clear();
+                                } else {
+                                  _missingTracksPaths.loop((e) {
+                                    if (_missingTracksSuggestions[e] != null) _selectedTracksToUpdate[e] = true;
+                                  });
+                                }
+                              },
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 8.0),
+                        Obx(
+                          (context) {
+                            final totalLength = _selectedTracksToUpdate.length;
+                            return FloatingActionButton.extended(
+                              heroTag: 'indexer_missing_tracks_fab_hero_extended',
+                              backgroundColor: (totalLength <= 0 ? theme.disabledColor : CurrentColor.inst.color).withValues(alpha: 1.0),
+                              extendedPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+                              onPressed: () async {
+                                final isUpdating = false.obs;
+                                NamidaNavigator.inst.navigateDialog(
+                                  onDisposing: () {
+                                    isUpdating.close();
+                                  },
+                                  tapToDismiss: () => !isUpdating.value,
+                                  dialog: CustomBlurryDialog(
+                                    isWarning: true,
+                                    normalTitleStyle: true,
+                                    bodyText: "${lang.UPDATE} ${_selectedTracksToUpdate.length.displayTrackKeyword}?",
+                                    actions: [
+                                      const CancelButton(),
+                                      const SizedBox(width: 8.0),
+                                      ObxO(
+                                        rx: isUpdating,
+                                        builder: (context, updating) => AnimatedEnabled(
+                                          enabled: !updating,
+                                          child: NamidaButton(
+                                            text: lang.UPDATE.toUpperCase(),
+                                            onPressed: () async {
+                                              isUpdating.value = true;
+                                              await _onUpdating();
+                                              isUpdating.value = false;
+                                              NamidaNavigator.inst.closeDialog();
+                                            },
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                );
+                              },
+                              label: Row(children: [
+                                Icon(
+                                  Broken.pen_add,
+                                  size: 20.0,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                ),
+                                const SizedBox(width: 12.0),
+                                Text(
+                                  "${lang.UPDATE} ($totalLength)",
+                                  style: textTheme.displayMedium?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                  ),
+                                ),
+                              ]),
+                            );
+                          },
                         ),
                       ],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: ThreeArchedCircle(
-                        size: 36.0,
-                        color: theme.colorScheme.secondary,
-                      ),
-                    ),
-                  )
-                : Row(
-                    children: [
-                      Obx(
-                        (context) {
-                          final allSelected =
-                              _selectedTracksToUpdate.isNotEmpty && _missingTracksPaths.every((e) => _missingTracksSuggestions[e] == null || _selectedTracksToUpdate[e] == true);
-                          return FloatingActionButton.small(
-                            heroTag: 'indexer_missing_tracks_fab_hero_small',
-                            tooltip: lang.SELECT_ALL,
-                            backgroundColor: allSelected ? CurrentColor.inst.color.withValues(alpha: 1.0) : theme.disabledColor.withValues(alpha: 1.0),
-                            child: Icon(
-                              allSelected ? Broken.tick_square : Broken.task_square,
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                            onPressed: () {
-                              final allSelected = _selectedTracksToUpdate.isNotEmpty &&
-                                  _missingTracksPaths.every((e) => _missingTracksSuggestions[e] == null || _selectedTracksToUpdate[e] == true);
-                              if (allSelected) {
-                                _selectedTracksToUpdate.clear();
-                              } else {
-                                _missingTracksPaths.loop((e) {
-                                  if (_missingTracksSuggestions[e] != null) _selectedTracksToUpdate[e] = true;
-                                });
-                              }
-                            },
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 8.0),
-                      Obx(
-                        (context) {
-                          final totalLength = _selectedTracksToUpdate.length;
-                          return FloatingActionButton.extended(
-                            heroTag: 'indexer_missing_tracks_fab_hero_extended',
-                            backgroundColor: (totalLength <= 0 ? theme.disabledColor : CurrentColor.inst.color).withValues(alpha: 1.0),
-                            extendedPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-                            onPressed: () async {
-                              final isUpdating = false.obs;
-                              NamidaNavigator.inst.navigateDialog(
-                                onDisposing: () {
-                                  isUpdating.close();
-                                },
-                                tapToDismiss: () => !isUpdating.value,
-                                dialog: CustomBlurryDialog(
-                                  isWarning: true,
-                                  normalTitleStyle: true,
-                                  bodyText: "${lang.UPDATE} ${_selectedTracksToUpdate.length.displayTrackKeyword}?",
-                                  actions: [
-                                    const CancelButton(),
-                                    const SizedBox(width: 8.0),
-                                    ObxO(
-                                      rx: isUpdating,
-                                      builder: (context, updating) => AnimatedEnabled(
-                                        enabled: !updating,
-                                        child: NamidaButton(
-                                          text: lang.UPDATE.toUpperCase(),
-                                          onPressed: () async {
-                                            isUpdating.value = true;
-                                            await _onUpdating();
-                                            isUpdating.value = false;
-                                            NamidaNavigator.inst.closeDialog();
-                                          },
-                                        ),
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              );
-                            },
-                            label: Row(children: [
-                              Icon(
-                                Broken.pen_add,
-                                size: 20.0,
-                                color: Colors.white.withValues(alpha: 0.8),
-                              ),
-                              const SizedBox(width: 12.0),
-                              Text(
-                                "${lang.UPDATE} ($totalLength)",
-                                style: textTheme.displayMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                ),
-                              ),
-                            ]),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+            ),
           ),
         ],
       ),
