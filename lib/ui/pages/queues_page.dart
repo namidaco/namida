@@ -22,7 +22,7 @@ class QueuesPage extends StatelessWidget with NamidaRouteWidget {
     return BackgroundWrapper(
       child: NamidaScrollbarWithController(
         child: (sc) => AnimationLimiter(
-          child: CustomScrollView(
+          child: SmoothCustomScrollView(
             controller: sc,
             slivers: [
               const SliverPadding(padding: EdgeInsets.only(top: Dimensions.tileBottomMargin6)),

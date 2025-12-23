@@ -220,7 +220,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                     child: LazyLoadListView(
                       onReachingEnd: _fetchRepliesNext,
                       scrollController: sc,
-                      listview: (controller) => CustomScrollView(
+                      listview: (controller) => SmoothCustomScrollView(
                         physics: const ClampingScrollPhysicsModified(),
                         controller: controller,
                         slivers: [
@@ -255,7 +255,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                                   child: ShimmerWrapper(
                                     transparent: false,
                                     shimmerEnabled: true,
-                                    child: SuperListView.builder(
+                                    child: SuperSmoothListView.builder(
                                       padding: EdgeInsets.zero,
                                       physics: const NeverScrollableScrollPhysics(),
                                       itemCount: repliesCount?.withMaximum(20) ?? 10,

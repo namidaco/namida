@@ -143,7 +143,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                   rx: foldersController.currentFolder,
                                   builder: (context, currentFolder) {
                                     final folderTracks = foldersController.folderToTracks(currentFolder) ?? [];
-                                    return CustomScrollView(
+                                    return SmoothCustomScrollView(
                                       controller: scrollController,
                                       slivers: [
                                         ObxO(
@@ -224,7 +224,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                   rx: foldersController.currentFolder,
                                   builder: (context, currentFolder) {
                                     final folderTracks = foldersController.folderToTracks(currentFolder) ?? [];
-                                    return CustomScrollView(
+                                    return SmoothCustomScrollView(
                                       controller: scrollController,
                                       slivers: [
                                         if (!isInside)

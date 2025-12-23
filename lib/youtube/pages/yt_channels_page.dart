@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/channels/channel_page_result.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
@@ -349,7 +348,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
               : Row(
                   children: [
                     Expanded(
-                      child: SingleChildScrollView(
+                      child: SmoothSingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: NamidaInkWell(
                           borderRadius: 24.0,
@@ -435,7 +434,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                         child: isLoadingInitialStreams
                             ? ShimmerWrapper(
                                 shimmerEnabled: true,
-                                child: SuperListView.builder(
+                                child: SuperSmoothListView.builder(
                                   controller: _uploadsScrollController,
                                   padding: EdgeInsets.zero,
                                   itemCount: 15,
@@ -460,7 +459,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                   listview: (controller) {
                                     final streamsList = this.streamsList;
                                     if (streamsList == null || streamsList.isEmpty) return const SizedBox();
-                                    return ListView.builder(
+                                    return SuperSmoothListView.builder(
                                       controller: controller,
                                       itemExtent: thumbnailItemExtent,
                                       itemCount: streamsList.length,
@@ -565,7 +564,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                         ),
                       ),
                       Expanded(
-                        child: ListView.builder(
+                        child: SuperSmoothListView.builder(
                           controller: _horizontalListController,
                           padding: EdgeInsets.only(right: kFABSize + 12.0),
                           scrollDirection: Axis.horizontal,

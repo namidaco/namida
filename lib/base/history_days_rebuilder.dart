@@ -84,7 +84,7 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
       width: context.width,
       child: ColoredBox(
         color: theme.scaffoldBackgroundColor,
-        child: SingleChildScrollView(
+        child: SmoothSingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),

@@ -13,6 +13,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:like_button/like_button.dart';
 import 'package:photo_view/photo_view.dart';
@@ -63,6 +64,10 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'custom_reorderable_list.dart';
 
 export 'popup_wrapper.dart';
+
+part 'smooth_scroll.dart';
+
+final _isDesktop = !(Platform.isAndroid || Platform.isIOS);
 
 class NamidaReordererableListener extends StatelessWidget {
   final int index;
@@ -563,7 +568,7 @@ class CustomBlurryDialog extends StatelessWidget {
     final vInsets = verticalInset;
     final double horizontalMargin = Dimensions.calculateDialogHorizontalMargin(context, horizontalInset);
     return Center(
-      child: SingleChildScrollView(
+      child: SmoothSingleChildScrollView(
         child: Dialog(
           backgroundColor: ctxth.dialogTheme.backgroundColor,
           surfaceTintColor: Colors.transparent,
@@ -3208,7 +3213,7 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
     final displayInfoBoxAtTop = widget.infoBox != null && !showSubpageInfoAtSide;
     final displayInfoBoxAtSide = widget.infoBox != null && showSubpageInfoAtSide;
     Widget listW = ClipRect(
-      child: CustomScrollView(
+      child: SmoothCustomScrollView(
         scrollDirection: widget.scrollDirection,
         controller: _scrollController,
         physics: widget.physics,
@@ -3258,7 +3263,7 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
             constraints: BoxConstraints(maxWidth: Dimensions.inst.sideInfoMaxWidth),
             child: Align(
               alignment: Alignment.topCenter,
-              child: SingleChildScrollView(
+              child: SmoothSingleChildScrollView(
                 child: widget.infoBox?.call(Dimensions.inst.sideInfoMaxWidth),
               ),
             ),
@@ -4195,6 +4200,7 @@ class NamidaTabViewState extends State<NamidaTabView> with SingleTickerProviderS
         ),
         Expanded(
           child: TabBarView(
+            physics: _isDesktop ? const NeverScrollableScrollPhysics() : null,
             controller: controller,
             children: widget.children,
           ),
@@ -5808,7 +5814,7 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
       builder: (context, releasesAfterCurrent) => releasesAfterCurrent == null
           ? ShimmerWrapper(
               shimmerEnabled: true,
-              child: SuperListView.builder(
+              child: SuperSmoothListView.builder(
                 padding: EdgeInsets.zero,
                 itemCount: 3,
                 itemBuilder: (context, index) {
@@ -5822,7 +5828,7 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
                 },
               ),
             )
-          : SuperListView.builder(
+          : SuperSmoothListView.builder(
               padding: EdgeInsets.zero,
               itemCount: releasesAfterCurrent.length,
               itemBuilder: (context, index) {
@@ -5926,7 +5932,7 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
     final textTheme = theme.textTheme;
     return ObxO(
       rx: settings.shortcuts.shortcuts,
-      builder: (context, userShortcuts) => SuperListView(
+      builder: (context, userShortcuts) => SuperSmoothListView(
         shrinkWrap: true,
         children: organizedMap.entries
             .map(

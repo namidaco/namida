@@ -416,7 +416,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               ),
               Expanded(
                 child: NamidaScrollbarWithController(
-                  child: (sc) => CustomScrollView(
+                  child: (sc) => SmoothCustomScrollView(
                     controller: sc,
                     slivers: [
                       const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
@@ -671,7 +671,7 @@ class YTDownloadFilenameBuilderRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    return SingleChildScrollView(
+    return SmoothSingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: YoutubeController.filenameBuilder.availableEncodedParams

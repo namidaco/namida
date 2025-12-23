@@ -8,7 +8,6 @@ import 'dart:isolate';
 import 'package:flutter/material.dart';
 
 import 'package:intl/intl.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/split_config.dart';
@@ -266,7 +265,7 @@ class JsonToHistoryParser {
                   (context) {
                     final missing = _latestMissingMap.valueR.entries.toList()..sortByReverse((e) => e.value.length);
                     return NamidaScrollbarWithController(
-                      child: (sc) => SuperListView.separated(
+                      child: (sc) => SuperSmoothListView.separated(
                         controller: sc,
                         separatorBuilder: (context, index) => const SizedBox(height: 8.0),
                         itemCount: missing.length,

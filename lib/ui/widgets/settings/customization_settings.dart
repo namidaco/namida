@@ -272,7 +272,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                         padding: const EdgeInsets.only(bottom: 58.0),
                         child: NamidaScrollbarWithController(
                           showOnStart: true,
-                          child: (c) => SingleChildScrollView(
+                          child: (c) => SmoothSingleChildScrollView(
                             controller: c,
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -1406,7 +1406,7 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
           ),
         ),
         SizedBox(height: 8.0),
-        SingleChildScrollView(
+        SmoothSingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: iconsRow,
         ),

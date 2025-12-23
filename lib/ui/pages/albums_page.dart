@@ -137,7 +137,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                       rx: HistoryController.inst.topTracksMapListens,
                       builder: (context, _) => countPerRowResolved == 1
                           ? Expanded(
-                              child: ListView.builder(
+                              child: SuperSmoothListView.builder(
                                 controller: scrollController,
                                 itemCount: finalAlbums.length,
                                 itemExtent: settings.albumListTileHeight.valueR + 4.0 * 5,
@@ -159,7 +159,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                             )
                           : settings.useAlbumStaggeredGridView.valueR
                               ? Expanded(
-                                  child: MasonryGridView.builder(
+                                  child: SmoothMasonryGridView.builder(
                                     controller: scrollController,
                                     padding: kBottomPaddingInsets,
                                     itemCount: finalAlbums.length,
@@ -185,7 +185,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                   ),
                                 )
                               : Expanded(
-                                  child: GridView.builder(
+                                  child: SmoothGridView.builder(
                                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                       crossAxisCount: countPerRowResolved,
                                       childAspectRatio: 0.75,

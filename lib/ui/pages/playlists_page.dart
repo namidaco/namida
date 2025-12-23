@@ -319,7 +319,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                 Expanded(
                   child: Stack(
                     children: [
-                      CustomScrollView(
+                      SmoothCustomScrollView(
                         controller: scrollController,
                         slivers: [
                           if (!isInsideDialog)

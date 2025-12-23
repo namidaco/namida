@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/class/route.dart';
@@ -142,7 +141,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
     const playlistThumbnailWidth = playlistThumbnailHeight * 16 / 9;
 
     return NamidaScrollbarWithController(
-      child: (sc) => CustomScrollView(
+      child: (sc) => SmoothCustomScrollView(
         controller: sc,
         slivers: [
           if (!isMinimalView) ...[
@@ -700,7 +699,7 @@ class _HorizontalSliverList extends StatelessWidget {
               child: displayShimmer
                   ? ShimmerWrapper(
                       shimmerEnabled: true,
-                      child: SuperListView.builder(
+                      child: SuperSmoothListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 6.0),
                         scrollDirection: Axis.horizontal,
                         itemCount: 10,
@@ -714,7 +713,7 @@ class _HorizontalSliverList extends StatelessWidget {
                         },
                       ),
                     )
-                  : SuperListView.builder(
+                  : SuperSmoothListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 6.0),
                       scrollDirection: Axis.horizontal,
                       itemCount: finalVideos.length + 1,

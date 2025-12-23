@@ -96,7 +96,7 @@ class BackupAndRestore extends SettingSubpageProvider {
             dialog: CustomBlurryDialog(
               normalTitleStyle: true,
               title: lang.RESTORE_BACKUP,
-              child: SingleChildScrollView(
+              child: SmoothSingleChildScrollView(
                 child: Column(
                   children: [
                     CustomListTile(
@@ -407,7 +407,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                     ],
                     child: SizedBox(
                       height: namida.height / 2,
-                      child: SingleChildScrollView(
+                      child: SmoothSingleChildScrollView(
                         child: Column(
                           children: [
                             getItemWidget(

@@ -42,7 +42,7 @@ class SearchPage extends StatelessWidget {
     return SliverToBoxAdapter(
       child: SizedBox(
         height: height + 24.0,
-        child: ListView.builder(
+        child: SuperSmoothListView.builder(
           clipBehavior: Clip.none,
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
           scrollDirection: Axis.horizontal,
@@ -130,7 +130,7 @@ class SearchPage extends StatelessWidget {
         children: [
           Column(
             children: [
-              SingleChildScrollView(
+              SmoothSingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
@@ -233,7 +233,7 @@ class SearchPage extends StatelessWidget {
                                         ? null
                                         : SearchSortController.inst.folderVideosSearchTemp.valueR.where((f) => VideoFolder.explicit(f).tracksDedicated().isNotEmpty).toList();
 
-                                    return CustomScrollView(
+                                    return SmoothCustomScrollView(
                                       controller: sc,
                                       slivers: [
                                         // == Albums ==

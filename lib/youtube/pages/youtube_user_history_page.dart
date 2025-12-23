@@ -90,7 +90,7 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
                     ),
                   SizedBox(
                     height: itemsLengthWithoutHiddens * thumbnailItemExtent,
-                    child: ListView.builder(
+                    child: SuperSmoothListView.builder(
                       padding: EdgeInsets.zero,
                       scrollDirection: Axis.vertical,
                       primary: false,
@@ -217,7 +217,7 @@ class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
           return SizedBox(
             height: horizontalHeight,
             width: itemsLengthWithoutHiddens * thumbnailItemExtent,
-            child: ListView.builder(
+            child: SuperSmoothListView.builder(
               padding: EdgeInsets.zero,
               scrollDirection: Axis.horizontal,
               primary: false,

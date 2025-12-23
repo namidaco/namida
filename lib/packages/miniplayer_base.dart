@@ -9,7 +9,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'package:playlist_manager/class/favourite_playlist.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/core/enum.dart';
@@ -792,7 +791,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                   .withoutWebmIfNeccessaryOrExperimentalCodecs(allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs);
 
                               final currentVideoConfig = VideoController.inst.currentVideoConfig;
-                              return SuperListView(
+                              return SuperSmoothListView(
                                 padding: const EdgeInsets.symmetric(vertical: 12.0),
                                 children: [
                                   Obx(
@@ -1958,7 +1957,7 @@ class _QueueListChildWrapper extends StatelessWidget {
               rx: Player.inst.currentIndex,
               builder: (context, currentIndex) => NamidaScrollbar(
                 controller: MiniPlayerController.inst.queueScrollController,
-                child: CustomScrollView(
+                child: SmoothCustomScrollView(
                   controller: MiniPlayerController.inst.queueScrollController,
                   slivers: [
                     NamidaSliverReorderableList(

@@ -74,7 +74,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                   thumbnails: [],
                 ),
               ),
-              builder: (properties) => CustomScrollView(
+              builder: (properties) => SmoothCustomScrollView(
                 controller: YoutubeHistoryController.inst.scrollController,
                 slivers: [
                   ObxO(
@@ -121,7 +121,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                                 ),
                               ),
                             ),
-                            content: ListView.builder(
+                            content: SuperSmoothListView.builder(
                               padding: const EdgeInsets.only(bottom: kYoutubeHistoryDayListBottomPadding, top: kYoutubeHistoryDayListTopPadding),
                               primary: false,
                               physics: const NeverScrollableScrollPhysics(),

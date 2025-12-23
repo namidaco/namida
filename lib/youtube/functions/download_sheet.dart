@@ -428,7 +428,7 @@ Future<void> showDownloadVideoBottomSheet({
                   height: maxHeight,
                   child: Padding(
                     padding: const EdgeInsets.only(top: verticalPadding),
-                    child: SingleChildScrollView(
+                    child: SmoothSingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -574,7 +574,7 @@ Future<void> showDownloadVideoBottomSheet({
                               rx: bodyHeightRx,
                               builder: (context, bodyHeight) => SizedBox(
                                 height: bodyHeight,
-                                child: SingleChildScrollView(
+                                child: SmoothSingleChildScrollView(
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [

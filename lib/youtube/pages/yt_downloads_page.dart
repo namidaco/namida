@@ -330,7 +330,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                         (context) {
                           final keys = YoutubeController.inst.youtubeDownloadTasksMap.keys.toList();
                           keys.sortByReverse((e) => YoutubeController.inst.latestEditedGroupDownloadTask[e] ?? 0);
-                          return CustomScrollView(
+                          return SmoothCustomScrollView(
                             controller: sc,
                             slivers: [
                               if (_isOnGoingSelectedR == null)

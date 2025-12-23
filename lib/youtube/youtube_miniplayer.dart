@@ -822,7 +822,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
           listview: (controller) => Stack(
             key: Key("${currentId}_body_stack"),
             children: [
-              CustomScrollView(
+              SmoothCustomScrollView(
                 // key: PageStorageKey(currentId), // duplicate errors
                 physics: _canScrollQueue ? const ClampingScrollPhysicsModified() : const NeverScrollableScrollPhysics(),
                 controller: controller,
@@ -1391,7 +1391,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                             child: ShimmerWrapper(
                               transparent: false,
                               shimmerEnabled: shimmerEnabled,
-                              child: SuperListView.builder(
+                              child: SuperSmoothListView.builder(
                                 padding: EdgeInsets.zero,
                                 key: Key("${currentId}_feedlist_shimmer"),
                                 physics: const NeverScrollableScrollPhysics(),
@@ -1437,7 +1437,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                         const hPadding = 4.0;
                                         return SizedBox(
                                           height: height,
-                                          child: ListView.builder(
+                                          child: SuperSmoothListView.builder(
                                             padding: const EdgeInsets.symmetric(vertical: 24.0 / 6, horizontal: 4.0),
                                             scrollDirection: Axis.horizontal,
                                             itemExtent: width + hPadding * 2,
@@ -1528,7 +1528,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                               child: ShimmerWrapper(
                                 transparent: false,
                                 shimmerEnabled: true,
-                                child: SuperListView.builder(
+                                child: SuperSmoothListView.builder(
                                   padding: EdgeInsets.zero,
                                   // key: Key(currentId),
                                   physics: const NeverScrollableScrollPhysics(),
@@ -1688,7 +1688,7 @@ class _StreamSegmentsRowState extends State<_StreamSegmentsRow> {
     final thumbWidth = (context.width * 0.2).withMaximum(128.0);
     const thumbHorizontalPadding = 1.0;
     final currentSegment = _currentSegment;
-    return SingleChildScrollView(
+    return SmoothSingleChildScrollView(
       controller: _controller,
       padding: EdgeInsets.symmetric(horizontal: 8.0),
       scrollDirection: Axis.horizontal,

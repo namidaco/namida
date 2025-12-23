@@ -11,6 +11,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide ReorderableListView, SliverReorderableList, ReorderableDragStartListener;
 import 'package:flutter/rendering.dart';
 
+import 'package:namida/ui/widgets/custom_widgets.dart' show SmoothCustomScrollView;
+
 // Examples can assume:
 // class MyDataObject {}
 
@@ -377,7 +379,7 @@ class ReorderableListState extends State<ReorderableList> {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
+    return SmoothCustomScrollView(
       scrollDirection: widget.scrollDirection,
       reverse: widget.reverse,
       controller: widget.controller,

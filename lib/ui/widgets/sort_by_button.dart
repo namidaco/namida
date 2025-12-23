@@ -108,7 +108,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: context.height * 0.5,
-      child: SingleChildScrollView(
+      child: SmoothSingleChildScrollView(
         child: Obx(
           (context) {
             final tracksSortSearch = settings.tracksSortSearch.valueR;

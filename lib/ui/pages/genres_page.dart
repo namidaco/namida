@@ -88,7 +88,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                     child: ObxPrefer(
                       enabled: sort.requiresHistory,
                       rx: HistoryController.inst.topTracksMapListens,
-                      builder: (context, _) => GridView.builder(
+                      builder: (context, _) => SmoothGridView.builder(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: countPerRowResolved,
                           childAspectRatio: 0.8,

@@ -162,7 +162,7 @@ class NamidaPopupWrapper extends StatelessWidget {
       ),
       child: NamidaScrollbarWithController(
         showOnStart: true,
-        child: (sc) => SingleChildScrollView(
+        child: (sc) => SmoothSingleChildScrollView(
           controller: sc,
           child: Material(
             type: MaterialType.transparency,

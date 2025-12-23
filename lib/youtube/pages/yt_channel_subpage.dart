@@ -5,7 +5,6 @@ import 'package:flutter/rendering.dart';
 
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/channels/channel_about_link.dart';
 import 'package:youtipie/class/channels/channel_home_section.dart';
 import 'package:youtipie/class/channels/channel_info.dart';
@@ -99,7 +98,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
 
   late final _scrollAnimation = AnimationController(vsync: this, value: 1.0);
 
-  late final _itemsScrollController = ScrollController();
+  late final _itemsScrollController = ScrollControllerWithDirection();
   late final _scrollControllersOffsets = <int, double>{};
   int _tabIndex = 0;
 

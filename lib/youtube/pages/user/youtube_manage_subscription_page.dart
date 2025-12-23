@@ -149,7 +149,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: ObxO(
             rx: YoutubeAccountController.membership.userMembershipTypeGlobal,
-            builder: (context, membershipType) => SuperListView(
+            builder: (context, membershipType) => SuperSmoothListView(
                   children: [
                     const SizedBox(height: 64.0),
                     Container(

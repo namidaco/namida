@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:history_manager/history_manager.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/audio_cache_detail.dart';
@@ -485,7 +484,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                   dialog: CustomBlurryDialog(
                     normalTitleStyle: true,
                     title: lang.CHOOSE,
-                    child: SingleChildScrollView(
+                    child: SmoothSingleChildScrollView(
                       child: Column(
                         children: [
                           CustomListTile(
@@ -1145,7 +1144,7 @@ class _CompressImagesListTile extends StatelessWidget {
         child: Column(
           children: [
             Obx(
-              (context) => SuperListView(
+              (context) => SuperSmoothListView(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 children: [

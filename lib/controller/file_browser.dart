@@ -1180,7 +1180,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                     padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                     child: SizedBox(
                       width: context.width,
-                      child: SingleChildScrollView(
+                      child: SmoothSingleChildScrollView(
                         controller: _pathSplitsScrollController,
                         scrollDirection: Axis.horizontal,
                         child: Row(
@@ -1292,7 +1292,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                   key: const Key('items'),
                                   child: NamidaScrollbar(
                                     controller: _scrollController,
-                                    child: CustomScrollView(
+                                    child: SmoothCustomScrollView(
                                       controller: _scrollController,
                                       slivers: [
                                         SuperSliverList.builder(

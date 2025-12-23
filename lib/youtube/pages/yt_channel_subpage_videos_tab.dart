@@ -215,14 +215,14 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
               child: LazyLoadListView(
                 scrollController: uploadsScrollController,
                 onReachingEnd: fetchStreamsNextPage,
-                listview: (controller) => CustomScrollView(
+                listview: (controller) => SmoothCustomScrollView(
                   controller: controller,
                   slivers: [
                     isLoadingInitialStreams
                         ? SliverToBoxAdapter(
                             child: ShimmerWrapper(
                               shimmerEnabled: true,
-                              child: SuperListView.builder(
+                              child: SuperSmoothListView.builder(
                                 shrinkWrap: true,
                                 primary: false,
                                 physics: const NeverScrollableScrollPhysics(),

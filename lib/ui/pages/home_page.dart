@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:history_manager/history_manager.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/base/pull_to_refresh.dart';
@@ -386,7 +385,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                       ? const SizedBox()
                       : Expanded(
                           flex: subList.length,
-                          child: SuperListView.builder(
+                          child: SuperSmoothListView.builder(
                             padding: EdgeInsets.zero,
                             itemCount: subList.length,
                             itemBuilder: (context, index) {
@@ -452,7 +451,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                 child: AnimationLimiter(
                   child: ObxO(
                     rx: settings.homePageItems,
-                    builder: (context, homePageItems) => CustomScrollView(
+                    builder: (context, homePageItems) => SmoothCustomScrollView(
                       controller: _scrollController,
                       slivers: [
                         const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
@@ -556,7 +555,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                   thirdWidget: SizedBox(
                                     height: 32.0,
                                     width: context.width,
-                                    child: SingleChildScrollView(
+                                    child: SmoothSingleChildScrollView(
                                       scrollDirection: Axis.horizontal,
                                       child: Padding(
                                         padding: const EdgeInsets.only(top: 4.0),
@@ -967,7 +966,7 @@ class _HorizontalList extends StatelessWidget {
           width: context.width,
           child: itemCount == 0 && !isLoading
               ? Center(
-                  child: SingleChildScrollView(
+                  child: SmoothSingleChildScrollView(
                     controller: controller,
                     padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
                     scrollDirection: Axis.horizontal,
@@ -990,7 +989,7 @@ class _HorizontalList extends StatelessWidget {
                     ),
                   ),
                 )
-              : ListView.builder(
+              : SuperSmoothListView.builder(
                   key: ValueKey(isLoading),
                   controller: controller,
                   itemExtent: itemExtent,
@@ -1057,7 +1056,7 @@ class _MixesCardState extends State<_MixesCard> {
         child: SizedBox(
           width: Dimensions.inst.availableAppContentWidth,
           child: SafeArea(
-            child: CustomScrollView(
+            child: SmoothCustomScrollView(
               slivers: [
                 const SliverPadding(padding: EdgeInsets.only(top: kToolbarHeight)),
                 SliverPadding(
@@ -1145,7 +1144,7 @@ class _MixesCardState extends State<_MixesCard> {
                         configs: const TrackTilePropertiesConfigs(
                           queueSource: QueueSource.homePageItem,
                         ),
-                        builder: (properties) => ListView.builder(
+                        builder: (properties) => SuperSmoothListView.builder(
                           itemExtent: Dimensions.inst.trackTileItemExtent,
                           itemCount: widget.tracks.length,
                           itemBuilder: (context, index) {

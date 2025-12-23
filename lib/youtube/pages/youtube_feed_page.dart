@@ -13,6 +13,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/pages/youtube_main_page_fetcher_acc_base.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_playlist_card.dart';
@@ -81,7 +82,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                         const hPadding = 4.0;
                         return SizedBox(
                           height: height,
-                          child: ListView.builder(
+                          child: SuperSmoothListView.builder(
                             padding: const EdgeInsets.symmetric(vertical: 24.0 / 6, horizontal: 4.0),
                             scrollDirection: Axis.horizontal,
                             itemExtent: width + hPadding * 2,

@@ -447,7 +447,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
               child: Column(
                 children: [
                   Expanded(
-                    child: SingleChildScrollView(
+                    child: SmoothSingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

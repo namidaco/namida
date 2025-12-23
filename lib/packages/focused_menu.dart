@@ -4,8 +4,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import 'package:super_sliver_list/super_sliver_list.dart';
-
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class FocusedMenuHolder extends StatefulWidget {
@@ -184,7 +182,7 @@ class FocusedMenuDetails extends StatelessWidget {
                           borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
                           boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 10, spreadRadius: 1)]),
                   child: menuWidget ??
-                      SuperListView.builder(
+                      SuperSmoothListView.builder(
                         itemCount: menuItems.length,
                         padding: EdgeInsets.zero,
                         itemBuilder: (context, index) {

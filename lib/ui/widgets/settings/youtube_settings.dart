@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/core/http.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
@@ -118,7 +117,7 @@ class YoutubeSettings extends SettingSubpageProvider {
               width: context.width,
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: context.height * 0.6),
-                child: SuperListView(
+                child: SuperSmoothListView(
                   padding: EdgeInsets.zero,
                   shrinkWrap: true,
                   children: [
@@ -834,7 +833,7 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
         constraints: BoxConstraints(maxHeight: context.height * 0.6),
         child: NamidaScrollbarWithController(
           showOnStart: true,
-          child: (c) => SuperListView(
+          child: (c) => SuperSmoothListView(
             controller: c,
             padding: EdgeInsets.zero,
             shrinkWrap: true,
@@ -1081,7 +1080,7 @@ class _MaxPageCacheDurationDialogState extends State<_MaxPageCacheDurationDialog
           },
         )
       ],
-      child: SingleChildScrollView(
+      child: SmoothSingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,

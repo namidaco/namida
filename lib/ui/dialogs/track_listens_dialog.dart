@@ -158,7 +158,7 @@ void showListensDialog({
                                 padding: const EdgeInsets.all(8.0),
                                 child: Column(
                                   children: [
-                                    SingleChildScrollView(
+                                    SmoothSingleChildScrollView(
                                       scrollDirection: Axis.horizontal,
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.center,

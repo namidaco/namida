@@ -12,7 +12,6 @@ import 'package:history_manager/history_manager.dart';
 import 'package:namico_subscription_manager/core/enum.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/core/extensions.dart' show ThumbnailPickerExt;
 
@@ -590,7 +589,7 @@ class NamidaOnTaps {
           child: Obx(
             (context) {
               final sizesLookup = sizesLookupMap.valueR;
-              return SuperListView(
+              return SuperSmoothListView(
                 padding: EdgeInsets.zero,
                 children: [
                   Padding(
@@ -895,7 +894,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
         child: Form(
           key: formKey,
           child: NamidaLoadingSwitcher(
-            builder: (loadingController) => SingleChildScrollView(
+            builder: (loadingController) => SmoothSingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1379,7 +1378,7 @@ class TracksAddOnTap {
                   child: SizedBox(
                     height: context.height * 0.4,
                     width: context.width,
-                    child: CustomScrollView(
+                    child: SmoothCustomScrollView(
                       slivers: [
                         // -- Tracks moods (embedded & custom)
                         ...getListy(

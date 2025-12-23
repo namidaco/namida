@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/current_color.dart';
@@ -141,7 +140,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                   ],
                   child: ObxO(
                     rx: settingsKey,
-                    builder: (context, imageSources) => SuperListView(
+                    builder: (context, imageSources) => SuperSmoothListView(
                       padding: EdgeInsets.zero,
                       shrinkWrap: true,
                       children: [
@@ -374,7 +373,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                       ),
                       const DoneButton(),
                     ],
-                    child: SingleChildScrollView(
+                    child: SmoothSingleChildScrollView(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -440,7 +439,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                           additional: resortIfNecessary,
                         ),
                       ],
-                      child: SingleChildScrollView(
+                      child: SmoothSingleChildScrollView(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -621,7 +620,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                       ],
                       child: ObxO(
                         rx: settings.lyricsSource,
-                        builder: (context, lyricsSource) => SuperListView(
+                        builder: (context, lyricsSource) => SuperSmoothListView(
                           padding: EdgeInsets.zero,
                           shrinkWrap: true,
                           children: [
@@ -987,7 +986,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                         if (subList.isNotEmpty)
                           Expanded(
                             flex: subList.length,
-                            child: SuperListView.builder(
+                            child: SuperSmoothListView.builder(
                               padding: EdgeInsets.zero,
                               itemCount: subList.length,
                               itemBuilder: (context, index) {

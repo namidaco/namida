@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:namico_login_manager/namico_login_manager.dart';
 import 'package:namico_subscription_manager/core/enum.dart';
 import 'package:namico_subscription_manager/namico_subscription_manager.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
 import 'package:youtipie/youtipie.dart';
 
@@ -202,7 +201,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                         Expanded(
                           child: Material(
                             type: MaterialType.transparency, // cuz it overflow with bg
-                            child: SuperListView.separated(
+                            child: SuperSmoothListView.separated(
                               separatorBuilder: (context, index) => const SizedBox(height: 8.0),
                               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0).add(
                                 const EdgeInsets.only(bottom: Dimensions.globalBottomPaddingTotal + 48.0), // 'Add account' button

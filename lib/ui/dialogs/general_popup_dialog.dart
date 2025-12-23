@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:rhttp/rhttp.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
@@ -679,7 +678,7 @@ Future<void> showGeneralPopupDialog(
             clipBehavior: Clip.antiAlias,
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
-              child: SingleChildScrollView(
+              child: SmoothSingleChildScrollView(
                 child: Column(
                   children: [
                     /// Top Widget
@@ -1538,7 +1537,7 @@ class _ArtworkManager extends StatelessWidget {
                                           Broken.emoji_sad,
                                           size: 48.0,
                                         )
-                                      : GridView.builder(
+                                      : SmoothGridView.builder(
                                           padding: EdgeInsets.zero,
                                           shrinkWrap: true,
                                           cacheExtent: context.height * 3,
@@ -1720,7 +1719,7 @@ void showSetTrackStatsDialog({
       ],
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: namida.height * 0.6),
-        child: SuperListView(
+        child: SuperSmoothListView(
           padding: const EdgeInsets.symmetric(horizontal: 6.0),
           shrinkWrap: true,
           children: [

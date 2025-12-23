@@ -624,7 +624,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                       if (!_checkIfTextEmpty(text)) {
                         return Align(
                           // -- Align vip to center widget
-                          child: SingleChildScrollView(
+                          child: SmoothSingleChildScrollView(
                             padding: const EdgeInsets.symmetric(horizontal: 24.0),
                             controller: Lyrics.inst.textScrollController,
                             child: Column(
@@ -648,7 +648,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                     final personCount = currentLRC?.personCount ?? 1;
                     return ObxO(
                       rx: _latestUpdatedLineIndex,
-                      builder: (context, selectedIndex) => SuperListView.builder(
+                      builder: (context, selectedIndex) => SuperSmoothListView.builder(
                         padding: EdgeInsets.symmetric(vertical: _paddingVertical),
                         controller: _scrollController,
                         listController: _listController,

@@ -4,8 +4,6 @@ import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 
-import 'package:super_sliver_list/super_sliver_list.dart';
-
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
@@ -342,7 +340,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                     controller: _scrollController,
                     child: AnimatedEnabled(
                       enabled: !_isUpdatingPaths,
-                      child: SuperListView.builder(
+                      child: SuperSmoothListView.builder(
                         controller: _scrollController,
                         padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingEffectiveR + 56.0 + 4.0),
                         itemCount: _missingTracksPaths.length,

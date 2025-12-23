@@ -91,7 +91,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                       children: [
                         SizedBox(
                           height: 130.0 + 28.0,
-                          child: ListView.builder(
+                          child: SuperSmoothListView.builder(
                             padding: const EdgeInsets.symmetric(vertical: 14.0),
                             scrollDirection: Axis.horizontal,
                             itemExtent: 100.0,

@@ -324,7 +324,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                 borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                 color: theme.cardColor,
               ),
-              child: SingleChildScrollView(
+              child: SmoothSingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -419,7 +419,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                       ),
                       verticalInBetweenPadding,
                       if (_equalizerPresets.isNotEmpty) ...[
-                        SingleChildScrollView(
+                        SmoothSingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             children: [

@@ -31,7 +31,7 @@ class ScrollSearchController {
 
   final Map<LibraryTab, Rx<bool>> isBarVisibleMap = <LibraryTab, Rx<bool>>{};
 
-  ScrollController scrollController = ScrollController();
+  var scrollController = ScrollControllerWithDirection();
   final Map<LibraryTab, double> scrollPositionsMap = {};
 
   final _textSearchControllers = <LibraryTab, TextEditingController>{}.obs;
@@ -103,12 +103,12 @@ class ScrollSearchController {
 
   void _assignScrollController(LibraryTab tab) {
     scrollController.dispose();
-    scrollController = ScrollController(initialScrollOffset: tab.scrollPosition);
+    scrollController = ScrollControllerWithDirection(initialScrollOffset: tab.scrollPosition);
 
     final rx = isBarVisibleMap[tab] ??= true.obs;
     rx.value = true;
     scrollController.addListener(() {
-      isBarVisibleMap[tab]?.value = scrollController.positions.lastOrNull?.userScrollDirection == ScrollDirection.forward;
+      isBarVisibleMap[tab]?.value = scrollController.userScrollDirection == ScrollDirection.forward;
     });
   }
 

@@ -381,7 +381,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                 ),
                 const SizedBox(height: 12.0),
                 Flexible(
-                  child: SingleChildScrollView(
+                  child: SmoothSingleChildScrollView(
                     // scrollDirection: Axis.horizontal,
                     child: ObxO(
                       rx: currentGroups,

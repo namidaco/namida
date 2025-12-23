@@ -449,7 +449,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
               maxDistance: 64.0,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: CustomScrollView(
+                child: SmoothCustomScrollView(
                   controller: c,
                   slivers: [
                     const SliverPadding(
@@ -467,7 +467,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                             child: ShimmerWrapper(
                               transparent: false,
                               shimmerEnabled: true,
-                              child: SuperListView.builder(
+                              child: SuperSmoothListView.builder(
                                 padding: EdgeInsets.zero,
                                 physics: const NeverScrollableScrollPhysics(),
                                 itemCount: 10,

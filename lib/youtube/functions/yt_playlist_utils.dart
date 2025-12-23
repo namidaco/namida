@@ -138,7 +138,7 @@ class YtUtilsPlaylist {
       extraItemsBuilder: (formState) => Column(
         children: [
           const SizedBox(height: 12.0),
-          SingleChildScrollView(
+          SmoothSingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: ObxO(
               rx: privacyRx,

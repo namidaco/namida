@@ -148,7 +148,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
           ),
           const SizedBox(width: 4.0),
           Expanded(
-            child: SingleChildScrollView(
+            child: SmoothSingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [

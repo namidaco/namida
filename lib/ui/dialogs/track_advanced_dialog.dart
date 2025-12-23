@@ -591,7 +591,7 @@ void _showTrackColorPaletteDialog({
             Obx(
               (context) => ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: context.height * 0.4),
-                child: SingleChildScrollView(
+                child: SmoothSingleChildScrollView(
                   child: getPalettesWidget(
                     palette: allPaletteColor.valueR,
                     onColorTap: (color) => selectedColors.addOrRemove(color),
@@ -801,7 +801,7 @@ void showLibraryTracksChooseDialog({
                     queueSource: QueueSource.others,
                   ),
                   builder: (properties) => Obx(
-                    (context) => ListView.builder(
+                    (context) => SuperSmoothListView.builder(
                       controller: scrollController,
                       padding: EdgeInsets.zero,
                       itemCount: allTracksList.length,

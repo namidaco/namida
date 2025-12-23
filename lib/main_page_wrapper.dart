@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:namida/class/route.dart';
@@ -21,6 +20,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/main.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/main_page.dart';
@@ -258,7 +258,7 @@ class NamidaDrawer extends StatelessWidget {
       child: Column(
         children: [
           Expanded(
-            child: SuperListView(
+            child: SuperSmoothListView(
               children: [
                 if (showLogoInDrawer)
                   NamidaLogoContainer(

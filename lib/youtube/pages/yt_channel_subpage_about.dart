@@ -106,7 +106,7 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
                       style: textTheme.displayLarge,
                     ),
                   )
-                : SuperListView(
+                : SuperSmoothListView(
                     controller: widget.scrollController,
                     children: [
                       const SizedBox(height: 24.0),

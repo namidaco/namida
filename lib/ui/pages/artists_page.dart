@@ -177,7 +177,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                         child: ObxPrefer(
                           enabled: sort.requiresHistory,
                           rx: HistoryController.inst.topTracksMapListens,
-                          builder: (context, _) => ListView.builder(
+                          builder: (context, _) => SuperSmoothListView.builder(
                             controller: scrollController,
                             itemCount: finalArtists.length,
                             padding: kBottomPaddingInsets,
@@ -205,7 +205,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                         child: ObxPrefer(
                           enabled: sort.requiresHistory,
                           rx: HistoryController.inst.topTracksMapListens,
-                          builder: (context, _) => GridView.builder(
+                          builder: (context, _) => SmoothGridView.builder(
                             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: countPerRowResolved,
                               childAspectRatio: 0.88,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
@@ -94,7 +93,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
             padding: const EdgeInsets.all(8.0),
             child: SizedBox(
               height: 34.0,
-              child: SuperListView(
+              child: SuperSmoothListView(
                 scrollDirection: Axis.horizontal,
                 children: [
                   Stack(
@@ -163,7 +162,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                 controller: YTLocalSearchController.inst.scrollController,
                 child: ObxO(
                   rx: YTLocalSearchController.inst.searchResults,
-                  builder: (context, searchResults) => CustomScrollView(
+                  builder: (context, searchResults) => SmoothCustomScrollView(
                     controller: YTLocalSearchController.inst.scrollController,
                     slivers: [
                       searchResults == null
@@ -171,7 +170,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                               child: ShimmerWrapper(
                                 transparent: false,
                                 shimmerEnabled: true,
-                                child: SuperListView.builder(
+                                child: SuperSmoothListView.builder(
                                   padding: EdgeInsets.zero,
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemCount: 10,

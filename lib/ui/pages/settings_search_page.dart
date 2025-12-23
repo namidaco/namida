@@ -22,7 +22,7 @@ class SettingsSearchPage extends StatelessWidget {
         child: Obx(
           (context) {
             final keys = SettingsSearchController.inst.searchResults.keys.toList();
-            return CustomScrollView(
+            return SmoothCustomScrollView(
               slivers: [
                 ...keys.map(
                   (key) {

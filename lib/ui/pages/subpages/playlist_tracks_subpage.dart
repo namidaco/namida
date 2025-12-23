@@ -151,7 +151,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
               queueSource: QueueSource.history,
               playlistName: k_PLAYLIST_NAME_HISTORY,
             ),
-            builder: (properties) => CustomScrollView(
+            builder: (properties) => SmoothCustomScrollView(
               controller: HistoryController.inst.scrollController,
               slivers: [
                 if (!showSubpageInfoAtSide)
@@ -219,7 +219,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                                 },
                               ),
                             ),
-                            content: ListView.builder(
+                            content: SuperSmoothListView.builder(
                               padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
                               primary: false,
                               physics: const NeverScrollableScrollPhysics(),
@@ -392,7 +392,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
       configs: const TrackTilePropertiesConfigs(
         queueSource: QueueSource.playlist,
       ),
-      builder: (properties) => CustomScrollView(
+      builder: (properties) => SmoothCustomScrollView(
         slivers: [
           SliverToBoxAdapter(
             child: AnimatedContainer(
@@ -431,7 +431,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
                       color: theme.cardColor,
                       borderRadius: BorderRadius.circular(18.0.multipliedRadius),
                     ),
-                    child: ListView.builder(
+                    child: SuperSmoothListView.builder(
                       itemExtent: Dimensions.inst.trackTileItemExtent,
                       itemCount: randomTracks.length,
                       itemBuilder: (context, i) {

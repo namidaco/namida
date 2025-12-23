@@ -40,7 +40,7 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
 
   Widget get sortWidget {
     final textTheme = context.textTheme;
-    return SingleChildScrollView(
+    return SmoothSingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,

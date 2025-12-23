@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/class/route.dart';
@@ -709,7 +708,7 @@ class _QueueConfigureOptions extends StatelessWidget {
       width: context.width,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: context.height * 0.6),
-        child: SuperListView(
+        child: SuperSmoothListView(
           padding: EdgeInsets.zero,
           shrinkWrap: true,
           children: [

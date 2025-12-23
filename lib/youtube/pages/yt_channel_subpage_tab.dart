@@ -112,7 +112,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
       children: [
         const SizedBox(height: 8.0),
         if (displaySortChips)
-          SingleChildScrollView(
+          SmoothSingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
@@ -164,14 +164,14 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
               child: LazyLoadListView(
                 scrollController: widget.scrollController,
                 onReachingEnd: _fetchNextPage,
-                listview: (controller) => CustomScrollView(
+                listview: (controller) => SmoothCustomScrollView(
                   controller: controller,
                   slivers: [
                     _isLoadingInitial
                         ? SliverToBoxAdapter(
                             child: ShimmerWrapper(
                               shimmerEnabled: true,
-                              child: SuperListView.builder(
+                              child: SuperSmoothListView.builder(
                                 shrinkWrap: true,
                                 primary: false,
                                 physics: const NeverScrollableScrollPhysics(),
@@ -260,7 +260,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                           ),
                                           const SizedBox(height: paddingAfterHeader),
                                           Expanded(
-                                            child: ListView.builder(
+                                            child: SuperSmoothListView.builder(
                                               padding: const EdgeInsets.symmetric(horizontal: 6.0),
                                               scrollDirection: Axis.horizontal,
                                               itemExtent: itemThumbnailWidth + paddingForThumbnail,

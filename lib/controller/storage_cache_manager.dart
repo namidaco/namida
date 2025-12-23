@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import 'package:checkmark/checkmark.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
@@ -327,7 +326,7 @@ class StorageCacheManager {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12.0),
-              SingleChildScrollView(
+              SmoothSingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: ObxO(
                   rx: currentSort,
@@ -377,7 +376,7 @@ class StorageCacheManager {
                       builder: (context, toDelete) {
                         final theme = context.theme;
                         final textTheme = theme.textTheme;
-                        return SuperListView.builder(
+                        return SuperSmoothListView.builder(
                           controller: sc,
                           padding: EdgeInsets.zero,
                           itemCount: allFiles.length,

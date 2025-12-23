@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:checkmark/checkmark.dart';
-import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/track.dart';
@@ -430,7 +429,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme, {bool i
                                 const SizedBox(height: 6.0),
                                 Expanded(
                                   child: Obx(
-                                    (context) => SuperListView.builder(
+                                    (context) => SuperSmoothListView.builder(
                                       padding: const EdgeInsets.only(bottom: 24.0),
                                       itemBuilder: (context, i) {
                                         final tf = subList[i];
@@ -540,7 +539,7 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme, {bool i
                         builder: (context, maxWidth) => SizedBox(
                           height: namida.height * 0.61,
                           width: maxWidth,
-                          child: SuperListView(
+                          child: SuperSmoothListView(
                             padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom * 0.6),
                             children: [
                               Row(
@@ -695,7 +694,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre, {bool instantEditArt
             builder: (context, tracksGoingToBeEdited) {
               final list = tracksGoingToBeEdited.keys.toList();
 
-              return SuperListView.builder(
+              return SuperSmoothListView.builder(
                 itemCount: list.length,
                 itemBuilder: (context, index) {
                   final tr = list[index];
@@ -1070,7 +1069,7 @@ Future<void> _editMultipleTracksTags(List<Track> tracksPre, {bool instantEditArt
                         builder: (context, maxWidth) => SizedBox(
                           height: namida.height * 0.7,
                           width: maxWidth,
-                          child: SuperListView(
+                          child: SuperSmoothListView(
                             padding: EdgeInsets.only(bottom: (namida.viewInsets?.bottom ?? 0) * 0.6),
                             children: [
                               Row(

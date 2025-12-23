@@ -165,7 +165,7 @@ class ThemeSetting extends SettingSubpageProvider {
                 child: SizedBox(
                   height: namida.height * 0.5,
                   width: namida.width,
-                  child: SingleChildScrollView(
+                  child: SmoothSingleChildScrollView(
                     child: Column(
                       children: [
                         ...Language.availableLanguages.map(

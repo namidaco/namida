@@ -94,7 +94,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                       onReachingEnd: () => YoutubeInfoController.current.updateCurrentComments(currentId),
                       extend: 400,
                       scrollController: sc,
-                      listview: (controller) => CustomScrollView(
+                      listview: (controller) => SmoothCustomScrollView(
                         physics: const ClampingScrollPhysicsModified(),
                         controller: controller,
                         slivers: [
@@ -106,7 +106,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                                   child: ShimmerWrapper(
                                     transparent: false,
                                     shimmerEnabled: true,
-                                    child: SuperListView.builder(
+                                    child: SuperSmoothListView.builder(
                                       padding: EdgeInsets.zero,
                                       physics: const NeverScrollableScrollPhysics(),
                                       itemCount: 10,

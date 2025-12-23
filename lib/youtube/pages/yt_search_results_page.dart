@@ -167,7 +167,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
             child: LazyLoadListView(
               onReachingEnd: _fetchSearchNextPage,
               listview: (controller) {
-                return CustomScrollView(
+                return SmoothCustomScrollView(
                   controller: controller,
                   slivers: [
                     const SliverPadding(padding: EdgeInsets.only(bottom: 4.0)),
@@ -215,7 +215,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               shimmerEnabled: true,
                               child: SizedBox(
                                 height: horizontalListHeight,
-                                child: SuperListView.builder(
+                                child: SuperSmoothListView.builder(
                                   shrinkWrap: true,
                                   padding: const EdgeInsets.symmetric(horizontal: 6.0),
                                   scrollDirection: Axis.horizontal,
@@ -245,7 +245,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                             ),
                             builder: (properties) => SizedBox(
                               height: horizontalListHeight,
-                              child: ListView.builder(
+                              child: SuperSmoothListView.builder(
                                 padding: const EdgeInsets.symmetric(horizontal: 6.0),
                                 scrollDirection: Axis.horizontal,
                                 itemExtent: thumbnailItemExtentLocal,
@@ -393,7 +393,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                       ),
                                                     SizedBox(
                                                       height: itemsLengthWithoutHiddens * thumbnailItemExtent,
-                                                      child: ListView.builder(
+                                                      child: SuperSmoothListView.builder(
                                                         padding: EdgeInsets.zero,
                                                         primary: false,
                                                         physics: const NeverScrollableScrollPhysics(),
