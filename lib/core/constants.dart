@@ -905,6 +905,7 @@ class NamidaFeaturesVisibility {
 
   static final showDownloadNotifications = _isWindows;
   static final showVideoControlsOnHover = _isWindows;
+  static final tiltingCardsEffect = _isWindows;
 
   static final isStoragePermissionNotRequired = _isWindows;
   static final recieveDragAndDrop = _isWindows;

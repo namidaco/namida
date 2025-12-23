@@ -148,6 +148,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                   return AnimatingTile(
                                     position: i,
                                     shouldAnimate: _shouldAnimate,
+                                    allowTilting: true,
                                     child: AlbumTile(
                                       identifier: albumId,
                                       album: tracks,

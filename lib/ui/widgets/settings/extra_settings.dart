@@ -1171,6 +1171,14 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   title: 'floating_artwork_effect'.toUpperCase(),
                   subtitle: lang.PERFORMANCE_NOTE,
                 ),
+              if (NamidaFeaturesVisibility.tiltingCardsEffect)
+                CustomSwitchListTile(
+                  icon: Broken.d_rotate,
+                  value: settings.extra.tiltingCardsEffect ?? false,
+                  onChanged: (isTrue) => setState(() => settings.extra.save(tiltingCardsEffect: !isTrue)),
+                  title: 'tilting_cards_effect'.toUpperCase(),
+                  subtitle: lang.PERFORMANCE_NOTE,
+                ),
             ],
           ),
         ),

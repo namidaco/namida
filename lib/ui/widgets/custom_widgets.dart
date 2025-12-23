@@ -14,6 +14,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:flutter_tilt/flutter_tilt.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:like_button/like_button.dart';
 import 'package:photo_view/photo_view.dart';
@@ -2263,6 +2264,7 @@ class AnimatingTile extends StatelessWidget {
   final int position;
   final Widget child;
   final bool shouldAnimate;
+  final bool allowTilting;
   final Duration duration;
 
   const AnimatingTile({
@@ -2271,24 +2273,36 @@ class AnimatingTile extends StatelessWidget {
     required this.child,
     this.duration = const Duration(milliseconds: 400),
     this.shouldAnimate = true,
+    this.allowTilting = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return shouldAnimate
-        ? AnimationConfiguration.staggeredList(
-            position: position,
+    Widget child = this.child;
+    if (shouldAnimate) {
+      child = AnimationConfiguration.staggeredList(
+        position: position,
+        duration: duration,
+        delay: const Duration(milliseconds: 50),
+        child: SlideAnimation(
+          verticalOffset: 25.0,
+          child: FadeInAnimation(
             duration: duration,
-            delay: const Duration(milliseconds: 50),
-            child: SlideAnimation(
-              verticalOffset: 25.0,
-              child: FadeInAnimation(
-                duration: duration,
-                child: child,
-              ),
-            ),
-          )
-        : child;
+            child: child,
+          ),
+        ),
+      );
+    }
+
+    if (NamidaFeaturesVisibility.tiltingCardsEffect) {
+      if (allowTilting && settings.extra.tiltingCardsEffect == true) {
+        child = _EncapsulateWithTilt(
+          child: child,
+        );
+      }
+    }
+
+    return child;
   }
 }
 
@@ -2308,20 +2322,76 @@ class AnimatingGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return shouldAnimate
-        ? AnimationConfiguration.staggeredGrid(
-            columnCount: columnCount,
-            position: position,
+    Widget child = this.child;
+    if (shouldAnimate) {
+      child = AnimationConfiguration.staggeredGrid(
+        columnCount: columnCount,
+        position: position,
+        duration: const Duration(milliseconds: 400),
+        child: SlideAnimation(
+          verticalOffset: 25.0,
+          child: FadeInAnimation(
             duration: const Duration(milliseconds: 400),
-            child: SlideAnimation(
-              verticalOffset: 25.0,
-              child: FadeInAnimation(
-                duration: const Duration(milliseconds: 400),
-                child: child,
-              ),
-            ),
-          )
-        : child;
+            child: child,
+          ),
+        ),
+      );
+    }
+
+    if (NamidaFeaturesVisibility.tiltingCardsEffect) {
+      if (settings.extra.tiltingCardsEffect == true) {
+        child = _EncapsulateWithTilt(
+          child: child,
+        );
+      }
+    }
+
+    return child;
+  }
+}
+
+class _EncapsulateWithTilt extends StatelessWidget {
+  final Widget child;
+  const _EncapsulateWithTilt({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tilt(
+      clipBehavior: Clip.none,
+      tiltConfig: const TiltConfig(
+        angle: 2.0,
+        sensorFactor: 0.5,
+        sensorRevertFactor: 0.1,
+        enableOutsideAreaMove: false,
+        enableReverse: false,
+        enableGestureSensors: false,
+        controllerMoveDuration: Duration(milliseconds: 200),
+        leaveDuration: Duration(milliseconds: 400),
+        moveDuration: Duration(milliseconds: 100),
+        sensorMoveDuration: Duration(milliseconds: 50),
+        enterDuration: Duration(milliseconds: 800),
+        controllerLeaveDuration: Duration(milliseconds: 200),
+      ),
+      fps: 30,
+      lightConfig: const LightConfig(
+        enableReverse: true,
+        maxIntensity: 0.2,
+        projectorScale: 0.8,
+        spreadFactor: 2.0,
+        color: Color(0xCCFFFFFF),
+      ),
+      shadowConfig: const ShadowConfig(
+        disable: true,
+        enableReverse: true,
+        color: Colors.transparent,
+      ),
+      childLayout: ChildLayout(
+        inner: [
+          child,
+        ],
+      ),
+      child: const SizedBox(),
+    );
   }
 }
 

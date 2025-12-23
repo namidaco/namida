@@ -608,6 +608,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                       return AnimatingTile(
                                                         position: i,
                                                         shouldAnimate: _shouldAnimate,
+                                                        allowTilting: true,
                                                         child: PlaylistTile(
                                                           enableHero: enableHero,
                                                           playlistName: key,

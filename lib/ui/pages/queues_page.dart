@@ -39,6 +39,7 @@ class QueuesPage extends StatelessWidget with NamidaRouteWidget {
                       return AnimatingTile(
                         key: ValueKey(i),
                         position: i,
+                        allowTilting: true,
                         child: QueueTile(queue: q),
                       );
                     },

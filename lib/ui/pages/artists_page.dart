@@ -188,6 +188,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                               return AnimatingTile(
                                 position: i,
                                 shouldAnimate: _shouldAnimate,
+                                allowTilting: true,
                                 child: ArtistTile(
                                   tracks: tracks,
                                   name: artist,
