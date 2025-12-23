@@ -16,6 +16,8 @@ class _DesktopSmoothMouseScroll extends StatefulWidget {
 
   final Axis scrollDirection;
 
+  final bool reverse;
+
   /// Scroll speed for adjusting the smoothness and add a bit of extra scroll
   /// Default value is 2.5
   /// You can try it for a range of 2 - 5
@@ -34,6 +36,7 @@ class _DesktopSmoothMouseScroll extends StatefulWidget {
     super.key,
     required this.controller,
     required this.scrollDirection,
+    required this.reverse,
     this.scrollSpeed = _kDefaultScrollOffset,
     this.scrollAnimationLength = _kDefaultAnimationDuration,
     this.curve = Curves.easeOutCubic,
@@ -72,6 +75,8 @@ class _DesktopSmoothMouseScrollState extends State<_DesktopSmoothMouseScroll> {
     final now = DateTime.now();
     final timeDiff = now.difference(_lastScrollTime).inMilliseconds;
     _lastScrollTime = now;
+
+    if (widget.reverse) delta = -delta;
 
     // Update target scroll position
     _targetScroll += (delta * widget.scrollSpeed);
@@ -158,6 +163,7 @@ class _SuperSmoothScrollViewBuilder extends StatefulWidget {
   final ScrollController? controller;
   final ScrollPhysics? physics;
   final Axis scrollDirection;
+  final bool reverse;
   final Widget Function(ScrollController controller, ScrollPhysics? physics) builder;
 
   const _SuperSmoothScrollViewBuilder({
@@ -165,6 +171,7 @@ class _SuperSmoothScrollViewBuilder extends StatefulWidget {
     required this.controller,
     required this.physics,
     required this.scrollDirection,
+    required this.reverse,
     required this.builder,
   });
 
@@ -196,6 +203,7 @@ class __SuperSmoothScrollViewBuilderState extends State<_SuperSmoothScrollViewBu
       child = _DesktopSmoothMouseScroll(
         controller: _controller,
         scrollDirection: widget.scrollDirection,
+        reverse: widget.reverse,
         child: child,
       );
     }
@@ -241,6 +249,7 @@ class SmoothCustomScrollView extends StatelessWidget {
       controller: controller,
       physics: physics,
       scrollDirection: scrollDirection,
+      reverse: reverse,
       builder: (controller, physics) => CustomScrollView(
         controller: controller,
         slivers: slivers,
@@ -296,6 +305,7 @@ class SmoothSingleChildScrollView extends StatelessWidget {
       controller: controller,
       physics: physics,
       scrollDirection: scrollDirection,
+      reverse: reverse,
       builder: (controller, physics) => SingleChildScrollView(
         controller: controller,
         physics: physics,
@@ -367,6 +377,7 @@ class SuperSmoothListView extends StatelessWidget {
         controller: controller,
         physics: physics,
         scrollDirection: scrollDirection,
+        reverse: reverse,
         builder: (controller, physics) => SuperListView(
           controller: controller,
           physics: physics,
@@ -425,6 +436,7 @@ class SuperSmoothListView extends StatelessWidget {
         controller: controller,
         physics: physics,
         scrollDirection: scrollDirection,
+        reverse: reverse,
         builder: (controller, physics) => itemExtent == null && itemExtentBuilder == null
             ? SuperListView.builder(
                 controller: controller,
@@ -507,6 +519,7 @@ class SuperSmoothListView extends StatelessWidget {
         controller: controller,
         physics: physics,
         scrollDirection: scrollDirection,
+        reverse: reverse,
         builder: (controller, physics) => SuperListView.separated(
           controller: controller,
           physics: physics,
@@ -560,6 +573,7 @@ class SuperSmoothListView extends StatelessWidget {
         controller: controller,
         physics: physics,
         scrollDirection: scrollDirection,
+        reverse: reverse,
         builder: (controller, physics) => SuperListView.custom(
           controller: controller,
           physics: physics,
@@ -612,6 +626,7 @@ class SmoothGridView {
         controller: controller,
         physics: physics,
         scrollDirection: scrollDirection,
+        reverse: reverse,
         builder: (controller, physics) => GridView.builder(
           gridDelegate: gridDelegate,
           controller: controller,
@@ -667,6 +682,7 @@ class SmoothMasonryGridView {
         controller: controller,
         physics: physics,
         scrollDirection: scrollDirection,
+        reverse: reverse,
         builder: (controller, physics) => MasonryGridView.builder(
           gridDelegate: gridDelegate,
           controller: controller,

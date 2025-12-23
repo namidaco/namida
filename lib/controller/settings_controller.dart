@@ -139,6 +139,7 @@ class _SettingsController with SettingsFileWriter {
   final enableFoldersHierarchyVideos = true.obs;
   final displayArtistBeforeTitle = true.obs;
   final heatmapListensView = false.obs;
+  final reverseListensView = true.obs;
   final backupItemslist = Rxn<List<AppPathsBackupEnum>>();
   final enableVideoPlayback = true.obs;
   final enableLyrics = false.obs;
@@ -545,6 +546,7 @@ class _SettingsController with SettingsFileWriter {
       enableFoldersHierarchyVideos.value = json['enableFoldersHierarchyVideos'] ?? enableFoldersHierarchyVideos.value;
       displayArtistBeforeTitle.value = json['displayArtistBeforeTitle'] ?? displayArtistBeforeTitle.value;
       heatmapListensView.value = json['heatmapListensView'] ?? heatmapListensView.value;
+      reverseListensView.value = json['reverseListensView'] ?? reverseListensView.value;
       if (json['backupItemslist_v2'] is List) {
         backupItemslist.value = (json['backupItemslist_v2'] as List).map((v) => AppPathsBackupEnum.values.getEnum(v)).whereType<AppPathsBackupEnum>().toList();
       }
@@ -780,6 +782,7 @@ class _SettingsController with SettingsFileWriter {
         'enableFoldersHierarchyVideos': enableFoldersHierarchyVideos.value,
         'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
         'heatmapListensView': heatmapListensView.value,
+        'reverseListensView': reverseListensView.value,
         'backupItemslist_v2': backupItemslist.value?.map((e) => e.name).toList(),
         'enableVideoPlayback': enableVideoPlayback.value,
         'enableLyrics': enableLyrics.value,
@@ -962,6 +965,7 @@ class _SettingsController with SettingsFileWriter {
     bool? enableFoldersHierarchyVideos,
     bool? displayArtistBeforeTitle,
     bool? heatmapListensView,
+    bool? reverseListensView,
     List<AppPathsBackupEnum>? backupItemslist,
     bool? enableVideoPlayback,
     bool? enableLyrics,
@@ -1184,6 +1188,7 @@ class _SettingsController with SettingsFileWriter {
     if (enableFoldersHierarchyVideos != null) this.enableFoldersHierarchyVideos.value = enableFoldersHierarchyVideos;
     if (displayArtistBeforeTitle != null) this.displayArtistBeforeTitle.value = displayArtistBeforeTitle;
     if (heatmapListensView != null) this.heatmapListensView.value = heatmapListensView;
+    if (reverseListensView != null) this.reverseListensView.value = reverseListensView;
     if (backupItemslist != null) {
       this.backupItemslist.value ??= AppPathsBackupEnumCategories.everything;
       backupItemslist.loop((d) {

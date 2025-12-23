@@ -3062,6 +3062,7 @@ class NamidaListView extends StatelessWidget {
   final ScrollPhysics? physics;
   final double scrollStep;
   final Map<String, int> scrollConfig;
+  final bool reverse;
 
   const NamidaListView({
     super.key,
@@ -3083,6 +3084,7 @@ class NamidaListView extends StatelessWidget {
     this.physics,
     this.scrollStep = 0,
     this.scrollConfig = const {},
+    this.reverse = false,
   });
 
   @override
@@ -3115,6 +3117,7 @@ class NamidaListView extends StatelessWidget {
                     itemCount: itemCount,
                   );
     return NamidaListViewRaw(
+      reverse: reverse,
       scrollController: scrollController,
       scrollConfig: scrollConfig,
       scrollStep: scrollStep,
