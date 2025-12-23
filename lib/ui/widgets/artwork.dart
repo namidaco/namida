@@ -6,6 +6,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:flutter_tilt/flutter_tilt.dart';
+
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -47,6 +49,7 @@ class ArtworkWidget extends StatefulWidget {
   final IconData? icon;
   final bool isCircle;
   final bool fallbackToFolderCover;
+  final bool allowFloating;
   final BoxFit fit;
   final AlignmentGeometry alignment;
 
@@ -80,6 +83,7 @@ class ArtworkWidget extends StatefulWidget {
     this.icon,
     this.isCircle = false,
     this.fallbackToFolderCover = true,
+    this.allowFloating = false,
     this.fit = BoxFit.cover,
     this.alignment = Alignment.center,
     this.extractInternally = true,
@@ -283,7 +287,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final borderR = widget.isCircle || settings.borderRadiusMultiplier.value == 0 ? null : BorderRadius.circular(widget.borderRadius.multipliedRadius);
     final shape = widget.isCircle ? BoxShape.circle : BoxShape.rectangle;
     final theme = context.theme;
-    return SizedBox(
+    Widget artwork = SizedBox(
       key: key,
       width: widget.staggered ? null : boxWidth,
       height: widget.staggered ? null : boxHeight,
@@ -378,6 +382,78 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                   ),
                 ),
         ),
+      ),
+    );
+
+    if (widget.allowFloating) {
+      if (NamidaFeaturesVisibility.floatingArtworkEffect) {
+        if (settings.extra.floatingArtworkEffect == true) {
+          artwork = _EncapsulateWithFloatingTilt(
+            compressed: widget.compressed,
+            child: artwork,
+          );
+        }
+      }
+    }
+
+    return artwork;
+  }
+}
+
+class _EncapsulateWithFloatingTilt extends StatefulWidget {
+  final bool compressed;
+  final Widget child;
+  const _EncapsulateWithFloatingTilt({super.key, required this.compressed, required this.child});
+
+  @override
+  State<_EncapsulateWithFloatingTilt> createState() => __EncapsulateWithFloatingTiltState();
+}
+
+class __EncapsulateWithFloatingTiltState extends State<_EncapsulateWithFloatingTilt> {
+  @override
+  Widget build(BuildContext context) {
+    final config = widget.compressed // (non expanded)
+        ? const TiltConfig(
+            angle: 2.0,
+            sensorFactor: 0.5,
+            sensorRevertFactor: 0.1,
+            enableOutsideAreaMove: false,
+            enableReverse: false,
+            controllerMoveDuration: Duration(milliseconds: 200),
+            leaveDuration: Duration(milliseconds: 400),
+            moveDuration: Duration(milliseconds: 100),
+            sensorMoveDuration: Duration(milliseconds: 50),
+            enterDuration: Duration(milliseconds: 800),
+            controllerLeaveDuration: Duration(milliseconds: 200),
+          )
+        : const TiltConfig(
+            angle: 8.0,
+            sensorFactor: 4.0,
+            sensorRevertFactor: 0.02,
+            enableOutsideAreaMove: false,
+            enableReverse: false,
+            controllerMoveDuration: Duration(milliseconds: 200),
+            leaveDuration: Duration(milliseconds: 400),
+            moveDuration: Duration(milliseconds: 100),
+            sensorMoveDuration: Duration(milliseconds: 50),
+            enterDuration: Duration(milliseconds: 800),
+            controllerLeaveDuration: Duration(milliseconds: 200),
+          );
+    return IgnorePointer(
+      child: Tilt(
+        clipBehavior: Clip.none,
+        tiltConfig: config,
+        fps: 60,
+        lightConfig: const LightConfig(disable: true, color: Colors.transparent),
+        shadowConfig: const ShadowConfig(disable: true, color: Colors.transparent),
+        childLayout: ChildLayout(
+          inner: [
+            TiltParallax(
+              child: widget.child,
+            ),
+          ],
+        ),
+        child: const SizedBox(),
       ),
     );
   }

@@ -834,6 +834,7 @@ class _TrackImage extends StatelessWidget {
         ],
         iconSize: maxWidth * 0.5,
         enableGlow: false,
+        allowFloating: true,
       ),
     );
   }
@@ -871,6 +872,7 @@ class _YoutubeIDImage extends StatelessWidget {
         ],
         iconSize: maxWidth * 0.5,
         enableGlow: false,
+        allowFloating: true,
       ),
     );
   }

@@ -58,6 +58,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final int fadeMilliSeconds;
   final bool disableBlurBgSizeShrink;
   final bool reduceInitialFlashes;
+  final bool allowFloating;
 
   const YoutubeThumbnail({
     required super.key,
@@ -92,6 +93,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.fadeMilliSeconds = 200,
     this.disableBlurBgSizeShrink = false,
     this.reduceInitialFlashes = false,
+    this.allowFloating = false,
   });
 
   @override
@@ -268,6 +270,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         fit: widget.fit,
         alignment: widget.alignment,
         extractInternally: false,
+        allowFloating: widget.allowFloating,
       ),
     );
   }

@@ -1163,6 +1163,14 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                 onChanged: (isTrue) => setState(() => settings.extra.save(tapToScroll: !isTrue)),
                 title: 'tap_to_scroll'.toUpperCase(),
               ),
+              if (NamidaFeaturesVisibility.floatingArtworkEffect)
+                CustomSwitchListTile(
+                  icon: Broken.recovery_convert,
+                  value: settings.extra.floatingArtworkEffect ?? false,
+                  onChanged: (isTrue) => setState(() => settings.extra.save(floatingArtworkEffect: !isTrue)),
+                  title: 'floating_artwork_effect'.toUpperCase(),
+                  subtitle: lang.PERFORMANCE_NOTE,
+                ),
             ],
           ),
         ),

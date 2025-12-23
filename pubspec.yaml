@@ -137,6 +137,7 @@ dependencies:
   flutter_animate: ^4.2.0+1
   dynamic_color: ^1.6.7
   super_sliver_list: ^0.4.1
+  flutter_tilt: ^3.3.2
 
   # ---- UI Widgets ----
   sleek_circular_slider: ^2.0.1
