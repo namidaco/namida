@@ -12,6 +12,8 @@ class _ExtraSettings with SettingsFileWriter {
   bool? floatingArtworkEffect;
   bool? tiltingCardsEffect;
   bool? mediaWaveHaptic;
+  bool? artistAlbumsExpanded;
+  bool? artistSinglesExpanded;
 
   int lastPlayedIndex = 0;
 
@@ -26,6 +28,8 @@ class _ExtraSettings with SettingsFileWriter {
     bool? floatingArtworkEffect,
     bool? tiltingCardsEffect,
     bool? mediaWaveHaptic,
+    bool? artistAlbumsExpanded,
+    bool? artistSinglesExpanded,
     int? lastPlayedIndex,
     int? ytAddToPlaylistsTabIndex,
   }) {
@@ -37,6 +41,8 @@ class _ExtraSettings with SettingsFileWriter {
     if (floatingArtworkEffect != null) this.floatingArtworkEffect = floatingArtworkEffect;
     if (tiltingCardsEffect != null) this.tiltingCardsEffect = tiltingCardsEffect;
     if (mediaWaveHaptic != null) this.mediaWaveHaptic = mediaWaveHaptic;
+    if (artistAlbumsExpanded != null) this.artistAlbumsExpanded = artistAlbumsExpanded;
+    if (artistSinglesExpanded != null) this.artistSinglesExpanded = artistSinglesExpanded;
     if (lastPlayedIndex != null) this.lastPlayedIndex = lastPlayedIndex;
     if (ytAddToPlaylistsTabIndex != null) this.ytAddToPlaylistsTabIndex = ytAddToPlaylistsTabIndex;
     _writeToStorage();
@@ -65,6 +71,8 @@ class _ExtraSettings with SettingsFileWriter {
       floatingArtworkEffect = json['floatingArtworkEffect'] ?? floatingArtworkEffect;
       tiltingCardsEffect = json['tiltingCardsEffect'] ?? tiltingCardsEffect;
       mediaWaveHaptic = json['mediaWaveHaptic'] ?? mediaWaveHaptic;
+      artistAlbumsExpanded = json['artistAlbumsExpanded'] ?? artistAlbumsExpanded;
+      artistSinglesExpanded = json['artistSinglesExpanded'] ?? artistSinglesExpanded;
       lastPlayedIndex = json['lastPlayedIndex'] ?? lastPlayedIndex;
       ytAddToPlaylistsTabIndex = json['ytAddToPlaylistsTabIndex'] ?? ytAddToPlaylistsTabIndex;
     } catch (e, st) {
@@ -83,6 +91,8 @@ class _ExtraSettings with SettingsFileWriter {
         if (floatingArtworkEffect != null) 'floatingArtworkEffect': floatingArtworkEffect,
         if (tiltingCardsEffect != null) 'tiltingCardsEffect': tiltingCardsEffect,
         if (mediaWaveHaptic != null) 'mediaWaveHaptic': mediaWaveHaptic,
+        if (artistAlbumsExpanded != null) 'artistAlbumsExpanded': artistAlbumsExpanded,
+        if (artistSinglesExpanded != null) 'artistSinglesExpanded': artistSinglesExpanded,
         'lastPlayedIndex': lastPlayedIndex,
         'ytAddToPlaylistsTabIndex': ytAddToPlaylistsTabIndex,
       };

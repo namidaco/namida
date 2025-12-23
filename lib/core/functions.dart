@@ -72,12 +72,22 @@ class NamidaOnTaps {
     }
     final albumIdsFinalList = albumIdsMap.entries.toList();
     SearchSortController.inst.sortAlbumsListRaw(albumIdsFinalList, settings.albumSort.value, settings.albumSortReversed.value);
-    final albumIds = albumIdsFinalList.map((e) => e.key).toList();
+
+    final albumIds = <String>[];
+    final singlesIds = <String>[];
+    for (final a in albumIdsFinalList) {
+      if (a.value.length > 1) {
+        albumIds.add(a.key);
+      } else {
+        singlesIds.add(a.key);
+      }
+    }
 
     ArtistTracksPage(
       name: name,
       tracks: tracks,
       albumIdentifiers: albumIds,
+      singlesIdentifiers: singlesIds,
       type: type,
     ).navigate();
   }

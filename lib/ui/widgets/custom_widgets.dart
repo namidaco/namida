@@ -1103,7 +1103,7 @@ class NamidaExpansionTile extends StatelessWidget {
   final EdgeInsetsGeometry? childrenPadding;
   final bool initiallyExpanded;
   final Widget? trailing;
-  final ValueChanged? onExpansionChanged;
+  final ValueChanged<bool>? onExpansionChanged;
   final bool normalRightPadding;
   final Color? bgColor;
   final bool bigahh;

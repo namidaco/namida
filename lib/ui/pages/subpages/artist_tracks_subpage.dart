@@ -10,6 +10,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -37,6 +38,7 @@ class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
 
   final List<Track> tracks;
   final List<String> albumIdentifiers;
+  final List<String> singlesIdentifiers;
   final MediaType type;
 
   const ArtistTracksPage({
@@ -44,6 +46,7 @@ class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
     required this.name,
     required this.tracks,
     required this.albumIdentifiers,
+    required this.singlesIdentifiers,
     required this.type,
   });
 
@@ -84,34 +87,19 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                 header: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    NamidaExpansionTile(
+                    _AlbumsRow(
+                      title: lang.ALBUMS,
                       icon: Broken.music_dashboard,
-                      titleText: "${lang.ALBUMS} ${widget.albumIdentifiers.length}",
-                      initiallyExpanded: widget.albumIdentifiers.isNotEmpty,
-                      children: [
-                        SizedBox(
-                          height: 130.0 + 28.0,
-                          child: SuperSmoothListView.builder(
-                            padding: const EdgeInsets.symmetric(vertical: 14.0),
-                            scrollDirection: Axis.horizontal,
-                            itemExtent: 100.0,
-                            itemCount: widget.albumIdentifiers.length,
-                            itemBuilder: (context, i) {
-                              final albumId = widget.albumIdentifiers[i];
-                              return Container(
-                                width: 100.0,
-                                margin: const EdgeInsets.only(left: 2.0),
-                                child: AlbumCard(
-                                  identifier: albumId,
-                                  album: albumId.getAlbumTracks(),
-                                  staggered: false,
-                                  compact: true,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                      identifiers: widget.albumIdentifiers,
+                      initiallyExpanded: settings.extra.artistAlbumsExpanded ?? true,
+                      onExpansionChanged: (value) => settings.extra.save(artistAlbumsExpanded: value),
+                    ),
+                    _AlbumsRow(
+                      title: lang.SINGLES,
+                      icon: Broken.music_square,
+                      identifiers: widget.singlesIdentifiers,
+                      initiallyExpanded: settings.extra.artistSinglesExpanded ?? false, // cuz no space
+                      onExpansionChanged: (value) => settings.extra.save(artistSinglesExpanded: value),
                     ),
                     TracksSearchWidgetBox(
                       state: this,
@@ -192,6 +180,56 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AlbumsRow extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final List<String> identifiers;
+  final bool initiallyExpanded;
+  final ValueChanged<bool>? onExpansionChanged;
+
+  const _AlbumsRow({
+    required this.title,
+    required this.icon,
+    required this.identifiers,
+    required this.initiallyExpanded,
+    required this.onExpansionChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaExpansionTile(
+      icon: icon,
+      titleText: "$title ${identifiers.length}",
+      initiallyExpanded: identifiers.isNotEmpty && initiallyExpanded,
+      onExpansionChanged: onExpansionChanged,
+      children: [
+        SizedBox(
+          height: 130.0 + 28.0,
+          child: SuperSmoothListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 14.0),
+            scrollDirection: Axis.horizontal,
+            itemExtent: 100.0,
+            itemCount: identifiers.length,
+            itemBuilder: (context, i) {
+              final albumId = identifiers[i];
+              return Container(
+                width: 100.0,
+                margin: const EdgeInsets.only(left: 2.0),
+                child: AlbumCard(
+                  identifier: albumId,
+                  album: albumId.getAlbumTracks(),
+                  staggered: false,
+                  compact: true,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
