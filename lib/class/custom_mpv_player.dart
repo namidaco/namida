@@ -312,8 +312,6 @@ class CustomMPVPlayer implements AVPlayer {
   Future<void> addMediaNext<T>(ItemPrepareConfig<T, UriSource> config) async {}
   @override
   Future<void> removeAllMediaNext() async {}
-  @override
-  Future<void> removePreviousMedia() async {}
 
   // Features missing: skip silence, looping animations, gapless, equalizer, equalizer presets, loudness enhancer
   // quick settings tile, picture in picture

@@ -41,13 +41,15 @@ class CurrentColor {
   bool get _canAutoUpdateColor => settings.autoColor.value || settings.forceMiniplayerTrackColor.value;
   bool get _shouldUpdateFromDeviceWallpaper => settings.pickColorsFromDeviceWallpaper.value;
 
-  Color get miniplayerColor => settings.forceMiniplayerTrackColor.valueR ? _namidaColorMiniplayer.valueR ?? color : color;
+  Color get miniplayerColor => settings.forceMiniplayerTrackColor.valueR ? _namidaColorMiniplayer.valueR?.color ?? color : color;
+  NamidaColor get miniplayerColorM =>
+      settings.forceMiniplayerTrackColor.valueR ? _namidaColorMiniplayer.valueR ?? _namidaColor.valueR ?? _defaultNamidaColor : _namidaColor.valueR ?? _defaultNamidaColor;
   Color get color => _namidaColor.valueR?.color ?? _defaultNamidaColor.color;
   List<Color> get palette => _namidaColor.valueR?.palette ?? _defaultNamidaColor.palette;
   Color get currentColorScheme => _colorSchemeOfSubPages.valueR ?? color;
   int get colorAlpha => namida.isDarkMode ? 200 : 120;
 
-  final _namidaColorMiniplayer = Rxn<Color>();
+  final _namidaColorMiniplayer = Rxn<NamidaColor>();
 
   final _namidaColor = Rxn<NamidaColor>();
 
@@ -223,7 +225,7 @@ class CurrentColor {
 
         final trColors = await getColorPalette();
         if (trColors == null || !stillPlaying()) return; // -- check current item
-        if (trColors.color != _namidaColorMiniplayer.value) _namidaColorMiniplayer.value = trColors.color;
+        if (trColors != _namidaColorMiniplayer.value) _namidaColorMiniplayer.value = trColors;
 
         if (settings.autoColor.value) {
           if (_shouldUpdateFromDeviceWallpaper) {

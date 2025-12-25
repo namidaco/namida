@@ -588,6 +588,36 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
 
     final borderRadiusRawValue = widget.minimalCard ? YTHistoryVideoCardBase.kDefaultBorderRadiusMinimalCard : YTHistoryVideoCardBase.kDefaultBorderRadius;
 
+    BoxDecoration decoration;
+    final bgColor = widget.bgColor ??
+        (isCurrentlyPlaying
+            ? (widget.properties.comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme).withAlpha(140)
+            : (theme.cardColor.withValues(alpha: widget.cardColorOpacity)));
+
+    if (settings.gradientTiles.value) {
+      Color? bgColorAlt;
+      if (isCurrentlyPlaying) {
+        final palette = CurrentColor.inst.miniplayerColorM.palette;
+        if (palette.isNotEmpty) {
+          bgColorAlt = palette[0].withValues(alpha: 0.4);
+        }
+      }
+      // -- has to be always gradient to animate properly
+      decoration = BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            bgColor,
+            bgColorAlt ?? bgColor,
+          ],
+          stops: [0.6, 1.0],
+        ),
+      );
+    } else {
+      decoration = BoxDecoration(color: bgColor);
+    }
+
     Widget finalChild = NamidaPopupWrapper(
       openOnTap: false,
       openOnLongPress: configs.openMenuOnLongPress,
@@ -640,10 +670,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
             },
         height: widget.minimalCard ? null : Dimensions.youtubeCardItemExtent,
         margin: YTHistoryVideoCardBase.cardMargin(widget.minimalCard),
-        bgColor: widget.bgColor ??
-            (isCurrentlyPlaying
-                ? (widget.properties.comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme).withAlpha(140)
-                : (theme.cardColor.withValues(alpha: widget.cardColorOpacity))),
+        decoration: decoration,
         child: Stack(
           children: [
             widget.minimalCard

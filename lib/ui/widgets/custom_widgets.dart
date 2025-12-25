@@ -3585,7 +3585,7 @@ class NamidaInkWell extends StatelessWidget {
     final borderR =
         decoration.borderRadius?.resolve(Directionality.of(context)) ?? (transparentHighlight || borderRadius == 0 ? null : BorderRadius.circular(borderRadius.multipliedRadius));
     final highlightColor = transparentHighlight ? Colors.transparent : Color.alphaBlend(theme.scaffoldBackgroundColor.withAlpha(20), theme.highlightColor);
-    final bgColor = this.bgColor ?? decoration.color ?? Colors.transparent;
+    final bgColor = this.bgColor ?? decoration.color;
     final decorationFinal = BoxDecoration(
       color: bgColor,
       borderRadius: borderR,

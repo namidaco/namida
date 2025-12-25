@@ -18,6 +18,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -86,8 +87,16 @@ class TrackTilePropertiesProvider extends StatelessWidget {
                                     ? CurrentColor.inst.miniplayerColor
                                     : CurrentColor.inst.currentColorScheme; // always follow track color
 
+                                Color? backgroundColorPlayingAlt;
+
+                                final palette = CurrentColor.inst.miniplayerColorM.palette;
+                                if (palette.isNotEmpty) {
+                                  backgroundColorPlayingAlt = palette[0].withValues(alpha: 0.4);
+                                }
+
                                 final properties = TrackTileProperties(
                                   backgroundColorPlaying: backgroundColorPlaying,
+                                  backgroundColorPlayingAlt: backgroundColorPlayingAlt,
                                   backgroundColorNotPlaying: backgroundColorNotPlaying,
                                   selectionColorLayer: selectionColorLayer,
                                   thumbnailSize: thumbnailSize,
@@ -160,6 +169,7 @@ class TrackTilePropertiesConfigs {
 class TrackTileProperties {
   final TrackTilePropertiesConfigs configs;
   final Color backgroundColorPlaying;
+  final Color? backgroundColorPlayingAlt;
   final Color backgroundColorNotPlaying;
   final Color selectionColorLayer;
 
@@ -181,6 +191,7 @@ class TrackTileProperties {
   const TrackTileProperties({
     required this.configs,
     required this.backgroundColorPlaying,
+    required this.backgroundColorPlayingAlt,
     required this.backgroundColorNotPlaying,
     required this.selectionColorLayer,
     required this.thumbnailSize,
@@ -279,10 +290,16 @@ class TrackTile extends StatelessWidget {
     final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
 
     Color backgroundColor;
+    Color? backgroundColorAlt;
     if (bgColor != null) {
       backgroundColor = bgColor!;
     } else {
-      backgroundColor = isTrackCurrentlyPlaying ? properties.backgroundColorPlaying : properties.backgroundColorNotPlaying.withValues(alpha: cardColorOpacity);
+      if (isTrackCurrentlyPlaying) {
+        backgroundColor = properties.backgroundColorPlaying;
+        backgroundColorAlt = properties.backgroundColorPlayingAlt;
+      } else {
+        backgroundColor = properties.backgroundColorNotPlaying.withValues(alpha: cardColorOpacity);
+      }
       if (isTrackSelected && queueSource != QueueSource.selectedTracks) {
         backgroundColor = Color.alphaBlend(
           properties.selectionColorLayer,
@@ -290,6 +307,25 @@ class TrackTile extends StatelessWidget {
         );
       }
     }
+
+    BoxDecoration decoration;
+    if (settings.gradientTiles.value) {
+      // -- has to be always gradient to animate properly
+      decoration = BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            backgroundColor,
+            backgroundColorAlt ?? backgroundColor,
+          ],
+          stops: [0.6, 1.0],
+        ),
+      );
+    } else {
+      decoration = BoxDecoration(color: backgroundColor);
+    }
+
     Widget threeLinesColumn;
     if (trackOrTwd.track.toTrackExtOrNull() == null) {
       threeLinesColumn = Text(
@@ -408,8 +444,9 @@ class TrackTile extends StatelessWidget {
                       _selectTrack(ranged: true);
                     },
               onSecondaryTap: _triggerTrackDialog,
-              child: ColoredBox(
-                color: backgroundColor,
+              child: AnimatedDecoration(
+                duration: const Duration(milliseconds: 300),
+                decoration: decoration,
                 child: SizedBox(
                   height: Dimensions.inst.trackTileItemExtent,
                   child: Padding(

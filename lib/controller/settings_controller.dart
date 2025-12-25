@@ -227,6 +227,7 @@ class _SettingsController with SettingsFileWriter {
   final displayThirdItemInEachRow = false.obs;
   final trackTileSeparator = '•'.obs;
   final displayFavouriteIconInListTile = true.obs;
+  final gradientTiles = true.obs;
 
   final editTagsKeepFileDates = true.obs;
   final downloadFilesWriteUploadDate = false.obs;
@@ -627,6 +628,7 @@ class _SettingsController with SettingsFileWriter {
       displayThirdItemInEachRow.value = json['displayThirdItemInEachRow'] ?? displayThirdItemInEachRow.value;
       trackTileSeparator.value = json['trackTileSeparator'] ?? trackTileSeparator.value;
       displayFavouriteIconInListTile.value = json['displayFavouriteIconInListTile'] ?? displayFavouriteIconInListTile.value;
+      gradientTiles.value = json['gradientTiles'] ?? gradientTiles.value;
       editTagsKeepFileDates.value = json['editTagsKeepFileDates'] ?? editTagsKeepFileDates.value;
       downloadFilesWriteUploadDate.value = json['downloadFilesWriteUploadDate'] ?? downloadFilesWriteUploadDate.value;
       downloadFilesKeepCachedVersions.value = json['downloadFilesKeepCachedVersions'] ?? downloadFilesKeepCachedVersions.value;
@@ -855,6 +857,7 @@ class _SettingsController with SettingsFileWriter {
         'displayThirdItemInEachRow': displayThirdItemInEachRow.value,
         'trackTileSeparator': trackTileSeparator.value,
         'displayFavouriteIconInListTile': displayFavouriteIconInListTile.value,
+        'gradientTiles': gradientTiles.value,
         'editTagsKeepFileDates': editTagsKeepFileDates.value,
         'downloadFilesWriteUploadDate': downloadFilesWriteUploadDate.value,
         'downloadFilesKeepCachedVersions': downloadFilesKeepCachedVersions.value,
@@ -985,6 +988,7 @@ class _SettingsController with SettingsFileWriter {
     int? isTrackPlayedSecondsCount,
     int? isTrackPlayedPercentageCount,
     bool? displayFavouriteIconInListTile,
+    bool? gradientTiles,
     bool? editTagsKeepFileDates,
     bool? downloadFilesWriteUploadDate,
     bool? downloadFilesKeepCachedVersions,
@@ -1222,6 +1226,7 @@ class _SettingsController with SettingsFileWriter {
     if (isTrackPlayedSecondsCount != null) this.isTrackPlayedSecondsCount.value = isTrackPlayedSecondsCount;
     if (isTrackPlayedPercentageCount != null) this.isTrackPlayedPercentageCount.value = isTrackPlayedPercentageCount;
     if (displayFavouriteIconInListTile != null) this.displayFavouriteIconInListTile.value = displayFavouriteIconInListTile;
+    if (gradientTiles != null) this.gradientTiles.value = gradientTiles;
     if (editTagsKeepFileDates != null) this.editTagsKeepFileDates.value = editTagsKeepFileDates;
     if (downloadFilesWriteUploadDate != null) this.downloadFilesWriteUploadDate.value = downloadFilesWriteUploadDate;
     if (downloadFilesKeepCachedVersions != null) this.downloadFilesKeepCachedVersions.value = downloadFilesKeepCachedVersions;

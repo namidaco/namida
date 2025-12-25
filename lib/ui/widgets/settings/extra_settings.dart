@@ -1207,6 +1207,12 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   title: 'media_wave_haptic'.toUpperCase(),
                   subtitle: 'Haptic feedback following the rhythm.\n${lang.PERFORMANCE_NOTE}.\nMight affect battery usage',
                 ),
+              CustomSwitchListTile(
+                icon: Broken.colors_square,
+                value: settings.gradientTiles.value,
+                onChanged: (isTrue) => setState(() => settings.save(gradientTiles: !isTrue)),
+                title: 'gradient_tiles_and_cards'.toUpperCase(),
+              ),
             ],
           ),
         ),
