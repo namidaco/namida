@@ -125,26 +125,27 @@ class WaveformController {
   }
 
   double _getCurrentAnimatingScaleGeneral(int positionInMs, int intensity) {
-    if (intensity == 0) return 0.01;
-    final posInMap = positionInMs ~/ _positionDividorWithOffset;
-    final dynamicScale = posInMap > _currentScaleMaxIndex ? 0.01 : _currentScaleLookup[posInMap];
-    final finalScale = dynamicScale * intensity * 0.00005;
-    if (finalScale.isNaN || finalScale > 0.3) return 0.01;
+    if (intensity > 0) {
+      final posInMap = positionInMs ~/ _positionDividorWithOffset;
+      final dynamicScale = posInMap > _currentScaleMaxIndex ? _defaultMinimumScale : _currentScaleLookup[posInMap];
+      final finalScale = dynamicScale * intensity * 0.00005;
+      if (finalScale.isNaN || finalScale > 0.35) return _defaultMinimumScale;
 
-    if (settings.extra.mediaWaveHaptic == true) {
-      _vibrateHaptic(finalScale);
+      if (settings.extra.mediaWaveHaptic == true) {
+        _vibrateHaptic(finalScale);
+      }
+
+      return finalScale;
     }
 
-    return finalScale;
+    return _defaultMinimumScale;
   }
 
   void _vibrateHaptic(double scale) {
     if (Player.inst.isPlaying.value == false) return;
-    if (scale > 0) {
+    if (scale > _defaultMinimumScale) {
       final haptic = VibratorController.interfaceHapticIgnoreSettings;
-      if (scale < 0.01) {
-        haptic.light();
-      } else if (scale < 0.03) {
+      if (scale < 0.03) {
         haptic.light();
         haptic.light();
         haptic.light();
@@ -157,14 +158,18 @@ class WaveformController {
         haptic.medium();
         haptic.high();
         haptic.high();
+        haptic.high();
         haptic.medium();
       } else {
+        haptic.high();
         haptic.high();
         haptic.high();
         haptic.high();
       }
     }
   }
+
+  static const _defaultMinimumScale = 0.01;
 
   final _waveformExtractor = WaveformExtractor.platform()..init();
 }

@@ -39,7 +39,7 @@ class _DesktopSmoothMouseScroll extends StatefulWidget {
     required this.reverse,
     this.scrollSpeed = _kDefaultScrollOffset,
     this.scrollAnimationLength = _kDefaultAnimationDuration,
-    this.curve = Curves.easeOutCubic,
+    this.curve = Curves.easeOutQuart,
     required this.child,
   });
 
@@ -196,10 +196,10 @@ class __SuperSmoothScrollViewBuilderState extends State<_SuperSmoothScrollViewBu
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = _isDesktop;
-    final physics = isDesktop ? const _CustomNeverScrollableScrollPhysics() : widget.physics;
+    final applySmoothScrolling = NamidaFeaturesVisibility.smoothScrolling && (settings.extra.smoothScrolling ?? true);
+    final physics = applySmoothScrolling ? const _CustomNeverScrollableScrollPhysics() : widget.physics;
     Widget child = widget.builder(_controller, physics);
-    if (isDesktop) {
+    if (applySmoothScrolling) {
       child = _DesktopSmoothMouseScroll(
         controller: _controller,
         scrollDirection: widget.scrollDirection,

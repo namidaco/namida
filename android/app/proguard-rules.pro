@@ -40,3 +40,7 @@
 -dontwarn javax.swing.filechooser.FileFilter
 
 -keep class net.sqlcipher.** { *; }
+
+# Just Audio
+-keep class com.ryanheise.just_audio.** { *; }
+-dontwarn com.ryanheise.just_audio.**

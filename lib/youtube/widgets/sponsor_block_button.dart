@@ -130,30 +130,34 @@ class __SkipSponsorButtonState extends State<SkipSponsorButton> {
                         color: itemsColor,
                       ),
                       const SizedBox(width: 4.0),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            segment.segmentStartMS == segment.segmentEndMS ? lang.JUMP : lang.SKIP,
-                            style: textTheme.displayMedium?.copyWith(
-                              fontSize: 14.0,
-                              color: itemsColor,
+                      ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: context.width * 0.3),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              segment.segmentStartMS == segment.segmentEndMS ? lang.JUMP : lang.SKIP,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.displayMedium?.copyWith(
+                                fontSize: 14.0,
+                                color: itemsColor,
+                              ),
                             ),
-                          ),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: context.width * 0.3),
-                            child: FittedBox(
+                            FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
                                 segment.category.sponsorCategoryToText(),
+                                softWrap: false,
+                                overflow: TextOverflow.fade,
                                 style: textTheme.displaySmall?.copyWith(
                                   fontSize: 11.0,
                                   color: itemsColor,
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       const SizedBox(width: 2.0),
                     ],

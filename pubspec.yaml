@@ -83,6 +83,7 @@ dependencies:
   namico_db_wrapper:
     git:
       url: https://github.com/namidaco/namico_db_wrapper
+  flutter_native_splash: ^2.4.7
 
   # ---- Audio Indexing & Playback ----
   just_audio:
@@ -170,7 +171,6 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^6.0.0
-  flutter_native_splash: ^2.4.7
   flutter_launcher_icons: ^0.14.4
 
   # custom_lint:

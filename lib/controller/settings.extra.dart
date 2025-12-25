@@ -9,6 +9,8 @@ class _ExtraSettings with SettingsFileWriter {
   final ytInitialHomePage = YTHomePages.playlists.obs;
 
   bool? tapToScroll;
+  bool? enhancedDragToScroll;
+  bool? smoothScrolling;
   bool? floatingArtworkEffect;
   bool? tiltingCardsEffect;
   bool? mediaWaveHaptic;
@@ -25,6 +27,8 @@ class _ExtraSettings with SettingsFileWriter {
     bool? autoLibraryTab,
     YTHomePages? ytInitialHomePage,
     bool? tapToScroll,
+    bool? enhancedDragToScroll,
+    bool? smoothScrolling,
     bool? floatingArtworkEffect,
     bool? tiltingCardsEffect,
     bool? mediaWaveHaptic,
@@ -38,6 +42,8 @@ class _ExtraSettings with SettingsFileWriter {
     if (autoLibraryTab != null) this.autoLibraryTab.value = autoLibraryTab;
     if (ytInitialHomePage != null) this.ytInitialHomePage.value = ytInitialHomePage;
     if (tapToScroll != null) this.tapToScroll = tapToScroll;
+    if (enhancedDragToScroll != null) this.enhancedDragToScroll = enhancedDragToScroll;
+    if (smoothScrolling != null) this.smoothScrolling = smoothScrolling;
     if (floatingArtworkEffect != null) this.floatingArtworkEffect = floatingArtworkEffect;
     if (tiltingCardsEffect != null) this.tiltingCardsEffect = tiltingCardsEffect;
     if (mediaWaveHaptic != null) this.mediaWaveHaptic = mediaWaveHaptic;
@@ -68,6 +74,8 @@ class _ExtraSettings with SettingsFileWriter {
       ytInitialHomePage.value = YTHomePages.values.getEnum(json['ytInitialHomePage']) ?? ytInitialHomePage.value;
 
       tapToScroll = json['tapToScroll'] ?? tapToScroll;
+      enhancedDragToScroll = json['enhancedDragToScroll'] ?? enhancedDragToScroll;
+      smoothScrolling = json['smoothScrolling'] ?? smoothScrolling;
       floatingArtworkEffect = json['floatingArtworkEffect'] ?? floatingArtworkEffect;
       tiltingCardsEffect = json['tiltingCardsEffect'] ?? tiltingCardsEffect;
       mediaWaveHaptic = json['mediaWaveHaptic'] ?? mediaWaveHaptic;
@@ -88,6 +96,8 @@ class _ExtraSettings with SettingsFileWriter {
         'autoLibraryTab': autoLibraryTab.value,
         'ytInitialHomePage': ytInitialHomePage.value.name,
         if (tapToScroll != null) 'tapToScroll': tapToScroll,
+        if (enhancedDragToScroll != null) 'enhancedDragToScroll': enhancedDragToScroll,
+        if (smoothScrolling != null) 'smoothScrolling': smoothScrolling,
         if (floatingArtworkEffect != null) 'floatingArtworkEffect': floatingArtworkEffect,
         if (tiltingCardsEffect != null) 'tiltingCardsEffect': tiltingCardsEffect,
         if (mediaWaveHaptic != null) 'mediaWaveHaptic': mediaWaveHaptic,

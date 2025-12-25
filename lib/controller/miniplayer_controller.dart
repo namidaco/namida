@@ -31,6 +31,8 @@ class MiniPlayerController {
 
   final ytMiniplayerKey = GlobalKey<NamidaYTMiniplayerState>();
 
+  bool get shouldCompressArtwork => !(animation.value > 0 && animation.value < 2);
+
   bool get isInQueue => animation.value > 1.0;
   bool get isMinimized => animation.value < 1.0;
 

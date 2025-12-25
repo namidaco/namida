@@ -2113,9 +2113,7 @@ class SubpageInfoContainer extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(
-                height: 18.0,
-              ),
+              const SizedBox(height: 18.0),
               Padding(
                 padding: const EdgeInsets.only(left: 14.0),
                 child: NamidaHero(
@@ -2136,26 +2134,24 @@ class SubpageInfoContainer extends StatelessWidget {
                         ),
                 ),
               ),
-              const SizedBox(
-                height: 2.0,
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 14.0),
-                child: NamidaHero(
-                  enabled: textHeroEnabled,
-                  tag: '${pauseHero}line2_$heroTag',
-                  child: Text(
-                    subtitle,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
-                    style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28, 10.0, 24.0)),
+              if (subtitle.isNotEmpty) ...[
+                const SizedBox(height: 2.0),
+                Padding(
+                  padding: const EdgeInsets.only(left: 14.0),
+                  child: NamidaHero(
+                    enabled: textHeroEnabled,
+                    tag: '${pauseHero}line2_$heroTag',
+                    child: Text(
+                      subtitle,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                      style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28, 10.0, 24.0)),
+                    ),
                   ),
                 ),
-              ),
-              if (thirdLineText != '') ...[
-                const SizedBox(
-                  height: 2.0,
-                ),
+              ],
+              if (thirdLineText.isNotEmpty) ...[
+                const SizedBox(height: 2.0),
                 Padding(
                   padding: const EdgeInsets.only(left: 14.0),
                   child: NamidaHero(
@@ -2170,9 +2166,7 @@ class SubpageInfoContainer extends StatelessWidget {
                   ),
                 ),
               ],
-              const SizedBox(
-                height: 18.0,
-              ),
+              const SizedBox(height: 18.0),
               ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: infoMaxWidth * 0.85),
                 child: FittedBox(
@@ -2364,6 +2358,8 @@ class _EncapsulateWithTilt extends StatelessWidget {
         sensorRevertFactor: 0.1,
         enableOutsideAreaMove: false,
         enableReverse: false,
+        enableGestureTouch: false,
+        enableGestureHover: true,
         enableGestureSensors: false,
         controllerMoveDuration: Duration(milliseconds: 200),
         leaveDuration: Duration(milliseconds: 400),
@@ -2387,7 +2383,12 @@ class _EncapsulateWithTilt extends StatelessWidget {
       ),
       childLayout: ChildLayout(
         inner: [
-          child,
+          Stack(
+            fit: StackFit.expand, // otherwise inner stacks collapse
+            children: [
+              child,
+            ],
+          ),
         ],
       ),
       child: const SizedBox(),
@@ -4366,7 +4367,8 @@ class NamidaScrollbar extends StatelessWidget {
       thicknessWhileDragging: 8.5,
       minInteractiveSize: 60.0,
       pressDuration: const Duration(milliseconds: 80),
-      tapToScroll: () => settings.extra.tapToScroll == true,
+      tapToScroll: () => settings.extra.tapToScroll ?? false,
+      enhancedDragToScroll: () => settings.extra.enhancedDragToScroll ?? true,
       onThumbLongPressStart: () => isScrollbarThumbDragging = true,
       onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
       child: child,

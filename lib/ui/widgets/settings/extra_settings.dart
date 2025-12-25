@@ -1162,14 +1162,34 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                 value: settings.extra.tapToScroll ?? false,
                 onChanged: (isTrue) => setState(() => settings.extra.save(tapToScroll: !isTrue)),
                 title: 'tap_to_scroll'.toUpperCase(),
+                subtitle: 'tap anywhere on the scroll track to scroll',
               ),
+              CustomSwitchListTile(
+                leading: StackedIcon(
+                  baseIcon: Broken.row_vertical,
+                  secondaryIcon: Broken.arrow_swap,
+                  secondaryIconSize: 12.0,
+                ),
+                value: settings.extra.enhancedDragToScroll ?? true,
+                onChanged: (isTrue) => setState(() => settings.extra.save(enhancedDragToScroll: !isTrue)),
+                title: 'enhanced_drag_to_scroll'.toUpperCase(),
+                subtitle: 'drag anywhere on the scroll track to scroll',
+              ),
+              if (NamidaFeaturesVisibility.smoothScrolling)
+                CustomSwitchListTile(
+                  icon: Broken.coin,
+                  rotateIcon: 2,
+                  value: settings.extra.smoothScrolling ?? true,
+                  onChanged: (isTrue) => setState(() => settings.extra.save(smoothScrolling: !isTrue)),
+                  title: 'smooth_scrolling'.toUpperCase(),
+                ),
               if (NamidaFeaturesVisibility.floatingArtworkEffect)
                 CustomSwitchListTile(
                   icon: Broken.recovery_convert,
                   value: settings.extra.floatingArtworkEffect ?? false,
                   onChanged: (isTrue) => setState(() => settings.extra.save(floatingArtworkEffect: !isTrue)),
                   title: 'floating_artwork_effect'.toUpperCase(),
-                  subtitle: lang.PERFORMANCE_NOTE,
+                  subtitle: "${lang.PERFORMANCE_NOTE}.\nMight affect battery usage",
                 ),
               if (NamidaFeaturesVisibility.tiltingCardsEffect)
                 CustomSwitchListTile(
@@ -1177,7 +1197,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   value: settings.extra.tiltingCardsEffect ?? false,
                   onChanged: (isTrue) => setState(() => settings.extra.save(tiltingCardsEffect: !isTrue)),
                   title: 'tilting_cards_effect'.toUpperCase(),
-                  subtitle: lang.PERFORMANCE_NOTE,
+                  subtitle: "${lang.PERFORMANCE_NOTE}.\nMight affect battery usage",
                 ),
               if (NamidaFeaturesVisibility.mediaWaveHaptic)
                 CustomSwitchListTile(
@@ -1185,7 +1205,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   value: settings.extra.mediaWaveHaptic ?? false,
                   onChanged: (isTrue) => setState(() => settings.extra.save(mediaWaveHaptic: !isTrue)),
                   title: 'media_wave_haptic'.toUpperCase(),
-                  subtitle: 'Haptic feedback following the rhythm.\n${lang.PERFORMANCE_NOTE}',
+                  subtitle: 'Haptic feedback following the rhythm.\n${lang.PERFORMANCE_NOTE}.\nMight affect battery usage',
                 ),
             ],
           ),
