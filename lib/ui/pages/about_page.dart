@@ -169,7 +169,7 @@ class _AboutPageState extends State<AboutPage> {
                           child: FutureBuilder(
                             future: NamidaChannel.inst.getEnabledAppIcon(),
                             builder: (context, snapshot) {
-                              final enabledIcon = snapshot.data ?? NamidaAppIcons.namida;
+                              final enabledIcon = snapshot.data ?? NamidaChannel.defaultIconForPlatform;
                               return Image.asset(
                                 enabledIcon.assetPath,
                               );

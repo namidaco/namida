@@ -20,6 +20,9 @@ class _NamidaChannelAndroid extends NamidaChannel {
 
     _initLiseners();
   }
+
+  @override
+  bool get supportsAppIcons => true;
   @override
   Future<bool?> isAppIconEnabled(NamidaAppIcons type) async {
     final res = await _channel.invokeMethod('isAppIconEnabled', {'key': type.name});

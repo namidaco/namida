@@ -2626,7 +2626,7 @@ class NamidaLogoContainer extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Image.asset(
-            NamidaAppIcons.monet.assetPath,
+            NamidaChannel.defaultIconForPlatform.assetPath,
             width: iconSize,
             height: iconSize,
             cacheHeight: 240,

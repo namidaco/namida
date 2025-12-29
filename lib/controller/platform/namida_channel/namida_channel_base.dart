@@ -10,9 +10,15 @@ abstract class NamidaChannel {
     );
   }
 
+  static final defaultIconForPlatform = NamidaPlatformBuilder.init(
+    android: () => NamidaAppIcons.namida,
+    windows: () => NamidaAppIcons.mini,
+  );
+
   final isInPip = false.obs;
 
   Future<NamidaAppIcons?> getEnabledAppIcon() async {
+    if (!supportsAppIcons) return null;
     NamidaAppIcons? newEnabledIcon;
     for (final e in NamidaAppIcons.values) {
       final enabled = await NamidaChannel.inst.isAppIconEnabled(e) ?? false;
@@ -27,6 +33,7 @@ abstract class NamidaChannel {
   bool get canOpenFileInExplorer;
   Future<void>? openFileInExplorer(String filePath);
 
+  bool get supportsAppIcons;
   Future<bool?> isAppIconEnabled(NamidaAppIcons type);
 
   Future<void> changeAppIcon(NamidaAppIcons type);

@@ -17,6 +17,8 @@ class _NamidaChannelWindows extends NamidaChannel {
   }
 
   @override
+  bool get supportsAppIcons => false;
+  @override
   Future<bool?> isAppIconEnabled(NamidaAppIcons type) async {
     // -- unsupported
     return false;
