@@ -573,18 +573,21 @@ extension LRCParsingUtils on String {
     try {
       final res = LRCParserSmart(this).parseLines();
       if (res.isNotEmpty) {
-        final lines = res
-            .map(
-              (e) => LrcLine(
-                timestamp: e.timeStamp ?? Duration.zero,
-                lyrics: e.mainText ?? '',
-                readableText: e.mainText ?? '',
-                person: null,
-                parts: null,
-                type: LrcTypes.simple,
-              ),
-            )
-            .toList();
+        final lines = <LrcLine>[];
+        for (final e in res) {
+          lines.add(
+            LrcLine(
+              timestamp: e.timeStamp ?? Duration.zero,
+              lyrics: e.mainText ?? '',
+              originalIndex: res.length,
+              readableText: e.mainText ?? '',
+              person: null,
+              parts: null,
+              type: LrcTypes.simple,
+            ),
+          );
+        }
+
         return Lrc(lyrics: lines);
       }
     } catch (_) {}

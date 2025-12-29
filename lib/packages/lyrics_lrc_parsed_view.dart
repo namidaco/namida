@@ -78,7 +78,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   late final ScrollController _scrollController;
 
   late final double _paddingVertical = widget.verticalPadding ?? (widget.isFullScreenView ? 32 * 12.0 : 12 * 12.0);
-  int _currentIndex = -1;
+  int? _currentIndex;
   String _currentLine = '';
 
   static const int _lrcOpacityDurationMS = 500;
@@ -132,9 +132,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     if (!_isCurrentLineEmpty) {
       _updateIsCurrentLineEmpty(true);
     }
-    _latestUpdatedLine.value = null;
-    _latestUpdatedLineIndex.value = -1;
-    _currentIndex = -1;
+    _latestUpdatedLineInfo.value = null;
+    _currentIndex = null;
   }
 
   void fillLists(Lrc? lrc, String? txt) {
@@ -201,13 +200,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
   void _updateHighlightedLine(int durMS, {bool force = false, bool forceAnimate = false, bool jump = false}) {
     final lrcDur = lyrics.lastWhereEff((e) => e.timestamp.inMilliseconds <= durMS + 5 && !e.isBGLyrics);
-    if (!force && _latestUpdatedLine.value == lrcDur?.timestamp) return;
-
+    if (!force && _latestUpdatedLineInfo.value?.$1 == lrcDur?.timestamp) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _latestUpdatedLine.value = lrcDur?.timestamp;
-
-      int newIndex = highlightTimestampsMap[_latestUpdatedLine.value] ?? -1;
-      _latestUpdatedLineIndex.value = newIndex;
+      final newLineDuration = lrcDur?.timestamp;
+      int? newIndex = newLineDuration == null ? null : highlightTimestampsMap[newLineDuration];
+      _latestUpdatedLineInfo.value = (lrcDur?.timestamp, newIndex);
+      if (newIndex == null) return;
       if (newIndex + 1 == lyrics.length) {
         final alreadyHighlightingLastLine = _currentIndex == newIndex;
         if (alreadyHighlightingLastLine) {
@@ -274,8 +272,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   Timer? _scrollTimer;
   bool _canAnimateScroll = true;
 
-  final _latestUpdatedLineIndex = (-1).obs;
-  final _latestUpdatedLine = Rxn<Duration>();
+  final _latestUpdatedLineInfo = Rxn<(Duration?, int?)>();
 
   var lyrics = <LrcLine>[];
   final highlightTimestampsMap = <Duration, int>{}; // timestamp: index
@@ -287,10 +284,39 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   void dispose() {
     Player.inst.currentItemDuration.removeListener(_itemDurationUpdater);
     Player.inst.nowPlayingPosition.removeListener(_playerPositionListener);
-    _latestUpdatedLineIndex.close();
-    _latestUpdatedLine.close();
+
+    _latestUpdatedLineInfo.close();
     _currentItemDurationMS.close();
+    _listController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onPointerDown(dynamic _) {
+    _scrollTimer?.cancel();
+    _scrollTimer = null;
+    _canAnimateScroll = false;
+    if (_isCurrentLineEmpty) {
+      _updateIsCurrentLineEmpty(false);
+    }
+  }
+
+  void _onPointerUp(dynamic _) {
+    _scrollTimer = Timer(const Duration(seconds: 3), () {
+      _canAnimateScroll = true;
+      if (Player.inst.playWhenReady.value) {
+        _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true, force: true);
+      }
+      if (_updateOpacityForEmptyLines && currentLRC != null && _checkIfTextEmpty(_currentLine)) {
+        _updateIsCurrentLineEmpty(true);
+      }
+    });
+  }
+
+  // -- mouse scroll
+  void _onPointerSignal(dynamic _) {
+    _onPointerDown(null);
+    _onPointerUp(null);
   }
 
   @override
@@ -593,25 +619,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
       fit: StackFit.loose,
       children: [
         Listener(
-          onPointerDown: (event) {
-            _scrollTimer?.cancel();
-            _scrollTimer = null;
-            _canAnimateScroll = false;
-            if (_isCurrentLineEmpty) {
-              _updateIsCurrentLineEmpty(false);
-            }
-          },
-          onPointerUp: (event) {
-            _scrollTimer = Timer(const Duration(seconds: 3), () {
-              _canAnimateScroll = true;
-              if (Player.inst.playWhenReady.value) {
-                _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true, force: true);
-              }
-              if (_updateOpacityForEmptyLines && currentLRC != null && _checkIfTextEmpty(_currentLine)) {
-                _updateIsCurrentLineEmpty(true);
-              }
-            });
-          },
+          onPointerDown: _onPointerDown,
+          onPointerUp: _onPointerUp,
+          onPointerCancel: _onPointerUp,
+          onPointerSignal: _onPointerSignal,
           child: ShaderFadingWidget(
             biggerValues: fullscreen,
             child: Builder(
@@ -647,157 +658,164 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                     final color = CurrentColor.inst.miniplayerColor;
                     final personCount = currentLRC?.personCount ?? 1;
                     return ObxO(
-                      rx: _latestUpdatedLineIndex,
-                      builder: (context, selectedIndex) => SuperSmoothListView.builder(
-                        padding: EdgeInsets.symmetric(vertical: _paddingVertical),
-                        controller: _scrollController,
-                        listController: _listController,
-                        itemCount: lyrics.length,
-                        itemBuilder: (context, index) {
-                          final distanceDiffFromSelected = index - selectedIndex; // -- does not account for empty lines
-                          final distanceDiffFromSelectedAbs = distanceDiffFromSelected.abs();
-                          final lrc = lyrics[index];
-                          String text = lrc.readableText;
-                          final person = lrc.person;
-                          final isBGLyrics = lrc.isBGLyrics;
+                      rx: _latestUpdatedLineInfo,
+                      builder: (context, selectedInfo) {
+                        final selectedIndex = selectedInfo?.$2;
+                        final selectedLineTimestamp = selectedInfo?.$1;
+                        return SuperSmoothListView.builder(
+                          padding: EdgeInsets.symmetric(vertical: _paddingVertical),
+                          controller: _scrollController,
+                          listController: _listController,
+                          itemCount: lyrics.length,
+                          itemBuilder: (context, index) {
+                            final distanceDiffFromSelected = selectedIndex == null ? null : index - selectedIndex; // -- does not account for empty lines
+                            final distanceDiffFromSelectedAbs = distanceDiffFromSelected?.abs();
+                            final lrc = lyrics[index];
+                            String text = lrc.readableText;
+                            final person = lrc.person;
+                            final isBGLyrics = lrc.isBGLyrics;
 
-                          final selected = distanceDiffFromSelectedAbs == 0 || isBGLyrics;
-                          final selectedAndEmpty = selected && _checkIfTextEmpty(text);
-                          final bgColor = selected && !isBGLyrics
-                              ? Color.alphaBlend(color.withAlpha(140), theme.scaffoldBackgroundColor).withValues(alpha: selectedAndEmpty ? 0.1 : 0.5)
-                              : null;
-                          final vMargin = (selected ? 2.0 : 0.0) + (fullscreen ? 2.0 : 0.0);
+                            final selected = distanceDiffFromSelected == 0 || isBGLyrics || selectedLineTimestamp == lrc.timestamp;
+                            final selectedAndEmpty = selected && _checkIfTextEmpty(text);
+                            final bgColor = selected && !isBGLyrics
+                                ? Color.alphaBlend(color.withAlpha(140), theme.scaffoldBackgroundColor).withValues(alpha: selectedAndEmpty ? 0.1 : 0.5)
+                                : null;
+                            final vMargin = (selected ? 2.0 : 0.0) + (fullscreen ? 2.0 : 0.0);
 
-                          EdgeInsetsGeometry padding = selectedAndEmpty
-                              ? const EdgeInsets.symmetric(
-                                  vertical: 3.0,
-                                  horizontal: 24.0,
-                                )
-                              : const EdgeInsets.symmetric(
-                                  vertical: 8.0,
-                                  horizontal: 8.0,
+                            EdgeInsetsGeometry padding = selectedAndEmpty
+                                ? const EdgeInsets.symmetric(
+                                    vertical: 3.0,
+                                    horizontal: 24.0,
+                                  )
+                                : const EdgeInsets.symmetric(
+                                    vertical: 8.0,
+                                    horizontal: 8.0,
+                                  );
+
+                            TextAlign textAlign = TextAlign.center;
+                            AlignmentDirectional alignment = AlignmentDirectional.center;
+                            double normalLineColorOpacity = 0.5;
+                            (double, FontWeight)? fontModifier;
+                            TextStyle textStyle;
+
+                            if (person != null && personCount > 0) {
+                              if (personCount == 1) {
+                                // -- keep defaults
+                              } else if (person == 0) {
+                                // -- bg
+                                fontModifier = (0.75, FontWeight.w400);
+                              } else if (person == 1) {
+                                // -- v1
+                                textAlign = TextAlign.start;
+                                alignment = AlignmentDirectional.centerStart;
+                                padding = padding.add(EdgeInsetsDirectional.only(start: 12.0, end: 64.0));
+                              } else if (person == 2) {
+                                // -- v2
+                                textAlign = TextAlign.end;
+                                alignment = AlignmentDirectional.centerEnd;
+                                padding = padding.add(EdgeInsetsDirectional.only(start: 64.0, end: 12.0));
+                              } else if (person == 3) {
+                                // -- v3
+                                textAlign = TextAlign.center;
+                                alignment = AlignmentDirectional.center;
+                              }
+                              if (selected) {
+                                textStyle = normalTextStyle.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.75),
                                 );
-
-                          TextAlign textAlign = TextAlign.center;
-                          AlignmentDirectional alignment = AlignmentDirectional.center;
-                          double normalLineColorOpacity = 0.5;
-                          (double, FontWeight)? fontModifier;
-                          TextStyle textStyle;
-
-                          if (person != null && personCount > 0) {
-                            if (personCount == 1) {
-                              // -- keep defaults
-                            } else if (person == 0) {
-                              // -- bg
-                              fontModifier = (0.75, FontWeight.w400);
-                            } else if (person == 1) {
-                              // -- v1
-                              textAlign = TextAlign.start;
-                              alignment = AlignmentDirectional.centerStart;
-                              padding = padding.add(EdgeInsetsDirectional.only(start: 12.0, end: 64.0));
-                            } else if (person == 2) {
-                              // -- v2
-                              textAlign = TextAlign.end;
-                              alignment = AlignmentDirectional.centerEnd;
-                              padding = padding.add(EdgeInsetsDirectional.only(start: 64.0, end: 12.0));
-                            } else if (person == 3) {
-                              // -- v3
-                              textAlign = TextAlign.center;
-                              alignment = AlignmentDirectional.center;
-                            }
-                            if (selected) {
-                              textStyle = normalTextStyle.copyWith(
-                                color: Colors.white.withValues(alpha: 0.75),
-                              );
-                            } else if (distanceDiffFromSelected <= 0) {
-                              // -- lines before current in word synced lyrics
-                              textStyle = normalTextStyle.copyWith(
-                                color: normalTextStyle.color?.withValues(alpha: normalLineColorOpacity) ?? Colors.transparent,
-                              );
-                            } else {
-                              // -- lines after current in word synced lyrics
-                              normalLineColorOpacity = 0.2;
-                              textStyle = normalTextStyle.copyWith(
-                                color: normalTextStyle.color?.withValues(alpha: normalLineColorOpacity) ?? Colors.transparent,
-                              );
-                            }
-                          } else {
-                            // -- lines in normal synced lyrics
-                            normalLineColorOpacity = distanceDiffFromSelectedAbs == 1
-                                ? 0.5
-                                : distanceDiffFromSelectedAbs == 2
-                                    ? 0.4
-                                    : 0.25;
-                            if (selected) {
-                              textStyle = normalTextStyle;
-                            } else {
-                              textStyle = normalTextStyle.copyWith(
-                                color: normalTextStyle.color?.withValues(alpha: normalLineColorOpacity) ?? Colors.transparent,
-                              );
-                            }
-                          }
-                          if (fontModifier != null) {
-                            final size = fontModifier.$1;
-                            final weigth = fontModifier.$2;
-                            textStyle = textStyle.copyWith(
-                              fontSize: size == 1.0 ? null : textStyle.fontSize! * size,
-                              fontWeight: weigth,
-                            );
-                          }
-
-                          final parts = lrc.parts;
-                          final textWidget = selected && parts != null && parts.isNotEmpty
-                              ? _TextWithFadingProgress(
-                                  parts: parts,
-                                  textStyle: textStyle,
-                                  textAlign: textAlign,
-                                )
-                              : Text(
-                                  text,
-                                  style: textStyle,
-                                  textAlign: textAlign,
-                                  // softWrap: false, // keep the text steady while animating mp
+                              } else if (distanceDiffFromSelected != null && distanceDiffFromSelected <= 0) {
+                                // -- lines before current in word synced lyrics
+                                textStyle = normalTextStyle.copyWith(
+                                  color: normalTextStyle.color?.withValues(alpha: normalLineColorOpacity) ?? Colors.transparent,
                                 );
+                              } else {
+                                // -- lines after current in word synced lyrics
+                                normalLineColorOpacity = 0.2;
+                                textStyle = normalTextStyle.copyWith(
+                                  color: normalTextStyle.color?.withValues(alpha: normalLineColorOpacity) ?? Colors.transparent,
+                                );
+                              }
+                            } else {
+                              // -- lines in normal synced lyrics
+                              if (distanceDiffFromSelected != null) {
+                                normalLineColorOpacity = distanceDiffFromSelectedAbs == 1
+                                    ? 0.5
+                                    : distanceDiffFromSelectedAbs == 2
+                                        ? 0.4
+                                        : 0.25;
+                              }
 
-                          return Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Positioned.fill(
-                                child: Material(
-                                  type: MaterialType.transparency,
-                                  child: InkWell(
-                                    splashFactory: InkSparkle.splashFactory,
-                                    onTap: () {
-                                      _canAnimateScroll = true;
-                                      Player.inst.seek(lrc.timestamp); //  should auto scroll bcz position changes
-                                    },
-                                  ),
-                                ),
-                              ),
-                              IgnorePointer(
-                                child: NamidaHero(
-                                  tag: 'LYRICS_LINE_${lrc.timestamp}',
-                                  enabled: false,
-                                  child: AnimatedScale(
-                                    duration: const Duration(milliseconds: 400),
-                                    curve: Curves.easeInOutCubicEmphasized,
-                                    scale: selected ? 1.0 : 0.95,
-                                    child: NamidaInkWell(
-                                      alignment: alignment,
-                                      bgColor: bgColor,
-                                      borderRadius: selectedAndEmpty ? 5.0 : 8.0,
-                                      animationDurationMS: 300,
-                                      margin: EdgeInsets.symmetric(vertical: vMargin, horizontal: 4.0),
-                                      padding: padding,
-                                      child: textWidget,
+                              if (selected) {
+                                textStyle = normalTextStyle;
+                              } else {
+                                textStyle = normalTextStyle.copyWith(
+                                  color: normalTextStyle.color?.withValues(alpha: normalLineColorOpacity) ?? Colors.transparent,
+                                );
+                              }
+                            }
+                            if (fontModifier != null) {
+                              final size = fontModifier.$1;
+                              final weigth = fontModifier.$2;
+                              textStyle = textStyle.copyWith(
+                                fontSize: size == 1.0 ? null : textStyle.fontSize! * size,
+                                fontWeight: weigth,
+                              );
+                            }
+
+                            final parts = lrc.parts;
+                            final textWidget = selected && parts != null && parts.isNotEmpty
+                                ? _TextWithFadingProgress(
+                                    parts: parts,
+                                    textStyle: textStyle,
+                                    textAlign: textAlign,
+                                  )
+                                : Text(
+                                    text,
+                                    style: textStyle,
+                                    textAlign: textAlign,
+                                    // softWrap: false, // keep the text steady while animating mp
+                                  );
+
+                            return Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Positioned.fill(
+                                  child: Material(
+                                    type: MaterialType.transparency,
+                                    child: InkWell(
+                                      splashFactory: InkSparkle.splashFactory,
+                                      onTap: () {
+                                        _canAnimateScroll = true;
+                                        Player.inst.seek(lrc.timestamp); //  should auto scroll bcz position changes
+                                      },
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
+                                IgnorePointer(
+                                  child: NamidaHero(
+                                    tag: 'LYRICS_LINE_${lrc.timestamp}',
+                                    enabled: false,
+                                    child: AnimatedScale(
+                                      duration: const Duration(milliseconds: 400),
+                                      curve: Curves.easeInOutCubicEmphasized,
+                                      scale: selected ? 1.0 : 0.95,
+                                      child: NamidaInkWell(
+                                        alignment: alignment,
+                                        bgColor: bgColor,
+                                        borderRadius: selectedAndEmpty ? 5.0 : 8.0,
+                                        animationDurationMS: 300,
+                                        margin: EdgeInsets.symmetric(vertical: vMargin, horizontal: 4.0),
+                                        padding: padding,
+                                        child: textWidget,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
                     );
                   },
                 );
