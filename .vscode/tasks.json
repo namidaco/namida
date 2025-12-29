@@ -51,13 +51,33 @@
       "detail": ""
     },
     {
+      "type": "shell",
+      "command": "git",
+      "args": [
+        "submodule",
+        "update",
+        "--init",
+        "--remote",
+        "--recursive",
+      ],
+      "group": {
+        "kind": "none",
+        "isDefault": false
+      },
+      "problemMatcher": [],
+      "label": "update submodules",
+      "detail": ""
+    },
+    {
       "type": "flutter",
       "command": "flutter",
       "args": [
         "build",
         "windows",
         "--release",
-        "--dart-define=IS_KURU_BUILD=${input:is_kuru}"
+      ],
+      "dependsOn": [
+        "update submodules"
       ],
       "group": {
         "kind": "build",
@@ -65,6 +85,23 @@
       },
       "problemMatcher": [],
       "label": "flutter build windows",
+      "detail": ""
+    },
+    {
+      "type": "flutter",
+      "command": "flutter",
+      "args": [
+        "build",
+        "windows",
+        "--release",
+        "--dart-define=IS_KURU_BUILD=true"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": [],
+      "label": "flutter build windows kuru",
       "detail": ""
     },
     {
@@ -84,6 +121,25 @@
       },
       "problemMatcher": [],
       "label": "build flutter windows inno installer",
+      "detail": ""
+    },
+    {
+      "type": "dart",
+      "command": "dart",
+      "args": [
+        "run",
+        "inno_bundle:build",
+        "--release",
+        "--no-app"
+      ],
+      "dependsOn": [
+        "flutter build windows kuru"
+      ],
+      "group": {
+        "kind": "build",
+      },
+      "problemMatcher": [],
+      "label": "build flutter windows inno installer kuru",
       "detail": ""
     },
     {
