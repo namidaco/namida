@@ -177,7 +177,7 @@ class _YoutubeHistoryLinker {
     } else {
       // -- the handling of executing pending requests is different.
       // -- even if `added` is false due to missing params/etc, it will
-      // -- properly get removed while exeuting pending.
+      // -- properly get removed while executing pending.
       _addPendingRequest(videoId: videoId, streamResult: streamResult);
       return YTMarkVideoWatchedResult.addedAsPending;
     }

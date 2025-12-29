@@ -502,6 +502,7 @@ class Namida extends StatefulWidget {
   static Future<void> disposeAllResources() async {
     YoutubeInfoController.dispose();
     await [
+      logger.dispose(),
       Player.inst.pause().whenComplete(Player.inst.dispose),
       PortsProvider.disposeAll(),
       SearchSortController.inst.disposeResources(),

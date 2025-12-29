@@ -222,6 +222,8 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                             content: SuperSmoothListView.builder(
                               padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
                               primary: false,
+                              shrinkWrap: false,
+                              cacheExtent: 0,
                               physics: const NeverScrollableScrollPhysics(),
                               itemExtent: Dimensions.inst.trackTileItemExtent,
                               itemCount: tracks.length,

@@ -202,8 +202,9 @@ class BackupAndRestore extends SettingSubpageProvider {
 
   void _ensureNewBackupItemsIncluded(List<AppPathsBackupEnum> items) {
     int includedCount = 0;
+    final settingItems = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
     for (final item in items) {
-      final isIncluded = settings.backupItemslist.value!.contains(item);
+      final isIncluded = settingItems.contains(item);
       if (isIncluded) includedCount++;
     }
     if (includedCount > 0 && includedCount < items.length) {

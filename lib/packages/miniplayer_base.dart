@@ -1762,11 +1762,14 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                     return NamidaLoadingSwitcher(
                                       size: 32.0.size,
                                       builder: (loadingController) => NamidaRawLikeButton(
-                                        isLiked: isUserLiked,
+                                        size: 32.0.size,
+                                        enableGradient: true,
                                         likedIcon: textData.likedIcon,
                                         normalIcon: textData.normalIcon,
-                                        size: 32.0.size,
+                                        enabledColor: theme.colorScheme.primary.withValues(alpha: 0.75),
+                                        disabledColor: theme.colorScheme.secondary.withValues(alpha: 0.75),
                                         removeConfirmationAction: null, // manually managed
+                                        isLiked: isUserLiked,
                                         onTap: (isLiked) async {
                                           return ytLikeManager.onLikeClicked(
                                             YTVideoLikeParamters(
@@ -1785,8 +1788,11 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                   rx: textData.favouritePlaylist,
                                   builder: (context, favouritePlaylist) => NamidaRawLikeButton(
                                     size: 32.0.size,
+                                    enableGradient: true,
                                     likedIcon: textData.likedIcon,
                                     normalIcon: textData.normalIcon,
+                                    enabledColor: theme.colorScheme.primary.withValues(alpha: 0.75),
+                                    disabledColor: theme.colorScheme.secondary.withValues(alpha: 0.75),
                                     removeConfirmationAction: lang.REMOVE_FROM_FAVOURITES,
                                     isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
                                     onTap: textData.onLikeTap,

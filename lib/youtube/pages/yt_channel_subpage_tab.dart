@@ -28,7 +28,13 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
   bool _isLoadingInitial = false;
   final _isLoadingMoreItems = false.obs;
 
+  Completer<void>? _initCompleter = Completer<void>();
+
   Future<YoutiPieChannelTabResult?> fetchTabAndUpdate({YoutiPieItemsSort? sort, bool? forceRequest}) async {
+    if (_initCompleter != null) {
+      await _initCompleter?.future;
+    }
+
     sort ??= _currentSort; // use set sort when refreshing.
     forceRequest ??= widget.shouldForceRequest();
 
@@ -67,7 +73,12 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
 
   @override
   void initState() {
-    _initValues();
+    _initValues().whenComplete(
+      () {
+        _initCompleter?.complete();
+        _initCompleter = null;
+      },
+    );
     if (widget.shouldForceRequest()) widget.tabFetcher(fetchTabAndUpdate);
     super.initState();
   }
@@ -78,7 +89,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
     super.dispose();
   }
 
-  void _initValues() async {
+  Future<void> _initValues() async {
     final tabResultCache = await YoutubeInfoController.channel.fetchChannelTabCache(channelId: widget.channelId, tab: widget.tab);
     refreshState(() {
       if (tabResultCache != null) {
@@ -189,13 +200,13 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                           )
                         : tabResult == null
                             ? SliverToBoxAdapter(
-                                child: Center(
-                                  child: Text(
-                                    lang.ERROR,
-                                    style: textTheme.displayLarge,
-                                  ),
-                                ),
-                              )
+                                // child: Center(
+                                //   child: Text(
+                                //     lang.ERROR,
+                                //     style: textTheme.displayLarge,
+                                //   ),
+                                // ),
+                                )
                             : SliverVariedExtentList.builder(
                                 itemExtentBuilder: (index, dimensions) {
                                   final item = tabResult.items[index];

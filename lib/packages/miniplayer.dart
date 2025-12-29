@@ -733,19 +733,25 @@ class _AnimatingThumnailWidget extends StatelessWidget {
                   Positioned(
                     bottom: 0,
                     right: 0,
-                    child: ObxO(
-                      rx: settings.youtube.sponsorBlockSettings,
-                      builder: (context, sponsorblock) => sponsorblock.enabled
-                          ? Align(
-                              alignment: AlignmentDirectional.centerEnd,
-                              child: Padding(
-                                padding: EdgeInsetsDirectional.only(bottom: 16.0),
-                                child: SkipSponsorButton(
-                                  itemsColor: Colors.white.withAlpha(200),
+                    child: AnimatedBuilder(
+                      animation: MiniPlayerController.inst.animation,
+                      child: ObxO(
+                        rx: settings.youtube.sponsorBlockSettings,
+                        builder: (context, sponsorblock) => sponsorblock.enabled
+                            ? Align(
+                                alignment: AlignmentDirectional.centerEnd,
+                                child: Padding(
+                                  padding: EdgeInsetsDirectional.only(bottom: 16.0),
+                                  child: SkipSponsorButton(
+                                    itemsColor: Colors.white.withAlpha(200),
+                                  ),
                                 ),
-                              ),
-                            )
-                          : const SizedBox(),
+                              )
+                            : const SizedBox(),
+                      ),
+                      builder: (context, child) {
+                        return MiniPlayerController.inst.animation.value == 1 ? child! : const SizedBox();
+                      },
                     ),
                   ),
               ],

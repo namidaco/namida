@@ -126,6 +126,7 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
         ];
       },
     );
+    return;
   }
 
   NamidaNavigator.inst.navigateDialog(

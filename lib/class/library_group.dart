@@ -20,6 +20,8 @@ class LibraryGroup<T extends Track> {
     mainMapFoldersTracksAndVideos.value = other.mainMapFoldersTracksAndVideos.value as Map<Folder, List<T>>;
     mainMapFoldersTracks.value = other.mainMapFoldersTracks.value as Map<Folder, List<T>>;
     mainMapFoldersVideos.value = other.mainMapFoldersVideos.value;
+
+    didFill = other.didFill;
   }
 
   final mainMapAlbums = LibraryItemMap();

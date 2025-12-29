@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -64,6 +65,8 @@ part 'yt_channel_subpage_videos_tab.dart';
 class YTChannelSubpage extends StatefulWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.YOUTUBE_CHANNEL_SUBPAGE;
+  @override
+  String? get name => channelID;
 
   final String channelID;
   final YoutubeSubscription? sub;
@@ -90,6 +93,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
 
   final _tabsGlobalKeys = <int, GlobalKey>{};
   final _tabLastFetched = <int, DateTime>{};
+  DateTime? _videosTabLastFetched;
 
   final _aboutPageKey = GlobalKey<_YTChannelSubpageAboutState>();
   final _videosPageKey = GlobalKey<_YTChannelVideosTabState>();
@@ -188,7 +192,9 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
           _channelInfo = channelInfoCache;
           final tabToBeSelected = _setTabsData(channelInfoCache);
           if (tabToBeSelected != null) _tabIndex = tabToBeSelected;
-          _fetchCurrentTab(channelInfoCache);
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _fetchCurrentTab(channelInfoCache, forceRequest: false),
+          );
         } else {
           _tabsGlobalKeys[0] = _videosPageKey;
         }
@@ -197,7 +203,9 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
 
     // -- always get new info.
     YoutubeInfoController.channel.fetchChannelInfo(channelId: ch.channelID, details: ExecuteDetails.forceRequest()).then(
-      (value) {
+      (valueNull) {
+        final value = valueNull ?? channelInfoCache;
+
         if (value != null) {
           _channelInfoSubButton.value = value;
           final tabToBeSelected = _setTabsData(value);
@@ -205,27 +213,47 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
             if (_tabIndex == 0 && tabToBeSelected != null) _tabIndex = tabToBeSelected; // only set if tab wasnt changed
             _channelInfo = value;
           });
-          onRefresh(() => _fetchCurrentTab(value, forceRequest: true), forceProceed: true);
+          onRefresh(() => _fetchCurrentTab(value, forceRequest: true, isFromRefresh: true), forceProceed: true);
         }
       },
     );
   }
 
-  Future<void> _fetchCurrentTab(YoutiPieChannelPageResult channelInfo, {bool? forceRequest}) async {
+  Future<void> _fetchCurrentTab(YoutiPieChannelPageResult channelInfo, {bool? forceRequest, bool? isFromRefresh, bool? forceRefreshIndicatorForVideos}) async {
     if (_tabsGlobalKeys.isEmpty) return;
-    final currentKeyState = _isAboutTab() ? _aboutPageKey : _tabsGlobalKeys[_tabIndex]?.currentState;
-    forceRequest ??= _shouldForceRequestTab(_tabIndex);
+    var currentKeyState = _isAboutTab() ? _aboutPageKey.currentState : _tabsGlobalKeys[_tabIndex]?.currentState;
+    if (currentKeyState == null) {
+      // -- index change callback happens instantly way before animation starts, post frame also won't work
+      await Future.delayed(Duration(milliseconds: 100));
+      currentKeyState = _isAboutTab() ? _aboutPageKey.currentState : _tabsGlobalKeys[_tabIndex]?.currentState;
+    }
+
     if (currentKeyState is _YTChannelVideosTabState) {
-      await currentKeyState.fetchChannelStreams(channelInfo, forceRequest: forceRequest);
-    } else if (currentKeyState is _YTChannelSubpageTabState) {
-      await currentKeyState.fetchTabAndUpdate(forceRequest: forceRequest);
-    } else if (currentKeyState is _YTChannelSubpageAboutState) {
-      await currentKeyState.fetchAboutAndUpdate(forceRequest: forceRequest);
+      forceRequest ??= _shouldForceRequestVideosTab(_tabIndex);
+      if (forceRefreshIndicatorForVideos == true && forceRequest) {
+        await onRefresh(() => (currentKeyState as _YTChannelVideosTabState).fetchChannelStreams(channelInfo, forceRequest: forceRequest!), forceProceed: true);
+      } else {
+        await currentKeyState.fetchChannelStreams(channelInfo, forceRequest: forceRequest);
+      }
+    } else {
+      forceRequest ??= _shouldForceRequestTab(_tabIndex);
+      // -- only if from refresh, cuz these tabs already have internal auto fetcher
+      if (isFromRefresh == true) {
+        if (currentKeyState is _YTChannelSubpageTabState) {
+          await currentKeyState.fetchTabAndUpdate(forceRequest: forceRequest);
+        } else if (currentKeyState is _YTChannelSubpageAboutState) {
+          await currentKeyState.fetchAboutAndUpdate(forceRequest: forceRequest);
+        }
+      }
     }
   }
 
   bool _shouldForceRequestTab(int tabIndex) {
     return _didEnoughTimePass(_tabLastFetched[tabIndex]);
+  }
+
+  bool _shouldForceRequestVideosTab(int tabIndex) {
+    return _didEnoughTimePass(_videosTabLastFetched);
   }
 
   bool _didEnoughTimePass(DateTime? datetime) {
@@ -453,7 +481,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
 
     Widget finalChild = Listener(
       onPointerMove: (event) => _itemsScrollController.hasClients ? onPointerMove(_itemsScrollController, event) : null,
-      onPointerUp: (_) => channelInfo == null ? null : onRefresh(() => _fetchCurrentTab(channelInfo, forceRequest: true)),
+      onPointerUp: (_) => channelInfo == null ? null : onRefresh(() => _fetchCurrentTab(channelInfo, forceRequest: true, isFromRefresh: true)),
       onPointerCancel: (_) => onVerticalDragFinish(),
       child: Stack(
         alignment: Alignment.topCenter,
@@ -479,7 +507,11 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
                     } catch (_) {}
 
                     _tabIndex = index;
-                    if (channelInfo != null) _fetchCurrentTab(channelInfo);
+                    if (channelInfo != null) {
+                      WidgetsBinding.instance.addPostFrameCallback(
+                        (_) => _fetchCurrentTab(channelInfo, forceRefreshIndicatorForVideos: true),
+                      );
+                    }
 
                     if (_isAboutTab()) {
                       if (_scrollAnimation.value < 1.0) {
@@ -500,6 +532,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
                             scrollController: _itemsScrollController,
                             channelInfo: _channelInfo,
                             localChannel: ch,
+                            onSuccessFetch: () => _videosTabLastFetched = DateTime.now(),
                           );
                         }
                         return YTChannelSubpageTab(
@@ -517,6 +550,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
                         scrollController: _itemsScrollController,
                         channelInfo: _channelInfo,
                         localChannel: ch,
+                        onSuccessFetch: () => _videosTabLastFetched = DateTime.now(),
                       ),
                     YTChannelSubpageAbout(
                       key: _aboutPageKey,

@@ -1189,7 +1189,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   value: settings.extra.floatingArtworkEffect ?? false,
                   onChanged: (isTrue) => setState(() => settings.extra.save(floatingArtworkEffect: !isTrue)),
                   title: 'floating_artwork_effect'.toUpperCase(),
-                  subtitle: "${lang.PERFORMANCE_NOTE}.\nMight affect battery usage",
+                  subtitle: "${lang.PERFORMANCE_NOTE}.\nMight affect battery usage.",
                 ),
               if (NamidaFeaturesVisibility.tiltingCardsEffect)
                 CustomSwitchListTile(
@@ -1197,7 +1197,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   value: settings.extra.tiltingCardsEffect ?? false,
                   onChanged: (isTrue) => setState(() => settings.extra.save(tiltingCardsEffect: !isTrue)),
                   title: 'tilting_cards_effect'.toUpperCase(),
-                  subtitle: "${lang.PERFORMANCE_NOTE}.\nMight affect battery usage",
+                  subtitle: "${lang.PERFORMANCE_NOTE}.\nMight affect battery usage.",
                 ),
               if (NamidaFeaturesVisibility.mediaWaveHaptic)
                 CustomSwitchListTile(
@@ -1205,7 +1205,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   value: settings.extra.mediaWaveHaptic ?? false,
                   onChanged: (isTrue) => setState(() => settings.extra.save(mediaWaveHaptic: !isTrue)),
                   title: 'media_wave_haptic'.toUpperCase(),
-                  subtitle: 'Haptic feedback following the rhythm.\n${lang.PERFORMANCE_NOTE}.\nMight affect battery usage',
+                  subtitle: 'Haptic feedback following the rhythm.\nMight affect battery usage.',
                 ),
               CustomSwitchListTile(
                 icon: Broken.colors_square,

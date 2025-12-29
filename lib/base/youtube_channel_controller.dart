@@ -93,6 +93,8 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
     streamsPeakDates = (oldest: DateTime.fromMillisecondsSinceEpoch(oldest), newest: DateTime.fromMillisecondsSinceEpoch(newest));
   }
 
+  void onSuccessFetch() {}
+
   Future<void> fetchChannelStreams(YoutiPieChannelPageResult channelPage, {bool forceRequest = false}) async {
     final tab = channelPage.tabs.getVideosTab();
     YoutiPieChannelTabResult? newResult;
@@ -108,6 +110,7 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
         final st = newResult.items;
         updatePeakDates(st.cast());
         YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID);
+        onSuccessFetch();
       }
     }
 

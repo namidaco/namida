@@ -1405,7 +1405,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     Completer<YTMarkVideoWatchedResult>? markedAsWatched;
 
     // only if was playing
-    if (okaySetFromCache() && (streamsResult != null || !ConnectivityController.inst.hasConnection)) {
+    if (okaySetFromCache() && ((streamsResult != null && !streamsResult.hasExpired()) || !ConnectivityController.inst.hasConnection)) {
       // -- allow when no connection bcz this function won't try again with no connection,
       // -- so we force call here and let `markVideoWatched` do the job when there is proper connection.
       markedAsWatched = Completer<YTMarkVideoWatchedResult>();

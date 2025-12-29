@@ -4,12 +4,14 @@ class YTChannelVideosTab extends StatefulWidget {
   final YoutiPieChannelPageResult? channelInfo;
   final ScrollController scrollController;
   final YoutubeSubscription localChannel;
+  final void Function() onSuccessFetch;
 
   const YTChannelVideosTab({
     super.key,
     required this.scrollController,
     required this.channelInfo,
     required this.localChannel,
+    required this.onSuccessFetch,
   });
 
   @override
@@ -30,6 +32,11 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
     final res = await super.fetchStreamsNextPage();
     if (res && mounted && listWrapper != null) setState(() => updatePeakDates(listWrapper!.items.cast()));
     return res;
+  }
+
+  @override
+  void onSuccessFetch() {
+    widget.onSuccessFetch();
   }
 
   @override
@@ -241,13 +248,13 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                           )
                         : streamsList == null
                             ? SliverToBoxAdapter(
-                                child: Center(
-                                  child: Text(
-                                    lang.ERROR,
-                                    style: textTheme.displayLarge,
-                                  ),
-                                ),
-                              )
+                                // child: Center(
+                                //   child: Text(
+                                //     lang.ERROR,
+                                //     style: textTheme.displayLarge,
+                                //   ),
+                                // ),
+                                )
                             : SliverFixedExtentList.builder(
                                 itemExtent: thumbnailItemExtent,
                                 itemCount: streamsList.length,

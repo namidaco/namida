@@ -11,13 +11,15 @@ import 'package:namida/core/extensions.dart';
 final logger = _Log();
 
 class _Log {
-  static Logger _logger = _createNewLogger(Level.all);
+  Level? _defaultLevel;
 
-  static Logger _createNewLogger(Level? level) {
+  Logger? _logger;
+
+  static Future<Logger> _createNewLogger(Level? level) async {
     final filter = kDebugMode ? DevelopmentFilter() : ProductionFilter();
     final logsFile = AppDirs.USER_DATA.isEmpty ? File(AppPaths.LOGS_FALLBACK) : File(AppPaths.LOGS);
-    return Logger(
-      level: level,
+    final res = Logger(
+      level: level ?? Level.all,
       filter: filter,
       printer: PrettyPrinter(
         colors: kDebugMode ? true : false,
@@ -27,22 +29,32 @@ class _Log {
       ),
       output: _FileOutput(file: logsFile),
     );
+    await res.init.ignoreError();
+    return res;
   }
 
-  void updateLoggerPath() => updateLogger(Level.all);
+  void updateLoggerPath() => updateLogger(null);
 
-  Logger updateLogger(Level? level) {
-    _logger.close();
-    return _logger = _createNewLogger(level);
+  void updateLogger(Level? level) {
+    _defaultLevel = level;
+    _logger?.close();
+    _logger = null;
+  }
+
+  Future<void> dispose() async {
+    await _logger?.close();
+    _logger = null;
   }
 
   void error(
     dynamic message, {
     Object? e,
     StackTrace? st,
-  }) {
+  }) async {
     printo('$e => $message\n=> $st', isError: true);
-    _logger.e(message, error: e, stackTrace: st);
+
+    final loggerEffective = _logger ??= await _createNewLogger(_defaultLevel);
+    loggerEffective.e(message, error: e, stackTrace: st);
   }
 
   void report(Object? e, StackTrace? st) => error('', e: e, st: st);
@@ -58,8 +70,8 @@ class _FileOutput extends LogOutput {
   Future<void> init() async {
     try {
       await file.create();
-      final sink = _sink = file.openWrite(mode: FileMode.writeOnlyAppend);
       if (await file.length() <= 2) {
+        final sink = _sink = file.openWrite(mode: FileMode.writeOnlyAppend);
         sink.write(await _getDeviceInfo());
         sink.write("\n===============================\n");
         await sink.flush();

@@ -697,9 +697,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                         ),
                                         Positioned(
                                           top: finalthumbnailHeight -
-                                              (_extraPaddingForYTMiniplayer / 2 * (1 - percentage)) -
-                                              (SeekReadyDimensions.barHeight / 2) -
-                                              (SeekReadyDimensions.barHeight / 2 * percentage) +
+                                              (_extraPaddingForYTMiniplayer / 2 * inversePerc) -
+                                              SeekReadyDimensions.barHeight +
+                                              (SeekReadyDimensions.barHeight * (0.5 * inversePerc)) +
                                               (SeekReadyDimensions.progressBarHeight / 2),
                                           left: 0,
                                           right: 0,

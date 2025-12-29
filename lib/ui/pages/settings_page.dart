@@ -174,7 +174,7 @@ class CollapsedSettingTiles extends StatelessWidget {
           page: () => const AdvancedSettings(),
         ),
         const AboutPageTileWidget(),
-        const CollapsedSettingTileWidget(),
+        // const CollapsedSettingTileWidget(),
         kBottomPaddingWidget,
       ],
     );

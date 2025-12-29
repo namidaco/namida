@@ -196,7 +196,7 @@ class __SuperSmoothScrollViewBuilderState extends State<_SuperSmoothScrollViewBu
 
   @override
   Widget build(BuildContext context) {
-    final applySmoothScrolling = NamidaFeaturesVisibility.smoothScrolling && (settings.extra.smoothScrolling ?? true);
+    final applySmoothScrolling = NamidaFeaturesVisibility.smoothScrolling && widget.physics is! NeverScrollableScrollPhysics && (settings.extra.smoothScrolling ?? true);
     final physics = applySmoothScrolling ? const _CustomNeverScrollableScrollPhysics() : widget.physics;
     Widget child = widget.builder(_controller, physics);
     if (applySmoothScrolling) {

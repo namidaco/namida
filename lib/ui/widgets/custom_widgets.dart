@@ -1748,6 +1748,7 @@ class NamidaRawLikeButton extends StatelessWidget {
   final Future<bool> Function(bool isLiked)? onTap;
   final IconData likedIcon;
   final IconData normalIcon;
+  final bool enableGradient;
 
   const NamidaRawLikeButton({
     super.key,
@@ -1760,6 +1761,7 @@ class NamidaRawLikeButton extends StatelessWidget {
     this.padding = EdgeInsets.zero,
     this.likedIcon = Broken.heart_filled,
     this.normalIcon = Broken.heart,
+    this.enableGradient = false,
   });
 
   Future<bool> _confirmSomething(String action) async {
@@ -1799,8 +1801,8 @@ class NamidaRawLikeButton extends StatelessWidget {
           dotSecondaryColor: theme.colorScheme.primaryContainer,
         ),
         circleColor: CircleColor(
-          start: theme.colorScheme.tertiary,
-          end: theme.colorScheme.tertiary,
+          start: theme.colorScheme.secondary,
+          end: theme.colorScheme.secondaryContainer,
         ),
         isLiked: isLiked,
         onTap: (isLiked) async {
@@ -1810,17 +1812,40 @@ class NamidaRawLikeButton extends StatelessWidget {
           }
           return await onTap?.call(isLiked);
         },
-        likeBuilder: (value) => value
-            ? Icon(
-                likedIcon,
-                color: enabledColor ?? theme.colorScheme.primary,
-                size: size,
-              )
-            : Icon(
-                normalIcon,
-                color: disabledColor ?? theme.colorScheme.secondary,
-                size: size,
-              ),
+        likeBuilder: (value) {
+          Widget iconWidget = value
+              ? Icon(
+                  likedIcon,
+                  color: enabledColor ?? theme.colorScheme.primary,
+                  size: size,
+                )
+              : Icon(
+                  normalIcon,
+                  color: disabledColor ?? theme.colorScheme.secondary,
+                  size: size,
+                );
+
+          if (enableGradient && value) {
+            iconWidget = ShaderMask(
+              blendMode: BlendMode.srcIn,
+              shaderCallback: (Rect bounds) => LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                stops: [
+                  0.2,
+                  0.9,
+                ],
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.75),
+                  Color.alphaBlend(theme.colorScheme.primary.withValues(alpha: 0.25), CurrentColor.inst.color).withValues(alpha: 0.75),
+                ],
+              ).createShader(bounds),
+              child: iconWidget,
+            );
+          }
+
+          return iconWidget;
+        },
       ),
     );
   }
@@ -4212,8 +4237,14 @@ class NamidaTabView extends StatefulWidget {
 
 class NamidaTabViewState extends State<NamidaTabView> with SingleTickerProviderStateMixin {
   late TabController controller;
+  int? _index;
 
-  void fn() => widget.onIndexChanged(controller.index);
+  void fn() {
+    final newIndex = controller.index;
+    if (newIndex == _index) return;
+    _index = newIndex;
+    widget.onIndexChanged(newIndex);
+  }
 
   void animateToTab(int index) {
     controller.animateTo(index);
@@ -4225,12 +4256,13 @@ class NamidaTabViewState extends State<NamidaTabView> with SingleTickerProviderS
 
   @override
   void initState() {
-    if (widget.reportIndexChangedOnInit) Timer(Duration.zero, () => widget.onIndexChanged(widget.initialIndex));
+    final initialIndex = widget.initialIndex.clampInt(0, widget.children.length - 1);
+    if (widget.reportIndexChangedOnInit) Timer(Duration.zero, () => widget.onIndexChanged(initialIndex));
     controller = TabController(
       length: widget.children.length,
       vsync: this,
       animationDuration: const Duration(milliseconds: 400),
-      initialIndex: widget.initialIndex,
+      initialIndex: initialIndex,
     );
     controller.addListener(fn);
     super.initState();
