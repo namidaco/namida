@@ -203,18 +203,19 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                 );
                 final lyricsString = newLRC.format();
                 await lrcUtils.saveLyricsToCache(lyricsString, true);
-                availableLyrics.remove(l);
-                availableLyrics.add(
-                  LyricsModel(
+
+                final indexOfLrc = availableLyrics.value.indexOf(l);
+                if (indexOfLrc >= 0) {
+                  availableLyrics[indexOfLrc] = LyricsModel(
                     lyrics: lyricsString,
                     synced: l.synced,
                     isInCache: l.isInCache,
                     fromInternet: l.fromInternet,
                     isEmbedded: l.isEmbedded,
                     file: l.file,
-                  ),
-                );
-                updateForCurrentTrack();
+                  );
+                  updateForCurrentTrack();
+                }
               }
 
               NamidaNavigator.inst.closeDialog();
@@ -327,6 +328,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         isEmbedded: false,
       );
       availableLyrics.add(lrcModel);
+      updateForCurrentTrack();
       // selectedLyrics.value = lrcModel;
     }
   }
@@ -349,6 +351,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         isEmbedded: false,
       );
       availableLyrics.add(lrcModel);
+      updateForCurrentTrack();
       // selectedLyrics.value = lrcModel;
 
       NamidaNavigator.inst.closeDialog();
@@ -416,6 +419,72 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void onEditLyricsTap(LyricsModel l) async {
+    final editTextController = TextEditingController(text: l.lyrics);
+    void saveEditedLRC() async {
+      final text = editTextController.text;
+      final synced = text.isValidLRC();
+
+      final file = await lrcUtils.saveLyricsToCache(text, synced);
+
+      final lrcModel = LyricsModel(
+        lyrics: text,
+        synced: synced,
+        isInCache: l.isInCache,
+        fromInternet: l.fromInternet,
+        file: file,
+        isEmbedded: l.isEmbedded,
+      );
+      final indexOfLrc = availableLyrics.value.indexOf(l);
+      if (indexOfLrc >= 0) {
+        availableLyrics[indexOfLrc] = lrcModel;
+        updateForCurrentTrack();
+      }
+
+      NamidaNavigator.inst.closeDialog();
+    }
+
+    await NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        editTextController.dispose();
+      },
+      colorScheme: colorScheme,
+      dialogBuilder: (theme) => CustomBlurryDialog(
+        icon: Broken.edit_2,
+        title: lang.EDIT,
+        normalTitleStyle: true,
+        actions: [
+          const CancelButton(),
+          const SizedBox(width: 6.0),
+          NamidaButton(
+            text: lang.SAVE.toUpperCase(),
+            onPressed: saveEditedLRC,
+          )
+        ],
+        child: SizedBox(
+          width: namida.width,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: Column(
+              children: [
+                CustomTagTextField(
+                  borderRadius: 12.0,
+                  controller: editTextController,
+                  hintText: lang.LYRICS,
+                  maxLines: 24,
+                  labelText: '',
+                  onFieldSubmitted: (value) {
+                    saveEditedLRC();
+                  },
+                ),
+              ],
             ),
           ),
         ),
@@ -602,6 +671,14 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                       altDesign: true,
                                     );
                                   },
+                                ),
+                                NamidaIconButton(
+                                  verticalPadding: 3.0,
+                                  horizontalPadding: 3.0,
+                                  tooltip: () => lang.EDIT,
+                                  icon: Broken.edit_2,
+                                  iconSize: 20.0,
+                                  onPressed: () => onEditLyricsTap(l),
                                 ),
                                 if (l.file != null) ...[
                                   if (l.synced && !l.fromInternet)
