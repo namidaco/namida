@@ -203,10 +203,10 @@ class NamidaLinkUtils {
     return null;
   }
 
-  static Future<bool> openLink(String url) async {
+  static Future<bool> openLink(String url, {LaunchMode preferredMode = LaunchMode.externalNonBrowserApplication}) async {
     bool didLaunch = false;
     try {
-      didLaunch = await launchUrlString(url, mode: LaunchMode.externalNonBrowserApplication);
+      didLaunch = await launchUrlString(url, mode: preferredMode);
     } catch (_) {}
     if (!didLaunch) {
       try {

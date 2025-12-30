@@ -33,10 +33,11 @@ abstract class LrcSearchUtils {
   File get cachedLRCFile;
   List<File> get deviceLRCFiles;
 
-  Future<void> saveLyricsToCache(String formatted, bool isSynced) async {
+  Future<File> saveLyricsToCache(String formatted, bool isSynced) async {
     final fc = isSynced ? cachedLRCFile : cachedTxtFile;
     await fc.create();
     await fc.writeAsString(formatted);
+    return fc;
   }
 
   @mustCallSuper

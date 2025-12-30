@@ -2,8 +2,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:lrc/lrc.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
@@ -287,6 +290,12 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
 
   final initialSearchTextHint = lrcUtils.initialSearchTextHint;
 
+  void onSearchExternallyTap() {
+    final query = Uri.encodeComponent('$initialSearchTextHint lyrics');
+    final url = "https://www.google.com/search?q=$query";
+    NamidaLinkUtils.openLink(url, preferredMode: LaunchMode.externalApplication);
+  }
+
   void onSearchTrigger([String? query]) async {
     fetchingFromInternet.value = true;
     fetchedLyrics.clear();
@@ -296,6 +305,122 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     );
     if (lyrics.isNotEmpty) fetchedLyrics.addAll(lyrics);
     fetchingFromInternet.value = false;
+  }
+
+  void onAddLRCFileTap() async {
+    final picked = await NamidaFileBrowser.pickFile(
+      note: lang.ADD_LRC_FILE,
+      allowedExtensions: NamidaFileExtensionsWrapper.lrcOrTxt,
+      initialDirectory: lrcUtils.pickFileInitialDirectory,
+    );
+    final path = picked?.path;
+    if (path != null) {
+      final text = await File(path).readAsString();
+      final synced = text.isValidLRC();
+      final file = await lrcUtils.saveLyricsToCache(text, synced);
+      final lrcModel = LyricsModel(
+        lyrics: text,
+        synced: synced,
+        isInCache: false,
+        fromInternet: false,
+        file: file,
+        isEmbedded: false,
+      );
+      availableLyrics.add(lrcModel);
+      // selectedLyrics.value = lrcModel;
+    }
+  }
+
+  void onAddLRCPasteTap() async {
+    final pasteTextController = TextEditingController();
+    final clipboardTextRx = ''.obs;
+    void savePastedLRC([String? text]) async {
+      text ??= pasteTextController.text;
+      final synced = text.isValidLRC();
+
+      final file = await lrcUtils.saveLyricsToCache(text, synced);
+
+      final lrcModel = LyricsModel(
+        lyrics: text,
+        synced: synced,
+        isInCache: true,
+        fromInternet: false,
+        file: file,
+        isEmbedded: false,
+      );
+      availableLyrics.add(lrcModel);
+      // selectedLyrics.value = lrcModel;
+
+      NamidaNavigator.inst.closeDialog();
+    }
+
+    Clipboard.getData(Clipboard.kTextPlain).then(
+      (value) => clipboardTextRx.value = value?.text ?? '',
+    );
+
+    await NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        pasteTextController.dispose();
+        clipboardTextRx.close();
+      },
+      colorScheme: colorScheme,
+      dialogBuilder: (theme) => CustomBlurryDialog(
+        icon: Broken.additem,
+        title: lang.ADD,
+        normalTitleStyle: true,
+        actions: [
+          const CancelButton(),
+          const SizedBox(width: 6.0),
+          NamidaButton(
+            text: lang.ADD.toUpperCase(),
+            onPressed: savePastedLRC,
+          )
+        ],
+        trailingWidgets: [
+          NamidaIconButton(
+            icon: Broken.export_1,
+            tooltip: () => '${lang.SEARCH}: Google',
+            iconSize: 22.0,
+            onPressed: onSearchExternallyTap,
+          ),
+        ],
+        child: SizedBox(
+          width: namida.width,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: ObxO(
+              rx: clipboardTextRx,
+              builder: (context, clipboardText) => Column(
+                children: [
+                  if (clipboardText.isNotEmpty) ...[
+                    CustomListTile(
+                      icon: Broken.clipboard_tick,
+                      title: lang.COPIED_TO_CLIPBOARD,
+                      subtitle: clipboardText,
+                      maxSubtitleLines: 6,
+                      onTap: () {
+                        savePastedLRC(clipboardText);
+                      },
+                    ),
+                    const SizedBox(height: 24.0),
+                  ],
+                  CustomTagTextField(
+                    borderRadius: 12.0,
+                    controller: pasteTextController,
+                    hintText: lang.LYRICS,
+                    maxLines: 6,
+                    labelText: '',
+                    onFieldSubmitted: (value) {
+                      savePastedLRC(value);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   await NamidaNavigator.inst.navigateDialog(
@@ -310,7 +435,49 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     colorScheme: colorScheme,
     dialogBuilder: (theme) => CustomBlurryDialog(
       horizontalInset: 38.0,
+      normalTitleStyle: true,
       title: lang.LYRICS,
+      titleWidgetInPadding: Row(
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 24.0),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                color: theme.cardColor,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                child: Obx(
+                  (context) => Text(
+                    (availableLyrics.length + fetchedLyrics.length).formatDecimal(),
+                    style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12.0),
+          Expanded(
+            child: Text(
+              lang.LYRICS,
+              style: theme.textTheme.displayLarge,
+            ),
+          ),
+          const SizedBox(width: 8.0),
+          NamidaIconButton(
+            icon: Broken.additem,
+            tooltip: () => lang.ADD,
+            onPressed: onAddLRCPasteTap,
+          ),
+          NamidaIconButton(
+            icon: Broken.document_download,
+            tooltip: () => lang.ADD_LRC_FILE,
+            onPressed: onAddLRCFileTap,
+          ),
+        ],
+      ),
       actions: [
         NamidaButton(
           text: lang.SEARCH,
@@ -321,15 +488,18 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         Obx(
           (context) {
             final selected = selectedLyrics.valueR;
+            final canAddToCache = selected != null && !selected.isInCache && !selected.isEmbedded /* && (selected.file != null || selected.fromInternet == true) */;
             return NamidaButton(
-              enabled: selected != null && !selected.isInCache && !selected.isEmbedded /* && (selected.file != null || selected.fromInternet == true) */,
-              text: lang.SAVE,
+              text: canAddToCache ? lang.SAVE : lang.DONE,
               onPressed: () async {
-                final selected = selectedLyrics.value;
-                if (selected != null) {
-                  await lrcUtils.saveLyricsToCache(selected.lyrics, selected.synced);
-                  updateForCurrentTrack();
+                if (canAddToCache) {
+                  final selected = selectedLyrics.value;
+                  if (selected != null) {
+                    await lrcUtils.saveLyricsToCache(selected.lyrics, selected.synced);
+                    updateForCurrentTrack();
+                  }
                 }
+
                 NamidaNavigator.inst.closeDialog();
               },
             );
@@ -341,6 +511,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         height: namida.height * 0.6,
         child: Column(
           children: [
+            const SizedBox(height: 8.0),
             Row(
               children: [
                 Expanded(
@@ -374,188 +545,231 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                       size: 58.0,
                     );
                   }
-                  final both = [...availableLyrics.valueR, ...fetchedLyrics.valueR];
-                  if (both.isEmpty && fetchingFromInternet.valueR != null) {
-                    return const Icon(
-                      Broken.emoji_sad,
-                      size: 48.0,
-                    );
-                  }
-                  return SuperSmoothListView.builder(
-                    padding: EdgeInsets.zero,
-                    itemCount: both.length,
-                    itemBuilder: (context, index) {
-                      final l = both[index];
-                      final syncedText = l.synced ? lang.SYNCED : lang.PLAIN;
-                      final cacheText = l.file == null
-                          ? ''
-                          : l.isInCache
-                              ? lang.CACHE
-                              : lang.LOCAL;
-                      return Obx(
-                        (context) => NamidaInkWell(
-                          borderRadius: 12.0,
-                          animationDurationMS: 200,
-                          onTap: () => selectedLyrics.value = l,
-                          bgColor: namida.theme.cardColor.withValues(alpha: 0.4),
-                          decoration: BoxDecoration(
-                            border: selectedLyrics.valueR == l
-                                ? Border.all(
-                                    width: 2.0,
-                                    color: colorScheme,
-                                  )
-                                : null,
-                          ),
-                          padding: const EdgeInsets.all(8.0),
-                          margin: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    l.file == null ? Broken.document_download : Broken.document,
-                                    size: 18.0,
+                  final availableLyricsValue = availableLyrics.valueR;
+                  final fetchedLyricsValue = fetchedLyrics.valueR;
+
+                  Widget listItemBuilder(BuildContext context, LyricsModel l, bool isTempFetched) {
+                    final syncedText = l.synced ? lang.SYNCED : lang.PLAIN;
+                    final cacheText = l.file == null
+                        ? ''
+                        : l.isInCache
+                            ? lang.CACHE
+                            : lang.LOCAL;
+                    return Obx(
+                      (context) => NamidaInkWell(
+                        borderRadius: 12.0,
+                        animationDurationMS: 200,
+                        onTap: isTempFetched ? () => selectedLyrics.value = l : null,
+                        bgColor: namida.theme.cardColor.withValues(alpha: 0.4),
+                        decoration: BoxDecoration(
+                          border: selectedLyrics.valueR == l
+                              ? Border.all(
+                                  width: 2.0,
+                                  color: colorScheme,
+                                )
+                              : null,
+                        ),
+                        padding: const EdgeInsets.all(8.0),
+                        margin: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  l.file == null ? Broken.document_download : Broken.document,
+                                  size: 18.0,
+                                ),
+                                const SizedBox(width: 8.0),
+                                Expanded(
+                                  child: Text(
+                                    cacheText != '' ? "$syncedText ($cacheText)" : syncedText,
+                                    style: namida.textTheme.displayMedium,
                                   ),
-                                  const SizedBox(width: 8.0),
-                                  Expanded(
-                                    child: Text(
-                                      cacheText != '' ? "$syncedText ($cacheText)" : syncedText,
-                                      style: namida.textTheme.displayMedium,
-                                    ),
-                                  ),
-                                  NamidaIconButton(
-                                    verticalPadding: 3.0,
-                                    horizontalPadding: 3.0,
-                                    tooltip: () => lang.COPY,
-                                    icon: Broken.copy,
-                                    iconSize: 20.0,
-                                    onPressed: () {
-                                      final text = l.lyrics;
-                                      NamidaUtils.copyToClipboard(
-                                        content: text,
-                                        message: text.replaceAll('\n', ' '),
-                                        maxLinesMessage: 2,
-                                        altDesign: true,
-                                      );
-                                    },
-                                  ),
-                                  if (l.file != null) ...[
-                                    if (l.synced && !l.fromInternet)
-                                      NamidaIconButton(
-                                        verticalPadding: 3.0,
-                                        horizontalPadding: 3.0,
-                                        icon: Broken.timer_1,
-                                        iconSize: 20.0,
-                                        onPressed: () {
-                                          showEditCachedSyncedTimeOffsetDialog(l);
-                                        },
-                                      ),
+                                ),
+                                NamidaIconButton(
+                                  verticalPadding: 3.0,
+                                  horizontalPadding: 3.0,
+                                  tooltip: () => lang.COPY,
+                                  icon: Broken.copy,
+                                  iconSize: 20.0,
+                                  onPressed: () {
+                                    final text = l.lyrics;
+                                    NamidaUtils.copyToClipboard(
+                                      content: text,
+                                      message: text.replaceAll('\n', ' '),
+                                      maxLinesMessage: 2,
+                                      altDesign: true,
+                                    );
+                                  },
+                                ),
+                                if (l.file != null) ...[
+                                  if (l.synced && !l.fromInternet)
                                     NamidaIconButton(
                                       verticalPadding: 3.0,
                                       horizontalPadding: 3.0,
-                                      icon: Broken.trash,
+                                      icon: Broken.timer_1,
                                       iconSize: 20.0,
                                       onPressed: () {
-                                        showDeleteLyricsDialog(l);
+                                        showEditCachedSyncedTimeOffsetDialog(l);
                                       },
                                     ),
-                                    const SizedBox(width: 2.0),
-                                  ],
+                                  NamidaIconButton(
+                                    verticalPadding: 3.0,
+                                    horizontalPadding: 3.0,
+                                    icon: Broken.trash,
+                                    iconSize: 20.0,
+                                    onPressed: () {
+                                      showDeleteLyricsDialog(l);
+                                    },
+                                  ),
+                                  const SizedBox(width: 2.0),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 8.0),
+                            SizedBox(
+                              width: context.width,
+                              child: Stack(
+                                children: [
+                                  NamidaInkWell(
+                                    width: context.width,
+                                    borderRadius: 8.0,
+                                    bgColor: namida.theme.cardColor,
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: expandedLyrics.valueR == l
+                                        ? Text(
+                                            l.lyrics,
+                                            style: namida.textTheme.displaySmall,
+                                          )
+                                        : Text(
+                                            l.lyrics,
+                                            maxLines: 12,
+                                            overflow: TextOverflow.fade,
+                                            style: namida.textTheme.displaySmall,
+                                          ),
+                                  ),
+                                  Positioned(
+                                    bottom: 4.0,
+                                    right: 4.0,
+                                    child: Container(
+                                      clipBehavior: Clip.antiAlias,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            blurRadius: 4.0,
+                                            color: namida.theme.scaffoldBackgroundColor,
+                                          ),
+                                        ],
+                                      ),
+                                      child: NamidaIconButton(
+                                        padding: const EdgeInsets.all(4.0),
+                                        icon: Broken.maximize_circle,
+                                        iconSize: 16.0,
+                                        onPressed: () {
+                                          if (expandedLyrics.value == l) {
+                                            expandedLyrics.value = null;
+                                          } else {
+                                            expandedLyrics.value = l;
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  )
                                 ],
                               ),
-                              const SizedBox(height: 8.0),
-                              SizedBox(
-                                width: context.width,
-                                child: Stack(
-                                  children: [
-                                    NamidaInkWell(
-                                      width: context.width,
-                                      borderRadius: 8.0,
-                                      bgColor: namida.theme.cardColor,
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: expandedLyrics.valueR == l
-                                          ? Text(
-                                              l.lyrics,
-                                              style: namida.textTheme.displaySmall,
-                                            )
-                                          : Text(
-                                              l.lyrics,
-                                              maxLines: 12,
-                                              overflow: TextOverflow.fade,
-                                              style: namida.textTheme.displaySmall,
-                                            ),
-                                    ),
-                                    Positioned(
-                                      bottom: 4.0,
-                                      right: 4.0,
-                                      child: Container(
-                                        clipBehavior: Clip.antiAlias,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              blurRadius: 4.0,
-                                              color: namida.theme.scaffoldBackgroundColor,
-                                            ),
-                                          ],
-                                        ),
-                                        child: NamidaIconButton(
-                                          padding: const EdgeInsets.all(4.0),
-                                          icon: Broken.maximize_circle,
-                                          iconSize: 16.0,
-                                          onPressed: () {
-                                            if (expandedLyrics.value == l) {
-                                              expandedLyrics.value = null;
-                                            } else {
-                                              expandedLyrics.value = l;
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                    )
-                                  ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  return SmoothCustomScrollView(
+                    slivers: [
+                      SuperSliverList.builder(
+                        itemCount: availableLyricsValue.length,
+                        itemBuilder: (context, index) {
+                          final l = availableLyricsValue[index];
+                          return listItemBuilder(context, l, false);
+                        },
+                      ),
+                      const SliverToBoxAdapter(
+                        child: NamidaContainerDivider(
+                          margin: EdgeInsets.symmetric(vertical: 4.0),
+                        ),
+                      ),
+                      if (fetchedLyricsValue.isEmpty && fetchingFromInternet.valueR != null)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsetsGeometry.symmetric(vertical: 12.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Broken.emoji_sad,
+                                  size: 48.0,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 6.0),
+                                NamidaInkWell(
+                                  borderRadius: 6.0,
+                                  bgColor: context.theme.cardColor,
+                                  onTap: onSearchExternallyTap,
+                                  padding: EdgeInsetsGeometry.symmetric(horizontal: 8.0, vertical: 4.0),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '${lang.SEARCH}: Google',
+                                        style: context.textTheme.displayMedium,
+                                      ),
+                                      const SizedBox(width: 6.0),
+                                      Icon(
+                                        Broken.export_1,
+                                        size: 14.0,
+                                      ),
+                                      const SizedBox(width: 2.0),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        SuperSliverList.builder(
+                          itemCount: fetchedLyricsValue.length,
+                          itemBuilder: (context, index) {
+                            final l = fetchedLyricsValue[index];
+                            return listItemBuilder(context, l, true);
+                          },
+                        ),
+                      if (fetchingFromInternet.valueR != null)
+                        const SliverToBoxAdapter(
+                          child: NamidaContainerDivider(
+                            margin: EdgeInsets.symmetric(vertical: 4.0),
                           ),
                         ),
-                      );
-                    },
+                      SliverPadding(padding: EdgeInsetsGeometry.only(top: 8.0)),
+                      SliverToBoxAdapter(
+                        child: CustomListTile(
+                          visualDensity: VisualDensity.compact,
+                          icon: Broken.additem,
+                          title: lang.ADD,
+                          onTap: onAddLRCPasteTap,
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: CustomListTile(
+                          visualDensity: VisualDensity.compact,
+                          icon: Broken.document_download,
+                          title: lang.ADD_LRC_FILE,
+                          onTap: onAddLRCFileTap,
+                        ),
+                      ),
+                    ],
                   );
-                },
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Obx(
-              (context) => CustomListTile(
-                visualDensity: VisualDensity.compact,
-                icon: Broken.add_circle,
-                title: lang.ADD_LRC_FILE,
-                trailingText: (availableLyrics.length + fetchedLyrics.length).formatDecimal(),
-                onTap: () async {
-                  final picked = await NamidaFileBrowser.pickFile(
-                    note: lang.ADD_LRC_FILE,
-                    allowedExtensions: NamidaFileExtensionsWrapper.lrcOrTxt,
-                    initialDirectory: lrcUtils.pickFileInitialDirectory,
-                  );
-                  final path = picked?.path;
-                  if (path != null) {
-                    final file = File(path);
-                    final ext = path.getExtension.toLowerCase();
-                    final synced = ext == 'lrc' || ext == 'ttml' || ext == 'xml';
-                    final text = await file.readAsString();
-                    final lrcModel = LyricsModel(
-                      lyrics: text,
-                      synced: synced,
-                      isInCache: false,
-                      fromInternet: false,
-                      file: File(path),
-                      isEmbedded: false,
-                    );
-                    availableLyrics.add(lrcModel);
-                    selectedLyrics.value = lrcModel;
-                  }
                 },
               ),
             ),
