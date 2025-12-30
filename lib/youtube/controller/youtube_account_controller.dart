@@ -40,6 +40,10 @@ class YoutubeAccountController {
     YoutiPieOperation.addVideoToHistory: false,
     YoutiPieOperation.fetchUserPlaylists: false,
     YoutiPieOperation.fetchUserPlaylistsNext: false,
+    YoutiPieOperation.fetchUserChannels: false,
+    YoutiPieOperation.fetchUserChannelsNext: false,
+    YoutiPieOperation.fetchUserChannelsAllVideos: false,
+    YoutiPieOperation.fetchUserChannelsAllVideosNext: false,
     YoutiPieOperation.getPlaylistsForVideo: false,
     YoutiPieOperation.getPlaylistEditInfo: false,
     YoutiPieOperation.addRemoveVideosPlaylist: false,
@@ -52,6 +56,9 @@ class YoutubeAccountController {
     YoutiPieOperation.fetchHistory: true,
     YoutiPieOperation.fetchUserPlaylists: true,
     YoutiPieOperation.fetchUserChannels: true,
+    YoutiPieOperation.fetchUserChannelsNext: true,
+    YoutiPieOperation.fetchUserChannelsAllVideos: true,
+    YoutiPieOperation.fetchUserChannelsAllVideosNext: true,
   };
 
   static String formatMembershipErrorMessage(YoutiPieOperation? operation, MembershipType? ms) {

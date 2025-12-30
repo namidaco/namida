@@ -58,6 +58,7 @@ class YoutubeInfoController {
   static const playlist = YoutiPie.playlist;
   static var history = _YoutubeHistoryLinker(() => YoutiPie.activeAccountDetails.value?.id);
   static const userplaylist = YoutiPie.userplaylist;
+  static const userchannel = YoutiPie.userchannel;
   static const comment = YoutiPie.comment;
   static const commentAction = YoutiPie.commentAction;
   static const notificationsAction = YoutiPie.notificationsAction;

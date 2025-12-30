@@ -5,7 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:youtipie/class/channels/channel_page_result.dart';
+import 'package:youtipie/class/channels/channel_info.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
@@ -24,15 +24,15 @@ import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart'
 class _YTSubscribeButtonManager {
   const _YTSubscribeButtonManager();
 
-  static final _activeChannelInfos = <String, List<RxBaseCore<YoutiPieChannelPageResult?>>>{};
+  static final _activeChannelInfos = <String, List<RxBaseCore<YoutiPieChannelInfo?>>>{};
   static final _activeModifications = <String, bool>{}.obs;
 
-  static void add(String? channelId, RxBaseCore<YoutiPieChannelPageResult?> channelPageRx) {
+  static void add(String? channelId, RxBaseCore<YoutiPieChannelInfo?> channelPageRx) {
     if (channelId == null) return;
     _activeChannelInfos.addForce(channelId, channelPageRx);
   }
 
-  static void remove(String? channelId, RxBaseCore<YoutiPieChannelPageResult?> channelPageRx) {
+  static void remove(String? channelId, RxBaseCore<YoutiPieChannelInfo?> channelPageRx) {
     if (channelId == null) return;
     _activeChannelInfos[channelId]?.remove(channelPageRx);
     if (_activeChannelInfos[channelId]?.isEmpty == true) _activeChannelInfos.remove(channelId);
@@ -48,7 +48,7 @@ class _YTSubscribeButtonManager {
     _activeModifications[channelId] = false;
   }
 
-  static void afterModifySuccess(String? channelId, RxBaseCore<YoutiPieChannelPageResult?> channelPageRx) {
+  static void afterModifySuccess(String? channelId, RxBaseCore<YoutiPieChannelInfo?> channelPageRx) {
     if (channelId == null) return;
     _activeChannelInfos[channelId]?.loop(
       (item) {
@@ -65,12 +65,16 @@ class _YTSubscribeButtonManager {
 
 class YTSubscribeButton extends StatefulWidget {
   final String? channelID;
-  final RxBaseCore<YoutiPieChannelPageResult?> mainChannelInfo;
+  final RxBaseCore<YoutiPieChannelInfo?> mainChannelInfo;
+  final SubscribeTextDisplayPolicy subscribeTextDisplayPolicy;
+  final bool subscribeTextOnLeft;
 
   const YTSubscribeButton({
     super.key,
     required this.channelID,
     required this.mainChannelInfo,
+    this.subscribeTextDisplayPolicy = SubscribeTextDisplayPolicy.always,
+    this.subscribeTextOnLeft = false,
   });
 
   @override
@@ -98,7 +102,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
     onStart();
     _YTSubscribeButtonManager.onModifyStart(widget.channelID);
     final res = await YoutiPie.channelAction.changeSubscribeStatus(
-      mainChannelPage: widget.mainChannelInfo.value,
+      mainChannelInfo: widget.mainChannelInfo.value,
       channelEngagement: channelInfo.channelEngagement,
       subscribe: !isSubscribed,
     );
@@ -152,7 +156,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                   isSaving.value = true;
                   _YTSubscribeButtonManager.onModifyStart(widget.channelID);
                   final res = await YoutiPie.channelAction.changeChannelNotificationStatus(
-                    mainChannelPage: widget.mainChannelInfo.value,
+                    mainChannelInfo: widget.mainChannelInfo.value,
                     notifications: notiToActivate,
                   );
                   _YTSubscribeButtonManager.onModifyDone(widget.channelID);
@@ -431,6 +435,41 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
     const iconSize = 20.0;
     final notificationIcon = _notificationsToIcon(_currentNotificationsStatus, iconSize);
 
+    final canDisplaySubscribeTextWidget = switch (widget.subscribeTextDisplayPolicy) {
+      SubscribeTextDisplayPolicy.never => false,
+      SubscribeTextDisplayPolicy.always => true,
+      SubscribeTextDisplayPolicy.onlyIfNotSubscribed => !subscribed,
+    };
+
+    final subscribeTextWidget = canDisplaySubscribeTextWidget
+        ? NamidaLoadingSwitcher(
+            size: 24.0,
+            builder: (loadingController) => TextButton(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                foregroundColor: Color.alphaBlend(Colors.grey.withValues(alpha: subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
+              ),
+              child: NamidaButtonText(
+                subscribed ? lang.SUBSCRIBED : lang.SUBSCRIBE,
+              ),
+              onPressed: () async {
+                final info = widget.mainChannelInfo.value;
+                if (info == null) return;
+                if (subscribed) {
+                  final confirmed = await _confirmUnsubscribe();
+                  if (!confirmed) return;
+                }
+                _onChangeSubscribeStatus(
+                  subscribed,
+                  loadingController.startLoading,
+                  loadingController.stopLoading,
+                );
+              },
+            ),
+          )
+        : const SizedBox();
+
     return LongPressDetector(
       enableSecondaryTap: true,
       onLongPress: widget.channelID == null ? null : () => _showLocalFavouriteChannelsSheet(widget.channelID!),
@@ -442,6 +481,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (widget.subscribeTextOnLeft) subscribeTextWidget,
               if (subscribed && notificationIcon != null)
                 NamidaIconButton(
                   horizontalPadding: 4.0,
@@ -453,36 +493,17 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                   icon: null,
                   child: notificationIcon,
                 ),
-              NamidaLoadingSwitcher(
-                size: 24.0,
-                builder: (loadingController) => TextButton(
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    foregroundColor: Color.alphaBlend(Colors.grey.withValues(alpha: subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
-                  ),
-                  child: NamidaButtonText(
-                    subscribed ? lang.SUBSCRIBED : lang.SUBSCRIBE,
-                  ),
-                  onPressed: () async {
-                    final info = widget.mainChannelInfo.value;
-                    if (info == null) return;
-                    if (subscribed) {
-                      final confirmed = await _confirmUnsubscribe();
-                      if (!confirmed) return;
-                    }
-                    _onChangeSubscribeStatus(
-                      subscribed,
-                      loadingController.startLoading,
-                      loadingController.stopLoading,
-                    );
-                  },
-                ),
-              ),
+              if (!widget.subscribeTextOnLeft) subscribeTextWidget,
             ],
           ),
         ),
       ),
     );
   }
+}
+
+enum SubscribeTextDisplayPolicy {
+  never,
+  always,
+  onlyIfNotSubscribed,
 }

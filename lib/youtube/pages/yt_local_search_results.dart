@@ -52,13 +52,14 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
   }) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
+    final isEnabled = enabled(sort);
     return NamidaInkWell(
       animationDurationMS: 100,
       borderRadius: 8.0,
       bgColor: theme.cardTheme.color,
       padding: const EdgeInsets.all(8.0),
       decoration: BoxDecoration(
-        border: enabled(sort) ? Border.all(color: theme.colorScheme.primary) : null,
+        border: isEnabled ? Border.all(color: theme.colorScheme.primary) : null,
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
       ),
       onTap: () {

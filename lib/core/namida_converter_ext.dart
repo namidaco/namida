@@ -1874,7 +1874,7 @@ class _NamidaConverters {
         YTHomePages.notifications: lang.NOTIFICATIONS,
         YTHomePages.channels: lang.CHANNELS,
         YTHomePages.playlists: lang.PLAYLISTS,
-        YTHomePages.userplaylists: '${lang.PLAYLISTS} (${lang.YOUTUBE})',
+        // YTHomePages.userplaylists: '${lang.PLAYLISTS} (${lang.YOUTUBE})',
         YTHomePages.downloads: lang.DOWNLOADS,
       },
       TrackSearchFilter: {
@@ -2070,7 +2070,7 @@ class _NamidaConverters {
         YTHomePages.notifications: Broken.notification_bing,
         YTHomePages.channels: Broken.profile_2user,
         YTHomePages.playlists: Broken.music_library_2,
-        YTHomePages.userplaylists: Broken.music_dashboard,
+        // YTHomePages.userplaylists: Broken.music_dashboard,
         YTHomePages.downloads: Broken.import,
       },
       LibraryImageSource: {

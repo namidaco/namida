@@ -27,12 +27,14 @@ import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 
 typedef YoutubeMainPageFetcherItemBuilder<T, W> = Widget? Function(T item, int index, W list);
 
-final _resultsFetchTime = <Type, DateTime>{};
+final _resultsFetchTime = <ValueKey, DateTime>{};
 
 class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends MapSerializable> extends StatefulWidget {
   final bool transparentShimmer;
   final YoutiPieOperation operation;
   final String title;
+  final Widget Function(Widget refreshIconWidget)? headerBuilder;
+  final EdgeInsetsGeometry? headerPadding;
   final CacheDetails<W> cacheReader;
   final Future<W?> Function(CacheDetails<W> reader)? cacheReadFn;
   final Future<W?> Function(ExecuteDetails details) networkFetcher;
@@ -42,6 +44,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   final YoutubeMainPageFetcherItemBuilder<T, W> itemBuilder;
   final RenderObjectWidget? Function(W list, YoutubeMainPageFetcherItemBuilder<T, W> itemBuilder, Widget dummyCard)? sliverListBuilder;
   final bool showRefreshInsteadOfRefreshing;
+  final ValueKey? fetchTimeMapKey;
 
   final Widget? pageHeader;
   final Widget? headerTrailing;
@@ -61,6 +64,8 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
     required this.transparentShimmer,
     required this.operation,
     required this.title,
+    this.headerBuilder,
+    this.headerPadding,
     required this.cacheReader,
     this.cacheReadFn,
     required this.networkFetcher,
@@ -70,6 +75,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
     required this.itemBuilder,
     this.sliverListBuilder,
     this.showRefreshInsteadOfRefreshing = false,
+    this.fetchTimeMapKey,
     this.pageHeader,
     this.headerTrailing,
     this.onHeaderTap,
@@ -90,6 +96,8 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
 
 class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializable> extends State<YoutubeMainPageFetcherAccBase<W, T>>
     with TickerProviderStateMixin, PullToRefreshMixin {
+  ValueKey get _getFetchTimeMapKey => widget.fetchTimeMapKey ?? ValueKey(W);
+
   @override
   bool get enablePullToRefresh => widget.enablePullToRefresh;
 
@@ -133,7 +141,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     if (forceRequest) {
       needNewRequest = true;
     } else {
-      final lastFetchedTime = _resultsFetchTime[W];
+      final lastFetchedTime = _resultsFetchTime[_getFetchTimeMapKey];
       if (_hasConnection) {
         if (lastFetchedTime == null) {
           needNewRequest = true;
@@ -209,7 +217,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     _isLoadingCurrentFeed.value = true;
     if (!YoutubeInfoController.didInit) await YoutubeInfoController.waitForInit;
     final val = await widget.networkFetcher(ExecuteDetails.forceRequest());
-    _resultsFetchTime[W] = DateTime.now();
+    _resultsFetchTime[_getFetchTimeMapKey] = DateTime.now();
     _isLoadingCurrentFeed.value = false;
     if (val != null) {
       _currentFeed.value = val;
@@ -224,7 +232,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
 
     if (!YoutubeInfoController.didInit) await YoutubeInfoController.waitForInit;
     final val = await widget.networkFetcher(ExecuteDetails.forceRequest());
-    _resultsFetchTime[W] = DateTime.now();
+    _resultsFetchTime[_getFetchTimeMapKey] = DateTime.now();
     if (val != null) {
       _currentFeed.value = val;
       _lastFetchWasCached.value = false;
@@ -253,14 +261,8 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
       widget.title,
       style: textTheme.displayLarge?.copyWith(fontSize: 28.0),
     );
-    if (widget.isSortable) {
-      headerTitle = Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          headerTitle,
-          const SizedBox(height: 2.0),
-          ObxO(
+    final sortWidget = widget.isSortable
+        ? ObxO(
             rx: _currentFeed,
             builder: (context, listItemsPre) {
               if (listItemsPre is YoutiPieListSorterMixin) {
@@ -268,7 +270,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                 final selectedSort = listItems.customSort ?? listItems.itemsSort.firstWhereEff((e) => e.initiallySelected);
                 return NamidaPopupWrapper(
                   childrenDefault: () {
-                    return (listItems).itemsSort.map(
+                    return listItems.itemsSort.map(
                       (s) {
                         return NamidaPopupItem(
                           icon: s.title == selectedSort?.title ? Broken.tick_circle : Broken.arrow_swap,
@@ -313,47 +315,71 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
               }
               return const SizedBox();
             },
-          ),
-        ],
-      );
-    }
-    Widget header = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Expanded(
-          child: headerTitle,
-        ),
-        const SizedBox(width: 12.0),
-        ObxO(
-          rx: _refreshButtonShown,
-          builder: (context, value) => value
-              ? NamidaIconButton(
-                  icon: Broken.refresh,
-                  onPressed: _fetchFeed,
-                )
-              : const SizedBox(),
-        ),
-        if (widget.headerTrailing != null) widget.headerTrailing!,
-        if (widget.onHeaderTap != null) const SizedBox(width: 12.0),
-        if (widget.onHeaderTap != null) const Icon(Broken.arrow_right_3),
-      ],
+          )
+        : null;
+    final refreshIconWidget = ObxO(
+      rx: _refreshButtonShown,
+      builder: (context, value) => value
+          ? NamidaIconButton(
+              icon: Broken.refresh,
+              onPressed: _fetchFeed,
+            )
+          : const SizedBox(),
     );
+
+    Widget header = widget.headerBuilder?.call(refreshIconWidget) ??
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+              child: sortWidget != null
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        headerTitle,
+                        const SizedBox(height: 2.0),
+                        sortWidget,
+                      ],
+                    )
+                  : headerTitle,
+            ),
+            const SizedBox(width: 12.0),
+            refreshIconWidget,
+            if (widget.headerTrailing != null) widget.headerTrailing!,
+            if (widget.onHeaderTap != null) const SizedBox(width: 12.0),
+            if (widget.onHeaderTap != null) const Icon(Broken.arrow_right_3),
+          ],
+        );
     const headerMaxHorizontalPadding = 24.0;
     const headerMaxVerticalPadding = 16.0;
 
     if (widget.onHeaderTap != null) {
+      final paddingHalf = widget.headerPadding != null
+          ? widget.headerPadding! / 2
+          : const EdgeInsets.symmetric(
+              horizontal: headerMaxHorizontalPadding / 2,
+              vertical: headerMaxVerticalPadding / 2,
+            );
       header = Padding(
-        padding: const EdgeInsets.symmetric(horizontal: headerMaxHorizontalPadding / 2, vertical: headerMaxVerticalPadding / 2),
+        padding: paddingHalf,
         child: header,
       );
       header = NamidaInkWell(
         onTap: widget.onHeaderTap,
-        margin: const EdgeInsets.symmetric(horizontal: headerMaxHorizontalPadding / 2, vertical: headerMaxVerticalPadding / 2),
+        margin: paddingHalf,
         child: header,
       );
     } else {
+      final padding = widget.headerPadding != null
+          ? widget.headerPadding!
+          : const EdgeInsets.symmetric(
+              horizontal: headerMaxHorizontalPadding,
+              vertical: headerMaxVerticalPadding,
+            );
+
       header = Padding(
-        padding: const EdgeInsets.symmetric(horizontal: headerMaxHorizontalPadding, vertical: headerMaxVerticalPadding),
+        padding: padding,
         child: header,
       );
     }
@@ -370,7 +396,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
       lastPadding = EdgeInsets.only(bottom: pagePadding.bottom);
     }
 
-    return BackgroundWrapper(
+    Widget page = BackgroundWrapper(
       child: PullToRefreshWidget(
         state: this,
         controller: _controller,
@@ -525,5 +551,14 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
         ),
       ),
     );
+
+    if (!widget.isHorizontal) {
+      page = NamidaScrollbar(
+        controller: _controller,
+        child: page,
+      );
+    }
+
+    return page;
   }
 }

@@ -20,6 +20,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/return_youtube_dislike.dart';
 import 'package:namida/youtube/class/sponsorblock.dart';
+import 'package:namida/youtube/controller/youtube_account_controller.dart';
 
 part 'settings.equalizer.dart';
 part 'settings.extra.dart';

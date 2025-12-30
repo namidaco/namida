@@ -3,9 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:youtipie/class/channels/channel_info.dart';
 import 'package:youtipie/class/channels/channel_page_result.dart';
+import 'package:youtipie/class/channels/channel_tab.dart';
+import 'package:youtipie/class/channels/channel_tab_result.dart';
 import 'package:youtipie/class/execute_details.dart';
+import 'package:youtipie/class/result_wrapper/channel_user_result.dart';
+import 'package:youtipie/class/result_wrapper/user_channels_all_videos_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/yt_feed_base.dart';
+import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
@@ -23,13 +30,17 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
+import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_import_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
+import 'package:namida/youtube/pages/youtube_main_page_fetcher_acc_base.dart';
+import 'package:namida/youtube/pages/youtube_user_channels_page.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -245,11 +256,6 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
       }
     }
   }
-
-  static const _thumbSize = 48.0;
-  double get _listBottomPadding => Dimensions.inst.globalBottomPaddingEffectiveR - 6.0;
-  final _listTopPadding = 6.0;
-  double get listHeight => _thumbSize + 12 * 2 + _listBottomPadding + _listTopPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -502,96 +508,482 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
         ),
         const NamidaContainerDivider(margin: EdgeInsets.only(left: 8.0, right: 8.0)),
         Obx(
-          (context) => AnimatedSizedBox(
-            duration: const Duration(milliseconds: 200),
-            width: context.width,
-            animateWidth: false,
-            height: listHeight,
-            child: Container(
-              padding: EdgeInsets.only(bottom: _listBottomPadding, top: _listTopPadding),
-              decoration: BoxDecoration(
-                color: Color.alphaBlend(theme.scaffoldBackgroundColor.withValues(alpha: 0.4), theme.cardTheme.color!),
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(12.0.multipliedRadius),
+          (context) {
+            final channelIDS = YoutubeSubscriptionsController.inst.subscribedChannels.toList();
+            final totalIDsLength = channelIDS.length;
+            return _ChannelsRowSlider<String>(
+              controller: _horizontalListController,
+              horizontalPadding: horizontalPadding,
+              isAllSelected: channel == null,
+              onAllTap: () {
+                _updateChannel(null, forceRequest: true); // loading is indicated in the ui rather than a refresh indicator
+              },
+              loadingAllProgressWidget: Obx(
+                (context) => CircularProgressIndicator(
+                  value: _allChannelsStreamsLoading.valueR && _allChannelsStreamsProgress.valueR <= 0 ? null : _allChannelsStreamsProgress.valueR,
+                  strokeWidth: 2.0,
                 ),
               ),
-              child: Obx(
-                (context) {
-                  final channelIDS = YoutubeSubscriptionsController.inst.subscribedChannels.toList();
-                  final totalIDsLength = channelIDS.length;
-                  return Row(
-                    children: [
-                      NamidaInkWell(
-                        borderRadius: 10.0,
-                        animationDurationMS: 150,
-                        bgColor: channel == null ? theme.colorScheme.secondary.withValues(alpha: 0.15) : null,
-                        width: _thumbSize,
-                        margin: const EdgeInsets.symmetric(horizontal: horizontalPadding),
-                        padding: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
-                        onTap: () {
-                          _updateChannel(null, forceRequest: true); // loading is indicated in the ui rather than a refresh indicator
-                        },
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 4.0),
-                            Stack(
-                              children: [
-                                CircleAvatar(
-                                  radius: _thumbSize / 2,
-                                  child: FittedBox(
-                                    child: Text("$totalIDsLength"),
+              list: channelIDS,
+              listItemBuilder: (context, indexPre, thumbSize) {
+                final index = totalIDsLength - indexPre - 1;
+                final key = channelIDS[index];
+                final sub = YoutubeSubscriptionsController.inst.availableChannels.valueR[key]!;
+                return _ChannelSmallCard(
+                  sub: sub,
+                  bgColor: channel?.channelID == sub.channelID ? selectedChannelBgColor : null,
+                  width: thumbSize,
+                  horizontalPadding: horizontalPadding,
+                  onTap: () => _updateChannel(sub, forceRequest: false),
+                );
+              },
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class YoutubeChannelsHostedPage extends StatefulWidget {
+  const YoutubeChannelsHostedPage({super.key});
+
+  @override
+  State<YoutubeChannelsHostedPage> createState() => _YoutubeChannelsHostedPageState();
+}
+
+class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> with TickerProviderStateMixin, PullToRefreshMixin {
+  YoutiPieChannelInfo? _currentChannelInfo;
+  YoutiPieUserChannelsResult? _userChannelsResult;
+
+  void _onViewAllTap() {
+    const YoutubeUserChannelsPage().navigate();
+  }
+
+  void _updateChannel(YoutiPieChannelInfo? channel, {bool forceRequest = false}) {
+    if (channel != _currentChannelInfo) {
+      setState(() {
+        _currentChannelInfo = channel;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    _initValues();
+
+    YoutubeAccountController.current.addOnAccountChanged(_onAccChanged);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    YoutubeAccountController.current.removeOnAccountChanged(_onAccChanged);
+    super.dispose();
+  }
+
+  void _onAccChanged() {
+    if (!mounted) return;
+    setState(() {
+      _userChannelsResult = null;
+      _currentChannelInfo = null;
+    });
+    _initValues();
+  }
+
+  Future<void> _initValues() async {
+    final cache = YoutiPie.cacheBuilder.forUserChannels();
+    final userChannelsResultCache = await cache.read();
+    if (!mounted) return;
+
+    setState(() {
+      _userChannelsResult = userChannelsResultCache;
+    });
+
+    await _fetchNewInfo(); // always fetch new
+  }
+
+  Future<void> _fetchNewInfo() async {
+    final userChannelsResult = await YoutubeInfoController.userchannel.fetchUserChannels(details: ExecuteDetails.forceRequest());
+    if (!mounted) return;
+    setState(() {
+      _userChannelsResult = userChannelsResult;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    const horizontalPadding = 6.0;
+
+    final currentChannelInfo = _currentChannelInfo;
+    final currentChannelThumbnail = currentChannelInfo?.thumbnails.pick()?.url;
+
+    final selectedChannelBgColor = theme.colorScheme.secondary.withValues(alpha: 0.1);
+
+    final userChannelsResult = _userChannelsResult;
+    final userChannels = userChannelsResult?.items ?? List<YoutiPieChannelInfo?>.filled(10, null);
+
+    return Column(
+      children: [
+        currentChannelInfo == null
+            ? const SizedBox()
+            : Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SmoothSingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: NamidaInkWell(
+                          borderRadius: 24.0,
+                          bgColor: theme.cardColor,
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          onTap: YTChannelSubpage(channelID: currentChannelInfo.id).navigate,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(width: 4.0),
+                              YoutubeThumbnail(
+                                type: ThumbnailType.channel,
+                                key: Key(currentChannelThumbnail ?? ''),
+                                width: 32.0,
+                                isImportantInCache: true,
+                                customUrl: currentChannelThumbnail,
+                                urlSymLinkId: currentChannelInfo.id,
+                                isCircle: true,
+                              ),
+                              const SizedBox(width: 8.0),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    currentChannelInfo.title ?? '',
+                                    style: textTheme.displayMedium,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                Positioned.fill(
-                                  child: FittedBox(
-                                    child: Obx(
-                                      (context) => CircularProgressIndicator(
-                                        value: _allChannelsStreamsLoading.valueR && _allChannelsStreamsProgress.valueR <= 0 ? null : _allChannelsStreamsProgress.valueR,
-                                        strokeWidth: 2.0,
-                                      ),
+                                  if (currentChannelInfo.subscribed ?? false)
+                                    Text(
+                                      lang.SUBSCRIBED,
+                                      style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                )
-                              ],
-                            ),
-                            const SizedBox(height: 4.0),
-                            Text(
-                              lang.ALL,
-                              style: textTheme.displaySmall,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                                ],
+                              ),
+                              const SizedBox(width: 8.0),
+                              const SizedBox(width: 4.0),
+                              const SizedBox(width: 4.0),
+                            ],
+                          ),
                         ),
                       ),
-                      Expanded(
-                        child: SuperSmoothListView.builder(
-                          controller: _horizontalListController,
-                          padding: EdgeInsets.only(right: kFABSize + 12.0),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: totalIDsLength,
-                          itemExtent: _thumbSize + horizontalPadding * 2,
-                          itemBuilder: (context, indexPre) {
-                            final index = totalIDsLength - indexPre - 1;
-                            final key = channelIDS[index];
-                            final sub = YoutubeSubscriptionsController.inst.availableChannels.valueR[key]!;
-                            return _ChannelSmallCard(
-                              sub: sub,
-                              bgColor: channel?.channelID == sub.channelID ? selectedChannelBgColor : null,
-                              width: _thumbSize,
-                              horizontalPadding: horizontalPadding,
-                              onTap: () => _updateChannel(sub, forceRequest: false),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                    ),
+                    const SizedBox(width: 4.0),
+                    NamidaInkWellButton(
+                      icon: Broken.category,
+                      text: lang.VIEW_ALL,
+                      onTap: _onViewAllTap,
+                    ),
+                  ],
+                ),
+              ),
+        Expanded(
+          child: _YoutubeChannelVideosPage(
+            key: ValueKey(currentChannelInfo?.id), // -- vip
+            channelId: currentChannelInfo?.id,
+          ),
+        ),
+        const NamidaContainerDivider(margin: EdgeInsets.only(left: 8.0, right: 8.0)),
+        _ChannelsRowSlider(
+          horizontalPadding: horizontalPadding,
+          isAllSelected: currentChannelInfo == null,
+          onAllTap: () => _updateChannel(null, forceRequest: true),
+          list: userChannels,
+          listItemBuilder: (context, index, thumbSize) {
+            final channel = userChannels[index];
+            final channelName = channel?.title;
+            final channelThumbnail = channel?.thumbnails.pick()?.url;
+            return NamidaInkWell(
+              borderRadius: 10.0,
+              animationDurationMS: 150,
+              bgColor: channel != null && currentChannelInfo?.id == channel.id ? selectedChannelBgColor : null,
+              width: thumbSize,
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
+              margin: EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
+              onTap: () => _updateChannel(channel, forceRequest: false),
+              child: Column(
+                children: [
+                  const SizedBox(height: 4.0),
+                  YoutubeThumbnail(
+                    type: ThumbnailType.channel,
+                    key: Key(channelThumbnail ?? ''),
+                    width: thumbSize,
+                    isImportantInCache: true,
+                    customUrl: channelThumbnail,
+                    urlSymLinkId: channel?.id,
+                    isCircle: true,
+                  ),
+                  const SizedBox(height: 4.0),
+                  Text(
+                    channelName ?? '',
+                    style: textTheme.displaySmall,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _YoutubeChannelVideosPage extends StatefulWidget {
+  final String? channelId;
+  const _YoutubeChannelVideosPage({super.key, this.channelId});
+
+  @override
+  State<_YoutubeChannelVideosPage> createState() => __YoutubeChannelVideosPageState();
+}
+
+class __YoutubeChannelVideosPageState extends State<_YoutubeChannelVideosPage> {
+  bool _isLoadingChannelPage = true;
+  ChannelTab? _videosTab;
+
+  @override
+  void initState() {
+    _initValues().whenComplete(() => refreshState(() => _isLoadingChannelPage = false));
+    super.initState();
+  }
+
+  Future<void> _initValues() async {
+    final channelId = widget.channelId;
+    if (channelId == null || channelId.isEmpty) return;
+
+    final channelPageCache = await YoutubeInfoController.channel.fetchChannelInfoCache(channelId);
+    if (!mounted) return;
+
+    setState(() {
+      _videosTab = channelPageCache?.tabs.getVideosTab();
+    });
+
+    if (_videosTab != null) return;
+
+    await _fetchNewInfo(channelId);
+  }
+
+  Future<void> _fetchNewInfo(String channelId) async {
+    final channelPage = await YoutubeInfoController.channel.fetchChannelInfo(channelId: channelId);
+    if (!mounted) return;
+
+    setState(() {
+      _videosTab = channelPage?.tabs.getVideosTab();
+    });
+  }
+
+  void _onViewAllTap() {
+    const YoutubeUserChannelsPage().navigate();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
+    const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
+    const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
+
+    if (_isLoadingChannelPage) {
+      return Center(
+        child: ThreeArchedCircle(
+          size: 48.0,
+          color: context.theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
+      );
+    }
+
+    final channelId = widget.channelId;
+    final tab = _videosTab;
+    if (channelId == null) {
+      return VideoTilePropertiesProvider(
+        configs: VideoTilePropertiesConfigs(
+          queueSource: QueueSourceYoutubeID.channel,
+          showMoreIcon: true,
+        ),
+        builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieUserChannelsAllVideosResult, YoutubeFeed>(
+          operation: YoutiPieOperation.fetchChannelTab,
+          transparentShimmer: true,
+          topPadding: 0.0,
+          title: lang.CHANNELS,
+          isSortable: true,
+          cacheReader: YoutiPie.cacheBuilder.forUserChannelsAllVideos(),
+          networkFetcher: (details) => YoutubeInfoController.userchannel.fetchUserChannelsAllVideos(details: details),
+          itemExtent: thumbnailItemExtent,
+          dummyCard: const YoutubeVideoCardDummy(
+            shimmerEnabled: true,
+            thumbnailHeight: thumbnailHeight,
+            thumbnailWidth: thumbnailWidth,
+            thumbnailWidthPercentage: 0.8,
+          ),
+          itemBuilder: (video, index, list) {
+            if (video is! StreamInfoItem) return const SizedBox();
+            return YoutubeVideoCard(
+              properties: properties,
+              key: Key(video.id),
+              thumbnailHeight: thumbnailHeight,
+              thumbnailWidth: thumbnailWidth,
+              isImageImportantInCache: false,
+              video: video,
+              playlistID: null,
+              thumbnailWidthPercentage: 0.8,
+              dateInsteadOfChannel: false,
+            );
+          },
+        ),
+      );
+    } else {
+      return tab == null
+          ? const SizedBox()
+          : VideoTilePropertiesProvider(
+              configs: VideoTilePropertiesConfigs(
+                queueSource: QueueSourceYoutubeID.channel,
+                showMoreIcon: true,
+              ),
+              builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieChannelTabResult, YoutubeFeed>(
+                operation: YoutiPieOperation.fetchChannelTab,
+                fetchTimeMapKey: ValueKey(channelId),
+                transparentShimmer: true,
+                topPadding: 0.0,
+                title: lang.CHANNEL,
+                headerTrailing: NamidaInkWellButton(
+                  icon: Broken.category,
+                  text: lang.VIEW_ALL,
+                  onTap: _onViewAllTap,
+                ),
+                headerBuilder: (_) => const SizedBox(),
+                headerPadding: EdgeInsets.zero,
+                isSortable: true,
+                cacheReader: YoutiPie.cacheBuilder.forChannelTab(channelId: channelId, tab: tab),
+                networkFetcher: (details) => YoutubeInfoController.channel.fetchChannelTab(channelId: channelId, tab: tab, details: details),
+                itemExtent: thumbnailItemExtent,
+                dummyCard: const YoutubeVideoCardDummy(
+                  shimmerEnabled: true,
+                  thumbnailHeight: thumbnailHeight,
+                  thumbnailWidth: thumbnailWidth,
+                  thumbnailWidthPercentage: 0.8,
+                ),
+                itemBuilder: (video, index, list) {
+                  if (video is! StreamInfoItem) return const SizedBox();
+                  return YoutubeVideoCard(
+                    properties: properties,
+                    key: Key(video.id),
+                    thumbnailHeight: thumbnailHeight,
+                    thumbnailWidth: thumbnailWidth,
+                    isImageImportantInCache: false,
+                    video: video,
+                    playlistID: null,
+                    thumbnailWidthPercentage: 0.8,
+                    dateInsteadOfChannel: true,
                   );
                 },
               ),
-            ),
+            );
+    }
+  }
+}
+
+class _ChannelsRowSlider<T> extends StatelessWidget {
+  final ScrollController? controller;
+  final double horizontalPadding;
+  final bool isAllSelected;
+  final void Function() onAllTap;
+  final Widget? loadingAllProgressWidget;
+  final List<T> list;
+  final Widget? Function(BuildContext context, int index, double thumbSize) listItemBuilder;
+
+  const _ChannelsRowSlider({
+    this.controller,
+    required this.horizontalPadding,
+    required this.isAllSelected,
+    required this.onAllTap,
+    this.loadingAllProgressWidget,
+    required this.list,
+    required this.listItemBuilder,
+  });
+
+  static const _thumbSize = 48.0;
+  double get _listBottomPadding => Dimensions.inst.globalBottomPaddingEffectiveR - 6.0;
+  final _listTopPadding = 6.0;
+  double get listHeight => _thumbSize + 12 * 2 + _listBottomPadding + _listTopPadding;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    return AnimatedSizedBox(
+      duration: const Duration(milliseconds: 200),
+      width: context.width,
+      animateWidth: false,
+      height: listHeight,
+      child: Container(
+        padding: EdgeInsets.only(bottom: _listBottomPadding, top: _listTopPadding),
+        decoration: BoxDecoration(
+          color: Color.alphaBlend(theme.scaffoldBackgroundColor.withValues(alpha: 0.4), theme.cardTheme.color!),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(12.0.multipliedRadius),
           ),
         ),
-      ],
+        child: Row(
+          children: [
+            NamidaInkWell(
+              borderRadius: 10.0,
+              animationDurationMS: 150,
+              bgColor: isAllSelected ? theme.colorScheme.secondary.withValues(alpha: 0.15) : null,
+              width: _thumbSize,
+              margin: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
+              onTap: onAllTap,
+              child: Column(
+                children: [
+                  const SizedBox(height: 4.0),
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: _thumbSize / 2,
+                        child: FittedBox(
+                          child: Text("${list.isEmpty || list[0] == null ? '' : list.length}"),
+                        ),
+                      ),
+                      if (loadingAllProgressWidget != null)
+                        Positioned.fill(
+                          child: FittedBox(
+                            child: loadingAllProgressWidget,
+                          ),
+                        )
+                    ],
+                  ),
+                  const SizedBox(height: 4.0),
+                  Text(
+                    lang.ALL,
+                    style: textTheme.displaySmall,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SuperSmoothListView.builder(
+                controller: controller,
+                padding: EdgeInsets.only(right: kFABSize + 12.0),
+                scrollDirection: Axis.horizontal,
+                itemCount: list.length,
+                itemExtent: _thumbSize + horizontalPadding * 2,
+                itemBuilder: (context, i) => listItemBuilder(context, i, _thumbSize),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

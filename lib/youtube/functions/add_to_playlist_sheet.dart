@@ -86,7 +86,7 @@ void showAddToPlaylistSheet({
             const SizedBox(height: 6.0),
             Expanded(
               child: NamidaTabView(
-                initialIndex: settings.extra.ytAddToPlaylistsTabIndex,
+                initialIndex: settings.extra.ytAddToPlaylistsTabIndex ?? settings.extra.getPreferredTabIndexIfLoggedInYT(),
                 onIndexChanged: (index) {
                   settings.extra.save(ytAddToPlaylistsTabIndex: index);
                 },

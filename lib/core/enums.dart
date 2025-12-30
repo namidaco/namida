@@ -278,6 +278,7 @@ enum RouteType {
   YOUTUBE_HISTORY_SUBPAGE,
   YOUTUBE_MOST_PLAYED_SUBPAGE,
   YOUTUBE_CHANNEL_SUBPAGE,
+  YOUTUBE_USER_CHANNELS_PAGE_HOSTED,
 
   YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE,
   YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE,
@@ -451,7 +452,6 @@ enum YTHomePages {
   notifications,
   channels,
   playlists,
-  userplaylists,
   downloads,
 }
 

@@ -3,6 +3,12 @@ part of 'settings_controller.dart';
 class _ExtraSettings with SettingsFileWriter {
   _ExtraSettings._internal();
 
+  int getPreferredTabIndexIfLoggedInYT() {
+    final activeChannel = YoutubeAccountController.current.activeAccountChannel.value;
+    if (activeChannel != null) return 1;
+    return 0;
+  }
+
   final selectedLibraryTab = LibraryTab.tracks.obs;
   final staticLibraryTab = LibraryTab.tracks.obs;
   final autoLibraryTab = true.obs;
@@ -19,7 +25,9 @@ class _ExtraSettings with SettingsFileWriter {
 
   int lastPlayedIndex = 0;
 
-  int ytAddToPlaylistsTabIndex = 0;
+  int? ytAddToPlaylistsTabIndex;
+  int? ytPlaylistsPageIndex;
+  int? ytChannelsPageIndex;
 
   void save({
     LibraryTab? selectedLibraryTab,
@@ -36,6 +44,8 @@ class _ExtraSettings with SettingsFileWriter {
     bool? artistSinglesExpanded,
     int? lastPlayedIndex,
     int? ytAddToPlaylistsTabIndex,
+    int? ytPlaylistsPageIndex,
+    int? ytChannelsPageIndex,
   }) {
     if (selectedLibraryTab != null) this.selectedLibraryTab.value = selectedLibraryTab;
     if (staticLibraryTab != null) this.staticLibraryTab.value = staticLibraryTab;
@@ -51,6 +61,8 @@ class _ExtraSettings with SettingsFileWriter {
     if (artistSinglesExpanded != null) this.artistSinglesExpanded = artistSinglesExpanded;
     if (lastPlayedIndex != null) this.lastPlayedIndex = lastPlayedIndex;
     if (ytAddToPlaylistsTabIndex != null) this.ytAddToPlaylistsTabIndex = ytAddToPlaylistsTabIndex;
+    if (ytPlaylistsPageIndex != null) this.ytPlaylistsPageIndex = ytPlaylistsPageIndex;
+    if (ytChannelsPageIndex != null) this.ytChannelsPageIndex = ytChannelsPageIndex;
     _writeToStorage();
   }
 
@@ -83,6 +95,8 @@ class _ExtraSettings with SettingsFileWriter {
       artistSinglesExpanded = json['artistSinglesExpanded'] ?? artistSinglesExpanded;
       lastPlayedIndex = json['lastPlayedIndex'] ?? lastPlayedIndex;
       ytAddToPlaylistsTabIndex = json['ytAddToPlaylistsTabIndex'] ?? ytAddToPlaylistsTabIndex;
+      ytPlaylistsPageIndex = json['ytPlaylistsPageIndex'] ?? ytPlaylistsPageIndex;
+      ytChannelsPageIndex = json['ytChannelsPageIndex'] ?? ytChannelsPageIndex;
     } catch (e, st) {
       printy(e, isError: true);
       logger.report(e, st);
@@ -105,6 +119,8 @@ class _ExtraSettings with SettingsFileWriter {
         if (artistSinglesExpanded != null) 'artistSinglesExpanded': artistSinglesExpanded,
         'lastPlayedIndex': lastPlayedIndex,
         'ytAddToPlaylistsTabIndex': ytAddToPlaylistsTabIndex,
+        'ytPlaylistsPageIndex': ytPlaylistsPageIndex,
+        'ytChannelsPageIndex': ytChannelsPageIndex,
       };
 
   Future<void> _writeToStorage() async => await writeToStorage();
