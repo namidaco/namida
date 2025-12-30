@@ -13,6 +13,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -375,47 +376,61 @@ class ExtrasSettings extends SettingSubpageProvider {
                 icon: Broken.filter_search,
                 title: lang.FILTER_TRACKS_BY,
                 trailingText: "${settings.trackSearchFilter.length}",
-                onTap: () => NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    title: lang.FILTER_TRACKS_BY,
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Broken.refresh),
-                        tooltip: lang.RESTORE_DEFAULTS,
-                        onPressed: () {
-                          settings.removeFromList(trackSearchFilterAll: TrackSearchFilter.values);
+                onTap: () {
+                  final original = List<TrackSearchFilter>.from(settings.trackSearchFilter.value);
 
-                          settings.save(trackSearchFilter: [
-                            TrackSearchFilter.filename,
-                            TrackSearchFilter.title,
-                            TrackSearchFilter.artist,
-                            TrackSearchFilter.album,
-                          ]);
-                        },
-                      ),
-                      const DoneButton(),
-                    ],
-                    child: SmoothSingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ...TrackSearchFilter.values.map(
-                            (e) => Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: Obx(
-                                (context) => ListTileWithCheckMark(
-                                  title: e.toText(),
-                                  onTap: () => _trackFilterOnTap(e),
-                                  active: settings.trackSearchFilter.contains(e),
+                  void refreshNecessary() {
+                    final didChange = !DeepCollectionEquality.unordered().equals(original, settings.trackSearchFilter.value);
+                    if (didChange) {
+                      SearchSortController.inst.disposeMediaResources(MediaType.track);
+                    }
+                  }
+
+                  NamidaNavigator.inst.navigateDialog(
+                    onDismissing: refreshNecessary,
+                    dialog: CustomBlurryDialog(
+                      title: lang.FILTER_TRACKS_BY,
+                      actions: [
+                        IconButton(
+                          icon: const Icon(Broken.refresh),
+                          tooltip: lang.RESTORE_DEFAULTS,
+                          onPressed: () {
+                            settings.removeFromList(trackSearchFilterAll: TrackSearchFilter.values);
+
+                            settings.save(trackSearchFilter: [
+                              TrackSearchFilter.filename,
+                              TrackSearchFilter.title,
+                              TrackSearchFilter.artist,
+                              TrackSearchFilter.album,
+                            ]);
+                          },
+                        ),
+                        DoneButton(
+                          additional: refreshNecessary,
+                        ),
+                      ],
+                      child: SmoothSingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ...TrackSearchFilter.values.map(
+                              (e) => Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Obx(
+                                  (context) => ListTileWithCheckMark(
+                                    title: e.toText(),
+                                    onTap: () => _trackFilterOnTap(e),
+                                    active: settings.trackSearchFilter.contains(e),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ),
@@ -435,11 +450,13 @@ class ExtrasSettings extends SettingSubpageProvider {
                   final list = List<TrackSearchFilter>.from(TrackSearchFilter.values);
                   list.remove(TrackSearchFilter.comment);
                   list.remove(TrackSearchFilter.year);
+                  list.remove(TrackSearchFilter.lyrics);
 
                   void resortIfNecessary() {
                     final didChange = !DeepCollectionEquality.unordered().equals(original, settings.ignoreCommonPrefixForTypes.value);
                     if (didChange) {
                       Indexer.inst.resortAllAfterIgnoreCommonPrefixChange();
+                      SearchSortController.inst.disposeMediaResources(MediaType.track);
                     }
                   }
 

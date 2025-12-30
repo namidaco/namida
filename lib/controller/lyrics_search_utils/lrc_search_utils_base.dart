@@ -7,6 +7,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_youtubeid.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -28,6 +29,7 @@ abstract class LrcSearchUtils {
 
   String get initialSearchTextHint;
   String? get pickFileInitialDirectory;
+  String get mainLyricsCacheDirectory => AppDirs.LYRICS;
   String get embeddedLyrics;
   File get cachedTxtFile;
   File get cachedLRCFile;

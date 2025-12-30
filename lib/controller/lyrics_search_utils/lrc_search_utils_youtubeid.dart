@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
 import 'lrc_search_utils_base.dart';
@@ -23,10 +22,10 @@ class LrcSearchUtilsYoutubeID extends LrcSearchUtils {
   String get embeddedLyrics => ''; // none
 
   @override
-  File get cachedTxtFile => File(p.join(AppDirs.LYRICS, "${video.id}.txt"));
+  File get cachedTxtFile => File(p.join(mainLyricsCacheDirectory, "${video.id}.txt"));
 
   @override
-  File get cachedLRCFile => File(p.join(AppDirs.LYRICS, "${video.id}.lrc"));
+  File get cachedLRCFile => File(p.join(mainLyricsCacheDirectory, "${video.id}.lrc"));
 
   @override
   List<File> get deviceLRCFiles => <File>[]; // none

@@ -1888,6 +1888,7 @@ class _NamidaConverters {
         TrackSearchFilter.composer: lang.COMPOSER,
         TrackSearchFilter.comment: lang.COMMENT,
         TrackSearchFilter.year: lang.YEAR,
+        TrackSearchFilter.lyrics: lang.LYRICS,
       },
       VibrationType: {
         VibrationType.none: lang.NONE,

@@ -4,7 +4,6 @@ import 'package:path/path.dart' as p;
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 import 'lrc_search_utils_base.dart';
@@ -24,10 +23,10 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
   String get embeddedLyrics => trackExt.lyrics;
 
   @override
-  File get cachedTxtFile => File(p.join(AppDirs.LYRICS, "${track.filename}.txt"));
+  File get cachedTxtFile => File(p.join(mainLyricsCacheDirectory, "${track.filename}.txt"));
 
   @override
-  File get cachedLRCFile => File(p.join(AppDirs.LYRICS, "${track.filename}.lrc"));
+  File get cachedLRCFile => File(p.join(mainLyricsCacheDirectory, "${track.filename}.lrc"));
 
   @override
   List<File> get deviceLRCFiles {
@@ -98,4 +97,15 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
       '$title by $artist song lyrics',
     ];
   }
+}
+
+class LrcSearchUtilsSelectableIsolate extends LrcSearchUtilsSelectable {
+  @override
+  final String mainLyricsCacheDirectory;
+
+  const LrcSearchUtilsSelectableIsolate(
+    super.trackExt,
+    super.track, {
+    required this.mainLyricsCacheDirectory,
+  });
 }

@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:isolate';
 
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -21,6 +24,8 @@ class TracksSearchWrapper {
   );
 
   static Map<String, dynamic> generateParams(SendPort sendPort, Iterable<TrackExtended> tracks) {
+    final filters = settings.trackSearchFilter.value;
+    final addLyrics = filters.contains(TrackSearchFilter.lyrics);
     return {
       'tracks': tracks
           .map((e) => {
@@ -32,14 +37,16 @@ class TracksSearchWrapper {
                 'composer': e.composer,
                 'year': e.year,
                 'comment': e.comment,
+                if (addLyrics) 'lyrics': e.lyrics,
                 'path': e.path,
                 'v': e.isVideo,
               })
           .toList(),
       'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
       'genresSplitConfig': GenresSplitConfig.settings().toMap(),
-      'filters': settings.trackSearchFilter.value,
+      'filters': filters,
       'cleanup': settings.enableSearchCleanup.value,
+      'lyricsCacheDirectory': AppDirs.LYRICS,
       'sendPort': sendPort,
     };
   }
@@ -50,6 +57,7 @@ class TracksSearchWrapper {
     final genresSplitConfig = GenresSplitConfig.fromMap(params['genresSplitConfig']);
     final tsf = params['filters'] as List<TrackSearchFilter>;
     final cleanup = params['cleanup'] as bool;
+    final lyricsCacheDirectory = params['lyricsCacheDirectory'] as String;
 
     final tsfMap = <TrackSearchFilter, bool>{};
     tsf.loop((f) => tsfMap[f] = true);
@@ -64,6 +72,7 @@ class TracksSearchWrapper {
     final scomposer = tsfMap[TrackSearchFilter.composer] ?? false;
     final scomment = tsfMap[TrackSearchFilter.comment] ?? false;
     final syear = tsfMap[TrackSearchFilter.year] ?? false;
+    final slyrics = tsfMap[TrackSearchFilter.lyrics] ?? false;
 
     final textCleanedForSearch = _functionOfCleanup(cleanup);
     final textNonCleanedForSearch = cleanup ? _functionOfCleanup(false) : null;
@@ -81,10 +90,14 @@ class TracksSearchWrapper {
     for (int i = 0; i < tracks.length; i++) {
       var trMap = tracks[i];
       final path = trMap['path'] as String;
+      final title = trMap['title'] as String;
+      final isVideo = trMap['v'] == true;
+      final track = Track.decide(path, isVideo);
+
       tracksExtended.add(
         _CustomTrackExtended(
-          path: path,
-          splitTitle: splitThis(trMap['title'], stitle),
+          track: track,
+          splitTitle: splitThis(title, stitle),
           splitFilename: splitThis(path.getFilename, sfilename),
           splitFolder: splitThis(Track.explicit(path).folderName, sfolder),
           splitAlbum: splitThis(trMap['album'], salbum),
@@ -92,7 +105,7 @@ class TracksSearchWrapper {
           splitArtist: sartist
               ? _mapListCleanedAndNonCleaned(
                   Indexer.splitArtist(
-                    title: trMap['title'],
+                    title: title,
                     originalArtist: trMap['artist'],
                     config: artistsSplitConfig,
                   ),
@@ -119,7 +132,13 @@ class TracksSearchWrapper {
                   textCleanedForSearch,
                   textNonCleanedForSearch,
                 ),
-          isVideo: trMap['v'] == true,
+          lyrics: slyrics
+              ? _fillAllAvailableLyrics(
+                  track,
+                  trMap['lyrics'] as String? ?? '',
+                  lyricsCacheDirectory,
+                )
+              : null,
         ),
       );
     }
@@ -129,6 +148,53 @@ class TracksSearchWrapper {
       textCleanedForSearch,
       textNonCleanedForSearch,
     );
+  }
+
+  static List<String>? _fillAllAvailableLyrics(Track track, String embedded, String lyricsCacheDirectory) {
+    final lyrics = <String>[];
+
+    final lrcUtils = LrcSearchUtilsSelectableIsolate(
+      mainLyricsCacheDirectory: lyricsCacheDirectory,
+      kDummyExtendedTrack,
+      track,
+    );
+
+    String? lrcContent;
+    final lyricsFilesLocal = lrcUtils.deviceLRCFiles;
+    for (final lf in lyricsFilesLocal) {
+      if (lf.existsAndValidSync()) {
+        lrcContent = lf.readAsStringSync();
+        break;
+      }
+    }
+    if (lrcContent == null) {
+      final syncedInCache = lrcUtils.cachedLRCFile;
+      if (syncedInCache.existsAndValidSync()) {
+        lrcContent = syncedInCache.readAsStringSync();
+      } else if (embedded.isNotEmpty) {
+        lrcContent = embedded;
+      }
+    }
+    if (lrcContent == null) {
+      final textInCache = lrcUtils.cachedTxtFile;
+      if (textInCache.existsAndValidSync()) {
+        lrcContent = textInCache.readAsStringSync();
+      }
+    }
+    if (lrcContent != null) {
+      final lrc = lrcContent.parseLRC();
+      if (lrc != null && lrc.lyrics.isNotEmpty) {
+        for (final line in lrc.lyrics) {
+          lyrics.add(line.readableText);
+        }
+      } else {
+        final split = LineSplitter().convert(lrcContent);
+        for (final line in split) {
+          lyrics.add(line);
+        }
+      }
+    }
+    return lyrics;
   }
 
   static List<String> _splitTextCleanedAndNonCleaned(String text, String Function(String) textCleanedForSearch, String Function(String)? textNonCleanedForSearch) {
@@ -152,7 +218,7 @@ class TracksSearchWrapper {
 
   List<Track> filter(String text) {
     final result = <Track>[];
-    _filter(text, (trExt, _) => result.add(Track.decide(trExt.path, trExt.isVideo)));
+    _filter(text, (trExt, _) => result.add(trExt.track));
     return result;
   }
 
@@ -205,7 +271,8 @@ class TracksSearchWrapper {
           isMatch(trExt.splitGenre) ||
           isMatch(trExt.splitComposer) ||
           isMatch(trExt.splitComment) ||
-          isMatch(trExt.year)) {
+          isMatch(trExt.year) ||
+          isMatch(trExt.lyrics)) {
         return true;
       }
       return false;
@@ -225,7 +292,7 @@ class TracksSearchWrapper {
 }
 
 class _CustomTrackExtended {
-  final String path;
+  final Track track;
   final List<String>? splitTitle;
   final List<String>? splitFilename;
   final List<String>? splitFolder;
@@ -236,10 +303,10 @@ class _CustomTrackExtended {
   final List<String>? splitComposer;
   final List<String>? splitComment;
   final List<String>? year;
-  final bool isVideo;
+  final List<String>? lyrics;
 
   const _CustomTrackExtended({
-    required this.path,
+    required this.track,
     required this.splitTitle,
     required this.splitFilename,
     required this.splitFolder,
@@ -250,6 +317,6 @@ class _CustomTrackExtended {
     required this.splitComposer,
     required this.splitComment,
     required this.year,
-    required this.isVideo,
+    required this.lyrics,
   });
 }

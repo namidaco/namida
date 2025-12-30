@@ -118,6 +118,7 @@ enum TrackSearchFilter {
   composer,
   comment,
   year,
+  lyrics,
 }
 
 enum LibraryTab {
