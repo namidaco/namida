@@ -2969,6 +2969,21 @@ class _FadeIgnoreTransitionState extends State<FadeIgnoreTransition> {
     super.initState();
     widget.opacity.addListener(_checkOpacity);
     _checkOpacity();
+
+    // -- just extra, for some rare cases
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _checkOpacity();
+    });
+  }
+
+  @override
+  void didUpdateWidget(FadeIgnoreTransition oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.opacity != oldWidget.opacity) {
+      oldWidget.opacity.removeListener(_checkOpacity);
+      widget.opacity.addListener(_checkOpacity);
+      _checkOpacity();
+    }
   }
 
   @override

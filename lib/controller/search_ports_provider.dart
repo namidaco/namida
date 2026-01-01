@@ -32,13 +32,14 @@ abstract class SearchPortsProvider {
   }
 
   Future<void> closePorts(MediaType type) async {
+    _sendPortsStreamSubs[type]?.cancel();
+    _sendPortsStreamSubs[type] = null;
+
     final port = _ports[type];
     if (port != null) {
       _ports[type] = null;
       await _closePortAndRemoveListener(port);
     }
-    _sendPortsStreamSubs[type]?.cancel();
-    _sendPortsStreamSubs[type] = null;
     _sendPorts[type] = null;
   }
 

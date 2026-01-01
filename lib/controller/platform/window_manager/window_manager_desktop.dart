@@ -118,6 +118,11 @@ class _NamidaWindowListener with WindowListener {
   void onWindowMoved() async {
     await _saveBounds();
   }
+
+  @override
+  Future<void> onWindowClose() async {
+    await Namida.disposeAllResources().ignoreError();
+  }
 }
 
 class _CustomScreenListener extends ScreenListener {

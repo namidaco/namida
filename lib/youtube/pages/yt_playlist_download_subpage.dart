@@ -414,6 +414,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   ],
                 ),
               ),
+              const SizedBox(height: 8.0),
               Expanded(
                 child: NamidaScrollbarWithController(
                   child: (sc) => SmoothCustomScrollView(

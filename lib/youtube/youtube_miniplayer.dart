@@ -187,7 +187,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
       displaythirdLineText: false,
     );
 
-    const seekReadyWidget = SeekReadyWidget();
+    final seekReadyWidget = SeekReadyWidget.forYTMiniplayer;
 
     final maxWidth = Dimensions.inst.miniplayerMaxWidth;
 

@@ -964,7 +964,7 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
                         vsync: this,
                         behaviour: RandomParticleBehaviour(
                           options: ParticleOptions(
-                            baseColor: theme.colorScheme.tertiary,
+                            baseColor: theme.colorScheme.secondary,
                             spawnMaxRadius: 4,
                             spawnMinRadius: 2,
                             spawnMaxSpeed: 60 + bpm * 2,

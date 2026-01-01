@@ -1018,9 +1018,28 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                           color: Colors.black.withValues(alpha: 1 - brightness),
                         ),
                       )
-                    : SizedBox.shrink(),
+                    : const SizedBox.shrink(),
               ),
             ),
+
+            // -- seek ready cant have expanded hit test otherwise it would block bottom controls here
+            // -- this widgets adds extra horizontal drag detection behind controls
+            if (!widget.isFullScreen)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: LayoutBuilder(
+                  builder: (context, c) =>
+                      SeekReadyWidget.forYTMiniplayer.createHitTestWidget(
+                        expandHitTest: true,
+                        allowTapping: false,
+                        c: c,
+                        maxWidth: maxWidth,
+                      ) ??
+                      const SizedBox(),
+                ),
+              ),
 
             if (widget.showControls)
               IgnorePointer(

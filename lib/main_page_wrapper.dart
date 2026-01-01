@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import 'package:window_manager/window_manager.dart';
@@ -22,7 +20,6 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/main.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/main_page.dart';
@@ -574,7 +571,6 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                 WindowCaptionButton.close(
                   brightness: brightness,
                   onPressed: () async {
-                    await Namida.disposeAllResources().ignoreError();
                     await windowManager.close().ignoreError();
                     await windowManager.destroy().ignoreError();
                   },

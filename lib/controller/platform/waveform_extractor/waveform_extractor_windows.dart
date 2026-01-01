@@ -170,7 +170,7 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
       if (data == null || data.isEmpty) {
         final audioWaveformGenerate2 = Process.runSync(
           waveformExePath,
-          ['-i', convertedFilePath ?? source, '--input-format', 'wav', ...waveformOutputOptions],
+          ['-i', convertedFilePath ?? source, /* '--input-format', 'wav', */ ...waveformOutputOptions],
           runInShell: true,
         );
         data = extractDataListFromProcess(audioWaveformGenerate2);

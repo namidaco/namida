@@ -29,6 +29,20 @@ class SeekReadyDimensions {
   static const seekTextExtraMargin = 8.0;
 }
 
+class SeekReadyWidgetForYTMiniplayer extends SeekReadyWidget {
+  static final globalKey = GlobalKey<_SeekReadyWidgetState>();
+  SeekReadyWidgetForYTMiniplayer() : super(key: globalKey);
+
+  Widget? createHitTestWidget({
+    required bool expandHitTest,
+    required bool allowTapping,
+    required BoxConstraints c,
+    required double maxWidth,
+  }) {
+    return globalKey.currentState?.createHitTestWidget(expandHitTest, allowTapping, c, maxWidth);
+  }
+}
+
 class SeekReadyWidget extends StatefulWidget {
   final bool isLocal;
   final bool isFullscreen;
@@ -39,6 +53,8 @@ class SeekReadyWidget extends StatefulWidget {
   final bool useReducedProgressColor;
   final bool Function()? canDrag;
   final void Function(bool isDragging)? onDraggingChange;
+
+  static final forYTMiniplayer = SeekReadyWidgetForYTMiniplayer();
 
   const SeekReadyWidget({
     super.key,
@@ -143,6 +159,9 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     _animation.animateTo(0);
     if (_dragUpToCancel < _dragUpToCancelMax) _onSeekEnd();
     _dragUpToCancel = 0.0;
+
+    _currentSeekStuckWord = '';
+    _dragToSeek = true;
   }
 
   bool _isPointerDown = false;
@@ -162,6 +181,94 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     final can = _userDragToSeek && _dragToSeek && (widget.canDrag == null ? true : widget.canDrag!());
     _canDragToSeekLatest = can;
     return can;
+  }
+
+  Widget createHitTestWidget(bool expandHitTest, bool allowTapping, BoxConstraints c, double maxWidth) {
+    const barHeight = SeekReadyDimensions.barHeight;
+    return Padding(
+      padding: expandHitTest
+          ? EdgeInsets.zero
+          : const EdgeInsets.only(
+              top: barHeight / 2,
+            ),
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) => _canDragToSeek, // refresh `_canDragToSeekLatest`
+        onPointerMove: (event) {
+          if (!_canDragToSeekLatest) return;
+          if (!_isMiniplayerExpanded) return;
+          if (_dragUpToCancel > _dragUpToCancelMax) {
+            _canDragToSeekLatest = false;
+            setState(() {
+              _currentSeekStuckWord = const <String>[" --:-- ", " kuru ", "umm..", "🫵😂", "🫵😹"].random;
+              _dragToSeek = false;
+            });
+            VibratorController.veryhigh();
+          } else {
+            _currentSeekStuckWord = '';
+            _dragToSeek = true;
+            _dragUpToCancel -= event.delta.dy * 0.1;
+          }
+        },
+        onPointerUp: (_) {
+          _dragToSeek = true;
+          _canDragToSeekLatest = true;
+        },
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onPanDown: (event) {
+            if (!_canDragToSeek) return;
+            if (_tapToSeek) _onDragStart(event.localPosition.dx, c.maxWidth, fromTap: true);
+          },
+          onPanEnd: (_) {
+            if (_tapToSeek) _onDragFinish();
+          },
+          onHorizontalDragStart: (details) {
+            if (!_canDragToSeek) return;
+            _onDragStart(details.localPosition.dx, c.maxWidth);
+          },
+          onHorizontalDragUpdate: (event) {
+            if (!_canDragToSeekLatest) return;
+            _onSeekDragUpdate(event.localPosition.dx, c.maxWidth);
+          },
+          onHorizontalDragEnd: (_) {
+            _onDragFinish();
+          },
+          onHorizontalDragCancel: () {
+            _isPointerDown = false;
+            _animation.animateTo(0);
+            widget.onDraggingChange?.call(false);
+          },
+          onTapDown: !allowTapping
+              ? null
+              : !allowTapping
+                  ? null
+                  : (details) {
+                      if (!_canDragToSeek) return;
+                      if (_tapToSeek) _onDragStart(details.localPosition.dx, c.maxWidth, fromTap: true);
+                    },
+          onTapUp: !allowTapping
+              ? null
+              : (_) {
+                  if (_tapToSeek) _onDragFinish();
+                },
+          child: Padding(
+            padding: !expandHitTest
+                ? EdgeInsets.zero
+                : const EdgeInsets.only(
+                    top: barHeight / 2,
+                  ),
+            child: SizedBox(
+              height: barHeight,
+              width: maxWidth,
+              child: const ColoredBox(
+                color: Colors.transparent,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -241,74 +348,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
           alignment: Alignment.centerLeft,
           children: [
             // -- hittest
-            Padding(
-              padding: const EdgeInsets.only(
-                top: barHeight / 2,
-              ),
-              child: Listener(
-                onPointerDown: (_) => _canDragToSeek, // refresh `_canDragToSeekLatest`
-                onPointerMove: (event) {
-                  if (!_canDragToSeekLatest) return;
-                  if (!_isMiniplayerExpanded) return;
-                  if (_dragUpToCancel > _dragUpToCancelMax) {
-                    _canDragToSeekLatest = false;
-                    setState(() {
-                      _currentSeekStuckWord = const <String>[" --:-- ", " kuru ", "umm..", "🫵😂", "🫵😹"].random;
-                      _dragToSeek = false;
-                    });
-                    VibratorController.veryhigh();
-                  } else {
-                    _currentSeekStuckWord = '';
-                    _dragToSeek = true;
-                    _dragUpToCancel -= event.delta.dy * 0.1;
-                  }
-                },
-                onPointerUp: (_) {
-                  _dragToSeek = true;
-                  _canDragToSeekLatest = true;
-                },
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onPanDown: (event) {
-                    if (!_canDragToSeek) return;
-                    if (_tapToSeek) _onDragStart(event.localPosition.dx, c.maxWidth, fromTap: true);
-                  },
-                  onPanEnd: (_) {
-                    if (_tapToSeek) _onDragFinish();
-                  },
-                  onHorizontalDragStart: (details) {
-                    if (!_canDragToSeek) return;
-                    _onDragStart(details.localPosition.dx, c.maxWidth);
-                  },
-                  onHorizontalDragUpdate: (event) {
-                    if (!_canDragToSeekLatest) return;
-                    _onSeekDragUpdate(event.localPosition.dx, c.maxWidth);
-                  },
-                  onHorizontalDragEnd: (_) {
-                    _onDragFinish();
-                  },
-                  onHorizontalDragCancel: () {
-                    _isPointerDown = false;
-                    _animation.animateTo(0);
-                    widget.onDraggingChange?.call(false);
-                  },
-                  onTapDown: (details) {
-                    if (!_canDragToSeek) return;
-                    if (_tapToSeek) _onDragStart(details.localPosition.dx, c.maxWidth, fromTap: true);
-                  },
-                  onTapUp: (_) {
-                    if (_tapToSeek) _onDragFinish();
-                  },
-                  child: SizedBox(
-                    height: barHeight,
-                    width: maxWidth,
-                    child: const ColoredBox(
-                      color: Colors.transparent,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            createHitTestWidget(fullscreen, true, c, maxWidth),
             if (widget.showBufferBars)
               ObxO(
                 rx: settings.youtube.enableHeatMap,

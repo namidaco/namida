@@ -240,8 +240,6 @@ class NamidaFFMPEG {
       thumbnailPath,
       '-map',
       '0:a?',
-      '-map',
-      '1:v',
       if (isVideoFile) ...[
         '-map',
         '0:v:0?',

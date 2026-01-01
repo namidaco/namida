@@ -25,7 +25,6 @@ class _DesktopSmoothMouseScroll extends StatefulWidget {
 
   /// Duration/length for how long the animation should go
   /// after the scroll has happened
-  /// Default value is 1500ms
   final int scrollAnimationLength;
 
   final Curve curve;
@@ -51,7 +50,6 @@ class _DesktopSmoothMouseScrollState extends State<_DesktopSmoothMouseScroll> {
   double _scroll = 0;
   bool _isAnimating = false;
   double _targetScroll = 0;
-  DateTime _lastScrollTime = DateTime.now();
 
   @override
   void initState() {
@@ -72,9 +70,6 @@ class _DesktopSmoothMouseScrollState extends State<_DesktopSmoothMouseScroll> {
 
   void _smoothScrollTo(double delta) {
     final controller = widget.controller;
-    final now = DateTime.now();
-    final timeDiff = now.difference(_lastScrollTime).inMilliseconds;
-    _lastScrollTime = now;
 
     if (widget.reverse) delta = -delta;
 
@@ -89,10 +84,7 @@ class _DesktopSmoothMouseScrollState extends State<_DesktopSmoothMouseScroll> {
       _targetScroll = 0;
     }
 
-    // Calculate animation duration based on time between scrolls
-    int animationDuration = timeDiff < 50
-        ? widget.scrollAnimationLength ~/ 4 // Faster for rapid scrolling
-        : widget.scrollAnimationLength;
+    int animationDuration = widget.scrollAnimationLength;
 
     // If at bounds, use shorter animation
     if (_targetScroll == controller.position.maxScrollExtent || _targetScroll == 0) {
