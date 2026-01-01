@@ -111,10 +111,6 @@
         "run",
         "inno_bundle:build",
         "--release",
-        "--no-app"
-      ],
-      "dependsOn": [
-        "flutter build windows"
       ],
       "group": {
         "kind": "build",
