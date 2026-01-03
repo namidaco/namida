@@ -1,35 +1,19 @@
-<link rel="stylesheet" href="styles.css" />
-
-# <div style="margin-right: 18px; margin-top: 18px; display:flex; vertical-align: middle; align-items: center; max-width: 100%;"><img src="some stuff/namida.png" width="82" style="margin-right: 18px;">Namida</div>
+# <div align="center"><img src="some stuff/namida.png" width="82"><br/>Namida</div>
 
 A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in Flutter
 
-<a href="https://github.com/flutter/flutter">![](https://img.shields.io/badge/Built%20in-Flutter-%23369FE7)
-</a>
-<a href="https://t.me/namida_official">![](https://img.shields.io/badge/Channel-blue?link=https%3A%2F%2Ft.me%2Fnamida_officialt&logo=telegram&logoColor=white)
-</a>
-<a href="https://t.me/+FmdfsgKoGmM1ZGFk">![](https://img.shields.io/badge/Chat-blue?link=https%3A%2F%2Ft.me%2F%2BFmdfsgKoGmM1ZGFk&logo=telegram&logoColor=white)
-</a>
-<a href="https://discord.gg/WeY7DTVChT">![](https://img.shields.io/badge/Discord-7B55C1?link=https%3A%2F%2Fdiscord.gg%2FWeY7DTVChT&logo=discord&logoColor=white)
-</a>
-<a href="https://github.com/namidaco/namida/releases">
-![](https://img.shields.io/github/downloads/namidaco/namida/total.svg)
-</a>
-<a href="https://github.com/namidaco/namida/releases">
+<a href="https://github.com/flutter/flutter">![](https://img.shields.io/badge/Built%20in-Flutter-%23369FE7)</a>
+<a href="https://t.me/namida_official">![](https://img.shields.io/badge/Channel-blue?link=https%3A%2F%2Ft.me%2Fnamida_officialt&logo=telegram&logoColor=white)</a>
+<a href="https://t.me/+FmdfsgKoGmM1ZGFk">![](https://img.shields.io/badge/Chat-blue?link=https%3A%2F%2Ft.me%2F%2BFmdfsgKoGmM1ZGFk&logo=telegram&logoColor=white)</a>
+<a href="https://discord.gg/WeY7DTVChT">![](https://img.shields.io/badge/Discord-7B55C1?link=https%3A%2F%2Fdiscord.gg%2FWeY7DTVChT&logo=discord&logoColor=white)</a>
+<a href="https://github.com/namidaco/namida/releases">![](https://img.shields.io/github/downloads/namidaco/namida/total.svg)</a>
 [![Hits-of-Code](https://hitsofcode.com/github/namidaco/namida?branch=main)](https://hitsofcode.com/github/namidaco/namida/view?branch=main)
-</a>
-<a href="https://github.com/namidaco/namida/releases">
 [![](https://img.shields.io/endpoint?url=https://ghloc.vercel.app/api/namidaco/namida/badge?style=flat&logo=dart&logoColor=aqua&label=Total%20Lines&color=darkturquoise)](https://ghloc.vercel.app/namidaco/namida?branch=main)
-</a>
 
-<div style="display:flex; gap:8px; align-items:center;">
-  <a href="https://github.com/namidaco/namida/releases/latest">
-    <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" height="75">
-  </a>
-  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida/">
-    <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50">
-  </a>
-</div>
+<p align="center">
+  <a href="https://github.com/namidaco/namida/releases/latest"><img src="./assets/icons/badge_github.png" height="50"></a>
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida/"><img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50"></a>
+</p>
 
 
 
@@ -264,25 +248,21 @@ Animating Thumbnail        |  Recommends & Listens
 
 <tr>
 <td align="center" width="200">
-  <div style="display:flex; flex-direction:column; align-items:center;">
-    <a href="https://github.com/namidaco/namida/releases/latest">
-      <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" height="75">
-    </a>
-    <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida/">
-      <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50" style="margin-top:8px;">
-    </a>
-  </div>
+  <a href="https://github.com/namidaco/namida/releases/latest">
+    <img src="./assets/icons/badge_github.png" height="50">
+  </a>
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida/">
+    <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50" style="margin-top:8px;">
+  </a>
 </td>
 
 <td align="center" width="200">
-  <div style="display:flex; flex-direction:column; align-items:center;">
-    <a href="https://github.com/namidaco/namida-snapshots/releases/latest">
-      <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" height="75">
-    </a>
-    <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida-snapshots/">
-      <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50" style="margin-top:8px;">
-    </a>
-  </div>
+  <a href="https://github.com/namidaco/namida-snapshots/releases/latest">
+    <img src="./assets/icons/badge_github.png" height="50">
+  </a>
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida-snapshots/">
+    <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50" style="margin-top:8px;">
+  </a>
 </td>
 </tr>
 </table>
@@ -338,8 +318,8 @@ Animating Thumbnail        |  Recommends & Listens
 
 - Donation will help improve namida and will show appreciation.
 
-<a href="https://www.buymeacoffee.com/namidaco" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 42px;" ></a>
-<a href="https://ko-fi.com/namidaco" target="_blank"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Ko-fi" style="height: 42px;" ></a>
+<a href="https://www.buymeacoffee.com/namidaco" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="30" ></a>
+<a href="https://ko-fi.com/namidaco" target="_blank"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Ko-fi" height="30" ></a>
 
 
 > Bitcoin/ETH/USDT (BEP20): `0x95b2834c84def92860df773d8b3d80d4c296d748`
@@ -351,7 +331,10 @@ Animating Thumbnail        |  Recommends & Listens
   - [Telegram (Updates)](https://t.me/namida_official)
   - [Telegram (Chat)](https://t.me/+FmdfsgKoGmM1ZGFk)
   - [Discord](https://discord.gg/WeY7DTVChT)
-- ⚠️ there are no websites for namidaco/namida other than github & telegram, we are not resposible for downloading from other sources.
+
+> [!WARNING]
+> There are no websites for namidaco/namida other than GitHub & Telegram,
+> we are not resposible for downloading from other sources.
 
 # LICENSE
 
