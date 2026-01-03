@@ -92,6 +92,7 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
     const supportedFormats = <String>{
       'wav', 'flac', 'mp3', 'ogg', 'opus', 'webm', //
     };
+    const runInShell = false; // otherwise won't in release mode
 
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
@@ -146,7 +147,7 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
           final audioWaveformGenerate1 = Process.runSync(
             waveformExePath,
             ['-i', source, '--input-format', extension, ...waveformOutputOptions],
-            runInShell: true,
+            runInShell: runInShell,
           );
           data = extractDataListFromProcess(audioWaveformGenerate1);
         } catch (_) {}
@@ -159,7 +160,7 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
           ffmpegConvert = Process.runSync(
             ffmpegExePath,
             ['-i', source, '-f', 'wav', convertedFilePath],
-            runInShell: true,
+            runInShell: runInShell,
           );
         } catch (_) {}
         if (ffmpegConvert == null || ffmpegConvert.exitCode != 0) {
@@ -171,7 +172,7 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
         final audioWaveformGenerate2 = Process.runSync(
           waveformExePath,
           ['-i', convertedFilePath ?? source, /* '--input-format', 'wav', */ ...waveformOutputOptions],
-          runInShell: true,
+          runInShell: runInShell,
         );
         data = extractDataListFromProcess(audioWaveformGenerate2);
       }
