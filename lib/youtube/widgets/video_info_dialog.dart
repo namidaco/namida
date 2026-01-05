@@ -243,7 +243,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
     final descriptionWidget = description == null || description.isEmpty ? null : NamidaSelectableAutoLinkText(text: description);
 
     final dateText = dateMS?.dateAndClockFormattedOriginal;
-    final dateAgo = dateMS == null ? '' : "\n(${TimeAgoController.dateMSSEFromNow(dateMS!)})";
+    final dateAgo = dateMS == null ? '' : TimeAgoController.dateMSSEFromNow(dateMS!);
 
     final theme = AppThemes.inst.getAppTheme(_themeColor);
     final headerIconColor = theme.colorScheme.primary;
@@ -576,7 +576,8 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                           ),
                           TrackInfoListTile(
                             title: lang.DATE,
-                            value: dateText == null ? '' : "$dateText$dateAgo",
+                            value: dateText ?? '',
+                            cards: [dateAgo],
                             icon: Broken.calendar,
                           ),
                           TrackInfoListTile(

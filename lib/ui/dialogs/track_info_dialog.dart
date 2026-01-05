@@ -364,7 +364,11 @@ Future<void> showTrackInfoDialog(
                               if (shouldShowTheField(trackExt.year == 0))
                                 TrackInfoListTile(
                                   title: lang.YEAR,
-                                  value: trackExt.year == 0 ? '?' : '${trackExt.year} (${trackExt.year.yearFormatted}${releasedFromNow == '' ? '' : ' | $releasedFromNow'})',
+                                  value: trackExt.year == 0 ? '?' : '${trackExt.year}',
+                                  cards: [
+                                    trackExt.year.yearFormatted,
+                                    releasedFromNow,
+                                  ],
                                   icon: Broken.calendar,
                                 ),
 
@@ -450,6 +454,7 @@ Future<void> showTrackInfoDialog(
 class TrackInfoListTile extends StatelessWidget {
   final String title;
   final String value;
+  final List<String>? cards;
   final IconData icon;
   final bool hasLinks;
   final Widget? child;
@@ -458,6 +463,7 @@ class TrackInfoListTile extends StatelessWidget {
     super.key,
     required this.title,
     required this.value,
+    this.cards,
     required this.icon,
     this.hasLinks = false,
     this.child,
@@ -517,6 +523,25 @@ class TrackInfoListTile extends StatelessWidget {
                             ),
                           )),
               ),
+              ...?cards
+                  ?.where((e) => e.isNotEmpty)
+                  .map(
+                    (e) => NamidaInkWell(
+                      borderRadius: 5.0,
+                      bgColor: theme.cardColor,
+                      padding: const EdgeInsetsGeometry.symmetric(horizontal: 6.0, vertical: 3.0),
+                      child: Text(
+                        e,
+                        style: theme.textTheme.displayMedium?.copyWith(
+                          color: Color.alphaBlend(theme.colorScheme.primary.withAlpha(140), textTheme.displayMedium!.color!),
+                          fontSize: 13.5,
+                        ),
+                      ),
+                    ),
+                  )
+                  .addSeparators(
+                    separator: const SizedBox(width: 4.0),
+                  )
             ],
           ),
         ),
