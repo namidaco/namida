@@ -183,16 +183,16 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
             if (isFav)
               MediaControlButton(
                 color = iconsColor,
-                drawableRes = com.msob7y.namida.R.drawable.heart,
-                contentDescription = "Favourite",
+                drawableRes = com.msob7y.namida.R.drawable.unheart,
+                contentDescription = "Unfavourite",
                 keyEvent = KeyEvent.KEYCODE_MEDIA_FAST_FORWARD,
                 additionalModifier = additionalModifier
               )
             else
               MediaControlButton(
                 color = iconsColor,
-                drawableRes = com.msob7y.namida.R.drawable.unheart,
-                contentDescription = "Unfavourite",
+                drawableRes = com.msob7y.namida.R.drawable.heart,
+                contentDescription = "Set Favourite",
                 keyEvent = KeyEvent.KEYCODE_MEDIA_REWIND,
                 additionalModifier = additionalModifier
               )
