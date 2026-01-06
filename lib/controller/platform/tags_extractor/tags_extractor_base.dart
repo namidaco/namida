@@ -76,7 +76,7 @@ abstract class TagsExtractor {
             )
           : await NamidaFFMPEG.inst.extractAudioThumbnail(
               audioPath: trackPath,
-              thumbnailSavePath: FileParts.joinPath(artworkDirectory, "$filename.png"),
+              thumbnailSavePath: FileParts.joinPath(artworkDirectory, filename),
             );
     }
     return res;
@@ -87,6 +87,56 @@ abstract class TagsExtractor {
   static List<AlbumIdentifier> get defaultAlbumIdentifier => settings.albumIdentifiers.value;
 
   static Set<AlbumIdentifier> getAlbumIdentifiersSet() => defaultAlbumIdentifier.toSet();
+
+  static String buildImageFilename({
+    required String path,
+    required Set<AlbumIdentifier>? identifiers,
+    String? Function()? identifierCallback,
+    required ({String? albumName, String? albumArtist, String? year}) Function() infoCallback,
+    required String? Function() hashKeyCallback,
+  }) {
+    final woext = buildImageFilenameWOExt(
+      path: path,
+      identifiers: identifiers,
+      identifierCallback: identifierCallback,
+      infoCallback: infoCallback,
+      hashKeyCallback: hashKeyCallback,
+    );
+    return '$woext.png';
+  }
+
+  static String buildImageFilenameWOExt({
+    required String path,
+    required Set<AlbumIdentifier>? identifiers,
+    String? Function()? identifierCallback,
+    required ({String? albumName, String? albumArtist, String? year}) Function() infoCallback,
+    required String? Function() hashKeyCallback,
+  }) {
+    final identifiersSet = identifiers ?? TagsExtractor.getAlbumIdentifiersSet();
+    if (TagsExtractor.defaultGroupArtworksByAlbum) {
+      if (identifierCallback != null) {
+        final id = identifierCallback();
+        if (id != null && id.isNotEmpty) return id;
+      }
+
+      final info = infoCallback();
+      final id = TagsExtractor.getArtworkIdentifier(
+        albumName: info.albumName,
+        albumArtist: info.albumArtist,
+        year: info.year,
+        identifiers: identifiersSet,
+      );
+      if (id.isNotEmpty) return id;
+    }
+    final filename = path.getFilename;
+    if (TagsExtractor.defaultUniqueArtworkHash) {
+      final key = hashKeyCallback();
+      if (key != null) {
+        return "${filename}_$key";
+      }
+    }
+    return filename;
+  }
 
   static String getArtworkIdentifier({
     required String? albumName,

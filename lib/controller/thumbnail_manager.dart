@@ -114,7 +114,8 @@ class ThumbnailManager {
   }) async {
     final prefix = !isLocal ? 'EXT_' : '';
     final dir = cacheDirPath ?? (isLocal ? AppDirs.THUMBNAILS : AppDirs.YT_THUMBNAILS);
-    final file = File("$dir$prefix$idOrFileNameWithExt.png");
+    if (!idOrFileNameWithExt.endsWith('.png')) idOrFileNameWithExt = '$idOrFileNameWithExt.png';
+    final file = File("$dir$prefix$idOrFileNameWithExt");
     if (forceExtract == false && await file.exists()) return file;
     await NamidaFFMPEG.inst.extractVideoThumbnail(videoPath: videoPath, thumbnailSavePath: file.path);
     final fileExists = await file.exists();

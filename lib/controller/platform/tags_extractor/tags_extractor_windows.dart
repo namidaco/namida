@@ -27,18 +27,18 @@ class _TagsExtractorWindows extends TagsExtractor {
     FArtwork artwork = FArtwork();
     if (extractArtwork) {
       if (artworkDirectory != null) {
-        final identifiersSet = identifiers ?? TagsExtractor.getAlbumIdentifiersSet();
-        final filename = TagsExtractor.defaultGroupArtworksByAlbum
-            ? TagsExtractor.getArtworkIdentifier(
-                albumName: ffmpegInfo?.format?.tags?.album,
-                albumArtist: ffmpegInfo?.format?.tags?.albumArtist,
-                year: ffmpegInfo?.format?.tags?.date,
-                identifiers: identifiersSet,
-              )
-            : TagsExtractor.defaultUniqueArtworkHash
-                ? "${trackPath.getFilename}_${trackPath.toFastHashKey()}"
-                : trackPath.getFilename;
-        final possibleThumbFile = FileParts.join(artworkDirectory, '$filename.png');
+        final filename = TagsExtractor.buildImageFilename(
+          path: trackPath,
+          identifiers: identifiers,
+          infoCallback: () => (
+            albumName: ffmpegInfo?.format?.tags?.album,
+            albumArtist: ffmpegInfo?.format?.tags?.albumArtist,
+            year: ffmpegInfo?.format?.tags?.date,
+          ),
+          hashKeyCallback: () => trackPath.toFastHashKey(),
+        );
+
+        final possibleThumbFile = FileParts.join(artworkDirectory, filename);
         artwork.file = possibleThumbFile;
 
         // specified directory to save in, the file is expected to exist here.

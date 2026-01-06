@@ -82,8 +82,16 @@ class _TagsExtractorAndroid extends TagsExtractor {
         // specified directory to save in, the file is expected to exist here.
         File? artworkFile = artwork.file;
         if (artworkFile == null || !await artworkFile.exists()) {
-          final identifiersSet = identifiers ?? TagsExtractor.getAlbumIdentifiersSet();
-          final filename = TagsExtractor.defaultGroupArtworksByAlbum ? TagsExtractor.getArtworkIdentifierFromInfo(trackInfo, identifiersSet) : trackPath.getFilename;
+          final filename = TagsExtractor.buildImageFilename(
+            path: trackPath,
+            identifiers: identifiers,
+            infoCallback: () => (
+              albumName: trackInfo?.tags.album,
+              albumArtist: trackInfo?.tags.albumArtist,
+              year: trackInfo?.tags.year,
+            ),
+            hashKeyCallback: () => trackPath.toFastHashKey(),
+          );
           final File? thumbFile = await TagsExtractor.extractThumbnailCustom(
             trackPath: trackPath,
             filename: filename,

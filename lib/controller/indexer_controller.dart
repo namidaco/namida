@@ -149,15 +149,19 @@ class Indexer<T extends Track> {
       if (trackPath == null) return (null, null);
       final isVideo = trackPath.isVideo();
       final artworkDirectory = isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS;
-      String filename;
-      if (TagsExtractor.defaultGroupArtworksByAlbum) {
-        final identifiersSet = TagsExtractor.getAlbumIdentifiersSet();
-        final trExt = Track.decide(trackPath, isVideo).toTrackExtOrNull();
-        filename = trExt?.albumIdentifierWrapper?.resolved() ??
-            TagsExtractor.getArtworkIdentifier(albumName: trExt?.album, albumArtist: trExt?.albumArtist, year: trExt?.year.toString(), identifiers: identifiersSet);
-      } else {
-        filename = trackPath.getFilename;
-      }
+      late final trExt = Track.decide(trackPath, isVideo).toTrackExtOrNull();
+      final filename = TagsExtractor.buildImageFilename(
+        path: trackPath,
+        identifiers: null,
+        identifierCallback: () => trExt?.albumIdentifierWrapper?.resolved(),
+        infoCallback: () => (
+          albumName: trExt?.album,
+          albumArtist: trExt?.albumArtist,
+          year: trExt?.year.toString(),
+        ),
+        hashKeyCallback: () => trExt?.hashKey ?? trackPath.toFastHashKey(),
+      );
+
       final res = await TagsExtractor.extractThumbnailCustom(
         trackPath: trackPath,
         isVideo: isVideo,

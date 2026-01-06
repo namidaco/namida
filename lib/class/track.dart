@@ -552,7 +552,10 @@ extension TrackExtUtils on TrackExtended {
   }
 
   String get cacheKey {
-    if (settings.groupArtworksByAlbum.value) return albumIdentifier;
+    if (settings.groupArtworksByAlbum.value) {
+      final id = albumIdentifier;
+      if (id.isNotEmpty) return id;
+    }
     if (TagsExtractor.defaultUniqueArtworkHash) {
       return hashKey != null ? "${filename}_$hashKey" : filename;
     }

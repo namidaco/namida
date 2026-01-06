@@ -334,7 +334,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                 if (artworkBytes != null && artworkBytes.isNotEmpty()) {
                   if (artworkDirectory != null) {
                     try {
-                      val artworkFilenameToUse: String
+                      var artworkFilenameToUse: String
                       if (uniqueArtworkHash) {
                         val artworkFilename = path.split("/").last()
                         artworkFilenameToUse = "${artworkFilename}_${path.toFastHashKey()}"
@@ -353,6 +353,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                         }
                         artworkFilenameToUse = cleanupFilename(parts)
                       }
+                      if (artworkFilenameToUse.isEmpty()) artworkFilenameToUse = path.split("/").last()
 
                       val artworkSavePath = "$artworkDirectory${artworkFilenameToUse}.png"
                       if (overrideOldArtwork || !File(artworkSavePath.toString()).exists()) {

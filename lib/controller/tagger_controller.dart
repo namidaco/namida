@@ -67,17 +67,20 @@ class NamidaTaggerController {
     required TrackExtended trackExtended,
     required File artworkFile,
   }) async {
-    final filename = TagsExtractor.defaultGroupArtworksByAlbum
-        ? trackExtended.albumIdentifierWrapper?.resolved() ??
-            TagsExtractor.getArtworkIdentifier(
-              albumName: trackExtended.album,
-              albumArtist: trackExtended.albumArtist,
-              year: trackExtended.year.toString(),
-              identifiers: TagsExtractor.getAlbumIdentifiersSet(),
-            )
-        : trackPath.getFilename;
+    final filename = TagsExtractor.buildImageFilename(
+      path: trackPath,
+      identifiers: null,
+      identifierCallback: () => trackExtended.albumIdentifierWrapper?.resolved(),
+      infoCallback: () => (
+        albumName: trackExtended.album,
+        albumArtist: trackExtended.albumArtist,
+        year: trackExtended.year.toString(),
+      ),
+      hashKeyCallback: () => trackExtended.hashKey ?? trackPath.toFastHashKey(),
+    );
+
     try {
-      return await artworkFile.copy("${AppDirs.ARTWORKS}$filename.png");
+      return await artworkFile.copy("${AppDirs.ARTWORKS}$filename");
     } catch (e) {
       printy(e, isError: true);
       return null;
