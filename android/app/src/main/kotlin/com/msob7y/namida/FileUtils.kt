@@ -25,7 +25,14 @@ object NamidaFileUtils {
    */
   @SuppressLint("NewApi")
   fun getRealPath(context: Context, uri: Uri, storagePaths: List<String>): String? {
+    var real = getRealPathFromURIAPI19(context, uri, storagePaths)
+    if (real == null){
+        real = extractRealPathFromFileProvider(context, uri, storagePaths)
+    }
+    return real
+  }
 
+  fun getRealPathFromURIAPI19(context: Context, uri: Uri, storagePaths: List<String>): String? {
     val isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
     try {
       // DocumentProvider
@@ -124,6 +131,70 @@ object NamidaFileUtils {
     }
     return null
   }
+
+  fun extractRealPathFromFileProvider(context: Context, uri: Uri, storagePaths: List<String>): String? {
+      // for: content://com.etc.launcher.release.fileprovider/external_files/Music/...
+      if (uri.authority?.contains("fileprovider") == true) {
+          val pathSegments = uri.pathSegments
+          // Skip the first segment (e.g., "external_files")
+          if (pathSegments.size > 1) {
+              val relativePath = pathSegments.drop(1).joinToString("/")
+              val decodedPath = Uri.decode(relativePath)
+              val primaryPath = "${Environment.getExternalStorageDirectory()}/$decodedPath"
+              if (File(primaryPath).exists()) {
+                  return primaryPath
+              }
+
+              val firstSegment = decodedPath.substringBefore('/')
+              val sdCardPattern = Regex("^[0-9A-F]{4}-[0-9A-F]{4}$")
+              if (sdCardPattern.matches(firstSegment)) {
+                  // Path already contains SD card ID, use it directly
+                  val fullSdPath = "/storage/$decodedPath"
+                  if (File(fullSdPath).exists()) {
+                      return fullSdPath
+                  }
+              }
+
+              // fallback to SD card and other external storage volumes
+              if (storagePaths.isNotEmpty()) {
+                  for (storagePath in storagePaths) {
+                      val fullPath = "$storagePath/$decodedPath"
+                      if (File(fullPath).exists()) {
+                          return fullPath
+                      }
+                  }
+              } else {
+                  val externalDirs = context.getExternalFilesDirs(null)
+                  externalDirs?.forEach { dir ->
+                      if (dir != null) {
+                          // Extract the storage root from the external files dir
+                          // e.g., /storage/XXXX-XXXX/Android/data/... -> /storage/XXXX-XXXX/
+                          val storagePath = extractStorageRoot(dir.absolutePath)
+                          if (storagePath != null) {
+                              val sdcardPath = "$storagePath/$decodedPath"
+                              if (File(sdcardPath).exists()) {
+                                  return sdcardPath
+                              }
+                          }
+                      }
+                  }
+              }
+              return primaryPath
+          }
+      }
+      return null
+  }
+
+  private fun extractStorageRoot(path: String): String? {
+      // Convert /storage/XXXX-XXXX/Android/data/... to /storage/XXXX-XXXX/
+      val storagePath = path.substringBefore("/Android/data")
+      return if (storagePath != path && storagePath.startsWith("/storage/")) {
+          storagePath
+      } else {
+          null
+      }
+  }
+
 
   /**
    * Get the value of the data column for this Uri. This is useful for MediaStore Uris, and other
