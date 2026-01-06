@@ -193,21 +193,31 @@ class Player {
           case NotificationTapAction.openMiniplayer:
             WidgetsBinding.instance.addPostFrameCallback(
               (_) {
-                MiniPlayerController.inst.snapToExpanded();
-                final ytMiniplayer = MiniPlayerController.inst.ytMiniplayerKey.currentState;
-                if (ytMiniplayer != null && ytMiniplayer.isExpanded == false) ytMiniplayer.animateToState(true);
+                try {
+                  MiniPlayerController.inst.snapToExpanded();
+                } catch (_) {}
+                try {
+                  final ytMiniplayer = MiniPlayerController.inst.ytMiniplayerKey.currentState;
+                  if (ytMiniplayer != null && ytMiniplayer.isExpanded == false) ytMiniplayer.animateToState(true);
+                } catch (_) {}
               },
             );
             break;
           case NotificationTapAction.openQueue:
             WidgetsBinding.instance.addPostFrameCallback(
               (_) {
-                MiniPlayerController.inst.snapToQueue();
-                final ytMiniplayer = MiniPlayerController.inst.ytMiniplayerKey.currentState;
-                if (ytMiniplayer != null && ytMiniplayer.isExpanded == false) ytMiniplayer.animateToState(true);
+                try {
+                  MiniPlayerController.inst.snapToQueue();
+                } catch (_) {}
+                try {
+                  final ytMiniplayer = MiniPlayerController.inst.ytMiniplayerKey.currentState;
+                  if (ytMiniplayer != null && ytMiniplayer.isExpanded == false) ytMiniplayer.animateToState(true);
+                } catch (_) {}
                 Future.delayed(const Duration(milliseconds: 100), () {
-                  final ytQueue = NamidaNavigator.inst.ytQueueSheetKey.currentState;
-                  if (ytQueue != null && ytQueue.isOpened == false) ytQueue.openSheet();
+                  try {
+                    final ytQueue = NamidaNavigator.inst.ytQueueSheetKey.currentState;
+                    if (ytQueue != null && ytQueue.isOpened == false) ytQueue.openSheet();
+                  } catch (_) {}
                 });
               },
             );
