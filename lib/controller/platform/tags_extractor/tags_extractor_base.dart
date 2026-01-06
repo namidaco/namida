@@ -50,6 +50,7 @@ abstract class TagsExtractor {
     required String? filename,
     required String? artworkDirectory,
     required bool isVideo,
+    bool overrideOldArtwork = false,
   }) async {
     final File? res;
     if (artworkDirectory == null || filename == null) {
@@ -72,11 +73,12 @@ abstract class TagsExtractor {
               isLocal: true,
               idOrFileNameWithExt: filename,
               cacheDirPath: artworkDirectory,
-              forceExtract: true,
+              forceExtract: overrideOldArtwork,
             )
           : await NamidaFFMPEG.inst.extractAudioThumbnail(
               audioPath: trackPath,
               thumbnailSavePath: FileParts.joinPath(artworkDirectory, filename),
+              forceReExtract: overrideOldArtwork,
             );
     }
     return res;

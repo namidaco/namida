@@ -81,6 +81,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
       if (artworkDirectory != null) {
         // specified directory to save in, the file is expected to exist here.
         File? artworkFile = artwork.file;
+        // no need to allow if overrideArtwork, it's alr done on native side atp.
         if (artworkFile == null || !await artworkFile.exists()) {
           final filename = TagsExtractor.buildImageFilename(
             path: trackPath,
@@ -97,6 +98,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
             filename: filename,
             artworkDirectory: artworkDirectory,
             isVideo: isVideo,
+            overrideOldArtwork: overrideArtwork,
           );
           artwork.file = thumbFile;
         }
@@ -109,6 +111,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
             filename: null,
             artworkDirectory: null,
             isVideo: isVideo,
+            overrideOldArtwork: overrideArtwork,
           );
           artwork.bytes = await tempFile?.readAsBytes();
           tempFile?.tryDeleting();

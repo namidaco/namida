@@ -43,24 +43,26 @@ class _TagsExtractorWindows extends TagsExtractor {
 
         // specified directory to save in, the file is expected to exist here.
         File? artworkFile = artwork.file;
-        if (artworkFile == null || !await artworkFile.exists()) {
+        if (overrideArtwork || artworkFile == null || !await artworkFile.exists()) {
           final File? thumbFile = await TagsExtractor.extractThumbnailCustom(
             trackPath: trackPath,
             filename: filename,
             artworkDirectory: artworkDirectory,
             isVideo: isVideo,
+            overrideOldArtwork: overrideArtwork,
           );
           artwork.file = thumbFile;
         }
       } else {
         // -- otherwise the artwork should be within info as bytes.
         Uint8List? artworkBytes = artwork.bytes;
-        if (artworkBytes == null || artworkBytes.isEmpty) {
+        if (overrideArtwork || artworkBytes == null || artworkBytes.isEmpty) {
           final File? tempFile = await TagsExtractor.extractThumbnailCustom(
             trackPath: trackPath,
             filename: null,
             artworkDirectory: null,
             isVideo: isVideo,
+            overrideOldArtwork: overrideArtwork,
           );
           artwork.bytes = await tempFile?.readAsBytes();
           tempFile?.tryDeleting();
