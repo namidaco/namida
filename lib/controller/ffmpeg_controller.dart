@@ -494,6 +494,15 @@ class NamidaFFMPEG {
     ]);
   }
 
+  Future<bool> convertToWav({
+    required String audioPath,
+    required String outputPath,
+  }) async {
+    return await _executer.ffmpegExecute(
+      ['-i', audioPath, '-f', 'wav', outputPath],
+    );
+  }
+
   /// First field is track/disc number, can be 0 or more.
   ///
   /// Second is track/disc total, can exist or can be null.

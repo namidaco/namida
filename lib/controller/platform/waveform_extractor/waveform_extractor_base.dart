@@ -3,7 +3,7 @@ part of 'waveform_extractor.dart';
 abstract class WaveformExtractor {
   static WaveformExtractor platform() {
     return NamidaPlatformBuilder.init(
-      android: () => _WaveformExtractorAndroid._internal(),
+      android: () => _WaveformExtractorAndroid._internal(NamidaFFMPEG.inst),
       windows: () => _WaveformExtractorWindows._internal(NamidaFFMPEG.inst),
     );
   }
