@@ -177,7 +177,7 @@ class Player {
       if (e is PlatformException) {
         final itemId = currentVideo?.id ?? currentTrack?.track.youtubeID;
         final button = itemId != null ? (lang.CLEAR_VIDEO_CACHE, () => const YTUtils().showVideoClearDialog(itemId)) : null;
-        snackyy(message: e.details.toString().substring(0, 164), title: '${lang.ERROR}: ${e.message}', isError: true, top: false, button: button);
+        snackyy(message: e.details.toString().substring(0, 600), title: '${lang.ERROR}: ${e.message}', isError: true, top: false, button: button, maxLinesMessage: 8);
       }
     };
 
@@ -252,7 +252,11 @@ class Player {
   }
 
   void refreshNotification() {
-    _audioHandler.refreshNotification();
+    try {
+      _audioHandler.refreshNotification();
+    } catch (_) {
+      // -- late init
+    }
   }
 
   Future<void> setAudioOnlyPlayback(bool audioOnly) async {
@@ -297,7 +301,11 @@ class Player {
   }
 
   void refreshRxVariables() {
-    _audioHandler.refreshRxVariables();
+    try {
+      _audioHandler.refreshRxVariables();
+    } catch (_) {
+      // -- late init
+    }
   }
 
   void updateNumberOfRepeats(int newNumber) {

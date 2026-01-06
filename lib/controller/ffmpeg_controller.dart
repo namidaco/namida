@@ -120,7 +120,8 @@ class NamidaFFMPEG {
     final oldTagsToApply = <String, String>{};
     final oldMetadata = await extractMetadata(tempFile.path);
 
-    const opusEtcFormats = {'opus', 'ogg', 'oga'};
+    // -- not all of them but always one of them
+    const opusEtcFormats = {'opus', 'ogg', 'oga', 'flac', 'alac'};
 
     bool isOpusEtc() {
       if (oldMetadata == null) return false;

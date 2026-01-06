@@ -121,7 +121,7 @@ class NamidaPopupWrapper extends StatelessWidget {
             borderRadius: 8.0,
             enableSecondaryTap: true,
             onTap: () {
-              Navigator.of(context, rootNavigator: true).pop();
+              popMenu();
               e.onTap();
             },
             onLongPress: e.onLongPress,
@@ -192,6 +192,7 @@ class NamidaPopupWrapper extends StatelessWidget {
       position: PopupPosition.bottom,
       arrowColor: bgColor,
       backgroundColor: bgColor,
+      onAfterPopup: () => popMenu(handleClosing: false),
       content: () => _getMenuContent(context),
       refreshListenable: refreshListenable,
       child: ColoredBox(
