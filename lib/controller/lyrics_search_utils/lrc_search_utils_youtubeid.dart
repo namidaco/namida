@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 
 import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 import 'lrc_search_utils_base.dart';
 
@@ -29,6 +30,13 @@ class LrcSearchUtilsYoutubeID extends LrcSearchUtils {
 
   @override
   List<File> get deviceLRCFiles => <File>[]; // none
+
+  @override
+  Future<int> getItemDurationMS() async {
+    final seconds = await YoutubeInfoController.utils.getVideoDurationSeconds(video.id);
+    if (seconds == null) return 0;
+    return seconds * 1000;
+  }
 
   @override
   List<String> searchQueriesGoogle() {

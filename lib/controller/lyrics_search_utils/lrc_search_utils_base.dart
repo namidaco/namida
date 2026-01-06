@@ -35,6 +35,8 @@ abstract class LrcSearchUtils {
   File get cachedLRCFile;
   List<File> get deviceLRCFiles;
 
+  Future<int> getItemDurationMS();
+
   Future<File> saveLyricsToCache(String formatted, bool isSynced) async {
     final fc = isSynced ? cachedLRCFile : cachedTxtFile;
     await fc.create();

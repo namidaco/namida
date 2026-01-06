@@ -40,6 +40,9 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
   }
 
   @override
+  Future<int> getItemDurationMS() async => trackExt.durationMS;
+
+  @override
   Future<bool> hasLyrics() async {
     return track.lyrics != '' || await super.hasLyrics();
   }

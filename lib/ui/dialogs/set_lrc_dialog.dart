@@ -31,6 +31,11 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
   final fetchingFromInternet = Rxn<bool>();
   final availableLyrics = <LyricsModel>[].obs;
   final fetchedLyrics = <LyricsModel>[].obs;
+  final trackDurationMSRx = Rxn<int>();
+
+  lrcUtils.getItemDurationMS().then((value) {
+    trackDurationMSRx.value = value;
+  });
 
   final embedded = lrcUtils.embeddedLyrics;
   final cachedTxt = lrcUtils.cachedTxtFile;
@@ -93,6 +98,21 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
   void updateForCurrentTrack() {
     if (item == Player.inst.currentItem.value) {
       Lyrics.inst.updateLyrics(item);
+    }
+  }
+
+  void updateEditLyrics(LyricsModel l, LyricsModel newL) {
+    final indexOfLrc = availableLyrics.value.indexOf(l);
+    if (indexOfLrc >= 0) {
+      availableLyrics[indexOfLrc] = newL;
+      updateForCurrentTrack();
+      return;
+    }
+    final indexOfLrc2 = fetchedLyrics.value.indexOf(l);
+    if (indexOfLrc2 >= 0) {
+      fetchedLyrics[indexOfLrc2] = newL;
+      updateForCurrentTrack();
+      return;
     }
   }
 
@@ -203,19 +223,15 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                 );
                 final lyricsString = newLRC.format();
                 await lrcUtils.saveLyricsToCache(lyricsString, true);
-
-                final indexOfLrc = availableLyrics.value.indexOf(l);
-                if (indexOfLrc >= 0) {
-                  availableLyrics[indexOfLrc] = LyricsModel(
-                    lyrics: lyricsString,
-                    synced: l.synced,
-                    isInCache: l.isInCache,
-                    fromInternet: l.fromInternet,
-                    isEmbedded: l.isEmbedded,
-                    file: l.file,
-                  );
-                  updateForCurrentTrack();
-                }
+                final newLModel = LyricsModel(
+                  lyrics: lyricsString,
+                  synced: l.synced,
+                  isInCache: l.isInCache,
+                  fromInternet: l.fromInternet,
+                  isEmbedded: l.isEmbedded,
+                  file: l.file,
+                );
+                updateEditLyrics(l, newLModel);
               }
 
               NamidaNavigator.inst.closeDialog();
@@ -442,11 +458,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         file: file,
         isEmbedded: l.isEmbedded,
       );
-      final indexOfLrc = availableLyrics.value.indexOf(l);
-      if (indexOfLrc >= 0) {
-        availableLyrics[indexOfLrc] = lrcModel;
-        updateForCurrentTrack();
-      }
+      updateEditLyrics(l, lrcModel);
 
       NamidaNavigator.inst.closeDialog();
     }
@@ -651,9 +663,30 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                 ),
                                 const SizedBox(width: 8.0),
                                 Expanded(
-                                  child: Text(
-                                    cacheText != '' ? "$syncedText ($cacheText)" : syncedText,
-                                    style: namida.textTheme.displayMedium,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        cacheText != '' ? "$syncedText ($cacheText)" : syncedText,
+                                        style: namida.textTheme.displayMedium,
+                                      ),
+                                      ObxO(
+                                        rx: trackDurationMSRx,
+                                        builder: (context, durMS) {
+                                          if (durMS == null || durMS == 0) return const SizedBox();
+                                          final lrcDuration = l.durationMS;
+                                          if (lrcDuration == null || lrcDuration == 0) return const SizedBox();
+                                          final diff = lrcDuration - durMS;
+                                          var label = diff.milliSecondsLabelWithCentiSeconds;
+                                          if (diff >= 0) label = '+$label';
+                                          return Text(
+                                            "${lang.DURATION}: $label",
+                                            style: theme.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                                          );
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 NamidaIconButton(
