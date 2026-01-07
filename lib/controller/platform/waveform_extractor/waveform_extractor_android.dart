@@ -27,23 +27,37 @@ class _WaveformExtractorAndroid extends WaveformExtractor {
     } catch (_) {}
 
     if (data == null || data.isEmpty) {
-      final convertedFilePath = FileParts.joinPath(AppDirs.APP_CACHE, '${source.toFastHashKey()}.wav');
+      final hashKey = 'custom_${source.toFastHashKey()}';
+      cacheKey ??= hashKey; // ensure consistent key from now on
       try {
-        final ffmpegConvertDone = await ffmpegController.convertToWav(
-          audioPath: source,
-          outputPath: convertedFilePath,
+        // -- try extract previous cache before converting
+        data = await _extractor.extractWaveformDataOnly(
+          source,
+          useCache: useCache,
+          cacheKey: cacheKey,
+          samplePerSecond: samplesPerSecond,
         );
-        if (ffmpegConvertDone) {
-          data = await _extractor.extractWaveformDataOnly(
-            convertedFilePath,
-            useCache: useCache,
-            cacheKey: cacheKey,
-            samplePerSecond: samplesPerSecond,
+      } catch (_) {}
+      if (data == null || data.isEmpty) {
+        // -- convert to wav and re-extract (with consistent cacheKey)
+        final convertedFilePath = FileParts.joinPath(AppDirs.APP_CACHE, '$hashKey.wav');
+        try {
+          final ffmpegConvertDone = await ffmpegController.convertToWav(
+            audioPath: source,
+            outputPath: convertedFilePath,
           );
+          if (ffmpegConvertDone) {
+            data = await _extractor.extractWaveformDataOnly(
+              convertedFilePath,
+              useCache: useCache,
+              cacheKey: cacheKey,
+              samplePerSecond: samplesPerSecond,
+            );
+          }
+        } catch (_) {
+        } finally {
+          File(convertedFilePath).tryDeleting();
         }
-      } catch (_) {
-      } finally {
-        File(convertedFilePath).tryDeleting();
       }
     }
     return data ?? <num>[];
