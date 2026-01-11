@@ -33,9 +33,10 @@
         android:extractNativeLibs="true"
         android:networkSecurityConfig="@xml/network_security_config"
         android:enableOnBackInvokedCallback="false"
+        android:largeHeap="true"
     >
 		<!-- SPLASH_AUTO_GENERATED START -->
-		<activity-alias
+        <activity-alias
             android:enabled="true"
             android:name="com.msob7y.namida.DefaultIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -50,7 +51,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.EnhancedIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -65,7 +66,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.HollowIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -80,7 +81,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.MonetIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -95,7 +96,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.GlowyIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -110,7 +111,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.ShadeIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -125,7 +126,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.MiniIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -140,7 +141,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.SpookyIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -155,7 +156,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.NamiweenIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -170,7 +171,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.SpaceIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -185,7 +186,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.TiredIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -200,7 +201,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.EddyIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -215,7 +216,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.NamichinIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -230,7 +231,7 @@
             </intent-filter>
         </activity-alias>
 
-		<activity-alias
+        <activity-alias
             android:enabled="false"
             android:name="com.msob7y.namida.CutsieIcon"
             android:targetActivity=".NamidaMainActivity"
@@ -244,7 +245,7 @@
                 <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
             </intent-filter>
         </activity-alias>
-		<!-- SPLASH_AUTO_GENERATED END -->
+        <!-- SPLASH_AUTO_GENERATED END -->
 
         <activity
             android:name=".NamidaMainActivity"

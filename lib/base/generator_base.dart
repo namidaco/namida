@@ -40,7 +40,8 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
     max ??= itemslistLength ~/ 8;
 
     // number of resulting tracks.
-    final int randomNumber = (max - min).getRandomNumberBelow(min);
+    int randomNumber = (max - min).getRandomNumberBelow(min);
+    if (randomNumber <= 0) randomNumber = list.length;
 
     final randomList = list.getRandomSample(randomNumber);
     if (exclude != null) randomList.remove(exclude);

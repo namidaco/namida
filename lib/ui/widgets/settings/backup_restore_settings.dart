@@ -390,20 +390,23 @@ class BackupAndRestore extends SettingSubpageProvider {
                       const CancelButton(),
                       ObxO(
                         rx: settings.backupItemslist,
-                        builder: (context, backupItemslist) => AnimatedEnabled(
-                          enabled: backupItemslist?.isNotEmpty == true,
-                          child: NamidaButton(
-                            text: lang.CREATE_BACKUP,
-                            onPressed: () {
-                              final items = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
-                              if (items.isNotEmpty) {
-                                NamidaNavigator.inst.closeDialog();
-                                final rawPaths = items.map((e) => e.resolve()).toList();
-                                BackupController.inst.createBackupFile(rawPaths);
-                              }
-                            },
-                          ),
-                        ),
+                        builder: (context, backupItemslist) {
+                          backupItemslist ??= AppPathsBackupEnumCategories.everything;
+                          return AnimatedEnabled(
+                            enabled: backupItemslist.isNotEmpty,
+                            child: NamidaButton(
+                              text: lang.CREATE_BACKUP,
+                              onPressed: () {
+                                final items = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
+                                if (items.isNotEmpty) {
+                                  NamidaNavigator.inst.closeDialog();
+                                  final rawPaths = items.map((e) => e.resolve()).toList();
+                                  BackupController.inst.createBackupFile(rawPaths);
+                                }
+                              },
+                            ),
+                          );
+                        },
                       ),
                     ],
                     child: SizedBox(

@@ -60,7 +60,7 @@ void _replaceInDart() {
   final suffixComment = '// $_kSuffixComment';
   final iconsEnum = _appIcons.map((e) {
     final authorInfo = e.authorInfos.map((e) => e.toClassString()).join(', ');
-    return '\t${e.dartName}("${e.assetPath}", [$authorInfo]),';
+    return '  ${e.dartName}("${e.assetPath}", [$authorInfo]),';
   }).join('\n');
   _replaceAllInFile(
     _FilePaths.namida_channel_base_dart,
@@ -69,28 +69,28 @@ void _replaceInDart() {
       '''$prefixComment
 enum NamidaAppIcons {
 $iconsEnum
-\t;
+  ;
 
-\tfinal String assetPath;
-\tfinal List<AuthorInfo> authorInfos;
-\tconst NamidaAppIcons(this.assetPath, this.authorInfos);
+  final String assetPath;
+  final List<AuthorInfo> authorInfos;
+  const NamidaAppIcons(this.assetPath, this.authorInfos);
 }
 
 class AuthorInfo {
-\tfinal String name;
-\tfinal String? username;
-\tfinal AuthorPlatform? platform;
-\tfinal AuthorAIModel? aiModel;
+  final String name;
+  final String? username;
+  final AuthorPlatform? platform;
+  final AuthorAIModel? aiModel;
 
-\tconst AuthorInfo(this.name, this.username, this.platform, this.aiModel);
+  const AuthorInfo(this.name, this.username, this.platform, this.aiModel);
 }
 
 enum AuthorPlatform {
-${_AuthorPlatform.values.map((e) => '\t${e.name},').join('\n')}
+${_AuthorPlatform.values.map((e) => '  ${e.name},').join('\n')}
 }
 
 enum AuthorAIModel {
-${_AuthorAIModel.values.map((e) => '\t${e.name},').join('\n')}
+${_AuthorAIModel.values.map((e) => '  ${e.name},').join('\n')}
 }
 
 $suffixComment''',
@@ -101,7 +101,7 @@ $suffixComment''',
 void _replaceInManifest() {
   final prefixComment = '<!-- $_kPrefixComment -->';
   final suffixComment = '<!-- $_kSuffixComment -->';
-  const indent = '\t\t';
+  const indent = '        ';
 
   final String manifestCode = _appIcons
       .map(
@@ -134,8 +134,8 @@ void _replaceInManifest() {
 void _replaceInKotlin() {
   final prefixComment = '// $_kPrefixComment';
   final suffixComment = '// $_kSuffixComment';
-  const indent = '\t\t\t\t';
-  final iconsMatches = _appIcons.map((e) => '$indent\t\t"${e.dartName}" -> LauncherIcon.${e.kotlinName}').join('\n');
+  const indent = '        ';
+  final iconsMatches = _appIcons.map((e) => '$indent    "${e.dartName}" -> LauncherIcon.${e.kotlinName}').join('\n');
   final kotlinCode = '''"changeAppIcon" -> {
           val key = call.argument<String>("key")
           val nativeIcon = when (key) {
@@ -174,7 +174,7 @@ $iconsMatches
 
   final iconsConstructor = _appIcons.mapIndexed((e, i) {
     final trailing = i == _appIcons.length - 1 ? ';' : ',';
-    return '\t${e.kotlinName}("${e.manifestName}", R.mipmap.${e.mipmapName})$trailing';
+    return '  ${e.kotlinName}("${e.manifestName}", R.mipmap.${e.mipmapName})$trailing';
   }).join('\n');
 
   _replaceAllInFile(

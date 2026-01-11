@@ -694,6 +694,7 @@ class CustomizationSettings extends SettingSubpageProvider {
             child: NamidaExpansionTile(
               bgColor: getBgColor(_CustomizationSettingsKeys.SWIPEACTIONS),
               initiallyExpanded: true,
+              borderless: true,
               icon: Broken.arrow_swap_horizontal,
               iconColor: context.defaultIconColor(),
               titleText: lang.SWIPE_ACTIONS,
@@ -986,6 +987,7 @@ class CustomizationSettings extends SettingSubpageProvider {
             child: NamidaExpansionTile(
               bgColor: getBgColor(_CustomizationSettingsKeys.THUMBANIMATIONINTENSITY),
               initiallyExpanded: true,
+              borderless: true,
               icon: Broken.flash,
               iconColor: context.defaultIconColor(),
               titleText: lang.ANIMATING_THUMBNAIL_INTENSITY,
@@ -1075,6 +1077,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               icon: Broken.gallery,
               iconColor: context.defaultIconColor(),
               initiallyExpanded: true,
+              borderless: true,
               titleText: lang.ARTWORK_GESTURES,
               childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0),
               trailing: Row(

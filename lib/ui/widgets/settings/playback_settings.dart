@@ -646,6 +646,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           bgColor: getBgColor(_PlaybackSettingsKeys.crossfade),
           bigahh: true,
           normalRightPadding: true,
+          borderless: true,
           initiallyExpanded: settings.player.enableCrossFade.value,
           leading: const StackedIcon(
             baseIcon: Broken.play,
@@ -716,6 +717,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           bgColor: getBgColor(_PlaybackSettingsKeys.fadeEffectOnPlayPause),
           bigahh: true,
           normalRightPadding: true,
+          borderless: true,
           initiallyExpanded: settings.player.enableVolumeFadeOnPlayPause.value,
           leading: const StackedIcon(
             baseIcon: Broken.play,

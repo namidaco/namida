@@ -249,9 +249,14 @@ extension ListieListieUtils<T> on List<T> {
     if (list.isEmpty) return list;
 
     final totalLength = list.length;
-    if (sampleCount >= totalLength) return List<T>.of(list);
 
     random ??= math.Random();
+
+    if (sampleCount >= totalLength) {
+      final copy = List<T>.from(list);
+      copy.shuffle(random);
+      return copy;
+    }
 
     final selectedIndices = <int>{};
     final selectedItems = <T>[];
@@ -272,9 +277,14 @@ extension ListieListieUtils<T> on List<T> {
     if (list.isEmpty) return list;
 
     final totalLength = list.length;
-    if (sampleCount >= totalLength) return List<T>.of(list);
 
     random ??= math.Random();
+
+    if (sampleCount >= totalLength) {
+      final copy = List<T>.from(list.where(test));
+      copy.shuffle(random);
+      return copy;
+    }
 
     final selectedIndices = <int>{};
     final selectedItems = <T>[];

@@ -83,47 +83,47 @@ abstract class NamidaChannel {
 
 // SPLASH_AUTO_GENERATED START
 enum NamidaAppIcons {
-	namida("assets/namida_icon.webp", [AuthorInfo("MSOB7YY", "MSOB7YY", AuthorPlatform.github, AuthorAIModel.midjourney)]),
-	enhanced("assets/namida_icon_enhanced.webp", [AuthorInfo("im_mehu", null, AuthorPlatform.discord, null)]),
-	hollow("assets/namida_icon_hollow.png", [AuthorInfo("wispy", null, AuthorPlatform.discord, null)]),
-	monet("assets/namida_icon_monet.png", [AuthorInfo("Sujal", null, AuthorPlatform.telegram, null)]),
-	glowy("assets/namida_icon_glowy.webp", [AuthorInfo("Sujal", null, AuthorPlatform.telegram, null)]),
-	shade("assets/namida_icon_shade.png", [AuthorInfo("شاكور", null, AuthorPlatform.discord, null)]),
-	mini("assets/namida_icon_mini.png", [AuthorInfo("شاكور", null, AuthorPlatform.discord, null)]),
-	spooky("assets/namida_icon_spooky.webp", [AuthorInfo("Miguquis", null, AuthorPlatform.discord, AuthorAIModel.gemini)]),
-	namiween("assets/namida_icon_namiween.webp", [AuthorInfo("𐔌 . ⋮ Reggie .ᐟ ֹ ₊ ꒱", null, AuthorPlatform.discord, AuthorAIModel.unknown)]),
-	space("assets/namida_icon_space.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
-	tired("assets/namida_icon_tired.webp", [AuthorInfo("Zephyr", null, AuthorPlatform.discord, AuthorAIModel.unknown)]),
-	eddy("assets/namida_icon_eddy.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
-	namichin("assets/namida_icon_namichin.webp", [AuthorInfo("Scarecloud", null, AuthorPlatform.discord, null)]),
-	cutsie("assets/namida_icon_cutsie.webp", [AuthorInfo("smilez", null, AuthorPlatform.discord, AuthorAIModel.gpt4)]),
-	;
+  namida("assets/namida_icon.webp", [AuthorInfo("MSOB7YY", "MSOB7YY", AuthorPlatform.github, AuthorAIModel.midjourney)]),
+  enhanced("assets/namida_icon_enhanced.webp", [AuthorInfo("im_mehu", null, AuthorPlatform.discord, null)]),
+  hollow("assets/namida_icon_hollow.png", [AuthorInfo("wispy", null, AuthorPlatform.discord, null)]),
+  monet("assets/namida_icon_monet.png", [AuthorInfo("Sujal", null, AuthorPlatform.telegram, null)]),
+  glowy("assets/namida_icon_glowy.webp", [AuthorInfo("Sujal", null, AuthorPlatform.telegram, null)]),
+  shade("assets/namida_icon_shade.png", [AuthorInfo("شاكور", null, AuthorPlatform.discord, null)]),
+  mini("assets/namida_icon_mini.png", [AuthorInfo("شاكور", null, AuthorPlatform.discord, null)]),
+  spooky("assets/namida_icon_spooky.webp", [AuthorInfo("Miguquis", null, AuthorPlatform.discord, AuthorAIModel.gemini)]),
+  namiween("assets/namida_icon_namiween.webp", [AuthorInfo("𐔌 . ⋮ Reggie .ᐟ ֹ ₊ ꒱", null, AuthorPlatform.discord, AuthorAIModel.unknown)]),
+  space("assets/namida_icon_space.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
+  tired("assets/namida_icon_tired.webp", [AuthorInfo("Zephyr", null, AuthorPlatform.discord, AuthorAIModel.unknown)]),
+  eddy("assets/namida_icon_eddy.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
+  namichin("assets/namida_icon_namichin.webp", [AuthorInfo("Scarecloud", null, AuthorPlatform.discord, null)]),
+  cutsie("assets/namida_icon_cutsie.webp", [AuthorInfo("smilez", null, AuthorPlatform.discord, AuthorAIModel.gpt4)]),
+  ;
 
-	final String assetPath;
-	final List<AuthorInfo> authorInfos;
-	const NamidaAppIcons(this.assetPath, this.authorInfos);
+  final String assetPath;
+  final List<AuthorInfo> authorInfos;
+  const NamidaAppIcons(this.assetPath, this.authorInfos);
 }
 
 class AuthorInfo {
-	final String name;
-	final String? username;
-	final AuthorPlatform? platform;
-	final AuthorAIModel? aiModel;
+  final String name;
+  final String? username;
+  final AuthorPlatform? platform;
+  final AuthorAIModel? aiModel;
 
-	const AuthorInfo(this.name, this.username, this.platform, this.aiModel);
+  const AuthorInfo(this.name, this.username, this.platform, this.aiModel);
 }
 
 enum AuthorPlatform {
-	github,
-	telegram,
-	discord,
+  github,
+  telegram,
+  discord,
 }
 
 enum AuthorAIModel {
-	midjourney,
-	gemini,
-	gpt4,
-	unknown,
+  midjourney,
+  gemini,
+  gpt4,
+  unknown,
 }
 
 // SPLASH_AUTO_GENERATED END

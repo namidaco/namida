@@ -139,23 +139,23 @@ class NamidaMainActivity : FlutterActivity() {
         }
 
 				// SPLASH_AUTO_GENERATED START
-				"changeAppIcon" -> {
+        "changeAppIcon" -> {
           val key = call.argument<String>("key")
           val nativeIcon = when (key) {
-						"namida" -> LauncherIcon.DEFAULT
-						"enhanced" -> LauncherIcon.ENHANCED
-						"hollow" -> LauncherIcon.HOLLOW
-						"monet" -> LauncherIcon.MONET
-						"glowy" -> LauncherIcon.GLOWY
-						"shade" -> LauncherIcon.SHADE
-						"mini" -> LauncherIcon.MINI
-						"spooky" -> LauncherIcon.SPOOKY
-						"namiween" -> LauncherIcon.NAMIWEEN
-						"space" -> LauncherIcon.SPACE
-						"tired" -> LauncherIcon.TIRED
-						"eddy" -> LauncherIcon.EDDY
-						"namichin" -> LauncherIcon.NAMICHIN
-						"cutsie" -> LauncherIcon.CUTSIE
+            "namida" -> LauncherIcon.DEFAULT
+            "enhanced" -> LauncherIcon.ENHANCED
+            "hollow" -> LauncherIcon.HOLLOW
+            "monet" -> LauncherIcon.MONET
+            "glowy" -> LauncherIcon.GLOWY
+            "shade" -> LauncherIcon.SHADE
+            "mini" -> LauncherIcon.MINI
+            "spooky" -> LauncherIcon.SPOOKY
+            "namiween" -> LauncherIcon.NAMIWEEN
+            "space" -> LauncherIcon.SPACE
+            "tired" -> LauncherIcon.TIRED
+            "eddy" -> LauncherIcon.EDDY
+            "namichin" -> LauncherIcon.NAMICHIN
+            "cutsie" -> LauncherIcon.CUTSIE
             else -> null
           }
 
@@ -166,23 +166,23 @@ class NamidaMainActivity : FlutterActivity() {
               result.error("INVALID_ICON", "No matching icon for key: $key", null)
           }
         }
-				"isAppIconEnabled" -> {
+        "isAppIconEnabled" -> {
           val key = call.argument<String>("key")
           val nativeIcon = when (key) {
-						"namida" -> LauncherIcon.DEFAULT
-						"enhanced" -> LauncherIcon.ENHANCED
-						"hollow" -> LauncherIcon.HOLLOW
-						"monet" -> LauncherIcon.MONET
-						"glowy" -> LauncherIcon.GLOWY
-						"shade" -> LauncherIcon.SHADE
-						"mini" -> LauncherIcon.MINI
-						"spooky" -> LauncherIcon.SPOOKY
-						"namiween" -> LauncherIcon.NAMIWEEN
-						"space" -> LauncherIcon.SPACE
-						"tired" -> LauncherIcon.TIRED
-						"eddy" -> LauncherIcon.EDDY
-						"namichin" -> LauncherIcon.NAMICHIN
-						"cutsie" -> LauncherIcon.CUTSIE
+            "namida" -> LauncherIcon.DEFAULT
+            "enhanced" -> LauncherIcon.ENHANCED
+            "hollow" -> LauncherIcon.HOLLOW
+            "monet" -> LauncherIcon.MONET
+            "glowy" -> LauncherIcon.GLOWY
+            "shade" -> LauncherIcon.SHADE
+            "mini" -> LauncherIcon.MINI
+            "spooky" -> LauncherIcon.SPOOKY
+            "namiween" -> LauncherIcon.NAMIWEEN
+            "space" -> LauncherIcon.SPACE
+            "tired" -> LauncherIcon.TIRED
+            "eddy" -> LauncherIcon.EDDY
+            "namichin" -> LauncherIcon.NAMICHIN
+            "cutsie" -> LauncherIcon.CUTSIE
             else -> null
           }
 
@@ -193,7 +193,7 @@ class NamidaMainActivity : FlutterActivity() {
               result.error("INVALID_ICON", "No matching icon for key: $key", null)
           }
         }
-				// SPLASH_AUTO_GENERATED END
+        // SPLASH_AUTO_GENERATED END
 
         else -> result.notImplemented()
       }

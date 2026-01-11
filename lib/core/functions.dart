@@ -1231,7 +1231,7 @@ class TracksAddOnTap {
             onTap: (insertionType) {
               final config = insertionType.toQueueInsertion();
               final count = config.numberOfTracks;
-              final rt = NamidaGenerator.inst.getRandomTracks(exclude: currentTrack, min: count - 1, max: count);
+              final rt = NamidaGenerator.inst.getRandomTracks(exclude: currentTrack, min: count, max: count + 1);
               Player.inst.addToQueue(rt, insertionType: insertionType, emptyTracksMessage: lang.NO_ENOUGH_TRACKS).closeDialog();
             },
           ),
@@ -1660,7 +1660,7 @@ class TracksAddOnTap {
                   onTap: (insertionType) async {
                     final config = insertionType.toQueueInsertion();
                     final count = config.numberOfTracks;
-                    final rt = await NamidaYTGenerator.inst.getRandomVideos(exclude: currentVideoId, min: count - 1, max: count);
+                    final rt = await NamidaYTGenerator.inst.getRandomVideos(exclude: currentVideoId, min: count, max: count + 1);
                     Player.inst.addToQueue(rt, insertionType: insertionType, emptyTracksMessage: lang.NO_ENOUGH_TRACKS).closeDialog();
                   },
                   trailingRaw: isLoading ? const LoadingIndicator() : null,

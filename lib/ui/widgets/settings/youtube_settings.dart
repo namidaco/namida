@@ -525,7 +525,6 @@ class YoutubeSettings extends SettingSubpageProvider {
             key: _YoutubeSettingKeys.seekbar,
             child: NamidaExpansionTile(
               bgColor: getBgColor(_YoutubeSettingKeys.seekbar),
-              bigahh: true,
               childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
               iconColor: context.defaultIconColor(),
               icon: Broken.candle_2,

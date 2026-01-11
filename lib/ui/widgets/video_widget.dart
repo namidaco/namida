@@ -1029,16 +1029,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: LayoutBuilder(
-                  builder: (context, c) =>
-                      SeekReadyWidget.forYTMiniplayer.createHitTestWidget(
-                        expandHitTest: true,
-                        allowTapping: false,
-                        c: c,
-                        maxWidth: maxWidth,
-                      ) ??
-                      const SizedBox(),
-                ),
+                child: SeekReadyWidget.forYTMiniplayer.createHitTestWidget(
+                      expandHitTest: true,
+                      allowTapping: false,
+                      maxWidth: maxWidth,
+                    ) ??
+                    const SizedBox(),
               ),
 
             if (widget.showControls)
@@ -2704,11 +2700,15 @@ class _VideoIdToTitleWidgetState extends State<_VideoTitleSubtitleWidget> {
           Text(
             videoName,
             style: textTheme.displayLarge?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.85)),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
           ),
         if (channelName != null && channelName.isNotEmpty)
           Text(
             channelName,
             style: textTheme.displaySmall?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.7)),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
       ],
     );

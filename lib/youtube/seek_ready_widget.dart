@@ -16,6 +16,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/sponsorblock.dart';
 import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -36,10 +37,9 @@ class SeekReadyWidgetForYTMiniplayer extends SeekReadyWidget {
   Widget? createHitTestWidget({
     required bool expandHitTest,
     required bool allowTapping,
-    required BoxConstraints c,
     required double maxWidth,
   }) {
-    return globalKey.currentState?.createHitTestWidget(expandHitTest, allowTapping, c, maxWidth);
+    return globalKey.currentState?.createHitTestWidget(expandHitTest, allowTapping, maxWidth);
   }
 }
 
@@ -183,7 +183,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     return can;
   }
 
-  Widget createHitTestWidget(bool expandHitTest, bool allowTapping, BoxConstraints c, double maxWidth) {
+  Widget createHitTestWidget(bool expandHitTest, bool allowTapping, double maxWidth) {
     const barHeight = SeekReadyDimensions.barHeight;
     return Padding(
       padding: expandHitTest
@@ -218,18 +218,18 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
           behavior: HitTestBehavior.translucent,
           onPanDown: (event) {
             if (!_canDragToSeek) return;
-            if (_tapToSeek) _onDragStart(event.localPosition.dx, c.maxWidth, fromTap: true);
+            if (_tapToSeek) _onDragStart(event.localPosition.dx, maxWidth, fromTap: true);
           },
           onPanEnd: (_) {
             if (_tapToSeek) _onDragFinish();
           },
           onHorizontalDragStart: (details) {
             if (!_canDragToSeek) return;
-            _onDragStart(details.localPosition.dx, c.maxWidth);
+            _onDragStart(details.localPosition.dx, maxWidth);
           },
           onHorizontalDragUpdate: (event) {
             if (!_canDragToSeekLatest) return;
-            _onSeekDragUpdate(event.localPosition.dx, c.maxWidth);
+            _onSeekDragUpdate(event.localPosition.dx, maxWidth);
           },
           onHorizontalDragEnd: (_) {
             _onDragFinish();
@@ -245,7 +245,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                   ? null
                   : (details) {
                       if (!_canDragToSeek) return;
-                      if (_tapToSeek) _onDragStart(details.localPosition.dx, c.maxWidth, fromTap: true);
+                      if (_tapToSeek) _onDragStart(details.localPosition.dx, maxWidth, fromTap: true);
                     },
           onTapUp: !allowTapping
               ? null
@@ -324,9 +324,8 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
       },
     );
 
-    return LayoutBuilder(
-      builder: (context, c) {
-        final maxWidth = c.maxWidth;
+    return LayoutWidthProvider(
+      builder: (context, maxWidth) {
         final sponsorblockWidget = widget.showSponsorBlockSegments
             ? ObxO(
                 rx: settings.youtube.sponsorBlockSettings,
@@ -348,7 +347,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
           alignment: Alignment.centerLeft,
           children: [
             // -- hittest
-            createHitTestWidget(fullscreen, true, c, maxWidth),
+            createHitTestWidget(fullscreen, true, maxWidth),
             if (widget.showBufferBars)
               ObxO(
                 rx: settings.youtube.enableHeatMap,
