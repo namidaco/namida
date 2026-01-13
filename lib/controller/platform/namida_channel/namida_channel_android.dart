@@ -12,7 +12,7 @@ class _NamidaChannelAndroid extends NamidaChannel {
   @override
   bool get canOpenFileInExplorer => false;
   @override
-  Future<void>? openFileInExplorer(String filePath) => null;
+  Future<void>? openFileInExplorer(String filePath, {bool isDirectory = false}) => null;
 
   _NamidaChannelAndroid._init() {
     _channel = const MethodChannel('namida');

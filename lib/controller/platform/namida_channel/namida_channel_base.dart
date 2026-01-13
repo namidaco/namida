@@ -31,7 +31,7 @@ abstract class NamidaChannel {
   }
 
   bool get canOpenFileInExplorer;
-  Future<void>? openFileInExplorer(String filePath);
+  Future<void>? openFileInExplorer(String filePath, {bool isDirectory = false});
 
   bool get supportsAppIcons;
   Future<bool?> isAppIconEnabled(NamidaAppIcons type);

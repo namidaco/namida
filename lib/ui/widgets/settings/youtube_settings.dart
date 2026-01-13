@@ -7,6 +7,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
@@ -608,6 +609,19 @@ class YoutubeSettings extends SettingSubpageProvider {
                   final path = await NamidaFileBrowser.getDirectory(note: lang.DEFAULT_DOWNLOAD_LOCATION);
                   if (path != null) settings.youtube.save(ytDownloadLocation: path);
                 },
+                trailingRaw: NamidaChannel.inst.canOpenFileInExplorer
+                    ? IconButton(
+                        tooltip: lang.OPEN_IN_FILE_EXPLORER,
+                        onPressed: () {
+                          final path = settings.youtube.ytDownloadLocation.value;
+                          NamidaChannel.inst.openFileInExplorer(path, isDirectory: true);
+                        },
+                        icon: const Icon(
+                          Broken.export_1,
+                          size: 20.0,
+                        ),
+                      )
+                    : null,
               ),
             ),
           ),

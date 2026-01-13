@@ -8,6 +8,7 @@ import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
@@ -147,6 +148,19 @@ class BackupAndRestore extends SettingSubpageProvider {
               settings.save(defaultBackupLocation: path);
             }
           },
+          trailingRaw: NamidaChannel.inst.canOpenFileInExplorer
+              ? IconButton(
+                  tooltip: lang.OPEN_IN_FILE_EXPLORER,
+                  onPressed: () {
+                    final path = settings.defaultBackupLocation.value ?? AppDirs.BACKUPS;
+                    NamidaChannel.inst.openFileInExplorer(path, isDirectory: true);
+                  },
+                  icon: const Icon(
+                    Broken.export_1,
+                    size: 20.0,
+                  ),
+                )
+              : null,
         ),
       ),
     );
