@@ -26,6 +26,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -35,6 +36,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 
 class Indexer<T extends Track> {
   static Indexer get inst => _instance;
@@ -349,7 +351,30 @@ class Indexer<T extends Track> {
 
     await _afterIndexing();
     isIndexing.value = false;
-    if (showFinishedSnackbar) snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
+
+    final isEmpty = tracksInfoList.value.isEmpty;
+    if (showFinishedSnackbar || isEmpty) {
+      if (isEmpty) {
+        snackyy(
+          title: lang.DONE,
+          message: lang.NO_TRACKS_FOUND,
+          button: (
+            lang.ADD_FOLDER,
+            () {
+              try {
+                SettingsSearchController.inst.onResultTap(
+                  settingPage: SettingSubpageEnum.indexer,
+                  key: IndexerSettingsKeysGlobal.foldersToScan,
+                  context: namida.context!,
+                );
+              } catch (_) {}
+            },
+          ),
+        );
+      } else {
+        snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
+      }
+    }
   }
 
   /// Adds all tracks inside [tracksInfoList] to their respective album, artist, etc..

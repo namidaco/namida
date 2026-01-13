@@ -28,6 +28,12 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
+class IndexerSettingsKeysGlobal {
+  const IndexerSettingsKeysGlobal._();
+
+  static const foldersToScan = _IndexerSettingsKeys.foldersToScan;
+}
+
 enum _IndexerSettingsKeys with SettingKeysBase {
   preventDuplicatedTracks,
   respectNoMedia,
@@ -55,7 +61,12 @@ enum _IndexerSettingsKeys with SettingKeysBase {
 }
 
 class IndexerSettings extends SettingSubpageProvider {
-  const IndexerSettings({super.key, super.initialItem});
+  final bool isInFirstConfigScreen;
+  const IndexerSettings({
+    super.key,
+    super.initialItem,
+    this.isInFirstConfigScreen = false,
+  });
 
   @override
   SettingSubpageEnum get settingPage => SettingSubpageEnum.indexer;
@@ -82,6 +93,10 @@ class IndexerSettings extends SettingSubpageProvider {
         _IndexerSettingsKeys.foldersToExclude: [lang.EXCLUDED_FODLERS],
       };
 
+  void _maybeShowRefreshPromptDialog(bool didModifyFolder) {
+    if (!isInFirstConfigScreen) showRefreshPromptDialog(didModifyFolder);
+  }
+
   Widget addFolderButton(void Function(List<String> dirsPath) onSuccessChoose) {
     return NamidaButton(
       icon: Broken.folder_add,
@@ -95,7 +110,7 @@ class IndexerSettings extends SettingSubpageProvider {
         }
 
         onSuccessChoose(folders.map((e) => e.path).toList());
-        showRefreshPromptDialog(true);
+        _maybeShowRefreshPromptDialog(true);
       },
     );
   }
@@ -112,7 +127,7 @@ class IndexerSettings extends SettingSubpageProvider {
           value: settings.useMediaStore.valueR,
           onChanged: (isTrue) {
             settings.save(useMediaStore: !isTrue);
-            showRefreshPromptDialog(false);
+            _maybeShowRefreshPromptDialog(false);
           },
         ),
       ),
@@ -135,7 +150,7 @@ class IndexerSettings extends SettingSubpageProvider {
           value: includeVideos,
           onChanged: (isTrue) {
             settings.save(includeVideos: !isTrue);
-            showRefreshPromptDialog(false);
+            _maybeShowRefreshPromptDialog(false);
           },
         ),
       ),
@@ -228,7 +243,7 @@ class IndexerSettings extends SettingSubpageProvider {
                                     onPressed: () {
                                       settings.removeFromList(directoriesToScan1: e);
                                       NamidaNavigator.inst.closeDialog();
-                                      showRefreshPromptDialog(true);
+                                      _maybeShowRefreshPromptDialog(true);
                                     },
                                   ),
                                 ],
@@ -299,7 +314,7 @@ class IndexerSettings extends SettingSubpageProvider {
                       trailing: TextButton(
                         onPressed: () {
                           settings.removeFromList(directoriesToExclude1: e);
-                          showRefreshPromptDialog(true);
+                          _maybeShowRefreshPromptDialog(true);
                         },
                         child: NamidaButtonText(
                           lang.REMOVE.toUpperCase(),
