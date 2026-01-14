@@ -7,6 +7,7 @@ abstract class ZipManager {
       ios: () => _ZipManagerNative(),
       macos: () => _ZipManagerNative(),
       windows: () => _ZipManagerGeneric(),
+      linux: () => _ZipManagerGeneric(),
     );
   }
 

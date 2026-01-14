@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 5.6.1+260101128
+version: 5.6.5-beta+260114196
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
@@ -44,7 +44,7 @@ dependencies:
   device_info_plus: ^11.1.0
   intl: ^0.20.1
   flutter_archive: ^6.0.3
-  archive: ^4.0.3
+  archive: ^4.0.7
   url_launcher: ^6.3.0
   connectivity_plus: ^7.0.0
   selectable_autolink_text: ^2.6.0
@@ -97,7 +97,7 @@ dependencies:
       path: audio_service/
       ref: minor
   media_kit: ^1.2.0
-  media_kit_video: ^2.0.0
+  media_kit_video: ^2.0.1
   media_kit_libs_linux: ^1.2.1
   media_kit_libs_macos_video: ^1.1.4
   media_kit_libs_windows_video: ^1.0.11
@@ -166,10 +166,19 @@ dependencies:
       url: https://github.com/MSOB7YY/super_native_extensions
       path: super_hot_key
 
+  # ---- Linux Packages ----
+  file_picker: ^10.3.8
+  modern_titlebar_buttons: ^1.1.2
+  mpris_service:
+    git:
+      url: https://github.com/alexmercerind/mpris_service
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  yaml: ^3.1.3
+  yaml_edit: ^2.2.3
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
 
@@ -239,16 +248,9 @@ inno_bundle:
   publisher: MSOB7Y
   installer_icon: windows/runner/resources/app_icon.ico
   updates_url: https://github.com/namidaco/namida/releases
-  files:
-    - path: ffmpeg_build\windows\ffmpeg.exe
-      destination: bin
-    - path: ffmpeg_build\windows\ffprobe.exe
-      destination: bin
-    - path: ffmpeg_build\windows\audiowaveform.exe
-      destination: bin
   file_extensions_associations:
     # audio extensions
-    - m4a,mp3,wav,flac,ogg,oga,aac,opus,weba,m4b,alac,ac3,mp2,m4p,mpa
+    - m4a,mp3,wav,flac,ogg,oga,ogx,aac,opus,weba,m4b,alac,ac3,mp2,m4p,mpa
     - amr,ape,aa,aax,act,dss,dts,dvf,dct,dff,dsf,mmf,mid,mpc,msv,mogg
     - raw,ra,voc,wma,caf,aiff,wv,aif,aifc,m4r,mac,mka,mlp,mpp,uax
     # video extensions

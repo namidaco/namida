@@ -9,6 +9,7 @@ abstract class NamidaStorage {
     return NamidaPlatformBuilder.init(
       android: () => _NamidaStorageAndroid._init(),
       windows: () => const _NamidaStorageWindows(),
+      linux: () => const _NamidaStorageLinux(),
     );
   }
 
@@ -28,16 +29,20 @@ abstract class NamidaStorage {
     String? note,
     bool multiple = false,
     List<NamidaFileExtensionsWrapper>? allowedExtensions,
-    String? memetype = NamidaStorageFileMemeType.any,
+    NamidaStorageFileMemeType? memetype = NamidaStorageFileMemeType.any,
   });
 
   Future<String?> pickDirectory({String? note});
 }
 
-class NamidaStorageFileMemeType {
-  static const image = "image/*";
-  static const audio = "audio/*";
-  static const video = "video/*";
-  static const media = "$audio,$video";
-  static const any = "*/*";
+enum NamidaStorageFileMemeType {
+  image("image/*"),
+  audio("audio/*"),
+  video("video/*"),
+  media("audio/*,video/*"),
+  any("*/*"),
+  ;
+
+  final String type;
+  const NamidaStorageFileMemeType(this.type);
 }

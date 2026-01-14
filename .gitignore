@@ -244,3 +244,6 @@ build
 android/app/repo/com/local/ffmpeg-kit/min_binary
 
 pubspec_overrides.yaml
+
+dist/
+scripts/bundle_output

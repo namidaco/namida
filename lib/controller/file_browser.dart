@@ -37,7 +37,7 @@ const _defaultMemeType = NamidaStorageFileMemeType.any;
 class NamidaFileBrowser {
   static Future<File?> pickFile({
     String note = '',
-    String memeType = _defaultMemeType,
+    NamidaStorageFileMemeType memeType = _defaultMemeType,
     String? initialDirectory,
     NamidaFileExtensionsWrapper? allowedExtensions,
   }) async {
@@ -53,7 +53,7 @@ class NamidaFileBrowser {
 
   static Future<List<File>> pickFiles({
     String note = '',
-    String memeType = _defaultMemeType,
+    NamidaStorageFileMemeType memeType = _defaultMemeType,
     String? initialDirectory,
     NamidaFileExtensionsWrapper? allowedExtensions,
   }) async {
@@ -119,7 +119,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
   final String? initialDirectory;
   final Completer<List<T>> onSelect;
   final NamidaFileExtensionsWrapper? allowedExtensions;
-  final String memeType;
+  final NamidaStorageFileMemeType memeType;
   final bool allowMultiple;
   final _NamidaFileBrowserPopCallback onPop;
 
@@ -137,7 +137,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
   static Future<File?> pickFile({
     String note = '',
     NamidaFileExtensionsWrapper? allowedExtensions,
-    String memeType = _defaultMemeType,
+    NamidaStorageFileMemeType memeType = _defaultMemeType,
     String? initialDirectory,
     required _NamidaFileBrowserNavigationCallback onNavigate,
     required _NamidaFileBrowserPopCallback onPop,
@@ -161,7 +161,7 @@ class _NamidaFileBrowserBase<T extends FileSystemEntity> extends StatefulWidget 
   static Future<List<File>> pickFiles({
     String note = '',
     NamidaFileExtensionsWrapper? allowedExtensions,
-    String memeType = _defaultMemeType,
+    NamidaStorageFileMemeType memeType = _defaultMemeType,
     String? initialDirectory,
     required _NamidaFileBrowserNavigationCallback onNavigate,
     required _NamidaFileBrowserPopCallback onPop,
@@ -686,9 +686,14 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
           _effectiveAllowedExtensions
             ..add(NamidaFileExtensionsWrapper.audio)
             ..add(NamidaFileExtensionsWrapper.video);
+        case NamidaStorageFileMemeType.any:
       }
     }
     _initIconsLookup();
+
+    if (isDesktop) {
+      _onBackupPickerLaunch(_effectiveAllowedExtensions);
+    }
   }
 
   @override

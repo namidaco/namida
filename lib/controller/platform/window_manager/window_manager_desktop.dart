@@ -1,6 +1,8 @@
 part of 'window_manager.dart';
 
 class _WindowManagerDesktop extends NamidaWindowManager {
+  _WindowManagerDesktop({super.customRoundedCorners});
+
   @override
   bool get usingCustomWindowTitleBar => true;
 
@@ -18,18 +20,15 @@ class _WindowManagerDesktop extends NamidaWindowManager {
       skipTaskbar: false,
       titleBarStyle: usingCustomWindowTitleBar ? TitleBarStyle.hidden : TitleBarStyle.normal,
     );
-    windowManager.addListener(_NamidaWindowListener());
-    await windowManager.waitUntilReadyToShow(windowOptions, () async {
-      final bounds = settings.windowBounds;
-      if (bounds != null) {
-        // -- making sure window is in bounds with the current screen/s max size
-        // -- for example: after disconnecting a second screen
-        final shiftedBounds = await _ensureBoundsWithinScreenSizeShift(bounds);
-        await windowManager.setBounds(shiftedBounds);
-      }
-      await windowManager.show();
-      await windowManager.focus();
-    });
+
+    await windowManager.waitUntilReadyToShow(windowOptions, ensurePositionRestored);
+
+    if (Platform.isLinux) {
+      // -- window_manager on linux doesnt support some methods.
+      windowManager.addListener(_NamidaWindowListenerEnhanced());
+    } else {
+      windowManager.addListener(_NamidaWindowListener());
+    }
 
     screenRetriever.addListener(_CustomScreenListener(
       listener: (_) async {
@@ -41,6 +40,21 @@ class _WindowManagerDesktop extends NamidaWindowManager {
         }
       },
     ));
+  }
+
+  @override
+  Future<void> ensurePositionRestored() async {
+    // -- sometimes waitUntilReadyToShow is not enough for linux
+
+    final bounds = settings.windowBounds;
+    if (bounds != null) {
+      // -- making sure window is in bounds with the current screen/s max size
+      // -- for example: after disconnecting a second screen
+      final shiftedBounds = await _ensureBoundsWithinScreenSizeShift(bounds);
+      await windowManager.setBounds(shiftedBounds);
+    }
+    await windowManager.show();
+    await windowManager.focus();
   }
 
   Future<Rect> _ensureBoundsWithinScreenSizeShift(Rect bounds) async {
@@ -98,9 +112,40 @@ class _WindowManagerDesktop extends NamidaWindowManager {
   }
 }
 
+class _NamidaWindowListenerEnhanced extends _NamidaWindowListener {
+  Timer? _timer;
+
+  void _startSaveTimer(void Function() callback) {
+    _timer?.cancel();
+    _timer = Timer(
+      const Duration(seconds: 2),
+      () {
+        callback();
+        _timer?.cancel();
+        _timer = null;
+      },
+    );
+  }
+
+  @override
+  void onWindowResize() {
+    super.onWindowResize();
+    _startSaveTimer(super.onWindowResized);
+  }
+
+  @override
+  void onWindowMove() {
+    super.onWindowMove();
+    _startSaveTimer(super.onWindowMoved);
+  }
+}
+
 class _NamidaWindowListener with WindowListener {
   Future<void> _saveBounds() async {
-    settings.save(windowBounds: await windowManager.getBounds());
+    final currentBounds = await windowManager.getBounds();
+    if (currentBounds != settings.windowBounds) {
+      settings.save(windowBounds: currentBounds);
+    }
   }
 
   @override

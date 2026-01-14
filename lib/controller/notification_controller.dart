@@ -19,6 +19,7 @@ class NotificationManager {
     return NamidaPlatformBuilder.init(
       android: () => const NotificationManager._(),
       windows: () => const _NotificationManagerSuppressed._(),
+      linux: () => const _NotificationManagerSuppressed._(),
     );
   }
 
@@ -43,6 +44,9 @@ class NotificationManager {
           appUserModelId: 'namidaco.namida.notification',
           guid: '51435cfe-f7be-4a73-82c1-50d53a8e7ae6',
           iconPath: AppPaths.NAMIDA_LOGO_MONET,
+        ),
+        linux: LinuxInitializationSettings(
+          defaultActionName: 'namidaco.namida.notification',
         ),
       ),
       onDidReceiveBackgroundNotificationResponse: _onDidReceiveLocalNotification,

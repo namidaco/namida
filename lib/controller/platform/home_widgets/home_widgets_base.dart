@@ -6,6 +6,7 @@ abstract class HomeWidgets {
       android: () => _HomeWidgetsMobile(),
       ios: () => _HomeWidgetsMobile(),
       windows: () => null,
+      linux: () => null,
     );
   }
 

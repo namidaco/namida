@@ -46,13 +46,16 @@ enum _YoutubeSettingKeys with SettingKeysBase {
   dimIntensity,
   downloadsMetadataTags,
   downloadLocation,
-  downloadNotifications(NamidaFeaturesAvailablity.windows),
+  downloadNotifications(NamidaFeaturesAvailablityGroup(items: [
+    NamidaFeaturesAvailablity.windows,
+    NamidaFeaturesAvailablity.linux,
+  ])),
   onOpeningYTLink,
   seekbar,
   ;
 
   @override
-  final NamidaFeaturesAvailablity? availability;
+  final NamidaFeaturesAvailablityBase? availability;
   const _YoutubeSettingKeys([this.availability]);
 }
 

@@ -68,8 +68,6 @@ export 'popup_wrapper.dart';
 
 part 'smooth_scroll.dart';
 
-final _isDesktop = !(Platform.isAndroid || Platform.isIOS);
-
 class NamidaReordererableListener extends StatelessWidget {
   final int index;
   final int durationMs;
@@ -84,7 +82,6 @@ class NamidaReordererableListener extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
     return ReorderableDelayedDragStartListener(
       index: index,
       delay: isDesktop ? Duration.zero : Duration(milliseconds: durationMs),
@@ -4321,7 +4318,7 @@ class NamidaTabViewState extends State<NamidaTabView> with SingleTickerProviderS
         ),
         Expanded(
           child: TabBarView(
-            physics: _isDesktop ? const NeverScrollableScrollPhysics() : null,
+            physics: isDesktop ? const NeverScrollableScrollPhysics() : null,
             controller: controller,
             children: widget.children,
           ),
@@ -5196,7 +5193,7 @@ class DecorationClipper extends CustomClipper<Path> {
 
 class BorderRadiusClip extends StatelessWidget {
   final TextDirection textDirection;
-  final BorderRadius borderRadius;
+  final BorderRadiusGeometry borderRadius;
   final Clip clipBehavior;
   final Widget child;
 

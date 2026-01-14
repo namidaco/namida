@@ -8,6 +8,9 @@ class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
   }
 
   @override
+  Future<void> dispose() async {}
+
+  @override
   Future<bool> ffmpegExecute(List<String> args) async {
     final res = await FFmpegKit.executeWithArguments([
       "-hide_banner",

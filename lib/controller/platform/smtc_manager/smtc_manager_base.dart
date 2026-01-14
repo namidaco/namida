@@ -6,6 +6,7 @@ abstract class NamidaSMTCManager {
       android: () => null,
       ios: () => null,
       windows: () => _SMTCManagerWindows(),
+      linux: () => _SMTCManagerLinux(),
     );
   }
 
@@ -15,6 +16,7 @@ abstract class NamidaSMTCManager {
   void onPlay();
   void onPause();
   void onStop();
+  Future<void> dispose();
 
   void updateMetadata(MediaItem mediaItem);
   void updateTimeline(int positionMS, int? durationMS);

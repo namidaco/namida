@@ -77,6 +77,14 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
   }
 
   @override
+  Future<void> dispose() async {
+    _isEnabled = false;
+    smtc?.setPlaybackStatus(PlaybackStatus.stopped);
+    await smtc?.dispose();
+    smtc = null;
+  }
+
+  @override
   void updateMetadata(MediaItem mediaItem) {
     _ensureEnabled();
     final metadata = MusicMetadata(
@@ -84,7 +92,7 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
       artist: mediaItem.artist,
       album: mediaItem.album,
       albumArtist: null,
-      thumbnail: mediaItem.artUri?.toFilePath_(),
+      thumbnail: mediaItem.artUri?.toFilePathWindows_(),
     );
     smtc?.updateMetadata(metadata);
   }
@@ -103,7 +111,7 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
 }
 
 extension _UriUtils on Uri {
-  String toFilePath_() {
+  String toFilePathWindows_() {
     return toFilePath(windows: true);
   }
 }

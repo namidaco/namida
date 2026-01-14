@@ -30,13 +30,15 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 
+final isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+
 class NamidaDeviceInfo {
   static int sdkVersion = -1;
 
   static String? _deviceId;
 
-  static final deviceInfoCompleter = Completer<BaseDeviceInfo>();
-  static final packageInfoCompleter = Completer<PackageInfo>();
+  static final deviceInfoCompleter = Completer<BaseDeviceInfo?>();
+  static final packageInfoCompleter = Completer<PackageInfo?>();
 
   static BaseDeviceInfo? deviceInfo;
   static PackageInfo? packageInfo;
@@ -53,9 +55,10 @@ class NamidaDeviceInfo {
     try {
       final res = await DeviceInfoPlugin().deviceInfo;
       deviceInfo = res;
-      deviceInfoCompleter.complete(res);
     } catch (_) {
       _fetchedDeviceInfo = false;
+    } finally {
+      deviceInfoCompleter.complete(deviceInfo);
     }
   }
 
@@ -97,9 +100,10 @@ class NamidaDeviceInfo {
       final res = await PackageInfo.fromPlatform();
       packageInfo = res;
       version = VersionWrapper(res.version, res.buildNumber);
-      packageInfoCompleter.complete(res);
     } catch (_) {
       _fetchedPackageInfo = false;
+    } finally {
+      packageInfoCompleter.complete(packageInfo);
     }
   }
 }
@@ -567,6 +571,11 @@ class AppPaths {
         if (home != null && home.isNotEmpty) return FileParts.joinPath(home, 'Logs', 'namida_logs.txt');
         return FileParts.joinPath(Directory.systemTemp.path, 'namida_logs.txt');
       },
+      linux: () {
+        final home = NamidaPlatformBuilder.linuxNamidaHome;
+        if (home != null && home.isNotEmpty) return FileParts.joinPath(home, 'Logs', 'namida_logs.txt');
+        return FileParts.joinPath(Directory.systemTemp.path, 'namida_logs.txt');
+      },
     );
   }
 
@@ -745,7 +754,7 @@ class NamidaFileExtensionsWrapper {
   }
 
   static const _audioExtensions = {
-    'm4a', 'mp3', 'wav', 'flac', 'ogg', 'oga', 'aac', 'opus', 'weba', 'm4b', 'alac', 'ac3', 'mp2', 'm4p', 'mpa', //
+    'm4a', 'mp3', 'wav', 'flac', 'ogg', 'oga', 'ogx', 'aac', 'opus', 'weba', 'm4b', 'alac', 'ac3', 'mp2', 'm4p', 'mpa', //
     'amr', 'ape', 'aa', 'aax', 'act', 'dss', 'dts', 'dvf', 'dct', 'dff', 'dsf', 'mmf', 'mid', 'mpc', 'msv', 'mogg',
     'raw', 'ra', 'voc', 'wma', 'caf', 'aiff', 'wv', 'aif', 'aifc', 'm4r', 'mac', 'mka', 'mlp', 'mpp', 'uax',
   };
@@ -846,9 +855,31 @@ extension PathTypeUtils on String {
   bool isVideo() => NamidaFileExtensionsWrapper.video.isPathValid(this);
 }
 
-enum NamidaFeaturesAvailablity {
+abstract class NamidaFeaturesAvailablityBase {
+  const NamidaFeaturesAvailablityBase();
+
+  bool resolve();
+  String get text;
+}
+
+class NamidaFeaturesAvailablityGroup extends NamidaFeaturesAvailablityBase {
+  final List<NamidaFeaturesAvailablity> items;
+
+  const NamidaFeaturesAvailablityGroup({required this.items});
+
+  @override
+  String get text => items.join(' | ');
+
+  @override
+  bool resolve() {
+    return items.any((element) => element.resolve());
+  }
+}
+
+enum NamidaFeaturesAvailablity implements NamidaFeaturesAvailablityBase {
   android('Android'),
   windows('Windows'),
+  linux('Linux'),
   android13and_plus('Android 13+'), // >= 33
   android12and_plus('Android S/12+'), // >= 31
   android12and_below('Android <= 12'), // <= 32
@@ -856,14 +887,17 @@ enum NamidaFeaturesAvailablity {
   android11and_below('Android <= 11'), // <=30
   ;
 
+  @override
   final String text;
   const NamidaFeaturesAvailablity(this.text);
 
+  @override
   bool resolve() {
     final isAndroid = NamidaFeaturesVisibility._isAndroid;
     return switch (this) {
       NamidaFeaturesAvailablity.android => isAndroid,
       NamidaFeaturesAvailablity.windows => NamidaFeaturesVisibility._isWindows,
+      NamidaFeaturesAvailablity.linux => NamidaFeaturesVisibility._isLinux,
       NamidaFeaturesAvailablity.android13and_plus => isAndroid && NamidaDeviceInfo.sdkVersion >= 33,
       NamidaFeaturesAvailablity.android12and_plus => isAndroid && NamidaDeviceInfo.sdkVersion >= 31,
       NamidaFeaturesAvailablity.android12and_below => isAndroid && NamidaDeviceInfo.sdkVersion <= 32,
@@ -877,13 +911,13 @@ class NamidaFeaturesVisibility {
   static final _platform = defaultTargetPlatform;
   static final _isAndroid = _platform == TargetPlatform.android;
   static final _isWindows = _platform == TargetPlatform.windows;
+  static final _isLinux = _platform == TargetPlatform.linux;
 
   static final wallpaperColors = NamidaFeaturesAvailablity.android12and_plus.resolve();
   static final displayArtworkOnLockscreen = NamidaFeaturesAvailablity.android12and_below.resolve();
   static final displayFavButtonInNotif = _isAndroid;
   static final displayFavButtonInNotifMightCauseIssue = displayFavButtonInNotif && NamidaFeaturesAvailablity.android11and_below.resolve();
   static final displayStopButtonInNotif = _isAndroid;
-  static final shouldRequestManageAllFilesPermission = NamidaFeaturesAvailablity.android11and_plus.resolve();
   static final displayAppIcons = _isAndroid;
   static final showEqualizerBands = _isAndroid;
   static final showToggleMediaStore = onAudioQueryAvailable;
@@ -904,11 +938,11 @@ class NamidaFeaturesVisibility {
   static final loudnessEnhancerAvailable = _isAndroid;
   static final gaplessPlaybackAvailable = _isAndroid;
 
-  static final showDownloadNotifications = _isWindows;
-  static final showVideoControlsOnHover = _isWindows;
-  static final tiltingCardsEffect = _isWindows;
-  static final smoothScrolling = _isWindows;
+  static final showDownloadNotifications = _isWindows || _isLinux;
+  static final showVideoControlsOnHover = _isWindows || _isLinux;
+  static final tiltingCardsEffect = _isWindows || _isLinux;
+  static final smoothScrolling = _isWindows || _isLinux;
 
-  static final isStoragePermissionNotRequired = _isWindows;
-  static final recieveDragAndDrop = _isWindows;
+  static final isStoragePermissionNotRequired = _isWindows || _isLinux;
+  static final recieveDragAndDrop = _isWindows || _isLinux;
 }

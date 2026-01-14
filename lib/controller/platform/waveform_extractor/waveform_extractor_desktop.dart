@@ -9,7 +9,7 @@ class _WaveformExtractorWindows extends WaveformExtractor {
     _isolateExecuter.initialize();
   }
 
-  final _isolateExecuter = _WaveformWindowsIsolateManager();
+  final _isolateExecuter = _WaveformDesktopIsolateManager();
 
   @override
   Future<List<num>> extractWaveformData(
@@ -56,8 +56,8 @@ class _WaveformExtractorWindows extends WaveformExtractor {
   }
 }
 
-class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
-  _WaveformWindowsIsolateManager();
+class _WaveformDesktopIsolateManager with PortsProvider<SendPort> {
+  _WaveformDesktopIsolateManager();
 
   final _completers = <int, Completer<dynamic>?>{};
   final _messageTokenWrapper = IsolateMessageTokenWrapper.create();
@@ -85,14 +85,14 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
   }
 
   static void _prepareResourcesAndListen(SendPort sendPort) async {
-    final executablesPath = NamidaPlatformBuilder.getExecutablesPath();
-    final ffmpegExePath = p.join(executablesPath, 'ffmpeg.exe');
-    final waveformExePath = p.join(executablesPath, 'audiowaveform.exe');
+    final executablesPath = NamidaPlatformBuilder.getExecutablesDirectoryPath();
+    final ffmpegExePath = NamidaPlatformBuilder.getFFmpegExecutablePath(executablesPath);
+    final waveformExePath = NamidaPlatformBuilder.getAudioWaveformExecutablePath(executablesPath);
 
     const supportedFormats = <String>{
-      'wav', 'flac', 'mp3', 'ogg', 'opus', 'webm', //
+      'wav', 'flac', 'mp3', 'ogg', 'opus', 'webm', // https://github.com/bbc/audiowaveform/#--input-format-format
     };
-    const runInShell = false; // otherwise won't in release mode
+    const runInShell = false; // otherwise won't work in release mode
 
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
@@ -162,8 +162,11 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
             ['-i', source, '-f', 'wav', convertedFilePath],
             runInShell: runInShell,
           );
-        } catch (_) {}
-        if (ffmpegConvert == null || ffmpegConvert.exitCode != 0) {
+        } catch (e) {
+          sendPort.send([token, [], e]);
+          return;
+        }
+        if (ffmpegConvert.exitCode != 0) {
           sendPort.send([token, []]);
           return;
         }
@@ -216,7 +219,7 @@ class _WaveformWindowsIsolateManager with PortsProvider<SendPort> {
     }
     if (result.length > 2) {
       final error = result[2];
-      logger.error('_WaveformWindowsIsolateManager.onResult', e: error);
+      logger.error('_WaveformDesktopIsolateManager.onResult', e: error);
     }
   }
 }

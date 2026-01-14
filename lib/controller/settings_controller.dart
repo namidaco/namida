@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+// ignore: depend_on_referenced_packages
+import 'package:collection/collection.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:youtipie/core/http.dart';
 
@@ -18,6 +20,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/return_youtube_dislike.dart';
 import 'package:namida/youtube/class/sponsorblock.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
@@ -42,7 +45,7 @@ class _SettingsController with SettingsFileWriter {
       this.youtube.prepareSettingsFile(),
       this.extra.prepareSettingsFile(),
       this.tutorial.prepareSettingsFile(),
-      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) this.shortcuts.prepareSettingsFile(),
+      if (isDesktop) this.shortcuts.prepareSettingsFile(),
     ]);
   }
 
@@ -1404,9 +1407,15 @@ class _SettingsController with SettingsFileWriter {
 
   void updateMediaItemsTrackSortingAll(MediaType media, List<SortType>? allsorts, bool? isReverse) {
     if (allsorts == null && isReverse == null) return;
+    final didChangeSorts = !DeepCollectionEquality().equals(allsorts, mediaItemsTrackSorting[media]);
+    final didChangeReverse = !DeepCollectionEquality().equals(isReverse, mediaItemsTrackSortingReverse[media]);
+
     if (allsorts != null) mediaItemsTrackSorting[media] = allsorts;
     if (isReverse != null) mediaItemsTrackSortingReverse[media] = isReverse;
-    _writeToStorage();
+
+    if (didChangeSorts || didChangeReverse) {
+      _writeToStorage();
+    }
   }
 
   void updateMediaItemsTrackSorting(MediaType media, List<SortType> allsorts) {

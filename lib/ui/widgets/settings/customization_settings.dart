@@ -77,7 +77,7 @@ enum _CustomizationSettingsKeys with SettingKeysBase {
   ;
 
   @override
-  final NamidaFeaturesAvailablity? availability;
+  final NamidaFeaturesAvailablityBase? availability;
   const _CustomizationSettingsKeys([this.availability]);
 }
 

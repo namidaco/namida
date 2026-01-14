@@ -20,7 +20,7 @@ import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 
 mixin SettingKeysBase {
-  NamidaFeaturesAvailablity? get availability => null;
+  NamidaFeaturesAvailablityBase? get availability => null;
 }
 
 extension _SettSearcherUtils on SettingSubpageEnum {

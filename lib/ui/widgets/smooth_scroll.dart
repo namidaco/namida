@@ -754,18 +754,6 @@ class _DirectionTrackingScrollPosition extends ScrollPositionWithSingleContext {
     _userScrollDirection = value;
     super.updateUserScrollDirection(value);
   }
-
-  // @override
-  // Future<void> moveTo(double to, {Duration? duration, Curve? curve, bool? clamp = true}) {
-  //   print('-------- moveTo $to');
-  //   assert(clamp != null);
-
-  //   if (clamp!) {
-  //     to = clampDouble(to, minScrollExtent, maxScrollExtent);
-  //   }
-
-  //   return super.moveTo(to, duration: duration, curve: curve);
-  // }
 }
 
 class _CustomNeverScrollableScrollPhysics extends ScrollPhysics {

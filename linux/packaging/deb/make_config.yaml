@@ -1,0 +1,42 @@
+display_name: Namida
+package_name: namida
+
+maintainer:
+  name: MSOB7YY
+  email: namida.coo@gmail.com
+
+priority: optional
+
+section: x11
+
+installed_size: 21400
+
+dependencies:
+  - mpv
+  - libmpv
+  - libmpv-dev
+  - libepoxy
+
+essential: false
+
+icon: linux/icons/namida.png
+
+postuninstall_scripts:
+  - echo "Sorry to see you go."
+
+keywords:
+  - Music
+  - Video
+  - Youtube
+  - Media
+  - Player
+
+generic_name: Media Player
+
+categories:
+  - AudioVideo
+  - Audio
+  - Video
+  - Player
+
+startup_notify: true

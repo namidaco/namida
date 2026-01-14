@@ -3,13 +3,16 @@ part of 'ffmpeg_executer.dart';
 /// -- stats for 238 files
 /// await Process.run() => 0:00:14:615057 | 0:00:10.506741
 /// Process.runSync() => 0:00:07.040127 | 0:00:06.651405
-class _FFMPEGExecuterWindows extends FFMPEGExecuter {
+class _FFMPEGExecuterDesktop extends FFMPEGExecuter {
   @override
   void init() {
     _isolateExecuter.initialize();
   }
 
-  final _isolateExecuter = _FFmpegWindowsIsolateManager();
+  @override
+  Future<void> dispose() => _isolateExecuter.dispose();
+
+  final _isolateExecuter = _FFmpegDesktopIsolateManager();
 
   @override
   Future<bool> ffmpegExecute(List<String> args) async {
@@ -42,13 +45,13 @@ class _FFMPEGExecuterWindows extends FFMPEGExecuter {
   }
 }
 
-class _FFmpegWindowsIsolateManager with PortsProvider<SendPort> {
-  _FFmpegWindowsIsolateManager();
+class _FFmpegDesktopIsolateManager with PortsProvider<SendPort> {
+  _FFmpegDesktopIsolateManager();
 
   final _completers = <int, Completer<dynamic>?>{};
   final _messageTokenWrapper = IsolateMessageTokenWrapper.create();
 
-  void dispose() => disposePort();
+  Future<void> dispose() => disposePort();
 
   Future<dynamic> executeIsolate(List<String> args, {required bool ffprobe}) async {
     if (!isInitialized) await initialize();
@@ -66,9 +69,9 @@ class _FFmpegWindowsIsolateManager with PortsProvider<SendPort> {
   }
 
   static void _prepareResourcesAndListen(SendPort sendPort) async {
-    final executablesPath = NamidaPlatformBuilder.getExecutablesPath();
-    final ffmpegExePath = p.join(executablesPath, 'ffmpeg.exe');
-    final ffprobeExePath = p.join(executablesPath, 'ffprobe.exe');
+    final executablesPath = NamidaPlatformBuilder.getExecutablesDirectoryPath();
+    final ffmpegExePath = NamidaPlatformBuilder.getFFmpegExecutablePath(executablesPath);
+    final ffprobeExePath = NamidaPlatformBuilder.getFFprobeExecutablePath(executablesPath);
 
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);

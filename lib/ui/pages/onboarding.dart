@@ -6,6 +6,7 @@ import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/permission_manager/permission_manager.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -13,7 +14,6 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/main.dart';
 import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -66,7 +66,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
   }
 
   Future<void> _requestPermission({bool request = true}) async {
-    didGrantStoragePermission = await requestStoragePermission(request: request);
+    didGrantStoragePermission = await PermissionManager.platform.requestStoragePermission(request: request);
     if (request) didDenyStoragePermission = !didGrantStoragePermission; // if user denied permission after requested
     if (mounted) setState(() {});
   }

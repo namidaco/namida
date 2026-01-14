@@ -4,38 +4,53 @@ import 'dart:convert';
 import 'dart:io';
 
 /// - `-r` to bump release version
+/// - `-y` to force bump same version
 /// - `-b` to build apk
 /// - `-v` to print build details
-void main(List<String> args) async {
+/// - `--skip-git` to skip adding changes to git
+void main(List<String> argsFixed) async {
+  final args = List<String>.from(argsFixed);
   final pubspec = File('pubspec.yaml');
   final pubspecLines = pubspec.readAsLinesSync();
   const versionLinePrefix = 'version: ';
   bool didBump = false;
   bool didAddToGit = false;
+  final skipGit = args.remove('--skip-git');
+  final isRelease = args.remove('-r');
+  final forceBump = args.remove('-y');
+  final buildApk = args.remove('-b');
+  final buildApkV = args.remove('-v');
   for (int i = 0; i < pubspecLines.length; i++) {
     final line = pubspecLines[i];
     if (line.startsWith(versionLinePrefix)) {
       final currentName = line.split(versionLinePrefix).last.split('+').first;
       final currentVersion = currentName.split('-').first; // stripping `-beta`
-      if (args.isEmpty) {
+      String? versionName = args.isEmpty ? null : args[0];
+      if (versionName == null) {
         print('please provide version name, current is: $currentVersion');
         break;
       }
-      final versionName = args[0];
       if (currentVersion == versionName) {
-        print('you entered the same version name: $currentVersion, enter `y` to force bump');
-        final input = stdin.readLineSync();
-        if (input?.toLowerCase() != 'y') break;
+        if (!forceBump) {
+          print('you entered the same version name: $currentVersion, enter `y` to force bump');
+          final input = stdin.readLineSync();
+          if (input?.toLowerCase() != 'y') break;
+        }
       }
-      final isRelease = args.contains('-r');
       final suffix = isRelease ? '' : '-beta';
       final newVersionName = "$versionName$suffix";
 
-      final date = DateTime.now().toUtc();
-      final year = date.year.toString();
-      String padLeft(int number) => number.toString().padLeft(2, '0');
-      final minutesPercentage = (date.minute / 60).toString().substring(2, 3);
-      final newBuildNumber = "${year.substring(2)}${padLeft(date.month)}${padLeft(date.day)}${padLeft(date.hour)}$minutesPercentage";
+      String newBuildNumber;
+      if (args.length > 1) {
+        newBuildNumber = args[1];
+      } else {
+        final date = DateTime.now().toUtc();
+        final year = date.year.toString();
+        String padLeft(int number) => number.toString().padLeft(2, '0');
+        final minutesPercentage = (date.minute / 60).toString().substring(2, 3);
+        newBuildNumber = "${year.substring(2)}${padLeft(date.month)}${padLeft(date.day)}${padLeft(date.hour)}$minutesPercentage";
+      }
+
       final newLine = '$versionLinePrefix$newVersionName+$newBuildNumber';
       print("old $line");
       pubspecLines[i] = newLine;
@@ -44,20 +59,22 @@ void main(List<String> args) async {
       pubspec.writeAsStringSync("""${pubspecLines.join('\n')}
 """);
 
-      print('git: adding changed files');
-      didAddToGit = await _runGitAdd(oldLine: line, newLine: newLine, args: []);
+      if (!skipGit) {
+        print('git: adding changed files');
+        didAddToGit = await _runGitAdd(oldLine: line, newLine: newLine, args: []);
+      }
       break;
     }
   }
   if (!didAddToGit) print('couldn\'t add to git stage');
   if (!didBump) {
-    print('couldnt bump version');
+    print('couldn\'t bump version');
     return;
   }
   print('version bumped');
-  if (args.contains('-b')) {
+  if (buildApk) {
     print('building...');
-    final didBuild = await _buildAPK(verbose: args.contains('-v'));
+    final didBuild = await _buildAPK(verbose: buildApkV);
     print(didBuild ? 'build success' : 'build error');
   }
 }

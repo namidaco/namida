@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.msob7y.namida</id>
+  
+  <name>Namida</name>
+  <summary>A Beautiful and Feature-rich Music Player, With YouTube &amp; Video Support Built in Flutter</summary>
+  
+  <metadata_license>FTL</metadata_license>
+  <project_license>EULA</project_license>
+  
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+  
+  <description>
+    <p>
+      A Beautiful and Feature-rich Music Player, With YouTube &amp; Video Support Built in Flutter
+    </p>
+  </description>
+  
+  <screenshots>
+    <screenshot type="default">
+      <image>https://github.com/namidaco/namida/raw/main/screens/collection_light_1.jpg</image>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/namidaco/namida/raw/main/screens/collection_light_2.jpg</image>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/namidaco/namida/raw/main/screens/collection_dark_1.jpg</image>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/namidaco/namida/raw/main/screens/collection_dark_2.jpg</image>
+    </screenshot>
+  </screenshots>
+</component>

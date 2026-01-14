@@ -17,7 +17,6 @@ import 'package:http_cache_stream/http_cache_stream.dart';
 import 'package:media_kit/media_kit.dart' as mk;
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:path_provider/path_provider.dart' as pp;
-import 'package:permission_handler/permission_handler.dart';
 import 'package:rhttp/rhttp.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
@@ -34,8 +33,10 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
+import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
+import 'package:namida/controller/platform/permission_manager/permission_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -125,6 +126,8 @@ Future<bool> _mainAppInitialization() async {
         bringWindowToFront: true,
         onSecondWindow: (args) => _NamidaReceiveIntentManager.executeReceivedItems(args, (p) => p, (p) => p),
       );
+    } else if (Platform.isLinux || Platform.isMacOS) {
+      // TODO(core): linux single instance support
     }
 
     ShortcutsController.instance?.init();
@@ -157,6 +160,7 @@ Future<bool> _mainAppInitialization() async {
       ]) {
         try {
           dir = await fn();
+          break;
         } catch (_) {}
       }
 
@@ -177,8 +181,8 @@ Future<bool> _mainAppInitialization() async {
       NamidaStorage.inst.getStorageDirectoriesAppCache().then((value) => AppDirs.APP_CACHE = value.firstOrNull ?? ''),
     ].executeAllAndSilentReportErrors();
 
-    // -- sdk must be initialized first
-    if (!await requestStoragePermission(request: false)) {
+    // -- android sdk must be initialized first
+    if (!await PermissionManager.platform.requestStoragePermission(request: false)) {
       shouldShowOnBoarding = true;
     }
 
@@ -206,12 +210,8 @@ Future<bool> _mainAppInitialization() async {
     ShortcutsController.instance?.initUserShortcutsFromSettings();
 
     if (settings.directoriesToScan.value.isEmpty) {
-      final downloadsFolder = await pp.getDownloadsDirectory().ignoreError().then((value) => value?.path) ?? FileParts.joinPath(paths[0], 'Download');
-      settings.directoriesToScan.value.addAll([
-        ...kStoragePaths.mappedUniqued((path) => FileParts.joinPath(path, 'Music')),
-        downloadsFolder,
-        AppDirs.INTERNAL_STORAGE,
-      ]);
+      final defaultDirs = await _getDefaultDirectoriesToScan(paths);
+      settings.directoriesToScan.value.addAll(defaultDirs.toList());
     }
   } catch (e, st) {
     logger.error('_mainAppInitialization', e: e, st: st);
@@ -314,6 +314,40 @@ Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
   }
 }
 
+Future<Set<String>> _getDefaultDirectoriesToScan(List<String> paths) async {
+  final dirsToScanDefault = <String>{};
+  void addDirToScan(String path, {bool ignoreExists = false}) {
+    try {
+      if (ignoreExists || Directory(path).existsSync()) {
+        dirsToScanDefault.add(path);
+      }
+    } catch (_) {}
+  }
+
+  for (final sp in kStoragePaths) {
+    addDirToScan(FileParts.joinPath(sp, 'Music'), ignoreExists: !isDesktop);
+  }
+  if (Platform.isLinux) {
+    try {
+      final p = Process.runSync('xdg-user-dir', ['MUSIC']);
+      if (p.exitCode == 0) {
+        final outputPath = (p.stdout as String).split('\n').first.trim();
+        if (outputPath.isNotEmpty && outputPath != NamidaPlatformBuilder.linuxUserHome) {
+          addDirToScan(outputPath);
+        }
+      }
+    } catch (_) {}
+  }
+  if (!isDesktop) {
+    // -- its more common to find music in downloads for phones, unlike desktop.
+    final downloadsFolder = await pp.getDownloadsDirectory().ignoreError().then((value) => value?.path) ?? FileParts.joinPath(paths[0], 'Download');
+    addDirToScan(downloadsFolder, ignoreExists: true);
+  }
+  addDirToScan(AppDirs.INTERNAL_STORAGE, ignoreExists: true);
+
+  return dirsToScanDefault;
+}
+
 void _cleanOldLogsSync(List params) {
   String dirPath = params[0];
   String? fileSuffix = params[1];
@@ -412,83 +446,12 @@ void _initializeIntenties() {
   }
 }
 
-/// Granting Storage Permission.
-/// Requesting Granular media permissions for Android 13 (API 33) doesnt work for some reason.
-/// Currently the target API is set to 32.
-/// [request] will prompt dialog if not granted.
-Future<bool> requestStoragePermission({bool request = true}) async {
-  bool granted = false;
-
-  final permissionsToRequest = <Permission>[];
-  if (NamidaDeviceInfo.sdkVersion < 33) {
-    permissionsToRequest.add(Permission.storage);
-  } else {
-    permissionsToRequest.add(Permission.audio);
-    permissionsToRequest.add(Permission.videos);
-    permissionsToRequest.add(Permission.photos);
-  }
-
-  if (await permissionsToRequest.anyAsync((element) => element.isPermanentlyDenied)) {
-    if (request) {
-      // -- user denied, should open settings.
-      await openAppSettings();
-    }
-  } else if (await permissionsToRequest.anyAsync((element) => element.isDenied)) {
-    if (request) {
-      final statuses = await permissionsToRequest.request();
-      if (statuses.values.any((st) => st.isPermanentlyDenied)) {
-        await openAppSettings();
-      }
-      granted = statuses.values.every((st) => st.isGranted);
-    }
-  } else {
-    granted = true;
-  }
-  return granted;
-}
-
-Future<bool> requestIgnoreBatteryOptimizations() async {
-  final granted = await Permission.ignoreBatteryOptimizations.isGranted;
-  if (granted) return true;
-  if (!settings.canAskForBatteryOptimizations) return false;
-
-  snackyy(
-    message: lang.IGNORE_BATTERY_OPTIMIZATIONS_SUBTITLE,
-    displayDuration: SnackDisplayDuration.eternal,
-    top: false,
-    isError: true,
-    button: (
-      lang.DONT_ASK_AGAIN,
-      () => settings.save(canAskForBatteryOptimizations: false),
-    ),
-  );
-  await Future.delayed(const Duration(seconds: 1));
-  final p = await Permission.ignoreBatteryOptimizations.request();
-  return p.isGranted;
-}
-
 Future<bool> requestManageStoragePermission({bool request = true, bool showError = true, bool ensureDirectoryCreated = false}) async {
-  Future<void> createDir() async {
-    if (!ensureDirectoryCreated) return;
-    final dir = Directory(AppDirs.INTERNAL_STORAGE);
-    if (!await dir.exists()) await dir.create(recursive: true);
-  }
-
-  if (!NamidaFeaturesVisibility.shouldRequestManageAllFilesPermission) {
-    await createDir();
-    return true;
-  }
-
-  if (request && !await Permission.manageExternalStorage.isGranted) {
-    await Permission.manageExternalStorage.request();
-  }
-
-  if (!await Permission.manageExternalStorage.isGranted || await Permission.manageExternalStorage.isDenied) {
-    if (showError) snackyy(title: lang.STORAGE_PERMISSION_DENIED, message: lang.STORAGE_PERMISSION_DENIED_SUBTITLE, isError: true);
-    return false;
-  }
-  await createDir();
-  return true;
+  return PermissionManager.platform.requestManageStoragePermission(
+    request: request,
+    showError: showError,
+    ensureDirectoryCreated: ensureDirectoryCreated,
+  );
 }
 
 BuildContext get rootContext => namida.rootNavigatorKey.currentContext!;
@@ -507,6 +470,7 @@ class Namida extends StatefulWidget {
       PortsProvider.disposeAll(),
       SearchSortController.inst.disposeResources(),
       NamicoDBWrapper.dispose(),
+      SMTCController.instance?.dispose(),
     ].executeAllAndSilentReportErrors();
   }
 }
@@ -534,13 +498,8 @@ class _NamidaState extends State<Namida> {
                     final isLight = mode.isLight(platformBrightness);
                     final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
                     final mainChild = WindowController.instance?.usingCustomWindowTitleBar == true
-                        ? Column(
-                            children: [
-                              const NamidaDesktopAppBar(),
-                              Expanded(
-                                child: widget,
-                              ),
-                            ],
+                        ? WrapWithWindowGoodies(
+                            child: widget,
                           )
                         : widget;
 
@@ -569,6 +528,8 @@ class _NamidaState extends State<Namida> {
     setState(() => _shouldShowOnBoarding = shouldShowOnBoarding);
 
     FlutterNativeSplash.remove();
+    WindowController.instance?.ensurePositionRestored();
+
     Timer(
       Duration.zero,
       () => _secondaryAppInitialization(shouldShowOnBoarding),
@@ -628,15 +589,17 @@ class _NamidaState extends State<Namida> {
 
                         return Overlay(
                           initialEntries: [
-                            OverlayEntry(builder: (context) {
-                              final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
-                              if (newPlatformBrightness != platformBrightness) {
-                                platformBrightness = newPlatformBrightness;
-                                mainApp = buildMainApp(widget, platformBrightness);
-                                YoutubeMiniplayerUiController.inst.startDimTimer(brightness: platformBrightness);
-                              }
-                              return mainApp;
-                            }),
+                            OverlayEntry(
+                              builder: (context) {
+                                final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
+                                if (newPlatformBrightness != platformBrightness) {
+                                  platformBrightness = newPlatformBrightness;
+                                  mainApp = buildMainApp(widget, platformBrightness);
+                                  YoutubeMiniplayerUiController.inst.startDimTimer(brightness: platformBrightness);
+                                }
+                                return mainApp;
+                              },
+                            ),
                           ],
                         );
                       },

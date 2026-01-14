@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
+import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:namida/class/route.dart';
@@ -369,6 +372,45 @@ class NamidaDrawer extends StatelessWidget {
   }
 }
 
+class WrapWithWindowGoodies extends StatelessWidget {
+  final Widget child;
+  const WrapWithWindowGoodies({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget child = this.child;
+
+    child = Column(
+      children: [
+        const NamidaDesktopAppBar(),
+        Expanded(
+          child: child,
+        ),
+      ],
+    );
+    final addRoundedCorners = WindowController.instance?.customRoundedCorners == true;
+    if (addRoundedCorners) {
+      final borderRadius = BorderRadiusGeometry.circular(8.0.multipliedRadius);
+      child = BorderRadiusClip(
+        borderRadius: borderRadius,
+        child: DecoratedBox(
+          position: DecorationPosition.foreground,
+          decoration: BoxDecoration(
+            borderRadius: borderRadius,
+            border: Border.all(
+              width: 1.0,
+              color: const Color.fromARGB(200, 60, 60, 60),
+            ),
+          ),
+          child: child,
+        ),
+      );
+    }
+
+    return child;
+  }
+}
+
 class NamidaDesktopAppBar extends StatefulWidget {
   const NamidaDesktopAppBar({super.key});
 
@@ -400,6 +442,11 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
   }
 
   @override
+  void onWindowFocus() {
+    // setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     final title = 'Namida';
     final height = WindowController.instance?.windowTitleBarHeightIfActive;
@@ -409,12 +456,98 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
     final textTheme = theme.textTheme;
     final colorscheme = theme.colorScheme;
     final brightness = theme.brightness;
+    final buttonHeigth = (height ?? 24.0) * 0.75;
+    final buttonWidth = Platform.isWindows ? 42.0 : 18.0;
+    final buttonsType = ThemeType.auto;
     // final backgroundColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor, Colors.white.withValues(alpha: 0.25));
     final backgroundColor = appBarTheme.backgroundColor ?? colorscheme.surface;
     final surfaceTintColor = appBarTheme.surfaceTintColor ?? colorscheme.surfaceTint;
     final logoImg = NamidaChannel.defaultIconForPlatform;
     final logoBgColor = context.isDarkMode ? const Color(0x40262729) : const Color(0x063c3f46);
     final logoTextColor = context.isDarkMode ? Color.alphaBlend(logoBgColor.withAlpha(100), Colors.white) : const Color.fromARGB(180, 44, 44, 44);
+
+    final buttonsRow = Platform.isWindows
+        ? [
+            SizedBox(
+              width: buttonWidth * 0.95,
+              child: WindowCaptionButton.minimize(
+                brightness: brightness,
+                onPressed: () async {
+                  final isMinimized = await windowManager.isMinimized();
+                  if (isMinimized) {
+                    windowManager.restore();
+                  } else {
+                    windowManager.minimize();
+                  }
+                },
+              ),
+            ),
+            SizedBox(
+              width: buttonWidth * 0.95,
+              child: FutureBuilder<bool>(
+                future: windowManager.isMaximized(),
+                builder: (context, snapshot) {
+                  if (snapshot.data == true) {
+                    return WindowCaptionButton.unmaximize(
+                      brightness: brightness,
+                      onPressed: windowManager.unmaximize,
+                    );
+                  }
+                  return WindowCaptionButton.maximize(
+                    brightness: brightness,
+                    onPressed: windowManager.maximize,
+                  );
+                },
+              ),
+            ),
+            SizedBox(
+              width: buttonWidth,
+              child: WindowCaptionButton.close(
+                brightness: brightness,
+                onPressed: () async {
+                  await windowManager.close().ignoreError();
+                  await windowManager.destroy().ignoreError();
+                },
+              ),
+            ),
+          ]
+        : [
+            DecoratedMinimizeButton(
+              width: buttonWidth,
+              height: buttonHeigth,
+              type: buttonsType,
+              onPressed: () async {
+                bool isMinimized = await windowManager.isMinimized();
+                if (isMinimized) {
+                  windowManager.restore();
+                } else {
+                  windowManager.minimize();
+                }
+              },
+            ),
+            DecoratedMaximizeButton(
+              width: buttonWidth,
+              height: buttonHeigth,
+              type: buttonsType,
+              onPressed: () async {
+                final isMaximized = await windowManager.isMaximized();
+                if (isMaximized) {
+                  await windowManager.unmaximize();
+                } else {
+                  await windowManager.maximize();
+                }
+              },
+            ),
+            DecoratedCloseButton(
+              width: buttonWidth,
+              height: buttonHeigth,
+              type: buttonsType,
+              onPressed: () async {
+                await windowManager.close().ignoreError();
+                await windowManager.destroy().ignoreError();
+              },
+            ),
+          ];
     return SizedBox(
       height: height,
       child: Material(
@@ -424,9 +557,20 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
         surfaceTintColor: surfaceTintColor,
         child: Stack(
           children: [
-            const Positioned.fill(
-              child: DragToMoveArea(
-                child: SizedBox(),
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onPanStart: (_) => windowManager.startDragging(),
+                onSecondaryTap: windowManager.popUpWindowMenu,
+                onDoubleTap: () async {
+                  bool isMaximized = await windowManager.isMaximized();
+                  if (!isMaximized) {
+                    windowManager.maximize();
+                  } else {
+                    windowManager.unmaximize();
+                  }
+                },
+                child: const SizedBox(),
               ),
             ),
             Row(
@@ -542,40 +686,16 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                     ),
                   ),
                 ),
-                WindowCaptionButton.minimize(
-                  brightness: brightness,
-                  onPressed: () async {
-                    bool isMinimized = await windowManager.isMinimized();
-                    if (isMinimized) {
-                      windowManager.restore();
-                    } else {
-                      windowManager.minimize();
-                    }
-                  },
-                ),
-                FutureBuilder<bool>(
-                  future: windowManager.isMaximized(),
-                  builder: (context, snapshot) {
-                    if (snapshot.data == true) {
-                      return WindowCaptionButton.unmaximize(
-                        brightness: brightness,
-                        onPressed: windowManager.unmaximize,
-                      );
-                    }
-                    return WindowCaptionButton.maximize(
-                      brightness: brightness,
-                      onPressed: windowManager.maximize,
-                    );
-                  },
-                ),
-                WindowCaptionButton.close(
-                  brightness: brightness,
-                  onPressed: () async {
-                    await windowManager.close().ignoreError();
-                    await windowManager.destroy().ignoreError();
-                  },
-                ),
+                ...buttonsRow
               ],
+            ),
+            // -- juust slight dim
+            Positioned.fill(
+              child: IgnorePointer(
+                child: ColoredBox(
+                  color: backgroundColor.withValues(alpha: 0.1),
+                ),
+              ),
             ),
           ],
         ),

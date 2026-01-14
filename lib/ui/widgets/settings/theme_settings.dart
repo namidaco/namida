@@ -40,7 +40,7 @@ enum _ThemeSettingsKeys with SettingKeysBase {
   ;
 
   @override
-  final NamidaFeaturesAvailablity? availability;
+  final NamidaFeaturesAvailablityBase? availability;
   const _ThemeSettingsKeys([this.availability]);
 }
 

@@ -1,13 +1,14 @@
 part of 'tags_extractor.dart';
 
-class _TagsExtractorWindows extends TagsExtractor {
-  _TagsExtractorWindows._internal();
+class _TagsExtractorDesktop extends TagsExtractor {
+  _TagsExtractorDesktop._internal();
 
   @override
   Future<void> updateLogsPath() async {}
 
   @override
   Future<FAudioModel> extractMetadata({
+    FFMPEGExecuter? executer,
     required String trackPath,
     bool extractArtwork = true,
     required String? artworkDirectory,
@@ -15,7 +16,7 @@ class _TagsExtractorWindows extends TagsExtractor {
     bool overrideArtwork = false,
     required bool isVideo,
   }) async {
-    final ffmpegInfo = await ffmpegController.extractMetadata(trackPath);
+    final ffmpegInfo = await executer?.extractMetadata(trackPath) ?? await ffmpegController.extractMetadata(trackPath);
 
     if (ffmpegInfo != null && isVideo) {
       try {
@@ -83,12 +84,17 @@ class _TagsExtractorWindows extends TagsExtractor {
     bool overrideArtwork = false,
   }) async* {
     final key = keyWrapper.next();
+
+    // -- create with each batch to avoid piling up the main executer
+    final executer = FFMPEGExecuter.platform();
+
     for (int i = 0; i < paths.length; i++) {
       var path = paths[i];
       currentPathsBeingExtracted[key] = path;
       final isVideo = path.isVideo();
       final artworkDirectory = isVideo ? videoArtworkDirectory : audioArtworkDirectory;
       final info = await extractMetadata(
+        executer: executer,
         trackPath: path,
         artworkDirectory: artworkDirectory,
         extractArtwork: extractArtwork,
@@ -97,6 +103,7 @@ class _TagsExtractorWindows extends TagsExtractor {
       );
       yield info;
     }
+    executer.dispose();
     currentPathsBeingExtracted.remove(key);
   }
 

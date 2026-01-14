@@ -14,6 +14,7 @@ import 'package:youtipie/core/extensions.dart' hide ListUtils;
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/permission_manager/permission_manager.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -833,7 +834,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                     if (accept) context.safePop();
                                                   } else {
                                                     if (!await requestManageStoragePermission()) return;
-                                                    requestIgnoreBatteryOptimizations();
+                                                    PermissionManager.platform.requestIgnoreBatteryOptimizations();
                                                     if (context.mounted) context.safePop();
                                                     YoutubeController.inst.downloadYoutubeVideos(
                                                       useCachedVersionsIfAvailable: true,

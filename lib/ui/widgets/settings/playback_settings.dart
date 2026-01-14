@@ -54,7 +54,7 @@ enum _PlaybackSettingsKeys with SettingKeysBase {
   ;
 
   @override
-  final NamidaFeaturesAvailablity? availability;
+  final NamidaFeaturesAvailablityBase? availability;
   const _PlaybackSettingsKeys([this.availability]);
 }
 

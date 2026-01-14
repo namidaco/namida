@@ -1,7 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' as material;
@@ -17,6 +16,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/controller/window_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -571,7 +571,7 @@ class NamidaNavigator {
 
   DateTime _currentBackPressTime = DateTime(0);
   Future<bool> _doubleTapToExit() async {
-    if (Platform.isWindows) return false;
+    if (isDesktop) return false;
 
     final now = DateTime.now();
     if (now.difference(_currentBackPressTime) > const Duration(seconds: 2)) {

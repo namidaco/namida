@@ -188,6 +188,32 @@ class BackupAndRestore extends SettingSubpageProvider {
           final args = ['--backupPath="$backupFolder"', '--musicFolders="$musicFoldersJoined"'];
           await Process.run(exeFile.path, args);
         }
+      } else if (Platform.isLinux) {
+        File? exeFile;
+        final commonPaths = [
+          '/usr/local/bin/namida_sync',
+          '/usr/bin/namida_sync',
+          '${NamidaPlatformBuilder.linuxUserHome ?? '~'}/.local/bin/namida_sync',
+        ];
+
+        for (final path in commonPaths) {
+          final file = File(path);
+          if (await file.exists()) {
+            exeFile = file;
+            break;
+          }
+        }
+        exeFile ??= await NamidaFileBrowser.pickFile(
+          note: "${lang.PICK_FROM_STORAGE}: namida_sync",
+          allowedExtensions: null,
+        );
+
+        if (exeFile == null || !await exeFile.exists()) {
+          requiresDownload = true;
+        } else {
+          final args = ['--backupPath="$backupFolder"', '--musicFolders="$musicFoldersJoined"'];
+          await Process.run(exeFile.path, args);
+        }
       } else {
         final uri = Uri(
           scheme: 'namidasync',

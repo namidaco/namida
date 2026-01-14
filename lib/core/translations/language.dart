@@ -96,7 +96,9 @@ class Language extends LanguageKeys {
       _currentMap = map.cast();
 
       _currentLanguage.value = lang;
-      settings.save(selectedLanguage: lang);
+      if (lang != settings.selectedLanguage.value) {
+        settings.save(selectedLanguage: lang);
+      }
       TimeAgoController.setLocale(lang.code);
       lang.refreshConverterMaps();
 

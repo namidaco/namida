@@ -56,7 +56,7 @@ enum _IndexerSettingsKeys with SettingKeysBase {
   ;
 
   @override
-  final NamidaFeaturesAvailablity? availability;
+  final NamidaFeaturesAvailablityBase? availability;
   const _IndexerSettingsKeys([this.availability]);
 }
 

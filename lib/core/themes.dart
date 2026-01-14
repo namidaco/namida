@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
@@ -23,6 +22,8 @@ class AppThemes {
     final pitchBlack = shouldUseAMOLED ? const Color.fromARGB(255, 0, 0, 0) : null;
     final mainColorMultiplier = pitchBlack == null ? 0.8 : 0.1; // makes colors that rely on mainColor, a bit darker.
     final pitchGrey = pitchBlack == null ? const Color.fromARGB(255, 35, 35, 35) : const Color.fromARGB(255, 20, 20, 20);
+
+    final useDesktopDecoration = isDesktop;
 
     int getColorAlpha(int a) => (a * mainColorMultiplier).round();
     Color getMainColorWithAlpha(int a) => color!.withAlpha(getColorAlpha(a));
@@ -97,7 +98,7 @@ class AppThemes {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
-          visualDensity: Platform.isWindows ? const VisualDensity(horizontal: -1.5, vertical: -1.5) : const VisualDensity(horizontal: -2.0, vertical: -2.0),
+          visualDensity: useDesktopDecoration ? const VisualDensity(horizontal: -1.5, vertical: -1.5) : const VisualDensity(horizontal: -2.0, vertical: -2.0),
           padding: const WidgetStatePropertyAll(
             EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           ),
@@ -136,10 +137,10 @@ class AppThemes {
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        contentPadding: Platform.isWindows ? const EdgeInsetsDirectional.fromSTEB(12.0, 18.0, 12.0, 18.0) : null,
+        contentPadding: useDesktopDecoration ? const EdgeInsetsDirectional.fromSTEB(12.0, 18.0, 12.0, 18.0) : null,
       ),
       textButtonTheme: TextButtonThemeData(
-        style: Platform.isWindows
+        style: useDesktopDecoration
             ? const ButtonStyle(
                 padding: WidgetStatePropertyAll(
                   EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),

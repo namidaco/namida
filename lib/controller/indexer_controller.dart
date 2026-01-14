@@ -1164,7 +1164,13 @@ class Indexer<T extends Track> {
       }
 
       final finalAudios = prevDuplicated ? audioFilesWithoutDuplicates : audioFiles.toList();
-      final listParts = (Platform.numberOfProcessors ~/ 2.5).withMinimum(1);
+      int listParts;
+      if (Platform.isAndroid || Platform.isIOS) {
+        listParts = (Platform.numberOfProcessors ~/ 2.5).withMinimum(2);
+      } else {
+        // lil bit more luxurious on desktop
+        listParts = (Platform.numberOfProcessors * 0.8).round().withMinimum(2);
+      }
       final audioFilesParts = finalAudios.split(listParts);
       final audioFilesCompleters = List.generate(audioFilesParts.length, (_) => Completer<void>());
       final keyWrapper = ExtractingPathKey.create();

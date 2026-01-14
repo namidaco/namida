@@ -1178,15 +1178,16 @@ class DirsFileFilter {
 
     directoriesToScan.loop((dirPath) {
       final directory = Directory(dirPath);
-
-      if (directory.existsSync()) {
-        allAvailableDirectories[directory] = false;
-        directory.listSyncSafe(recursive: true, followLinks: true).loop((file) {
-          if (file is Directory) {
-            allAvailableDirectories[file] = false;
-          }
-        });
-      }
+      try {
+        if (directory.existsSync()) {
+          allAvailableDirectories[directory] = false;
+          directory.listSyncSafe(recursive: true, followLinks: true).loop((file) {
+            if (file is Directory) {
+              allAvailableDirectories[file] = false;
+            }
+          });
+        }
+      } on FileSystemException catch (_) {}
     });
 
     /// Assigning directories and sub-subdirectories that has .nomedia.

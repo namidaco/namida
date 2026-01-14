@@ -108,17 +108,17 @@ class _FileOutput extends LogOutput {
   Future<String> _getDeviceInfo() async {
     final device = await NamidaDeviceInfo.deviceInfoCompleter.future;
     final package = await NamidaDeviceInfo.packageInfoCompleter.future;
-    final deviceMap = device.data;
-    final packageMap = package.data;
+    final deviceMap = device?.data;
+    final packageMap = package?.data;
 
     // -- android
-    deviceMap.remove('supported32BitAbis');
-    deviceMap.remove('supported64BitAbis');
-    deviceMap.remove('systemFeatures');
+    deviceMap?.remove('supported32BitAbis');
+    deviceMap?.remove('supported64BitAbis');
+    deviceMap?.remove('systemFeatures');
     // -----------
 
     // -- windows
-    deviceMap.remove('digitalProductId');
+    deviceMap?.remove('digitalProductId');
     // -----------
 
     final encoder = JsonEncoder.withIndent(

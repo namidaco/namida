@@ -86,7 +86,7 @@ class _NamidaStorageWindows extends NamidaStorage {
     String? note,
     bool multiple = false,
     List<NamidaFileExtensionsWrapper>? allowedExtensions,
-    String? memetype = NamidaStorageFileMemeType.any,
+    NamidaStorageFileMemeType? memetype = NamidaStorageFileMemeType.any,
   }) async {
     final extensionsMap = <String, String>{};
     if (allowedExtensions != null) {

@@ -54,7 +54,7 @@ enum _ExtraSettingsKeys with SettingKeysBase {
   ;
 
   @override
-  final NamidaFeaturesAvailablity? availability;
+  final NamidaFeaturesAvailablityBase? availability;
   const _ExtraSettingsKeys([this.availability]);
 }
 

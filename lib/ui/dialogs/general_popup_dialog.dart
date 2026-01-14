@@ -1216,7 +1216,7 @@ Future<void> showGeneralPopupDialog(
 
                               /// Track Utils
                               /// todo: support for multiple tracks editing
-                              if (isSingle && playlistUtilsRow == null)
+                              if (isSingle /*  && playlistUtilsRow == null */)
                                 Row(
                                   children: [
                                     const SizedBox(width: 24.0),

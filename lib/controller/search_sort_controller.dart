@@ -709,7 +709,11 @@ class SearchSortController extends SearchPortsProvider {
       reverse: reverse,
       list: trackSearchTemp.value,
       onDone: (sortType, isReverse) {
-        if (!isAuto) settings.save(tracksSortSearch: sortType, tracksSortSearchReversed: isReverse);
+        if (!isAuto) {
+          if (sortBy != settings.tracksSortSearch.value || reverse != settings.tracksSortSearchReversed.value) {
+            settings.save(tracksSortSearch: sortType, tracksSortSearchReversed: isReverse);
+          }
+        }
         trackSearchTemp.refresh();
       },
     );
@@ -849,7 +853,9 @@ class SearchSortController extends SearchPortsProvider {
     finalMap.value.assignAllEntries(albumsList);
     finalMap.refresh();
 
-    settings.save(albumSort: sortBy, albumSortReversed: reverse);
+    if (sortBy != settings.albumSort.value || reverse != settings.albumSortReversed.value) {
+      settings.save(albumSort: sortBy, albumSortReversed: reverse);
+    }
 
     _searchMediaType(type: MediaType.album, text: LibraryTab.albums.textSearchController?.text ?? '');
   }
@@ -936,7 +942,9 @@ class SearchSortController extends SearchPortsProvider {
     finalMap.value.assignAllEntries(artistsList);
     finalMap.refresh();
 
-    settings.save(artistSort: sortBy, artistSortReversed: reverse);
+    if (sortBy != settings.artistSort.value || reverse != settings.artistSortReversed.value) {
+      settings.save(artistSort: sortBy, artistSortReversed: reverse);
+    }
 
     _searchMediaType(type: artistType, text: LibraryTab.artists.textSearchController?.text ?? '');
   }
@@ -971,7 +979,9 @@ class SearchSortController extends SearchPortsProvider {
     finalMap.value.assignAllEntries(genresList);
     finalMap.refresh();
 
-    settings.save(genreSort: sortBy, genreSortReversed: reverse);
+    if (sortBy != settings.genreSort.value || reverse != settings.genreSortReversed.value) {
+      settings.save(genreSort: sortBy, genreSortReversed: reverse);
+    }
     _searchMediaType(type: MediaType.genre, text: LibraryTab.genres.textSearchController?.text ?? '');
   }
 
@@ -1031,7 +1041,9 @@ class SearchSortController extends SearchPortsProvider {
     playlistsMap.value.assignAllEntries(playlistList);
     playlistsMap.refresh();
 
-    settings.save(playlistSort: sortBy, playlistSortReversed: reverse);
+    if (sortBy != settings.playlistSort.value || reverse != settings.playlistSortReversed.value) {
+      settings.save(playlistSort: sortBy, playlistSortReversed: reverse);
+    }
 
     _searchPlaylists(LibraryTab.playlists.textSearchController?.text ?? '');
   }

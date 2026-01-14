@@ -7,12 +7,14 @@ abstract class NamidaChannel {
     return NamidaPlatformBuilder.init(
       android: () => _NamidaChannelAndroid._init(),
       windows: () => _NamidaChannelWindows._internal(),
+      linux: () => _NamidaChannelLinux._internal(),
     );
   }
 
   static final defaultIconForPlatform = NamidaPlatformBuilder.init(
     android: () => NamidaAppIcons.namida,
     windows: () => NamidaAppIcons.mini,
+    linux: () => NamidaAppIcons.mini,
   );
 
   final isInPip = false.obs;

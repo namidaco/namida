@@ -41,18 +41,18 @@ class _NamidaStorageAndroid extends NamidaStorage {
     String? note,
     bool multiple = false,
     List<NamidaFileExtensionsWrapper>? allowedExtensions,
-    String? memetype = NamidaStorageFileMemeType.any,
+    NamidaStorageFileMemeType? memetype = NamidaStorageFileMemeType.any,
   }) async {
     try {
       List<String>? extensionsList;
       if (allowedExtensions != null) {
         extensionsList = <String>[];
-        allowedExtensions.loop((item) => extensionsList!.addAll(item.extensions.toList()));
+        allowedExtensions.loop((item) => extensionsList!.addAll(item.extensions));
       }
 
       final res = await _channel.invokeListMethod<String?>('pickFile', {
         'note': note,
-        'type': memetype,
+        'type': memetype?.type,
         'multiple': multiple,
         'allowedExtensions': extensionsList,
       });
