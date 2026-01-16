@@ -19,7 +19,6 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:rhttp/rhttp.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
-import 'package:windows_single_instance/windows_single_instance.dart';
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/file_parts.dart';
@@ -33,6 +32,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
+import 'package:namida/controller/platform/app_single_instance/app_single_instance.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
@@ -118,16 +118,10 @@ Future<bool> _mainAppInitialization() async {
       HomeWidgetController.instance?.init(),
     ].executeAllAndSilentReportErrors();
 
-    if (Platform.isWindows) {
+    final singleInstance = AppSingleInstanceBase.instance;
+    if (singleInstance != null) {
       args = Zone.current['args'] as List<String>? ?? [];
-      await WindowsSingleInstance.ensureSingleInstance(
-        args,
-        "namida_instance",
-        bringWindowToFront: true,
-        onSecondWindow: (args) => _NamidaReceiveIntentManager.executeReceivedItems(args, (p) => p, (p) => p),
-      );
-    } else if (Platform.isLinux || Platform.isMacOS) {
-      // TODO(core): linux single instance support
+      await singleInstance.acquireSingleInstanceOrExit(args);
     }
 
     ShortcutsController.instance?.init();
@@ -225,7 +219,9 @@ Future<bool> _mainAppInitialization() async {
     /// even tho we don't really need to wait for queue, it's better as to
     /// minimize startup lag as this changes some app-level vars like color scheme
     FutureOr<void> prepareLatestQueue() {
-      if (!shouldShowOnBoarding) {
+      if (args != null && args.isNotEmpty) {
+        // -- will play from args instead of latest queue
+      } else if (!shouldShowOnBoarding) {
         return ytInfoInitSyncItemsCompleter.future.whenComplete(QueueController.inst.prepareLatestQueueAsync);
       }
     }
@@ -263,7 +259,8 @@ Future<bool> _mainAppInitialization() async {
   }
 
   if (args != null && args.isNotEmpty) {
-    _NamidaReceiveIntentManager.executeReceivedItems(args, (p) => p, (p) => p);
+    NamidaReceiveIntentManager.executeReceivedItems(args, (p) => p, (p) => p);
+    Player.inst.play();
   }
   return shouldShowOnBoarding;
 }
@@ -435,13 +432,13 @@ void _initializeIntenties() {
   if (NamidaFeaturesVisibility.recieveSharingIntents) {
     // -- Recieving Initial Android Shared Intent.
     FlutterSharingIntent.instance.getInitialSharing().then(
-          (items) => _NamidaReceiveIntentManager.executeReceivedItems(items, (f) => f.value, (f) => f.realPath),
+          (items) => NamidaReceiveIntentManager.executeReceivedItems(items, (f) => f.value, (f) => f.realPath),
         );
 
     // -- Listening to Android Shared Intents.
     FlutterSharingIntent.instance.getMediaStream().listen(
-          (items) => _NamidaReceiveIntentManager.executeReceivedItems(items, (f) => f.value, (f) => f.realPath),
-          onError: (err) => _NamidaReceiveIntentManager.showErrorPlayingFileSnackbar(error: err.toString()),
+          (items) => NamidaReceiveIntentManager.executeReceivedItems(items, (f) => f.value, (f) => f.realPath),
+          onError: (err) => NamidaReceiveIntentManager.showErrorPlayingFileSnackbar(error: err.toString()),
         );
   }
 }
@@ -471,6 +468,7 @@ class Namida extends StatefulWidget {
       SearchSortController.inst.disposeResources(),
       NamicoDBWrapper.dispose(),
       SMTCController.instance?.dispose(),
+      AppSingleInstanceBase.instance?.dispose(),
     ].executeAllAndSilentReportErrors();
   }
 }
@@ -698,7 +696,7 @@ class ScrollBehaviorModified extends ScrollBehavior {
   }
 }
 
-class _NamidaReceiveIntentManager {
+class NamidaReceiveIntentManager {
   static void executeReceivedItems<T>(List<T> files, String? Function(T f) valueCallback, String? Function(T f) realPathCallback) {
     // -- deep links
     if (files.length == 1) {
@@ -831,7 +829,7 @@ class _NamidaDropRegion extends StatelessWidget {
             );
           }
         }
-        _NamidaReceiveIntentManager.executeReceivedItems(finalData, (f) => f, (f) => f);
+        NamidaReceiveIntentManager.executeReceivedItems(finalData, (f) => f, (f) => f);
       },
       child: child,
     );

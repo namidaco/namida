@@ -167,6 +167,7 @@ dependencies:
       path: super_hot_key
 
   # ---- Linux Packages ----
+  dbus: ^0.7.11
   file_picker: ^10.3.8
   modern_titlebar_buttons: ^1.1.2
   mpris_service:
