@@ -118,7 +118,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
 
   @override
   void dispose() {
-    if (widget.videoId != null) {
+    if (widget.videoId?.isNotEmpty == true) {
       if (requestedThumbnailTemp == true) ThumbnailManager.inst.closeThumbnailClients(widget.videoId!, true);
       if (requestedThumbnailNonTemp == true) ThumbnailManager.inst.closeThumbnailClients(widget.videoId!, false);
     }
@@ -149,7 +149,10 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
             ArtworkWidget.kImagePathInitialValue;
       }
 
-      final videoId = widget.videoId;
+      String? videoId = widget.videoId;
+      if (videoId != null && videoId.isEmpty) {
+        videoId = null;
+      }
 
       File? res = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(
         id: videoId,
