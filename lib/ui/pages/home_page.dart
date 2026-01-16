@@ -34,6 +34,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/artist_card.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/stats.dart';
 
 final int _lowestDateMSSEToDisplay = DateTime(1980).millisecondsSinceEpoch + 1;
 
@@ -660,6 +661,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                         ).addSeparators(
                           skipFirst: 1,
                           separator: const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
+                        ),
+                        const SliverToBoxAdapter(
+                          child: NamidaContainerDivider(
+                            height: 2.0,
+                            margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                          ),
+                        ),
+                        const SliverToBoxAdapter(
+                          child: StatsSection(),
                         ),
                         kBottomPaddingWidgetSliver,
                       ],
