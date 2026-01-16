@@ -413,23 +413,26 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
             builder: (context, activeAccountChannel) {
               String? errorMessage;
               Widget? button;
-              if (activeAccountChannel == null) {
-                errorMessage = lang.SIGN_IN_YOU_NEED_ACCOUNT_TO_VIEW_PAGE;
-                button = NamidaInkWellButton(
-                  sizeMultiplier: 1.1,
-                  icon: Broken.user_edit,
-                  text: lang.MANAGE_YOUR_ACCOUNTS,
-                  onTap: const YoutubeAccountManagePage().navigate,
-                );
-              } else if (YoutubeAccountController.operationBlockedByMembership(widget.operation, membership)) {
-                errorMessage = YoutubeAccountController.formatMembershipErrorMessage(widget.operation, membership);
-                button = NamidaInkWellButton(
-                  sizeMultiplier: 1.1,
-                  icon: Broken.message_edit,
-                  text: lang.MEMBERSHIP_MANAGE,
-                  onTap: const YoutubeManageSubscriptionPage().navigate,
-                );
+              if (widget.operation.requiresAccount) {
+                if (activeAccountChannel == null) {
+                  errorMessage = lang.SIGN_IN_YOU_NEED_ACCOUNT_TO_VIEW_PAGE;
+                  button = NamidaInkWellButton(
+                    sizeMultiplier: 1.1,
+                    icon: Broken.user_edit,
+                    text: lang.MANAGE_YOUR_ACCOUNTS,
+                    onTap: const YoutubeAccountManagePage().navigate,
+                  );
+                } else if (YoutubeAccountController.operationBlockedByMembership(widget.operation, membership)) {
+                  errorMessage = YoutubeAccountController.formatMembershipErrorMessage(widget.operation, membership);
+                  button = NamidaInkWellButton(
+                    sizeMultiplier: 1.1,
+                    icon: Broken.message_edit,
+                    text: lang.MEMBERSHIP_MANAGE,
+                    onTap: const YoutubeManageSubscriptionPage().navigate,
+                  );
+                }
               }
+
               return errorMessage != null
                   ? Padding(
                       padding: pagePadding,
