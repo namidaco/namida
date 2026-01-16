@@ -504,6 +504,7 @@ enum TrackExecuteActions {
   copyArtistAndTitle,
   copyYTLink,
   searchYTSimilar,
+  delete,
 }
 
 enum CacheVideoPriority {

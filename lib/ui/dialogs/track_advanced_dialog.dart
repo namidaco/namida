@@ -71,41 +71,6 @@ void showTrackAdvancedDialog({
 
   final firstTracksDirectoryPath = tracksUniqued.first.track.path.getDirectoryPath;
 
-  void showTrackDeletePermanentlyDialog(List<Selectable> tracks, Color colorScheme) {
-    late final isDeleting = false.obs;
-    NamidaNavigator.inst.navigateDialog(
-      onDisposing: () {
-        isDeleting.close();
-      },
-      tapToDismiss: () => !isDeleting.value,
-      colorScheme: colorScheme,
-      dialogBuilder: (theme) => CustomBlurryDialog(
-        theme: theme,
-        normalTitleStyle: true,
-        isWarning: true,
-        bodyText: lang.CONFIRM,
-        actions: [
-          const CancelButton(),
-          ObxO(
-            rx: isDeleting,
-            builder: (context, deleting) => AnimatedEnabled(
-              enabled: !deleting,
-              child: NamidaButton(
-                text: lang.DELETE.toUpperCase(),
-                onPressed: () async {
-                  isDeleting.value = true;
-                  await EditDeleteController.inst.deleteTracksFromStoragePermanently(tracks);
-                  isDeleting.value = false;
-                  NamidaNavigator.inst.closeDialog(2);
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   final videosOnlyCount = tracks.fold(0, (previousValue, element) => previousValue + (element.track is Video ? 1 : 0));
   final tracksOnlyCount = tracks.length - videosOnlyCount;
 
@@ -163,7 +128,11 @@ void showTrackAdvancedDialog({
                   if (videosOnlyCount > 0) videosOnlyCount.displayVideoKeyword,
                 ].join(' & ').addDQuotation()),
             icon: Broken.danger,
-            onTap: () => showTrackDeletePermanentlyDialog(tracks, colorScheme),
+            onTap: () => showTrackDeletePermanentlyDialog(
+              tracks,
+              colorScheme,
+              afterConfirm: () => NamidaNavigator.inst.closeDialog(2),
+            ),
           ),
           if (sourcesMap.isNotEmpty)
             CustomListTile(
@@ -674,6 +643,50 @@ void _showTrackColorPaletteDialog({
         ),
       );
     },
+  );
+}
+
+void showTrackDeletePermanentlyDialog(List<Selectable> tracks, Color? colorScheme, {void Function()? afterConfirm}) {
+  final videosOnlyCount = tracks.fold(0, (previousValue, element) => previousValue + (element.track is Video ? 1 : 0));
+  final tracksOnlyCount = tracks.length - videosOnlyCount;
+
+  late final isDeleting = false.obs;
+  NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      isDeleting.close();
+    },
+    tapToDismiss: () => !isDeleting.value,
+    colorScheme: colorScheme,
+    dialogBuilder: (theme) => CustomBlurryDialog(
+      theme: theme,
+      normalTitleStyle: true,
+      isWarning: true,
+      bodyText: "${lang.DELETE_N_TRACKS_FROM_STORAGE.replaceFirst('_NUM_', [
+            if (tracksOnlyCount > 0) tracksOnlyCount.displayTrackKeyword,
+            if (videosOnlyCount > 0) videosOnlyCount.displayVideoKeyword,
+          ].join(' & ').addDQuotation())}?",
+      actions: [
+        const CancelButton(),
+        ObxO(
+          rx: isDeleting,
+          builder: (context, deleting) => AnimatedEnabled(
+            enabled: !deleting,
+            child: NamidaButton(
+              text: lang.DELETE.toUpperCase(),
+              style: ButtonStyle(
+                foregroundColor: WidgetStatePropertyAll(Colors.red),
+              ),
+              onPressed: () async {
+                isDeleting.value = true;
+                await EditDeleteController.inst.deleteTracksFromStoragePermanently(tracks);
+                isDeleting.value = false;
+                afterConfirm?.call();
+              },
+            ),
+          ),
+        ),
+      ],
+    ),
   );
 }
 

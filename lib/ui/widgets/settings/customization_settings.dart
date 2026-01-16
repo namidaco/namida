@@ -351,6 +351,7 @@ class CustomizationSettings extends SettingSubpageProvider {
     required BuildContext context,
     required _CustomizationSettingsKeys key,
     bool excludePlayerActions = false,
+    bool excludeDelete = true,
     required String title,
     required IconData icon,
     required Rx<TrackExecuteActions> rx,
@@ -359,16 +360,18 @@ class CustomizationSettings extends SettingSubpageProvider {
   }) {
     List<Widget> getChildren() {
       var values = TrackExecuteActions.values;
-      if (excludePlayerActions) {
-        final newValues = <TrackExecuteActions>[];
-        for (final v in values) {
-          if (v == TrackExecuteActions.playnext || v == TrackExecuteActions.playlast || v == TrackExecuteActions.playafter) {
-            // -- exclude
-          } else {
-            newValues.add(v);
-          }
-        }
-        values = newValues;
+      if (excludePlayerActions || excludeDelete) {
+        final valuesToExclude = <TrackExecuteActions>[
+          if (excludePlayerActions) ...[
+            TrackExecuteActions.playnext,
+            TrackExecuteActions.playlast,
+            TrackExecuteActions.playafter,
+          ],
+          if (excludeDelete) ...[
+            TrackExecuteActions.delete,
+          ],
+        ];
+        values = TrackExecuteActions.values.where((element) => !valuesToExclude.remove(element)).toList();
       }
 
       return [
@@ -703,6 +706,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 _getSwipeActionTileWidget(
                   context: context,
                   key: _CustomizationSettingsKeys.swipeLeftAction,
+                  excludeDelete: false,
                   title: lang.LEFT_ACTION,
                   icon: Broken.arrow_left_1,
                   rx: settings.onTrackSwipeLeft,
@@ -711,6 +715,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 _getSwipeActionTileWidget(
                   context: context,
                   key: _CustomizationSettingsKeys.swipeRightAction,
+                  excludeDelete: false,
                   title: lang.RIGHT_ACTION,
                   icon: Broken.arrow_right,
                   rx: settings.onTrackSwipeRight,

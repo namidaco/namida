@@ -52,6 +52,7 @@ import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
+import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/pages/albums_page.dart';
@@ -569,6 +570,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       TrackExecuteActions.copyArtistAndTitle => "${lang.COPY} (${lang.ARTIST} + ${lang.TITLE})",
       TrackExecuteActions.copyYTLink => "${lang.COPY} (${lang.LINK})",
       TrackExecuteActions.searchYTSimilar => lang.SEARCH_YOUTUBE,
+      TrackExecuteActions.delete => lang.DELETE,
     };
   }
 
@@ -594,6 +596,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       TrackExecuteActions.copyArtistAndTitle => Broken.copy,
       TrackExecuteActions.copyYTLink => Broken.copy,
       TrackExecuteActions.searchYTSimilar => Broken.search_normal_1,
+      TrackExecuteActions.delete => Broken.danger,
     };
   }
 
@@ -844,6 +847,17 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
           searchController.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
           searchController.ytSearchKey.currentState?.fetchSearch(customText: text);
         }
+      case TrackExecuteActions.delete:
+        item.execute(
+          selectable: (finalItem) {
+            showTrackDeletePermanentlyDialog(
+              [finalItem],
+              null,
+              afterConfirm: NamidaNavigator.inst.closeDialog,
+            );
+          },
+          youtubeID: (finalItem) {},
+        );
     }
     VibratorController.verylight();
   }
