@@ -132,8 +132,8 @@ jobs:
         run: |
           sudo apt-get update -y && sudo apt-get upgrade -y
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev mpv libmpv-dev alsa-base alsa-utils alsa-tools dpkg-dev rpm jq makepkg
-          dart pub global deactivate fastforge_workspace
-          dart pub global deactivate fastforge
+          dart pub global deactivate fastforge_workspace || true
+          dart pub global deactivate fastforge || true
           dart pub global activate --source git https://github.com/MSOB7YY/fastforge.git
           dart pub global activate --source git https://github.com/MSOB7YY/fastforge.git --git-path "packages/fastforge"
 
