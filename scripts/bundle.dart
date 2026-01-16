@@ -7,12 +7,14 @@ import 'package:yaml/yaml.dart';
 import 'package:yaml_edit/yaml_edit.dart';
 
 void main(List<String> args) async {
+  args = List.from(args);
   final start = DateTime.now();
 
   final linuxDistDir = _getDirectoryEnsureExistsAndCleaned('./dist');
   final bundleOutputDir = _getDirectoryEnsureExistsAndCleaned('./scripts/bundle_output');
 
-  final isKuru = args.contains('-kuru');
+  final isKuru = args.remove('-kuru');
+  final tarOnly = args.remove('-tar');
 
   print('====> Parsing version...');
 
@@ -30,7 +32,7 @@ void main(List<String> args) async {
   // -- just bcz kernel_blob.bin is sometimes created for release mode
   await _execute('flutter', ["clean"]);
 
-  final filename = 'namida-$versionOnly-beta';
+  final filename = 'namida-v$versionOnly-beta';
   String buildOutputPath(String ext) {
     return "${bundleOutputDir.path}/$filename.linux.$ext";
   }
@@ -71,6 +73,8 @@ void main(List<String> args) async {
     ".",
   ]);
   print('====> Success');
+
+  if (tarOnly) return;
 
   const availableOutputFormats = [
     'deb',

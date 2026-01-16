@@ -2,7 +2,7 @@
 Version=1.0
 Type=Application
 Name=Namida
-Comment=Music Player
+Comment=Media Player
 TryExec=namida
 Exec=namida %F
 Icon=namida

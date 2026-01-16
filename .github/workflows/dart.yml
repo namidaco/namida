@@ -129,21 +129,69 @@ jobs:
           cd ../
 
       - name: Setup Linux
-        continue-on-error: true
         run: |
           sudo apt-get update -y && sudo apt-get upgrade -y
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev mpv libmpv alsa-base alsa-utils alsa-tools dpkg dpkg-dev rpm
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev mpv libmpv-dev alsa-base alsa-utils alsa-tools dpkg-dev rpm jq makepkg
           dart pub global deactivate fastforge_workspace
           dart pub global deactivate fastforge
           dart pub global activate --source git https://github.com/MSOB7YY/fastforge.git
           dart pub global activate --source git https://github.com/MSOB7YY/fastforge.git --git-path "packages/fastforge"
 
       - name: Creating Linux deb/rpm/tar.gz
-        continue-on-error: true
         run: |
           dart ./scripts/bundle.dart
           mkdir -p build_final
           mv ./scripts/bundle_output/* build_final/ || echo "No files to move"
+
+      - name: Publish to AUR
+        run: |
+          # Setup SSH for AUR
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur
+          chmod 600 ~/.ssh/aur
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+          cat >> ~/.ssh/config << EOF
+          Host aur.archlinux.org
+            IdentityFile ~/.ssh/aur
+            User aur
+          EOF
+          chmod 600 ~/.ssh/config
+
+          # Parse version string (5.6.5-beta+260114196)
+          FULL_VERSION="${{ steps.extract_version.outputs.version }}"
+          PKGVER=$(echo "$FULL_VERSION" | sed 's/-beta+.*//')
+          BUILDNUMBER=$(echo "$FULL_VERSION" | sed 's/.*+//')
+
+          # Clone AUR package
+          git clone ssh://aur@aur.archlinux.org/namida-bin.git namida_aur
+          cd namida_aur
+
+          # Update version and build number in PKGBUILD
+          sed -i "s/^pkgver=.*/pkgver=${PKGVER}/" PKGBUILD
+          sed -i "s/^_buildnumber=.*/_buildnumber=${BUILDNUMBER}/" PKGBUILD
+          sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+
+          # Calculate checksum from the local tarball
+          TARBALL="../build_final/namida-v${PKGVER}-beta.linux.tar.gz"
+          if [ -f "$TARBALL" ]; then
+            NEW_SHA256=$(sha256sum "$TARBALL" | awk '{print $1}')
+            sed -i "s/^sha256sums=.*/sha256sums=('${NEW_SHA256}')/" PKGBUILD
+          else
+            echo "Warning: Tarball not found at $TARBALL"
+            ls -la ../build_final/
+          fi
+
+          # Generate .SRCINFO
+          makepkg --printsrcinfo > .SRCINFO
+
+          # Commit and push to AUR
+          git config user.name "MSOB7YY"
+          git config user.email "${{ secrets.EMAIL }}"
+          git add PKGBUILD .SRCINFO
+          git commit -m "update to v${PKGVER} (build ${BUILDNUMBER})"
+          git push origin master
+
+          cd ..
 
       - name: Get the previous release date
         continue-on-error: true

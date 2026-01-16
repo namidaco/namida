@@ -99,14 +99,18 @@ set(INSTALL_BUNDLE_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
 install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"
   COMPONENT Runtime)
 
-# bundle .desktop & icon
+# bundle .desktop, icons & metainfo
 install(FILES "namida.desktop"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications"
 )
-install(FILES "icons/namida.png"
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/pixmaps"
+install(DIRECTORY "icons/"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/"
+  FILES_MATCHING PATTERN "*"
 )
-
+install(FILES "packaging/com.msob7y.namida.metainfo.xml"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/metainfo/"
+  RENAME "namida.metainfo.xml"
+)
 
 # bundle required binaries
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg_build/linux/"
