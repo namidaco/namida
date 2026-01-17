@@ -22,7 +22,7 @@ void main(List<String> args) async {
   final pubspecParsed = loadYaml(pubspecContent);
   final versionWithBuildNumber = pubspecParsed['version'] as String;
   final versionOnly = versionWithBuildNumber.split('+').first.split('-').first;
-  // final buildNumberOnly = versionWithBuildNumber.split('+').last;
+  final buildNumberOnly = versionWithBuildNumber.split('+').last;
 
   print('====> Parsed version: $versionOnly');
 
@@ -107,6 +107,9 @@ void main(List<String> args) async {
       }
     }
   }
+
+  print('====> updating aur files');
+  await _execute('bash', ['../namida_aur/bump.sh', versionOnly, buildNumberOnly]);
 
   // await _execute('dart', ['bump_version.dart', '-y', '--skip-git', versionOnly, buildNumberOnly]);
 

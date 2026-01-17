@@ -51,18 +51,21 @@ class _SMTCManagerLinux extends NamidaSMTCManager {
           seek: (offset) async {
             await Player.inst.seek(offset);
           },
-
           setPosition: (_, value) => Player.inst.seek(Duration(microseconds: value)),
-          // openUri: (value) => Intent.instance.play(value.toString()),
-          // loopStatus: (value) => setLoop(
-          //   switch (value) {
-          //     MPRISLoopStatus.none => Loop.off,
-          //     MPRISLoopStatus.track => Loop.one,
-          //     MPRISLoopStatus.playlist => Loop.all,
-          //   },
-          // ),
+          openUri: (value) async => NamidaReceiveIntentManager.executeReceivedItems([value.toFilePath()], (f) => f, (f) => f),
+          loopStatus: (value) async {
+            final e = settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values);
+            settings.player.save(repeatMode: e);
+            snackyy(
+              icon: Broken.flash_1,
+              title: '',
+              message: "${lang.REPEAT_MODE}: ${e.buildText()}",
+              borderColor: Colors.green.withValues(alpha: 0.6),
+              top: false,
+            );
+          },
           rate: (value) => Player.inst.setPlayerSpeed(value),
-          // shuffle: (value) => Player.inst.setShuffle(value),
+          shuffle: (value) async => Player.inst.shuffleTracks(true),
           volume: (value) => Player.inst.setVolume(value * 100.0),
         ),
       );
