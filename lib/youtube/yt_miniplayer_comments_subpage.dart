@@ -34,7 +34,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
   @override
   void initState() {
     super.initState();
-    sc = ScrollController();
+    sc = NamidaScrollController.create();
   }
 
   @override

@@ -82,8 +82,8 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   void initState() {
     super.initState();
 
-    _uploadsScrollController = ScrollController();
-    _horizontalListController = ScrollController();
+    _uploadsScrollController = NamidaScrollController.create();
+    _horizontalListController = NamidaScrollController.create();
     YoutubeSubscriptionsController.inst.sortByLastFetched();
     final subCh = YoutubeSubscriptionsController.inst.subscribedChannels.lastOrNull;
     if (subCh != null) {

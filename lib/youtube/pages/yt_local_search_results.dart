@@ -32,7 +32,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
     NamidaNavigator.inst.isytLocalSearchInFullPage = true;
 
     YTLocalSearchController.inst.scrollController?.dispose();
-    YTLocalSearchController.inst.scrollController = ScrollController();
+    YTLocalSearchController.inst.scrollController = NamidaScrollController.create();
 
     Future(() => YTLocalSearchController.inst.search(widget.initialSearch));
   }

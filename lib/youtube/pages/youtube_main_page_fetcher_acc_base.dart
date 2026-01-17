@@ -114,7 +114,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     widget.onListUpdated!(_currentFeed.value);
   }
 
-  final _controller = ScrollController();
+  final _controller = NamidaScrollController.create();
   final _isLoadingCurrentFeed = false.obs;
   final _isLoadingNext = false.obs;
   final _lastFetchWasCached = false.obs;

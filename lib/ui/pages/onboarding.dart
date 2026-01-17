@@ -52,7 +52,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
   @override
   void initState() {
     super.initState();
-    c = ScrollController()..addListener(_scrollListener);
+    c = NamidaScrollController.create()..addListener(_scrollListener);
     Timer(Duration.zero, _scrollListener);
 
     _requestPermission(request: false); // just to set it to true only if granted.

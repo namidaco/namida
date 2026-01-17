@@ -19,6 +19,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/mp.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
 class MiniPlayerController {
@@ -50,7 +51,7 @@ class MiniPlayerController {
 
   bool get _miniplayerIsWideScreen => Dimensions.inst.miniplayerIsWideScreen;
 
-  late final ScrollController queueScrollController = ScrollController()..addListener(_updateIcon);
+  late final ScrollController queueScrollController = NamidaScrollController.create()..addListener(_updateIcon);
 
   Future<void> _onMiniplayerDismiss() async => await Player.inst.clearQueue();
 

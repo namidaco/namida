@@ -14,6 +14,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 
 mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvider<Map<String, dynamic>> {
@@ -38,7 +39,7 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
 
   @override
   void initState() {
-    _scrollController = ScrollController();
+    _scrollController = NamidaScrollController.create();
     _focusNode = FocusNode();
     listChangesListenerRx().addListener(_restartSearchPortIfNecessary);
     super.initState();

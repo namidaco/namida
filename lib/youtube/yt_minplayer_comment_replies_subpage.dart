@@ -55,7 +55,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
   @override
   void initState() {
     super.initState();
-    sc = ScrollController();
+    sc = NamidaScrollController.create();
 
     _isLoadingCurrentReplies.value = true;
     _initValues().whenComplete(

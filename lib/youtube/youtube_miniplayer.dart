@@ -88,7 +88,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     setState(() => _canScrollQueue = can);
   }
 
-  final _scrollController = ScrollController();
+  final _scrollController = NamidaScrollController.create();
 
   void resetGlowUnderVideo() => _shouldShowGlowUnderVideo.value = false;
 
@@ -1636,7 +1636,7 @@ class _StreamSegmentsRow extends StatefulWidget {
 
 class _StreamSegmentsRowState extends State<_StreamSegmentsRow> {
   StreamSegment? _currentSegment;
-  late final _controller = ScrollController();
+  late final _controller = NamidaScrollController.create();
 
   final _segmentKeys = <StreamSegment, GlobalKey>{};
 

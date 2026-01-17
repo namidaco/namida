@@ -100,7 +100,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   void initState() {
     super.initState();
     _listController = ListController();
-    _scrollController = ScrollController();
+    _scrollController = NamidaScrollController.create();
     final lrc = Lyrics.inst.currentLyricsLRC.value;
     final txt = Lyrics.inst.currentLyricsText.value;
     fillLists(lrc, txt);

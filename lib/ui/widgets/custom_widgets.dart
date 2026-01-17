@@ -53,6 +53,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
+import 'package:namida/packages/smooth_scroll_controller.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
@@ -3034,7 +3035,7 @@ class NamidaSelectableAutoLinkText extends StatelessWidget {
         fontSize: 13.5 * fontScale,
       ),
       scrollPhysics: const NeverScrollableScrollPhysics(),
-      onTap: (url) async => await NamidaLinkUtils.openLinkPreferNamida(url),
+      onTap: (url) async => await NamidaLinkUtils.openLinkPreferNamida(url, theme: theme),
     );
   }
 }
@@ -3292,7 +3293,7 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
 
   @override
   void initState() {
-    _scrollController = widget.scrollController ?? ScrollController();
+    _scrollController = widget.scrollController ?? NamidaScrollController.create();
     super.initState();
   }
 
@@ -4183,7 +4184,7 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
   @override
   void initState() {
     super.initState();
-    controller = (widget.scrollController ?? ScrollController())..addListener(_scrollListener);
+    controller = (widget.scrollController ?? NamidaScrollController.create())..addListener(_scrollListener);
   }
 
   @override
@@ -4440,7 +4441,7 @@ class _NamidaScrollbarWithControllerState extends State<NamidaScrollbarWithContr
   late final ScrollController _sc;
   @override
   void initState() {
-    _sc = ScrollController();
+    _sc = NamidaScrollController.create();
     super.initState();
   }
 

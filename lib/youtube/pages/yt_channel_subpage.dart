@@ -102,7 +102,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
 
   late final _scrollAnimation = AnimationController(vsync: this, value: 1.0);
 
-  late final _itemsScrollController = ScrollControllerWithDirection();
+  late final _itemsScrollController = NamidaScrollController.create();
   late final _scrollControllersOffsets = <int, double>{};
   int _tabIndex = 0;
 

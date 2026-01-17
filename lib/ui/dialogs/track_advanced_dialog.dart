@@ -708,7 +708,7 @@ void showLibraryTracksChooseDialog({
   }
 
   final searchController = TextEditingController();
-  final scrollController = ScrollController();
+  final scrollController = NamidaScrollController.create();
   final focusNode = FocusNode();
   final searchManager = _TracksSearchTemp(
     (tracks) {

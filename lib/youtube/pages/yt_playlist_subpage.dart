@@ -489,7 +489,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
   void initState() {
     // we eventually need to implement playlist sort if account is signed in.
     _playlist = widget.playlist;
-    _controller = ScrollController();
+    _controller = NamidaScrollController.create();
     super.initState();
 
     _initValues();

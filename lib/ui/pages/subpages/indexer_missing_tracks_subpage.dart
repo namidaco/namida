@@ -70,7 +70,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
+    _scrollController = NamidaScrollController.create();
     Timer(Duration.zero, _fetchMissingTracks);
   }
 

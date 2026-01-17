@@ -78,8 +78,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
-    _lostMemoriesScrollController = ScrollController();
+    _scrollController = NamidaScrollController.create();
+    _lostMemoriesScrollController = NamidaScrollController.create();
     _fillLists();
   }
 

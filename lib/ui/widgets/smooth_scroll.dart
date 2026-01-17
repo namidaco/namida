@@ -2,182 +2,55 @@
 
 part of 'custom_widgets.dart';
 
-// source: https://pub.dev/packages/web_smooth_scroll
-// modified to fit namida
-class _DesktopSmoothMouseScroll extends StatefulWidget {
-  /// Extra scroll offset to be added while the scroll is happened
-  static const double _kDefaultScrollOffset = 1.5;
-
-  /// Duration/length for how long the animation should go
-  /// after the scroll has happened
-  static const int _kDefaultAnimationDuration = 300;
-
-  final ScrollController controller;
-
-  final Axis scrollDirection;
-
-  final bool reverse;
-
-  /// Scroll speed for adjusting the smoothness and add a bit of extra scroll
-  /// Default value is 2.5
-  /// You can try it for a range of 2 - 5
-  final double scrollSpeed;
-
-  /// Duration/length for how long the animation should go
-  /// after the scroll has happened
-  final int scrollAnimationLength;
-
-  final Curve curve;
-
-  final Widget child;
-
-  const _DesktopSmoothMouseScroll({
-    super.key,
-    required this.controller,
-    required this.scrollDirection,
-    required this.reverse,
-    this.scrollSpeed = _kDefaultScrollOffset,
-    this.scrollAnimationLength = _kDefaultAnimationDuration,
-    this.curve = Curves.easeOutQuart,
-    required this.child,
-  });
-
-  @override
-  State<_DesktopSmoothMouseScroll> createState() => _DesktopSmoothMouseScrollState();
-}
-
-class _DesktopSmoothMouseScrollState extends State<_DesktopSmoothMouseScroll> {
-  double _scroll = 0;
-  bool _isAnimating = false;
-  double _targetScroll = 0;
-
-  @override
-  void initState() {
-    super.initState();
-
-    widget.controller.addListener(_scrollListener);
-    _targetScroll = widget.controller.initialScrollOffset;
-  }
-
-  @override
-  void didUpdateWidget(covariant _DesktopSmoothMouseScroll oldWidget) {
-    if (!widget.controller.hasClients) {
-      widget.controller.addListener(_scrollListener);
+class NamidaScrollController {
+  static ScrollController create({
+    double initialScrollOffset = 0.0,
+    bool keepScrollOffset = true,
+    String? debugLabel,
+    void Function(ScrollPosition)? onAttach,
+    void Function(ScrollPosition)? onDetach,
+  }) {
+    if (NamidaFeaturesVisibility.smoothScrolling) {
+      return SmoothScrollController(
+        smooth: () => settings.extra.smoothScrolling ?? true,
+        initialScrollOffset: initialScrollOffset,
+        keepScrollOffset: keepScrollOffset,
+        debugLabel: debugLabel,
+        onAttach: onAttach,
+        onDetach: onDetach,
+      );
     }
-
-    super.didUpdateWidget(oldWidget);
-  }
-
-  void _smoothScrollTo(double delta) {
-    final controller = widget.controller;
-
-    if (widget.reverse) delta = -delta;
-
-    // Update target scroll position
-    _targetScroll += (delta * widget.scrollSpeed);
-
-    // Bound the scroll value
-    if (_targetScroll > controller.position.maxScrollExtent) {
-      _targetScroll = controller.position.maxScrollExtent;
-    }
-    if (_targetScroll < 0) {
-      _targetScroll = 0;
-    }
-
-    int animationDuration = widget.scrollAnimationLength;
-
-    // If at bounds, use shorter animation
-    if (_targetScroll == controller.position.maxScrollExtent || _targetScroll == 0) {
-      animationDuration = widget.scrollAnimationLength ~/ 4;
-    }
-
-    _isAnimating = true;
-
-    // Always start a new animation to the target
-    controller
-        .animateTo(
-          _targetScroll,
-          duration: Duration(milliseconds: animationDuration),
-          curve: widget.curve,
-        )
-        .then((_) => _isAnimating = false);
-
-    if (controller is ScrollControllerWithDirection) {
-      // -- manually update controllers that need reliable direction, since "NeverScrollableScrollPhysics" won't update it
-      final newDirection = delta.isNegative ? fr.ScrollDirection.forward : fr.ScrollDirection.reverse;
-      for (final p in controller.positions) {
-        if (p is _DirectionTrackingScrollPosition) {
-          p.updateUserScrollDirection(newDirection);
-        }
-      }
-    }
-  }
-
-  void _scrollListener() {
-    _scroll = widget.controller.offset;
-    // Update target scroll when user manually scrolls
-    if (!_isAnimating) {
-      _targetScroll = _scroll;
-    }
-  }
-
-  void _onPointerSignal(PointerSignalEvent pointerSignal) {
-    if (pointerSignal is PointerScrollEvent) {
-      if (pointerSignal.kind != PointerDeviceKind.trackpad) {
-        final isHorizontal = HardwareKeyboard.instance.isShiftPressed;
-        final accept = switch (widget.scrollDirection) {
-          Axis.horizontal => isHorizontal,
-          Axis.vertical => !isHorizontal,
-        };
-        if (!accept) return;
-
-        // Apply smooth scrolling for mouse wheel
-        _smoothScrollTo(pointerSignal.scrollDelta.dy);
-      } else {
-        // For trackpad, calculate new offset with bounds checking
-        final newOffset = (widget.controller.offset + pointerSignal.scrollDelta.dy).clamp(0.0, widget.controller.position.maxScrollExtent);
-        // Directly update scroll position without smoothing
-        widget.controller.jumpTo(newOffset);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Listener(
-      onPointerSignal: _onPointerSignal,
-      child: widget.child,
+    return ScrollController(
+      initialScrollOffset: initialScrollOffset,
+      keepScrollOffset: keepScrollOffset,
+      debugLabel: debugLabel,
+      onAttach: onAttach,
+      onDetach: onDetach,
     );
   }
 }
 
-class _SuperSmoothScrollViewBuilder extends StatefulWidget {
+class _SmoothScrollControllerBuilder extends StatefulWidget {
   final ScrollController? controller;
-  final ScrollPhysics? physics;
-  final Axis scrollDirection;
-  final bool reverse;
-  final Widget Function(ScrollController controller, ScrollPhysics? physics) builder;
+  final Widget Function(ScrollController controller) builder;
 
-  const _SuperSmoothScrollViewBuilder({
+  const _SmoothScrollControllerBuilder({
     super.key,
     required this.controller,
-    required this.physics,
-    required this.scrollDirection,
-    required this.reverse,
     required this.builder,
   });
 
   @override
-  State<_SuperSmoothScrollViewBuilder> createState() => __SuperSmoothScrollViewBuilderState();
+  State<_SmoothScrollControllerBuilder> createState() => __SmoothScrollControllerBuilderState();
 }
 
-class __SuperSmoothScrollViewBuilderState extends State<_SuperSmoothScrollViewBuilder> {
+class __SmoothScrollControllerBuilderState extends State<_SmoothScrollControllerBuilder> {
   late ScrollController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? ScrollController();
+    _controller = widget.controller ?? NamidaScrollController.create();
   }
 
   @override
@@ -188,18 +61,7 @@ class __SuperSmoothScrollViewBuilderState extends State<_SuperSmoothScrollViewBu
 
   @override
   Widget build(BuildContext context) {
-    final applySmoothScrolling = NamidaFeaturesVisibility.smoothScrolling && widget.physics is! NeverScrollableScrollPhysics && (settings.extra.smoothScrolling ?? true);
-    final physics = applySmoothScrolling ? const _CustomNeverScrollableScrollPhysics() : widget.physics;
-    Widget child = widget.builder(_controller, physics);
-    if (applySmoothScrolling) {
-      child = _DesktopSmoothMouseScroll(
-        controller: _controller,
-        scrollDirection: widget.scrollDirection,
-        reverse: widget.reverse,
-        child: child,
-      );
-    }
-    return child;
+    return widget.builder(_controller);
   }
 }
 
@@ -237,12 +99,9 @@ class SmoothCustomScrollView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _SuperSmoothScrollViewBuilder(
+    return _SmoothScrollControllerBuilder(
       controller: controller,
-      physics: physics,
-      scrollDirection: scrollDirection,
-      reverse: reverse,
-      builder: (controller, physics) => CustomScrollView(
+      builder: (controller) => CustomScrollView(
         controller: controller,
         slivers: slivers,
         physics: physics,
@@ -293,16 +152,10 @@ class SmoothSingleChildScrollView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _SuperSmoothScrollViewBuilder(
+    return _SmoothScrollControllerBuilder(
       controller: controller,
-      physics: physics,
-      scrollDirection: scrollDirection,
-      reverse: reverse,
-      builder: (controller, physics) => SingleChildScrollView(
+      builder: (controller) => SingleChildScrollView(
         controller: controller,
-        physics: physics,
-        scrollDirection: scrollDirection,
-        reverse: reverse,
         padding: padding,
         primary: primary,
         dragStartBehavior: dragStartBehavior,
@@ -365,12 +218,9 @@ class SuperSmoothListView extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => _SuperSmoothScrollViewBuilder(
+  Widget build(BuildContext context) => _SmoothScrollControllerBuilder(
         controller: controller,
-        physics: physics,
-        scrollDirection: scrollDirection,
-        reverse: reverse,
-        builder: (controller, physics) => SuperListView(
+        builder: (controller) => SuperListView(
           controller: controller,
           physics: physics,
           listController: listController,
@@ -423,13 +273,10 @@ class SuperSmoothListView extends StatelessWidget {
     ExtentPrecalculationPolicy? extentPrecalculationPolicy,
     bool delayPopulatingCacheArea = false,
   }) =>
-      _SuperSmoothScrollViewBuilder(
+      _SmoothScrollControllerBuilder(
         key: key,
         controller: controller,
-        physics: physics,
-        scrollDirection: scrollDirection,
-        reverse: reverse,
-        builder: (controller, physics) => itemExtent == null && itemExtentBuilder == null
+        builder: (controller) => itemExtent == null && itemExtentBuilder == null
             ? SuperListView.builder(
                 controller: controller,
                 physics: physics,
@@ -506,13 +353,10 @@ class SuperSmoothListView extends StatelessWidget {
     ExtentPrecalculationPolicy? extentPrecalculationPolicy,
     bool delayPopulatingCacheArea = false,
   }) =>
-      _SuperSmoothScrollViewBuilder(
+      _SmoothScrollControllerBuilder(
         key: key,
         controller: controller,
-        physics: physics,
-        scrollDirection: scrollDirection,
-        reverse: reverse,
-        builder: (controller, physics) => SuperListView.separated(
+        builder: (controller) => SuperListView.separated(
           controller: controller,
           physics: physics,
           listController: listController,
@@ -560,13 +404,10 @@ class SuperSmoothListView extends StatelessWidget {
     ExtentPrecalculationPolicy? extentPrecalculationPolicy,
     bool delayPopulatingCacheArea = false,
   }) =>
-      _SuperSmoothScrollViewBuilder(
+      _SmoothScrollControllerBuilder(
         key: key,
         controller: controller,
-        physics: physics,
-        scrollDirection: scrollDirection,
-        reverse: reverse,
-        builder: (controller, physics) => SuperListView.custom(
+        builder: (controller) => SuperListView.custom(
           controller: controller,
           physics: physics,
           listController: listController,
@@ -613,13 +454,10 @@ class SmoothGridView {
     String? restorationId,
     Clip clipBehavior = Clip.hardEdge,
   }) =>
-      _SuperSmoothScrollViewBuilder(
+      _SmoothScrollControllerBuilder(
         key: key,
         controller: controller,
-        physics: physics,
-        scrollDirection: scrollDirection,
-        reverse: reverse,
-        builder: (controller, physics) => GridView.builder(
+        builder: (controller) => GridView.builder(
           gridDelegate: gridDelegate,
           controller: controller,
           physics: physics,
@@ -669,13 +507,10 @@ class SmoothMasonryGridView {
     String? restorationId,
     Clip clipBehavior = Clip.hardEdge,
   }) =>
-      _SuperSmoothScrollViewBuilder(
+      _SmoothScrollControllerBuilder(
         key: key,
         controller: controller,
-        physics: physics,
-        scrollDirection: scrollDirection,
-        reverse: reverse,
-        builder: (controller, physics) => MasonryGridView.builder(
+        builder: (controller) => MasonryGridView.builder(
           gridDelegate: gridDelegate,
           controller: controller,
           physics: physics,
@@ -699,74 +534,4 @@ class SmoothMasonryGridView {
           clipBehavior: clipBehavior,
         ),
       );
-}
-
-class ScrollControllerWithDirection extends ScrollController {
-  ScrollControllerWithDirection({
-    super.initialScrollOffset,
-    super.keepScrollOffset = true,
-    super.debugLabel,
-    super.onAttach,
-    super.onDetach,
-  });
-
-  @override
-  ScrollPosition createScrollPosition(
-    ScrollPhysics physics,
-    ScrollContext context,
-    ScrollPosition? oldPosition,
-  ) {
-    return _DirectionTrackingScrollPosition(
-      physics: physics,
-      context: context,
-      initialPixels: initialScrollOffset,
-      keepScrollOffset: keepScrollOffset,
-      oldPosition: oldPosition,
-      debugLabel: debugLabel,
-    );
-  }
-
-  fr.ScrollDirection? get userScrollDirection {
-    return positions.lastOrNull?.userScrollDirection;
-  }
-}
-
-// custom scroll position that tracks direction, since "NeverScrollableScrollPhysics" will prevent reports
-class _DirectionTrackingScrollPosition extends ScrollPositionWithSingleContext {
-  _DirectionTrackingScrollPosition({
-    required super.physics,
-    required super.context,
-    super.initialPixels,
-    super.keepScrollOffset,
-    super.oldPosition,
-    super.debugLabel,
-  });
-
-  @override
-  fr.ScrollDirection get userScrollDirection => _userScrollDirection;
-  fr.ScrollDirection _userScrollDirection = fr.ScrollDirection.idle;
-
-  @override
-  void updateUserScrollDirection(fr.ScrollDirection value) {
-    if (userScrollDirection == value) {
-      return;
-    }
-    _userScrollDirection = value;
-    super.updateUserScrollDirection(value);
-  }
-}
-
-class _CustomNeverScrollableScrollPhysics extends ScrollPhysics {
-  const _CustomNeverScrollableScrollPhysics({super.parent});
-
-  @override
-  _CustomNeverScrollableScrollPhysics applyTo(ScrollPhysics? ancestor) {
-    return _CustomNeverScrollableScrollPhysics(parent: buildParent(ancestor));
-  }
-
-  @override
-  bool get allowUserScrolling => false;
-
-  @override
-  bool get allowImplicitScrolling => true;
 }

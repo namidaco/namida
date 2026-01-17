@@ -51,7 +51,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
 
   late final AnimationController _bigBoxAnimation;
 
-  late final _queueScrollController = ScrollController();
+  late final _queueScrollController = NamidaScrollController.create();
   late final _canScrollQueue = true.obs;
   late final _arrowIcon = Broken.cd.obs;
 

@@ -25,13 +25,14 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class Lyrics {
   static Lyrics get inst => _instance;
   static final Lyrics _instance = Lyrics._internal();
   Lyrics._internal();
 
-  final textScrollController = ScrollController(keepScrollOffset: true);
+  final textScrollController = NamidaScrollController.create(keepScrollOffset: true);
 
   final lrcViewKey = GlobalKey<LyricsLRCParsedViewState>();
   final lrcViewKeyFullscreen = GlobalKey<LyricsLRCParsedViewState>();

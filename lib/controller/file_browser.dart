@@ -287,8 +287,8 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   bool _showEmptyFolders = false;
 
   static final _pathSeparator = Platform.pathSeparator;
-  late final _scrollController = ScrollController();
-  late final _pathSplitsScrollController = ScrollController();
+  late final _scrollController = NamidaScrollController.create();
+  late final _pathSplitsScrollController = NamidaScrollController.create();
 
   static String _pathToName(String path) {
     return path.pathReverseSplitter(_pathSeparator);
