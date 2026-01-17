@@ -210,37 +210,54 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                               itemBuilder: (context, index) {
                                 final acc = signedInAccounts[index];
                                 final active = currentChannel?.id == acc.id;
-                                return CustomListTile(
-                                  verticalPadding: acc.handler.isEmpty ? 6.0 : 0.0,
-                                  title: acc.title ?? '',
-                                  subtitle: acc.handler,
+                                return NamidaInkWell(
+                                  padding: const EdgeInsetsGeometry.symmetric(vertical: 8.0),
                                   bgColor: active ? accountColorActive : accountColorNonActive,
-                                  borderR: 14.0,
-                                  visualDensity: VisualDensity.compact,
+                                  borderRadius: 14.0,
                                   onTap: () => _onSetAccount(acc),
-                                  leading: YoutubeThumbnail(
-                                    type: ThumbnailType.channel,
-                                    key: Key(acc.id),
-                                    width: 64.0,
-                                    forceSquared: false,
-                                    isImportantInCache: true,
-                                    customUrl: acc.thumbnails.pick()?.url,
-                                    isCircle: true,
-                                  ),
-                                  trailing: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    mainAxisSize: MainAxisSize.min,
+                                  child: Row(
                                     children: [
-                                      if (active)
+                                      const SizedBox(width: 12.0),
+                                      YoutubeThumbnail(
+                                        type: ThumbnailType.channel,
+                                        key: Key(acc.id),
+                                        width: 52.0,
+                                        forceSquared: false,
+                                        isImportantInCache: true,
+                                        customUrl: acc.thumbnails.pick()?.url,
+                                        isCircle: true,
+                                      ),
+                                      const SizedBox(width: 8.0),
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              acc.title ?? '',
+                                              style: theme.textTheme.displayMedium,
+                                            ),
+                                            Text(
+                                              acc.handler,
+                                              style: theme.textTheme.displaySmall,
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                      if (active) ...[
+                                        const SizedBox(width: 8.0),
                                         const NamidaCheckMark(
                                           size: 12.0,
                                           active: true,
                                         ),
+                                        const SizedBox(width: 4.0),
+                                      ],
                                       IconButton(
                                         tooltip: active ? lang.SIGN_OUT : lang.REMOVE,
                                         onPressed: () => _onRemoveChannel(acc, active),
                                         icon: active ? const Icon(Broken.logout) : const Icon(Broken.trash),
                                       ),
+                                      const SizedBox(width: 12.0),
                                     ],
                                   ),
                                 );

@@ -867,7 +867,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
   String toText() => _NamidaConverters.inst.getTitle(this);
   IconData toIcon() => _NamidaConverters.inst.getIcon(this);
 
-  Future<bool> execute(Iterable<String> ids) async {
+  Future<bool> execute(Iterable<String> ids, {ThemeData? theme}) async {
     Iterable<YoutubeID> getPlayables() => ids.map((e) => YoutubeID(id: e, playlistID: null));
     switch (this) {
       case OnYoutubeLinkOpenAction.showDownload:
@@ -907,12 +907,12 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
                 .mapAsync((id) async => await YoutubeInfoController.utils.getVideoName(id) ?? id) //
                 .join(', ') +
             (ids.length > 3 ? '... + ${ids.length - 3}' : '');
-        _showAskDialog((action) => action.execute(ids), title: videoNamesSubtitle);
+        _showAskDialog((action) => action.execute(ids), title: videoNamesSubtitle, theme: theme);
         return true;
     }
   }
 
-  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {String? title}) async {
+  void _showAskDialog(void Function(OnYoutubeLinkOpenAction action) onTap, {String? title, ThemeData? theme}) async {
     final isItemEnabled = <OnYoutubeLinkOpenAction, bool>{
       OnYoutubeLinkOpenAction.playNext: true,
       OnYoutubeLinkOpenAction.playAfter: true,
@@ -925,7 +925,9 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
       onDisposing: () {
         isItemEnabled.close();
       },
+      theme: theme,
       dialogBuilder: (theme) => CustomBlurryDialog(
+        theme: theme,
         title: lang.CHOOSE,
         titleWidgetInPadding: Column(
           mainAxisSize: MainAxisSize.min,
@@ -963,6 +965,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
                 if (subtitle == '') subtitle = null;
                 return Obx(
                   (context) => CustomListTile(
+                    passedColor: theme.colorScheme.primaryContainer,
                     enabled: isItemEnabled[e] ?? true,
                     icon: e.toIcon(),
                     title: e.toText() + extraTitle,

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -220,13 +221,13 @@ class NamidaLinkUtils {
     return didLaunch;
   }
 
-  static Future<bool> openLinkPreferNamida(String url) {
-    final didOpen = tryOpeningPlaylistOrVideo(url);
+  static Future<bool> openLinkPreferNamida(String url, {ThemeData? theme}) {
+    final didOpen = tryOpeningPlaylistOrVideo(url, theme: theme);
     if (didOpen) return Future.value(true);
     return openLink(url);
   }
 
-  static bool tryOpeningPlaylistOrVideo(String url) {
+  static bool tryOpeningPlaylistOrVideo(String url, {ThemeData? theme}) {
     final possiblePlaylistId = NamidaLinkUtils.extractPlaylistId(url);
     if (possiblePlaylistId != null && possiblePlaylistId.isNotEmpty) {
       YTHostedPlaylistSubpage.fromId(
@@ -238,7 +239,7 @@ class NamidaLinkUtils {
 
     final possibleVideoId = NamidaLinkUtils.extractYoutubeId(url);
     if (possibleVideoId != null && possibleVideoId.isNotEmpty) {
-      OnYoutubeLinkOpenAction.alwaysAsk.execute([possibleVideoId]);
+      OnYoutubeLinkOpenAction.alwaysAsk.execute([possibleVideoId], theme: theme);
       return true;
     }
     return false;

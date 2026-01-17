@@ -3012,7 +3012,8 @@ class _FadeIgnoreTransitionState extends State<FadeIgnoreTransition> {
 class NamidaSelectableAutoLinkText extends StatelessWidget {
   final String text;
   final double fontScale;
-  const NamidaSelectableAutoLinkText({super.key, required this.text, this.fontScale = 1.0});
+  final Color? colorScheme;
+  const NamidaSelectableAutoLinkText({super.key, required this.text, this.fontScale = 1.0, this.colorScheme});
 
   @override
   Widget build(BuildContext context) {

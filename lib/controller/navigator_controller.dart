@@ -304,6 +304,7 @@ class NamidaNavigator {
     final bool Function()? tapToDismiss,
     final FutureOr<void> Function()? onDismissing,
     final Color? colorScheme,
+    ThemeData? theme,
     final bool lighterDialogColor = true,
     final double scale = 0.96,
     final bool blackBg = false,
@@ -324,7 +325,7 @@ class NamidaNavigator {
       return true;
     }
 
-    final theme = AppThemes.inst.getAppTheme(colorScheme, null, lighterDialogColor);
+    theme ??= AppThemes.inst.getAppTheme(colorScheme, null, lighterDialogColor);
 
     final res = await _rootNav.currentState?.pushPage<T>(
       WillPopScope(
