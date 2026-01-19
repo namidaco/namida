@@ -461,11 +461,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                           sliver: SliverToBoxAdapter(
                             child: Row(
                               children: [
-                                Text(
-                                  'Namida',
-                                  style: textTheme.displayLarge?.copyWith(fontSize: 32.0),
+                                Expanded(
+                                  child: Text(
+                                    'Namida',
+                                    style: textTheme.displayLarge?.copyWith(fontSize: 32.0),
+                                  ),
                                 ),
-                                const Spacer(),
+                                NamidaIconButton(
+                                  icon: Broken.chart_21,
+                                  onPressed: StatsPage().navigate,
+                                ),
                                 NamidaIconButton(
                                   icon: Broken.setting_4,
                                   onPressed: showReorderHomeItemsDialog,
@@ -661,15 +666,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                         ).addSeparators(
                           skipFirst: 1,
                           separator: const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
-                        ),
-                        const SliverToBoxAdapter(
-                          child: NamidaContainerDivider(
-                            height: 2.0,
-                            margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                          ),
-                        ),
-                        const SliverToBoxAdapter(
-                          child: StatsSection(),
                         ),
                         kBottomPaddingWidgetSliver,
                       ],

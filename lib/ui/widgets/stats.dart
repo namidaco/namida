@@ -1,14 +1,34 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+
+class StatsPage extends StatelessWidget with NamidaRouteWidget {
+  const StatsPage({super.key});
+
+  @override
+  RouteType get route => RouteType.PAGE_stats;
+
+  @override
+  Widget build(BuildContext context) {
+    return const BackgroundWrapper(
+      child: Column(
+        children: [
+          StatsSection(),
+        ],
+      ),
+    );
+  }
+}
 
 class StatsSection extends StatelessWidget {
   const StatsSection({super.key});
