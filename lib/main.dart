@@ -337,7 +337,7 @@ Future<Set<String>> _getDefaultDirectoriesToScan(List<String> paths) async {
   }
   if (!isDesktop) {
     // -- its more common to find music in downloads for phones, unlike desktop.
-    final downloadsFolder = await pp.getDownloadsDirectory().ignoreError().then((value) => value?.path) ?? FileParts.joinPath(paths[0], 'Download');
+    final downloadsFolder = FileParts.joinPath(paths[0], 'Download'); // pp.getDownloadsDirectory() returns app specific downloads, not what we want here
     addDirToScan(downloadsFolder, ignoreExists: true);
   }
   addDirToScan(AppDirs.INTERNAL_STORAGE, ignoreExists: true);
