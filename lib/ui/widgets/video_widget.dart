@@ -338,6 +338,19 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   final _volumeListenerKey = 'video_widget';
 
+  final _isLongPressActive = false.obs;
+  double get defaultLongPressSpeed => settings.player.longPressSpeed.value;
+
+  void _startLongPressAction() {
+    Player.inst.setPlayerSpeed(defaultLongPressSpeed);
+    _isLongPressActive.value = true;
+  }
+
+  void _endLongPressAction() {
+    Player.inst.setPlayerSpeed(settings.player.speed.value);
+    _isLongPressActive.value = false;
+  }
+
   @override
   void dispose() {
     seekAnimationForward1.dispose();
@@ -346,6 +359,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     seekAnimationBackward2.dispose();
     _currentDeviceVolume.close();
     _canShowBrightnessSlider.close();
+    _seekSecondsRx.close();
+    _isEndCardsVisible.close();
+    _isLongPressActive.close();
     Player.inst.onVolumeChangeRemoveListener(_volumeListenerKey);
     MiniPlayerController.inst.animation.removeListener(_disableControlsListener);
     _systemBrightnessStreamSub?.cancel();
@@ -400,12 +416,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final textTheme = context.textTheme;
     final seekContainerSize = _maxWidth;
     final finalOffset = seekContainerSize * 0.05;
-    final forwardIcons = <int, IconData>{
+    const forwardIcons = <int, IconData>{
       5: Broken.forward_5_seconds,
       10: Broken.forward_10_seconds,
       15: Broken.forward_15_seconds,
     };
-    final backwardIcons = <int, IconData>{
+    const backwardIcons = <int, IconData>{
       5: Broken.backward_5_seconds,
       10: Broken.backward_10_seconds,
       15: Broken.backward_15_seconds,
@@ -668,6 +684,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _isEndCardsVisible.value = true;
   }
 
+  late final _seekReadyKey = widget.isFullScreen ? SeekReadyWidget.fullscreenKey : SeekReadyWidget.normalKey;
+  SeekReadyWidgetState? get _seekReady => _seekReadyKey.currentState;
+
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
@@ -905,6 +924,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       },
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
+        onLongPressStart: !_isControlsEnabled ? null : (_) => _startLongPressAction(),
+        onLongPressEnd: (_) => _endLongPressAction(),
+        onLongPressCancel: () => _endLongPressAction(),
+        onHorizontalDragStart: !_isControlsEnabled ? null : (details) => _seekReady?.onHorizontalDragStartSimple(),
+        onHorizontalDragUpdate: !_isControlsEnabled ? null : (event) => _seekReady?.onHorizontalDragUpdateSimple(event),
+        onHorizontalDragEnd: !_isControlsEnabled ? null : _seekReady?.onHorizontalDragEnd,
+        onHorizontalDragCancel: !_isControlsEnabled ? null : _seekReady?.onHorizontalDragCancel,
         onVerticalDragUpdate: !shouldShowSliders
             ? null
             : (event) async {
@@ -1024,12 +1050,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
             // -- seek ready cant have expanded hit test otherwise it would block bottom controls here
             // -- this widgets adds extra horizontal drag detection behind controls
-            if (!widget.isFullScreen)
+            if (!widget.isFullScreen && _isControlsEnabled)
               Positioned(
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: SeekReadyWidget.forYTMiniplayer.createHitTestWidget(
+                child: SeekReadyWidget.normalKey.currentState?.createHitTestWidget(
                       expandHitTest: true,
                       allowTapping: false,
                       maxWidth: maxWidth,
@@ -1713,6 +1739,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(horizontal: 12.0),
                                             child: SeekReadyWidget(
+                                              key: SeekReadyWidget.fullscreenKey,
                                               isFullscreen: widget.isFullScreen,
                                               showPositionCircle: widget.isFullScreen,
                                               isLocal: widget.isLocal,
@@ -2103,6 +2130,46 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                           ),
                         ),
                       ],
+
+                      Positioned(
+                        top: 0,
+                        child: ObxO(
+                          rx: _isLongPressActive,
+                          builder: (context, isLongPress) => AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 100),
+                            child: isLongPress
+                                ? Padding(
+                                    key: const Key('longpress_active'),
+                                    padding: EdgeInsets.only(top: 24.0 + topPadding),
+                                    child: NamidaBgBlurClipped(
+                                      blur: 2.5,
+                                      child: NamidaInkWell(
+                                        borderRadius: 8.0,
+                                        bgColor: Colors.black.withValues(alpha: 0.3),
+                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Broken.forward,
+                                              size: 20.0,
+                                            ),
+                                            const SizedBox(width: 6.0),
+                                            Text(
+                                              "${lang.SPEED} ${defaultLongPressSpeed}x",
+                                              style: context.textTheme.displayMedium,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(
+                                    key: Key('longpress_inactive'),
+                                  ),
+                          ),
+                        ),
+                      ),
 
                       if (widget.isFullScreen && _canShowControls)
                         ObxO(

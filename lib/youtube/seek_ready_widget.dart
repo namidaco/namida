@@ -30,19 +30,6 @@ class SeekReadyDimensions {
   static const seekTextExtraMargin = 8.0;
 }
 
-class SeekReadyWidgetForYTMiniplayer extends SeekReadyWidget {
-  static final globalKey = GlobalKey<_SeekReadyWidgetState>();
-  SeekReadyWidgetForYTMiniplayer() : super(key: globalKey);
-
-  Widget? createHitTestWidget({
-    required bool expandHitTest,
-    required bool allowTapping,
-    required double maxWidth,
-  }) {
-    return globalKey.currentState?.createHitTestWidget(expandHitTest, allowTapping, maxWidth);
-  }
-}
-
 class SeekReadyWidget extends StatefulWidget {
   final bool isLocal;
   final bool isFullscreen;
@@ -54,7 +41,8 @@ class SeekReadyWidget extends StatefulWidget {
   final bool Function()? canDrag;
   final void Function(bool isDragging)? onDraggingChange;
 
-  static final forYTMiniplayer = SeekReadyWidgetForYTMiniplayer();
+  static final normalKey = GlobalKey<SeekReadyWidgetState>();
+  static final fullscreenKey = GlobalKey<SeekReadyWidgetState>();
 
   const SeekReadyWidget({
     super.key,
@@ -70,10 +58,10 @@ class SeekReadyWidget extends StatefulWidget {
   });
 
   @override
-  State<SeekReadyWidget> createState() => _SeekReadyWidgetState();
+  State<SeekReadyWidget> createState() => SeekReadyWidgetState();
 }
 
-class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProviderStateMixin {
+class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProviderStateMixin {
   /// the percentage of the seek bar that causes a seek near the left edge to trigger a magnet effect to 0.
   late final _defaultSeekLeftMagnet = widget.isFullscreen ? 0.01 : 0.05;
   final _seekPercentage = 0.0.obs;
@@ -115,20 +103,32 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     }
   }
 
-  void _onSeekDragUpdate(double deltax, double maxWidth) {
-    final percentageSwiped = (deltax / maxWidth).clampDouble(0.0, 1.0);
+  void _onSeekDragUpdateSimple(double deltax) {
+    final dur = ((Player.inst.currentItemDuration.value ?? Player.inst.getCurrentVideoDuration).inMilliseconds);
+    if (dur == 0) return;
+
+    final timeChangeMs = deltax * 200;
+
+    final currentPositionMs = _seekPercentage.value * dur;
+    final newPositionMs = currentPositionMs + timeChangeMs;
+
+    _seekPercentage.value = (newPositionMs / dur).clampDouble(0.0, 1.0);
+  }
+
+  void _onSeekDragUpdate(double positionx, double maxWidth) {
+    final percentageSwiped = (positionx / maxWidth).clampDouble(0.0, 1.0);
     _seekPercentage.value = percentageSwiped;
   }
 
-  Duration get _currentDurationR => Player.inst.getCurrentVideoDurationR;
+  Duration get _currentDurationR => (Player.inst.currentItemDuration.valueR ?? Player.inst.getCurrentVideoDurationR);
 
   void _onSeekEnd() async {
     widget.onDraggingChange?.call(false);
-    final newSeek = _seekPercentage.value * (Player.inst.getCurrentVideoDuration.inMilliseconds);
+    final newSeek = _seekPercentage.value * ((Player.inst.currentItemDuration.value ?? Player.inst.getCurrentVideoDuration).inMilliseconds);
     await Player.inst.seek(Duration(milliseconds: newSeek.round()));
   }
 
-  void _onDragStart(double deltax, double maxWidth, {bool fromTap = false}) {
+  void _onDragStartSimple({bool fromTap = false}) {
     widget.onDraggingChange?.call(true);
     _isPointerDown = true;
 
@@ -142,7 +142,10 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     } else {
       _animation.animateTo(1);
     }
+  }
 
+  void _onDragStart(double deltax, double maxWidth, {bool fromTap = false}) {
+    _onDragStartSimple(fromTap: fromTap);
     _onSeekDragUpdate(deltax, maxWidth);
   }
 
@@ -183,7 +186,41 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
     return can;
   }
 
-  Widget createHitTestWidget(bool expandHitTest, bool allowTapping, double maxWidth) {
+  void onHorizontalDragStartSimple() {
+    if (!_canDragToSeek) return;
+
+    final dur = ((Player.inst.currentItemDuration.value ?? Player.inst.getCurrentVideoDuration).inMilliseconds);
+    final perc = dur > 0 ? Player.inst.nowPlayingPosition.value / dur : 0.0;
+    _seekPercentage.value = perc;
+    _onDragStartSimple();
+  }
+
+  void onHorizontalDragStart(DragStartDetails details, double maxWidth) {
+    if (!_canDragToSeek) return;
+    _onDragStart(details.localPosition.dx, maxWidth);
+  }
+
+  void onHorizontalDragUpdateSimple(DragUpdateDetails event) {
+    if (!_canDragToSeekLatest) return;
+    _onSeekDragUpdateSimple(event.delta.dx);
+  }
+
+  void onHorizontalDragUpdate(DragUpdateDetails event, double maxWidth) {
+    if (!_canDragToSeekLatest) return;
+    _onSeekDragUpdate(event.localPosition.dx, maxWidth);
+  }
+
+  void onHorizontalDragEnd(dynamic _) {
+    _onDragFinish();
+  }
+
+  void onHorizontalDragCancel() {
+    _isPointerDown = false;
+    _animation.animateTo(0);
+    widget.onDraggingChange?.call(false);
+  }
+
+  Widget createHitTestWidget({required bool expandHitTest, required bool allowTapping, required double maxWidth}) {
     const barHeight = SeekReadyDimensions.barHeight;
     return Padding(
       padding: expandHitTest
@@ -223,22 +260,10 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
           onPanEnd: (_) {
             if (_tapToSeek) _onDragFinish();
           },
-          onHorizontalDragStart: (details) {
-            if (!_canDragToSeek) return;
-            _onDragStart(details.localPosition.dx, maxWidth);
-          },
-          onHorizontalDragUpdate: (event) {
-            if (!_canDragToSeekLatest) return;
-            _onSeekDragUpdate(event.localPosition.dx, maxWidth);
-          },
-          onHorizontalDragEnd: (_) {
-            _onDragFinish();
-          },
-          onHorizontalDragCancel: () {
-            _isPointerDown = false;
-            _animation.animateTo(0);
-            widget.onDraggingChange?.call(false);
-          },
+          onHorizontalDragStart: (details) => onHorizontalDragStart(details, maxWidth),
+          onHorizontalDragUpdate: (event) => onHorizontalDragUpdate(event, maxWidth),
+          onHorizontalDragEnd: onHorizontalDragEnd,
+          onHorizontalDragCancel: onHorizontalDragCancel,
           onTapDown: !allowTapping
               ? null
               : !allowTapping
@@ -347,7 +372,11 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
           alignment: Alignment.centerLeft,
           children: [
             // -- hittest
-            createHitTestWidget(fullscreen, true, maxWidth),
+            createHitTestWidget(
+              expandHitTest: fullscreen,
+              allowTapping: true,
+              maxWidth: maxWidth,
+            ),
             if (widget.showBufferBars)
               ObxO(
                 rx: settings.youtube.enableHeatMap,
@@ -482,7 +511,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                 child: AnimatedBuilder(
                   animation: _animation,
                   child: Obx((context) {
-                    final durMS = Player.inst.getCurrentVideoDurationR.inMilliseconds;
+                    final durMS = (Player.inst.currentItemDuration.valueR ?? Player.inst.getCurrentVideoDurationR).inMilliseconds;
                     final currentPositionMS = Player.inst.nowPlayingPositionR;
                     final buffered = Player.inst.buffered.valueR;
                     final videoCached = Player.inst.currentCachedVideo.valueR != null;
@@ -593,7 +622,7 @@ class _SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProv
                 animation: _animation,
                 child: Obx(
                   (context) {
-                    final durMS = Player.inst.getCurrentVideoDurationR.inMilliseconds;
+                    final durMS = (Player.inst.currentItemDuration.valueR ?? Player.inst.getCurrentVideoDurationR).inMilliseconds;
                     final currentPositionMS = Player.inst.nowPlayingPositionR;
                     final pos = durMS == 0 ? 0.0 : (maxWidth * (currentPositionMS / durMS));
                     final clampedEdge = clampCircleEdges ? halfCircle / 2 : 0.0;

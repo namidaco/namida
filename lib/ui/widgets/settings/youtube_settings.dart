@@ -949,6 +949,21 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                   title: 'enable_seek_heatmap'.toUpperCase(),
                 ),
               ),
+              ObxO(
+                rx: settings.player.longPressSpeed,
+                builder: (context, longPressSpeed) => CustomListTile(
+                  icon: Broken.forward,
+                  title: 'long_press_speed'.toUpperCase(),
+                  trailing: NamidaWheelSlider(
+                    initValue: (longPressSpeed * 100).round(),
+                    max: 2 * 100,
+                    onValueChanged: (val) {
+                      settings.player.save(longPressSpeed: val / 100);
+                    },
+                    text: "${longPressSpeed}x",
+                  ),
+                ),
+              ),
               CustomListTile(
                 icon: Broken.driver_refresh,
                 title: 'max_page_cache_duration_validity'.toUpperCase(),

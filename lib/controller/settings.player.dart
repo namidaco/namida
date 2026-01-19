@@ -10,6 +10,7 @@ class _PlayerSettings with SettingsFileWriter {
   final volume = 1.0.obs;
   final speed = 1.0.obs;
   final pitch = 1.0.obs;
+  final longPressSpeed = 2.0.obs;
   final linkSpeedPitch = false.obs;
 
   var speeds = <double>[0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0];
@@ -54,6 +55,7 @@ class _PlayerSettings with SettingsFileWriter {
     double? volume,
     double? speed,
     double? pitch,
+    double? longPressSpeed,
     bool? linkSpeedPitch,
     List<double>? speeds,
     int? seekDurationInSeconds,
@@ -88,6 +90,7 @@ class _PlayerSettings with SettingsFileWriter {
     if (volume != null) this.volume.value = volume;
     if (speed != null) this.speed.value = speed;
     if (pitch != null) this.pitch.value = pitch;
+    if (longPressSpeed != null) this.longPressSpeed.value = longPressSpeed;
     if (linkSpeedPitch != null) this.linkSpeedPitch.value = linkSpeedPitch;
     if (speeds != null) this.speeds = speeds;
     if (seekDurationInSeconds != null) this.seekDurationInSeconds.value = seekDurationInSeconds;
@@ -142,6 +145,7 @@ class _PlayerSettings with SettingsFileWriter {
       volume.value = json['volume'] ?? volume.value;
       speed.value = json['speed'] ?? speed.value;
       pitch.value = json['pitch'] ?? pitch.value;
+      longPressSpeed.value = json['longPressSpeed'] ?? longPressSpeed.value;
       linkSpeedPitch.value = json['linkSpeedPitch'] ?? linkSpeedPitch.value;
       speeds = (json['speeds'] as List?)?.cast<double>() ?? speeds;
       seekDurationInSeconds.value = json['seekDurationInSeconds'] ?? seekDurationInSeconds.value;
@@ -197,6 +201,7 @@ class _PlayerSettings with SettingsFileWriter {
         'volume': volume.value,
         'speed': speed.value,
         'pitch': pitch.value,
+        'longPressSpeed': longPressSpeed.value,
         'linkSpeedPitch': linkSpeedPitch.value,
         'speeds': speeds,
         'seekDurationInSeconds': seekDurationInSeconds.value,
