@@ -157,6 +157,9 @@ class SmoothSingleChildScrollView extends StatelessWidget {
       builder: (controller) => SingleChildScrollView(
         controller: controller,
         padding: padding,
+        physics: physics,
+        reverse: reverse,
+        scrollDirection: scrollDirection,
         primary: primary,
         dragStartBehavior: dragStartBehavior,
         clipBehavior: clipBehavior,
