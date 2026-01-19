@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:history_manager/history_manager.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/base/pull_to_refresh.dart';
@@ -39,10 +40,17 @@ import 'package:namida/ui/widgets/stats.dart';
 final int _lowestDateMSSEToDisplay = DateTime(1980).millisecondsSinceEpoch + 1;
 
 class HomePage extends StatefulWidget with NamidaRouteWidget {
+  final HistoryManager<TrackWithDate, Track> historyManager;
+  final PlaylistManager<TrackWithDate, Track, SortType> playlistManager;
+  final NamidaGenerator generator;
+
   @override
   RouteType get route => RouteType.PAGE_Home;
 
-  const HomePage({super.key});
+  HomePage.tracks({super.key})
+      : historyManager = HistoryController.inst,
+        playlistManager = PlaylistController.inst,
+        generator = NamidaGenerator.inst;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -106,11 +114,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   }
 
   void _fillLists() async {
-    if (HistoryController.inst.isHistoryLoaded) {
+    if (widget.historyManager.isHistoryLoaded) {
       _isLoading = false;
     } else {
       _isLoading = true;
-      await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
+      await widget.historyManager.waitForHistoryAndMostPlayedLoad;
     }
 
     final timeNow = DateTime.now();
@@ -123,22 +131,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
     // -- Recent Listens --
     if (_recentListened.isEmpty) {
-      _recentListened.addAll(
-          NamidaGenerator.inst.generateItemsFromHistoryDates(DateTime(timeNow.year, timeNow.month, timeNow.day - 3), timeNow, sortByListensInRangeIfRequired: false).take(40));
+      _recentListened
+          .addAll(widget.generator.generateItemsFromHistoryDates(DateTime(timeNow.year, timeNow.month, timeNow.day - 3), timeNow, sortByListensInRangeIfRequired: false).take(40));
     }
 
     // -- Top Recents --
     if (_topRecentListened.isEmpty) {
-      final sortedMap = HistoryController.inst.getMostListensInTimeRange(
+      final sortedMap = widget.historyManager.getMostListensInTimeRange(
         mptr: _topRecentsTimeRange,
         isStartOfDay: false,
-        mainItemToSubItem: (item) => item.track,
+        mainItemToSubItem: widget.historyManager.mainItemToSubItem,
       );
       _topRecentListened.addAll(sortedMap.entriesSortedByValue);
     }
 
     // -- Lost Memories --
-    _lostMemoriesYears = HistoryController.inst.getHistoryYears()..remove(timeNow.year);
+    _lostMemoriesYears = widget.historyManager.getHistoryYears()..remove(timeNow.year);
     final oldestYear = _lostMemoriesYears.lastOrNull ?? 0;
 
     final minusYearClamped = (timeNow.year - 1).withMinimum(oldestYear);
@@ -164,16 +172,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
     // ==== Mixes ====
     // -- Random --
-    if (_randomTracks.isEmpty) _randomTracks.addAll(NamidaGenerator.inst.getRandomTracks(min: 25, max: 26));
+    if (_randomTracks.isEmpty) _randomTracks.addAll(widget.generator.getRandomTracks(min: 25, max: 26));
 
     final int mostRecentAddedMSSE = DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch;
     final int mostRecentListenedMSSE = DateTime.now().subtract(Duration(days: 2)).millisecondsSinceEpoch;
     final underrated = allTracksInLibrary.getRandomSampleWhere(100, (tr) {
-      if (PlaylistController.inst.favouritesPlaylist.isSubItemFavourite(tr)) return false; // alr favourited
-      final listensCount = HistoryController.inst.topTracksMapListens.value[tr]?.length;
+      if (widget.playlistManager.favouritesPlaylist.isSubItemFavourite(tr)) return false; // alr favourited
+      final listensCount = widget.historyManager.topTracksMapListens.value[tr]?.length;
       if (listensCount != null && listensCount > 8) return false; // alr listened enough
       if (tr.dateAdded > mostRecentAddedMSSE) return false; // its very recently added
-      final lastListen = HistoryController.inst.topTracksMapListens.value[tr]?.lastOrNull;
+      final lastListen = widget.historyManager.topTracksMapListens.value[tr]?.lastOrNull;
       if (lastListen != null && lastListen > mostRecentListenedMSSE) return false; // recently listened
       return true;
     });
@@ -184,30 +192,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       final maxCount = settings.queueInsertion.value[QueueInsertionType.algorithm]?.numberOfTracks.withMinimum(10) ?? 25;
       MapEntry<String, List<Track>>? supremacyEntry;
       if (ct != null) {
-        final sameAsCurrent = NamidaGenerator.inst.generateRecommendedTrack(ct).take(maxCount);
+        final sameAsCurrent = widget.generator.generateRecommendedTrack(ct).take(maxCount);
         if (sameAsCurrent.isNotEmpty) {
           final supremacy = [ct, ...sameAsCurrent];
           supremacyEntry = MapEntry('"${ct.title}" ${lang.SUPREMACY}', supremacy);
         }
       }
-      final favsSample = PlaylistController.inst.favouritesPlaylist.value.tracks.getRandomSample(25).tracks.toList();
+      final favsSample = widget.playlistManager.favouritesPlaylist.value.tracks.getRandomSample(25).tracks.toList();
       final topRecentListenedKeys = _topRecentListened.map((e) => e.key).toList();
 
-      final recentTopSortedByTotalListens = List.from(topRecentListenedKeys)..sortByReverse((e) => HistoryController.inst.topTracksMapListens.value[e.track]?.length ?? 0);
-      final recent30Tracks = HistoryController.inst.historyTracks.take(30).map((e) => e.track).toList();
+      final recentTopSortedByTotalListens = List.from(topRecentListenedKeys)..sortByReverse((e) => widget.historyManager.topTracksMapListens.value[e.track]?.length ?? 0);
+      final recent30Tracks = widget.historyManager.historyTracks.take(30).map(widget.historyManager.mainItemToSubItem).toList();
 
-      final topRecentListenedExpanded = HistoryController.inst.getMostListensInTimeRange(
+      final topRecentListenedExpanded = widget.historyManager.getMostListensInTimeRange(
         mptr: MostPlayedTimeRange.custom,
         customDate: DateRange(
           oldest: timeNow.subtract(Duration(days: 14)),
           newest: timeNow,
         ),
         isStartOfDay: false,
-        mainItemToSubItem: (item) => item.track,
+        mainItemToSubItem: widget.historyManager.mainItemToSubItem,
       );
       recent30Tracks.sortByReverse((tr) => topRecentListenedExpanded[tr]?.length ?? 0);
 
-      final sameTimeAyearAgo = HistoryController.inst
+      final sameTimeAyearAgo = widget.historyManager
           .getMostListensInTimeRange(
             mptr: MostPlayedTimeRange.custom,
             customDate: DateRange(
@@ -215,7 +223,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
               newest: DateTime(timeNow.year - 1, timeNow.month, timeNow.day + 9),
             ),
             isStartOfDay: false,
-            mainItemToSubItem: (item) => item.track,
+            mainItemToSubItem: widget.historyManager.mainItemToSubItem,
           )
           .keysSortedByValue
           .take(40);
@@ -271,11 +279,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     );
     currentYearLostMemories = year;
     currentYearLostMemoriesDateRange = dateRange;
-    final sortedMap = HistoryController.inst.getMostListensInTimeRange(
+    final sortedMap = widget.historyManager.getMostListensInTimeRange(
       mptr: MostPlayedTimeRange.custom,
       customDate: dateRange,
       isStartOfDay: false,
-      mainItemToSubItem: (item) => item.track,
+      mainItemToSubItem: widget.historyManager.mainItemToSubItem,
     );
     _sameTimeYearAgo = sortedMap.entriesSortedByValue.toList();
     if (_lostMemoriesScrollController.hasClients) _lostMemoriesScrollController.jumpTo(0);
@@ -289,7 +297,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       mostPlayedTimeRange: mptr,
       mostPlayedCustomDateRange: dateCustom,
     );
-    HistoryController.inst.updateTempMostPlayedPlaylist(
+    widget.historyManager.updateTempMostPlayedPlaylist(
       mptr: mptr,
       customDateRange: dateCustom,
     );
@@ -307,7 +315,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
         subList.add(e);
       }
     });
-    final mainListController = ScrollController();
+    final mainListController = NamidaScrollController.create();
     void jumpToLast() {
       mainListController.animateTo(
         mainListController.positions.first.maxScrollExtent,
@@ -566,6 +574,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       child: Padding(
                                         padding: const EdgeInsets.only(top: 4.0),
                                         child: Row(
+                                          mainAxisSize: MainAxisSize.min,
                                           children: _lostMemoriesYears
                                               .map(
                                                 (e) => Padding(
@@ -941,15 +950,23 @@ class _HorizontalList extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           onTap: onTap,
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(width: 16.0),
-              leading ?? Icon(icon, color: iconColor ?? context.defaultIconColor()),
+              leading ??
+                  Icon(
+                    icon,
+                    color: iconColor ?? context.defaultIconColor(),
+                  ),
               const SizedBox(width: 8.0),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: textTheme.displayLarge),
+                    Text(
+                      title,
+                      style: textTheme.displayLarge,
+                    ),
                     if (subtitle != null)
                       Text(
                         subtitle!,
@@ -961,7 +978,11 @@ class _HorizontalList extends StatelessWidget {
               ),
               if (onTap != null || trailing != null) ...[
                 const SizedBox(width: 8.0),
-                trailing ?? const Icon(Broken.arrow_right_3, size: 20.0),
+                trailing ??
+                    const Icon(
+                      Broken.arrow_right_3,
+                      size: 20.0,
+                    ),
                 const SizedBox(width: 12.0),
               ]
             ],

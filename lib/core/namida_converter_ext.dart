@@ -143,7 +143,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.folders => FoldersPage.tracksAndVideos(),
       LibraryTab.foldersMusic => FoldersPage.tracks(),
       LibraryTab.foldersVideos => FoldersPage.videos(),
-      LibraryTab.home => const HomePage(),
+      LibraryTab.home => HomePage.tracks(),
       LibraryTab.youtube => const YouTubeHomeView(),
       LibraryTab.search => const NamidaDummyPage(),
     };
