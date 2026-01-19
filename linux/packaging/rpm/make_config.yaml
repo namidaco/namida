@@ -11,8 +11,7 @@ icon: linux/icons/namida.png
 build_arch: x86_64
 
 requires:
-  - mpv
-  - libmpv-dev
+  - mpv # (has mpv-devel as sub)
   - libepoxy
 
 keywords:

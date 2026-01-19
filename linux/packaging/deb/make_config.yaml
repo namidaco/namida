@@ -14,7 +14,8 @@ installed_size: 21400
 dependencies:
   - mpv
   - libmpv-dev
-  - libepoxy
+  - libepoxy0
+  - libepoxy-dev
 
 essential: false
 
