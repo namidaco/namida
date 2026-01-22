@@ -1,6 +1,12 @@
+// ignore_for_file: avoid_print
+
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/base.dart';
 import 'package:namida/core/utils.dart';
 
 class BenchmarkExecutionTime {
@@ -58,5 +64,49 @@ class BenchmarkExecutionTime {
         child: Text(getResults()),
       ),
     );
+  }
+}
+
+class BenchmarkExecutionTimeWithLogger extends BenchmarkExecutionTime {
+  final bool uniqueFilename;
+  BenchmarkExecutionTimeWithLogger({this.uniqueFilename = false});
+
+  File? file;
+
+  @override
+  void start() {
+    super.start();
+    file = _createFile();
+  }
+
+  @override
+  void mark(String key) {
+    super.mark(key);
+
+    try {
+      file?.writeAsStringSync('$key\n', mode: FileMode.writeOnlyAppend, flush: true);
+    } catch (e) {
+      print('[$this] Error marking key ($key) to file: $e');
+    }
+  }
+
+  File? _createFile() {
+    try {
+      final filenameSuffix = uniqueFilename ? DateTime.now().toIso8601String().replaceAll(':', '_') : 'app';
+      final filename = 'NAMIDA_LOGGER_$filenameSuffix.txt';
+      final String dirPath = NamidaPlatformBuilder.init(
+        android: () => '/storage/emulated/0/Documents/',
+        windows: () => Directory.systemTemp.path,
+        linux: () => Directory.systemTemp.path,
+      );
+
+      final file = FileParts.join(dirPath, filename);
+      file.createSync(recursive: true);
+      print('[$this] Created logger file at: ${file.path}');
+      return file;
+    } catch (e) {
+      print('[$this] Error creating logger file: $e');
+      return null;
+    }
   }
 }
