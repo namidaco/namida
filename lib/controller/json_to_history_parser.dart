@@ -1100,6 +1100,27 @@ class JsonToHistoryParser {
 
     portLoadingProgress.send(linesCount);
 
+    final tracksLookupTitlesMap = <String, List<Map>>{};
+    final tracksLookupArtistsMap = <String, List<Map>>{};
+    final tracksLookupArtistSplitsMap = <String, List<String>>{};
+
+    for (final trMap in allTracks) {
+      final title = trMap['title'] as String;
+      tracksLookupTitlesMap.addForce(title.cleanUpForComparison, trMap);
+
+      final originalArtist = trMap['artist'] as String;
+      final artistsList = Indexer.splitArtist(
+        title: title,
+        originalArtist: originalArtist,
+        config: artistsSplitConfig,
+      );
+      for (final ar in artistsList) {
+        tracksLookupArtistsMap.addForce(ar.cleanUpForComparison, trMap);
+      }
+      final path = trMap['path'];
+      tracksLookupArtistSplitsMap[path] = artistsList;
+    }
+
     final missingEntries = <_MissingListenEntry, List<int>>{};
     int totalParsed = 0;
     int totalAdded = 0;
@@ -1140,24 +1161,49 @@ class JsonToHistoryParser {
             if (watchAsDSE < oldestDay || watchAsDSE > newestDay) continue;
           }
 
-          /// matching has to meet 2 conditons:
-          /// [csv artist] contains [track.artistsList.first]
-          /// [csv title] contains [track.title], anything after ( or [ is ignored.
-          final tracks = allTracks.firstWhereOrAllWhere(
-            matchAll,
-            (trMap) {
-              final title = trMap['title'] as String;
-              final originalArtist = trMap['artist'] as String;
-              final artistsList = Indexer.splitArtist(
-                title: title,
-                originalArtist: originalArtist,
-                config: artistsSplitConfig,
-              );
-              final matchingArtist = artistsList.isNotEmpty && pieces[0].cleanUpForComparison.contains(artistsList.first.cleanUpForComparison);
-              final matchingTitle = pieces[2].cleanUpForComparison.contains(title.splitFirst('(').splitFirst('[').cleanUpForComparison);
-              return matchingArtist && matchingTitle;
-            },
-          );
+          final tracks = <Map>[];
+          final csvTitleCleaned = pieces[2].cleanUpForComparison;
+          final csvArtistCleaned = pieces[0].cleanUpForComparison;
+
+          final titleMatching = tracksLookupTitlesMap[csvTitleCleaned];
+          final artistMatching = tracksLookupArtistsMap[csvArtistCleaned];
+          if (titleMatching != null && titleMatching.isNotEmpty && artistMatching != null && artistMatching.isNotEmpty) {
+            final intersection = titleMatching.where((track) => artistMatching.contains(track));
+            if (intersection.isNotEmpty) {
+              if (matchAll) {
+                tracks.addAll(intersection);
+              } else {
+                tracks.add(intersection.first);
+              }
+            }
+          }
+
+          if (tracks.isEmpty) {
+            /// matching has to meet 2 conditons:
+            /// [csv artist] contains [track.artistsList.first]
+            /// [csv title] contains [track.title], anything after ( or [ is ignored.
+            tracks.addAll(allTracks.firstWhereOrAllWhere(
+              matchAll,
+              (trMap) {
+                final title = trMap['title'] as String;
+                final matchingTitle = csvTitleCleaned.contains(title.splitFirst('(').splitFirst('[').cleanUpForComparison);
+                if (!matchingTitle) return false;
+
+                final originalArtist = trMap['artist'] as String;
+                final artistsList = tracksLookupArtistSplitsMap[trMap['path']] ??
+                    Indexer.splitArtist(
+                      title: title,
+                      originalArtist: originalArtist,
+                      config: artistsSplitConfig,
+                    );
+                final matchingArtist = artistsList.isNotEmpty && csvArtistCleaned.contains(artistsList.first.cleanUpForComparison);
+                if (!matchingArtist) return false;
+
+                return true;
+              },
+            ));
+          }
+
           totalAdded += tracks.length;
           if (tracks.isNotEmpty) {
             for (final trMap in tracks) {
