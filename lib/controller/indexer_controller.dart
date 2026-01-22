@@ -254,6 +254,13 @@ class Indexer<T extends Track> {
       await sortMediaTracksAndSubListsAfterHistoryPrepared();
       await _sortAll();
       isIndexing.value = false;
+
+      if (settings.refreshOnStartup.value) {
+        this.refreshLibraryAndCheckForDiff(allowDeletion: false, showFinishedSnackbar: false);
+      } else {
+        // main reason is to refresh fallback cover
+        this.getAudioFiles();
+      }
     } else {
       // -- otherwise it get into normally and start indexing.
       await File(tracksDBPath).create();

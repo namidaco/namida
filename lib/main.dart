@@ -23,6 +23,7 @@ import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
@@ -289,15 +290,7 @@ Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
       NamidaChannel.inst.setCanEnterPip(settings.enablePip.value),
     ].executeAllAndSilentReportErrors();
 
-    await [
-      QueueController.inst.prepareAllQueuesFile(),
-
-      if (!shouldShowOnBoarding)
-        if (settings.refreshOnStartup.value)
-          Indexer.inst.refreshLibraryAndCheckForDiff(allowDeletion: false, showFinishedSnackbar: false)
-        else
-          Indexer.inst.getAudioFiles() // main reason is to refresh fallback covers
-    ].executeAllAndSilentReportErrors();
+    QueueController.inst.prepareAllQueuesFile().catchError(logger.report);
 
     // CurrentColor.inst.initialize(); // --> !can block?
 
@@ -465,6 +458,7 @@ class Namida extends StatefulWidget {
       logger.dispose(),
       Player.inst.pause().whenComplete(Player.inst.dispose),
       PortsProvider.disposeAll(),
+      ShortcutKeyData.disposeAllHotkeys(),
       SearchSortController.inst.disposeResources(),
       NamicoDBWrapper.dispose(),
       SMTCController.instance?.dispose(),

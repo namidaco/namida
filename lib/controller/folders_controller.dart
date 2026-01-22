@@ -202,7 +202,7 @@ class FoldersController<T extends Folder, E extends Track> {
       map[folder] ??= <E>[]; // adding missing/new folders
     }
     _sortMap(map, _pathsTreeMapRoot);
-    stepIn(_pathsTreeMapCurrent?.parent);
+    if (_config.enableFoldersHierarchy.value) stepIn(_pathsTreeMapCurrent?.parent);
   }
 
   void _sortMap(Map<T, List<dynamic>> map, _FolderNode<T, E> rootNode) {

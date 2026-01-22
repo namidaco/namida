@@ -46,16 +46,14 @@ class ShortcutKeyData {
     final key = this.key;
     if (key != null) {
       final oldHotkey = _createdHotkeys.remove(key);
-      oldHotkey?.dispose();
+      await oldHotkey?.dispose();
     }
   }
 
   static Future<void> disposeAllHotkeys() async {
     final copies = _createdHotkeys.values.toList();
     _createdHotkeys.clear();
-    for (final h in copies) {
-      h.dispose();
-    }
+    await Future.wait(copies.map((c) => c.dispose()));
   }
 
   bool isSimilarTo(ShortcutKeyData other) {

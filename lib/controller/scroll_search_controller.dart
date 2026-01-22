@@ -108,7 +108,10 @@ class ScrollSearchController {
     final rx = isBarVisibleMap[tab] ??= true.obs;
     rx.value = true;
     scrollController.addListener(() {
-      isBarVisibleMap[tab]?.value = scrollController.positions.lastOrNull?.userScrollDirection == ScrollDirection.forward;
+      final direction = scrollController.positions.lastOrNull?.userScrollDirection;
+      if (direction != ScrollDirection.idle) {
+        isBarVisibleMap[tab]?.value = direction != ScrollDirection.reverse;
+      }
     });
   }
 
