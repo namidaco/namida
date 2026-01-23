@@ -3,8 +3,10 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:flutter_mailer/flutter_mailer.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:markdown/src/ast.dart' as md;
 import 'package:rhttp/rhttp.dart';
 
@@ -12,6 +14,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/version_controller.dart';
@@ -166,14 +169,16 @@ class _AboutPageState extends State<AboutPage> {
                             shape: BoxShape.circle,
                             color: Color.fromRGBO(25, 25, 25, 0.1),
                           ),
-                          child: FutureBuilder(
-                            future: NamidaChannel.inst.getEnabledAppIcon(),
-                            builder: (context, snapshot) {
-                              final enabledIcon = snapshot.data ?? NamidaChannel.defaultIconForPlatform;
-                              return Image.asset(
-                                enabledIcon.assetPath,
-                              );
-                            },
+                          child: _KuruKuruActivator(
+                            child: FutureBuilder(
+                              future: NamidaChannel.inst.getEnabledAppIcon(),
+                              builder: (context, snapshot) {
+                                final enabledIcon = snapshot.data ?? NamidaChannel.defaultIconForPlatform;
+                                return Image.asset(
+                                  enabledIcon.assetPath,
+                                );
+                              },
+                            ),
                           ),
                         ),
                         const SizedBox(height: 4.0),
@@ -565,6 +570,104 @@ class NamidaAboutListTile extends StatelessWidget {
               NamidaLinkUtils.openLink(link!);
             }
           },
+    );
+  }
+}
+
+class _KuruKuruActivator extends StatefulWidget {
+  final Widget child;
+  const _KuruKuruActivator({required this.child});
+
+  @override
+  State<_KuruKuruActivator> createState() => __KuruKuruActivatorState();
+}
+
+class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTickerProviderStateMixin {
+  AnimationController? _controller;
+  Animation<double>? _animation;
+
+  int _speedLevel = 0;
+
+  void _initAndAnimate() {
+    _controller ??= AnimationController(vsync: this);
+
+    if (mounted) {
+      // _controller?.stop();
+
+      final newSpeedLevel = (_speedLevel++) * 3;
+      final playLongerVer = _speedLevel == 8;
+      if (_speedLevel > 8 && _controller?.isAnimating == true) {
+        // -- is long kuru kurin rn
+        return;
+      }
+
+      final duration = playLongerVer ? 26000 : 2000 + (newSpeedLevel * 200);
+      _controller?.duration = Duration(milliseconds: duration);
+
+      final end = playLongerVer ? 200.0 : 5.0 + newSpeedLevel;
+      final decelerateCurve = Tween<double>(
+        begin: 0.0,
+        end: end,
+      ).animate(CurvedAnimation(
+        parent: _controller!,
+        curve: Curves.decelerate,
+      ));
+
+      setState(() => _animation = decelerateCurve);
+      _controller?.forward(from: 0).then((_) => _speedLevel = 0);
+
+      _play(longerVer: playLongerVer);
+    }
+  }
+
+  void _play({bool longerVer = false}) async {
+    (String, Duration) randomSample;
+    if (longerVer) {
+      randomSample = ('https://www.myinstants.com/media/sounds/kuru-kuru.mp3', Duration(milliseconds: 0));
+    } else {
+      const sounds = [
+        ('https://www.myinstants.com/media/sounds/kurukuru.mp3', Duration(milliseconds: 200)),
+        ('https://www.myinstants.com/media/sounds/kururinnn.mp3', Duration(milliseconds: 0)),
+      ];
+      randomSample = sounds.random;
+    }
+    final pl = Player.createTempPlayer();
+    await pl.setSource(
+      ItemPrepareConfig(
+        AudioVideoSource.uri(Uri.parse(randomSample.$1)),
+        index: 0,
+        initialPosition: randomSample.$2,
+        videoOptions: null,
+      ),
+    );
+    if (Player.inst.isPlaying.value) {
+      await pl.setVolume(0.25);
+    } else {
+      await pl.setVolume(0.5);
+    }
+    await pl.play();
+    pl.dispose();
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final animation = _animation;
+    final child = widget.child;
+
+    return DoubleTapDetector(
+      onDoubleTap: () => _initAndAnimate(),
+      child: animation == null
+          ? child
+          : RotationTransition(
+              turns: animation,
+              child: child,
+            ),
     );
   }
 }

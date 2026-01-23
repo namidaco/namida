@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
-
 import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:media_kit/media_kit.dart';
@@ -10,11 +8,8 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:namida/core/extensions.dart';
 
 class CustomMPVPlayer implements AVPlayer {
-  static final currentVideoController = ValueNotifier<VideoController?>(null);
-
-  CustomMPVPlayer() {
-    currentVideoController.value = _videoController;
-
+  CustomMPVPlayer({bool disableVideo = false}) {
+    if (!disableVideo) _videoController;
     _playerHeightStreamSub = _player.stream.height.listen((event) {
       final resolved = _dimensionResolver(event, null);
       if (resolved != null) _videoControllerListener(height: resolved);
@@ -26,13 +21,20 @@ class CustomMPVPlayer implements AVPlayer {
 
     _playerCompletedStreamSub = _player.stream.completed.listen((event) => _updateProcessingState(completed: event));
     _playerBufferingStreamSub = _player.stream.buffering.listen((event) => _updateProcessingState(buffering: event));
-
-    _videoController.id.addListener(_videoControllerListener);
-    _videoController.rect.addListener(_videoControllerListener);
   }
 
   final _player = Player(configuration: PlayerConfiguration(pitch: true));
-  late final _videoController = VideoController(_player);
+  VideoController? _videoControllerRaw;
+  VideoController get _videoController {
+    return _videoControllerRaw ??= _createVideoControllerAndListen();
+  }
+
+  VideoController _createVideoControllerAndListen() {
+    final c = VideoController(_player);
+    c.id.addListener(_videoControllerListener);
+    c.rect.addListener(_videoControllerListener);
+    return c;
+  }
 
   UriSource? _audioSource;
   VideoSourceOptions? _videoOptions;
@@ -282,8 +284,8 @@ class CustomMPVPlayer implements AVPlayer {
       _playerProcessingStateStreamController.close(),
     ].execute();
 
-    _videoController.id.removeListener(_videoControllerListener);
-    _videoController.rect.removeListener(_videoControllerListener);
+    _videoControllerRaw?.id.removeListener(_videoControllerListener);
+    _videoControllerRaw?.rect.removeListener(_videoControllerListener);
 
     return _player.dispose();
   }

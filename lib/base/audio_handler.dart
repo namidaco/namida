@@ -2246,6 +2246,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   static AVPlayer createPlayer({
+    bool disableVideo = false,
     required AudioPlayer Function() exoplayerCreator,
     required AudioPlayer Function() exoplayerSWCreator,
   }) {
@@ -2254,10 +2255,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       pl = InternalPlayerType.platformDefault;
     }
     return switch (pl) {
-      InternalPlayerType.auto => CustomMPVPlayer(), // shouldn't happen
+      InternalPlayerType.auto => CustomMPVPlayer(disableVideo: disableVideo), // shouldn't happen
       InternalPlayerType.exoplayer => CustomAudioPlayer(exoplayerCreator()),
       InternalPlayerType.exoplayer_sw => CustomAudioPlayer(exoplayerSWCreator()),
-      InternalPlayerType.mpv => CustomMPVPlayer(),
+      InternalPlayerType.mpv => CustomMPVPlayer(disableVideo: disableVideo),
     };
   }
 
