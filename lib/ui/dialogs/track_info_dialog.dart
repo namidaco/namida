@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:just_audio/just_audio.dart';
+import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/audio_handler.dart';
@@ -68,14 +68,22 @@ Future<void> showTrackInfoDialog(
       Player.inst.pause();
     }
 
-    final ap = AudioPlayer();
-    await ap.setSource(track.toAudioSource(0, 0, null));
+    final ap = Player.createTempPlayer();
+    await ap.setSource(
+      ItemPrepareConfig(
+        track.toAudioSource(0, 0, null),
+        index: 0,
+        initialPosition: null,
+        videoOptions: null,
+      ),
+    );
     ap.play();
 
     NamidaNavigator.inst.navigateDialog(
       durationInMs: 400,
       onDismissing: () {
         ap.stop();
+        ap.dispose();
         if (wasPlaying) {
           Player.inst.play();
         }

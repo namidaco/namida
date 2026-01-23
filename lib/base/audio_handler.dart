@@ -556,11 +556,21 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             if (dur > 0) {
               return dur ~/ 1000;
             } else {
-              final ap = AudioPlayer();
-              final d = await ap.setFilePath(finalItem.track.path);
-              ap.stop();
-              ap.dispose();
-              return d?.inSeconds ?? 0;
+              final ap = Player.createTempPlayer();
+              try {
+                final d = await ap.setSource(
+                  ItemPrepareConfig(
+                    AudioVideoSource.file(finalItem.track.path),
+                    index: 0,
+                    initialPosition: null,
+                    videoOptions: null,
+                  ),
+                );
+                return d?.inSeconds ?? 0;
+              } finally {
+                ap.stop();
+                ap.dispose();
+              }
             }
           },
           youtubeID: (finalItem) async {
@@ -2235,26 +2245,28 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     );
   }
 
-  @override
-  AVPlayer createPlayerInstance() {
+  static AVPlayer createPlayer({
+    required AudioPlayer Function() exoplayerCreator,
+    required AudioPlayer Function() exoplayerSWCreator,
+  }) {
     var pl = settings.player.internalPlayer.value;
     if (pl == InternalPlayerType.auto) {
       pl = InternalPlayerType.platformDefault;
     }
     return switch (pl) {
       InternalPlayerType.auto => CustomMPVPlayer(), // shouldn't happen
-      InternalPlayerType.exoplayer => CustomAudioPlayer(
-          _createAndroidPlayer(
-            preferSWDecoders: false,
-          ),
-        ),
-      InternalPlayerType.exoplayer_sw => CustomAudioPlayer(
-          _createAndroidPlayer(
-            preferSWDecoders: true,
-          ),
-        ),
+      InternalPlayerType.exoplayer => CustomAudioPlayer(exoplayerCreator()),
+      InternalPlayerType.exoplayer_sw => CustomAudioPlayer(exoplayerSWCreator()),
       InternalPlayerType.mpv => CustomMPVPlayer(),
     };
+  }
+
+  @override
+  AVPlayer createPlayerInstance() {
+    return createPlayer(
+      exoplayerCreator: () => _createAndroidPlayer(preferSWDecoders: false),
+      exoplayerSWCreator: () => _createAndroidPlayer(preferSWDecoders: true),
+    );
   }
 
   AudioPlayer _createAndroidPlayer({required bool preferSWDecoders}) {

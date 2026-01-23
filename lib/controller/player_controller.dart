@@ -725,4 +725,13 @@ class Player {
   Future<void> disposeVideo() async {
     await _audioHandler.setVideo(null);
   }
+
+  // ======================
+
+  static AVPlayer createTempPlayer() {
+    return NamidaAudioVideoHandler.createPlayer(
+      exoplayerCreator: () => AudioPlayer(preferSWDecoders: false),
+      exoplayerSWCreator: () => AudioPlayer(preferSWDecoders: true),
+    );
+  }
 }
