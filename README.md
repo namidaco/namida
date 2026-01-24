@@ -22,16 +22,15 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 [![](https://img.shields.io/endpoint?url=https://ghloc.vercel.app/api/namidaco/namida/badge?style=flat&logo=dart&logoColor=aqua&label=Total%20Lines&color=darkturquoise)](https://ghloc.vercel.app/namidaco/namida?branch=main)
 </a>
 
-<div style="display:flex; gap:8px; align-items:center;">
+<div>
   <a href="https://github.com/namidaco/namida/releases/latest">
-    <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" height="75">
+    <img src="./some stuff/badge_github.png" height="50">
   </a>
+  &nbsp;
   <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida/">
     <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50">
   </a>
 </div>
-
-
 
 # Sections:
 
@@ -78,7 +77,11 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - Best Video & Audio Quality
 - Audio Only & Data Saver Mode
 - Support Downloads, Caching & Offline Playback
-- Video View with gestures support (swipe to control volume, double tap to seek, swipe up/pinch in to enter fullscreen, etc)
+- Video View with gestures support (swipe to control volume, double tap to seek, swipe up/pinch in to enter fullscreen, swipe to seek, long press for 2x speed, etc)
+- SponsorBlock & Return Youtube Dislike Integration
+- Segments and Heatmap for videos
+- Data Saver Mode
+- Cache Priority System to keep important stuff
 - Tags config for downloads
 - Optional Auto title/artist/album extraction for downloads and scrobbling
 - Downloads output filename builder (similar to yt-dlp)
@@ -91,9 +94,9 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
   - `video_id`, `id`: video identifier
   - `video_url`, `url`: video full url (https://www.youtube.com/watch?v=`id`)
   - `video_title`, `fulltitle`: video full title
-  - `title`: extracted music title from video title (*Navjaxx - **<ins>Fading Light</ins>** (Slowed)*)
-  - `artist`: extracted music artist from video title (***<ins>Navjaxx</ins>** - Fading Light (Slowed)*) or else `channel`
-  - `genre`: music genre. automatically set to ***Nightcore*** when the video title contains "nightcore".
+  - `title`: extracted music title from video title (_Navjaxx - **<ins>Fading Light</ins>** (Slowed)_)
+  - `artist`: extracted music artist from video title (**\*<ins>Navjaxx</ins>** - Fading Light (Slowed)\*) or else `channel`
+  - `genre`: music genre. automatically set to **_Nightcore_** when the video title contains "nightcore".
   - `ext`: format container extension (mp4, m4a, webm). this is not necessary as it would be added automatically
   - `channel_fulltitle`: channel full name
   - `channel`, `uploader`: channel name (excluding ` - Topic`)
@@ -114,7 +117,8 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
   - `playlist_autonumber`: position of the video in the playlists (starts at 1)
   - `none`: empty field. useful for tags to override any other settings
 
-- Example: 
+- Example:
+
 ```bash
 # [04] music title [(channel name)]
 [%(playlist_autonumber)s] %(title)s [(%(channel)s)]
@@ -128,12 +132,12 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 
 ## Others:
 
-- Lyrics auto fetching & displaying (Synced & Plain).
+- Lyrics auto fetching & displaying (Synced & Plain) + Support for Word Synced lrc/ttml.
 - Sleep Timer (Tracks or Minutes)
 - Crossfade, Play/Pause Fade Effect, along with Skip Silence.
 - Replay Gain (Normalize Audio)
 - Control pausing scenarios (calls, notifications, volume 0, etc..)
-- Define parameters to use for filtering tracks in search lists.
+- Search tracks by title, artist, album, filename, even lyrics and more.
 - Global Tracks Selection
   - allows u to select from multiple places into the same list.
 - Never miss your sessions!
@@ -142,6 +146,10 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
   - despite being a flexible system (easily modified, manipulated, imported), it lets u specifiy minimum seconds/percentage to count a listen.
 - Most Played Playlist
   - find out your top tracks based on your history record.
+- Custom Playlists Order & Ability to set custom artworks
+- Left & Right swipe actions for tracks and videos
+- Artwork Gestures (tap and long press)
+- Support for `cover.jpg` etc images for folders, & `.info.txt` for displaying small info
 
 ## Some additional cool features:
 
@@ -154,7 +162,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
   - Applies an edge breathing effect, colors can be static or dynamic (all the colors extracted from the artwork)
 - Particles Effect
   - they speed up with the audio peak too
-- Track Play Mode 
+- Track Play Mode
   - when playing from search, you can selected whether to play: selected track only, search results, album, first artist or first genre.
 - Insert after latest inserted
   - Want to insert multiple tracks one after each other? this will get your back.
@@ -165,8 +173,8 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - Dive into your memories
   - Find out ur long partners u forgot about, "lost memories" allows u to meet tracks you listened to around this time, but n years ago
   - The "Most Played" page also allows you to specify time range, showing ur most beloved tracks at that time
-  - The "Recommended" tracks addition in queue lets you add tracks you usually listened to with the current one 
-  - The "Similar Release Date" tracks addition in queue lets you add tracks released around the same time as the current one 
+  - The "Recommended" tracks addition in queue lets you add tracks you usually listened to with the current one
+  - The "Similar Release Date" tracks addition in queue lets you add tracks released around the same time as the current one
 - <p>CAN IMPORT YOUTUBE HISTORY <img src="some stuff/ong.png" width=16 height=16/></p>
 - <p>LASTFM TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/></p>
 - you gonna find decent amount of options/customizations in the settings and inside dialogs so make sure to check them out.
@@ -205,10 +213,10 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 </summary>
 
-  - looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
-    - for comment tag, any url format should get matched normally.
-    - for filenames, it should contain `v=video_id` or `id=video_id` in order to get matched.
-  
+- looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
+  - for comment tag, any url format should get matched normally.
+  - for filenames, it should contain `v=video_id` or `id=video_id` in order to get matched.
+
 </details>
 
 - Since v4.0.0, full video library indexing & playback is supported, videos can now be played independently, as well as dedicated videos folder view.
@@ -219,7 +227,6 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 <img src="screens/collection_light_2.jpg" class="imgbr"/>
 <img src="screens/collection_dark_1.jpg" class="imgbr"/>
 <img src="screens/collection_dark_2.jpg" class="imgbr"/>
-
 
 <details>
   <summary>
@@ -242,16 +249,16 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 ### Usage Preview
 
-Animating Thumbnail        |  Recommends & Listens
-:-------------------------:|:-------------------------:
-<video src="https://github.com/namidaco/namida/assets/85245079/da47c270-9f45-4ff5-a08e-e99e4b7ebb7c.mp4"> |  <video src="https://github.com/namidaco/namida/assets/85245079/72e978b3-6e15-4b4e-948a-03b470802b30.mp4">
-
+|                                            Animating Thumbnail                                            |                                           Recommends & Listens                                            |
+| :-------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------: |
+| <video src="https://github.com/namidaco/namida/assets/85245079/da47c270-9f45-4ff5-a08e-e99e4b7ebb7c.mp4"> | <video src="https://github.com/namidaco/namida/assets/85245079/72e978b3-6e15-4b4e-948a-03b470802b30.mp4"> |
 
 # Installation
 
-- Namida is available for 
-  - **Android** (stable/beta) 
-  - **Windows** (beta) <sub>`new`</sub>
+- Namida is available for
+  - **Android** (stable/beta)
+  - **Windows** (beta)
+  - **Linux** (beta) <sub>`new`</sub>
 
 <div align="center">
 
@@ -266,7 +273,7 @@ Animating Thumbnail        |  Recommends & Listens
 <td align="center" width="200">
   <div style="display:flex; flex-direction:column; align-items:center;">
     <a href="https://github.com/namidaco/namida/releases/latest">
-      <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" height="75">
+      <img src="./some stuff/badge_github.png" height="50">
     </a>
     <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida/">
       <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50" style="margin-top:8px;">
@@ -277,7 +284,7 @@ Animating Thumbnail        |  Recommends & Listens
 <td align="center" width="200">
   <div style="display:flex; flex-direction:column; align-items:center;">
     <a href="https://github.com/namidaco/namida-snapshots/releases/latest">
-      <img src="https://raw.githubusercontent.com/machiav3lli/oandbackupx/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" height="75">
+      <img src="./some stuff/badge_github.png" height="50">
     </a>
     <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/namidaco/namida-snapshots/">
       <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="50" style="margin-top:8px;">
@@ -289,10 +296,28 @@ Animating Thumbnail        |  Recommends & Listens
 
 </div>
 
+### Linux Installation
+
+```bash
+# Quick Install
+curl -fsSL https://raw.githubusercontent.com/namidaco/namida/main/scripts/install_linux_tar.sh | sudo bash
+
+# Package managers
+yay namida                # AUR (Arch Linux)
+sudo pacman -S namida-bin # AUR (Arch Linux)
+sudo dpkg -i namida.deb   # Debian/Ubuntu (download .deb from beta releases)
+sudo rpm -i namida.rpm    # Fedora/RHEL (download .rpm from beta releases)
+
+# make sure mpv is installed
+sudo apt install mpv      # Debian/Ubuntu/Mint
+sudo dnf install mpv      # Fedora/RHEL
+sudo pacman -S mpv        # Arch/Manjaro
+```
 
 ### Permission Note:
 
 #### The permissions namida uses and why:
+
 > - `WAKE_LOCK` & `FOREGROUND_SERVICE` & `FOREGROUND_SERVICE_MEDIA_PLAYBACK`: keep app alive for media playback.
 > - `INTERNET`: for many stuff like artist/album images, streaming & downloading, etc.
 > - `READ_EXTERNAL_STORAGE` (Android ≤ 12): list files from indexer folders only.
@@ -301,24 +326,24 @@ Animating Thumbnail        |  Recommends & Listens
 > - `READ_MEDIA_IMAGES` (Android 13+): list image files from indexer folders only (for fallback covers).
 > - `WRITE_EXTERNAL_STORAGE` (Android ≤ 10): same as below but less restrict.
 > - `MANAGE_EXTERNAL_STORAGE` or `all_files_access` (Android 10+ / requested when needed): used for
->    - editing audio tags
->    - creating or auto-restoring backups
->    - saving artworks
->    - deleting files
->    - compressing images & fix ytdlp images
->    - exporting playlists as m3u
->    - downloading youtube content
->    - playing tracks from a root folder
->    - in-app file browser
+>   - editing audio tags
+>   - creating or auto-restoring backups
+>   - saving artworks
+>   - deleting files
+>   - compressing images & fix ytdlp images
+>   - exporting playlists as m3u
+>   - downloading youtube content
+>   - playing tracks from a root folder
+>   - in-app file browser
 > - `VIBRATE`: vibrate/haptic feedback while doing some actions (can be turned off in settings).
-> - `POST_NOTIFICATIONS` (requested when needed): post notifications like history import/download progress 
+> - `POST_NOTIFICATIONS` (requested when needed): post notifications like history import/download progress
 > - `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` (requested when needed): improve downloads.
 > - `WRITE_SETTINGS` (requested when needed): to set audio as ringtone/etc.
 
 ### Special Thanks:
 
 > - [@MSOB7YY](https://github.com/MSOB7YY) for their youtube client, which powers youtube section.
-> - [@010101-sans](https://github.com/010101-sans) for creating [namida_sync](https://github.com/010101-sans/namida_sync), which makes syncing namida backups/files between android/windows easier.
+> - [@010101-sans](https://github.com/010101-sans) for creating [namida_sync](https://github.com/010101-sans/namida_sync), which makes syncing namida backups/files between android/windows/linux easier.
 > - [@cameralis](https://github.com/cameralis) for their awesome miniplayer physics.
 > - [@alexmercerind](https://github.com/alexmercerind) for helping me out a lot.
 > - [@lusaxweb](https://github.com/lusaxweb) for their awesome Iconsax icon pack.
@@ -328,11 +353,11 @@ Animating Thumbnail        |  Recommends & Listens
 > ### © Logo by @midjourney
 
 # Contribute
+
 - You can help translating Namida to your language on [Translation Repo](https://github.com/namidaco/namida-translations)
 - Building is not currently directly possible, see why on https://github.com/namidaco/namida/issues/37#issuecomment-1780341883
 
 <!-- [![Translation status](https://translate.codeberg.org/widget/namida-translations/namicomponent/horizontal-auto.svg)](https://translate.codeberg.org/engage/namida-translations/) -->
-
 
 # Donate
 
@@ -341,17 +366,20 @@ Animating Thumbnail        |  Recommends & Listens
 <a href="https://www.buymeacoffee.com/namidaco" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 42px;" ></a>
 <a href="https://ko-fi.com/namidaco" target="_blank"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Ko-fi" style="height: 42px;" ></a>
 
-
 > Bitcoin/ETH/USDT (BEP20): `0x95b2834c84def92860df773d8b3d80d4c296d748`
 
 - Don't forget to 🌟 star the repo if you like the project ^^
 
 # Social
+
 - join us on our platforms for updates, tips, discussion & ideas
   - [Telegram (Updates)](https://t.me/namida_official)
   - [Telegram (Chat)](https://t.me/+FmdfsgKoGmM1ZGFk)
   - [Discord](https://discord.gg/WeY7DTVChT)
-- ⚠️ there are no websites for namidaco/namida other than github & telegram, we are not resposible for downloading from other sources.
+
+> [!WARNING]
+> There are no websites for namidaco/namida other than GitHub & Telegram,
+> we are not resposible for downloading from other sources.
 
 # LICENSE
 
