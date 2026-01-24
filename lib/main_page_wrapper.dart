@@ -26,7 +26,6 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/main_page.dart';
-import 'package:namida/ui/pages/onboarding.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -36,27 +35,8 @@ import 'package:namida/ui/widgets/settings/customization_settings.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 
-class MainPageWrapper extends StatefulWidget {
-  final bool shouldShowOnBoarding;
-
-  const MainPageWrapper({super.key, required this.shouldShowOnBoarding});
-
-  @override
-  State<MainPageWrapper> createState() => _MainPageWrapperState();
-}
-
-class _MainPageWrapperState extends State<MainPageWrapper> {
-  @override
-  void initState() {
-    super.initState();
-    if (widget.shouldShowOnBoarding) {
-      WidgetsBinding.instance.addPostFrameCallback(
-        (timeStamp) {
-          NamidaNavigator.inst.navigateToRootReplacement(const FirstRunConfigureScreen());
-        },
-      );
-    }
-  }
+class MainPageWrapper extends StatelessWidget {
+  const MainPageWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {

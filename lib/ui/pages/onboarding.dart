@@ -83,9 +83,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     }
 
     NamidaNavigator.inst.navigateToRootReplacement(
-      MainPageWrapper(
-        shouldShowOnBoarding: false,
-      ),
+      const MainPageWrapper(),
     );
     Indexer.inst.prepareTracksFile();
     return QueueController.inst.prepareLatestQueueAsync();
