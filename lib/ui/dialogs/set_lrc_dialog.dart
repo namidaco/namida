@@ -57,7 +57,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
   if (await cachedTxt.exists()) {
     availableLyrics.add(
       LyricsModel(
-        lyrics: await cachedTxt.readAsString(),
+        lyrics: await cachedTxt.readLrcString(),
         synced: false,
         fromInternet: false,
         isInCache: true,
@@ -69,7 +69,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
   if (await cachedLRC.exists()) {
     availableLyrics.add(
       LyricsModel(
-        lyrics: await cachedLRC.readAsString(),
+        lyrics: await cachedLRC.readLrcString(),
         synced: true,
         fromInternet: false,
         isInCache: true,
@@ -84,7 +84,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     if (await localLRC.exists()) {
       availableLyrics.add(
         LyricsModel(
-          lyrics: await localLRC.readAsString(),
+          lyrics: await localLRC.readLrcString(),
           synced: true,
           fromInternet: false,
           isInCache: false,
@@ -332,7 +332,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     );
     final path = picked?.path;
     if (path != null) {
-      final text = await File(path).readAsString();
+      final text = await File(path).readLrcString();
       final synced = text.isValidLRC();
       final file = await lrcUtils.saveLyricsToCache(text, synced);
       final lrcModel = LyricsModel(

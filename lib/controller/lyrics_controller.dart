@@ -178,14 +178,14 @@ class Lyrics {
       final lyricsFilesLocal = lrcUtils.deviceLRCFiles;
       for (final lf in lyricsFilesLocal) {
         if (await lf.existsAndValid()) {
-          lrcContent = await lf.readAsString();
+          lrcContent = await lf.readLrcString();
           break;
         }
       }
       if (lrcContent == null) {
         final syncedInCache = lrcUtils.cachedLRCFile;
         if (await syncedInCache.existsAndValid()) {
-          lrcContent = await syncedInCache.readAsString();
+          lrcContent = await syncedInCache.readLrcString();
         } else if (trackLyrics != '') {
           lrcContent = trackLyrics;
         }
@@ -197,7 +197,7 @@ class Lyrics {
       if (lrcContent == null) {
         final textInCache = lrcUtils.cachedTxtFile;
         if (await textInCache.existsAndValid()) {
-          lrcContent = await textInCache.readAsString();
+          lrcContent = await textInCache.readLrcString();
         }
       }
     }
@@ -233,7 +233,7 @@ class Lyrics {
 
     /// get from storage
     if (source != LyricsSource.internet && await lyricsFile.existsAndValid()) {
-      return await lyricsFile.readAsString();
+      return await lyricsFile.readLrcString();
     } else if (source != LyricsSource.internet && trackLyrics != '') {
       return trackLyrics;
     }

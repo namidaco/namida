@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:isolate';
 
+import 'package:lrc/lrc.dart';
+
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -163,14 +165,14 @@ class TracksSearchWrapper {
     final lyricsFilesLocal = lrcUtils.deviceLRCFiles;
     for (final lf in lyricsFilesLocal) {
       if (lf.existsAndValidSync()) {
-        lrcContent = lf.readAsStringSync();
+        lrcContent = lf.readLrcStringSync();
         break;
       }
     }
     if (lrcContent == null) {
       final syncedInCache = lrcUtils.cachedLRCFile;
       if (syncedInCache.existsAndValidSync()) {
-        lrcContent = syncedInCache.readAsStringSync();
+        lrcContent = syncedInCache.readLrcStringSync();
       } else if (embedded.isNotEmpty) {
         lrcContent = embedded;
       }
@@ -178,7 +180,7 @@ class TracksSearchWrapper {
     if (lrcContent == null) {
       final textInCache = lrcUtils.cachedTxtFile;
       if (textInCache.existsAndValidSync()) {
-        lrcContent = textInCache.readAsStringSync();
+        lrcContent = textInCache.readLrcStringSync();
       }
     }
     if (lrcContent != null) {
