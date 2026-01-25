@@ -585,6 +585,7 @@ class _KuruKuruActivator extends StatefulWidget {
 class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTickerProviderStateMixin {
   AnimationController? _controller;
   Animation<double>? _animation;
+  List<AVPlayer>? _activePlayers;
 
   int _speedLevel = 0;
 
@@ -594,17 +595,17 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
     if (mounted) {
       // _controller?.stop();
 
-      final newSpeedLevel = (_speedLevel++) * 3;
+      final newSpeedLevel = (_speedLevel++) * 2;
       final playLongerVer = _speedLevel == 8;
       if (_speedLevel > 8 && _controller?.isAnimating == true) {
         // -- is long kuru kurin rn
         return;
       }
 
-      final duration = playLongerVer ? 26000 : 2000 + (newSpeedLevel * 200);
+      final duration = playLongerVer ? 26000 : 1000 + (newSpeedLevel * 200);
       _controller?.duration = Duration(milliseconds: duration);
 
-      final end = playLongerVer ? 200.0 : 5.0 + newSpeedLevel;
+      final end = playLongerVer ? 200.0 : 4.0 + newSpeedLevel;
       final decelerateCurve = Tween<double>(
         begin: 0.0,
         end: end,
@@ -632,26 +633,43 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
       randomSample = sounds.random;
     }
     final pl = Player.createTempPlayer();
-    await pl.setSource(
-      ItemPrepareConfig(
-        AudioVideoSource.uri(Uri.parse(randomSample.$1)),
-        index: 0,
-        initialPosition: randomSample.$2,
-        videoOptions: null,
-      ),
-    );
-    if (Player.inst.isPlaying.value) {
-      await pl.setVolume(0.25);
-    } else {
-      await pl.setVolume(0.5);
+    _activePlayers ??= [];
+    _activePlayers?.add(pl);
+    try {
+      await pl.setSource(
+        ItemPrepareConfig(
+          AudioVideoSource.uri(Uri.parse(randomSample.$1)),
+          index: 0,
+          initialPosition: randomSample.$2,
+          videoOptions: null,
+        ),
+      );
+      if (Player.inst.isPlaying.value) {
+        await pl.setVolume(0.25);
+      } else {
+        await pl.setVolume(0.5);
+      }
+      await pl.play();
+      await pl.processingStateStream.firstWhere((element) => element == ProcessingState.completed);
+    } catch (_) {
+    } finally {
+      await pl.pause();
+      pl.dispose();
+      _activePlayers?.remove(pl);
     }
-    await pl.play();
-    pl.dispose();
   }
 
   @override
   void dispose() {
     _controller?.dispose();
+    final activePlayers = _activePlayers;
+    if (activePlayers != null) {
+      for (final pl in activePlayers) {
+        pl.pause().whenComplete(pl.dispose);
+      }
+      activePlayers.clear();
+    }
+
     super.dispose();
   }
 

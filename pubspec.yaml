@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 5.6.6-beta+260116135
+version: 5.6.8-beta+260125162
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
@@ -35,7 +35,7 @@ dependencies:
   path: ^1.9.0
   rhttp: ^0.14.0
   path_provider: ^2.1.3
-  permission_handler: 
+  permission_handler:
     git:
       url: https://github.com/MSOB7YY/flutter-permission-handler
       path: permission_handler
@@ -51,7 +51,7 @@ dependencies:
   share_plus: <=10.1.4 # v12.0.1 doesnt work on windows
   calendar_date_picker2: ^2.0.0
   wakelock_plus: ^1.2.10
-  screen_brightness: 
+  screen_brightness:
     git:
       url: https://github.com/MSOB7YY/screen_brightness
       path: screen_brightness/
@@ -62,7 +62,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/flutter_sharing_intent
   queue: ^3.1.0+2
-  jiffy: 
+  jiffy:
     git:
       url: https://github.com/MSOB7YY/jiffy
   playlist_manager:
@@ -154,14 +154,14 @@ dependencies:
   # ---- Windows Packages ----
   window_manager: ^0.5.0
   filepicker_windows: ^2.1.4
-  smtc_windows: 
+  smtc_windows:
     git:
       url: https://github.com/MSOB7YY/frb_plugins
       path: packages/smtc_windows
   windows_taskbar: ^1.1.2
   super_drag_and_drop: ^0.9.1
   windows_single_instance: ^1.1.0
-  super_hot_key: 
+  super_hot_key:
     git:
       url: https://github.com/MSOB7YY/super_native_extensions
       path: super_hot_key

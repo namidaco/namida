@@ -5009,6 +5009,7 @@ class DoubleTapDetector extends StatelessWidget {
 
 class LongPressDetector extends StatelessWidget {
   final VoidCallback? onLongPress;
+  final void Function(LongPressGestureRecognizer instance)? initializer;
   final Widget? child;
   final HitTestBehavior? behavior;
   final bool enableSecondaryTap;
@@ -5016,6 +5017,7 @@ class LongPressDetector extends StatelessWidget {
   const LongPressDetector({
     super.key,
     required this.onLongPress,
+    this.initializer,
     this.child,
     this.behavior,
     this.enableSecondaryTap = false,
@@ -5026,11 +5028,12 @@ class LongPressDetector extends StatelessWidget {
     final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
     gestures[LongPressGestureRecognizer] = GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
       () => LongPressGestureRecognizer(debugOwner: this),
-      (LongPressGestureRecognizer instance) {
-        instance
-          ..onLongPress = onLongPress
-          ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
-      },
+      initializer ??
+          (LongPressGestureRecognizer instance) {
+            instance
+              ..onLongPress = onLongPress
+              ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+          },
     );
 
     if (enableSecondaryTap) {

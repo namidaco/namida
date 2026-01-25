@@ -924,9 +924,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       },
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onLongPressStart: !_isControlsEnabled ? null : (_) => _startLongPressAction(),
-        onLongPressEnd: (_) => _endLongPressAction(),
-        onLongPressCancel: () => _endLongPressAction(),
         onHorizontalDragStart: !_isControlsEnabled ? null : (details) => _seekReady?.onHorizontalDragStartSimple(),
         onHorizontalDragUpdate: !_isControlsEnabled ? null : (event) => _seekReady?.onHorizontalDragUpdateSimple(event),
         onHorizontalDragEnd: !_isControlsEnabled ? null : _seekReady?.onHorizontalDragEnd,
@@ -1114,6 +1111,17 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               color: Colors.black.withValues(alpha: 0.25),
                             ),
                           ),
+                        ),
+                      ),
+
+                      Positioned.fill(
+                        child: LongPressDetector(
+                          onLongPress: null,
+                          initializer: (instance) {
+                            instance.onLongPressStart = !_isControlsEnabled ? null : (_) => _startLongPressAction();
+                            instance.onLongPressEnd = (_) => _endLongPressAction();
+                            instance.onLongPressCancel = () => _endLongPressAction();
+                          },
                         ),
                       ),
 
@@ -2157,7 +2165,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             const SizedBox(width: 6.0),
                                             Text(
                                               "${lang.SPEED} ${defaultLongPressSpeed}x",
-                                              style: context.textTheme.displayMedium,
+                                              style: context.textTheme.displayMedium?.copyWith(
+                                                color: itemsColor,
+                                              ),
                                             ),
                                           ],
                                         ),
