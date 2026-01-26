@@ -133,7 +133,6 @@ Future<void> showGeneralPopupDialog(
 
   final Iterable<YoutubeID> availableYoutubeIDs = tracks.map((e) => YoutubeID(id: e.youtubeID, playlistID: null)).where((element) => element.id.isNotEmpty);
   final String? firstVideolId = availableYoutubeIDs.firstOrNull?.id;
-  final String? firstVideoChannelId = firstVideolId == null ? null : await YoutubeInfoController.utils.getVideoChannelID(firstVideolId);
 
   final numberOfRepeats = 1.obso;
   final isLoadingFilesToShare = false.obso;
@@ -655,16 +654,24 @@ Future<void> showGeneralPopupDialog(
                   NamidaNavigator.inst.closeDialog();
                   Player.inst.playOrPause(0, availableYoutubeIDs, QueueSource.others, gentlePlay: true);
                 },
-                trailing: isSingle && firstVideoChannelId != null
-                    ? IconButton(
-                        tooltip: lang.GO_TO_CHANNEL,
-                        icon: Icon(
-                          Broken.user,
-                          size: 20.0,
-                          color: iconColor,
-                        ),
-                        iconSize: 20.0,
-                        onPressed: YTChannelSubpage(channelID: firstVideoChannelId).navigate,
+                trailing: isSingle && firstVideolId != null
+                    ? FutureBuilder(
+                        future: YoutubeInfoController.utils.getVideoChannelID(firstVideolId),
+                        builder: (context, snapshot) {
+                          final firstVideoChannelId = snapshot.data;
+                          return firstVideoChannelId != null
+                              ? IconButton(
+                                  tooltip: lang.GO_TO_CHANNEL,
+                                  icon: Icon(
+                                    Broken.user,
+                                    size: 20.0,
+                                    color: iconColor,
+                                  ),
+                                  iconSize: 20.0,
+                                  onPressed: YTChannelSubpage(channelID: firstVideoChannelId).navigate,
+                                )
+                              : const SizedBox();
+                        },
                       )
                     : null,
               )
