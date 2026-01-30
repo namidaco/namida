@@ -162,7 +162,7 @@ class _SettingsController with SettingsFileWriter {
   final forceMiniplayerTrackColor = false.obs;
   final isTrackPlayedSecondsCount = 40.obs;
   final isTrackPlayedPercentageCount = 40.obs;
-  final waveformTotalBars = 100.obs;
+  final waveformTotalBars = 80.obs;
   final videosMaxCacheInMB = (8 * 1024).obs; // 8GB
   final audiosMaxCacheInMB = (4 * 1024).obs; // 4GB
   final imagesMaxCacheInMB = (8 * 32).obs; // 256 MB
@@ -180,7 +180,7 @@ class _SettingsController with SettingsFileWriter {
   final enableM3USyncStartup = true.obs;
   final prioritizeEmbeddedLyrics = true.obs;
   final swipeableDrawer = true.obs;
-  final dismissibleMiniplayer = false.obs;
+  final dismissibleMiniplayer = true.obs;
   final enableClipboardMonitoring = false.obs;
   final artworkGestureDoubleTapLRC = true.obs;
   final previousButtonReplays = false.obs;
