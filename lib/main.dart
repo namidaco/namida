@@ -27,6 +27,7 @@ import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/home_widget_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -251,6 +252,7 @@ Future<bool> _mainAppInitialization() async {
           await HttpCacheManager.init(config: config).ignoreError();
         },
       ),
+      NamidaFFMPEG.configure(),
       ytInfoInitSyncItemsCompleter.future,
     ].executeAllAndSilentReportErrors();
 

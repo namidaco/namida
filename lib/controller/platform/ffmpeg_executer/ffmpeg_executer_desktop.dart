@@ -5,8 +5,8 @@ part of 'ffmpeg_executer.dart';
 /// Process.runSync() => 0:00:07.040127 | 0:00:06.651405
 class _FFMPEGExecuterDesktop extends FFMPEGExecuter {
   @override
-  void init() {
-    _isolateExecuter.initialize();
+  FutureOr<void> init() async {
+    await _isolateExecuter.initialize();
   }
 
   @override

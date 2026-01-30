@@ -9,7 +9,7 @@ abstract class FFMPEGExecuter {
     );
   }
 
-  void init();
+  FutureOr<void> init();
   Future<void> dispose();
   Future<bool> ffmpegExecute(List<String> args);
   Future<String?> ffprobeExecute(List<String> args);

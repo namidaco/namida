@@ -87,6 +87,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
 
     // -- create with each batch to avoid piling up the main executer
     final executer = FFMPEGExecuter.platform();
+    await executer.init();
 
     for (int i = 0; i < paths.length; i++) {
       var path = paths[i];

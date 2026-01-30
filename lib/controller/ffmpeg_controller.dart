@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit_config.dart';
+
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/media_info.dart';
@@ -20,11 +22,18 @@ import 'platform/ffmpeg_executer/ffmpeg_executer.dart';
 class NamidaFFMPEG {
   static NamidaFFMPEG get inst => _instance;
   static final NamidaFFMPEG _instance = NamidaFFMPEG._internal();
-  NamidaFFMPEG._internal() {
-    _executer.init();
+  NamidaFFMPEG._internal();
+
+  static Future<void> configure() async {
+    if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
+      await [
+        FFmpegKitConfig.disableLogs(),
+        FFmpegKitConfig.setSessionHistorySize(200),
+      ].executeAllAndSilentReportErrors();
+    }
   }
 
-  final _executer = FFMPEGExecuter.platform();
+  final _executer = FFMPEGExecuter.platform()..init();
 
   final currentOperations = <OperationType, Rx<OperationProgress>>{
     OperationType.imageCompress: OperationProgress().obs,

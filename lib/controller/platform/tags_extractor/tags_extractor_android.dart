@@ -6,7 +6,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
   }
 
   late MethodChannel _channel;
-  final _ffmpegQueue = Queue(parallel: 1); // concurrent execution can result in being stuck
+  final _ffmpegQueue = Queue(parallel: 6); // concurrent executions could result in being stuck/failed if session size exceeded
 
   Timer? _logsSetTimer;
   int _logsSetRetries = 5;
@@ -120,7 +120,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
     }
 
     if (trackInfo == null || trackInfo.hasError || !trackInfo.tags.isValid) {
-      final ffmpegInfo = await _ffmpegQueue.add(() => ffmpegController.extractMetadata(trackPath).timeout(const Duration(seconds: 5)).catchError((_) => null));
+      final ffmpegInfo = await _ffmpegQueue.add(() async => await ffmpegController.extractMetadata(trackPath).timeout(const Duration(seconds: 5)).catchError((_) => null));
 
       if (ffmpegInfo != null && isVideo) {
         try {
@@ -199,7 +199,10 @@ class _TagsExtractorAndroid extends TagsExtractor {
         overrideArtwork: overrideArtwork,
         isVideo: isVideo,
         trackInfo: trackInfoMap == null ? null : FAudioModel.fromMap(trackInfoMap),
-      ).catchError((_) => _getFallbackFAudioModel(path, trackInfoMap)).then((value) => onExtract(value, index));
+      ).catchError((e, st) {
+        logger.error('ffmpeg fallback extracton failed', e: e, st: st);
+        return _getFallbackFAudioModel(path, trackInfoMap);
+      }).then((value) => onExtract(value, index));
     }
 
     final channelEvent = EventChannel('faudiotagger/stream/$streamKey');
