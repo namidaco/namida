@@ -29,7 +29,7 @@ class _FFMPEGExecuterDesktop extends FFMPEGExecuter {
 
   @override
   Future<Map<dynamic, dynamic>?> getMediaInformation(String path) async {
-    final stringed = await ffprobeExecute(
+    final output = await ffprobeExecute(
       [
         "-hide_banner",
         "-print_format",
@@ -41,7 +41,7 @@ class _FFMPEGExecuterDesktop extends FFMPEGExecuter {
         path,
       ],
     );
-    return stringed == null ? null : jsonDecode(stringed) as Map;
+    return FFMPEGExecuter.parseFFprobeOutput(output);
   }
 }
 

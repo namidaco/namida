@@ -34,10 +34,21 @@ class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
 
   @override
   Future<Map<dynamic, dynamic>?> getMediaInformation(String path) async {
-    final mediaInfo = await FFprobeKit.getMediaInformation(path);
-    final information = mediaInfo.getMediaInformation();
-    final map = information?.getAllProperties();
-    return map;
+    final commandArguments = [
+      "-v",
+      "quiet",
+      "-hide_banner",
+      "-print_format",
+      "json",
+      "-show_format",
+      "-show_streams",
+      "-show_chapters",
+      "-i",
+      path,
+    ];
+    final session = await FFprobeKit.getMediaInformationFromCommandArguments(commandArguments);
+    final String? output = await session.getOutput();
+    return FFMPEGExecuter.parseFFprobeOutput(output);
   }
 }
 

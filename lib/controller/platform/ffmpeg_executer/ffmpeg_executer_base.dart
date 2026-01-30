@@ -15,6 +15,20 @@ abstract class FFMPEGExecuter {
   Future<String?> ffprobeExecute(List<String> args);
   Future<Map<dynamic, dynamic>?> getMediaInformation(String path);
 
+  static Map? parseFFprobeOutput(String? output) {
+    if (output == null) return null;
+    try {
+      return jsonDecode(output) as Map?;
+    } catch (_) {
+      try {
+        // COVERART is a giant base64 blob and breaks json pasing
+        output = output.replaceFirst(RegExp(r'"COVERART".*', multiLine: false, caseSensitive: false), '');
+        return jsonDecode(output) as Map?;
+      } catch (_) {}
+    }
+    return null;
+  }
+
   Future<MediaInfo?> extractMetadata(String path) async {
     final output = await ffprobeExecute(['-show_streams', '-show_format', '-show_entries', 'stream_tags:format_tags', '-of', 'json', path]);
     if (output != null && output != '') {
