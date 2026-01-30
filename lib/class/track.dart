@@ -413,7 +413,7 @@ class TrackExtended {
 
   static String buildAudioInfoFormattedCompact(String format, String channels, int bitrate, int sampleRate) {
     return [
-      format,
+      format.toUpperCase(),
       if (channels.isNotEmpty && channels != '2') "$channels ch",
       "$bitrate kbps",
       "${sampleRate / 1000} khz",
