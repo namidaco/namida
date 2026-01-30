@@ -874,18 +874,19 @@ class Indexer<T extends Track> {
   }
 
   Future<void> reindexTracks({
-    required List<T> tracks,
+    required List<Selectable> tracks,
     bool updateArtwork = false,
     required void Function(bool didExtract) onProgress,
     required void Function(int tracksLength) onFinish,
     bool tryExtractingFromFilename = true,
   }) async {
-    final tracksReal = <T>[];
+    final tracksReal = <Track>[];
     final tracksRealPaths = <String>[];
-    final tracksMissing = <T>[];
+    final tracksMissing = <Track>[];
     final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
-    await tracks.loopAsync((tr) async {
+    await tracks.loopAsync((s) async {
       bool exists = false;
+      final tr = s.track;
       try {
         exists = await File(tr.path).exists();
       } catch (_) {}

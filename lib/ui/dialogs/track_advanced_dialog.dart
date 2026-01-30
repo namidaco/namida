@@ -217,7 +217,7 @@ void showTrackAdvancedDialog({
                 ),
                 onTap: () async {
                   await Indexer.inst.reindexTracks(
-                    tracks: tracks.tracks.toList(),
+                    tracks: tracksUniqued,
                     updateArtwork: willUpdateArtwork.value,
                     tryExtractingFromFilename: false,
                     onProgress: (didExtract) {
