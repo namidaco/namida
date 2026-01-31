@@ -1279,7 +1279,7 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
   }
 
   Future<void> _onAddTap() {
-    const submitUrl = 'https://discord.com/channels/1156253663803740271/1423484977693327430';
+    const submitUrl = 'https://discord.com/channels/1156253663803740271/1423484977693327430/1423671224520671362';
     return NamidaLinkUtils.openLink(submitUrl);
   }
 

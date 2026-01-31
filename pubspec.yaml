@@ -101,7 +101,7 @@ dependencies:
   media_kit_libs_linux: ^1.2.1
   media_kit_libs_macos_video: ^1.1.4
   media_kit_libs_windows_video: ^1.0.11
-  http_cache_stream: ^0.0.2
+  http_cache_stream: ^0.0.4
   waveform_extractor: ^1.1.3
   basic_audio_handler:
     git:

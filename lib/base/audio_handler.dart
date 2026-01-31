@@ -1439,28 +1439,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             return null;
           });
           setReplayGainIfRequired();
-          if (streamsResult != null && (streamsResult.audioStreams.isNotEmpty || streamsResult.mixedStreams.isNotEmpty)) {
-            // only when video has actual streams. otherwise its deleted/privated/etc
-            if (markedAsWatched != null) {
-              // -- older request was initiated, wait to see the value.
-              markedAsWatched.future.then(
-                (marked) {
-                  if ((marked == YTMarkVideoWatchedResult.noAccount || marked == YTMarkVideoWatchedResult.userDenied) && streamsResult != null) {
-                    YoutubeInfoController.history.markVideoWatched(videoId: item.id, streamResult: streamsResult).then(_onVideoMarkWatchResultError);
-                  }
-                },
-              );
-            } else {
-              // -- no old requests, force mark
-              YoutubeInfoController.history.markVideoWatched(videoId: item.id, streamResult: streamsResult).then(_onVideoMarkWatchResultError);
-            }
-          }
+          markAsWatchedIfRequired();
+
           duration ??= streamsResult?.audioStreams.firstOrNull?.duration;
           onInfoOrThumbObtained(info: streamsResult?.info);
           if (checkInterrupted(refreshNoti: false)) return; // -- onInfoOrThumbObtained refreshes notification.
           YoutubeInfoController.current.currentYTStreams.value = streamsResult;
         } else {
           YoutubeInfoController.current.currentYTStreams.value = streamsResult;
+          markAsWatchedIfRequired();
         }
 
         if (checkInterrupted()) return;

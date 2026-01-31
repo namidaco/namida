@@ -855,14 +855,7 @@ class Indexer<T extends Track> {
       },
     );
     this.tracksInfoList.refresh();
-    this.mainMapAlbums.refresh();
-    this.mainMapArtists.refresh();
-    this.mainMapAlbumArtists.refresh();
-    this.mainMapComposer.refresh();
-    this.mainMapGenres.refresh();
-    this.mainMapFoldersTracksAndVideos.refresh();
-    this.mainMapFoldersTracks.refresh();
-    this.mainMapFoldersVideos.refresh();
+    this.mainMapsGroup.refreshAll();
     SearchSortController.inst.trackSearchList.refresh();
     SearchSortController.inst.trackSearchTemp.refresh();
     FoldersController.tracksAndVideos.currentFolder.refresh();

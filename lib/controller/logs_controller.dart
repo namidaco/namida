@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -13,7 +12,7 @@ final logger = _Log();
 class _Log {
   Level? _defaultLevel;
 
-  Logger? _logger;
+  Future<Logger>? _logger;
 
   static Future<Logger> _createNewLogger(Level? level) async {
     final filter = kDebugMode ? DevelopmentFilter() : ProductionFilter();
@@ -35,14 +34,14 @@ class _Log {
 
   void updateLoggerPath() => updateLogger(null);
 
-  void updateLogger(Level? level) {
+  void updateLogger(Level? level) async {
     _defaultLevel = level;
-    _logger?.close();
+    (await _logger)?.close();
     _logger = null;
   }
 
   Future<void> dispose() async {
-    await _logger?.close();
+    (await _logger)?.close();
     _logger = null;
   }
 
@@ -52,8 +51,7 @@ class _Log {
     StackTrace? st,
   }) async {
     printo('$e => $message\n=> $st', isError: true);
-
-    final loggerEffective = _logger ??= await _createNewLogger(_defaultLevel);
+    final loggerEffective = await (_logger ??= _createNewLogger(_defaultLevel));
     loggerEffective.e(message, error: e, stackTrace: st);
   }
 
@@ -64,18 +62,10 @@ class _FileOutput extends LogOutput {
   _FileOutput({required this.file});
   final File file;
 
-  IOSink? _sink;
-
   @override
   Future<void> init() async {
     try {
       await file.create();
-      if (await file.length() <= 2) {
-        final sink = _sink = file.openWrite(mode: FileMode.writeOnlyAppend);
-        sink.write(await _getDeviceInfo());
-        sink.write("\n===============================\n");
-        await sink.flush();
-      }
     } catch (_) {}
     return await super.init();
   }
@@ -83,61 +73,16 @@ class _FileOutput extends LogOutput {
   Future<void> _writeMainFile(OutputEvent event) async {
     // -- chronological logs
     try {
-      final sink = _sink;
-      if (sink == null) return;
-      final length = event.lines.length;
-      for (int i = 0; i < length; i++) {
-        sink.write("\n${event.lines[i]}");
-      }
-      sink.write("\n-------------------------------");
-      await sink.flush();
+      await file.writeAsString(
+        "${event.lines.join('\n')}\n\n",
+        mode: FileMode.writeOnlyAppend,
+        flush: true,
+      );
     } catch (_) {}
   }
 
   @override
   void output(OutputEvent event) {
     _writeMainFile(event);
-  }
-
-  @override
-  Future<void> destroy() async {
-    await _sink?.flush().ignoreError();
-    await _sink?.close().ignoreError();
-  }
-
-  Future<String> _getDeviceInfo() async {
-    final device = await NamidaDeviceInfo.deviceInfoCompleter.future;
-    final package = await NamidaDeviceInfo.packageInfoCompleter.future;
-    final deviceMap = device?.data;
-    final packageMap = package?.data;
-
-    // -- android
-    deviceMap?.remove('supported32BitAbis');
-    deviceMap?.remove('supported64BitAbis');
-    deviceMap?.remove('systemFeatures');
-    // -----------
-
-    // -- windows
-    deviceMap?.remove('digitalProductId');
-    // -----------
-
-    final encoder = JsonEncoder.withIndent(
-      "  ",
-      (object) {
-        if (object is DateTime) {
-          return object.toString();
-        }
-        try {
-          return object.toJson();
-        } catch (_) {
-          return object.toString();
-        }
-      },
-    );
-    final infoMap = {
-      'device': deviceMap,
-      'package': packageMap,
-    };
-    return encoder.convert(infoMap);
   }
 }

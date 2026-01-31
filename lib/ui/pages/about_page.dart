@@ -418,7 +418,7 @@ class _AboutPageState extends State<AboutPage> {
                       icon: Broken.direct_send,
                       tooltip: () => AppSocial.EMAIL,
                       onPressed: () async {
-                        final attachments = await AppPaths.getAllExistingLogFiles();
+                        final attachments = await AppPaths.getAllExistingLogsAndSettingsAsZip();
                         final mailOptions = MailOptions(
                           body: 'pls look at this report im beggin u pls solve my issue pls i wa-',
                           subject: 'Namida Logs Report',
@@ -429,7 +429,7 @@ class _AboutPageState extends State<AboutPage> {
                       },
                     ),
                     onTap: () async {
-                      final filePaths = await AppPaths.getAllExistingLogFiles();
+                      final filePaths = await AppPaths.getAllExistingLogsAndSettingsAsZip();
                       NamidaUtils.shareFiles(filePaths);
                     },
                   )

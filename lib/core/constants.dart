@@ -10,8 +10,10 @@ import 'package:flutter/services.dart';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_udid/flutter_udid.dart';
+import 'package:intl/intl.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart' as pp;
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -24,6 +26,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/base.dart';
+import 'package:namida/controller/platform/zip_manager/zip_manager.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -534,16 +537,53 @@ class AppPaths {
   static final VIDEOS_CACHE_OLD = _join(_USER_DATA, 'cache_videos.json');
   // ---------
 
-  static Future<List<String>> getAllExistingLogFiles() async {
-    final existingPaths = <String>[];
+  static Future<List<String>> getAllExistingLogsAndSettingsAsZip() async {
+    final format = DateFormat('yyyy-MM-dd HH.mm.ss');
+    final dateText = format.format(DateTime.now());
+    final tmpDirParentPath = FileParts.joinPath((await pp.getTemporaryDirectory()).path, 'namida_logs_$dateText');
+    final tmpDirContentsPath = FileParts.joinPath(tmpDirParentPath, 'contents');
+    final tmpDirContents = await Directory(tmpDirContentsPath).create(recursive: true);
+    await _copyAllExistingLogAndSettingsTo(tmpDirPath: tmpDirContentsPath);
+    final zipper = ZipManager.platform();
+    final zipFile = FileParts.join(tmpDirParentPath, 'namida_logs_$dateText.zip');
+    await zipper.createZipFromDirectory(
+      sourceDir: tmpDirContents,
+      zipFile: zipFile,
+    );
+    tmpDirContents.delete(recursive: true);
+    return [zipFile.path];
+  }
+
+  static Future<List<File>> _copyAllExistingLogAndSettingsTo({required String tmpDirPath, bool includeSettings = true}) async {
+    final existingPaths = <File>[];
+    final deviceInfoFile = FileParts.join(tmpDirPath, 'device_info.txt');
+    try {
+      final deviceInfo = await _getDeviceInfo();
+      await deviceInfoFile.create(recursive: true);
+      await deviceInfoFile.writeAsString(deviceInfo);
+      existingPaths.add(deviceInfoFile);
+    } catch (_) {}
     for (final p in [
       AppPaths.LOGS,
       AppPaths.LOGS_FALLBACK,
       AppPaths.LOGS_TAGGER,
+      if (includeSettings) ...[
+        AppPaths.SETTINGS,
+        AppPaths.SETTINGS_EQUALIZER,
+        AppPaths.SETTINGS_PLAYER,
+        AppPaths.SETTINGS_YOUTUBE,
+        AppPaths.SETTINGS_EXTRA,
+        AppPaths.SETTINGS_TUTORIAL,
+        AppPaths.SETTINGS_SHORTCUTS,
+      ],
     ]) {
-      final size = await File(p).fileSize();
-      if (size != null && size > 0) {
-        existingPaths.add(p);
+      final file = File(p);
+      if (await file.exists()) {
+        final copy = await file.copy(FileParts.joinPath(tmpDirPath, p.getFilename));
+        final size = await copy.fileSize();
+        if (size != null && size > 0) {
+          existingPaths.add(copy);
+        }
       }
     }
     return existingPaths;
@@ -578,6 +618,42 @@ class AppPaths {
         return FileParts.joinPath(Directory.systemTemp.path, 'namida_logs.txt');
       },
     );
+  }
+
+  static Future<String> _getDeviceInfo() async {
+    final device = await NamidaDeviceInfo.deviceInfoCompleter.future;
+    final package = await NamidaDeviceInfo.packageInfoCompleter.future;
+    final deviceMap = device?.data;
+    final packageMap = package?.data;
+
+    // -- android
+    deviceMap?.remove('supported32BitAbis');
+    deviceMap?.remove('supported64BitAbis');
+    deviceMap?.remove('systemFeatures');
+    // -----------
+
+    // -- windows
+    deviceMap?.remove('digitalProductId');
+    // -----------
+
+    final encoder = JsonEncoder.withIndent(
+      "  ",
+      (object) {
+        if (object is DateTime) {
+          return object.toString();
+        }
+        try {
+          return object.toJson();
+        } catch (_) {
+          return object.toString();
+        }
+      },
+    );
+    final infoMap = {
+      'device': deviceMap,
+      'package': packageMap,
+    };
+    return encoder.convert(infoMap);
   }
 
   static final TOTAL_LISTEN_TIME = _join(_USER_DATA, 'total_listen.txt');

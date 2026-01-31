@@ -408,7 +408,10 @@ Future<void> showTrackInfoDialog(
                                 title: lang.FORMAT,
                                 value: [
                                   track.audioInfoFormattedCompact,
-                                  '${trackExt.extension} - ${trackExt.size.fileSizeFormatted}',
+                                  [
+                                    trackExt.extension,
+                                    trackExt.size.fileSizeFormatted,
+                                  ].joinText(separator: ' - '),
                                   track.gainDataFormatted,
                                 ].joinText(separator: '\n'),
                                 icon: Broken.voice_cricle,

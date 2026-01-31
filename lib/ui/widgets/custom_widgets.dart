@@ -3439,7 +3439,7 @@ class NamidaSliverReorderableList extends StatelessWidget {
       proxyDecorator: (child, index, animation) => child,
       onReorderStart: onReorderStart,
       onReorderEnd: onReorderEnd,
-      autoScrollerVelocityScalar: 600,
+      autoScrollerVelocityScalar: 500,
     );
   }
 }

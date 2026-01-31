@@ -148,7 +148,7 @@ class BackupController {
     isCreatingBackup.value = true;
 
     // formats date
-    final format = DateFormat('yyyy-MM-dd hh.mm.ss');
+    final format = DateFormat('yyyy-MM-dd HH.mm.ss');
     final date = format.format(DateTime.now().toLocal());
 
     final backupDirPath = await _getBackupDirectoryPathEnsured(lang.CREATE_BACKUP);

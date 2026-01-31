@@ -28,7 +28,7 @@ class NamidaFFMPEG {
     if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
       await [
         FFmpegKitConfig.disableLogs(),
-        FFmpegKitConfig.setSessionHistorySize(200),
+        FFmpegKitConfig.setSessionHistorySize(500),
       ].executeAllAndSilentReportErrors();
     }
   }

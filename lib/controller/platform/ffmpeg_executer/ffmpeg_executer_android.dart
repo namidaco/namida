@@ -1,6 +1,12 @@
 part of 'ffmpeg_executer.dart';
 
 class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
+  final _ffmpegKitQueue = Queue(parallel: 128); // concurrent executions could result in being stuck/failed if session size exceeded
+
+  Future<T> _enqueue<T>(Future<T> Function() fn) async {
+    return await _ffmpegKitQueue.add(() => fn().timeout(const Duration(seconds: 10)));
+  }
+
   @override
   FutureOr<void> init() {}
 
@@ -9,46 +15,58 @@ class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
 
   @override
   Future<bool> ffmpegExecute(List<String> args) async {
-    final res = await FFmpegKit.executeWithArguments([
-      "-hide_banner",
-      "-loglevel",
-      "quiet",
-      ...args,
-    ]);
-    final rc = await res.getReturnCode();
-    return rc?.isValueSuccess() ?? false;
+    return await _enqueue(
+      () async {
+        final session = await FFmpegKit.executeWithArguments([
+          "-hide_banner",
+          "-loglevel",
+          "quiet",
+          ...args,
+        ]);
+        final rc = await session.getReturnCode();
+        return rc?.isValueSuccess() ?? false;
+      },
+    );
   }
 
   /// Automatically appends `-loglevel quiet -v quiet ` for fast execution
   @override
   Future<String?> ffprobeExecute(List<String> args) async {
-    final res = await FFprobeKit.executeWithArguments([
-      "-loglevel",
-      "quiet",
-      "-v",
-      "quiet",
-      ...args,
-    ]);
-    return await res.getOutput();
+    return await _enqueue(
+      () async {
+        final session = await FFprobeKit.executeWithArguments([
+          "-loglevel",
+          "quiet",
+          "-v",
+          "quiet",
+          ...args,
+        ]);
+        return await session.getOutput();
+      },
+    );
   }
 
   @override
   Future<Map<dynamic, dynamic>?> getMediaInformation(String path) async {
-    final commandArguments = [
-      "-v",
-      "quiet",
-      "-hide_banner",
-      "-print_format",
-      "json",
-      "-show_format",
-      "-show_streams",
-      "-show_chapters",
-      "-i",
-      path,
-    ];
-    final session = await FFprobeKit.getMediaInformationFromCommandArguments(commandArguments);
-    final String? output = await session.getOutput();
-    return FFMPEGExecuter.parseFFprobeOutput(output);
+    return await _enqueue(
+      () async {
+        final commandArguments = [
+          "-v",
+          "quiet",
+          "-hide_banner",
+          "-print_format",
+          "json",
+          "-show_format",
+          "-show_streams",
+          "-show_chapters",
+          "-i",
+          path,
+        ];
+        final session = await FFprobeKit.getMediaInformationFromCommandArguments(commandArguments);
+        final String? output = await session.getOutput();
+        return FFMPEGExecuter.parseFFprobeOutput(output);
+      },
+    );
   }
 }
 

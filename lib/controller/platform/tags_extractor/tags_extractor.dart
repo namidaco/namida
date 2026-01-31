@@ -3,8 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
-import 'package:queue/queue.dart';
-
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';

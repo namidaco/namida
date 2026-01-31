@@ -9,7 +9,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_displaymode/flutter_displaymode.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
@@ -478,32 +477,23 @@ class _NamidaState extends State<Namida> {
           child: ObxO(
             rx: settings.selectedLanguage,
             builder: (context, selectedLanguage) {
-              final codes = selectedLanguage.code.split('_');
-              return Localizations(
-                locale: Locale(codes.first, codes.length > 1 ? codes.last : null),
-                delegates: const [
-                  DefaultWidgetsLocalizations.delegate,
-                  DefaultMaterialLocalizations.delegate,
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                ],
-                child: Obx(
-                  (context) {
-                    final mode = settings.themeMode.valueR;
-                    final isLight = mode.isLight(platformBrightness);
-                    final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
-                    final mainChild = WindowController.instance?.usingCustomWindowTitleBar == true
-                        ? WrapWithWindowGoodies(
-                            child: widget,
-                          )
-                        : widget;
+              return Obx(
+                key: ValueKey(selectedLanguage),
+                (context) {
+                  final mode = settings.themeMode.valueR;
+                  final isLight = mode.isLight(platformBrightness);
+                  final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
+                  final mainChild = WindowController.instance?.usingCustomWindowTitleBar == true
+                      ? WrapWithWindowGoodies(
+                          child: widget,
+                        )
+                      : widget;
 
-                    return Theme(
-                      data: theme,
-                      child: mainChild,
-                    );
-                  },
-                ),
+                  return Theme(
+                    data: theme,
+                    child: mainChild,
+                  );
+                },
               );
             },
           ),
@@ -576,6 +566,7 @@ class _NamidaState extends State<Namida> {
                       navigatorKey: namida.rootNavigatorKey,
                       title: 'Namida',
                       // restorationScopeId: 'Namida',
+                      localeResolutionCallback: (locale, supportedLocales) => const Locale('en', 'US'),
                       builder: (context, widget) {
                         Brightness platformBrightness = MediaQuery.platformBrightnessOf(context);
                         // overlay entries get rebuilt on any insertion/removal, so we create app here.

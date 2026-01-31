@@ -6,7 +6,6 @@ class _TagsExtractorAndroid extends TagsExtractor {
   }
 
   late MethodChannel _channel;
-  final _ffmpegQueue = Queue(parallel: 6); // concurrent executions could result in being stuck/failed if session size exceeded
 
   Timer? _logsSetTimer;
   int _logsSetRetries = 5;
@@ -120,7 +119,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
     }
 
     if (trackInfo == null || trackInfo.hasError || !trackInfo.tags.isValid) {
-      final ffmpegInfo = await _ffmpegQueue.add(() async => await ffmpegController.extractMetadata(trackPath).timeout(const Duration(seconds: 5)).catchError((_) => null));
+      final ffmpegInfo = await ffmpegController.extractMetadata(trackPath);
 
       if (ffmpegInfo != null && isVideo) {
         try {
