@@ -1,5 +1,7 @@
 // ignore_for_file: constant_identifier_names
 
+import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
+
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/core/constants.dart';
 
@@ -646,4 +648,41 @@ enum LibraryImageSource {
 enum AlbumType {
   single,
   normal;
+}
+
+enum DesktopTitlebarIconsType {
+  none,
+  auto,
+  adwaita,
+  arc,
+  breeze,
+  elementary,
+  flatRemix,
+  materia,
+  nordic,
+  osxArc,
+  pop,
+  unity,
+  vimix,
+  yaru,
+  ;
+
+  mtb.ThemeType? toThemeType() {
+    return switch (this) {
+      DesktopTitlebarIconsType.none => null,
+      DesktopTitlebarIconsType.auto => mtb.ThemeType.auto,
+      DesktopTitlebarIconsType.adwaita => mtb.ThemeType.adwaita,
+      DesktopTitlebarIconsType.arc => mtb.ThemeType.arc,
+      DesktopTitlebarIconsType.breeze => mtb.ThemeType.breeze,
+      DesktopTitlebarIconsType.elementary => mtb.ThemeType.elementary,
+      DesktopTitlebarIconsType.flatRemix => mtb.ThemeType.flatRemix,
+      DesktopTitlebarIconsType.materia => mtb.ThemeType.materia,
+      DesktopTitlebarIconsType.nordic => mtb.ThemeType.nordic,
+      DesktopTitlebarIconsType.osxArc => mtb.ThemeType.osxArc,
+      DesktopTitlebarIconsType.pop => mtb.ThemeType.pop,
+      DesktopTitlebarIconsType.unity => mtb.ThemeType.unity,
+      DesktopTitlebarIconsType.vimix => mtb.ThemeType.vimix,
+      DesktopTitlebarIconsType.yaru => mtb.ThemeType.yaru,
+    };
+  }
 }

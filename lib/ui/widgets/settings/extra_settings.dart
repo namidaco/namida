@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
+import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/current_color.dart';
@@ -1157,6 +1160,70 @@ class _ExtrasFlagsOptions extends StatefulWidget {
 }
 
 class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
+  List<Widget> _getTitlebarIconsTypeChildren() {
+    final buttonWidth = 18.0;
+    final buttonHeight = 18.0;
+    return [
+      ...DesktopTitlebarIconsType.values.map(
+        (e) {
+          void onTap() {
+            settings.save(desktopTitlebarType: e);
+            NamidaNavigator.inst.popMenu();
+          }
+
+          final buttonsType = e.toThemeType();
+          final row = buttonsType == null
+              ? Text(
+                  lang.NONE,
+                  textAlign: TextAlign.center,
+                )
+              : buttonsType == mtb.ThemeType.auto
+                  ? Text(
+                      lang.AUTO,
+                      textAlign: TextAlign.center,
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        mtb.DecoratedMinimizeButton(
+                          width: buttonWidth,
+                          height: buttonHeight,
+                          type: buttonsType,
+                          onPressed: () {},
+                        ),
+                        const SizedBox(width: 2.0),
+                        mtb.DecoratedMaximizeButton(
+                          width: buttonWidth,
+                          height: buttonHeight,
+                          type: buttonsType,
+                          onPressed: () {},
+                        ),
+                        const SizedBox(width: 2.0),
+                        mtb.DecoratedCloseButton(
+                          width: buttonWidth,
+                          height: buttonHeight,
+                          type: buttonsType,
+                          onPressed: () {},
+                        ),
+                      ],
+                    );
+          return ObxO(
+            rx: settings.desktopTitlebarType,
+            builder: (context, value) => NamidaInkWell(
+              margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+              borderRadius: 6.0,
+              bgColor: value == e ? context.theme.cardColor : null,
+              onTap: onTap,
+              child: row,
+            ),
+          );
+        },
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -1230,6 +1297,33 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                 onChanged: (isTrue) => setState(() => settings.save(gradientTiles: !isTrue)),
                 title: 'gradient_tiles_and_cards'.toUpperCase(),
               ),
+              if (isDesktop)
+                CustomSwitchListTile(
+                  icon: Broken.card_tick_1,
+                  value: settings.desktopTitlebar.value,
+                  onChanged: (isTrue) => setState(() => settings.save(desktopTitlebar: !isTrue)),
+                  title: 'show_desktop_title_bar'.toUpperCase(),
+                ),
+              if (isDesktop && !Platform.isWindows)
+                NamidaPopupWrapper(
+                  children: _getTitlebarIconsTypeChildren,
+                  child: CustomListTile(
+                    visualDensity: VisualDensity.compact,
+                    icon: Broken.close_circle,
+                    title: 'desktop_title_bar_icons_type'.toUpperCase(),
+                    trailing: NamidaPopupWrapper(
+                      children: _getTitlebarIconsTypeChildren,
+                      child: ObxO(
+                        rx: settings.desktopTitlebarType,
+                        builder: (context, type) => Text(
+                          type.name,
+                          style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
+                          textAlign: TextAlign.end,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

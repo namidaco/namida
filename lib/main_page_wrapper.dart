@@ -358,15 +358,16 @@ class WrapWithWindowGoodies extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget child = this.child;
-
-    child = Column(
-      children: [
-        const NamidaDesktopAppBar(),
-        Expanded(
-          child: child,
-        ),
-      ],
+    Widget child = ObxO(
+      rx: settings.desktopTitlebar,
+      builder: (context, show) => Column(
+        children: [
+          if (show) const NamidaDesktopAppBar(),
+          Expanded(
+            child: this.child,
+          ),
+        ],
+      ),
     );
     final addRoundedCorners = WindowController.instance?.customRoundedCorners == true;
     if (addRoundedCorners) {
@@ -436,9 +437,8 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
     final textTheme = theme.textTheme;
     final colorscheme = theme.colorScheme;
     final brightness = theme.brightness;
-    final buttonHeigth = (height ?? 24.0) * 0.75;
+    final buttonHeight = (height ?? 24.0) * 0.75;
     final buttonWidth = Platform.isWindows ? 42.0 : 18.0;
-    final buttonsType = ThemeType.auto;
     // final backgroundColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor, Colors.white.withValues(alpha: 0.25));
     final backgroundColor = appBarTheme.backgroundColor ?? colorscheme.surface;
     final surfaceTintColor = appBarTheme.surfaceTintColor ?? colorscheme.surfaceTint;
@@ -447,87 +447,102 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
     final logoTextColor = context.isDarkMode ? Color.alphaBlend(logoBgColor.withAlpha(100), Colors.white) : const Color.fromARGB(180, 44, 44, 44);
 
     final buttonsRow = Platform.isWindows
-        ? [
-            SizedBox(
-              width: buttonWidth * 0.95,
-              child: WindowCaptionButton.minimize(
-                brightness: brightness,
-                onPressed: () async {
-                  final isMinimized = await windowManager.isMinimized();
-                  if (isMinimized) {
-                    windowManager.restore();
-                  } else {
-                    windowManager.minimize();
-                  }
-                },
+        ? Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: buttonWidth * 0.95,
+                child: WindowCaptionButton.minimize(
+                  brightness: brightness,
+                  onPressed: () async {
+                    final isMinimized = await windowManager.isMinimized();
+                    if (isMinimized) {
+                      windowManager.restore();
+                    } else {
+                      windowManager.minimize();
+                    }
+                  },
+                ),
               ),
-            ),
-            SizedBox(
-              width: buttonWidth * 0.95,
-              child: FutureBuilder<bool>(
-                future: windowManager.isMaximized(),
-                builder: (context, snapshot) {
-                  if (snapshot.data == true) {
-                    return WindowCaptionButton.unmaximize(
+              SizedBox(
+                width: buttonWidth * 0.95,
+                child: FutureBuilder<bool>(
+                  future: windowManager.isMaximized(),
+                  builder: (context, snapshot) {
+                    if (snapshot.data == true) {
+                      return WindowCaptionButton.unmaximize(
+                        brightness: brightness,
+                        onPressed: windowManager.unmaximize,
+                      );
+                    }
+                    return WindowCaptionButton.maximize(
                       brightness: brightness,
-                      onPressed: windowManager.unmaximize,
+                      onPressed: windowManager.maximize,
                     );
-                  }
-                  return WindowCaptionButton.maximize(
-                    brightness: brightness,
-                    onPressed: windowManager.maximize,
-                  );
-                },
+                  },
+                ),
               ),
-            ),
-            SizedBox(
-              width: buttonWidth,
-              child: WindowCaptionButton.close(
-                brightness: brightness,
-                onPressed: () async {
-                  await windowManager.close().ignoreError();
-                  await windowManager.destroy().ignoreError();
-                },
+              SizedBox(
+                width: buttonWidth,
+                child: WindowCaptionButton.close(
+                  brightness: brightness,
+                  onPressed: () async {
+                    await windowManager.close().ignoreError();
+                    await windowManager.destroy().ignoreError();
+                  },
+                ),
               ),
-            ),
-          ]
-        : [
-            DecoratedMinimizeButton(
-              width: buttonWidth,
-              height: buttonHeigth,
-              type: buttonsType,
-              onPressed: () async {
-                bool isMinimized = await windowManager.isMinimized();
-                if (isMinimized) {
-                  windowManager.restore();
-                } else {
-                  windowManager.minimize();
-                }
-              },
-            ),
-            DecoratedMaximizeButton(
-              width: buttonWidth,
-              height: buttonHeigth,
-              type: buttonsType,
-              onPressed: () async {
-                final isMaximized = await windowManager.isMaximized();
-                if (isMaximized) {
-                  await windowManager.unmaximize();
-                } else {
-                  await windowManager.maximize();
-                }
-              },
-            ),
-            DecoratedCloseButton(
-              width: buttonWidth,
-              height: buttonHeigth,
-              type: buttonsType,
-              onPressed: () async {
-                await windowManager.close().ignoreError();
-                await windowManager.destroy().ignoreError();
-              },
-            ),
-          ];
+            ],
+          )
+        : ObxO(
+            rx: settings.desktopTitlebarType,
+            builder: (context, buttonsTypePre) {
+              final buttonsType = buttonsTypePre.toThemeType();
+              if (buttonsType == null) return const SizedBox();
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DecoratedMinimizeButton(
+                    width: buttonWidth,
+                    height: buttonHeight,
+                    type: buttonsType,
+                    onPressed: () async {
+                      bool isMinimized = await windowManager.isMinimized();
+                      if (isMinimized) {
+                        windowManager.restore();
+                      } else {
+                        windowManager.minimize();
+                      }
+                    },
+                  ),
+                  DecoratedMaximizeButton(
+                    width: buttonWidth,
+                    height: buttonHeight,
+                    type: buttonsType,
+                    onPressed: () async {
+                      final isMaximized = await windowManager.isMaximized();
+                      if (isMaximized) {
+                        await windowManager.unmaximize();
+                      } else {
+                        await windowManager.maximize();
+                      }
+                    },
+                  ),
+                  DecoratedCloseButton(
+                    width: buttonWidth,
+                    height: buttonHeight,
+                    type: buttonsType,
+                    onPressed: () async {
+                      await windowManager.close().ignoreError();
+                      await windowManager.destroy().ignoreError();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
     return SizedBox(
       height: height,
       child: Material(
@@ -666,7 +681,7 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                     ),
                   ),
                 ),
-                ...buttonsRow
+                buttonsRow,
               ],
             ),
             // -- juust slight dim

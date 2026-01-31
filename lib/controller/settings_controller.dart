@@ -187,6 +187,8 @@ class _SettingsController with SettingsFileWriter {
   final refreshOnStartup = false.obs;
   final alwaysExpandedSearchbar = false.obs;
   final mixedQueue = false.obs;
+  final desktopTitlebar = true.obs;
+  final desktopTitlebarType = DesktopTitlebarIconsType.auto.obs;
   final RxList<TagField> tagFieldsToEdit = <TagField>[
     TagField.trackNumber,
     TagField.year,
@@ -598,6 +600,8 @@ class _SettingsController with SettingsFileWriter {
       refreshOnStartup.value = json['refreshOnStartup'] ?? refreshOnStartup.value;
       alwaysExpandedSearchbar.value = json['alwaysExpandedSearchbar'] ?? alwaysExpandedSearchbar.value;
       mixedQueue.value = json['mixedQueue'] ?? mixedQueue.value;
+      desktopTitlebar.value = json['desktopTitlebar'] ?? desktopTitlebar.value;
+      desktopTitlebarType.value = DesktopTitlebarIconsType.values.getEnum(json['desktopTitlebarType']) ?? desktopTitlebarType.value;
 
       final tagFieldsToEditStorage = json['tagFieldsToEdit'];
       if (tagFieldsToEditStorage is List) {
@@ -832,6 +836,8 @@ class _SettingsController with SettingsFileWriter {
         'refreshOnStartup': refreshOnStartup.value,
         'alwaysExpandedSearchbar': alwaysExpandedSearchbar.value,
         'mixedQueue': mixedQueue.value,
+        'desktopTitlebar': desktopTitlebar.value,
+        'desktopTitlebarType': desktopTitlebarType.value.name,
         'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.name),
         'stretchLyricsDuration': stretchLyricsDuration.value,
         'playlistAddTracksAtBeginning': playlistAddTracksAtBeginning.value,
@@ -1026,6 +1032,8 @@ class _SettingsController with SettingsFileWriter {
     bool? refreshOnStartup,
     bool? alwaysExpandedSearchbar,
     bool? mixedQueue,
+    bool? desktopTitlebar,
+    DesktopTitlebarIconsType? desktopTitlebarType,
     List<TagField>? tagFieldsToEdit,
     bool? stretchLyricsDuration,
     bool? playlistAddTracksAtBeginning,
@@ -1267,6 +1275,8 @@ class _SettingsController with SettingsFileWriter {
     if (refreshOnStartup != null) this.refreshOnStartup.value = refreshOnStartup;
     if (alwaysExpandedSearchbar != null) this.alwaysExpandedSearchbar.value = alwaysExpandedSearchbar;
     if (mixedQueue != null) this.mixedQueue.value = mixedQueue;
+    if (desktopTitlebar != null) this.desktopTitlebar.value = desktopTitlebar;
+    if (desktopTitlebarType != null) this.desktopTitlebarType.value = desktopTitlebarType;
     if (tagFieldsToEdit != null) {
       tagFieldsToEdit.loop((d) {
         if (!this.tagFieldsToEdit.contains(d)) {
