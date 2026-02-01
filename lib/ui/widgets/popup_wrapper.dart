@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -7,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -195,13 +195,7 @@ class NamidaPopupWrapper extends StatelessWidget {
       onAfterPopup: () => popMenu(handleClosing: false),
       content: () => _getMenuContent(context),
       refreshListenable: refreshListenable,
-      child: ColoredBox(
-        color: Colors.transparent,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: child,
-        ),
-      ),
+      child: child,
     );
   }
 

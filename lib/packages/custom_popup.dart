@@ -115,15 +115,19 @@ class CustomPopupState extends State<CustomPopup> {
       child: LongPressDetector(
         enableSecondaryTap: true,
         onLongPress: widget.openOnLongPress ? () => show() : null,
-        child: Platform.isAndroid || Platform.isIOS
-            ? widget.child
-            : ColoredBox(
-                color: Colors.transparent,
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: widget.child,
-                ),
-              ),
+        child: isDesktop
+            ? Stack(
+                children: [
+                  widget.child,
+                  Positioned.fill(
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      hitTestBehavior: HitTestBehavior.translucent,
+                    ),
+                  ),
+                ],
+              )
+            : widget.child,
       ),
     );
   }
