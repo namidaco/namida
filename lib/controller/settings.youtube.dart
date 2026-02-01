@@ -19,6 +19,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final showVideoEndcards = true.obs;
   final autoStartRadio = false.obs;
   final personalizedRelatedVideos = true.obs;
+  final searchCleanup = true.obs;
 
   final ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
   final ytMiniplayerDimAfterSeconds = 15.obs;
@@ -60,6 +61,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? showVideoEndcards,
     bool? autoStartRadio,
     bool? personalizedRelatedVideos,
+    bool? searchCleanup,
     String? ytDownloadLocation,
     int? ytMiniplayerDimAfterSeconds,
     double? ytMiniplayerDimOpacity,
@@ -95,6 +97,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (showVideoEndcards != null) this.showVideoEndcards.value = showVideoEndcards;
     if (autoStartRadio != null) this.autoStartRadio.value = autoStartRadio;
     if (personalizedRelatedVideos != null) this.personalizedRelatedVideos.value = personalizedRelatedVideos;
+    if (searchCleanup != null) this.searchCleanup.value = searchCleanup;
 
     if (ytDownloadLocation != null) this.ytDownloadLocation.value = ytDownloadLocation;
     if (ytMiniplayerDimAfterSeconds != null) this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;
@@ -166,6 +169,7 @@ class _YoutubeSettings with SettingsFileWriter {
       showVideoEndcards.value = json['showVideoEndcards'] ?? showVideoEndcards.value;
       autoStartRadio.value = json['autoStartRadio'] ?? autoStartRadio.value;
       personalizedRelatedVideos.value = json['personalizedRelatedVideos'] ?? personalizedRelatedVideos.value;
+      searchCleanup.value = json['searchCleanup'] ?? searchCleanup.value;
 
       ytDownloadLocation.value = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
       ytMiniplayerDimAfterSeconds.value = json['ytMiniplayerDimAfterSeconds'] ?? ytMiniplayerDimAfterSeconds.value;
@@ -219,6 +223,7 @@ class _YoutubeSettings with SettingsFileWriter {
         'showVideoEndcards': showVideoEndcards.value,
         'autoStartRadio': autoStartRadio.value,
         'personalizedRelatedVideos': personalizedRelatedVideos.value,
+        'searchCleanup': searchCleanup.value,
         'ytDownloadLocation': ytDownloadLocation.value,
         'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
         'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,

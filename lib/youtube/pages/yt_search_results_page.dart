@@ -379,6 +379,12 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                                 if (!isMixesVisible) itemsLengthWithoutHiddens -= chunk.mixesPlaylistCount.value;
                                                 if (itemsLengthWithoutHiddens <= 0) return const SizedBox();
 
+                                                if (settings.youtube.searchCleanup.value) {
+                                                  if (chunk.title.isNotEmpty) {
+                                                    return const SizedBox();
+                                                  }
+                                                }
+
                                                 return Column(
                                                   mainAxisSize: MainAxisSize.min,
                                                   crossAxisAlignment: CrossAxisAlignment.start,
