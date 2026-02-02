@@ -1932,27 +1932,24 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 rx: Player.inst.currentIndex,
                                 builder: (context, currentIndex) {
                                   final shouldShowPrev = currentIndex != 0;
-                                  return IgnorePointer(
-                                    ignoring: !shouldShowPrev,
-                                    child: Opacity(
-                                      opacity: shouldShowPrev ? 1.0 : 0.0,
-                                      child: NamidaBgBlurClipped(
-                                        blur: 2,
-                                        shape: BoxShape.circle,
-                                        child: ColoredBox(
-                                          color: Colors.black.withValues(alpha: 0.2),
-                                          child: NamidaIconButton(
-                                            icon: null,
-                                            padding: secondaryButtonPadding,
-                                            onPressed: () {
-                                              Player.inst.previous();
-                                              _startTimer();
-                                            },
-                                            child: Icon(
-                                              Broken.previous,
-                                              size: secondaryButtonSize,
-                                              color: itemsColor,
-                                            ),
+                                  return Opacity(
+                                    opacity: shouldShowPrev ? 1.0 : 0.5,
+                                    child: NamidaBgBlurClipped(
+                                      blur: 2,
+                                      shape: BoxShape.circle,
+                                      child: ColoredBox(
+                                        color: Colors.black.withValues(alpha: 0.2),
+                                        child: NamidaIconButton(
+                                          icon: null,
+                                          padding: secondaryButtonPadding,
+                                          onPressed: () {
+                                            Player.inst.previous();
+                                            _startTimer();
+                                          },
+                                          child: Icon(
+                                            Broken.previous,
+                                            size: secondaryButtonSize,
+                                            color: itemsColor,
                                           ),
                                         ),
                                       ),
@@ -2001,27 +1998,24 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     rx: Player.inst.currentQueue,
                                     builder: (context, ytqueue) {
                                       final shouldShowNext = currentIndex != ytqueue.length - 1;
-                                      return IgnorePointer(
-                                        ignoring: !shouldShowNext,
-                                        child: Opacity(
-                                          opacity: shouldShowNext ? 1.0 : 0.0,
-                                          child: NamidaBgBlurClipped(
-                                            blur: 2,
-                                            shape: BoxShape.circle,
-                                            child: ColoredBox(
-                                              color: Colors.black.withValues(alpha: 0.2),
-                                              child: NamidaIconButton(
-                                                icon: null,
-                                                padding: secondaryButtonPadding,
-                                                onPressed: () {
-                                                  Player.inst.next();
-                                                  _startTimer();
-                                                },
-                                                child: Icon(
-                                                  Broken.next,
-                                                  size: secondaryButtonSize,
-                                                  color: itemsColor,
-                                                ),
+                                      return Opacity(
+                                        opacity: shouldShowNext ? 1.0 : 0.5,
+                                        child: NamidaBgBlurClipped(
+                                          blur: 2,
+                                          shape: BoxShape.circle,
+                                          child: ColoredBox(
+                                            color: Colors.black.withValues(alpha: 0.2),
+                                            child: NamidaIconButton(
+                                              icon: null,
+                                              padding: secondaryButtonPadding,
+                                              onPressed: () {
+                                                Player.inst.next();
+                                                _startTimer();
+                                              },
+                                              child: Icon(
+                                                Broken.next,
+                                                size: secondaryButtonSize,
+                                                color: itemsColor,
                                               ),
                                             ),
                                           ),
