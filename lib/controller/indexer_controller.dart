@@ -18,8 +18,10 @@ import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -37,6 +39,8 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
+
+part 'indexer_artwork_extract_strategies.dart';
 
 class Indexer<T extends Track> {
   static Indexer get inst => _instance;
@@ -121,8 +125,6 @@ class Indexer<T extends Track> {
     return alltracks;
   }
 
-  bool imageObtainedBefore(String imagePath) => _artworksMap[imagePath] != null || _artworksMapFullRes[imagePath] != null;
-
   String? getFallbackFolderArtworkPath({required String folderPath}) {
     String? cover = this.allFolderCovers[folderPath];
     if (cover == null && folderPath.endsWith(Platform.pathSeparator)) {
@@ -134,103 +136,54 @@ class Indexer<T extends Track> {
     return cover;
   }
 
+  bool imageObtainedBefore(String imagePath) => _pendingArtworksCompressed[imagePath] != null || _pendingArtworksFullRes[imagePath] != null;
+
   /// {imagePath: (TrackExtended, id)};
   final _backupMediaStoreIDS = <String, (Track, int)>{};
-  final artworksMap = <String, Uint8List?>{};
-  final _artworksMap = <String, Completer<void>>{};
-  final _artworksMapFullRes = <String, Completer<void>>{};
+  final artworksBytesMap = <String, Uint8List?>{};
+  final artworksFilesMap = <String, File?>{};
+  final _pendingArtworksCompressed = <String, Completer<void>>{};
+  final _pendingArtworksFullRes = <String, Completer<void>>{};
+
   Future<(File?, Uint8List?)> getArtwork({
     required String? imagePath,
-    String? trackPath,
+    Track? track,
     bool checkFileFirst = true,
     required bool compressed,
     int? size,
   }) async {
-    if (!NamidaFeaturesVisibility.onAudioQueryAvailable) {
-      if (compressed) return (null, null);
-      if (trackPath == null) return (null, null);
-      final isVideo = trackPath.isVideo();
-      final artworkDirectory = isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS;
-      late final trExt = Track.decide(trackPath, isVideo).toTrackExtOrNull();
-      final filename = TagsExtractor.buildImageFilename(
-        path: trackPath,
-        identifiers: null,
-        identifierCallback: () => trExt?.albumIdentifierWrapper?.resolved(),
-        infoCallback: () => (
-          albumName: trExt?.album,
-          albumArtist: trExt?.albumArtist,
-          year: trExt?.year.toString(),
-        ),
-        hashKeyCallback: () => trExt?.hashKey ?? trackPath.toFastHashKey(),
-      );
+    if (imagePath == null && track == null) return (null, null);
 
-      final res = await TagsExtractor.extractThumbnailCustom(
-        trackPath: trackPath,
-        isVideo: isVideo,
-        artworkDirectory: artworkDirectory,
-        filename: filename,
-      );
-      return (res, null);
-    }
-    if (imagePath == null) return (null, null);
-    if (!_defaultUseMediaStore) return (null, null); // bcz it can generate non-accurate artworks (thanks media store)
+    final strategy = _getArtworkStrategy(
+      imagePath: imagePath,
+      track: track,
+    );
 
-    if (compressed && _artworksMap[imagePath] != null) {
-      await _artworksMap[imagePath]!.future;
-      return (null, artworksMap[imagePath]);
+    return await strategy.getArtwork(
+      imagePath: imagePath,
+      track: track,
+      checkFileFirst: checkFileFirst,
+      size: size,
+      compressed: compressed,
+    );
+  }
+
+  _ArtworkExtractStrategy _getArtworkStrategy({
+    required String? imagePath,
+    required Track? track,
+  }) {
+    // -- network tracks
+    if (track != null && track.isNetwork) {
+      return _NetworkBasedArtworkExtractStrategy(this);
     }
 
-    if (checkFileFirst && await File(imagePath).exists()) {
-      return (File(imagePath), null);
-    } else {
-      final info = _backupMediaStoreIDS[imagePath];
-      if (info != null) {
-        final id = info.$2;
-        Uint8List? artwork;
-        if (compressed) {
-          _artworksMap[imagePath] = Completer<Uint8List?>();
-
-          artwork = await _audioQuery.queryArtwork(
-            id,
-            ArtworkType.AUDIO,
-            format: ArtworkFormat.JPEG,
-            quality: null,
-            size: size?.clampInt(48, 360) ?? 360,
-          );
-          artworksMap[imagePath] = artwork;
-          _artworksMap[imagePath]!.completeIfWasnt();
-          await _artworksMap[imagePath]?.future;
-          return (null, artworksMap[imagePath]);
-        } else {
-          _artworksMapFullRes[imagePath] = Completer<void>();
-          // -- try extracting full res using taggers
-          File? file;
-          final res = await NamidaTaggerController.inst.extractMetadata(trackPath: info.$1.path, isVideo: info.$1 is Video);
-          file = res.tags.artwork.file;
-          if (file == null) {
-            artwork = await _audioQuery.queryArtwork(
-              id,
-              ArtworkType.AUDIO,
-              format: ArtworkFormat.PNG,
-              quality: 100,
-              size: 720,
-            );
-            if (artwork != null) {
-              final f = File(imagePath);
-              await FileImage(f).evict();
-              await f.writeAsBytes(artwork);
-              file = f;
-            }
-          }
-
-          _artworksMapFullRes[imagePath]!.completeIfWasnt(); // to notify that the process was done, but we dont store full res bytes
-          await _artworksMapFullRes[imagePath]?.future;
-          return (file, null);
-        }
-      }
+    // -- media store available
+    if (_defaultUseMediaStore && imagePath != null) {
+      return _MediaStoreArtworkExtractStrategy(this);
     }
 
-    return (null, null);
+    // -- file based
+    return _FileBasedArtworkExtractStrategy(this);
   }
 
   Future<void> prepareTracksFile({bool startupBoost = false}) async {
@@ -368,13 +321,13 @@ class Indexer<T extends Track> {
           button: (
             lang.ADD_FOLDER,
             () {
-              try {
-                SettingsSearchController.inst.onResultTap(
-                  settingPage: SettingSubpageEnum.indexer,
-                  key: IndexerSettingsKeysGlobal.foldersToScan,
-                  context: namida.context!,
-                );
-              } catch (_) {}
+              SettingsSearchController.inst
+                  .onResultTap(
+                    settingPage: SettingSubpageEnum.indexer,
+                    key: IndexerSettingsKeysGlobal.foldersToScan,
+                    context: namida.context!,
+                  )
+                  .ignoreError();
             },
           ),
         );
@@ -671,6 +624,7 @@ class Indexer<T extends Track> {
         albumIdentifierWrapper: null,
         isVideo: trackPath.isVideo(),
         hashKey: TrackExtended.generateHashKeyIfEnabled(null, trackPath, null),
+        server: null,
       );
       if (!trackInfo.hasError) {
         int durationInMS = trackInfo.durationMS ?? 0;
@@ -844,14 +798,13 @@ class Indexer<T extends Track> {
         recentlyDeltedFileWrite.writeln(tr.path);
         _removeThisTrackFromAlbumGenreArtistEtc(tr);
         allTracksMappedByYTID.remove(tr.youtubeID);
-        _currentFileNamesMap.remove(tr.path.getFilename);
         tracksInfoList.value.remove(tr);
         SearchSortController.inst.trackSearchList.value.remove(tr);
         SearchSortController.inst.trackSearchTemp.value.remove(tr);
         allTracksMappedByPath.remove(tr.path);
         unawaited(_tracksDBManager.delete(tr.path));
         TrackTileManager.rebuildTrackInfo(tr);
-        this.scanMediaStore(tr.path);
+        if (tr.isPhysical) this.scanMediaStore(tr.path);
       },
     );
     this.tracksInfoList.refresh();
@@ -867,7 +820,7 @@ class Indexer<T extends Track> {
   }
 
   Future<void> reindexTracks({
-    required List<Selectable> tracks,
+    required List<PhysicalMedia> tracks,
     bool updateArtwork = false,
     required void Function(bool didExtract) onProgress,
     required void Function(int tracksLength) onFinish,
@@ -881,7 +834,7 @@ class Indexer<T extends Track> {
       bool exists = false;
       final tr = s.track;
       try {
-        exists = await File(tr.path).exists();
+        exists = await tr.exists();
       } catch (_) {}
       if (exists) {
         tracksReal.add(tr);
@@ -1218,11 +1171,19 @@ class Indexer<T extends Track> {
 
     /// doing some checks to remove unqualified tracks.
     /// removes tracks after changing `duration` or `size`.
+    /// also removes network tracks to re add them properly
     tracksInfoList.removeWhere((tr) {
-      final remove = (tr.durationMS != 0 && tr.durationMS < minDur * 1000) || tr.size < minSize;
-      if (remove) unawaited(_tracksDBManager.delete(tr.path));
+      final remove = tr.isNetwork || (tr.durationMS != 0 && tr.durationMS < minDur * 1000) || tr.size < minSize;
+      if (remove) {
+        allTracksMappedByPath.remove(tr.path);
+        allTracksMappedByYTID.remove(tr.youtubeID);
+        _currentFileNamesMap.remove(tr.path.getFilename);
+        unawaited(_tracksDBManager.delete(tr.path));
+      }
       return remove;
     });
+
+    await _addServerTracksIfAvailable();
 
     /// removes duplicated tracks after a refresh
     if (prevDuplicated) {
@@ -1244,6 +1205,21 @@ class Indexer<T extends Track> {
     _createDefaultNamidaArtworkIfRequired();
     TrackTileManager.onTrackItemPropChange();
     SearchSortController.inst.refreshPortsIfNecessary();
+  }
+
+  Future<void> _addServerTracksIfAvailable() async {
+    for (final dir in settings.directoriesToScan.value) {
+      if (dir is DirectoryIndexServer) {
+        MusicWebServer? server = dir.toWebServer();
+        if (server != null) {
+          await server.fetchAllMusicAndProcess(
+            (trExt) {
+              _addTrackToLists(trExt, null);
+            },
+          );
+        }
+      }
+    }
   }
 
   Future<void> updateTrackDuration(Track track, Duration dur) async {
@@ -1443,8 +1419,9 @@ class Indexer<T extends Track> {
     return (cleanedUpTitle, cleanedUpArtist);
   }
 
-  Set<String> getNewFoundPaths(Set<String> currentFiles) => currentFiles.difference(Set.of(tracksInfoList.value.map((t) => t.path)));
-  Set<String> getDeletedPaths(Set<String> currentFiles) => Set.of(tracksInfoList.value.map((t) => t.path)).difference(currentFiles);
+  Iterable<String> _getPhysicalMedias() => tracksInfoList.value.where((tr) => tr.isPhysical).map((t) => t.path);
+  Set<String> getNewFoundPaths(Set<String> currentFiles) => currentFiles.difference(Set.of(_getPhysicalMedias()));
+  Set<String> getDeletedPaths(Set<String> currentFiles) => Set.of(_getPhysicalMedias()).difference(currentFiles);
 
   /// [strictNoMedia] forces all subdirectories to follow the same result of the parent.
   ///
@@ -1485,7 +1462,7 @@ class Indexer<T extends Track> {
     final allMusic = await _audioQuery.querySongs();
     // -- folders selected will be ignored when [_defaultUseMediaStore] is enabled.
     allMusic.retainWhere((element) =>
-        settings.directoriesToExclude.value.every((dir) => !element.data.startsWith(dir)) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */);
+        settings.directoriesToExclude.value.every((dir) => !element.data.startsWith(dir.source)) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */);
     final tracks = <TrackExtended>[];
     final artistsSplitConfig = ArtistsSplitConfig.settings();
     final genresSplitConfig = GenresSplitConfig.settings();
@@ -1572,6 +1549,7 @@ class Indexer<T extends Track> {
         ),
         isVideo: e.data.isVideo(),
         hashKey: TrackExtended.generateHashKeyIfEnabled(null, path, null),
+        server: null,
       );
       tracks.add(trext);
       _backupMediaStoreIDS[trext.pathToImage] = (trext.asTrack(), e.id);

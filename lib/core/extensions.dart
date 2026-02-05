@@ -11,6 +11,7 @@ import 'package:dart_extensions/dart_extensions.dart';
 import 'package:lrc/lrc.dart';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -1072,5 +1073,27 @@ extension ThemeModeExtensions on ThemeMode {
     final useDarkTheme = mode == ThemeMode.dark || (mode == ThemeMode.system && platformBrightness == Brightness.dark);
     final isLight = !useDarkTheme;
     return isLight;
+  }
+}
+
+extension DirectoryIndexUtils on List<DirectoryIndex> {
+  Iterable<DirectoryIndexServer> allServers() {
+    return whereType<DirectoryIndexServer>();
+  }
+
+  bool hasServer() {
+    return allServers().isNotEmpty;
+  }
+}
+
+extension DirectoryIndexServerUtils on Iterable<DirectoryIndexServer> {
+  String toBodyText({bool? Function(DirectoryIndexServer d)? stillExistsCallback}) {
+    return this.map((e) {
+      final type = e.type.toText();
+      final title = '$type - ${e.username ?? '?'}';
+      final stillExists = stillExistsCallback?.call(e) ?? true;
+      final removedText = stillExists ? '' : ' (${lang.REMOVED})';
+      return "$title$removedText:\n${e.source}";
+    }).join('\n\n');
   }
 }

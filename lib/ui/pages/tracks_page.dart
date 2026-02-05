@@ -138,13 +138,13 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                                   bgColor: context.theme.cardColor,
                                   padding: const EdgeInsetsGeometry.symmetric(horizontal: 12.0, vertical: 6.0),
                                   onTap: () {
-                                    try {
-                                      SettingsSearchController.inst.onResultTap(
-                                        settingPage: SettingSubpageEnum.indexer,
-                                        key: IndexerSettingsKeysGlobal.foldersToScan,
-                                        context: context,
-                                      );
-                                    } catch (_) {}
+                                    SettingsSearchController.inst
+                                        .onResultTap(
+                                          settingPage: SettingSubpageEnum.indexer,
+                                          key: IndexerSettingsKeysGlobal.foldersToScan,
+                                          context: context,
+                                        )
+                                        .ignoreError();
                                   },
                                   child: Text(
                                     lang.ADD_FOLDER,

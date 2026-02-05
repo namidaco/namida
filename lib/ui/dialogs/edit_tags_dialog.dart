@@ -39,7 +39,8 @@ final _editingInProgress = <String, bool>{}.obs;
 /// - Android 13 (API 33): Internal ✓, External ✓
 ///
 /// TODO: Implement [Android <= 9] SD Card Editing Using SAF (Storage Access Framework).
-Future<void> showEditTracksTagsDialog(List<Track> tracks, Color? colorScheme, {bool instantEditArtwork = false}) async {
+Future<void> showEditTracksTagsDialog(List<PhysicalMedia> tracks, Color? colorScheme, {bool instantEditArtwork = false}) async {
+  if (tracks.isEmpty) return;
   if (tracks.length == 1) {
     _editSingleTrackTagsDialog(tracks.first, colorScheme, instantEditArtwork: instantEditArtwork);
   } else {
@@ -47,8 +48,7 @@ Future<void> showEditTracksTagsDialog(List<Track> tracks, Color? colorScheme, {b
   }
 }
 
-Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme, {bool autoOpenSearch = false}) async {
-  final singleTrack = tracks.first;
+Future<void> showSetYTLinkCommentDialog(Track singleTrack, Color colorScheme, {bool autoOpenSearch = false}) async {
   final formKey = GlobalKey<FormState>();
   final controller = TextEditingController();
   final ytSearchController = TextEditingController();
@@ -106,7 +106,8 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme, {
                     canEditComment.value = true;
 
                     snackyy(
-                      message: 'Set to "${video.title}" by "${video.channelName ?? video.channel?.title}"',
+                      title: lang.CHANGED,
+                      message: '"${video.channelName ?? video.channel?.title}" -> "${video.title}"',
                       top: false,
                       altDesign: true,
                       leftBarIndicatorColor: colorScheme,
@@ -161,12 +162,27 @@ Future<void> showSetYTLinkCommentDialog(List<Track> tracks, Color colorScheme, {
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   _editingInProgress[singleTrack.path] = true;
-                  await NamidaTaggerController.inst.updateTracksMetadata(
-                    tracks: [singleTrack],
-                    editedTags: {},
-                    commentToInsert: controller.text,
-                    trimWhiteSpaces: false,
-                  ).ignoreError();
+                  if (singleTrack.isPhysical) {
+                    await NamidaTaggerController.inst.updateTracksMetadata(
+                      tracks: [singleTrack],
+                      editedTags: {},
+                      commentToInsert: controller.text,
+                      trimWhiteSpaces: false,
+                    ).ignoreError();
+                  } else {
+                    final trExt = singleTrack.toTrackExt();
+                    final oldComment = trExt.comment;
+                    final commentToInsert = controller.text;
+                    await Indexer.inst.updateTrackMetadata(
+                      tracksMap: {
+                        singleTrack: trExt.copyWith(
+                          comment: oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
+                          generatePathHash: false,
+                        ),
+                      },
+                    );
+                  }
+
                   _editingInProgress[singleTrack.path] = false;
                   NamidaNavigator.inst.closeDialog();
                 }
@@ -215,7 +231,7 @@ Widget get _getKeepDatesWidget => ObxO(
       ),
     );
 
-Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme, {bool instantEditArtwork = false}) async {
+Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme, {bool instantEditArtwork = false}) async {
   if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
 
   final color = Colors.transparent.obso;
@@ -665,10 +681,10 @@ Future<void> _editSingleTrackTagsDialog(Track track, Color? colorScheme, {bool i
   );
 }
 
-Future<void> _editMultipleTracksTags(List<Track> tracksPre, {bool instantEditArtwork = false}) async {
+Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instantEditArtwork = false}) async {
   if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
 
-  final tracksGoingToBeEditedRx = <Track, bool>{for (final t in tracksPre) t: true}.obs;
+  final tracksGoingToBeEditedRx = <PhysicalMedia, bool>{for (final t in tracksPre) t: true}.obs;
 
   final toBeEditedTracksColumn = Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1238,6 +1254,7 @@ class CustomTagTextField extends StatefulWidget {
   final void Function(String value)? onFieldSubmitted;
   final double borderRadius;
   final FocusNode? focusNode;
+  final bool obscureText;
 
   const CustomTagTextField({
     super.key,
@@ -1257,6 +1274,7 @@ class CustomTagTextField extends StatefulWidget {
     this.onFieldSubmitted,
     this.borderRadius = 16.0,
     this.focusNode,
+    this.obscureText = false,
   });
 
   @override
@@ -1280,6 +1298,7 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
     final borderR = widget.borderRadius.multipliedRadius;
     final borderRS = (widget.borderRadius - 2.0).withMinimum(0).multipliedRadius;
     return TextFormField(
+      obscureText: widget.obscureText,
       onTap: widget.onTap,
       focusNode: widget.focusNode,
       validator: widget.validator,

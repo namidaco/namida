@@ -107,7 +107,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   static const _imagePathInitialValue = ArtworkWidget.kImagePathInitialValue;
 
   String? _imagePath = _imagePathInitialValue;
-  late Uint8List? bytes = widget.bytes ?? Indexer.inst.artworksMap[widget.path];
+  late Uint8List? bytes = widget.bytes ?? Indexer.inst.artworksBytesMap[widget.path];
   // late final bool _imageObtainedBefore = Indexer.inst.imageObtainedBefore(widget.path ?? '');
 
   bool _triedDeleting = false;
@@ -117,8 +117,11 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   @override
   void initState() {
     super.initState();
-
-    _imagePath = widget.path; // to prevent flashing/etc
+    if (bytes?.isNotEmpty == true) {
+      // -- skip
+    } else {
+      _imagePath = widget.path; // to prevent flashing/etc
+    }
 
     if (widget.extractInternally) {
       _initValues();
@@ -150,12 +153,13 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final wPath = widget.path;
     if (wPath != null && _imagePath == _imagePathInitialValue) {
       if (!await canStartLoadingItems()) return;
+      final track = widget.track;
 
       if (widget.compressed == false) {
         final resPath = await Indexer.inst
             .getArtwork(
               imagePath: wPath,
-              trackPath: widget.track?.path,
+              track: track,
               compressed: false,
               checkFileFirst: false,
               size: widget.compressed ? _getThumbnailEffectiveCacheHeight.round() : null,
@@ -170,7 +174,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
         final resBytes = await Indexer.inst
             .getArtwork(
               imagePath: wPath,
-              trackPath: widget.track?.path,
+              track: track,
               compressed: widget.compressed,
               checkFileFirst: false,
               size: widget.compressed ? _getThumbnailEffectiveCacheHeight.round() : null,
@@ -183,8 +187,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
         }
       }
 
-      if (_imagePath == _imagePathInitialValue && widget.track != null && widget.fallbackToFolderCover) {
-        final cover = Indexer.inst.getFallbackFolderArtworkPath(folderPath: widget.track!.folderPath);
+      bool stillInvalid() => _imagePath == _imagePathInitialValue && bytes == null;
+
+      if (stillInvalid() && track != null && widget.fallbackToFolderCover) {
+        final cover = Indexer.inst.getFallbackFolderArtworkPath(folderPath: track.folderPath);
         if (cover != null && mounted) setState(() => _imagePath = cover);
       }
 
@@ -246,7 +252,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final sizePercentage = widget.disableBlurBgSizeShrink || !dropShadowEnabled ? 1.0 : DropShadow.defaultSizePercentage;
 
     // -- dont display stock widget if image can be obtained.
-    if (thereMightBeImageSoon) {
+    if (thereMightBeImageSoon && !canDisplayImage) {
       final box = SizedBox(
         key: key,
         width: boxWidth,

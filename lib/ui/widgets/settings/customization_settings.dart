@@ -442,7 +442,7 @@ class CustomizationSettings extends SettingSubpageProvider {
         bgColor: getBgColor(_CustomizationSettingsKeys.ALBUMTILECUSTOMIZATION),
         bigahh: true,
         compact: false,
-        initiallyExpanded: settings.useSettingCollapsedTiles.value,
+        initiallyExpanded: settings.useSettingCollapsedTiles.value || initialItem == _CustomizationSettingsKeys.ALBUMTILECUSTOMIZATION,
         leading: const StackedIcon(
           baseIcon: Broken.brush,
           secondaryIcon: Broken.music_dashboard,
@@ -614,7 +614,7 @@ class CustomizationSettings extends SettingSubpageProvider {
         bgColor: getBgColor(_CustomizationSettingsKeys.TRACKTILECUSTOMIZATION),
         bigahh: true,
         compact: false,
-        initiallyExpanded: settings.useSettingCollapsedTiles.value,
+        initiallyExpanded: settings.useSettingCollapsedTiles.value || initialItem == _CustomizationSettingsKeys.TRACKTILECUSTOMIZATION,
         leading: const StackedIcon(
           baseIcon: Broken.brush,
           secondaryIcon: Broken.music_circle,
@@ -696,7 +696,7 @@ class CustomizationSettings extends SettingSubpageProvider {
             key: _CustomizationSettingsKeys.SWIPEACTIONS,
             child: NamidaExpansionTile(
               bgColor: getBgColor(_CustomizationSettingsKeys.SWIPEACTIONS),
-              initiallyExpanded: true,
+              initiallyExpanded: true /* || initialItem == _CustomizationSettingsKeys.SWIPEACTIONS */,
               borderless: true,
               icon: Broken.arrow_swap_horizontal,
               iconColor: context.defaultIconColor(),
@@ -936,7 +936,7 @@ class CustomizationSettings extends SettingSubpageProvider {
         bgColor: getBgColor(_CustomizationSettingsKeys.MINIPLAYERCUSTOMIZATION),
         bigahh: true,
         compact: false,
-        initiallyExpanded: settings.useSettingCollapsedTiles.value,
+        initiallyExpanded: settings.useSettingCollapsedTiles.value || initialItem == _CustomizationSettingsKeys.MINIPLAYERCUSTOMIZATION,
         leading: const StackedIcon(
           baseIcon: Broken.brush,
           secondaryIcon: Broken.external_drive,
@@ -991,7 +991,7 @@ class CustomizationSettings extends SettingSubpageProvider {
             key: _CustomizationSettingsKeys.THUMBANIMATIONINTENSITY,
             child: NamidaExpansionTile(
               bgColor: getBgColor(_CustomizationSettingsKeys.THUMBANIMATIONINTENSITY),
-              initiallyExpanded: true,
+              initiallyExpanded: true /* || initialItem == _CustomizationSettingsKeys.THUMBANIMATIONINTENSITY */,
               borderless: true,
               icon: Broken.flash,
               iconColor: context.defaultIconColor(),
@@ -1081,7 +1081,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               bgColor: getBgColor(_CustomizationSettingsKeys.ARTWORKGESTURES),
               icon: Broken.gallery,
               iconColor: context.defaultIconColor(),
-              initiallyExpanded: true,
+              initiallyExpanded: true /* || initialItem == _CustomizationSettingsKeys.ARTWORKGESTURES */,
               borderless: true,
               titleText: lang.ARTWORK_GESTURES,
               childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0),

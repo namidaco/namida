@@ -12,6 +12,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
@@ -150,19 +151,23 @@ class QueueController {
     String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
 
     final queuesToSave = <Queue>{};
+    final pathsOnlySet = forThesePathsOnly?.toSet();
+    final existenceCache = <String, bool>{};
     queuesMap.value.entries.toList().loop((entry) {
       final q = entry.value;
       q.tracks.replaceWhere(
         (e) {
-          final trackPath = e.path;
-          if (ensureNewFileExists) {
-            if (!File(getNewPath(trackPath)).existsSync()) return false;
-          }
-          final firstC = forThesePathsOnly != null ? forThesePathsOnly.contains(e.track.path) : true;
-          final secondC = trackPath.startsWith(oldDir);
-          return firstC && secondC;
+          final tr = e.track;
+          return replaceFunctionForUpdatedPaths(
+            tr,
+            oldDir,
+            newDir,
+            pathsOnlySet,
+            ensureNewFileExists,
+            existenceCache,
+          );
         },
-        (old) => Track.fromTypeParameter(old.runtimeType, old.path.replaceFirst(oldDir, newDir)),
+        (old) => Track.fromTypeParameter(old.runtimeType, getNewPath(old.path)),
         onMatch: () => queuesToSave.add(q),
       );
     });

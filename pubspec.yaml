@@ -84,6 +84,9 @@ dependencies:
     git:
       url: https://github.com/namidaco/namico_db_wrapper
   flutter_native_splash: ^2.4.7
+  opensubsonic_api:
+    git:
+      url: https://github.com/MSOB7YY/opensubsonic_api.dart
 
   # ---- Audio Indexing & Playback ----
   just_audio:

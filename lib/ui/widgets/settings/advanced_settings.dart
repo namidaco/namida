@@ -8,6 +8,7 @@ import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -966,6 +967,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                           await EditDeleteController.inst.updateDirectoryInEveryPartOfNamida(
                             oldDirController.text,
                             newDirController.text,
+                            null,
                             forThesePathsOnly: tracksPaths,
                             ensureNewFileExists: updateMissingOnly.value,
                           );
@@ -1032,7 +1034,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                               return lang.PLEASE_ENTER_A_NAME;
                             }
                             try {
-                              if (!Directory(value).existsSync()) {
+                              if (!DirectoryIndex.guess(value, null).existsSync()) {
                                 return lang.DIRECTORY_DOESNT_EXIST;
                               }
                             } catch (e) {

@@ -1,6 +1,4 @@
 // ignore_for_file: avoid_rx_value_getter_outside_obx
-import 'dart:io';
-
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -11,6 +9,7 @@ import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
 
@@ -196,16 +195,19 @@ class SelectedTracksController {
 
   void replaceTrackDirectory(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) {
     String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
-
+    final pathsOnlySet = forThesePathsOnly?.toSet();
+    final existenceCache = <String, bool>{};
     _tracksOrTwdList.replaceWhere(
       (e) {
-        final trackPath = e.track.path;
-        if (ensureNewFileExists) {
-          if (!File(getNewPath(trackPath)).existsSync()) return false;
-        }
-        final firstC = forThesePathsOnly != null ? forThesePathsOnly.contains(e.track.path) : true;
-        final secondC = trackPath.startsWith(oldDir);
-        return firstC && secondC;
+        final tr = e.track;
+        return replaceFunctionForUpdatedPaths(
+          tr,
+          oldDir,
+          newDir,
+          pathsOnlySet,
+          ensureNewFileExists,
+          existenceCache,
+        );
       },
       (old) {
         final newtr = Track.fromTypeParameter(old.track.runtimeType, getNewPath(old.track.path));

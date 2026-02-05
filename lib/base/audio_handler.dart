@@ -16,6 +16,7 @@ import 'package:youtipie/class/streams/video_streams_result.dart';
 
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/custom_mpv_player.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/track.dart';
@@ -28,6 +29,7 @@ import 'package:namida/controller/home_widget_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -560,7 +562,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               try {
                 final d = await ap.setSource(
                   ItemPrepareConfig(
-                    AudioVideoSource.file(finalItem.track.path),
+                    finalItem.toAudioSource(0, 1, null, cache: false),
                     index: 0,
                     initialPosition: null,
                     videoOptions: null,
@@ -668,8 +670,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     playErrorRemainingSecondsToSkip.value = 0;
   }
 
-  Future<ItemPrepareConfigSelectable<Q, UriSource>> _itemToPrepareConfigSelectable(Q pi, Selectable item, int index, Duration? duration,
-      {CurrentVideoConfig? configToUpdate}) async {
+  Future<ItemPrepareConfigSelectable<Q, UriSource>> _itemToPrepareConfigSelectable(
+    Q pi,
+    Selectable item,
+    int index,
+    Duration? duration, {
+    CurrentVideoConfig? configToUpdate,
+  }) async {
     final isVideo = item is Video;
     final tr = item.track;
     duration ??= Duration(milliseconds: tr.durationMS);
@@ -680,7 +687,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         : initialVideo == null
             ? isVideo
                 ? VideoSourceOptions(
-                    source: AudioVideoSource.file(item.path),
+                    source: item.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
                     loop: false,
                     videoOnly: true,
                   )
@@ -692,7 +699,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               );
     return ItemPrepareConfigSelectable(
       tr.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
-      itemExists: await File(tr.path).exists(),
+      itemExists: await tr.exists(),
       item: pi,
       videoOptions: videoOptions,
       index: index,
@@ -708,14 +715,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     WaveformController.inst.resetWaveform();
     VideoController.inst.currentVideoConfig.resetAll();
 
-    WaveformController.inst.generateWaveform(
-      path: tr.path,
-      duration: Duration(milliseconds: tr.durationMS),
-      stillPlaying: (path) {
-        final current = currentItem.value;
-        return current is Selectable && path == current.track.path;
-      },
-    );
+    if (tr.isPhysical) {
+      WaveformController.inst.generateWaveform(
+        path: tr.path,
+        duration: Duration(milliseconds: tr.durationMS),
+        stillPlaying: (path) {
+          final current = currentItem.value;
+          return current is Selectable && path == current.track.path;
+        },
+      );
+    }
 
     Duration? duration;
     bool checkInterrupted() {
@@ -734,7 +743,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       // -- we check if it exists to avoid refreshing notification redundently.
       // -- otherwise `getArtwork` already handles duplications.
       if (!exists) {
-        Indexer.inst.getArtwork(imagePath: tr.pathToImage, trackPath: tr.path, compressed: false, checkFileFirst: false).then((value) => refreshNotification());
+        Indexer.inst.getArtwork(imagePath: tr.pathToImage, track: tr, compressed: false, checkFileFirst: false).then((value) => refreshNotification());
       }
     });
 
@@ -750,7 +759,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       VideoController.inst.currentVideoConfig.updateFrom(preparedConfig.videoUpdateConfig);
     }
     Future<Duration?> setPls() async {
-      bool itemReallyExists = preparedConfig?.itemExists == true ? true : File(tr.path).existsSync();
+      bool itemReallyExists = preparedConfig?.itemExists == true ? true : tr.existsSync();
       if (!itemReallyExists) throw PathNotFoundException(tr.path, const OSError(), 'Track file not found or couldn\'t be accessed.');
 
       if (preparedConfig == null || preparedConfig!.item != item) {
@@ -1115,7 +1124,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   /// Sets [_nextSeekSetAudioCache] to properly update audio source on next seek and calls [_onVideoCacheAddPendingInfo] to add info.
-  Future<void> _onAudioCacheDone(String videoId, File audioCacheFile) async {
+  Future<void> _onAudioFirstCacheDone(String videoId, File audioCacheFile) async {
     final curr = currentItem.value;
     if (curr is! YoutubeID) return;
     if (curr.id != videoId) return;
@@ -1413,6 +1422,25 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     Duration? positionToRestore = heyIhandledPlaying && playedFromCacheDetails.audio != null ? currentPositionMS.value.milliseconds : initialPosition;
 
     Completer<YTMarkVideoWatchedResult>? markedAsWatched;
+
+    void markAsWatchedIfRequired() {
+      if (streamsResult != null && (streamsResult.audioStreams.isNotEmpty || streamsResult.mixedStreams.isNotEmpty)) {
+        // only when video has actual streams. otherwise its deleted/privated/etc
+        if (markedAsWatched != null) {
+          // -- older request was initiated, wait to see the value.
+          markedAsWatched.future.then(
+            (marked) {
+              if ((marked == YTMarkVideoWatchedResult.noAccount || marked == YTMarkVideoWatchedResult.userDenied) && streamsResult != null) {
+                YoutubeInfoController.history.markVideoWatched(videoId: item.id, streamResult: streamsResult).then(_onVideoMarkWatchResultError);
+              }
+            },
+          );
+        } else {
+          // -- no old requests, force mark
+          YoutubeInfoController.history.markVideoWatched(videoId: item.id, streamResult: streamsResult).then(_onVideoMarkWatchResultError);
+        }
+      }
+    }
 
     // only if was playing
     if (okaySetFromCache() && ((streamsResult != null && !streamsResult.hasExpired()) || !ConnectivityController.inst.hasConnection)) {
@@ -2184,7 +2212,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required File cacheFile,
     required String videoId,
     required VideoStreamsResult? streamsResult,
-    required void Function(File cachedFile) onCacheDone,
+    required void Function(File cachedFile) onFirstCacheDone,
   }) {
     // -- this part might not be used, live streams are built different early
     final isLive = streamsResult != null && (streamsResult.info?.isLive == true || streamsResult.audioStreams.isEmpty && streamsResult.mixedStreams.isNotEmpty);
@@ -2197,19 +2225,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         return AudioVideoSource.file('');
       }
     }
-
-    final cacheConfig = HttpCacheManager.instance.createStreamConfig();
-
-    cacheConfig.onCacheDone = onCacheDone;
-    final cacheStream = HttpCacheManager.instance.createStream(
+    return _buildCacheableAVSource(
       uriDDL,
-      file: cacheFile,
-      config: cacheConfig,
+      cacheFile: cacheFile,
+      onFirstCacheDone: (cachedFile) => _onAudioFirstCacheDone(videoId, cachedFile),
+      onFetched: (cachedFile) {},
     );
-    cacheStream.download();
-    final cacheUrl = cacheStream.cacheUrl;
-    void disposeStream() => cacheStream.dispose(force: true);
-    return AudioVideoSource.uri(cacheUrl, onDispose: disposeStream);
   }
 
   UriSource _buildLockCachingAudioSource(Uri uriDDL, {required AudioStream stream, required String videoId, required VideoStreamsResult? streamsResult}) {
@@ -2218,7 +2239,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       cacheFile: File(stream.cachePath(videoId)),
       videoId: videoId,
       streamsResult: streamsResult,
-      onCacheDone: (cachedFile) => _onAudioCacheDone(videoId, cachedFile),
+      onFirstCacheDone: (cachedFile) => _onAudioFirstCacheDone(videoId, cachedFile),
     );
   }
 
@@ -2228,7 +2249,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       cacheFile: File(stream.cachePath(videoId)),
       videoId: videoId,
       streamsResult: streamsResult,
-      onCacheDone: (cachedFile) => _onVideoCacheDone(videoId, cachedFile),
+      onFirstCacheDone: (cachedFile) => _onVideoCacheDone(videoId, cachedFile),
     );
   }
 
@@ -2271,7 +2292,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
 // ----------------------- Extensions --------------------------
 extension TrackToAudioSourceMediaItem on Selectable {
-  UriSource toAudioSource(int currentIndex, int queueLength, Duration? duration) {
+  UriSource toAudioSource(int currentIndex, int queueLength, Duration? duration, {bool cache = true}) {
+    if (track.isNetwork) {
+      return _buildTrackNetworkAudioSource(tr: this.track);
+    }
     return AudioVideoSource.file(
       track.path,
       // tag: toMediaItem(currentIndex, queueLength, duration),
@@ -2422,6 +2446,54 @@ class AndroidLoudnessEnhancerExtended {
   Future<void> refreshEnabled() {
     return _loudnessEnhancer.setEnabled(getActualEnabled);
   }
+}
+
+UriSource _buildCacheableAVSource(
+  Uri uriDDL, {
+  required File cacheFile,
+  required void Function(File cachedFile) onFirstCacheDone,
+  required void Function(File cachedFile) onFetched,
+}) {
+  final cacheConfig = HttpCacheManager.instance.createStreamConfig();
+
+  cacheConfig.onCacheDone = onFirstCacheDone;
+  final cacheStream = HttpCacheManager.instance.createStream(
+    uriDDL,
+    file: cacheFile,
+    config: cacheConfig,
+  );
+  cacheStream.download().then(onFetched);
+  final cacheUrl = cacheStream.cacheUrl;
+  void disposeStream() => cacheStream.dispose(force: true);
+  return AudioVideoSource.uri(cacheUrl, onDispose: disposeStream);
+}
+
+UriSource _buildTrackNetworkAudioSource({required Track tr}) {
+  final uri = Uri.parse(tr.path);
+  final res = MediaUrlParseResult.parseFromUri(uri);
+  final cacheFile = FileParts.join(AppDirs.APP_CACHE, res.type.name, res.username, res.id);
+  final uriDDL = MusicWebServer.baseUrlToActualUrl(tr.path, uri: uri);
+  if (uriDDL == null) return AudioVideoSource.file('');
+
+  bool stillPlaying(String path) {
+    final current = Player.inst.currentItem.value;
+    return current is Selectable && path == current.track.path;
+  }
+
+  return _buildCacheableAVSource(
+    uriDDL,
+    cacheFile: cacheFile,
+    onFirstCacheDone: (cachedFile) {},
+    onFetched: (cachedFile) async {
+      if (stillPlaying(tr.path)) {
+        await WaveformController.inst.generateWaveform(
+          path: cachedFile.path,
+          duration: Duration(milliseconds: tr.durationMS),
+          stillPlaying: (_) => stillPlaying(tr.path),
+        );
+      }
+    },
+  );
 }
 
 class ItemPrepareConfigSelectable<Q, S extends UriSource> extends ItemPrepareConfig<Q, S> {

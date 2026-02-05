@@ -247,7 +247,12 @@ Future<void> showTrackInfoDialog(
                                     artwork: artwork,
                                     heroTag: heroTag,
                                     imageFile: () => File(networkArtworkInfo?.toArtworkLocation().path ?? track.pathToImage),
-                                    onSave: (_) => EditDeleteController.inst.saveTrackArtworkToStorage(track),
+                                    fetchImage: () => Indexer.inst.getArtwork(
+                                      imagePath: track.pathToImage,
+                                      track: track,
+                                      compressed: false,
+                                    ),
+                                    onSave: (_, __) => EditDeleteController.inst.saveTrackArtworkToStorage(track),
                                     themeColor: () => color.value,
                                   ),
                                   const SizedBox(width: 10.0),

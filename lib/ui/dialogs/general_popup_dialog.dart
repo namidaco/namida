@@ -84,7 +84,7 @@ Future<void> showGeneralPopupDialog(
     final int length = tracks.length;
     for (int i = 0; i < length; i++) {
       final t = tracks[i];
-      if (File(t.path).existsSync()) tracksExisting.add(t);
+      if (t.existsSync()) tracksExisting.add(t);
     }
   } else {
     tracks.loop((t) {
@@ -129,7 +129,7 @@ Future<void> showGeneralPopupDialog(
     return (ext.album, ext.albumIdentifier);
   });
   final List<String> availableArtists = tracks.mappedUniquedList((e) => e.toTrackExt().artistsList);
-  final List<Folder> availableFolders = tracks.mappedUniqued((e) => e.folder);
+  final List<Folder> availableFolders = tracks.mapAsPhysical().mappedUniqued((e) => e.folder);
 
   final Iterable<YoutubeID> availableYoutubeIDs = tracks.map((e) => YoutubeID(id: e.youtubeID, playlistID: null)).where((element) => element.id.isNotEmpty);
   final String? firstVideolId = availableYoutubeIDs.firstOrNull?.id;
@@ -1031,7 +1031,7 @@ Future<void> showGeneralPopupDialog(
                                         IconButton(
                                           tooltip: lang.OPEN_IN_FILE_EXPLORER,
                                           onPressed: () {
-                                            final path = tracksExisting.firstOrNull?.path ?? availableFolders.first.path;
+                                            final path = tracksExisting.firstOrNull?.asPhysical()?.path ?? availableFolders.first.path;
                                             NamidaChannel.inst.openFileInExplorer(path);
                                           },
                                           icon: const Icon(
@@ -1067,8 +1067,10 @@ Future<void> showGeneralPopupDialog(
                                     ),
                                   ),
                                   onTap: () async {
+                                    final trs = tracksExisting.mapPhysicalOrError((tr) => tr.path);
+                                    if (trs.isEmpty) return;
                                     isLoadingFilesToShare.value = true;
-                                    await NamidaUtils.shareFiles(tracksExisting.mapped((e) => e.path));
+                                    await NamidaUtils.shareFiles(trs);
                                     isLoadingFilesToShare.value = false;
                                     NamidaNavigator.inst.closeDialog();
                                   },
@@ -1131,8 +1133,10 @@ Future<void> showGeneralPopupDialog(
                                 title: lang.EDIT_TAGS,
                                 icon: Broken.edit,
                                 onTap: () {
+                                  final trs = tracks.asPhysicalOrError();
+                                  if (trs.isEmpty) return;
                                   NamidaNavigator.inst.closeDialog();
-                                  showEditTracksTagsDialog(tracks, colorDelightened);
+                                  showEditTracksTagsDialog(trs, colorDelightened);
                                 },
                                 trailing: isSingle
                                     ? IconButton(
@@ -1252,8 +1256,10 @@ Future<void> showGeneralPopupDialog(
                                         ),
                                         () => lang.SHARE,
                                         () async {
+                                          final trs = tracksExisting.mapPhysicalOrError((tr) => tr.path);
+                                          if (trs.isEmpty) return;
                                           isLoadingFilesToShare.value = true;
-                                          await NamidaUtils.shareFiles(tracksExisting.mapped((e) => e.path));
+                                          await NamidaUtils.shareFiles(trs);
                                           isLoadingFilesToShare.value = false;
                                           NamidaNavigator.inst.closeDialog();
                                         },
@@ -1314,7 +1320,7 @@ Future<void> showGeneralPopupDialog(
                                         child: bigIcon(
                                           Broken.edit_2,
                                           () => lang.SET_YOUTUBE_LINK,
-                                          () => showSetYTLinkCommentDialog(tracks, colorDelightened),
+                                          () => showSetYTLinkCommentDialog(tracks.first, colorDelightened),
                                           iconWidget: StackedIcon(
                                             baseIcon: Broken.edit_2,
                                             secondaryIcon: Broken.video_square,

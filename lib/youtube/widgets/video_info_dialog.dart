@@ -467,7 +467,14 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                     type: ThumbnailType.video,
                                     isTemp: null,
                                   ),
-                                  onSave: (_) => YTUtils.copyThumbnailToStorage(videoId),
+                                  fetchImage: () async => (
+                                    await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+                                      id: videoId,
+                                      type: ThumbnailType.video,
+                                    ),
+                                    null
+                                  ),
+                                  onSave: (_, __) => YTUtils.copyThumbnailToStorage(videoId),
                                   themeColor: () => _themeColor,
                                 ),
                                 const SizedBox(width: 10.0),

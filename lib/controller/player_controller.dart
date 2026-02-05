@@ -26,6 +26,7 @@ import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -494,15 +495,19 @@ class Player {
   Future<void> replaceTracksDirectoryInQueue(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
     String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
     if (currentItem.value is Selectable) {
+      final pathsOnlySet = forThesePathsOnly?.toSet();
+      final existenceCache = <String, bool>{};
       await _audioHandler.replaceWhereInQueue(
         (e) {
-          final trackPath = (e as Selectable).track.path;
-          if (ensureNewFileExists) {
-            if (!File(getNewPath(trackPath)).existsSync()) return false;
-          }
-          final firstC = forThesePathsOnly != null ? forThesePathsOnly.contains(e.track.path) : true;
-          final secondC = trackPath.startsWith(oldDir);
-          return firstC && secondC;
+          final tr = (e as Selectable).track;
+          return replaceFunctionForUpdatedPaths(
+            tr,
+            oldDir,
+            newDir,
+            pathsOnlySet,
+            ensureNewFileExists,
+            existenceCache,
+          );
         },
         (old) {
           old as Selectable;

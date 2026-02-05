@@ -439,7 +439,7 @@ class CurrentColor {
     }
   }
 
-  Future<Iterable<Color>> _extractPaletteGenerator(String imagePath, {Track? track, bool useIsolate = _defaultUseIsolate}) async {
+  Future<Iterable<Color>> _extractPaletteGenerator(String imagePath, {required Track? track, bool useIsolate = _defaultUseIsolate}) async {
     Uint8List? bytes;
     File? imageFile;
 
@@ -449,6 +449,7 @@ class CurrentColor {
       bytes = await Indexer.inst
           .getArtwork(
             imagePath: imagePath,
+            track: track,
             compressed: true,
             size: 200,
           )

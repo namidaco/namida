@@ -548,6 +548,7 @@ class YoutubeSettings extends SettingSubpageProvider {
               iconColor: context.defaultIconColor(),
               icon: Broken.candle_2,
               titleText: lang.SEEKBAR,
+              initiallyExpanded: initialItem == _YoutubeSettingKeys.seekbar,
               children: [
                 CustomListTile(
                   icon: Broken.mouse_circle,

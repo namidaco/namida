@@ -13,6 +13,7 @@ import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/shortcut_data.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.dart';
@@ -131,8 +132,8 @@ class _SettingsController with SettingsFileWriter {
     TrackSearchFilter.album,
   ].obs;
   final playlistSearchFilter = ['name', 'creationDate', 'modifiedDate', 'moods', 'comment'].obs;
-  final directoriesToScan = <String>[].obs;
-  final directoriesToExclude = <String>[].obs;
+  final directoriesToScan = <DirectoryIndex>[].obs;
+  final directoriesToExclude = <DirectoryIndex>[].obs;
   final preventDuplicatedTracks = false.obs;
   final respectNoMedia = false.obs;
   final defaultBackupLocation = Rxn<String?>();
@@ -540,8 +541,8 @@ class _SettingsController with SettingsFileWriter {
       if (json['commonPrefixes'] is List) commonPrefixes.value = (json['commonPrefixes'] as List).cast<String>();
 
       if (json['playlistSearchFilter'] is List) playlistSearchFilter.value = (json['playlistSearchFilter'] as List).cast<String>();
-      if (json['directoriesToScan'] is List) directoriesToScan.value = (json['directoriesToScan'] as List).cast<String>();
-      if (json['directoriesToExclude'] is List) directoriesToExclude.value = (json['directoriesToExclude'] as List).cast<String>();
+      if (json['directoriesToScan'] is List) directoriesToScan.value = (json['directoriesToScan'] as List).map(DirectoryIndex.fromMap).toList();
+      if (json['directoriesToExclude'] is List) directoriesToExclude.value = (json['directoriesToExclude'] as List).map(DirectoryIndex.fromMap).toList();
       preventDuplicatedTracks.value = json['preventDuplicatedTracks'] ?? preventDuplicatedTracks.value;
       respectNoMedia.value = json['respectNoMedia'] ?? respectNoMedia.value;
       defaultBackupLocation.value = json['defaultBackupLocation_v2'] ?? defaultBackupLocation.value;
@@ -780,8 +781,8 @@ class _SettingsController with SettingsFileWriter {
         'ignoreCommonPrefixForTypes': ignoreCommonPrefixForTypes.value.mapped((e) => e.name),
         'commonPrefixes': commonPrefixes.value,
         'playlistSearchFilter': playlistSearchFilter.value,
-        'directoriesToScan': directoriesToScan.value,
-        'directoriesToExclude': directoriesToExclude.value,
+        'directoriesToScan': directoriesToScan.value.map((e) => e.toMap()).toList(),
+        'directoriesToExclude': directoriesToExclude.value.map((e) => e.toMap()).toList(),
         'preventDuplicatedTracks': preventDuplicatedTracks.value,
         'respectNoMedia': respectNoMedia.value,
         'defaultBackupLocation_v2': defaultBackupLocation.value,
@@ -966,8 +967,8 @@ class _SettingsController with SettingsFileWriter {
     List<TrackSearchFilter>? ignoreCommonPrefixForTypes,
     List<String>? commonPrefixes,
     List<String>? playlistSearchFilter,
-    List<String>? directoriesToScan,
-    List<String>? directoriesToExclude,
+    List<DirectoryIndex>? directoriesToScan,
+    List<DirectoryIndex>? directoriesToExclude,
     bool? preventDuplicatedTracks,
     bool? respectNoMedia,
     String? defaultBackupLocation,
@@ -1343,10 +1344,10 @@ class _SettingsController with SettingsFileWriter {
     List<TrackSearchFilter>? ignoreCommonPrefixForTypesAll,
     String? playlistSearchFilter1,
     List<String>? playlistSearchFilterAll,
-    String? directoriesToScan1,
-    List<String>? directoriesToScanAll,
-    String? directoriesToExclude1,
-    List<String>? directoriesToExcludeAll,
+    DirectoryIndex? directoriesToScan1,
+    List<DirectoryIndex>? directoriesToScanAll,
+    DirectoryIndex? directoriesToExclude1,
+    List<DirectoryIndex>? directoriesToExcludeAll,
     LibraryTab? libraryTab1,
     List<LibraryTab>? libraryTabsAll,
     HomePageItems? homePageItem1,

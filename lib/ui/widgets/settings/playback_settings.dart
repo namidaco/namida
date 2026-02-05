@@ -647,7 +647,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           bigahh: true,
           normalRightPadding: true,
           borderless: true,
-          initiallyExpanded: settings.player.enableCrossFade.value,
+          initiallyExpanded: settings.player.enableCrossFade.value || initialItem == _PlaybackSettingsKeys.crossfade,
           leading: const StackedIcon(
             baseIcon: Broken.play,
             secondaryIcon: Broken.recovery_convert,
@@ -718,7 +718,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           bigahh: true,
           normalRightPadding: true,
           borderless: true,
-          initiallyExpanded: settings.player.enableVolumeFadeOnPlayPause.value,
+          initiallyExpanded: settings.player.enableVolumeFadeOnPlayPause.value || initialItem == _PlaybackSettingsKeys.fadeEffectOnPlayPause,
           leading: const StackedIcon(
             baseIcon: Broken.play,
             secondaryIcon: Broken.pause,
@@ -776,6 +776,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           iconColor: context.defaultIconColor(),
           icon: Broken.volume_slash,
           titleText: lang.ON_VOLUME_ZERO,
+          initiallyExpanded: initialItem == _PlaybackSettingsKeys.onVolume0,
           children: [
             Obx(
               (context) => CustomSwitchListTile(
@@ -828,6 +829,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           iconColor: context.defaultIconColor(),
           icon: Broken.notification_bing,
           titleText: lang.ON_INTERRUPTION,
+          initiallyExpanded: initialItem == _PlaybackSettingsKeys.onInterruption,
           children: [
             ...InterruptionType.values.map(
               (type) {

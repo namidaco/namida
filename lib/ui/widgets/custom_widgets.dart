@@ -6333,7 +6333,8 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
   final Widget artwork;
   final String? heroTag;
   final FutureOr<File?> Function() imageFile;
-  final FutureOr<String?> Function(File imgFile) onSave;
+  final FutureOr<(File?, Uint8List?)> Function() fetchImage;
+  final FutureOr<String?> Function(File? imgFile, Uint8List? bytes) onSave;
   final Color? Function()? themeColor;
 
   const NamidaArtworkExpandableToFullscreen({
@@ -6341,13 +6342,35 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
     required this.artwork,
     required this.heroTag,
     required this.imageFile,
+    required this.fetchImage,
     required this.onSave,
     required this.themeColor,
   });
 
   void openInFullscreen() async {
-    final imgFile = await imageFile();
-    if (imgFile == null || !(await imgFile.exists())) return;
+    File? imgFile;
+    Uint8List? imgBytes;
+
+    imgFile = await imageFile();
+    if (imgFile != null && await imgFile.exists()) {
+      // -- good
+    } else {
+      final res = await fetchImage();
+      imgFile = res.$1;
+      imgBytes = res.$2;
+      if (res.$1 != null) {
+        imgFile = res.$1!;
+      } else if (res.$2 != null) {
+        imgBytes = res.$2!;
+      }
+    }
+
+    final ImageProvider<Object>? imgProvider = imgFile != null
+        ? FileImage(imgFile)
+        : imgBytes != null
+            ? MemoryImage(imgBytes)
+            : null;
+    if (imgProvider == null) return;
 
     NamidaNavigator.inst.navigateDialog(
       scale: 1.0,
@@ -6355,10 +6378,10 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
       dialog: NamidaArtworkFullscreen(
         title: '',
         artwork: artwork,
-        imgFile: imgFile,
+        imgProvider: imgProvider,
         heroTag: heroTag,
         save: () async {
-          final saveDirPath = await onSave(imgFile);
+          final saveDirPath = await onSave(imgFile, imgBytes);
           NamidaOnTaps.inst.showSavedImageInSnack(saveDirPath, themeColor?.call());
         },
         close: NamidaNavigator.inst.closeDialog,
@@ -6378,7 +6401,7 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
 class NamidaArtworkFullscreen extends StatefulWidget {
   final String title;
   final Widget artwork;
-  final File imgFile;
+  final ImageProvider<Object>? imgProvider;
   final String? heroTag;
   final void Function() save;
   final void Function() close;
@@ -6387,7 +6410,7 @@ class NamidaArtworkFullscreen extends StatefulWidget {
     super.key,
     required this.title,
     required this.artwork,
-    required this.imgFile,
+    required this.imgProvider,
     required this.heroTag,
     required this.save,
     required this.close,
@@ -6442,7 +6465,7 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
             loadingBuilder: (context, event) => widget.artwork,
             backgroundDecoration: const BoxDecoration(color: Colors.transparent),
             filterQuality: FilterQuality.high,
-            imageProvider: FileImage(widget.imgFile),
+            imageProvider: widget.imgProvider,
           ),
         ),
         Positioned(

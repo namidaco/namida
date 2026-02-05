@@ -107,8 +107,12 @@ class NamidaNavigator {
   }
 
   void _minimizeMiniplayer() {
-    MiniPlayerController.inst.snapToMini();
-    MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
+    try {
+      MiniPlayerController.inst.snapToMini();
+      MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
+    } catch (_) {
+      // -- could be non initialized
+    }
   }
 
   void hideStuff({

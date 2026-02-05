@@ -123,7 +123,8 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                                 artwork: artworkPre,
                                 heroTag: 'album_${widget.albumIdentifier}',
                                 imageFile: () => info.toArtworkIfExistsAndValidAndEnabled() ?? File(tracksPathToImage),
-                                onSave: (imgFile) => EditDeleteController.inst.saveImageToStorage(imgFile),
+                                fetchImage: () => const (null, null),
+                                onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
                                 themeColor: null,
                               );
                               return squared

@@ -41,6 +41,7 @@ abstract class LanguageKeys {
   String get ALBUMS => _getKey('ALBUMS');
   String get ALL => _getKey('ALL');
   String get ALL_TIME => _getKey('ALL_TIME');
+  String get ALREADY_EXISTS => _getKey('ALREADY_EXISTS');
   String get ALWAYS => _getKey('ALWAYS');
   String get ALWAYS_ASK => _getKey('ALWAYS_ASK');
   String get ALWAYS_DIM => _getKey('ALWAYS_DIM');
@@ -363,6 +364,7 @@ abstract class LanguageKeys {
   String get LANGUAGE => _getKey('LANGUAGE');
   String get LEARN_MORE => _getKey('LEARN_MORE');
   String get LEFT_ACTION => _getKey('LEFT_ACTION');
+  String get LEGACY_AUTHENTICATION => _getKey('LEGACY_AUTHENTICATION');
   String get LIBRARY_TABS_REORDER => _getKey('LIBRARY_TABS_REORDER');
   String get LIBRARY_TABS => _getKey('LIBRARY_TABS');
   String get LIKE => _getKey('LIKE');
@@ -373,6 +375,7 @@ abstract class LanguageKeys {
   String get LOAD_ALL => _getKey('LOAD_ALL');
   String get LOCAL => _getKey('LOCAL');
   String get LOCAL_VIDEO_MATCHING => _getKey('LOCAL_VIDEO_MATCHING');
+  String get LOGIN => _getKey('LOGIN');
   String get LONG_PRESS_ACTION => _getKey('LONG_PRESS_ACTION');
   String get LONG_PRESS_THE_LYRICS_TO_ENTER_FULLSCREEN => _getKey('LONG_PRESS_THE_LYRICS_TO_ENTER_FULLSCREEN');
   String get LOST_MEMORIES => _getKey('LOST_MEMORIES');
@@ -461,6 +464,7 @@ abstract class LanguageKeys {
   String get NORMALIZE_AUDIO_SUBTITLE => _getKey('NORMALIZE_AUDIO_SUBTITLE');
   String get NOTIFICATION => _getKey('NOTIFICATION');
   String get NOT_AVAILABLE_FOR_YOUR_DEVICE => _getKey('NOT_AVAILABLE_FOR_YOUR_DEVICE');
+  String get NOT_SUPPORTED_FOR_NETWORK_FILES => _getKey('NOT_SUPPORTED_FOR_NETWORK_FILES');
   String get NO_CHANGES_FOUND => _getKey('NO_CHANGES_FOUND');
   String get NO_ENOUGH_TRACKS => _getKey('NO_ENOUGH_TRACKS');
   String get NO_EXCLUDED_FOLDERS => _getKey('NO_EXCLUDED_FOLDERS');
@@ -509,6 +513,7 @@ abstract class LanguageKeys {
   String get PALETTE_SELECTED_MIX => _getKey('PALETTE_SELECTED_MIX');
   String get PARALLEL_DOWNLOADS => _getKey('PARALLEL_DOWNLOADS');
   String get PARSED => _getKey('PARSED');
+  String get PASSWORD => _getKey('PASSWORD');
   String get PATH => _getKey('PATH');
   String get PAUSE => _getKey('PAUSE');
   String get PAUSE_FADE_DURATION => _getKey('PAUSE_FADE_DURATION');
@@ -686,6 +691,7 @@ abstract class LanguageKeys {
   String get SKIP_SPONSOR_SEGMENTS_IN_VIDEOS => _getKey('SKIP_SPONSOR_SEGMENTS_IN_VIDEOS');
   String get SLEEP_AFTER => _getKey('SLEEP_AFTER');
   String get SLEEP_TIMER => _getKey('SLEEP_TIMER');
+  String get SOME_WEB_SERVERS_REQUIRE_AUTHENTICATION => _getKey('SOME_WEB_SERVERS_REQUIRE_AUTHENTICATION');
   String get SORT_BY => _getKey('SORT_BY');
   String get SOURCE => _getKey('SOURCE');
   String get SPEED => _getKey('SPEED');

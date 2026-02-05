@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -19,6 +20,7 @@ class FolderTile extends StatefulWidget {
   final FoldersController controller;
   final List<Track> tracks;
   final bool isTracksRecursive;
+  final bool isHome;
   final int dirInsideCount;
   final String? subtitle;
 
@@ -28,6 +30,7 @@ class FolderTile extends StatefulWidget {
     required this.controller,
     required this.tracks,
     required this.isTracksRecursive,
+    required this.isHome,
     required this.dirInsideCount,
     this.subtitle,
   });
@@ -93,6 +96,30 @@ class _FolderTileState extends State<FolderTile> {
     final double iconSize = (settings.trackThumbnailSizeinList.value / 1.35).clampDouble(0, settings.trackListTileHeight.value);
     final double thumbSize = (settings.trackThumbnailSizeinList.value / 2.6).clampDouble(0, settings.trackListTileHeight.value * 0.5);
     final extraInfo = _getFolderExtraInfo(widget.folder);
+
+    String folderTitle = widget.folder.folderName;
+    Widget? trailingWidget;
+    if (widget.isHome) {
+      try {
+        if (folderTitle.startsWith('http')) {
+          final server = DirectoryIndexServer.parseFromEncodedUrlPath(folderTitle);
+          folderTitle = [
+            server.source,
+            [
+              server.type.toText(),
+              server.username,
+            ].join(' - ')
+          ].join('\n');
+          final assetImagePath = server.type.toAssetImage();
+          trailingWidget = assetImagePath == null
+              ? null
+              : Image.asset(
+                  assetImagePath,
+                  height: 20.0,
+                );
+        }
+      } catch (_) {}
+    }
 
     final subtitleTextStyle = textTheme.displaySmall?.copyWith(fontSize: 12.0);
     final subtitleFirstPart = widget.tracks.isEmpty
@@ -212,7 +239,7 @@ class _FolderTileState extends State<FolderTile> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                widget.folder.folderName,
+                                folderTitle,
                                 style: textTheme.displayMedium,
                               ),
                               Text(
@@ -222,7 +249,7 @@ class _FolderTileState extends State<FolderTile> {
                             ],
                           )
                         : Text(
-                            widget.folder.folderName,
+                            folderTitle,
                             style: textTheme.displayMedium,
                           ),
                     if (widget.subtitle != null)
@@ -243,6 +270,10 @@ class _FolderTileState extends State<FolderTile> {
                   ],
                 ),
               ),
+              if (trailingWidget != null) ...[
+                const SizedBox(width: 2.0),
+                trailingWidget,
+              ],
               const SizedBox(
                 width: 2.0,
               ),

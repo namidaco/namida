@@ -161,6 +161,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                                 tracks: tracks,
                                                 isTracksRecursive: isTracksRecursive,
                                                 dirInsideCount: dirInsideCount,
+                                                isHome: isHome,
                                               );
                                             },
                                           ),
@@ -247,6 +248,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                                     tracks: tracks,
                                                     isTracksRecursive: isTracksRecursive,
                                                     dirInsideCount: dirInsideCount,
+                                                    isHome: true,
                                                   );
                                                 },
                                               );

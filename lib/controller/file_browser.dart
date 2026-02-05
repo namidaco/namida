@@ -8,6 +8,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -1020,6 +1021,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
               ),
               Row(
                 children: [
+                  const SizedBox(width: 4.0),
                   IconButton(
                     onPressed: () {
                       _onSelectionComplete(<T>[]);
@@ -1029,6 +1031,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                       size: 24.0,
                     ),
                   ),
+                  const SizedBox(width: 4.0),
                   Expanded(
                     child: widget.note != ''
                         ? Text(
@@ -1079,7 +1082,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                       return lang.PLEASE_ENTER_A_NAME;
                                     }
                                     try {
-                                      if (!Directory(value).existsSync()) {
+                                      if (!DirectoryIndexLocal(value).existsSync()) {
                                         return lang.DIRECTORY_DOESNT_EXIST;
                                       }
                                     } catch (e) {

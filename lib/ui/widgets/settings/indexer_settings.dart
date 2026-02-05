@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/backup_controller.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
@@ -21,6 +23,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/pages/subpages/indexer_missing_tracks_subpage.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -97,21 +100,351 @@ class IndexerSettings extends SettingSubpageProvider {
     if (!isInFirstConfigScreen) showRefreshPromptDialog(didModifyFolder);
   }
 
-  Widget addFolderButton(void Function(List<String> dirsPath) onSuccessChoose) {
-    return NamidaButton(
-      icon: Broken.folder_add,
-      text: lang.ADD,
-      onPressed: () async {
-        final folders = await NamidaFileBrowser.pickDirectories(note: lang.ADD_FOLDER);
+  void _reAuthDirIndex(DirectoryIndexServer e) {
+    _pickServerFolder(
+      initialType: e.type,
+      initialDir: e,
+      onSuccessChoose: (dirsPath) {
+        settings.removeFromList(directoriesToScan1: e);
+        MusicWebServerAuthDetails.manager.deleteFromDb(e);
+        settings.save(directoriesToScan: dirsPath);
+      },
+    );
+  }
 
-        if (folders.isEmpty) {
-          snackyy(title: lang.NOTE, message: lang.NO_FOLDER_CHOSEN);
+  void _pickLocalFolder(void Function(List<DirectoryIndex> dirsPath) onSuccessChoose) async {
+    final folders = await NamidaFileBrowser.pickDirectories(note: lang.ADD_FOLDER);
+
+    if (folders.isEmpty) {
+      snackyy(title: lang.NOTE, message: lang.NO_FOLDER_CHOSEN);
+      return;
+    }
+
+    onSuccessChoose(folders.map((e) => DirectoryIndexLocal(e.path)).toList());
+    _maybeShowRefreshPromptDialog(true);
+  }
+
+  void _pickServerFolder({
+    required DirectoryIndexType initialType,
+    DirectoryIndex? initialDir,
+    required void Function(List<DirectoryIndex> dirsPath) onSuccessChoose,
+  }) {
+    // -- uncomment to support in-place selections
+    // final types = List<DirectoryIndexType>.from(DirectoryIndexType.values);
+    // types.remove(DirectoryIndexType.unknown);
+    // types.remove(DirectoryIndexType.local);
+    final types = [initialType];
+
+    final isAuthenticatingRx = false.obs;
+    final possibleErrorRx = Rxn<MusicWebServerError>();
+    final selectedTypeRx = initialType.obs;
+    final legacyAuthRx = false.obs;
+    final urlController = TextEditingController(text: initialDir?.source);
+    final usernameController = TextEditingController(text: initialDir?.username);
+    final passwordController = TextEditingController(text: null);
+    final formKey = GlobalKey<FormState>();
+
+    bool isDuplicated(DirectoryIndexServer dir) {
+      if (initialDir == null) {
+        // -- only if adding new
+        if (settings.directoriesToScan.value.any((element) => element == dir)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    String? emptyValidator(String? value) {
+      value ??= '';
+      if (value.isEmpty) {
+        return lang.EMPTY_VALUE;
+      }
+      return null;
+    }
+
+    String? validator(String? value) {
+      final v = emptyValidator(value);
+      if (v != null) {
+        return v;
+      }
+
+      final url = urlController.text;
+      final username = usernameController.text;
+      final selectedType = selectedTypeRx.value;
+
+      if (initialDir == null) {
+        // -- only if adding new
+        final dir = DirectoryIndexServer(url, selectedType, username);
+        if (isDuplicated(dir)) {
+          return lang.ALREADY_EXISTS;
+        }
+      }
+
+      return null;
+    }
+
+    String? urlValidator(String? value) {
+      final v = validator(value);
+      if (v != null) {
+        return v;
+      }
+      final parsedUri = Uri.tryParse(value!);
+      if (parsedUri == null) {
+        return lang.NAME_CONTAINS_BAD_CHARACTER;
+      }
+      return null;
+    }
+
+    Future<void> authenticate() async {
+      if (formKey.currentState!.validate()) {
+        final url = urlController.text;
+        final username = usernameController.text;
+        final password = passwordController.text;
+        final selectedType = selectedTypeRx.value;
+        final legacyAuth = legacyAuthRx.value;
+
+        final dir = DirectoryIndexServer(url, selectedType, username);
+        if (isDuplicated(dir)) {
           return;
         }
 
-        onSuccessChoose(folders.map((e) => e.path).toList());
+        onSuccessChoose([dir]); // before db cuz this could remove old stuff
+
+        final authInfo = MusicWebServerAuthDetails.create(
+          dir: dir,
+          password: password,
+          legacyAuth: legacyAuth,
+        );
+        await authInfo.saveToDb(dir);
+        possibleErrorRx.value = await dir.toWebServer()?.ping();
+        if (possibleErrorRx.value != null) {
+          return;
+        }
+
         _maybeShowRefreshPromptDialog(true);
+
+        NamidaNavigator.inst.closeDialog();
+      }
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        isAuthenticatingRx.close();
+        possibleErrorRx.close();
+        selectedTypeRx.close();
+        legacyAuthRx.close();
+        urlController.dispose();
+        usernameController.dispose();
+        passwordController.dispose();
       },
+      dialogBuilder: (theme) => Form(
+        key: formKey,
+        child: CustomBlurryDialog(
+          theme: theme,
+          normalTitleStyle: true,
+          title: lang.CONFIGURE,
+          actions: [
+            ObxO(
+              rx: isAuthenticatingRx,
+              builder: (context, isAuthenticating) => AnimatedEnabled(
+                enabled: !isAuthenticating,
+                child: const CancelButton(),
+              ),
+            ),
+            ObxO(
+              rx: isAuthenticatingRx,
+              builder: (context, isAuthenticating) => AnimatedEnabled(
+                enabled: !isAuthenticating,
+                child: NamidaButton(
+                  text: lang.ADD,
+                  onPressed: authenticate,
+                ),
+              ),
+            ),
+          ],
+          child: ObxO(
+            rx: selectedTypeRx,
+            builder: (context, selectedType) {
+              late final demoInfo = selectedType.toDemoInfo();
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: types
+                          .map(
+                            (e) {
+                              final isSelected = e == selectedType;
+                              final assetImagePath = e.toAssetImage();
+                              final assetWidget = assetImagePath == null
+                                  ? null
+                                  : Image.asset(
+                                      assetImagePath,
+                                      height: 24.0,
+                                    );
+                              final color = e.toColor(theme);
+                              return Expanded(
+                                child: NamidaInkWell(
+                                  alignment: Alignment.center,
+                                  animationDurationMS: 200,
+                                  borderRadius: 8.0,
+                                  bgColor: color.withValues(alpha: 0.2),
+                                  padding: const EdgeInsets.all(8.0),
+                                  decoration: BoxDecoration(
+                                    border: isSelected
+                                        ? Border.all(
+                                            color: color.withValues(alpha: 0.6),
+                                            width: 1.2,
+                                          )
+                                        : null,
+                                    borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                                  ),
+                                  onTap: () {
+                                    selectedTypeRx.value = e;
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      if (assetWidget != null) ...[
+                                        assetWidget,
+                                        const SizedBox(width: 12.0),
+                                      ],
+                                      Flexible(
+                                        child: Text(
+                                          e.toText(),
+                                          style: theme.textTheme.displayMedium,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                          .addSeparators(
+                            separator: SizedBox(width: 8.0),
+                            skipFirst: 1,
+                          )
+                          .toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 12.0),
+                  NamidaContainerDivider(
+                    margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                  ),
+                  const SizedBox(height: 12.0),
+                  ObxO(
+                    rx: legacyAuthRx,
+                    builder: (context, value) => CustomSwitchListTile(
+                      visualDensity: VisualDensity.compact,
+                      title: lang.LEGACY_AUTHENTICATION,
+                      value: value,
+                      onChanged: (_) => legacyAuthRx.toggle(),
+                    ),
+                  ),
+                  const SizedBox(height: 12.0),
+                  CustomTagTextField(
+                    controller: urlController,
+                    hintText: initialDir?.source ?? demoInfo?.url ?? '',
+                    labelText: 'URL',
+                    validator: urlValidator,
+                  ),
+                  const SizedBox(height: 12.0),
+                  CustomTagTextField(
+                    controller: usernameController,
+                    hintText: initialDir?.username ?? demoInfo?.username ?? '',
+                    labelText: lang.LOGIN,
+                    validator: validator,
+                  ),
+                  const SizedBox(height: 12.0),
+                  CustomTagTextField(
+                    controller: passwordController,
+                    hintText: initialDir != null ? '' : demoInfo?.password ?? '',
+                    labelText: lang.PASSWORD,
+                    validator: emptyValidator,
+                    obscureText: true,
+                    maxLines: 1,
+                    keyboardType: TextInputType.visiblePassword,
+                  ),
+                  const SizedBox(height: 8.0),
+                  ObxO(
+                    rx: possibleErrorRx,
+                    builder: (context, err) => err == null
+                        ? const SizedBox()
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              NamidaContainerDivider(
+                                margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                              ),
+                              const SizedBox(height: 12.0),
+                              Text(
+                                "${lang.ERROR}: ${err.code}\n${err.message}",
+                                style: context.textTheme.displayMedium?.copyWith(
+                                  color: const Color.fromARGB(255, 221, 69, 58),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 12.0),
+                            ],
+                          ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _promptAddFolderType(void Function(List<DirectoryIndex> dirsPath) onSuccessChoose) {
+    final types = List<DirectoryIndexType>.from(DirectoryIndexType.values);
+    types.remove(DirectoryIndexType.unknown);
+    NamidaNavigator.inst.navigateDialog(
+      dialogBuilder: (theme) => CustomBlurryDialog(
+        theme: theme,
+        normalTitleStyle: true,
+        title: lang.CHOOSE,
+        actions: const [
+          CancelButton(),
+        ],
+        child: Column(
+          children: types.map(
+            (e) {
+              final assetImagePath = e.toAssetImage();
+              final assetWidget = assetImagePath == null
+                  ? null
+                  : Image.asset(
+                      assetImagePath,
+                      height: 24.0,
+                    );
+              return CustomListTile(
+                visualDensity: VisualDensity.compact,
+                icon: assetWidget != null ? null : e.toIcon(),
+                leading: assetWidget,
+                title: e.toText(),
+                subtitle: e.toSubtitle(),
+                onTap: () async {
+                  NamidaNavigator.inst.closeDialog();
+                  switch (e) {
+                    case DirectoryIndexType.local:
+                      _pickLocalFolder(onSuccessChoose);
+                    case DirectoryIndexType.subsonic:
+                      _pickServerFolder(initialType: e, onSuccessChoose: onSuccessChoose);
+                    case DirectoryIndexType.unknown:
+                  }
+                },
+              );
+            },
+          ).toList(),
+        ),
+      ),
     );
   }
 
@@ -189,79 +522,127 @@ class IndexerSettings extends SettingSubpageProvider {
       child: Obx(
         (context) {
           final mediaStoreEnabled = settings.useMediaStore.valueR;
-          return AnimatedOpacity(
-            duration: const Duration(milliseconds: 200),
-            opacity: mediaStoreEnabled ? 0.5 : 1.0,
-            child: NamidaExpansionTile(
-              bgColor: getBgColor(_IndexerSettingsKeys.foldersToScan),
-              subtitleText: mediaStoreEnabled ? lang.MEDIA_STORE_IS_ENABLED_THIS_WILL_HAVE_NO_EFFECT : null,
-              bigahh: true,
-              compact: false,
-              initiallyExpanded: initiallyExpanded,
-              icon: Broken.folder,
-              titleText: lang.LIST_OF_FOLDERS,
-              textColor: textTheme.displayLarge!.color,
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IgnorePointer(
-                    ignoring: settings.useMediaStore.valueR,
-                    child: addFolderButton((dirsPath) {
-                      settings.save(directoriesToScan: dirsPath);
-                    }),
-                  ),
-                  const SizedBox(width: 8.0),
-                  const Icon(Broken.arrow_down_2),
-                ],
-              ),
+          return NamidaExpansionTile(
+            bgColor: getBgColor(_IndexerSettingsKeys.foldersToScan),
+            bigahh: false,
+            compact: false,
+            childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+            initiallyExpanded: initiallyExpanded || initialItem == _IndexerSettingsKeys.foldersToScan,
+            icon: Broken.folder,
+            titleText: lang.LIST_OF_FOLDERS,
+            textColor: textTheme.displayLarge!.color,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                ...settings.directoriesToScan.valueR.map(
-                  (e) => IgnorePointer(
-                    ignoring: settings.useMediaStore.value,
-                    child: ListTile(
-                      title: Text(
-                        e,
-                        style: textTheme.displayMedium,
-                      ),
-                      trailing: TextButton(
-                        onPressed: () {
-                          if (settings.directoriesToScan.length == 1) {
-                            snackyy(
-                              title: lang.MINIMUM_ONE_ITEM,
-                              message: lang.MINIMUM_ONE_FOLDER_SUBTITLE,
-                              displayDuration: SnackDisplayDuration.veryLong,
-                            );
-                          } else {
-                            NamidaNavigator.inst.navigateDialog(
-                              dialog: CustomBlurryDialog(
-                                normalTitleStyle: true,
-                                isWarning: true,
-                                actions: [
-                                  const CancelButton(),
-                                  NamidaButton(
-                                    text: lang.REMOVE,
-                                    onPressed: () {
-                                      settings.removeFromList(directoriesToScan1: e);
-                                      NamidaNavigator.inst.closeDialog();
-                                      _maybeShowRefreshPromptDialog(true);
-                                    },
-                                  ),
-                                ],
-                                bodyText: "${lang.REMOVE} \"$e\"?",
-                              ),
-                            );
-                          }
-                        },
-                        child: NamidaButtonText(
-                          lang.REMOVE.toUpperCase(),
-                          style: const TextStyle(fontSize: 14.0),
-                        ),
-                      ),
-                    ),
-                  ),
+                NamidaButton(
+                  icon: Broken.folder_add,
+                  text: lang.ADD,
+                  onPressed: () {
+                    _promptAddFolderType((dirsPath) {
+                      settings.save(directoriesToScan: dirsPath);
+                    });
+                  },
                 ),
+                const SizedBox(width: 8.0),
+                const Icon(Broken.arrow_down_2),
               ],
             ),
+            children: [
+              ...settings.directoriesToScan.valueR.map(
+                (e) {
+                  final assetImagePath = e.type.toAssetImage();
+                  final assetWidget = assetImagePath == null
+                      ? null
+                      : Image.asset(
+                          assetImagePath,
+                          height: 20.0,
+                        );
+                  final isServer = e is DirectoryIndexServer;
+                  return CustomListTile(
+                    visualDensity: VisualDensity.compact,
+                    leading: assetWidget ??
+                        Icon(
+                          e.type.toIcon(),
+                          size: 20.0,
+                        ),
+                    title: e.source,
+                    subtitle: isServer
+                        ? [
+                            e.type.toText(),
+                            e.username,
+                          ].joinText(separator: ' - ')
+                        : mediaStoreEnabled
+                            ? lang.MEDIA_STORE_IS_ENABLED_THIS_WILL_HAVE_NO_EFFECT
+                            : null,
+                    trailingRaw: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isServer)
+                          IconButton(
+                            onPressed: () => _reAuthDirIndex(e),
+                            icon: Obx(
+                              (context) {
+                                final hasAuth = MusicWebServerAuthDetails.manager.dirHasAuthInfoR(e);
+                                return hasAuth
+                                    ? const Icon(
+                                        Broken.lock,
+                                        size: 20.0,
+                                      )
+                                    : const StackedIcon(
+                                        baseIcon: Broken.lock,
+                                        iconSize: 20.0,
+                                        secondaryIcon: Broken.danger,
+                                        secondaryIconSize: 13.0,
+                                      );
+                              },
+                            ),
+                          ),
+                        TextButton(
+                          onPressed: () {
+                            if (settings.directoriesToScan.length == 1) {
+                              snackyy(
+                                title: lang.MINIMUM_ONE_ITEM,
+                                message: lang.MINIMUM_ONE_FOLDER_SUBTITLE,
+                                displayDuration: SnackDisplayDuration.veryLong,
+                              );
+                            } else {
+                              String bodyText = "${lang.REMOVE} \"${e.source}\"?";
+                              if (e.isServer) {
+                                final title = '${e.type.toText()} - ${e.username ?? '?'}';
+                                bodyText += "\n$title";
+                              }
+                              NamidaNavigator.inst.navigateDialog(
+                                dialog: CustomBlurryDialog(
+                                  normalTitleStyle: true,
+                                  isWarning: true,
+                                  actions: [
+                                    const CancelButton(),
+                                    NamidaButton(
+                                      text: lang.REMOVE,
+                                      onPressed: () {
+                                        settings.removeFromList(directoriesToScan1: e);
+                                        if (isServer) MusicWebServerAuthDetails.manager.deleteFromDb(e);
+                                        NamidaNavigator.inst.closeDialog();
+                                        _maybeShowRefreshPromptDialog(true);
+                                      },
+                                    ),
+                                  ],
+                                  bodyText: bodyText,
+                                ),
+                              );
+                            }
+                          },
+                          child: NamidaButtonText(
+                            lang.REMOVE.toUpperCase(),
+                            style: const TextStyle(fontSize: 14.0),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
           );
         },
       ),
@@ -279,18 +660,25 @@ class IndexerSettings extends SettingSubpageProvider {
         rx: settings.directoriesToExclude,
         builder: (context, directoriesToExclude) => NamidaExpansionTile(
           bgColor: getBgColor(_IndexerSettingsKeys.foldersToExclude),
-          bigahh: true,
+          bigahh: false,
           compact: false,
-          initiallyExpanded: initiallyExpanded,
+          childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+          initiallyExpanded: initiallyExpanded || initialItem == _IndexerSettingsKeys.foldersToExclude,
           icon: Broken.folder_minus,
           titleText: lang.EXCLUDED_FODLERS,
           textColor: textTheme.displayLarge!.color,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              addFolderButton((dirsPath) {
-                settings.save(directoriesToExclude: dirsPath);
-              }),
+              NamidaButton(
+                icon: Broken.folder_add,
+                text: lang.ADD,
+                onPressed: () {
+                  _pickLocalFolder((dirsPath) {
+                    settings.save(directoriesToExclude: dirsPath);
+                  });
+                },
+              ),
               const SizedBox(width: 8.0),
               const Icon(Broken.arrow_down_2),
             ],
@@ -306,12 +694,10 @@ class IndexerSettings extends SettingSubpageProvider {
                 ]
               : [
                   ...directoriesToExclude.map(
-                    (e) => ListTile(
-                      title: Text(
-                        e,
-                        style: textTheme.displayMedium,
-                      ),
-                      trailing: TextButton(
+                    (e) => CustomListTile(
+                      title: e.source,
+                      subtitle: e.username,
+                      trailingRaw: TextButton(
                         onPressed: () {
                           settings.removeFromList(directoriesToExclude1: e);
                           _maybeShowRefreshPromptDialog(true);
@@ -927,21 +1313,47 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder) async {
   final currentFiles = await Indexer.inst.getAudioFiles();
   final newPathsLength = Indexer.inst.getNewFoundPaths(currentFiles).length;
   final deletedPathLength = Indexer.inst.getDeletedPaths(currentFiles).length;
-  if (newPathsLength == 0 && deletedPathLength == 0) {
+  final settingsServers = settings.directoriesToScan.value.allServers();
+  final hasServer = settingsServers.isNotEmpty || allTracksInLibrary.any((element) => element.isNetwork);
+  if (!hasServer && newPathsLength == 0 && deletedPathLength == 0) {
     snackyy(title: lang.NOTE, message: lang.NO_CHANGES_FOUND);
   } else {
+    String bodyText = lang.PROMPT_INDEXING_REFRESH
+        .replaceFirst(
+          '_NEW_FILES_',
+          newPathsLength.toString(),
+        )
+        .replaceFirst(
+          '_DELETED_FILES_',
+          deletedPathLength.toString(),
+        );
+    if (hasServer) {
+      final tracksServers = <String, bool>{};
+      for (final trExt in Indexer.inst.allTracksMappedByPath.values) {
+        final s = trExt.server;
+        if (s != null) {
+          tracksServers[s] ??= false;
+        }
+      }
+      final servers = <DirectoryIndexServer, bool>{};
+      for (final s in settingsServers) {
+        servers[s] = true;
+      }
+      for (final ts in tracksServers.entries) {
+        if (servers.keys.any((element) => element.source == ts.key)) {
+          // already exists and more detailed
+        } else {
+          final dir = DirectoryIndexServer.parseFromEncodedUrlPath(ts.key);
+          servers[dir] ??= ts.value;
+        }
+      }
+      final serversText = servers.keys.toBodyText(stillExistsCallback: (d) => servers[d]);
+      bodyText = '${lang.LOCAL}:\n$bodyText\n\n$serversText';
+    }
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: lang.NOTE,
-        bodyText: lang.PROMPT_INDEXING_REFRESH
-            .replaceFirst(
-              '_NEW_FILES_',
-              newPathsLength.toString(),
-            )
-            .replaceFirst(
-              '_DELETED_FILES_',
-              deletedPathLength.toString(),
-            ),
+        bodyText: bodyText,
         actions: [
           const CancelButton(),
           NamidaButton(
@@ -950,7 +1362,9 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder) async {
               NamidaNavigator.inst.closeDialog();
               await Future.delayed(const Duration(milliseconds: 300));
               VideoController.inst.rescanLocalVideosPaths();
-              await Indexer.inst.refreshLibraryAndCheckForDiff(currentFiles: currentFiles);
+              await Indexer.inst.refreshLibraryAndCheckForDiff(
+                currentFiles: currentFiles,
+              );
             },
           ),
         ],

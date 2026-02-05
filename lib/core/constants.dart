@@ -700,6 +700,8 @@ class AppDirs {
   static final RECENTLY_DELETED = _join(USER_DATA, 'Recently Deleted'); // stores files that was deleted recently
   static String get LOGS_DIRECTORY => _join(USER_DATA, 'Logs');
 
+  static final LOGIN = _join(ROOT_DIR, 'login'); // this should never be accessed/backed up etc.
+
   // ================= Internal Storage =================
   static final SAVED_ARTWORKS = _join(INTERNAL_STORAGE, 'Artworks');
   static final BACKUPS = _join(INTERNAL_STORAGE, 'Backups'); // only one without ending slash.
@@ -908,6 +910,7 @@ const kDummyExtendedTrack = TrackExtended(
   gainData: null,
   albumIdentifierWrapper: null,
   isVideo: false,
+  server: null,
 );
 
 /// Unknown Tag Fields

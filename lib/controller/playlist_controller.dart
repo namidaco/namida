@@ -111,16 +111,19 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
   Future<void> replaceTracksDirectory(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
     String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
-
+    final pathsOnlySet = forThesePathsOnly?.toSet();
+    final existenceCache = <String, bool>{};
     await replaceTheseTracksInPlaylists(
       (e) {
-        final trackPath = e.track.path;
-        if (ensureNewFileExists) {
-          if (!File(getNewPath(trackPath)).existsSync()) return false;
-        }
-        final firstC = forThesePathsOnly != null ? forThesePathsOnly.contains(e.track.path) : true;
-        final secondC = trackPath.startsWith(oldDir);
-        return firstC && secondC;
+        final tr = e.track;
+        return replaceFunctionForUpdatedPaths(
+          tr,
+          oldDir,
+          newDir,
+          pathsOnlySet,
+          ensureNewFileExists,
+          existenceCache,
+        );
       },
       (old) => TrackWithDate(
         dateAdded: old.dateAdded,
@@ -494,11 +497,16 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     String findCommonPath(List<TrackWithDate> tracks) {
       if (tracks.isEmpty) return '';
 
+      // use absolute paths if playlist has network tracks
+      if (tracks[0].track.isNetwork) return '';
+
       String res = "";
       final firstPath = tracks[0].track.path;
       for (int i = 0; i < firstPath.length; i++) {
         for (var twd in tracks) {
-          var s = twd.track.path;
+          var tr = twd.track;
+          if (tr.isNetwork) return '';
+          var s = tr.path;
           if (i >= s.length || firstPath[i] != s[i]) {
             return res;
           }

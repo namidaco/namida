@@ -62,31 +62,6 @@ class NamidaTaggerController {
     );
   }
 
-  Future<File?> copyArtworkToCache({
-    required String trackPath,
-    required TrackExtended trackExtended,
-    required File artworkFile,
-  }) async {
-    final filename = TagsExtractor.buildImageFilename(
-      path: trackPath,
-      identifiers: null,
-      identifierCallback: () => trackExtended.albumIdentifierWrapper?.resolved(),
-      infoCallback: () => (
-        albumName: trackExtended.album,
-        albumArtist: trackExtended.albumArtist,
-        year: trackExtended.year.toString(),
-      ),
-      hashKeyCallback: () => trackExtended.hashKey ?? trackPath.toFastHashKey(),
-    );
-
-    try {
-      return await artworkFile.copy("${AppDirs.ARTWORKS}$filename");
-    } catch (e) {
-      printy(e, isError: true);
-      return null;
-    }
-  }
-
   /// [commentToInsert] is applicable for first track only
   Future<void> updateTracksMetadata({
     required List<Track> tracks,
@@ -150,6 +125,11 @@ class NamidaTaggerController {
               return null;
             }(),
           );
+
+    const kStatsFields = {TagField.mood, TagField.tags, TagField.rating};
+    final shouldEditStats = kStatsFields.any((f) => editedTags[f] != null);
+    late final wantedToEditNonStatsTags = editedTags.keys.any((et) => kStatsFields.contains(et));
+
     final splittersConfigs = SplitArtistGenreConfigsWrapper.settings();
     final tracksMap = <Track, TrackExtended>{};
     for (int i = 0; i < tracks.length; i++) {
@@ -158,51 +138,70 @@ class NamidaTaggerController {
       bool fileExists = false;
       String? error;
 
-      try {
-        fileExists = await file.exists();
-        if (!fileExists) error = 'file not found';
-      } catch (e) {
-        error = e.toString();
-      }
+      if (shouldEditStats && track.isNetwork) {
+        final newStats = await Indexer.inst.updateTrackStats(
+          tracks.first,
+          ratingString: editedTags[TagField.rating],
+          moodsString: editedTags[TagField.mood],
+          tagsString: editedTags[TagField.tags],
+        );
+        onStatsEdit?.call(newStats);
 
-      if (error != null) {
-        printo('Did Update Metadata: false', isError: true);
-        if (onEdit != null) onEdit(false, error, track);
-        continue;
-      }
-
-      await file.executeAndKeepStats(
-        () async {
-          // -- 1. try tagger
-          final didUpdate = await _extractor.writeTags(
-            path: track.path,
-            newTags: newTags,
-            commentToInsert: commentToInsert,
-            oldComment: oldComment,
-          );
-
-          if (didUpdate) {
-            final trExt = track.toTrackExt();
-            final newTrExt = trExt.copyWithTag(tag: newTags, splittersConfigs: splittersConfigs, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
-            tracksMap[track] = newTrExt;
-            if (imageFile != null) await imageFile.copy(newTrExt.pathToImage);
+        if (onEdit != null) {
+          if (wantedToEditNonStatsTags) {
+            error = 'Not Supported for network files';
+            onEdit(false, error, track);
+          } else {
+            onEdit(true, error, track);
           }
-          printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
-          if (onEdit != null) onEdit(didUpdate, error, track);
+        }
+      } else {
+        try {
+          fileExists = await file.exists();
+          if (!fileExists) error = 'file not found';
+        } catch (e) {
+          error = e.toString();
+        }
 
-          // -- update app-related stats even if tags editing failed.
-          if (editedTags[TagField.mood] != null || editedTags[TagField.tags] != null || editedTags[TagField.rating] != null) {
-            final newStats = await Indexer.inst.updateTrackStats(
-              tracks.first,
-              ratingString: editedTags[TagField.rating],
-              moodsString: editedTags[TagField.mood],
-              tagsString: editedTags[TagField.tags],
+        if (error != null) {
+          printo('Did Update Metadata: false', isError: true);
+          if (onEdit != null) onEdit(false, error, track);
+          continue;
+        }
+
+        await file.executeAndKeepStats(
+          () async {
+            // -- 1. try tagger
+            final didUpdate = await _extractor.writeTags(
+              path: track.path,
+              newTags: newTags,
+              commentToInsert: commentToInsert,
+              oldComment: oldComment,
             );
-            onStatsEdit?.call(newStats);
-          }
-        },
-        keepStats: keepFileDates ?? _defaultKeepFileDates,
-      );
+
+            if (didUpdate) {
+              final trExt = track.toTrackExt();
+              final newTrExt = trExt.copyWithTag(tag: newTags, splittersConfigs: splittersConfigs, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
+              tracksMap[track] = newTrExt;
+              if (imageFile != null) await imageFile.copy(newTrExt.pathToImage);
+            }
+            printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
+            if (onEdit != null) onEdit(didUpdate, error, track);
+
+            // -- update app-related stats even if tags editing failed.
+            if (shouldEditStats) {
+              final newStats = await Indexer.inst.updateTrackStats(
+                tracks.first,
+                ratingString: editedTags[TagField.rating],
+                moodsString: editedTags[TagField.mood],
+                tagsString: editedTags[TagField.tags],
+              );
+              onStatsEdit?.call(newStats);
+            }
+          },
+          keepStats: keepFileDates ?? _defaultKeepFileDates,
+        );
+      }
     }
 
     if (onUpdatingTracksStart != null) onUpdatingTracksStart();

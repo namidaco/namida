@@ -15,13 +15,13 @@ import 'package:playlist_manager/playlist_manager.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/core/extensions.dart' show ThumbnailPickerExt;
 
-import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -1066,12 +1066,12 @@ class DirsFileFilterResult {
 }
 
 class DirsFileFilter {
-  final List<String>? directoriesToExclude;
+  final List<DirectoryIndex>? directoriesToExclude;
   final NamidaFileExtensionsWrapper extensions;
   final NamidaFileExtensionsWrapper? imageExtensions;
   final bool strictNoMedia;
 
-  final List<String> _directoriesToScan;
+  final List<DirectoryIndex> _directoriesToScan;
   final bool _respectNoMedia;
 
   DirsFileFilter({
@@ -1130,7 +1130,7 @@ class DirsFileFilter {
             final path = systemEntity.path;
 
             if (fillFolderCovers) {
-              final dirPath = d.path;
+              final dirPath = d.source;
               if (folderCovers[dirPath] == null) {
                 if (imageExtensions.isPathValid(path)) {
                   final filenameCleaned = path.getFilenameWOExt.toLowerCase();
@@ -1143,7 +1143,7 @@ class DirsFileFilter {
             }
 
             // -- skips if the file is included in one of the excluded folders.
-            if (directoriesToExclude != null && directoriesToExclude.any((exc) => path.startsWith(exc))) {
+            if (directoriesToExclude != null && directoriesToExclude.any((exc) => path.startsWith(exc.source))) {
               continue;
             }
 
@@ -1173,32 +1173,31 @@ class DirsFileFilter {
     );
   }
 
-  static Map<Directory, bool> _getAvailableDirectoriesIsolate({required List<String> directoriesToScan, required bool respectNoMedia, required bool strictNoMedia}) {
-    final allAvailableDirectories = <Directory, bool>{};
+  static Map<DirectoryIndex, bool> _getAvailableDirectoriesIsolate({required List<DirectoryIndex> directoriesToScan, required bool respectNoMedia, required bool strictNoMedia}) {
+    final allAvailableDirectories = <DirectoryIndex, bool>{};
 
-    directoriesToScan.loop((dirPath) {
-      final directory = Directory(dirPath);
+    for (final directory in directoriesToScan) {
       try {
         if (directory.existsSync()) {
           allAvailableDirectories[directory] = false;
-          directory.listSyncSafe(recursive: true, followLinks: true).loop((file) {
+          final contents = directory.listSyncSafe(recursive: true, followLinks: true);
+          contents.loop((file) {
             if (file is Directory) {
-              allAvailableDirectories[file] = false;
+              allAvailableDirectories[DirectoryIndexLocal(file.path)] = false;
             }
           });
         }
       } on FileSystemException catch (_) {}
-    });
+    }
 
     /// Assigning directories and sub-subdirectories that has .nomedia.
     if (respectNoMedia) {
       for (final d in allAvailableDirectories.keys) {
-        final hasNoMedia = FileParts.join(d.path, ".nomedia").existsSync();
-        if (hasNoMedia) {
+        if (d.hasNoMedia()) {
           if (strictNoMedia) {
             // strictly applies bool to all subdirectories.
             allAvailableDirectories.forEach((key, value) {
-              if (key.path.startsWith(d.path)) {
+              if (key.source.startsWith(d.source)) {
                 allAvailableDirectories[key] = true;
               }
             });
@@ -2213,4 +2212,21 @@ class _VerticalDivider extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: 2.0),
     );
   }
+}
+
+String _getNewPath(String old, String oldDir, String newDir) => old.replaceFirst(oldDir, newDir);
+bool replaceFunctionForUpdatedPaths(Track tr, String oldDir, String newDir, Set<String>? pathsOnlySet, bool ensureNewFileExists, Map<String, bool> existenceCache) {
+  final trackPath = tr.path;
+
+  if (!trackPath.startsWith(oldDir)) return false;
+
+  if (pathsOnlySet != null && !pathsOnlySet.contains(trackPath)) return false;
+
+  if (ensureNewFileExists) {
+    final newPath = _getNewPath(trackPath, oldDir, newDir);
+    final exists = existenceCache[newPath] ??= Track.explicit(newPath).existsSync();
+    if (!exists) return false;
+  }
+
+  return true;
 }

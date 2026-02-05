@@ -91,6 +91,30 @@ abstract class TagsExtractor {
 
   static Set<AlbumIdentifier> getAlbumIdentifiersSet() => defaultAlbumIdentifier.toSet();
 
+  static String buildImageFilenameFromTrack({required Track track, required TrackExtended? trExt}) {
+    final isNetwork = track.isNetwork;
+    final path = isNetwork
+        ? DownloadTaskFilename.cleanupFilename(
+            [
+              trExt?.originalArtist ?? '',
+              trExt?.title ?? '',
+              MusicWebServer.baseUrlToId(track.path) ?? '',
+            ].joinText(separator: ' - '),
+          )
+        : track.path;
+    return TagsExtractor.buildImageFilename(
+      path: path,
+      identifiers: null,
+      identifierCallback: () => trExt?.albumIdentifierWrapper?.resolved(),
+      infoCallback: () => (
+        albumName: trExt?.album,
+        albumArtist: trExt?.albumArtist,
+        year: trExt?.year.toString(),
+      ),
+      hashKeyCallback: () => trExt?.hashKey ?? path.toFastHashKey(),
+    );
+  }
+
   static String buildImageFilename({
     required String path,
     required Set<AlbumIdentifier>? identifiers,

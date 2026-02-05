@@ -724,7 +724,7 @@ class ExtrasSettings extends SettingSubpageProvider {
               bgColor: getBgColor(_ExtraSettingsKeys.imageSource),
               bigahh: true,
               normalRightPadding: true,
-              initiallyExpanded: false,
+              initiallyExpanded: false || initialItem == _ExtraSettingsKeys.imageSource,
               leading: const StackedIcon(
                 baseIcon: Broken.image,
                 secondaryIcon: Broken.cpu,

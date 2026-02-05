@@ -1442,8 +1442,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               isCached: false,
                                               popOnTap: false,
                                               onPlay: (isSelected) {
+                                                final tr = currentSelectable!.track;
                                                 showSetYTLinkCommentDialog(
-                                                  [currentSelectable!.track],
+                                                  tr,
                                                   CurrentColor.inst.miniplayerColor,
                                                   autoOpenSearch: true,
                                                 );

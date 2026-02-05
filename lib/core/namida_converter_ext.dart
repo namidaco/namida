@@ -30,6 +30,7 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -659,7 +660,12 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
               artwork: const SizedBox(),
               heroTag: info.heroTag,
               imageFile: () => File(track.pathToImage),
-              onSave: (_) => EditDeleteController.inst.saveTrackArtworkToStorage(track),
+              fetchImage: () => Indexer.inst.getArtwork(
+                imagePath: track.pathToImage,
+                track: track,
+                compressed: false,
+              ),
+              onSave: (_, __) => EditDeleteController.inst.saveTrackArtworkToStorage(track),
               themeColor: null,
             );
             details.openInFullscreen();
@@ -674,7 +680,14 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
                 type: ThumbnailType.video,
                 isTemp: null,
               ),
-              onSave: (_) => YTUtils.copyThumbnailToStorage(videoId),
+              fetchImage: () async => (
+                await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+                  id: videoId,
+                  type: ThumbnailType.video,
+                ),
+                null
+              ),
+              onSave: (_, __) => YTUtils.copyThumbnailToStorage(videoId),
               themeColor: null,
             );
             details.openInFullscreen();
@@ -695,14 +708,18 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       case TrackExecuteActions.editTags:
         item.execute(
           selectable: (finalItem) {
-            showEditTracksTagsDialog([finalItem.track], null);
+            final tr = finalItem.track.asPhysicalOrError();
+            if (tr == null) return;
+            showEditTracksTagsDialog([tr], null);
           },
           youtubeID: (finalItem) {},
         );
       case TrackExecuteActions.editArtwork:
         item.execute(
           selectable: (finalItem) {
-            showEditTracksTagsDialog([finalItem.track], null, instantEditArtwork: true);
+            final tr = finalItem.track.asPhysicalOrError();
+            if (tr == null) return;
+            showEditTracksTagsDialog([tr], null, instantEditArtwork: true);
           },
           youtubeID: (finalItem) {},
         );
@@ -1348,6 +1365,7 @@ extension RouteUtils on NamidaRoute {
         route != RouteType.YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE &&
         route != RouteType.YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE;
     final shouldShowProgressPercentage = route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage;
+    const shouldShowMissingServerDirAuth = true;
 
     final name = this.name;
 
@@ -1390,6 +1408,19 @@ extension RouteUtils on NamidaRoute {
           onPressed: () => JsonToHistoryParser.inst.showMissingEntriesDialog(),
         ),
         shouldShow: JsonToHistoryParser.inst.shouldShowMissingEntriesDialog,
+      ),
+
+      _getAnimatedCrossFade(
+        child: ObxO(
+          rx: MusicWebServerAuthDetails.manager.hasMissingAuthRx,
+          builder: (context, missingAuth) => missingAuth
+              ? NamidaAppBarIcon(
+                  icon: Broken.danger,
+                  onPressed: MusicWebServerAuthDetails.manager.promptFillMissingAuthDialog,
+                )
+              : const SizedBox(),
+        ),
+        shouldShow: shouldShowMissingServerDirAuth,
       ),
 
       ObxO(

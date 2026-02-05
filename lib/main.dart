@@ -26,11 +26,13 @@ import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/home_widget_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/controller/platform/app_single_instance/app_single_instance.dart';
@@ -208,6 +210,11 @@ Future<bool> _mainAppInitialization() async {
     if (settings.directoriesToScan.value.isEmpty) {
       final defaultDirs = await _getDefaultDirectoriesToScan(paths);
       settings.directoriesToScan.value.addAll(defaultDirs.toList());
+    } else {
+      final servers = settings.directoriesToScan.value.allServers();
+      if (servers.isNotEmpty) {
+        await MusicWebServerAuthDetails.manager.initialize(servers);
+      }
     }
   } catch (e, st) {
     logger.error('_mainAppInitialization', e: e, st: st);
@@ -306,12 +313,12 @@ Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
   }
 }
 
-Future<Set<String>> _getDefaultDirectoriesToScan(List<String> paths) async {
-  final dirsToScanDefault = <String>{};
+Future<Set<DirectoryIndex>> _getDefaultDirectoriesToScan(List<String> paths) async {
+  final dirsToScanDefault = <DirectoryIndex>{};
   void addDirToScan(String path, {bool ignoreExists = false}) {
     try {
-      if (ignoreExists || Directory(path).existsSync()) {
-        dirsToScanDefault.add(path);
+      if (ignoreExists || DirectoryIndexLocal(path).existsSync()) {
+        dirsToScanDefault.add(DirectoryIndexLocal(path));
       }
     } catch (_) {}
   }
@@ -519,6 +526,13 @@ class _NamidaState extends State<Namida> {
       Duration.zero,
       () => _secondaryAppInitialization(shouldShowOnBoarding),
     );
+
+    if (MusicWebServerAuthDetails.manager.hasMissingAuthRx.value) {
+      Timer(
+        Duration(seconds: 3),
+        MusicWebServerAuthDetails.manager.promptFillMissingAuthDialog,
+      );
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _refreshSystemBarsColors());
     settings.themeMode.addListener(_refreshSystemBarsColors);

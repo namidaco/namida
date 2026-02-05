@@ -3,16 +3,16 @@ import 'dart:isolate';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
-import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -25,7 +25,8 @@ class EditDeleteController {
 
   Future<void> deleteTracksFromStoragePermanently(List<Selectable> tracksToDelete) async {
     if (!await requestManageStoragePermission()) return;
-    final files = tracksToDelete.map((e) => e.track.path).toList();
+    final files = tracksToDelete.map((e) => e.track).mapPhysicalOrError((tr) => tr.path);
+    if (files.isEmpty) return;
     await Isolate.run(() => _deleteAllIsolate(files));
     await Indexer.inst.onDeleteTracksFromStoragePermanently(tracksToDelete);
   }
@@ -107,13 +108,31 @@ class EditDeleteController {
     }
     final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create(recursive: true);
     final saveDirPath = saveDir.path;
-    final info = await NamidaTaggerController.inst.extractMetadata(
-      trackPath: track.path,
-      cacheDirectoryPath: saveDirPath,
-      isVideo: track is Video,
+    final info = await Indexer.inst.getArtwork(
+      compressed: false,
+      imagePath: track.pathToImage,
+      track: track,
     );
-    final imgFile = info.tags.artwork.file;
-    if (imgFile != null) return saveDirPath;
+    final fileToCopy = info.$1;
+    final bytesToCopy = info.$2;
+    if (fileToCopy != null || bytesToCopy != null) {
+      final trExt = track.toTrackExtOrNull();
+      final filename = TagsExtractor.buildImageFilenameFromTrack(
+        track: track,
+        trExt: trExt,
+      );
+      final newImgFilePath = FileParts.joinPath(saveDirPath, filename);
+      if (fileToCopy != null) {
+        await fileToCopy.copy(newImgFilePath);
+        return saveDirPath;
+      } else if (bytesToCopy != null) {
+        final f = File(newImgFilePath);
+        await f.create(recursive: true);
+        await f.writeAsBytes(bytesToCopy);
+        return saveDirPath;
+      }
+    }
+
     return null;
   }
 
@@ -196,8 +215,9 @@ class EditDeleteController {
     }
   }
 
-  Future<void> updateDirectoryInEveryPartOfNamida(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
-    if (!settings.directoriesToScan.value.any((dirPath) => newDir.startsWith(dirPath))) settings.save(directoriesToScan: [newDir]);
+  Future<void> updateDirectoryInEveryPartOfNamida(String oldDir, String newDir, DirectoryIndexType? newDirType,
+      {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
+    if (!settings.directoriesToScan.value.any((dir) => newDir.startsWith(dir.source))) settings.save(directoriesToScan: [DirectoryIndex.guess(newDir, newDirType)]);
     final pathSeparator = Platform.pathSeparator;
     if (!oldDir.endsWith(pathSeparator)) oldDir += pathSeparator;
     if (!newDir.endsWith(pathSeparator)) newDir += pathSeparator;

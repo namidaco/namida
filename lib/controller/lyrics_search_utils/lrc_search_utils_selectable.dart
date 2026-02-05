@@ -14,7 +14,7 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
   const LrcSearchUtilsSelectable(this.trackExt, this.track);
 
   @override
-  String get pickFileInitialDirectory => track.path.getDirectoryPath;
+  String? get pickFileInitialDirectory => track.isNetwork ? null : track.path.getDirectoryPath;
 
   @override
   String get initialSearchTextHint => '${trackExt.originalArtist} - ${trackExt.title}';
@@ -30,6 +30,7 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
 
   @override
   List<File> get deviceLRCFiles {
+    if (track.isNetwork) return [];
     final dirPath = track.path.getDirectoryPath;
     return [
       File(p.join(dirPath, "${track.filename}.lrc")),

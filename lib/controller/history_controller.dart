@@ -10,6 +10,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
@@ -32,15 +33,19 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
 
   Future<void> replaceTracksDirectoryInHistory(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
     String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
+    final pathsOnlySet = forThesePathsOnly?.toSet();
+    final existenceCache = <String, bool>{};
     await replaceTheseTracksInHistory(
       (e) {
-        final trackPath = e.track.path;
-        if (ensureNewFileExists) {
-          if (!File(getNewPath(trackPath)).existsSync()) return false;
-        }
-        final firstC = forThesePathsOnly != null ? forThesePathsOnly.contains(e.track.path) : true;
-        final secondC = trackPath.startsWith(oldDir);
-        return firstC && secondC;
+        final tr = e.track;
+        return replaceFunctionForUpdatedPaths(
+          tr,
+          oldDir,
+          newDir,
+          pathsOnlySet,
+          ensureNewFileExists,
+          existenceCache,
+        );
       },
       (old) => TrackWithDate(
         dateAdded: old.dateAdded,

@@ -254,7 +254,8 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       onMenuOpen: (currentItem, _) => openMenu((currentItem as Selectable).trackWithDate, currentItem.track),
       focusedMenuOptions: (currentItem) => FocusedMenuOptions(
         onSearch: (item) {
-          showSetYTLinkCommentDialog([(item as Selectable).track], CurrentColor.inst.miniplayerColor, autoOpenSearch: true);
+          final tr = (item as Selectable).track;
+          showSetYTLinkCommentDialog(tr, CurrentColor.inst.miniplayerColor, autoOpenSearch: true);
         },
         onOpen: (currentItem) {
           if (settings.enableVideoPlayback.value) return true;

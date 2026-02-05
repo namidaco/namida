@@ -10,12 +10,16 @@ import 'package:namida/class/folder.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 
 part 'album_identifier_wrapper.dart';
@@ -222,6 +226,9 @@ class Track extends Selectable<String> {
   @override
   TrackWithDate? get trackWithDate => null;
 
+  bool get isPhysical => !isNetwork;
+  bool get isNetwork => path.startsWith('http');
+
   final String path;
   const Track.explicit(this.path);
 
@@ -238,6 +245,9 @@ class Track extends Selectable<String> {
   factory Track.fromJson(String path, {required bool isVideo}) {
     return isVideo ? Video.explicit(path) : Track.explicit(path);
   }
+
+  Future<bool> exists() => isNetwork ? Future.value(true) : File(path).exists();
+  bool existsSync() => isNetwork ? true : File(path).existsSync();
 
   @override
   bool operator ==(other) {
@@ -294,6 +304,7 @@ class TrackExtended {
 
   final AlbumIdentifierWrapper? albumIdentifierWrapper;
   final bool isVideo;
+  final String? server;
 
   const TrackExtended({
     required this.title,
@@ -332,6 +343,7 @@ class TrackExtended {
     required this.hashKey,
     required this.albumIdentifierWrapper,
     required this.isVideo,
+    required this.server,
   });
 
   static String _padInt(int val) => val.toString().padLeft(2, '0');
@@ -483,6 +495,7 @@ class TrackExtended {
       hashKey: json['hashKey'],
       albumIdentifierWrapper: json['albumIdentifierWrapper'] == null ? null : AlbumIdentifierWrapper.fromMap(json['albumIdentifierWrapper']),
       isVideo: json['v'] ?? false,
+      server: json['server'],
     );
   }
 
@@ -518,7 +531,8 @@ class TrackExtended {
       if (gainData != null) 'gainData': gainData?.toMap(),
       if (hashKey != null) 'hashKey': hashKey,
       if (albumIdentifierWrapper != null) 'albumIdentifierWrapper': albumIdentifierWrapper?.toMap(),
-      'v': isVideo,
+      if (isVideo) 'v': isVideo,
+      if (server != null) 'server': server,
     };
   }
 
@@ -556,6 +570,15 @@ extension TrackExtUtils on TrackExtended {
       final id = albumIdentifier;
       if (id.isNotEmpty) return id;
     }
+    final filename = this.asTrack().isNetwork
+        ? DownloadTaskFilename.cleanupFilename(
+            [
+              originalArtist,
+              title,
+              MusicWebServer.baseUrlToId(path) ?? '',
+            ].joinText(separator: ' - '),
+          )
+        : this.filename;
     if (TagsExtractor.defaultUniqueArtworkHash) {
       return hashKey != null ? "${filename}_$hashKey" : filename;
     }
@@ -573,7 +596,7 @@ extension TrackExtUtils on TrackExtended {
     }
     var filename = this.filename;
     if (filename.isNotEmpty) {
-      var id = RegExp('[v|id]=(.{11})').firstMatch(filename)?.group(1);
+      var id = RegExp(r'(?:v|id)=([\w-]{11})').firstMatch(filename)?.group(1);
       if (id != null) return 'youtu.be/$id';
     }
     return '';
@@ -625,6 +648,7 @@ extension TrackExtUtils on TrackExtended {
     int? dateModified,
     String? path,
     required bool generatePathHash,
+    String? server,
   }) {
     final finaltitle = tag.title ?? title;
     final finalartists = tag.artist != null
@@ -702,6 +726,7 @@ extension TrackExtUtils on TrackExtended {
       ),
       isVideo: isVideo,
       hashKey: newHashKey,
+      server: server,
     );
   }
 
@@ -744,6 +769,7 @@ extension TrackExtUtils on TrackExtended {
     AlbumIdentifierWrapper? albumIdentifierWrapper,
     bool? isVideo,
     required bool generatePathHash,
+    String? server,
   }) {
     final newPath = path ?? this.path;
     String? newHashKey = TrackExtended.generateHashKeyIfEnabled(path, newPath, this.hashKey);
@@ -784,6 +810,7 @@ extension TrackExtUtils on TrackExtended {
       hashKey: newHashKey,
       albumIdentifierWrapper: albumIdentifierWrapper ?? this.albumIdentifierWrapper,
       isVideo: isVideo ?? this.isVideo,
+      server: server ?? this.server,
     );
   }
 }
@@ -793,6 +820,13 @@ extension TrackUtils on Track {
   TrackExtended toTrackExt() =>
       toTrackExtOrNull() ?? kDummyExtendedTrack.copyWith(title: path.getFilenameWOExt, path: path, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
   TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[path];
+  PhysicalMedia? asPhysical() => isPhysical ? PhysicalMedia.fromTrack(this) : null;
+  PhysicalMedia? asPhysicalOrError() {
+    final p = asPhysical();
+    if (p != null) return p;
+    _showErrorForNetworkTracks();
+    return null;
+  }
 
   String get yearPreferyyyyMMdd => toTrackExt().yearPreferyyyyMMdd;
 
@@ -850,7 +884,7 @@ extension TrackUtils on Track {
   String get filename => path.getFilename;
   String get filenameWOExt => path.getFilenameWOExt;
   String get extension => path.getExtension;
-  String get folderPath => path.getDirectoryPath;
+  String get folderPath => isNetwork ? DirectoryIndexServer.parseFromEncodedUrlPath(path).toDbKey() : path.getDirectoryPath;
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
     final identifier = this.cacheKey;
@@ -871,4 +905,69 @@ extension TrackUtils on Track {
   String getAlbumIdentifier(List<AlbumIdentifier> identifiers) => toTrackExt().getAlbumIdentifier(identifiers);
 
   ReplayGainData? get gainData => toTrackExt().gainData;
+}
+
+extension TrackListUtils on List<Track> {
+  List<PhysicalMedia> asPhysical() => where((element) => element.isPhysical).map((e) => PhysicalMedia.fromTrack(e)).toList();
+  List<PhysicalMedia> asPhysicalOrError() {
+    final p = asPhysical();
+    final diff = this.length - p.length;
+    if (diff > 0) {
+      _showErrorForNetworkTracks(diff, this.length);
+    }
+    return p;
+  }
+}
+
+extension TrackIterableUtils on Iterable<Track> {
+  List<PhysicalMedia> mapAsPhysical() {
+    return mapPhysical((tr) => PhysicalMedia.fromTrack(tr));
+  }
+
+  List<T> mapPhysical<T>(T Function(Track tr) callback) {
+    final pListRes = <T>[];
+    for (final tr in this) {
+      if (tr.isPhysical) {
+        pListRes.add(callback(tr));
+      }
+    }
+    return pListRes;
+  }
+
+  List<PhysicalMedia> mapAsPhysicalOrError() {
+    return mapPhysicalOrError((tr) => PhysicalMedia.fromTrack(tr));
+  }
+
+  List<T> mapPhysicalOrError<T>(T Function(Track tr) callback) {
+    int totalCount = 0;
+    final pListRes = <T>[];
+    for (final tr in this) {
+      totalCount++;
+      if (tr.isPhysical) {
+        pListRes.add(callback(tr));
+      }
+    }
+    final diff = totalCount - pListRes.length;
+    if (diff > 0) {
+      _showErrorForNetworkTracks(diff, totalCount);
+    }
+    return pListRes;
+  }
+}
+
+class PhysicalMedia extends Track {
+  const PhysicalMedia.explicit(super.path) : super.explicit();
+  factory PhysicalMedia.fromTrack(Track tr) => PhysicalMedia.explicit(tr.path);
+}
+
+void _showErrorForNetworkTracks([int? count, int? totalCount]) {
+  var msg = lang.NOT_SUPPORTED_FOR_NETWORK_FILES;
+  if (count != null && count > 1) {
+    final totalCountText = totalCount == null ? '' : '/$totalCount';
+    msg = '$msg: $count$totalCountText';
+  }
+  snackyy(
+    message: msg,
+    isError: true,
+  );
 }

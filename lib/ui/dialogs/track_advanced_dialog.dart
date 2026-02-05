@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:isolate';
 import 'dart:math' as math;
 
@@ -60,19 +59,17 @@ void showTrackAdvancedDialog({
 
   final willUpdateArtwork = false.obs;
 
-  final firstTrackExists = File(tracks.first.track.path).existsSync(); // sync is faster
-
   final reIndexedTracksSuccessful = 0.obs;
   final reIndexedTracksFailed = 0.obs;
   final shouldShowReIndexProgress = false.obs;
   final shouldReIndexEnabled = true.obs;
 
-  final tracksUniqued = tracks.uniqued((element) => element.track);
+  final tracksUniquedPhysical = tracks.map((element) => element.track).mapAsPhysical()..removeDuplicates();
+  final firstTrackPhysicalExists = tracksUniquedPhysical.firstOrNull?.track.existsSync() ?? false; // sync is faster
+  final firstTracksDirectoryPath = tracksUniquedPhysical.firstOrNull?.track.path.getDirectoryPath;
 
-  final firstTracksDirectoryPath = tracksUniqued.first.track.path.getDirectoryPath;
-
-  final videosOnlyCount = tracks.fold(0, (previousValue, element) => previousValue + (element.track is Video ? 1 : 0));
-  final tracksOnlyCount = tracks.length - videosOnlyCount;
+  final videosOnlyCount = tracksUniquedPhysical.fold(0, (previousValue, element) => previousValue + (element.track is Video ? 1 : 0));
+  final tracksOnlyCount = tracksUniquedPhysical.length - videosOnlyCount;
 
   final canShowClearDialogRx = true.obs;
 
@@ -118,22 +115,23 @@ void showTrackAdvancedDialog({
               ),
             ),
           ),
-          CustomListTile(
-            passedColor: colorScheme,
-            title: lang.DELETE,
-            subtitle: lang.DELETE_N_TRACKS_FROM_STORAGE.replaceFirst(
-                '_NUM_',
-                [
-                  if (tracksOnlyCount > 0) tracksOnlyCount.displayTrackKeyword,
-                  if (videosOnlyCount > 0) videosOnlyCount.displayVideoKeyword,
-                ].join(' & ').addDQuotation()),
-            icon: Broken.danger,
-            onTap: () => showTrackDeletePermanentlyDialog(
-              tracks,
-              colorScheme,
-              afterConfirm: () => NamidaNavigator.inst.closeDialog(2),
+          if (tracksOnlyCount > 0 || videosOnlyCount > 0)
+            CustomListTile(
+              passedColor: colorScheme,
+              title: lang.DELETE,
+              subtitle: lang.DELETE_N_TRACKS_FROM_STORAGE.replaceFirst(
+                  '_NUM_',
+                  [
+                    if (tracksOnlyCount > 0) tracksOnlyCount.displayTrackKeyword,
+                    if (videosOnlyCount > 0) videosOnlyCount.displayVideoKeyword,
+                  ].join(' & ').addDQuotation()),
+              icon: Broken.danger,
+              onTap: () => showTrackDeletePermanentlyDialog(
+                tracks,
+                colorScheme,
+                afterConfirm: () => NamidaNavigator.inst.closeDialog(2),
+              ),
             ),
-          ),
           if (sourcesMap.isNotEmpty)
             CustomListTile(
               passedColor: colorScheme,
@@ -144,13 +142,13 @@ void showTrackAdvancedDialog({
             ),
 
           // -- Updating directory path option, only for tracks whithin the same parent directory.
-          if (!isSingle && tracksUniqued.every((element) => element.track.path.startsWith(firstTracksDirectoryPath)))
+          if (!isSingle && firstTracksDirectoryPath != null && tracksUniquedPhysical.every((element) => element.track.path.startsWith(firstTracksDirectoryPath)))
             UpdateDirectoryPathListTile(
               colorScheme: colorScheme,
               oldPath: firstTracksDirectoryPath,
-              tracksPaths: tracksUniqued.map((e) => e.track.path),
+              tracksPaths: tracksUniquedPhysical.map((e) => e.track.path),
             ),
-          if (NamidaFeaturesVisibility.methodSetMusicAs && isSingle && firstTrackExists)
+          if (NamidaFeaturesVisibility.methodSetMusicAs && isSingle && firstTrackPhysicalExists)
             CustomListTile(
               visualDensity: VisualDensity.compact,
               passedColor: colorScheme,
@@ -198,43 +196,44 @@ void showTrackAdvancedDialog({
                 );
               },
             ),
-          Obx(
-            (context) {
-              final shouldShow = shouldShowReIndexProgress.valueR;
-              final errors = reIndexedTracksFailed.valueR;
-              final secondLine = errors > 0 ? '\n${lang.ERROR}: $errors' : '';
-              return CustomListTile(
-                enabled: shouldReIndexEnabled.valueR,
-                passedColor: colorScheme,
-                title: lang.RE_INDEX,
-                icon: Broken.direct_inbox,
-                subtitle: shouldShow ? "${reIndexedTracksSuccessful.valueR}/${tracksUniqued.length}$secondLine" : null,
-                trailingRaw: NamidaInkWell(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
-                  bgColor: theme.cardColor,
-                  onTap: () => willUpdateArtwork.toggle(),
-                  child: Obx((context) => Text('${lang.ARTWORK}  ${willUpdateArtwork.valueR ? '✓' : 'x'}')),
-                ),
-                onTap: () async {
-                  await Indexer.inst.reindexTracks(
-                    tracks: tracksUniqued,
-                    updateArtwork: willUpdateArtwork.value,
-                    tryExtractingFromFilename: false,
-                    onProgress: (didExtract) {
-                      shouldReIndexEnabled.value = false;
-                      shouldShowReIndexProgress.value = true;
-                      if (didExtract) {
-                        reIndexedTracksSuccessful.value++;
-                      } else {
-                        reIndexedTracksFailed.value++;
-                      }
-                    },
-                    onFinish: (tracksLength) {},
-                  );
-                },
-              );
-            },
-          ),
+          if (tracksUniquedPhysical.isNotEmpty)
+            Obx(
+              (context) {
+                final shouldShow = shouldShowReIndexProgress.valueR;
+                final errors = reIndexedTracksFailed.valueR;
+                final secondLine = errors > 0 ? '\n${lang.ERROR}: $errors' : '';
+                return CustomListTile(
+                  enabled: shouldReIndexEnabled.valueR,
+                  passedColor: colorScheme,
+                  title: lang.RE_INDEX,
+                  icon: Broken.direct_inbox,
+                  subtitle: shouldShow ? "${reIndexedTracksSuccessful.valueR}/${tracksUniquedPhysical.length}$secondLine" : null,
+                  trailingRaw: NamidaInkWell(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+                    bgColor: theme.cardColor,
+                    onTap: () => willUpdateArtwork.toggle(),
+                    child: Obx((context) => Text('${lang.ARTWORK}  ${willUpdateArtwork.valueR ? '✓' : 'x'}')),
+                  ),
+                  onTap: () async {
+                    await Indexer.inst.reindexTracks(
+                      tracks: tracksUniquedPhysical,
+                      updateArtwork: willUpdateArtwork.value,
+                      tryExtractingFromFilename: false,
+                      onProgress: (didExtract) {
+                        shouldReIndexEnabled.value = false;
+                        shouldShowReIndexProgress.value = true;
+                        if (didExtract) {
+                          reIndexedTracksSuccessful.value++;
+                        } else {
+                          reIndexedTracksFailed.value++;
+                        }
+                      },
+                      onFinish: (tracksLength) {},
+                    );
+                  },
+                );
+              },
+            ),
 
           if (source == QueueSource.history && isSingle)
             CustomListTile(

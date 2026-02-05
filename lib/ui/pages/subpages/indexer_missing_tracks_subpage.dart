@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
@@ -193,7 +192,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
     String? getSuggestion(String path) {
       final all = NamidaGenerator.getHighMatcheFilesFromFilename(allAudioFiles, path);
       for (final p in all) {
-        if (File(p).existsSync()) return p;
+        if (Track.explicit(p).existsSync()) return p;
       }
       return null;
     }
@@ -203,7 +202,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
 
     // ignore: no_leading_underscores_for_local_identifiers
     void _onAdd(String path) {
-      final exists = File(path).existsSync();
+      final exists = Track.explicit(path).existsSync();
       if (!exists) {
         missingTracksPaths.add(path);
         missingTracksSuggestions[path] = getSuggestion(path);
