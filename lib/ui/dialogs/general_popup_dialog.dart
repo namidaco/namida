@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -1578,7 +1579,7 @@ class _ArtworkManager extends StatelessWidget {
                                                         ],
                                                       );
                                                     },
-                                                    duration: Duration(milliseconds: 200),
+                                                    duration: const Duration(milliseconds: 200),
                                                     child: bytes == null
                                                         ? ColoredBox(
                                                             color: theme.cardColor,
@@ -1586,8 +1587,15 @@ class _ArtworkManager extends StatelessWidget {
                                                         : TapDetector(
                                                             onTap: () async {
                                                               NamidaNavigator.inst.closeDialog();
+                                                              Uint8List? fullResbytes;
                                                               try {
-                                                                await customArtworkManager.setArtworkFile(null, bytes);
+                                                                final fullResUrl = url.replaceAll(RegExp(r'\/i\/u\/(.+)\/'), '/i/u/ar0/');
+                                                                final res = await Rhttp.getBytes(fullResUrl);
+                                                                fullResbytes = res.body;
+                                                              } catch (_) {}
+
+                                                              try {
+                                                                await customArtworkManager.setArtworkFile(null, fullResbytes ?? bytes);
                                                                 showSnackInfo();
                                                               } catch (e) {
                                                                 showSnackInfo(e);
