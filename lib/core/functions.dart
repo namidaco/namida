@@ -1086,10 +1086,10 @@ class DirsFileFilter {
     return await Isolate.run(() => _filterIsolate(this));
   }
 
-  DirsFileFilterResult filterSync() => _filterIsolate(this);
+  Future<DirsFileFilterResult> filterSync() => _filterIsolate(this);
 
-  static DirsFileFilterResult _filterIsolate(DirsFileFilter parameters) {
-    final allAvailableDirectories = _getAvailableDirectoriesIsolate(
+  static Future<DirsFileFilterResult> _filterIsolate(DirsFileFilter parameters) async {
+    final allAvailableDirectories = await _getAvailableDirectoriesIsolate(
       directoriesToScan: parameters._directoriesToScan,
       respectNoMedia: parameters._respectNoMedia,
       strictNoMedia: parameters.strictNoMedia,
@@ -1119,53 +1119,56 @@ class DirsFileFilter {
         : null;
     final fillFolderCovers = imageExtensions != null && coversNames != null;
 
-    allAvailableDirectories.keys.toList().loop((d) {
+    Future<void> listFilesAndAdd(DirectoryIndex d) async {
       final hasNoMedia = allAvailableDirectories[d] ?? false;
       try {
-        final allFiles = d.listSyncSafe();
-        final allFilesLength = allFiles.length;
-        for (int i = 0; i < allFilesLength; i++) {
-          var systemEntity = allFiles[i];
-          if (systemEntity is File) {
-            final path = systemEntity.path;
+        final stream = d.list();
+        if (stream != null) {
+          await for (final systemEntity in stream) {
+            if (systemEntity is File) {
+              final path = systemEntity.path;
 
-            if (fillFolderCovers) {
-              final dirPath = d.source;
-              if (folderCovers[dirPath] == null) {
-                if (imageExtensions.isPathValid(path)) {
-                  final filenameCleaned = path.getFilenameWOExt.toLowerCase();
-                  final isValidCover = coversNames[filenameCleaned] == true;
-                  if (isValidCover) folderCovers[dirPath] = path;
+              if (fillFolderCovers) {
+                final dirPath = d.source;
+                if (folderCovers[dirPath] == null) {
+                  if (imageExtensions.isPathValid(path)) {
+                    final filenameCleaned = path.getFilenameWOExt.toLowerCase();
+                    final isValidCover = coversNames[filenameCleaned] == true;
+                    if (isValidCover) folderCovers[dirPath] = path;
 
-                  continue;
+                    continue;
+                  }
                 }
               }
+
+              // -- skips if the file is included in one of the excluded folders.
+              if (directoriesToExclude != null && directoriesToExclude.any((exc) => path.startsWith(exc.source))) {
+                continue;
+              }
+
+              // -- skip if not in extensions
+              if (!extensions.isPathValid(path)) {
+                continue;
+              }
+
+              // -- skip if hidden
+              if (path.getFilename.startsWith('.')) continue;
+
+              // -- skip if in nomedia folder & specified to exclude
+              if (respectNoMedia && hasNoMedia) {
+                excludedByNoMedia.add(path);
+                continue;
+              }
+
+              allPaths.add(path);
             }
-
-            // -- skips if the file is included in one of the excluded folders.
-            if (directoriesToExclude != null && directoriesToExclude.any((exc) => path.startsWith(exc.source))) {
-              continue;
-            }
-
-            // -- skip if not in extensions
-            if (!extensions.isPathValid(path)) {
-              continue;
-            }
-
-            // -- skip if hidden
-            if (path.getFilename.startsWith('.')) continue;
-
-            // -- skip if in nomedia folder & specified to exclude
-            if (respectNoMedia && hasNoMedia) {
-              excludedByNoMedia.add(path);
-              continue;
-            }
-
-            allPaths.add(path);
           }
         }
       } catch (_) {}
-    });
+    }
+
+    await Future.wait(allAvailableDirectories.keys.map(listFilesAndAdd));
+
     return DirsFileFilterResult(
       allPaths: allPaths,
       excludedByNoMedia: excludedByNoMedia,
@@ -1173,22 +1176,36 @@ class DirsFileFilter {
     );
   }
 
-  static Map<DirectoryIndex, bool> _getAvailableDirectoriesIsolate({required List<DirectoryIndex> directoriesToScan, required bool respectNoMedia, required bool strictNoMedia}) {
+  static Future<Map<DirectoryIndex, bool>> _getAvailableDirectoriesIsolate({
+    required List<DirectoryIndex> directoriesToScan,
+    required bool respectNoMedia,
+    required bool strictNoMedia,
+  }) async {
     final allAvailableDirectories = <DirectoryIndex, bool>{};
 
-    for (final directory in directoriesToScan) {
+    bool dirAlreadyScanned(DirectoryIndex directory) => allAvailableDirectories[directory] != null;
+
+    Future<void> listAndAdd(DirectoryIndex directory) async {
+      if (dirAlreadyScanned(directory)) return;
       try {
-        if (directory.existsSync()) {
+        if (await directory.exists()) {
           allAvailableDirectories[directory] = false;
-          final contents = directory.listSyncSafe(recursive: true, followLinks: true);
-          contents.loop((file) {
-            if (file is Directory) {
-              allAvailableDirectories[DirectoryIndexLocal(file.path)] = false;
+          final stream = directory.list(recursive: true, followLinks: true);
+          if (stream != null) {
+            await for (final file in stream) {
+              if (file is Directory) {
+                final dir = DirectoryIndexLocal(file.path);
+                if (!dirAlreadyScanned(dir)) {
+                  allAvailableDirectories[dir] = false;
+                }
+              }
             }
-          });
+          }
         }
       } on FileSystemException catch (_) {}
     }
+
+    await Future.wait(directoriesToScan.map(listAndAdd));
 
     /// Assigning directories and sub-subdirectories that has .nomedia.
     if (respectNoMedia) {
