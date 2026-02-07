@@ -10,7 +10,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
   Future<FAudioModel> extractMetadata({
     FFMPEGExecuter? executer,
     required String trackPath,
-    bool extractArtwork = true,
+    required bool extractArtwork,
     required String? artworkDirectory,
     Set<AlbumIdentifier>? identifiers,
     bool overrideArtwork = false,
@@ -78,7 +78,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
   Stream<FAudioModel> extractMetadataAsStream({
     required List<String> paths,
     required ExtractingPathKey keyWrapper,
-    bool extractArtwork = true,
+    required bool extractArtwork,
     required String? audioArtworkDirectory,
     required String? videoArtworkDirectory,
     bool overrideArtwork = false,

@@ -4,7 +4,7 @@ abstract class _ArtworkExtractStrategy {
   final Indexer parent;
   const _ArtworkExtractStrategy(this.parent);
 
-  Future<(File?, Uint8List?)> getArtwork({
+  Future<FArtwork> getArtwork({
     required String? imagePath,
     required Track? track,
     required bool checkFileFirst,
@@ -26,24 +26,24 @@ abstract class _ArtworkExtractStrategy {
   }
 }
 
-// ============================================
-// Network-based strategy (for web servers)
-// ============================================
+/// ============================================
+/// Network-based strategy (for web servers)
+/// ============================================
 class _NetworkBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
   const _NetworkBasedArtworkExtractStrategy(super.parent);
 
   @override
-  Future<(File?, Uint8List?)> getArtwork({
+  Future<FArtwork> getArtwork({
     required String? imagePath,
     required Track? track,
     required bool checkFileFirst,
     required int? size,
     required bool compressed,
   }) async {
-    if (track == null) return (null, null);
+    if (track == null) return FArtwork.dummy();
 
     if (imagePath != null && checkFileFirst && await File(imagePath).exists()) {
-      return (File(imagePath), null);
+      return FArtwork(file: File(imagePath));
     }
 
     imagePath ??= track.pathToImage;
@@ -51,7 +51,7 @@ class _NetworkBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
     final pendingResFn = _getPendingRequestResult(imagePath, false);
     if (pendingResFn != null) {
       await pendingResFn();
-      return (null, parent.artworksBytesMap[imagePath]);
+      return FArtwork(bytes: parent.artworksBytesMap[imagePath]);
     }
 
     parent._pendingArtworksFullRes[imagePath] = Completer<void>();
@@ -67,18 +67,18 @@ class _NetworkBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
     parent._pendingArtworksFullRes[imagePath]!.completeIfWasnt();
     parent._pendingArtworksFullRes.remove(imagePath);
 
-    return (null, parent.artworksBytesMap[imagePath]);
+    return FArtwork(bytes: parent.artworksBytesMap[imagePath]);
   }
 }
 
-// ============================================
-// File-based strategy (for physical files)
-// ============================================
+/// ============================================
+/// File-based strategy (for physical files)
+/// ============================================
 class _FileBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
   const _FileBasedArtworkExtractStrategy(super.parent);
 
   @override
-  Future<(File?, Uint8List?)> getArtwork({
+  Future<FArtwork> getArtwork({
     required String? imagePath,
     required Track? track,
     required bool checkFileFirst,
@@ -86,21 +86,21 @@ class _FileBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
     required bool compressed,
   }) async {
     if (imagePath != null && checkFileFirst && await File(imagePath).exists()) {
-      return (File(imagePath), null);
+      return FArtwork(file: File(imagePath));
     }
 
     if (track != null) {
       return await _extractFromTrack(track.path);
     }
 
-    return (null, null);
+    return FArtwork.dummy();
   }
 
-  Future<(File?, Uint8List?)> _extractFromTrack(String trackPath) async {
+  Future<FArtwork> _extractFromTrack(String trackPath) async {
     final pendingResFn = _getPendingRequestResult(trackPath, false);
     if (pendingResFn != null) {
       await pendingResFn();
-      return (parent.artworksFilesMap[trackPath], null);
+      return FArtwork(file: parent.artworksFilesMap[trackPath], bytes: parent.artworksBytesMap[trackPath]);
     }
 
     parent._pendingArtworksFullRes[trackPath] = Completer<void>();
@@ -121,50 +121,85 @@ class _FileBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
       hashKeyCallback: () => trExt?.hashKey ?? trackPath.toFastHashKey(),
     );
 
-    final file = await TagsExtractor.extractThumbnailCustom(
+    Uint8List? bytes;
+    File? file;
+    final isCachingEnabled = parent._isArtworkCachingEnabled;
+    // -- prefer this way before ffmpeg since this can return bytes directly and is generally faster
+    final model = await NamidaTaggerController.inst.extractMetadata(
       trackPath: trackPath,
       isVideo: isVideo,
-      artworkDirectory: artworkDirectory,
-      filename: filename,
+      extractArtwork: true,
+      saveArtworkToCache: isCachingEnabled,
     );
+    final artwork = model.tags.artwork;
+    bytes = artwork.bytes;
+    file = artwork.file;
 
-    parent.artworksFilesMap[trackPath] = file;
+    if (bytes == null && file == null) {
+      file = await TagsExtractor.extractThumbnailCustom(
+        trackPath: trackPath,
+        isVideo: isVideo,
+        artworkDirectory: artworkDirectory,
+        filename: filename,
+      );
+      if (!isCachingEnabled) {
+        bytes = await file?.readAsBytes();
+        file?.tryDeleting();
+        file = null;
+      }
+    }
+
+    if (bytes != null) {
+      parent.artworksBytesMap[trackPath] = bytes;
+    } else {
+      // -- even if file null
+      parent.artworksFilesMap[trackPath] = file;
+    }
+
     parent._pendingArtworksFullRes[trackPath]!.completeIfWasnt();
     parent._pendingArtworksFullRes.remove(trackPath);
 
-    return (parent.artworksFilesMap[trackPath], null);
+    return FArtwork(file: parent.artworksFilesMap[trackPath], bytes: parent.artworksBytesMap[trackPath]);
   }
 }
 
-// ============================================
-// Media Store Strategy (for local tracks with media store)
-// ============================================
+/// ============================================
+/// Media Store Strategy (for local tracks with media store)
+/// Automatically falls back to [_FileBasedArtworkExtractStrategy] if failed.
+/// ============================================
 class _MediaStoreArtworkExtractStrategy extends _ArtworkExtractStrategy {
   const _MediaStoreArtworkExtractStrategy(super.parent);
 
   @override
-  Future<(File?, Uint8List?)> getArtwork({
+  Future<FArtwork> getArtwork({
     required String? imagePath,
     required Track? track,
     required bool checkFileFirst,
     required int? size,
     required bool compressed,
   }) async {
-    if (imagePath == null) return (null, null);
+    if (imagePath == null) return FArtwork.dummy();
 
     final pendingResFn = _getPendingRequestResult(imagePath, compressed);
     if (pendingResFn != null) {
       await pendingResFn();
-      return (null, parent.artworksBytesMap[imagePath]);
+      return FArtwork(bytes: parent.artworksBytesMap[imagePath]);
     }
 
     if (checkFileFirst && await File(imagePath).exists()) {
-      return (File(imagePath), null);
+      return FArtwork(file: File(imagePath));
     }
 
+    FArtwork? artwork;
+
     final info = parent._backupMediaStoreIDS[imagePath];
-    if (info == null) {
-      return await _FileBasedArtworkExtractStrategy(parent).getArtwork(
+    if (info != null) {
+      artwork = compressed ? await _getCompressed(imagePath, info.$2, size) : await _getFullRes(imagePath, info);
+    }
+
+    // -- fallback to file-based if no info or media store failed
+    if (artwork == null || !artwork.hasArtwork) {
+      artwork = await _FileBasedArtworkExtractStrategy(parent).getArtwork(
         imagePath: imagePath,
         track: track,
         checkFileFirst: false,
@@ -173,10 +208,10 @@ class _MediaStoreArtworkExtractStrategy extends _ArtworkExtractStrategy {
       );
     }
 
-    return compressed ? await _getCompressed(imagePath, info.$2, size) : await _getFullRes(imagePath, info);
+    return artwork;
   }
 
-  Future<(File?, Uint8List?)> _getCompressed(
+  Future<FArtwork> _getCompressed(
     String imagePath,
     int id,
     int? size,
@@ -195,10 +230,10 @@ class _MediaStoreArtworkExtractStrategy extends _ArtworkExtractStrategy {
     parent._pendingArtworksCompressed[imagePath]!.completeIfWasnt();
     parent._pendingArtworksCompressed.remove(imagePath);
 
-    return (null, artwork);
+    return FArtwork(bytes: parent.artworksBytesMap[imagePath]);
   }
 
-  Future<(File?, Uint8List?)> _getFullRes(
+  Future<FArtwork> _getFullRes(
     String imagePath,
     (Track, int) info,
   ) async {
@@ -211,7 +246,7 @@ class _MediaStoreArtworkExtractStrategy extends _ArtworkExtractStrategy {
       size: null,
       compressed: false,
     );
-    var file = res.$1;
+    var file = res.file;
 
     if (file == null) {
       final artwork = await parent._audioQuery.queryArtwork(
@@ -233,6 +268,6 @@ class _MediaStoreArtworkExtractStrategy extends _ArtworkExtractStrategy {
     parent._pendingArtworksFullRes[imagePath]!.completeIfWasnt();
     parent._pendingArtworksFullRes.remove(imagePath);
 
-    return (parent.artworksFilesMap[imagePath], null);
+    return FArtwork(file: parent.artworksFilesMap[imagePath]);
   }
 }

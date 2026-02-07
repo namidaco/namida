@@ -25,6 +25,11 @@ class FArtwork {
     this.size,
   });
 
+  FArtwork.dummy()
+      : file = null,
+        bytes = null,
+        size = null;
+
   factory FArtwork.fromMap(Map<String, dynamic> map) {
     final art = map["artwork"];
     return FArtwork(

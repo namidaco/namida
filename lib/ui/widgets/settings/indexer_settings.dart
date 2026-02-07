@@ -41,6 +41,7 @@ enum _IndexerSettingsKeys with SettingKeysBase {
   preventDuplicatedTracks,
   respectNoMedia,
   extractFtArtist,
+  artworksCache,
   groupArtworksByAlbum,
   uniqueArtworkHash,
   albumIdentifiers,
@@ -79,6 +80,7 @@ class IndexerSettings extends SettingSubpageProvider {
         _IndexerSettingsKeys.preventDuplicatedTracks: [lang.PREVENT_DUPLICATED_TRACKS, lang.PREVENT_DUPLICATED_TRACKS_SUBTITLE],
         _IndexerSettingsKeys.respectNoMedia: [lang.RESPECT_NO_MEDIA, lang.RESPECT_NO_MEDIA_SUBTITLE],
         _IndexerSettingsKeys.extractFtArtist: [lang.EXTRACT_FEAT_ARTIST, lang.EXTRACT_FEAT_ARTIST_SUBTITLE],
+        _IndexerSettingsKeys.artworksCache: [lang.ENABLE_ARTWORK_CACHE, lang.ENABLE_ARTWORK_CACHE_SUBTITLE],
         _IndexerSettingsKeys.groupArtworksByAlbum: [lang.GROUP_ARTWORKS_BY_ALBUM],
         _IndexerSettingsKeys.uniqueArtworkHash: [lang.UNIQUE_ARTWORK_HASH],
         _IndexerSettingsKeys.albumIdentifiers: [lang.ALBUM_IDENTIFIERS],
@@ -490,7 +492,38 @@ class IndexerSettings extends SettingSubpageProvider {
     );
   }
 
-  Widget getGroupArtworksByAlbumWidget() {
+  Widget getArtworkCacheWidget(BuildContext context) {
+    return getItemWrapper(
+      key: _IndexerSettingsKeys.artworksCache,
+      child: NamidaExpansionTile(
+        bgColor: getBgColor(_IndexerSettingsKeys.artworksCache),
+        bigahh: true,
+        normalRightPadding: true,
+        borderless: true,
+        initiallyExpanded: settings.cacheArtworks.value || initialItem == _IndexerSettingsKeys.artworksCache,
+        leading: const StackedIcon(
+          baseIcon: Broken.gallery,
+          secondaryIcon: Broken.cpu_charge,
+        ),
+        childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+        iconColor: context.defaultIconColor(),
+        titleText: lang.ENABLE_ARTWORK_CACHE,
+        subtitleText: lang.ENABLE_ARTWORK_CACHE_SUBTITLE,
+        onExpansionChanged: (wasCollapsed) {
+          if (!wasCollapsed) return settings.save(cacheArtworks: false);
+        },
+        trailing: Obx((context) {
+          return CustomSwitch(active: settings.cacheArtworks.valueR);
+        }),
+        children: [
+          _getGroupArtworksByAlbumWidget(),
+          _getUniqueArtworkHashWidget(),
+        ],
+      ),
+    );
+  }
+
+  Widget _getGroupArtworksByAlbumWidget() {
     return getItemWrapper(
       key: _IndexerSettingsKeys.groupArtworksByAlbum,
       child: Obx(
@@ -505,6 +538,32 @@ class IndexerSettings extends SettingSubpageProvider {
             onChanged: (isTrue) {
               settings.save(groupArtworksByAlbum: !isTrue);
               _showReindexingPrompt(title: lang.GROUP_ARTWORKS_BY_ALBUM, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _getUniqueArtworkHashWidget() {
+    return getItemWrapper(
+      key: _IndexerSettingsKeys.uniqueArtworkHash,
+      child: Obx(
+        (context) => AnimatedEnabled(
+          enabled: !settings.groupArtworksByAlbum.valueR,
+          child: CustomSwitchListTile(
+            bgColor: getBgColor(_IndexerSettingsKeys.uniqueArtworkHash),
+            leading: StackedIcon(
+              baseIcon: Broken.gallery,
+              secondaryIcon: Broken.cpu,
+              secondaryIconSize: 13.0,
+            ),
+            title: lang.UNIQUE_ARTWORK_HASH,
+            subtitle: "${lang.PERFORMANCE_NOTE}. ${lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING}",
+            value: settings.uniqueArtworkHash.valueR,
+            onChanged: (isTrue) {
+              settings.save(uniqueArtworkHash: !isTrue);
+              _showReindexingPrompt(title: lang.UNIQUE_ARTWORK_HASH, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
             },
           ),
         ),
@@ -860,30 +919,7 @@ class IndexerSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          getGroupArtworksByAlbumWidget(),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.uniqueArtworkHash,
-            child: Obx(
-              (context) => AnimatedEnabled(
-                enabled: !settings.groupArtworksByAlbum.valueR,
-                child: CustomSwitchListTile(
-                  bgColor: getBgColor(_IndexerSettingsKeys.uniqueArtworkHash),
-                  leading: StackedIcon(
-                    baseIcon: Broken.gallery,
-                    secondaryIcon: Broken.cpu,
-                    secondaryIconSize: 13.0,
-                  ),
-                  title: lang.UNIQUE_ARTWORK_HASH,
-                  subtitle: "${lang.PERFORMANCE_NOTE}. ${lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING}",
-                  value: settings.uniqueArtworkHash.valueR,
-                  onChanged: (isTrue) {
-                    settings.save(uniqueArtworkHash: !isTrue);
-                    _showReindexingPrompt(title: lang.UNIQUE_ARTWORK_HASH, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
-                  },
-                ),
-              ),
-            ),
-          ),
+          getArtworkCacheWidget(context),
           getItemWrapper(
             key: _IndexerSettingsKeys.albumIdentifiers,
             child: Obx(
@@ -1069,6 +1105,8 @@ class IndexerSettings extends SettingSubpageProvider {
               title: lang.RE_INDEX,
               subtitle: lang.RE_INDEX_SUBTITLE,
               onTap: () async {
+                Indexer.inst.calculateAllImageSizesInStorage();
+
                 final clearArtworks = false.obs;
                 await NamidaNavigator.inst.navigateDialog(
                   onDisposing: () {
@@ -1109,7 +1147,7 @@ class IndexerSettings extends SettingSubpageProvider {
                                 dense: true,
                                 icon: Broken.broom,
                                 title: lang.CLEAR_IMAGE_CACHE,
-                                subtitle: artworksSizeInStorage.fileSizeFormatted,
+                                subtitle: artworksSizeInStorage == 0 ? '?' : artworksSizeInStorage.fileSizeFormatted,
                                 active: active,
                                 onTap: clearArtworks.toggle,
                               ),

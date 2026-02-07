@@ -680,12 +680,11 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
                 type: ThumbnailType.video,
                 isTemp: null,
               ),
-              fetchImage: () async => (
-                await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+              fetchImage: () async => FArtwork(
+                file: await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
                   id: videoId,
                   type: ThumbnailType.video,
                 ),
-                null
               ),
               onSave: (_, __) => YTUtils.copyThumbnailToStorage(videoId),
               themeColor: null,

@@ -122,7 +122,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     final includeVideosWidget = indexer.getIncludeVideosWidget();
     final foldersToScan = indexer.getFoldersToScanWidget(context: context, initiallyExpanded: true);
     final foldersToExclude = indexer.getFoldersToExcludeWidget(context: context, initiallyExpanded: true);
-    final groupArtworksByAlbum = indexer.getGroupArtworksByAlbumWidget();
+    final artworkCacheWidget = indexer.getArtworkCacheWidget(context);
 
     const themeSettings = ThemeSetting();
     final themeTile = themeSettings.getThemeTile(maxWidth: maxWidth);
@@ -180,7 +180,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                   libraryTabsTile,
                                   useMediaStore,
                                   includeVideosWidget,
-                                  groupArtworksByAlbum,
+                                  artworkCacheWidget,
                                   foldersToScan,
                                   foldersToExclude,
                                 ],

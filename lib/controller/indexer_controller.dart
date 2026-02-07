@@ -49,6 +49,7 @@ class Indexer<T extends Track> {
 
   bool get _defaultUseMediaStore => NamidaFeaturesVisibility.onAudioQueryAvailable && settings.useMediaStore.value;
   bool get _includeVideosAsTracks => settings.includeVideos.value;
+  bool get _isArtworkCachingEnabled => settings.cacheArtworks.value;
 
   void _clearTracksDBAndReOpen() {
     _tracksDBManager.deleteEverything();
@@ -145,14 +146,14 @@ class Indexer<T extends Track> {
   final _pendingArtworksCompressed = <String, Completer<void>>{};
   final _pendingArtworksFullRes = <String, Completer<void>>{};
 
-  Future<(File?, Uint8List?)> getArtwork({
+  Future<FArtwork> getArtwork({
     required String? imagePath,
     Track? track,
     bool checkFileFirst = true,
     required bool compressed,
     int? size,
   }) async {
-    if (imagePath == null && track == null) return (null, null);
+    if (imagePath == null && track == null) return FArtwork.dummy();
 
     final strategy = _getArtworkStrategy(
       imagePath: imagePath,
@@ -746,13 +747,12 @@ class Indexer<T extends Track> {
     int minSize = 0,
     required TrackExtended? Function() onMinDurTrigger,
     required TrackExtended? Function() onMinSizeTrigger,
-    bool deleteOldArtwork = false,
-    bool checkForDuplicates = true,
     bool tryExtractingFromFilename = true,
   }) async {
     final res = await NamidaTaggerController.inst.extractMetadata(
       trackPath: trackPath,
-      overrideArtwork: deleteOldArtwork,
+      extractArtwork: false,
+      overrideArtwork: false,
       isVideo: trackPath.isVideo(),
     );
     if (res.hasError) return null;
@@ -781,7 +781,7 @@ class Indexer<T extends Track> {
       SearchSortController.inst.trackSearchList.add(tr);
     }
 
-    if (artwork != null && artwork.hasArtwork) {
+    if (artwork != null && artwork.file != null) {
       artworksInStorage.value++;
       if (artwork.size != null) artworksSizeInStorage.value += artwork.size!;
     }
@@ -855,6 +855,7 @@ class Indexer<T extends Track> {
     final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
       paths: tracksRealPaths,
       keyWrapper: keyWrapper,
+      extractArtwork: updateArtwork,
       overrideArtwork: updateArtwork,
     );
     final splitConfigs = _createSplitConfig();
@@ -951,6 +952,7 @@ class Indexer<T extends Track> {
 
     final model = await NamidaTaggerController.inst.extractMetadata(
       trackPath: trackPath,
+      extractArtwork: null,
       isVideo: trackPath.isVideo(),
     );
     final trext = await extractFunction(model);
@@ -1011,6 +1013,7 @@ class Indexer<T extends Track> {
       final keyWrapper = ExtractingPathKey.create();
       final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
         paths: tracksToExtract,
+        extractArtwork: null,
         keyWrapper: keyWrapper,
       );
       await for (final item in stream) {
@@ -1154,6 +1157,7 @@ class Indexer<T extends Track> {
         final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
           paths: chunkList,
           keyWrapper: keyWrapper,
+          extractArtwork: null,
           overrideArtwork: false,
         );
 

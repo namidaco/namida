@@ -113,8 +113,8 @@ class EditDeleteController {
       imagePath: track.pathToImage,
       track: track,
     );
-    final fileToCopy = info.$1;
-    final bytesToCopy = info.$2;
+    final fileToCopy = info.file;
+    final bytesToCopy = info.bytes;
     if (fileToCopy != null || bytesToCopy != null) {
       final trExt = track.toTrackExtOrNull();
       final filename = TagsExtractor.buildImageFilenameFromTrack(

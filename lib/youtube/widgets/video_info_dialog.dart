@@ -10,6 +10,7 @@ import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/yt_video_like_manager.dart';
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -467,12 +468,11 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                     type: ThumbnailType.video,
                                     isTemp: null,
                                   ),
-                                  fetchImage: () async => (
-                                    await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+                                  fetchImage: () async => FArtwork(
+                                    file: await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
                                       id: videoId,
                                       type: ThumbnailType.video,
                                     ),
-                                    null
                                   ),
                                   onSave: (_, __) => YTUtils.copyThumbnailToStorage(videoId),
                                   themeColor: () => _themeColor,

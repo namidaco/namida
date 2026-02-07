@@ -138,7 +138,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                       artwork: artworkPre,
                       heroTag: 'artist_${widget.name}',
                       imageFile: () => info.toArtworkIfExistsAndValidAndEnabled() ?? File(tracksPathToImage),
-                      fetchImage: () => const (null, null),
+                      fetchImage: () => null,
                       onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
                       themeColor: null,
                     );

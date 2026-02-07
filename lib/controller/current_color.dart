@@ -446,14 +446,14 @@ class CurrentColor {
     if (await File(imagePath).exists()) {
       imageFile = File(imagePath);
     } else {
-      bytes = await Indexer.inst
-          .getArtwork(
-            imagePath: imagePath,
-            track: track,
-            compressed: true,
-            size: 200,
-          )
-          .then((value) => value.$2);
+      final res = await Indexer.inst.getArtwork(
+        imagePath: imagePath,
+        track: track,
+        compressed: true,
+        size: 200,
+      );
+      imageFile = res.file;
+      bytes = res.bytes;
       if (bytes?.isEmpty == true) bytes = null;
     }
 

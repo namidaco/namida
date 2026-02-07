@@ -28,10 +28,12 @@ class NamidaTaggerController {
   Future<Stream<FAudioModel>> extractMetadataAsStream({
     required List<String> paths,
     required ExtractingPathKey keyWrapper,
-    bool extractArtwork = true,
-    bool saveArtworkToCache = true,
+    required bool? extractArtwork,
+    bool? saveArtworkToCache,
     bool overrideArtwork = false,
   }) async {
+    extractArtwork ??= settings.cacheArtworks.value; // no need to extract artwork while indexing if caching is disabled
+    saveArtworkToCache ??= settings.cacheArtworks.value;
     return _extractor.extractMetadataAsStream(
       paths: paths,
       keyWrapper: keyWrapper,
@@ -44,13 +46,15 @@ class NamidaTaggerController {
 
   Future<FAudioModel> extractMetadata({
     required String trackPath,
-    bool extractArtwork = true,
-    bool saveArtworkToCache = true,
+    required bool? extractArtwork,
+    bool? saveArtworkToCache,
     String? cacheDirectoryPath,
     Set<AlbumIdentifier>? identifiers,
     bool overrideArtwork = false,
     required bool isVideo,
   }) async {
+    extractArtwork ??= settings.cacheArtworks.value;
+    saveArtworkToCache ??= settings.cacheArtworks.value;
     final artworkDirectory = saveArtworkToCache ? cacheDirectoryPath ?? (isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS) : null;
     return _extractor.extractMetadata(
       trackPath: trackPath,
@@ -83,7 +87,13 @@ class NamidaTaggerController {
     String oldComment = '';
     if (commentToInsert.isNotEmpty) {
       final tr = tracks.first;
-      oldComment = await NamidaTaggerController.inst.extractMetadata(trackPath: tr.path, isVideo: tr is Video).then((value) => value.tags.comment ?? '');
+      oldComment = await NamidaTaggerController.inst
+          .extractMetadata(
+            trackPath: tr.path,
+            isVideo: tr is Video,
+            extractArtwork: false,
+          )
+          .then((value) => value.tags.comment ?? '');
     }
 
     final newTags = commentToInsert.isNotEmpty

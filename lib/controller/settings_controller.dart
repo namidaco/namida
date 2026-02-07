@@ -83,6 +83,7 @@ class _SettingsController with SettingsFileWriter {
 
   final useMediaStore = false.obs;
   final includeVideos = true.obs;
+  final cacheArtworks = true.obs;
   final displayTrackNumberinAlbumPage = true.obs;
   final albumCardTopRightDate = true.obs;
   final forceSquaredTrackThumbnail = false.obs;
@@ -471,6 +472,7 @@ class _SettingsController with SettingsFileWriter {
 
       useMediaStore.value = json['useMediaStore'] ?? useMediaStore.value;
       includeVideos.value = json['includeVideos'] ?? includeVideos.value;
+      cacheArtworks.value = json['cacheArtworks'] ?? cacheArtworks.value;
       displayTrackNumberinAlbumPage.value = json['displayTrackNumberinAlbumPage'] ?? displayTrackNumberinAlbumPage.value;
       albumCardTopRightDate.value = json['albumCardTopRightDate'] ?? albumCardTopRightDate.value;
       forceSquaredTrackThumbnail.value = json['forceSquaredTrackThumbnail'] ?? forceSquaredTrackThumbnail.value;
@@ -743,6 +745,7 @@ class _SettingsController with SettingsFileWriter {
 
         'useMediaStore': useMediaStore.value,
         'includeVideos': includeVideos.value,
+        'cacheArtworks': cacheArtworks.value,
         'displayTrackNumberinAlbumPage': displayTrackNumberinAlbumPage.value,
         'albumCardTopRightDate': albumCardTopRightDate.value,
         'forceSquaredTrackThumbnail': forceSquaredTrackThumbnail.value,
@@ -924,6 +927,7 @@ class _SettingsController with SettingsFileWriter {
     double? albumListTileHeight,
     bool? useMediaStore,
     bool? includeVideos,
+    bool? cacheArtworks,
     bool? displayTrackNumberinAlbumPage,
     bool? albumCardTopRightDate,
     bool? forceSquaredTrackThumbnail,
@@ -1107,6 +1111,7 @@ class _SettingsController with SettingsFileWriter {
 
     if (useMediaStore != null) this.useMediaStore.value = useMediaStore;
     if (includeVideos != null) this.includeVideos.value = includeVideos;
+    if (cacheArtworks != null) this.cacheArtworks.value = cacheArtworks;
 
     if (displayTrackNumberinAlbumPage != null) this.displayTrackNumberinAlbumPage.value = displayTrackNumberinAlbumPage;
     if (albumCardTopRightDate != null) this.albumCardTopRightDate.value = albumCardTopRightDate;

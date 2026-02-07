@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tilt/flutter_tilt.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -107,7 +108,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   static const _imagePathInitialValue = ArtworkWidget.kImagePathInitialValue;
 
   String? _imagePath = _imagePathInitialValue;
-  late Uint8List? bytes = widget.bytes ?? Indexer.inst.artworksBytesMap[widget.path];
+  late Uint8List? _bytes = widget.bytes ?? Indexer.inst.artworksBytesMap[widget.path];
   // late final bool _imageObtainedBefore = Indexer.inst.imageObtainedBefore(widget.path ?? '');
 
   bool _triedDeleting = false;
@@ -117,7 +118,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   @override
   void initState() {
     super.initState();
-    if (bytes?.isNotEmpty == true) {
+    if (_bytes?.isNotEmpty == true) {
       // -- skip
     } else {
       _imagePath = widget.path; // to prevent flashing/etc
@@ -155,8 +156,20 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       if (!await canStartLoadingItems()) return;
       final track = widget.track;
 
+      void updateValues(FArtwork res) {
+        if (mounted) {
+          final file = res.file;
+          final b = res.bytes;
+          if (file != null) {
+            setState(() => _imagePath = file.path);
+          } else if (b != null) {
+            setState(() => _bytes = b);
+          }
+        }
+      }
+
       if (widget.compressed == false) {
-        final resPath = await Indexer.inst
+        await Indexer.inst
             .getArtwork(
               imagePath: wPath,
               track: track,
@@ -164,14 +177,9 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
               checkFileFirst: false,
               size: widget.compressed ? _getThumbnailEffectiveCacheHeight.round() : null,
             )
-            .then((value) => value.$1?.path);
-        if (mounted) {
-          if (resPath != null) {
-            setState(() => _imagePath = resPath);
-          }
-        }
-      } else if (bytes == null) {
-        final resBytes = await Indexer.inst
+            .then(updateValues);
+      } else if (_bytes == null) {
+        await Indexer.inst
             .getArtwork(
               imagePath: wPath,
               track: track,
@@ -179,15 +187,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
               checkFileFirst: false,
               size: widget.compressed ? _getThumbnailEffectiveCacheHeight.round() : null,
             )
-            .then((value) => value.$2);
-        if (mounted) {
-          if (resBytes != null) {
-            setState(() => bytes = resBytes);
-          }
-        }
+            .then(updateValues);
       }
 
-      bool stillInvalid() => _imagePath == _imagePathInitialValue && bytes == null;
+      bool stillInvalid() => _imagePath == _imagePathInitialValue && _bytes == null;
 
       if (stillInvalid() && track != null && widget.fallbackToFolderCover) {
         final cover = Indexer.inst.getFallbackFolderArtworkPath(folderPath: track.folderPath);
@@ -239,7 +242,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
   @override
   Widget build(BuildContext context) {
-    final bytes = this.bytes;
+    final bytes = this._bytes;
     final key = Key("${widget.key}${_imagePath}_${bytes?.length}");
     final isValidBytes = bytes is Uint8List ? bytes.isNotEmpty : false;
     final goodImagePath = _imagePath?.isNotEmpty == true;

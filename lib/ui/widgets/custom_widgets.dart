@@ -24,6 +24,7 @@ import 'package:sleek_circular_slider/sleek_circular_slider.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/class/track.dart';
@@ -6333,7 +6334,7 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
   final Widget artwork;
   final String? heroTag;
   final FutureOr<File?> Function() imageFile;
-  final FutureOr<(File?, Uint8List?)> Function() fetchImage;
+  final FutureOr<FArtwork?> Function() fetchImage;
   final FutureOr<String?> Function(File? imgFile, Uint8List? bytes) onSave;
   final Color? Function()? themeColor;
 
@@ -6356,13 +6357,8 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
       // -- good
     } else {
       final res = await fetchImage();
-      imgFile = res.$1;
-      imgBytes = res.$2;
-      if (res.$1 != null) {
-        imgFile = res.$1!;
-      } else if (res.$2 != null) {
-        imgBytes = res.$2!;
-      }
+      imgFile = res?.file;
+      imgBytes = res?.bytes;
     }
 
     final ImageProvider<Object>? imgProvider = imgFile != null
