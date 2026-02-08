@@ -167,7 +167,7 @@ class _FolderTileState extends State<FolderTile> {
       if (subtitleSecondPart != null) ...subtitleSecondPart,
     ];
 
-    final thumbnailCoverPath = Indexer.inst.getFallbackFolderArtworkPath(folderPath: widget.folder.path);
+    final thumbnailCoverPath = Indexer.inst.getFallbackFolderArtworkPath(folder: widget.folder);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin, right: Dimensions.tileBottomMargin, left: Dimensions.tileBottomMargin),

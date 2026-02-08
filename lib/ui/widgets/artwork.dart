@@ -193,7 +193,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       bool stillInvalid() => _imagePath == _imagePathInitialValue && _bytes == null;
 
       if (stillInvalid() && track != null && widget.fallbackToFolderCover) {
-        final cover = Indexer.inst.getFallbackFolderArtworkPath(folderPath: track.folderPath);
+        final cover = Indexer.inst.getFallbackFolderArtworkPath(folder: track.folder);
         if (cover != null && mounted) setState(() => _imagePath = cover);
       }
 

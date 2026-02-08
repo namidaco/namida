@@ -555,10 +555,15 @@ extension TrackExtUtils on TrackExtended {
   bool get hasUnknownGenre => genresList.isEmpty || genresList.first == UnknownTags.GENRE;
   bool get hasUnknownMood => moodList.isEmpty || moodList.first == UnknownTags.MOOD || moodList.first == UnknownTags.GENRE; // cuz moods get parsed like genres
 
+  bool get isPhysical => !isNetwork;
+  bool get isNetwork => path.startsWith('http');
+
+  Folder get folder => Folder.explicit(folderPath);
+
   String get filename => path.getFilename;
   String get filenameWOExt => path.getFilenameWOExt;
   String get extension => path.getExtension;
-  String get folderPath => path.getDirectoryPath;
+  String get folderPath => isNetwork ? DirectoryIndexServer.parseFromEncodedUrlPath(path).toDbKey() : path.getDirectoryPath;
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
     final identifier = this.cacheKey;
@@ -570,7 +575,7 @@ extension TrackExtUtils on TrackExtended {
       final id = albumIdentifier;
       if (id.isNotEmpty) return id;
     }
-    final filename = this.asTrack().isNetwork
+    final filename = this.isNetwork
         ? DownloadTaskFilename.cleanupFilename(
             [
               originalArtist,

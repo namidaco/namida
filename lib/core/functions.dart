@@ -1056,7 +1056,7 @@ double checkIfListsSimilar<E>(List<E> q1, List<E> q2, {bool fullyFunctional = fa
 class DirsFileFilterResult {
   final Set<String> allPaths;
   final Set<String> excludedByNoMedia;
-  final Map<String, String> folderCovers;
+  final Map<Folder, String> folderCovers;
 
   const DirsFileFilterResult({
     required this.allPaths,
@@ -1102,7 +1102,7 @@ class DirsFileFilter {
 
     final allPaths = <String>{};
     final excludedByNoMedia = <String>{};
-    final folderCovers = <String, String>{};
+    final folderCovers = <Folder, String>{};
 
     final coversNames = imageExtensions != null && imageExtensions.extensions.isNotEmpty
         ? {
@@ -1129,12 +1129,12 @@ class DirsFileFilter {
               final path = systemEntity.path;
 
               if (fillFolderCovers) {
-                final dirPath = d.source;
-                if (folderCovers[dirPath] == null) {
+                final folder = Folder.explicit(d.source);
+                if (folderCovers[folder] == null) {
                   if (imageExtensions.isPathValid(path)) {
                     final filenameCleaned = path.getFilenameWOExt.toLowerCase();
                     final isValidCover = coversNames[filenameCleaned] == true;
-                    if (isValidCover) folderCovers[dirPath] = path;
+                    if (isValidCover) folderCovers[folder] = path;
 
                     continue;
                   }

@@ -101,7 +101,7 @@ class Indexer<T extends Track> {
   var allTracksMappedByPath = <String, TrackExtended>{};
   final trackStatsMap = <Track, TrackStats>{}.obs;
 
-  var allFolderCovers = <String, String>{}; // {directoryPath, imagePath}
+  var allFolderCovers = <Folder, String>{}; // {directoryPath, imagePath}
   var allTracksMappedByYTID = <String, List<T>>{};
 
   /// Used to prevent duplicated track (by filename).
@@ -126,15 +126,8 @@ class Indexer<T extends Track> {
     return alltracks;
   }
 
-  String? getFallbackFolderArtworkPath({required String folderPath}) {
-    String? cover = this.allFolderCovers[folderPath];
-    if (cover == null && folderPath.endsWith(Platform.pathSeparator)) {
-      try {
-        folderPath = folderPath.substring(0, folderPath.length - 1);
-        cover = this.allFolderCovers[folderPath];
-      } catch (_) {}
-    }
-    return cover;
+  String? getFallbackFolderArtworkPath({required Folder folder}) {
+    return this.allFolderCovers[folder]; // folder hash already resolves extra/removed path separator
   }
 
   bool imageObtainedBefore(String imagePath) => _pendingArtworksCompressed[imagePath] != null || _pendingArtworksFullRes[imagePath] != null;

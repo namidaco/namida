@@ -464,7 +464,7 @@ class CurrentColor {
         if (ytImg != null) imageFile = File(ytImg.path);
 
         if (imageFile == null) {
-          final cover = Indexer.inst.getFallbackFolderArtworkPath(folderPath: track.folderPath);
+          final cover = Indexer.inst.getFallbackFolderArtworkPath(folder: track.folder);
           if (cover != null) imageFile = File(cover);
         }
       }

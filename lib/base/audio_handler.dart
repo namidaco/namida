@@ -2309,7 +2309,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
     final artist = tr.originalArtist == '' ? UnknownTags.ARTIST : tr.originalArtist;
     final imagePath = tr.pathToImage;
     String? imagePathToUse = await File(imagePath).exists() ? imagePath : null;
-    imagePathToUse ??= Indexer.inst.getFallbackFolderArtworkPath(folderPath: tr.folderPath);
+    imagePathToUse ??= Indexer.inst.getFallbackFolderArtworkPath(folder: tr.folder);
     return MediaItem(
       id: this.toMediaItemId(),
       title: tr.title,
