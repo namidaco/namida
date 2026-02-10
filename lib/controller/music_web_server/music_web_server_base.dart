@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 // ignore: depend_on_referenced_packages
@@ -8,14 +9,19 @@ import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:opensubsonic_api/opensubsonic_api.dart';
+import 'package:webdav_client/webdav_client.dart' as webdav;
 
+import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/music_web_server/server_auth_model.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
+import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -25,6 +31,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 
 part 'subsonic_web_server.dart';
+part 'webdav_server.dart';
 
 abstract class MusicWebServer {
   final MusicWebServerAuthDetails authDetails;
@@ -36,7 +43,7 @@ abstract class MusicWebServer {
 
   Future<MusicWebServerError?> ping();
   Future<void> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback);
-  Uri? getStreamUrl(String id);
+  FutureOr<WebStreamUriDetails?> getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal});
   Future<Uint8List?> getImage(String id);
   void dispose();
 
@@ -50,11 +57,15 @@ abstract class MusicWebServer {
     return allTracks;
   }
 
-  static Uri? baseUrlToActualUrl(String baseUrl, {Uri? uri}) {
+  static FutureOr<WebStreamUriDetails?> baseUrlToActualUrl(
+    String baseUrl, {
+    Uri? uri,
+    void Function(File cachedFile)? onFetchedIfLocal,
+  }) {
     return _executeIfHasServer(
       baseUrl,
-      (s, id) => s.getStreamUrl(id),
-      () => Uri.file(baseUrl),
+      (s, id) => s.getStreamUrl(id, onFetchedIfLocal: onFetchedIfLocal),
+      () => WebStreamUriDetails.fromUri(Uri.file(baseUrl)),
       uri: uri,
     );
   }
@@ -105,7 +116,7 @@ class MusicWebServerError {
 class MediaUrlParseResult {
   final DirectoryIndexType type;
   final String username;
-  final String id;
+  final String? id;
 
   const MediaUrlParseResult({
     required this.type,
@@ -121,7 +132,7 @@ class MediaUrlParseResult {
   factory MediaUrlParseResult.parseFromUri(Uri uri) {
     final username = uri.queryParameters['namida_u'] ?? '';
     final type = DirectoryIndexType.values.getEnum(uri.queryParameters['namida_t']);
-    final id = uri.queryParameters['d'] as String;
+    final id = uri.queryParameters['d'];
     return MediaUrlParseResult(
       type: type ?? DirectoryIndexType.unknown,
       username: username,
@@ -144,45 +155,74 @@ class MusicWebServerAuthDetailsDemo {
   });
 }
 
+class WebStreamUriDetails {
+  final Uri uri;
+  final Map<String, String>? headers;
+  final bool allowStreamCaching;
+
+  const WebStreamUriDetails({
+    required this.uri,
+    required this.headers,
+    required this.allowStreamCaching,
+  });
+
+  static WebStreamUriDetails? fromUri(
+    Uri? uri, {
+    Map<String, String>? headers,
+    bool allowStreamCaching = true,
+  }) {
+    if (uri == null) return null;
+    return WebStreamUriDetails(
+      uri: uri,
+      headers: headers,
+      allowStreamCaching: allowStreamCaching,
+    );
+  }
+}
+
 class MusicWebServerAuthDetails {
   static final manager = _MusicWebServerAuthManager();
 
   final DirectoryIndex dir;
-  final SubsonicAuthModel auth;
+  final ServerAuthModel auth;
 
   MusicWebServerAuthDetails.create({
     required this.dir,
     required String password,
     required bool legacyAuth,
-  }) : auth = legacyAuth ? SubsonicAuthModel.password(dir.username ?? '', 'enc:${_encPassword(password)}') : SubsonicAuthModel.randomSalt(dir.username ?? '', password);
+  }) : auth = _createAuthModel(dir, password, legacyAuth);
 
   MusicWebServerAuthDetails._({
     required this.dir,
     required this.auth,
   });
 
-  static String _encPassword(String password) {
-    return md5.convert(utf8.encode(password)).toString();
+  static ServerAuthModel _createAuthModel(DirectoryIndex dir, String password, bool legacyAuth) {
+    return ServerAuthModel.createModel(
+      dir.username ?? '',
+      password,
+      legacyAuth,
+      dir.type.legacyAuthEncrypt,
+    );
   }
 
   factory MusicWebServerAuthDetails.fromMap(Map<String, dynamic> map) {
     final authMap = map['auth'];
     final token = authMap['t'] as String?;
     final username = authMap['u'] as String? ?? '';
+    final password = authMap['p'] as String?;
+
     return MusicWebServerAuthDetails._(
-      dir: DirectoryIndex.fromMap(
-        map['dir'],
-      ),
+      dir: DirectoryIndex.fromMap(map['dir']),
       auth: token != null
-          ? SubsonicAuthModel.token(
+          ? ServerAuthModel.token(
               username,
               token,
               authMap['s'], // new salt would result in auth error [40]
             )
-          : SubsonicAuthModel.password(
-              username,
-              authMap['p'],
-            ),
+          : (password?.startsWith('enc:') ?? false)
+              ? ServerAuthModel.encryptedPassword(username, password!)
+              : ServerAuthModel.rawPassword(username, password ?? ''),
     );
   }
 
@@ -211,6 +251,7 @@ class _MusicWebServerAuthManager {
     'web_servers',
     config: const DBConfig(
       createIfNotExist: true,
+      encryptionKey: 'servers',
     ),
   );
 
@@ -218,7 +259,7 @@ class _MusicWebServerAuthManager {
     if (_cachedServers.containsKey(dir)) {
       return _cachedServers[dir]; // even if null
     }
-    return _cachedServers[dir] = _createServer(dir);
+    return _cachedServers[dir] = _createServer(dir)?..ping();
   }
 
   static MusicWebServer? _createServer(DirectoryIndex dir) {
@@ -227,6 +268,7 @@ class _MusicWebServerAuthManager {
     return switch (dir.type) {
       DirectoryIndexType.local || DirectoryIndexType.unknown => null,
       DirectoryIndexType.subsonic => _SubsonicWebServer.init(authDetails),
+      DirectoryIndexType.webdav => _WebDAVServer.init(authDetails),
     };
   }
 

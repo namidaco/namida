@@ -65,7 +65,7 @@ class EditDeleteController {
   }
 
   Future<void> _deleteAll(String dir, String extension, List<Selectable> tracks) async {
-    final files = tracks.map((e) => FileParts.joinPath(dir, "${e.track.filename}.$extension")).toList();
+    final files = tracks.map((e) => FileParts.joinPath(dir, "${e.track.cacheKey}.$extension")).toList();
     await Isolate.run(() => _deleteAllIsolate(files));
   }
 
@@ -267,7 +267,7 @@ extension HasCachedFiles on List<Selectable> {
   Future<bool> _doesAnyPathExist(String directory, String extension, {String Function(Selectable tr)? fullPath}) async {
     for (int i = 0; i < length; i++) {
       final track = this[i];
-      if (await File(fullPath != null ? fullPath(track) : "$directory${track.track.filename}.$extension").exists()) {
+      if (await File(fullPath != null ? fullPath(track) : "$directory${track.track.cacheKey}.$extension").exists()) {
         return true;
       }
     }

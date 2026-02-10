@@ -562,7 +562,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               try {
                 final d = await ap.setSource(
                   ItemPrepareConfig(
-                    finalItem.toAudioSource(0, 1, null, cache: false),
+                    await finalItem.toAudioSource(0, 1, null, cache: false),
                     index: 0,
                     initialPosition: null,
                     videoOptions: null,
@@ -687,7 +687,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         : initialVideo == null
             ? isVideo
                 ? VideoSourceOptions(
-                    source: item.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
+                    source: await item.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
                     loop: false,
                     videoOnly: true,
                   )
@@ -698,7 +698,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                 videoOnly: false,
               );
     return ItemPrepareConfigSelectable(
-      tr.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
+      await tr.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
       itemExists: await tr.exists(),
       item: pi,
       videoOptions: videoOptions,
@@ -787,7 +787,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     try {
       duration = await setPls();
-    } on Exception catch (e) {
+    } catch (e) {
       if (checkInterrupted()) return;
       final reallyError = !(duration != null && currentPositionMS.value > 0);
       if (reallyError) {
@@ -2292,7 +2292,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
 // ----------------------- Extensions --------------------------
 extension TrackToAudioSourceMediaItem on Selectable {
-  UriSource toAudioSource(int currentIndex, int queueLength, Duration? duration, {bool cache = true}) {
+  FutureOr<UriSource> toAudioSource(int currentIndex, int queueLength, Duration? duration, {bool cache = true}) {
     if (track.isNetwork) {
       return _buildTrackNetworkAudioSource(tr: this.track);
     }
@@ -2450,6 +2450,7 @@ class AndroidLoudnessEnhancerExtended {
 
 UriSource _buildCacheableAVSource(
   Uri uriDDL, {
+  Map<String, String>? headers,
   required File cacheFile,
   required void Function(File cachedFile) onFirstCacheDone,
   required void Function(File cachedFile) onFetched,
@@ -2465,34 +2466,64 @@ UriSource _buildCacheableAVSource(
   cacheStream.download().then(onFetched);
   final cacheUrl = cacheStream.cacheUrl;
   void disposeStream() => cacheStream.dispose(force: true);
-  return AudioVideoSource.uri(cacheUrl, onDispose: disposeStream);
+  return AudioVideoSource.uri(
+    cacheUrl,
+    headers: headers,
+    onDispose: disposeStream,
+  );
 }
 
-UriSource _buildTrackNetworkAudioSource({required Track tr}) {
+Future<UriSource> _buildTrackNetworkAudioSource({required Track tr}) async {
   final uri = Uri.parse(tr.path);
   final res = MediaUrlParseResult.parseFromUri(uri);
-  final cacheFile = FileParts.join(AppDirs.APP_CACHE, res.type.name, res.username, res.id);
-  final uriDDL = MusicWebServer.baseUrlToActualUrl(tr.path, uri: uri);
-  if (uriDDL == null) return AudioVideoSource.file('');
+  final id = res.id;
+  if (id == null || id.isEmpty) return AudioVideoSource.file('');
+
+  final cleanPath = id.startsWith('/') ? id.substring(1) : res.id;
+  final cacheFile = FileParts.join(AppDirs.APP_CACHE, res.type.name, res.username, cleanPath);
 
   bool stillPlaying(String path) {
     final current = Player.inst.currentItem.value;
     return current is Selectable && path == current.track.path;
   }
 
+  void onFetched(File cachedFile) async {
+    if (stillPlaying(tr.path)) {
+      await WaveformController.inst.generateWaveform(
+        path: cachedFile.path,
+        duration: Duration(milliseconds: tr.durationMS),
+        stillPlaying: (_) => stillPlaying(tr.path),
+      );
+    }
+  }
+
+  if (await cacheFile.exists()) {
+    if (await cacheFile.fileSize() == tr.size) {
+      onFetched(cacheFile);
+      return AudioVideoSource.file(cacheFile.path);
+    } else {
+      await cacheFile.tryDeleting();
+    }
+  }
+
+  final uriDDLInfo = await MusicWebServer.baseUrlToActualUrl(
+    tr.path,
+    uri: uri,
+    onFetchedIfLocal: onFetched,
+  );
+
+  if (uriDDLInfo == null) return AudioVideoSource.file('');
+
+  if (!uriDDLInfo.allowStreamCaching) {
+    return AudioVideoSource.uri(uriDDLInfo.uri);
+  }
+
   return _buildCacheableAVSource(
-    uriDDL,
+    uriDDLInfo.uri,
+    headers: uriDDLInfo.headers,
     cacheFile: cacheFile,
     onFirstCacheDone: (cachedFile) {},
-    onFetched: (cachedFile) async {
-      if (stillPlaying(tr.path)) {
-        await WaveformController.inst.generateWaveform(
-          path: cachedFile.path,
-          duration: Duration(milliseconds: tr.durationMS),
-          stillPlaying: (_) => stillPlaying(tr.path),
-        );
-      }
-    },
+    onFetched: onFetched,
   );
 }
 

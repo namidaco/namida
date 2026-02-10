@@ -65,6 +65,8 @@ class _TagsExtractorAndroid extends TagsExtractor {
     required bool isVideo,
     bool tagger = true,
     FAudioModel? trackInfo,
+    required bool isNetwork,
+    String? networkId,
   }) async {
     if (trackInfo == null && tagger && !isVideo) {
       trackInfo = await _readAllData(
@@ -85,10 +87,14 @@ class _TagsExtractorAndroid extends TagsExtractor {
           final filename = TagsExtractor.buildImageFilename(
             path: trackPath,
             identifiers: identifiers,
+            isNetwork: isNetwork,
+            networkId: networkId,
             infoCallback: () => (
               albumName: trackInfo?.tags.album,
               albumArtist: trackInfo?.tags.albumArtist,
               year: trackInfo?.tags.year,
+              title: trackInfo?.tags.title,
+              artist: trackInfo?.tags.artist,
             ),
             hashKeyCallback: () => trackPath.toFastHashKey(),
           );
@@ -142,6 +148,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
     required String? audioArtworkDirectory,
     required String? videoArtworkDirectory,
     bool overrideArtwork = false,
+    required bool isNetwork,
   }) async {
     final streamKey = keyWrapper.next();
     StreamSubscription<dynamic>? streamSub;
@@ -197,6 +204,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
         extractArtwork: extractArtwork,
         overrideArtwork: overrideArtwork,
         isVideo: isVideo,
+        isNetwork: isNetwork,
         trackInfo: trackInfoMap == null ? null : FAudioModel.fromMap(trackInfoMap),
       ).catchError((e, st) {
         logger.error('ffmpeg fallback extracton failed', e: e, st: st);

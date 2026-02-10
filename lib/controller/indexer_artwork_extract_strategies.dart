@@ -56,13 +56,13 @@ class _NetworkBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
 
     parent._pendingArtworksFullRes[imagePath] = Completer<void>();
 
-    final isNetwork = track.isNetwork;
-    if (isNetwork) {
-      try {
-        final resBytes = await MusicWebServer.baseUrlToImage(track.path);
-        parent.artworksBytesMap[imagePath] = resBytes;
-      } catch (_) {}
-    }
+    try {
+      final resBytes = await MusicWebServer.baseUrlToImage(track.path);
+      parent.artworksBytesMap[imagePath] = resBytes;
+      if (resBytes != null && parent.isNetworkArtworkCachingEnabled) {
+        File(imagePath).writeAsBytes(resBytes).ignoreError();
+      }
+    } catch (_) {}
 
     parent._pendingArtworksFullRes[imagePath]!.completeIfWasnt();
     parent._pendingArtworksFullRes.remove(imagePath);
@@ -117,7 +117,10 @@ class _FileBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
         albumName: trExt?.album,
         albumArtist: trExt?.albumArtist,
         year: trExt?.year.toString(),
+        title: trExt?.title,
+        artist: trExt?.originalArtist,
       ),
+      isNetwork: false,
       hashKeyCallback: () => trExt?.hashKey ?? trackPath.toFastHashKey(),
     );
 
@@ -130,6 +133,7 @@ class _FileBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
       isVideo: isVideo,
       extractArtwork: true,
       saveArtworkToCache: isCachingEnabled,
+      isNetwork: false,
     );
     final artwork = model.tags.artwork;
     bytes = artwork.bytes;

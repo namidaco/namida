@@ -50,6 +50,7 @@ class Indexer<T extends Track> {
   bool get _defaultUseMediaStore => NamidaFeaturesVisibility.onAudioQueryAvailable && settings.useMediaStore.value;
   bool get _includeVideosAsTracks => settings.includeVideos.value;
   bool get _isArtworkCachingEnabled => settings.cacheArtworks.value;
+  bool get isNetworkArtworkCachingEnabled => true;
 
   void _clearTracksDBAndReOpen() {
     _tracksDBManager.deleteEverything();
@@ -555,7 +556,7 @@ class Indexer<T extends Track> {
     if (addedItemsLists[MediaType.folderVideo]?.newKeys.isNotEmpty == true) FoldersController.videos.onMapChanged(mainMapFoldersVideos);
   }
 
-  Future<TrackExtended?> _convertTagToTrack({
+  static Future<TrackExtended?> convertTagToTrack({
     required String trackPath,
     required FAudioModel trackInfo,
     required bool tryExtractingFromFilename,
@@ -741,15 +742,19 @@ class Indexer<T extends Track> {
     required TrackExtended? Function() onMinDurTrigger,
     required TrackExtended? Function() onMinSizeTrigger,
     bool tryExtractingFromFilename = true,
+    required bool isNetwork,
+    String? networkId,
   }) async {
     final res = await NamidaTaggerController.inst.extractMetadata(
       trackPath: trackPath,
       extractArtwork: false,
       overrideArtwork: false,
       isVideo: trackPath.isVideo(),
+      isNetwork: isNetwork,
+      networkId: networkId,
     );
     if (res.hasError) return null;
-    return _convertTagToTrack(
+    return convertTagToTrack(
       trackPath: trackPath,
       trackInfo: res,
       tryExtractingFromFilename: tryExtractingFromFilename,
@@ -850,11 +855,12 @@ class Indexer<T extends Track> {
       keyWrapper: keyWrapper,
       extractArtwork: updateArtwork,
       overrideArtwork: updateArtwork,
+      isNetwork: false,
     );
     final splitConfigs = _createSplitConfig();
     await for (final item in stream) {
       final path = item.tags.path;
-      final trext = await _convertTagToTrack(
+      final trext = await convertTagToTrack(
         trackPath: path,
         trackInfo: item,
         tryExtractingFromFilename: tryExtractingFromFilename,
@@ -933,7 +939,7 @@ class Indexer<T extends Track> {
 
     final splitConfig = _createSplitConfig();
 
-    Future<TrackExtended?> extractFunction(FAudioModel item) => _convertTagToTrack(
+    Future<TrackExtended?> extractFunction(FAudioModel item) => convertTagToTrack(
           trackPath: item.tags.path,
           trackInfo: item,
           tryExtractingFromFilename: true,
@@ -947,6 +953,7 @@ class Indexer<T extends Track> {
       trackPath: trackPath,
       extractArtwork: null,
       isVideo: trackPath.isVideo(),
+      isNetwork: false,
     );
     final trext = await extractFunction(model);
     if (trext != null) {
@@ -993,7 +1000,7 @@ class Indexer<T extends Track> {
     if (tracksToExtract.isNotEmpty) {
       final splitConfig = _createSplitConfig();
 
-      Future<TrackExtended?> extractFunction(FAudioModel item) => _convertTagToTrack(
+      Future<TrackExtended?> extractFunction(FAudioModel item) => convertTagToTrack(
             trackPath: item.tags.path,
             trackInfo: item,
             tryExtractingFromFilename: true,
@@ -1008,6 +1015,7 @@ class Indexer<T extends Track> {
         paths: tracksToExtract,
         extractArtwork: null,
         keyWrapper: keyWrapper,
+        isNetwork: false,
       );
       await for (final item in stream) {
         final p = item.tags.path;
@@ -1129,7 +1137,7 @@ class Indexer<T extends Track> {
         if (chunkList.isEmpty) return;
 
         final splittersConfigs = _createSplitConfig();
-        Future<TrackExtended?> extractFunction(FAudioModel item) => _convertTagToTrack(
+        Future<TrackExtended?> extractFunction(FAudioModel item) => convertTagToTrack(
               trackPath: item.tags.path,
               trackInfo: item,
               tryExtractingFromFilename: true,
@@ -1152,6 +1160,7 @@ class Indexer<T extends Track> {
           keyWrapper: keyWrapper,
           extractArtwork: null,
           overrideArtwork: false,
+          isNetwork: false,
         );
 
         await for (final item in stream) {

@@ -57,7 +57,7 @@ final class DirectoryIndexServer extends DirectoryIndex {
     if (uriCleanText.endsWith('?')) uriCleanText = uriCleanText.substring(0, uriCleanText.length - 1);
 
     if (parseIdCallback != null) {
-      final id = uri.queryParameters['d'] as String;
+      final id = uri.queryParameters['d'];
       parseIdCallback(id);
     }
 
@@ -163,18 +163,22 @@ sealed class DirectoryIndex {
 }
 
 enum DirectoryIndexType {
-  local(false),
-  subsonic(true),
-  unknown(false),
+  local(false, false, false),
+  subsonic(true, false, true),
+  webdav(true, true, false),
+  unknown(false, false, false),
   ;
 
   final bool isServer;
-  const DirectoryIndexType(this.isServer);
+  final bool legacyAuthOnly;
+  final bool legacyAuthEncrypt;
+  const DirectoryIndexType(this.isServer, this.legacyAuthOnly, this.legacyAuthEncrypt);
 
   String toText() {
     return switch (this) {
       DirectoryIndexType.local => lang.LOCAL,
       DirectoryIndexType.subsonic => '(Open) Subsonic',
+      DirectoryIndexType.webdav => 'WebDAV',
       DirectoryIndexType.unknown => lang.NONE,
     };
   }
@@ -183,6 +187,7 @@ enum DirectoryIndexType {
     return switch (this) {
       DirectoryIndexType.local => lang.PICK_FROM_STORAGE,
       DirectoryIndexType.subsonic => 'Navidrome, Airsonic, Gonic, etc...',
+      DirectoryIndexType.webdav => null,
       DirectoryIndexType.unknown => null,
     };
   }
@@ -191,6 +196,7 @@ enum DirectoryIndexType {
     return switch (this) {
       DirectoryIndexType.local || DirectoryIndexType.unknown => null,
       DirectoryIndexType.subsonic => 'assets/icons/subsonic.png',
+      DirectoryIndexType.webdav => null,
     };
   }
 
@@ -198,6 +204,7 @@ enum DirectoryIndexType {
     return switch (this) {
       DirectoryIndexType.local || DirectoryIndexType.unknown => Broken.driver,
       DirectoryIndexType.subsonic => Broken.cloud,
+      DirectoryIndexType.webdav => Broken.global,
     };
   }
 
@@ -205,6 +212,7 @@ enum DirectoryIndexType {
     return switch (this) {
       DirectoryIndexType.local || DirectoryIndexType.unknown => theme.colorScheme.primary,
       DirectoryIndexType.subsonic => const Color.fromARGB(255, 235, 211, 0),
+      DirectoryIndexType.webdav => theme.colorScheme.primary,
     };
   }
 
@@ -216,6 +224,12 @@ enum DirectoryIndexType {
           url: 'https://demo.navidrome.org',
           username: 'demo',
           password: 'demo',
+        ),
+      DirectoryIndexType.webdav => MusicWebServerAuthDetailsDemo(
+          type: this,
+          url: 'http://localhost:8080',
+          username: '',
+          password: '',
         ),
     };
   }

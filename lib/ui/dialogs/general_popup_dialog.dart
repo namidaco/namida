@@ -68,7 +68,7 @@ Future<void> showGeneralPopupDialog(
   bool extractColor = true,
   bool isCircle = false,
   bool isFromPlayerQueue = false,
-  Exception? errorPlayingTrack,
+  Object? errorPlayingTrack,
   String? artistToAddFrom,
   (String, String)? albumToAddFrom,
   String? heroTag,

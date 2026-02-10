@@ -259,7 +259,13 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
   FTags? tags;
   Uint8List? artworkBytes = Uint8List.fromList([]);
 
-  final infoFull = await NamidaTaggerController.inst.extractMetadata(trackPath: track.path, isVideo: track is Video, extractArtwork: true, saveArtworkToCache: false);
+  final infoFull = await NamidaTaggerController.inst.extractMetadata(
+    trackPath: track.path,
+    isVideo: track is Video,
+    extractArtwork: true,
+    saveArtworkToCache: false,
+    isNetwork: false,
+  );
   tags = infoFull.tags;
   artworkBytes = tags.artwork.bytes;
   if (infoFull.hasError) {
@@ -638,7 +644,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                       NamidaInkWell(
                         borderRadius: 2.0,
                         onTap: () {
-                          final titleAndArtist = Indexer.getTitleAndArtistFromFilename(track.path.getFilenameWOExt);
+                          final titleAndArtist = Indexer.getTitleAndArtistFromFilename(track.filenameWOExt);
                           final title = titleAndArtist.$1;
                           final artist = titleAndArtist.$2;
 

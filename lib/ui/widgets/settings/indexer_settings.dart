@@ -140,7 +140,7 @@ class IndexerSettings extends SettingSubpageProvider {
     final isAuthenticatingRx = false.obs;
     final possibleErrorRx = Rxn<MusicWebServerError>();
     final selectedTypeRx = initialType.obs;
-    final legacyAuthRx = false.obs;
+    final legacyAuthRx = initialType.legacyAuthOnly ? null : false.obs;
     final urlController = TextEditingController(text: initialDir?.source);
     final usernameController = TextEditingController(text: initialDir?.username);
     final passwordController = TextEditingController(text: null);
@@ -203,7 +203,7 @@ class IndexerSettings extends SettingSubpageProvider {
         final username = usernameController.text;
         final password = passwordController.text;
         final selectedType = selectedTypeRx.value;
-        final legacyAuth = legacyAuthRx.value;
+        final legacyAuth = legacyAuthRx?.value ?? initialType.legacyAuthOnly;
 
         final dir = DirectoryIndexServer(url, selectedType, username);
         if (isDuplicated(dir)) {
@@ -234,7 +234,7 @@ class IndexerSettings extends SettingSubpageProvider {
         isAuthenticatingRx.close();
         possibleErrorRx.close();
         selectedTypeRx.close();
-        legacyAuthRx.close();
+        legacyAuthRx?.close();
         urlController.dispose();
         usernameController.dispose();
         passwordController.dispose();
@@ -339,16 +339,18 @@ class IndexerSettings extends SettingSubpageProvider {
                     margin: const EdgeInsets.symmetric(horizontal: 8.0),
                   ),
                   const SizedBox(height: 12.0),
-                  ObxO(
-                    rx: legacyAuthRx,
-                    builder: (context, value) => CustomSwitchListTile(
-                      visualDensity: VisualDensity.compact,
-                      title: lang.LEGACY_AUTHENTICATION,
-                      value: value,
-                      onChanged: (_) => legacyAuthRx.toggle(),
+                  if (legacyAuthRx != null) ...[
+                    ObxO(
+                      rx: legacyAuthRx,
+                      builder: (context, value) => CustomSwitchListTile(
+                        visualDensity: VisualDensity.compact,
+                        title: lang.LEGACY_AUTHENTICATION,
+                        value: value,
+                        onChanged: (_) => legacyAuthRx.toggle(),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12.0),
+                    const SizedBox(height: 12.0),
+                  ],
                   CustomTagTextField(
                     controller: urlController,
                     hintText: initialDir?.source ?? demoInfo?.url ?? '',
@@ -360,14 +362,12 @@ class IndexerSettings extends SettingSubpageProvider {
                     controller: usernameController,
                     hintText: initialDir?.username ?? demoInfo?.username ?? '',
                     labelText: lang.LOGIN,
-                    validator: validator,
                   ),
                   const SizedBox(height: 12.0),
                   CustomTagTextField(
                     controller: passwordController,
                     hintText: initialDir != null ? '' : demoInfo?.password ?? '',
                     labelText: lang.PASSWORD,
-                    validator: emptyValidator,
                     obscureText: true,
                     maxLines: 1,
                     keyboardType: TextInputType.visiblePassword,
@@ -437,7 +437,7 @@ class IndexerSettings extends SettingSubpageProvider {
                   switch (e) {
                     case DirectoryIndexType.local:
                       _pickLocalFolder(onSuccessChoose);
-                    case DirectoryIndexType.subsonic:
+                    case DirectoryIndexType.subsonic || DirectoryIndexType.webdav:
                       _pickServerFolder(initialType: e, onSuccessChoose: onSuccessChoose);
                     case DirectoryIndexType.unknown:
                   }
@@ -667,7 +667,7 @@ class IndexerSettings extends SettingSubpageProvider {
                             } else {
                               String bodyText = "${lang.REMOVE} \"${e.source}\"?";
                               if (e.isServer) {
-                                final title = '${e.type.toText()} - ${e.username ?? '?'}';
+                                final title = [e.type.toText(), e.username ?? '?'].joinText(separator: ' - ');
                                 bodyText += "\n$title";
                               }
                               NamidaNavigator.inst.navigateDialog(

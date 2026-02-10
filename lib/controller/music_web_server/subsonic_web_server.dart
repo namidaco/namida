@@ -19,7 +19,7 @@ class _SubsonicWebServer extends MusicWebServer {
         );
       },
       baseUrl: authDetails.dir.source,
-      auth: authDetails.auth,
+      auth: authDetails.auth.toSubsonicAuthModel(),
     );
     _serverUri = Uri.parse(authDetails.dir.source);
   }
@@ -30,7 +30,7 @@ class _SubsonicWebServer extends MusicWebServer {
   }
 
   @override
-  Uri? getStreamUrl(String id) {
+  WebStreamUriDetails? getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal}) {
     final api = _api;
     if (api == null) return null;
     final baseUri = _serverUri;
@@ -50,7 +50,7 @@ class _SubsonicWebServer extends MusicWebServer {
         ...authDetails.auth.toUrlParams(),
       },
     );
-    return uri;
+    return WebStreamUriDetails.fromUri(uri);
   }
 
   @override

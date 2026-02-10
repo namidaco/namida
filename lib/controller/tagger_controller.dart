@@ -31,6 +31,7 @@ class NamidaTaggerController {
     required bool? extractArtwork,
     bool? saveArtworkToCache,
     bool overrideArtwork = false,
+    required bool isNetwork,
   }) async {
     extractArtwork ??= settings.cacheArtworks.value; // no need to extract artwork while indexing if caching is disabled
     saveArtworkToCache ??= settings.cacheArtworks.value;
@@ -41,6 +42,7 @@ class NamidaTaggerController {
       audioArtworkDirectory: saveArtworkToCache ? AppDirs.ARTWORKS : null,
       videoArtworkDirectory: saveArtworkToCache ? AppDirs.THUMBNAILS : null,
       overrideArtwork: overrideArtwork,
+      isNetwork: isNetwork,
     );
   }
 
@@ -52,6 +54,8 @@ class NamidaTaggerController {
     Set<AlbumIdentifier>? identifiers,
     bool overrideArtwork = false,
     required bool isVideo,
+    required bool isNetwork,
+    String? networkId,
   }) async {
     extractArtwork ??= settings.cacheArtworks.value;
     saveArtworkToCache ??= settings.cacheArtworks.value;
@@ -63,6 +67,8 @@ class NamidaTaggerController {
       identifiers: identifiers,
       overrideArtwork: overrideArtwork,
       isVideo: isVideo,
+      isNetwork: isNetwork,
+      networkId: networkId,
     );
   }
 
@@ -87,13 +93,17 @@ class NamidaTaggerController {
     String oldComment = '';
     if (commentToInsert.isNotEmpty) {
       final tr = tracks.first;
-      oldComment = await NamidaTaggerController.inst
-          .extractMetadata(
-            trackPath: tr.path,
-            isVideo: tr is Video,
-            extractArtwork: false,
-          )
-          .then((value) => value.tags.comment ?? '');
+      if (tr.isPhysical) {
+        // -- tho its almost always physical, but just in case since this fn can be used to update stats
+        oldComment = await NamidaTaggerController.inst
+            .extractMetadata(
+              trackPath: tr.path,
+              isVideo: tr is Video,
+              extractArtwork: false,
+              isNetwork: false,
+            )
+            .then((value) => value.tags.comment ?? '');
+      }
     }
 
     final newTags = commentToInsert.isNotEmpty
@@ -144,8 +154,6 @@ class NamidaTaggerController {
     final tracksMap = <Track, TrackExtended>{};
     for (int i = 0; i < tracks.length; i++) {
       var track = tracks[i];
-      final file = File(track.path);
-      bool fileExists = false;
       String? error;
 
       if (shouldEditStats && track.isNetwork) {
@@ -166,6 +174,8 @@ class NamidaTaggerController {
           }
         }
       } else {
+        final file = File(track.path);
+        bool fileExists = false;
         try {
           fileExists = await file.exists();
           if (!fileExists) error = 'file not found';

@@ -15,6 +15,8 @@ class _TagsExtractorDesktop extends TagsExtractor {
     Set<AlbumIdentifier>? identifiers,
     bool overrideArtwork = false,
     required bool isVideo,
+    required bool isNetwork,
+    String? networkId,
   }) async {
     final ffmpegInfo = await executer?.extractMetadata(trackPath) ?? await ffmpegController.extractMetadata(trackPath);
 
@@ -31,10 +33,14 @@ class _TagsExtractorDesktop extends TagsExtractor {
         final filename = TagsExtractor.buildImageFilename(
           path: trackPath,
           identifiers: identifiers,
+          isNetwork: isNetwork,
+          networkId: networkId,
           infoCallback: () => (
             albumName: ffmpegInfo?.format?.tags?.album,
             albumArtist: ffmpegInfo?.format?.tags?.albumArtist,
             year: ffmpegInfo?.format?.tags?.date,
+            title: ffmpegInfo?.format?.tags?.title,
+            artist: ffmpegInfo?.format?.tags?.artist,
           ),
           hashKeyCallback: () => trackPath.toFastHashKey(),
         );
@@ -82,6 +88,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
     required String? audioArtworkDirectory,
     required String? videoArtworkDirectory,
     bool overrideArtwork = false,
+    required bool isNetwork,
   }) async* {
     final key = keyWrapper.next();
 
@@ -101,6 +108,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
         extractArtwork: extractArtwork,
         overrideArtwork: overrideArtwork,
         isVideo: isVideo,
+        isNetwork: isNetwork,
       );
       yield info;
     }

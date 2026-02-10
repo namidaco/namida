@@ -341,6 +341,7 @@ class NamidaFFMPEG {
               trackPath: filee.path,
               onMinDurTrigger: () => null,
               onMinSizeTrigger: () => null,
+              isNetwork: false,
             );
         if (tr == null) continue;
         final videoId = tr.youtubeID;

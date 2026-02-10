@@ -36,7 +36,7 @@ class NamidaDialogs {
     TrackWithDate? trackWithDate,
     int? index,
     bool isFromPlayerQueue = false,
-    Exception? errorPlayingTrack,
+    Object? errorPlayingTrack,
     required QueueSource source,
     String? heroTag,
   }) async {

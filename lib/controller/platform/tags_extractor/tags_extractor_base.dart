@@ -28,6 +28,8 @@ abstract class TagsExtractor {
     Set<AlbumIdentifier>? identifiers,
     bool overrideArtwork = false,
     required bool isVideo,
+    required bool isNetwork,
+    String? networkId,
   });
 
   FutureOr<Stream<FAudioModel>> extractMetadataAsStream({
@@ -37,6 +39,7 @@ abstract class TagsExtractor {
     required String? audioArtworkDirectory,
     required String? videoArtworkDirectory,
     bool overrideArtwork = false,
+    required bool isNetwork,
   });
 
   Future<bool> writeTags({
@@ -91,40 +94,46 @@ abstract class TagsExtractor {
 
   static Set<AlbumIdentifier> getAlbumIdentifiersSet() => defaultAlbumIdentifier.toSet();
 
-  static String buildImageFilenameFromTrack({required Track track, required TrackExtended? trExt}) {
-    final isNetwork = track.isNetwork;
-    final path = isNetwork
-        ? DownloadTaskFilename.cleanupFilename(
-            [
-              trExt?.originalArtist ?? '',
-              trExt?.title ?? '',
-              MusicWebServer.baseUrlToId(track.path) ?? '',
-            ].joinText(separator: ' - '),
-          )
-        : track.path;
+  static String buildImageFilenameFromTrack({required Track track, String? networkId, required TrackExtended? trExt}) {
     return TagsExtractor.buildImageFilename(
-      path: path,
+      path: track.path,
+      isNetwork: track.isNetwork,
+      networkId: networkId,
       identifiers: null,
       identifierCallback: () => trExt?.albumIdentifierWrapper?.resolved(),
       infoCallback: () => (
         albumName: trExt?.album,
         albumArtist: trExt?.albumArtist,
         year: trExt?.year.toString(),
+        title: trExt?.title,
+        artist: trExt?.originalArtist,
       ),
-      hashKeyCallback: () => trExt?.hashKey ?? path.toFastHashKey(),
+      hashKeyCallback: () => trExt?.hashKey ?? track.path.toFastHashKey(),
     );
   }
 
   static String buildImageFilename({
     required String path,
     required Set<AlbumIdentifier>? identifiers,
+    required bool? isNetwork,
+    String? networkId,
     String? Function()? identifierCallback,
-    required ({String? albumName, String? albumArtist, String? year}) Function() infoCallback,
+    required ({
+      String? albumName,
+      String? albumArtist,
+      String? year,
+      String? title,
+      String? artist,
+    })
+            Function()
+        infoCallback,
     required String? Function() hashKeyCallback,
   }) {
     final woext = buildImageFilenameWOExt(
       path: path,
       identifiers: identifiers,
+      isNetwork: isNetwork,
+      networkId: networkId,
       identifierCallback: identifierCallback,
       infoCallback: infoCallback,
       hashKeyCallback: hashKeyCallback,
@@ -135,8 +144,18 @@ abstract class TagsExtractor {
   static String buildImageFilenameWOExt({
     required String path,
     required Set<AlbumIdentifier>? identifiers,
+    required bool? isNetwork,
+    String? networkId,
     String? Function()? identifierCallback,
-    required ({String? albumName, String? albumArtist, String? year}) Function() infoCallback,
+    required ({
+      String? albumName,
+      String? albumArtist,
+      String? year,
+      String? title,
+      String? artist,
+    })
+            Function()
+        infoCallback,
     required String? Function() hashKeyCallback,
   }) {
     final identifiersSet = identifiers ?? TagsExtractor.getAlbumIdentifiersSet();
@@ -155,7 +174,21 @@ abstract class TagsExtractor {
       );
       if (id.isNotEmpty) return id;
     }
-    final filename = path.getFilename;
+    String filename;
+    isNetwork ??= path.startsWith('http');
+    if (isNetwork) {
+      final info = infoCallback();
+      filename = DownloadTaskFilename.cleanupFilename(
+        [
+          info.artist ?? '',
+          info.title ?? '',
+          networkId ?? MusicWebServer.baseUrlToId(path) ?? '',
+        ].joinText(separator: ' - '),
+      );
+    } else {
+      filename = path.getFilename;
+    }
+
     if (TagsExtractor.defaultUniqueArtworkHash) {
       final key = hashKeyCallback();
       if (key != null) {

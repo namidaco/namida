@@ -46,7 +46,12 @@ class ConnectivityController {
       _hasHighConnection.value = highConnection;
       _hasConnection.value = true;
       if (_onConnectionRestored.isNotEmpty) {
-        _onConnectionRestored.loop((item) => item());
+        final indicesToRemove = <int>{};
+        _onConnectionRestored.loopAdv((item, i) {
+          item();
+          indicesToRemove.add(i);
+        });
+        _onConnectionRestored.removeWhere(indicesToRemove.remove);
       }
     }
   }

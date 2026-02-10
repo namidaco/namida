@@ -71,7 +71,7 @@ Future<void> showTrackInfoDialog(
     final ap = Player.createTempPlayer();
     await ap.setSource(
       ItemPrepareConfig(
-        track.toAudioSource(0, 0, null),
+        await track.toAudioSource(0, 0, null),
         index: 0,
         initialPosition: null,
         videoOptions: null,

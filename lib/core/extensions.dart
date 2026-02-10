@@ -1090,7 +1090,7 @@ extension DirectoryIndexServerUtils on Iterable<DirectoryIndexServer> {
   String toBodyText({bool? Function(DirectoryIndexServer d)? stillExistsCallback}) {
     return this.map((e) {
       final type = e.type.toText();
-      final title = '$type - ${e.username ?? '?'}';
+      final title = [type, e.username ?? '?'].joinText(separator: ' - ');
       final stillExists = stillExistsCallback?.call(e) ?? true;
       final removedText = stillExists ? '' : ' (${lang.REMOVED})';
       return "$title$removedText:\n${e.source}";
