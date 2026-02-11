@@ -120,12 +120,14 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
     return numberOfListensMap.finalize(item, sorter: sorter);
   }
 
-  Iterable<E> generateRecommendedItemsFor(E item, E Function(T current) itemToSub) {
+  Iterable<E> generateRecommendedItemsFor(E item, E Function(T current) itemToSub, {int? sampleCount}) {
     final historytracks = historyController.historyTracks.toList();
     if (historytracks.isEmpty) return [];
 
-    final q = QueueInsertionType.algorithm.toQueueInsertion();
-    final sampleCount = q.sample ?? 10;
+    if (sampleCount == null) {
+      final q = QueueInsertionType.algorithm.toQueueInsertion();
+      sampleCount = q.sample ?? 10;
+    }
 
     final max = historytracks.length;
     int clamped(int range) => range.clampInt(0, max);

@@ -290,13 +290,18 @@ extension ListieListieUtils<T> on List<T> {
     final selectedIndices = <int>{};
     final selectedItems = <T>[];
 
-    for (var i = totalLength - sampleCount; i < totalLength; i++) {
+    int attempts = 0;
+    final maxAttempts = totalLength;
+
+    for (var i = totalLength - sampleCount; i < totalLength && attempts < maxAttempts;) {
       final t = random.nextInt(i + 1);
       final indexToSelect = selectedIndices.contains(t) ? i : t;
       final item = list[indexToSelect];
+      attempts++;
       if (test(item)) {
         selectedIndices.add(indexToSelect);
         selectedItems.add(item);
+        i++;
       }
     }
 

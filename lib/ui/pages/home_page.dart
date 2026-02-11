@@ -114,11 +114,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   }
 
   void _fillLists() async {
-    if (widget.historyManager.isHistoryLoaded) {
+    final historyManager = widget.historyManager;
+    if (historyManager.isHistoryLoaded) {
       _isLoading = false;
     } else {
       _isLoading = true;
-      await widget.historyManager.waitForHistoryAndMostPlayedLoad;
+      await historyManager.waitForHistoryAndMostPlayedLoad;
     }
 
     final timeNow = DateTime.now();
@@ -137,16 +138,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
     // -- Top Recents --
     if (_topRecentListened.isEmpty) {
-      final sortedMap = widget.historyManager.getMostListensInTimeRange(
+      final sortedMap = historyManager.getMostListensInTimeRange(
         mptr: _topRecentsTimeRange,
         isStartOfDay: false,
-        mainItemToSubItem: widget.historyManager.mainItemToSubItem,
+        mainItemToSubItem: historyManager.mainItemToSubItem,
       );
       _topRecentListened.addAll(sortedMap.entriesSortedByValue);
     }
 
     // -- Lost Memories --
-    _lostMemoriesYears = widget.historyManager.getHistoryYears()..remove(timeNow.year);
+    _lostMemoriesYears = historyManager.getHistoryYears()..remove(timeNow.year);
     final oldestYear = _lostMemoriesYears.lastOrNull ?? 0;
 
     final minusYearClamped = (timeNow.year - 1).withMinimum(oldestYear);
@@ -174,16 +175,57 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     // -- Random --
     if (_randomTracks.isEmpty) _randomTracks.addAll(widget.generator.getRandomTracks(min: 25, max: 26));
 
-    final int mostRecentAddedMSSE = DateTime.now().subtract(Duration(days: 7)).millisecondsSinceEpoch;
-    final int mostRecentListenedMSSE = DateTime.now().subtract(Duration(days: 2)).millisecondsSinceEpoch;
+    final int mostRecentAdded7DaysMSSE = timeNow.subtract(Duration(days: 7)).millisecondsSinceEpoch;
+    final int mostRecentListened2DaysMSSE = timeNow.subtract(Duration(days: 2)).millisecondsSinceEpoch;
     final underrated = allTracksInLibrary.getRandomSampleWhere(100, (tr) {
       if (widget.playlistManager.favouritesPlaylist.isSubItemFavourite(tr)) return false; // alr favourited
-      final listensCount = widget.historyManager.topTracksMapListens.value[tr]?.length;
+      final listensCount = historyManager.topTracksMapListens.value[tr]?.length;
       if (listensCount != null && listensCount > 8) return false; // alr listened enough
-      if (tr.dateAdded > mostRecentAddedMSSE) return false; // its very recently added
-      final lastListen = widget.historyManager.topTracksMapListens.value[tr]?.lastOrNull;
-      if (lastListen != null && lastListen > mostRecentListenedMSSE) return false; // recently listened
+      if (tr.dateAdded > mostRecentAdded7DaysMSSE) return false; // its very recently added
+      final lastListen = historyManager.topTracksMapListens.value[tr]?.lastOrNull;
+      if (lastListen != null && lastListen > mostRecentListened2DaysMSSE) return false; // recently listened
       return true;
+    });
+
+    final avgTopListensCount = (historyManager.topTracksMapListens.value.values.take(20).fold(0, (value, element) => value + element.length) ~/ 20).withMinimum(0);
+    final int within1MonthsDaysMSSE = timeNow.subtract(Duration(days: 30 * 1)).millisecondsSinceEpoch;
+    final int within3MonthsDaysMSSE = timeNow.subtract(Duration(days: 30 * 3)).millisecondsSinceEpoch;
+    final int within6MonthsDaysMSSE = timeNow.subtract(Duration(days: 30 * 6)).millisecondsSinceEpoch;
+    final int within12MonthsDaysMSSE = timeNow.subtract(Duration(days: 30 * 12)).millisecondsSinceEpoch;
+    final lostPartners = allTracksInLibrary.getRandomSampleWhere(100, (tr) {
+      final listens = historyManager.topTracksMapListens.value[tr];
+      if (listens != null && listens.isNotEmpty) {
+        final lastListen = listens.last;
+        final listensPercentage = listens.length / avgTopListensCount;
+        // -- if listens percentage >= p and there is no listen in the last n days
+        // -- ex: 90/100 >= 0.9 && no listens within 12 months (where 100 is avg top listens)
+        return switch (listensPercentage) {
+          >= 0.90 when within12MonthsDaysMSSE > lastListen => true,
+          >= 0.50 when within6MonthsDaysMSSE > lastListen => true,
+          >= 0.20 when within3MonthsDaysMSSE > lastListen => true,
+          >= 0.1 when within1MonthsDaysMSSE > lastListen => true,
+          _ => false,
+        };
+      }
+      return false;
+    });
+
+    // -- tracks with little to no listens in the past n days
+    final discover = allTracksInLibrary.getRandomSampleWhere(100, (tr) {
+      final listens = historyManager.topTracksMapListens.value[tr];
+      if (listens == null || listens.isEmpty) return true;
+      if (listens.length > 10) return false;
+      int listensCountWithinPeriod = 0;
+      for (int i = listens.length - 1; i >= 0; i--) {
+        final l = listens[i];
+        if (l > within3MonthsDaysMSSE) {
+          listensCountWithinPeriod++;
+          if (listensCountWithinPeriod > 5) break;
+        } else {
+          break;
+        }
+      }
+      return listensCountWithinPeriod <= 5;
     });
 
     if (_mixes.isEmpty) {
@@ -192,7 +234,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       final maxCount = settings.queueInsertion.value[QueueInsertionType.algorithm]?.numberOfTracks.withMinimum(10) ?? 25;
       MapEntry<String, List<Track>>? supremacyEntry;
       if (ct != null) {
-        final sameAsCurrent = widget.generator.generateRecommendedTrack(ct).take(maxCount);
+        final sameAsCurrent = widget.generator.generateRecommendedTrack(ct, sampleCount: 50).take(maxCount);
         if (sameAsCurrent.isNotEmpty) {
           final supremacy = [ct, ...sameAsCurrent];
           supremacyEntry = MapEntry('"${ct.title}" ${lang.SUPREMACY}', supremacy);
@@ -201,21 +243,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       final favsSample = widget.playlistManager.favouritesPlaylist.value.tracks.getRandomSample(25).tracks.toList();
       final topRecentListenedKeys = _topRecentListened.map((e) => e.key).toList();
 
-      final recentTopSortedByTotalListens = List.from(topRecentListenedKeys)..sortByReverse((e) => widget.historyManager.topTracksMapListens.value[e.track]?.length ?? 0);
-      final recent30Tracks = widget.historyManager.historyTracks.take(30).map(widget.historyManager.mainItemToSubItem).toList();
+      final recentTopSortedByTotalListens = List.from(topRecentListenedKeys)..sortByReverse((e) => historyManager.topTracksMapListens.value[e.track]?.length ?? 0);
+      final recent30Tracks = historyManager.historyTracks.take(30).map(historyManager.mainItemToSubItem).toList();
 
-      final topRecentListenedExpanded = widget.historyManager.getMostListensInTimeRange(
+      final topRecentListenedExpanded = historyManager.getMostListensInTimeRange(
         mptr: MostPlayedTimeRange.custom,
         customDate: DateRange(
           oldest: timeNow.subtract(Duration(days: 14)),
           newest: timeNow,
         ),
         isStartOfDay: false,
-        mainItemToSubItem: widget.historyManager.mainItemToSubItem,
+        mainItemToSubItem: historyManager.mainItemToSubItem,
       );
       recent30Tracks.sortByReverse((tr) => topRecentListenedExpanded[tr]?.length ?? 0);
 
-      final sameTimeAyearAgo = widget.historyManager
+      final sameTimeAyearAgo = historyManager
           .getMostListensInTimeRange(
             mptr: MostPlayedTimeRange.custom,
             customDate: DateRange(
@@ -223,7 +265,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
               newest: DateTime(timeNow.year - 1, timeNow.month, timeNow.day + 9),
             ),
             isStartOfDay: false,
-            mainItemToSubItem: widget.historyManager.mainItemToSubItem,
+            mainItemToSubItem: historyManager.mainItemToSubItem,
           )
           .keysSortedByValue
           .take(40);
@@ -245,10 +287,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
       _mixes.addAll([
         MapEntry(lang.NEW_TRACKS_RECOMMENDED, recommendedMixTracks),
-        MapEntry(lang.TOP_RECENTS, topRecentListenedKeys),
         if (supremacyEntry != null) supremacyEntry,
-        MapEntry(lang.FAVOURITES, favsSample),
+        MapEntry(lang.TOP_RECENTS, topRecentListenedKeys),
         MapEntry(lang.UNDERRATED, underrated),
+        MapEntry(lang.LOST_PARTNERS, lostPartners),
+        MapEntry(lang.DISCOVER, discover),
+        MapEntry(lang.FAVOURITES, favsSample),
         MapEntry(lang.RANDOM_PICKS, _randomTracks),
       ]);
 
@@ -1259,10 +1303,11 @@ class _MixesCardState extends State<_MixesCard> {
         blur: 10,
         disableBlurBgSizeShrink: true,
         borderRadius: fullscreen ? 12.0 : 8.0,
-        forceSquared: true,
+        forceSquared: !fullscreen,
         path: _track?.pathToImage,
         displayIcon: !displayShimmer,
         thumbnailSize: widget.width,
+        width: fullscreen ? context.width : null,
         onTopWidgets: [
           if (fullscreen)
             Positioned(

@@ -78,8 +78,8 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
     return super.generateRecommendedSimilarTimeRangeFor(track, (current) => current.track);
   }
 
-  Iterable<Track> generateRecommendedTrack(Track track) {
-    return super.generateRecommendedItemsFor(track, (current) => current.track);
+  Iterable<Track> generateRecommendedTrack(Track track, {int? sampleCount}) {
+    return super.generateRecommendedItemsFor(track, (current) => current.track, sampleCount: sampleCount);
   }
 
   /// [daysRange] means taking n days before [yearTimeStamp] & n days after [yearTimeStamp].

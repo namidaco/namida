@@ -168,6 +168,7 @@ abstract class LanguageKeys {
   String get DISABLE_ALL => _getKey('DISABLE_ALL');
   String get DISABLE_REORDERING => _getKey('DISABLE_REORDERING');
   String get DISABLE_SEARCH_CLEANUP => _getKey('DISABLE_SEARCH_CLEANUP');
+  String get DISCOVER => _getKey('DISCOVER');
   String get DISC_NUMBER_TOTAL => _getKey('DISC_NUMBER_TOTAL');
   String get DISC_NUMBER => _getKey('DISC_NUMBER');
   String get DISLIKE => _getKey('DISLIKE');
@@ -382,6 +383,7 @@ abstract class LanguageKeys {
   String get LONG_PRESS_THE_LYRICS_TO_ENTER_FULLSCREEN => _getKey('LONG_PRESS_THE_LYRICS_TO_ENTER_FULLSCREEN');
   String get LOST_MEMORIES => _getKey('LOST_MEMORIES');
   String get LOST_MEMORIES_SUBTITLE => _getKey('LOST_MEMORIES_SUBTITLE');
+  String get LOST_PARTNERS => _getKey('LOST_PARTNERS');
   String get LOUDNESS_ENHANCER => _getKey('LOUDNESS_ENHANCER');
   String get LYRICIST => _getKey('LYRICIST');
   String get LYRICS => _getKey('LYRICS');
