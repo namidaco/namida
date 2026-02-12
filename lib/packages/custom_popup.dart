@@ -165,6 +165,21 @@ class _PopupContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        Positioned(
+          top: arrowDirection == _ArrowDirection.top ? 4.0 : null,
+          bottom: arrowDirection == _ArrowDirection.bottom ? 4.0 : null,
+          left: arrowHorizontal,
+          child: RotatedBox(
+            key: arrowKey,
+            quarterTurns: arrowDirection == _ArrowDirection.top ? 2 : 4,
+            child: arrowDirection == null || !showArrow
+                ? SizedBox()
+                : CustomPaint(
+                    size: const Size(16, 8),
+                    painter: _TrianglePainter(color: arrowColor ?? Colors.white),
+                  ),
+          ),
+        ),
         Container(
           key: childKey,
           padding: contentPadding,
@@ -192,21 +207,6 @@ class _PopupContent extends StatelessWidget {
               ),
               child: child,
             ),
-          ),
-        ),
-        Positioned(
-          top: arrowDirection == _ArrowDirection.top ? 4.0 : null,
-          bottom: arrowDirection == _ArrowDirection.bottom ? 4.0 : null,
-          left: arrowHorizontal,
-          child: RotatedBox(
-            key: arrowKey,
-            quarterTurns: arrowDirection == _ArrowDirection.top ? 2 : 4,
-            child: arrowDirection == null || !showArrow
-                ? SizedBox()
-                : CustomPaint(
-                    size: const Size(16, 8),
-                    painter: _TrianglePainter(color: arrowColor ?? Colors.white),
-                  ),
           ),
         ),
       ],

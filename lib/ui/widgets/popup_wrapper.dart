@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -19,6 +20,7 @@ class NamidaPopupWrapper extends StatelessWidget {
   final FutureOr<List<Widget>> Function()? children;
   final FutureOr<List<NamidaPopupItem>> Function()? childrenDefault;
   final bool childrenAfterChildrenDefault;
+  final BoxDecoration? contentDecoration;
   final VoidCallback? onTap;
   final VoidCallback? onPop;
   final bool openOnTap;
@@ -32,6 +34,7 @@ class NamidaPopupWrapper extends StatelessWidget {
     this.children,
     this.childrenAfterChildrenDefault = true,
     this.childrenDefault,
+    this.contentDecoration,
     this.onTap,
     this.onPop,
     this.openOnTap = true,
@@ -181,7 +184,8 @@ class NamidaPopupWrapper extends StatelessWidget {
   }
 
   CustomPopup _toCustomPopup(BuildContext context) {
-    final bgColor = context.theme.popupMenuTheme.color ?? context.theme.colorScheme.surface;
+    final colorScheme = CurrentColor.inst.color /* ?? context.theme.colorScheme.surface */;
+    final scaffoldBgColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor.withValues(alpha: 0.5), context.isDarkMode ? Colors.black : Colors.white);
     return CustomPopup(
       controller: controller,
       openOnTap: openOnTap,
@@ -190,8 +194,23 @@ class NamidaPopupWrapper extends StatelessWidget {
       contentPadding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
       contentRadius: 12.0.multipliedRadius,
       position: PopupPosition.bottom,
-      arrowColor: bgColor,
-      backgroundColor: bgColor,
+      contentDecoration: contentDecoration ??
+          BoxDecoration(
+            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+            border: Border.all(
+              color: colorScheme,
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.alphaBlend(scaffoldBgColor.withValues(alpha: 0.9), colorScheme).withValues(alpha: 1.0),
+                Color.alphaBlend(scaffoldBgColor.withValues(alpha: 0.6), colorScheme).withValues(alpha: 1.0),
+              ],
+            ),
+          ),
+      arrowColor: colorScheme,
+      backgroundColor: colorScheme,
       onAfterPopup: () => popMenu(handleClosing: false),
       content: () => _getMenuContent(context),
       refreshListenable: refreshListenable,

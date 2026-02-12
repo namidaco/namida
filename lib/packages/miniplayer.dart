@@ -308,6 +308,20 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                 ),
                                 WidgetSpan(
                                   child: NamidaPopupWrapper(
+                                    contentDecoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                                      border: Border.all(
+                                        color: CurrentColor.inst.miniplayerColor,
+                                      ),
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Color.alphaBlend(theme.scaffoldBackgroundColor.withValues(alpha: 0.8), CurrentColor.inst.miniplayerColor).withValues(alpha: 1.0),
+                                          Color.alphaBlend(theme.scaffoldBackgroundColor.withValues(alpha: 0.5), CurrentColor.inst.miniplayerColor).withValues(alpha: 1.0),
+                                        ],
+                                      ),
+                                    ),
                                     children: () => [
                                       Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
