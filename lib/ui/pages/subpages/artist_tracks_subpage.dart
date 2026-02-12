@@ -87,6 +87,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                 header: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const SizedBox(height: 4.0),
                     _AlbumsRow(
                       title: lang.ALBUMS,
                       icon: Broken.music_dashboard,
@@ -94,6 +95,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                       initiallyExpanded: settings.extra.artistAlbumsExpanded ?? true,
                       onExpansionChanged: (value) => settings.extra.save(artistAlbumsExpanded: value),
                     ),
+                    const SizedBox(height: 6.0),
                     _AlbumsRow(
                       title: lang.SINGLES,
                       icon: Broken.music_square,
@@ -101,6 +103,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                       initiallyExpanded: settings.extra.artistSinglesExpanded ?? false, // cuz no space
                       onExpansionChanged: (value) => settings.extra.save(artistSinglesExpanded: value),
                     ),
+                    const SizedBox(height: 4.0),
                     TracksSearchWidgetBox(
                       state: this,
                       leftText: [
@@ -202,35 +205,45 @@ class _AlbumsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NamidaExpansionTile(
-      icon: icon,
-      titleText: "$title ${identifiers.length}",
-      initiallyExpanded: identifiers.isNotEmpty && initiallyExpanded,
-      onExpansionChanged: onExpansionChanged,
-      children: [
-        SizedBox(
-          height: 130.0 + 28.0,
-          child: SuperSmoothListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 14.0),
-            scrollDirection: Axis.horizontal,
-            itemExtent: 100.0,
-            itemCount: identifiers.length,
-            itemBuilder: (context, i) {
-              final albumId = identifiers[i];
-              return Container(
-                width: 100.0,
-                margin: const EdgeInsets.only(left: 2.0),
-                child: AlbumCard(
-                  identifier: albumId,
-                  album: albumId.getAlbumTracks(),
-                  staggered: false,
-                  compact: true,
-                ),
-              );
-            },
-          ),
+    return Padding(
+      padding: const EdgeInsetsGeometry.symmetric(horizontal: 8.0),
+      child: BorderRadiusClip(
+        borderRadius: BorderRadiusGeometry.circular(8.0.multipliedRadius),
+        child: NamidaExpansionTile(
+          bgColor: context.theme.cardColor,
+          icon: icon,
+          borderless: true,
+          titleText: "$title: ${identifiers.length}",
+          initiallyExpanded: identifiers.isNotEmpty && initiallyExpanded,
+          onExpansionChanged: identifiers.isEmpty ? null : onExpansionChanged,
+          children: identifiers.isEmpty
+              ? const []
+              : [
+                  SizedBox(
+                    height: 130.0 + 28.0,
+                    child: SuperSmoothListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 14.0),
+                      scrollDirection: Axis.horizontal,
+                      itemExtent: 100.0,
+                      itemCount: identifiers.length,
+                      itemBuilder: (context, i) {
+                        final albumId = identifiers[i];
+                        return Container(
+                          width: 100.0,
+                          margin: const EdgeInsets.only(left: 2.0),
+                          child: AlbumCard(
+                            identifier: albumId,
+                            album: albumId.getAlbumTracks(),
+                            staggered: false,
+                            compact: true,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
         ),
-      ],
+      ),
     );
   }
 }
