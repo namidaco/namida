@@ -1,4 +1,5 @@
 import 'package:namida/class/replay_gain_data.dart';
+import 'package:namida/core/extensions.dart';
 
 class MediaInfo {
   final String path;
@@ -10,6 +11,24 @@ class MediaInfo {
     this.streams,
     this.format,
   });
+
+  MIStream? getAudioStream() => streams?.firstWhereEff((e) => e.streamType == StreamType.audio) ?? streams?.firstOrNull;
+  static const _losslessFormats = {'flac', 'alac', 'wav', 'pcm_s16le', 'pcm_s24le', 'pcm_s32le', 'ape'};
+
+  bool? isLossless([MIStream? audioStream]) {
+    String? formatName = (audioStream ?? getAudioStream())?.codecName ?? format?.formatName;
+
+    if (formatName != null && formatName.isNotEmpty) {
+      final confirmedLossless = _losslessFormats.contains(formatName.toLowerCase());
+      if (confirmedLossless) {
+        return true;
+      } else {
+        // -- we cant tell for sure if its not lossless
+        return null;
+      }
+    }
+    return null;
+  }
 
   factory MediaInfo.fromMap(Map<dynamic, dynamic> map) {
     final format = map.getOrUpperCase("format");
@@ -271,6 +290,12 @@ class MIStream {
     this.height,
   });
 
+  static int? _extractInt(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
   factory MIStream.fromMap(Map<dynamic, dynamic> map) {
     final tags = map.getOrUpperCase("tags");
     return MIStream(
@@ -297,7 +322,7 @@ class MIStream {
       channels: map.getOrUpperCase("channels"),
       sampleFmt: map.getOrUpperCase("sample_fmt"),
       codecTimeBase: map.getOrUpperCase("codec_time_base"),
-      bitsPerSample: map.getOrUpperCase("bits_per_sample"),
+      bitsPerSample: _extractInt(map.getOrUpperCase("bits_per_raw_sample")) ?? _extractInt(map.getOrUpperCase("bits_per_sample")),
       codecType: map.getOrUpperCase("codec_type"),
       colorRange: map.getOrUpperCase("color_range"),
       pixFmt: map.getOrUpperCase("pix_fmt"),

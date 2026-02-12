@@ -322,8 +322,9 @@ extension FAudioModelExtensions on FAudioModel {
       encodingType: original.encodingType ?? this.encodingType,
       format: original.format ?? this.format,
       sampleRate: original.sampleRate ?? this.sampleRate,
+      bits: original.bits ?? this.bits,
       isVariableBitRate: original.isVariableBitRate ?? this.isVariableBitRate,
-      isLoseless: original.isLoseless ?? this.isLoseless,
+      isLossless: original.isLossless ?? this.isLossless,
       hasError: this.hasError,
       errorsMap: this.errorsMap,
     );
@@ -336,11 +337,11 @@ extension MediaInfoToFAudioModel on MediaInfo {
     final info = infoFull.format?.tags;
     final trackNumberTotal = info?.track?.split('/');
     final discNumberTotal = info?.disc?.split('/');
-    final audioStream = infoFull.streams?.firstWhereEff((e) => e.streamType == StreamType.audio) ?? infoFull.streams?.firstOrNull;
+    final audioStream = infoFull.getAudioStream();
     int? parsy(String? v) => v == null ? null : int.tryParse(v);
     final bitrate = parsy(infoFull.format?.bitRate); // 234292
     final bitrateThousands = bitrate == null ? null : bitrate / 1000; // 234
-    String? format = infoFull.format?.formatName;
+    String? format = audioStream?.codecName ?? infoFull.format?.formatName;
     if (format != null && format.isNotEmpty) format = format.replaceFirst(RegExp('flac', caseSensitive: false), 'FLAC');
     return FAudioModel(
       tags: FTags(
@@ -381,6 +382,8 @@ extension MediaInfoToFAudioModel on MediaInfo {
               'unknown',
       format: format,
       sampleRate: parsy(audioStream?.sampleRate),
+      bits: audioStream?.bitsPerSample,
+      isLossless: infoFull.isLossless(),
     );
   }
 }

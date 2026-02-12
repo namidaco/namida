@@ -230,6 +230,8 @@ class _SubsonicWebServer extends MusicWebServer {
       synopsis: '',
       bitrate: media.bitRate ?? 0,
       sampleRate: 0,
+      bits: 0,
+      isLossless: null,
       format: media.suffix ?? media.contentType ?? '',
       channels: '',
       discNo: media.discNumber ?? 0,

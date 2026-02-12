@@ -227,8 +227,9 @@ class FAudioModel {
   final String? encodingType;
   final String? format;
   final int? sampleRate;
+  final int? bits;
   final bool? isVariableBitRate;
-  final bool? isLoseless;
+  final bool? isLossless;
   final bool hasError;
   final Map<String, String> errorsMap;
 
@@ -240,8 +241,9 @@ class FAudioModel {
     this.encodingType,
     this.format,
     this.sampleRate,
+    this.bits,
     this.isVariableBitRate,
-    this.isLoseless,
+    this.isLossless,
     this.hasError = false,
     this.errorsMap = const {},
   });
@@ -261,8 +263,9 @@ class FAudioModel {
       encodingType: map["encodingType"],
       format: format,
       sampleRate: map["sampleRate"],
+      bits: map["bits"],
       isVariableBitRate: map["isVariableBitRate"],
-      isLoseless: map["isLoseless"],
+      isLossless: map["isLossless"],
       hasError: map["ERROR_FAULTY"] == true,
       errorsMap: (map["ERRORS"] as Map?)?.cast() ?? {},
     );
@@ -277,8 +280,9 @@ class FAudioModel {
       "encodingType": encodingType,
       "format": format,
       "sampleRate": sampleRate,
+      "bits": bits,
       "isVariableBitRate": isVariableBitRate,
-      "isLoseless": isLoseless,
+      "isLossless": isLossless,
     });
     return tagsMap;
   }

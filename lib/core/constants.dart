@@ -897,6 +897,8 @@ const kDummyExtendedTrack = TrackExtended(
   synopsis: "",
   bitrate: 0,
   sampleRate: 0,
+  bits: 0,
+  isLossless: null,
   format: "",
   channels: "",
   discNo: 0,

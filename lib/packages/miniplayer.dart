@@ -282,6 +282,16 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           final onSecondary = theme.colorScheme.onSecondaryContainer;
           return Obx((context) {
             if (!settings.enableVideoPlayback.valueR) {
+              final trExt = (currentItem as Selectable).track.toTrackExt();
+              var text = " • ${trExt.audioInfoFormattedCompact}";
+              final bits = trExt.bits;
+              final isLossless = trExt.isLossless;
+
+              final bitsTextParts = [
+                if (bits >= 24) 'Hi-Res',
+                if (isLossless == true) 'Lossless',
+              ];
+
               return Text.rich(
                 TextSpan(
                   text: lang.AUDIO,
@@ -289,8 +299,70 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                   children: [
                     if (settings.displayAudioInfoMiniplayer.valueR)
                       TextSpan(
-                        text: " • ${(currentItem as Selectable).track.audioInfoFormattedCompact}",
+                        text: text,
                         style: TextStyle(color: theme.colorScheme.primary, fontSize: fontSizeMultiplier(11.0)),
+                        children: bits > 0
+                            ? [
+                                const WidgetSpan(
+                                  child: SizedBox(width: 4.0),
+                                ),
+                                WidgetSpan(
+                                  child: NamidaPopupWrapper(
+                                    children: () => [
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Broken.wind_2,
+                                              size: 32.0,
+                                            ),
+                                            const SizedBox(height: 12.0),
+                                            Text(
+                                              bitsTextParts.join(' '),
+                                              style: textTheme.displayLarge,
+                                            ),
+                                            const SizedBox(height: 6.0),
+                                            Text(
+                                              trExt.audioInfoFormattedAlt,
+                                              style: textTheme.displayMedium,
+                                            ),
+                                            const SizedBox(height: 4.0),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                    child: NamidaInkWell(
+                                      borderRadius: 4.0,
+                                      bgColor: theme.cardColor.withAlpha(60),
+                                      padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0, vertical: 1.0),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Broken.wind_2,
+                                            size: 12.0,
+                                          ),
+                                          const SizedBox(width: 2.0),
+                                          Text(
+                                            [
+                                              '$bits-bit',
+                                              ...bitsTextParts,
+                                            ].join(' '),
+                                            style: TextStyle(
+                                              color: theme.colorScheme.primary,
+                                              fontSize: fontSizeMultiplier(11.0),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ]
+                            : null,
                       )
                   ],
                 ),
@@ -543,7 +615,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
                 final bitrate = audioStream?.bitrate ?? Player.inst.currentCachedAudio.valueR?.bitrate;
                 final bitrateText = bitrate == null ? null : "${bitrate ~/ 1000} kbps";
                 final sampleRate = audioStream?.codecInfo.embeddedAudioInfo?.audioSampleRate;
-                final sampleRateText = sampleRate == null ? null : "$sampleRate khz";
+                final sampleRateText = sampleRate == null ? null : "$sampleRate kHz";
                 final language = audioStream?.audioTrack?.langCode ?? Player.inst.currentCachedAudio.valueR?.langaugeCode;
 
                 final finalText = <String?>[

@@ -290,6 +290,8 @@ class TrackExtended {
   final String synopsis;
   final int bitrate;
   final int sampleRate;
+  final int bits;
+  final bool? isLossless;
   final String format;
   final String channels;
   final int discNo;
@@ -330,6 +332,8 @@ class TrackExtended {
     required this.synopsis,
     required this.bitrate,
     required this.sampleRate,
+    required this.bits,
+    required this.isLossless,
     required this.format,
     required this.channels,
     required this.discNo,
@@ -426,9 +430,16 @@ class TrackExtended {
   static String buildAudioInfoFormattedCompact(String format, String channels, int bitrate, int sampleRate) {
     return [
       format.toUpperCase(),
-      if (channels.isNotEmpty && channels != '2') "$channels ch",
+      if (channels.isNotEmpty && channels != '2' && !channels.contains('stereo')) "$channels ch",
       "$bitrate kbps",
-      "${sampleRate / 1000} khz",
+      "${sampleRate / 1000} kHz",
+    ].joinText(separator: ' • ');
+  }
+
+  static String buildAudioInfoFormattedAlt(String format, int bits, int sampleRate) {
+    return [
+      "$bits-bit/${sampleRate / 1000} kHz",
+      format.toUpperCase(),
     ].joinText(separator: ' • ');
   }
 
@@ -479,6 +490,8 @@ class TrackExtended {
       synopsis: json['synopsis'] ?? '',
       bitrate: json['bitrate'] ?? 0,
       sampleRate: json['sampleRate'] ?? 0,
+      bits: json['bits'] ?? 0,
+      isLossless: json['isLossless'],
       format: json['format'] ?? '',
       channels: json['channels'] ?? '',
       discNo: json['discNo'] ?? 0,
@@ -520,6 +533,8 @@ class TrackExtended {
       if (synopsis.isNotEmpty) 'synopsis': synopsis,
       if (bitrate > 0) 'bitrate': bitrate,
       if (sampleRate > 0) 'sampleRate': sampleRate,
+      if (bits > 0) 'bits': bits,
+      if (isLossless == true) 'isLossless': isLossless,
       if (format.isNotEmpty) 'format': format,
       if (channels.isNotEmpty) 'channels': channels,
       if (discNo > 0) 'discNo': discNo,
@@ -647,6 +662,15 @@ extension TrackExtUtils on TrackExtended {
     );
   }
 
+  String get audioInfoFormattedAlt {
+    final trExt = this;
+    return TrackExtended.buildAudioInfoFormattedAlt(
+      trExt.format,
+      trExt.bits,
+      trExt.sampleRate,
+    );
+  }
+
   TrackExtended copyWithTag({
     required FTags tag,
     required SplitArtistGenreConfigsWrapper splittersConfigs,
@@ -723,6 +747,8 @@ extension TrackExtUtils on TrackExtended {
       durationMS: durationMS,
       format: format,
       sampleRate: sampleRate,
+      bits: bits,
+      isLossless: isLossless,
       size: size,
       albumIdentifierWrapper: AlbumIdentifierWrapper.normalize(
         album: album,
@@ -761,6 +787,8 @@ extension TrackExtUtils on TrackExtended {
     String? synopsis,
     int? bitrate,
     int? sampleRate,
+    int? bits,
+    bool? isLossless,
     String? format,
     String? channels,
     int? discNo,
@@ -802,6 +830,8 @@ extension TrackExtUtils on TrackExtended {
       synopsis: synopsis ?? this.synopsis,
       bitrate: bitrate ?? this.bitrate,
       sampleRate: sampleRate ?? this.sampleRate,
+      bits: bits ?? this.bits,
+      isLossless: isLossless ?? this.isLossless,
       format: format ?? this.format,
       channels: channels ?? this.channels,
       discNo: discNo ?? this.discNo,
@@ -856,6 +886,8 @@ extension TrackUtils on Track {
   String get synopsis => toTrackExt().synopsis;
   int get bitrate => toTrackExt().bitrate;
   int get sampleRate => toTrackExt().sampleRate;
+  int get bits => toTrackExt().bits;
+  bool? get isLossless => toTrackExt().isLossless;
   String get format => toTrackExt().format;
   String get channels => toTrackExt().channels;
   int get discNo => toTrackExt().discNo;

@@ -898,7 +898,7 @@ class EqualizerControls extends StatelessWidget {
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
                                 child: Text(
-                                  band.centerFrequency >= 1000 ? '${(band.centerFrequency / 1000).round()} khz' : '${band.centerFrequency.round()} hz',
+                                  band.centerFrequency >= 1000 ? '${(band.centerFrequency / 1000).round()} kHz' : '${band.centerFrequency.round()} hz',
                                   style: textTheme.displaySmall,
                                 ),
                               ),
