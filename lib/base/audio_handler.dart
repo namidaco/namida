@@ -321,6 +321,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         PlayerRepeatMode.one => 'repeate-one',
         PlayerRepeatMode.forNtimes => 'status',
         PlayerRepeatMode.all => 'repeat',
+        PlayerRepeatMode.allShuffle => 'shuffle',
       };
       void onRepeatPress() {
         final e = settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values);

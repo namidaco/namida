@@ -31,6 +31,7 @@ void main(List<String> args) async {
 
   // -- just bcz kernel_blob.bin is sometimes created for release mode
   await _execute('flutter', ["clean"]);
+  await _execute('flutter', ["pub", "get"]);
 
   final filename = 'namida-v$versionOnly-beta';
   String buildOutputPath(String ext) {

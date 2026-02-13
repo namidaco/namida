@@ -1636,6 +1636,7 @@ class _NamidaConverters {
         PlayerRepeatMode.none: lang.REPEAT_MODE_NONE,
         PlayerRepeatMode.one: lang.REPEAT_MODE_ONE,
         PlayerRepeatMode.all: lang.REPEAT_MODE_ALL,
+        PlayerRepeatMode.allShuffle: lang.SHUFFLE_ALL,
         PlayerRepeatMode.forNtimes: lang.REPEAT_FOR_N_TIMES,
       },
       LibraryTab: {
@@ -2039,6 +2040,7 @@ class _NamidaConverters {
         PlayerRepeatMode.none: Broken.repeate_music,
         PlayerRepeatMode.one: Broken.repeate_one,
         PlayerRepeatMode.all: Broken.repeat,
+        PlayerRepeatMode.allShuffle: Broken.shuffle,
         PlayerRepeatMode.forNtimes: Broken.status,
       },
       ThemeMode: {
