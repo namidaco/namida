@@ -656,8 +656,11 @@ class PlaybackSettings extends SettingSubpageProvider {
           iconColor: context.defaultIconColor(),
           titleText: lang.ENABLE_CROSSFADE_EFFECT,
           onExpansionChanged: (wasCollapsed) {
-            if (!wasCollapsed) return settings.player.save(enableCrossFade: false);
-            SussyBaka.monetize(onEnable: () => settings.player.save(enableCrossFade: true));
+            if (wasCollapsed) {
+              SussyBaka.monetize(onEnable: () => settings.player.save(enableCrossFade: true));
+            } else {
+              settings.player.save(enableCrossFade: false);
+            }
           },
           trailing: Obx((context) {
             return CustomSwitch(active: settings.player.enableCrossFade.valueR);

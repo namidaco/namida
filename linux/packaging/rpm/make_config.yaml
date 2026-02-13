@@ -7,12 +7,14 @@ packagerEmail: namida.coo@gmail.com
 license: EULA
 url: https://github.com/namidaco/namida
 icon: linux/icons/namida.png
-
+bin_name: namida
+package_name: namida
 build_arch: x86_64
 
 requires:
   - mpv # (has mpv-devel as sub)
   - libepoxy
+  - bzip2-libs
 
 keywords:
   - API
@@ -29,3 +31,6 @@ categories:
   - Player
 
 startup_notify: true
+
+post_install_symlinks:
+  /usr/lib64/libbz2.so.1.0: /usr/lib64/libbz2.so.1

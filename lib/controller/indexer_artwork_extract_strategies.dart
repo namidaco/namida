@@ -90,13 +90,16 @@ class _FileBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
     }
 
     if (track != null) {
-      return await _extractFromTrack(track.path);
+      return await _extractFromTrack(
+        trackPath: track.path,
+        imagePath: imagePath,
+      );
     }
 
     return FArtwork.dummy();
   }
 
-  Future<FArtwork> _extractFromTrack(String trackPath) async {
+  Future<FArtwork> _extractFromTrack({required String trackPath, required String? imagePath}) async {
     final pendingResFn = _getPendingRequestResult(trackPath, false);
     if (pendingResFn != null) {
       await pendingResFn();
@@ -106,51 +109,20 @@ class _FileBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
     parent._pendingArtworksFullRes[trackPath] = Completer<void>();
 
     final isVideo = trackPath.isVideo();
-    final artworkDirectory = isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS;
-    final trExt = Track.decide(trackPath, isVideo).toTrackExtOrNull();
-
-    final filename = TagsExtractor.buildImageFilename(
-      path: trackPath,
-      identifiers: null,
-      identifierCallback: () => trExt?.albumIdentifierWrapper?.resolved(),
-      infoCallback: () => (
-        albumName: trExt?.album,
-        albumArtist: trExt?.albumArtist,
-        year: trExt?.year.toString(),
-        title: trExt?.title,
-        artist: trExt?.originalArtist,
-      ),
-      isNetwork: false,
-      hashKeyCallback: () => trExt?.hashKey ?? trackPath.toFastHashKey(),
-    );
 
     Uint8List? bytes;
     File? file;
     final isCachingEnabled = parent._isArtworkCachingEnabled;
     // -- prefer this way before ffmpeg since this can return bytes directly and is generally faster
-    final model = await NamidaTaggerController.inst.extractMetadata(
+    final artwork = await NamidaTaggerController.inst.extractArtwork(
       trackPath: trackPath,
       isVideo: isVideo,
-      extractArtwork: true,
-      saveArtworkToCache: isCachingEnabled,
-      isNetwork: false,
     );
-    final artwork = model.tags.artwork;
-    bytes = artwork.bytes;
-    file = artwork.file;
-
-    if (bytes == null && file == null) {
-      file = await TagsExtractor.extractThumbnailCustom(
-        trackPath: trackPath,
-        isVideo: isVideo,
-        artworkDirectory: artworkDirectory,
-        filename: filename,
-      );
-      if (!isCachingEnabled) {
-        bytes = await file?.readAsBytes();
-        file?.tryDeleting();
-        file = null;
-      }
+    bytes = artwork?.bytes;
+    file = artwork?.file; // null anyways
+    if (bytes != null && isCachingEnabled && imagePath != null) {
+      File(imagePath).writeAsBytes(bytes).ignoreError();
+      file = File(imagePath);
     }
 
     if (bytes != null) {

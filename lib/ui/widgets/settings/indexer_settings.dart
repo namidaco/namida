@@ -492,6 +492,40 @@ class IndexerSettings extends SettingSubpageProvider {
     );
   }
 
+  void _promptClearArtworkCache(BuildContext context) async {
+    Indexer.inst.calculateAllImageSizesInStorage();
+    await NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.NOTE,
+        normalTitleStyle: true,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.CLEAR,
+            onPressed: () async {
+              NamidaNavigator.inst.closeDialog();
+              await Indexer.inst.clearImageCache();
+            },
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: ObxO(
+            rx: Indexer.inst.artworksSizeInStorage,
+            builder: (context, artworksSizeInStorage) => ListTileWithCheckMark(
+              dense: true,
+              icon: Broken.broom,
+              title: lang.CLEAR_IMAGE_CACHE,
+              subtitle: artworksSizeInStorage == 0 ? '?' : artworksSizeInStorage.fileSizeFormatted,
+              active: true,
+              onTap: null,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget getArtworkCacheWidget(BuildContext context) {
     return getItemWrapper(
       key: _IndexerSettingsKeys.artworksCache,
@@ -510,7 +544,13 @@ class IndexerSettings extends SettingSubpageProvider {
         titleText: lang.ENABLE_ARTWORK_CACHE,
         subtitleText: lang.ENABLE_ARTWORK_CACHE_SUBTITLE,
         onExpansionChanged: (wasCollapsed) {
-          if (!wasCollapsed) return settings.save(cacheArtworks: false);
+          if (wasCollapsed) {
+            settings.save(cacheArtworks: true);
+            _showReindexingPrompt(title: lang.ENABLE_ARTWORK_CACHE, body: lang.REQUIRES_CLEARING_IMAGE_CACHE_AND_RE_INDEXING);
+          } else {
+            settings.save(cacheArtworks: false);
+            _promptClearArtworkCache(context);
+          }
         },
         trailing: Obx((context) {
           return CustomSwitch(active: settings.cacheArtworks.valueR);

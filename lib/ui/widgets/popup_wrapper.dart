@@ -198,14 +198,14 @@ class NamidaPopupWrapper extends StatelessWidget {
           BoxDecoration(
             borderRadius: BorderRadius.circular(12.0.multipliedRadius),
             border: Border.all(
-              color: colorScheme,
+              color: colorScheme.withValues(alpha: 0.8),
             ),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color.alphaBlend(scaffoldBgColor.withValues(alpha: 0.9), colorScheme).withValues(alpha: 1.0),
-                Color.alphaBlend(scaffoldBgColor.withValues(alpha: 0.6), colorScheme).withValues(alpha: 1.0),
+                Color.alphaBlend(scaffoldBgColor.withValues(alpha: 0.90), colorScheme).withValues(alpha: 1.0),
+                Color.alphaBlend(scaffoldBgColor.withValues(alpha: 0.65), colorScheme).withValues(alpha: 1.0),
               ],
             ),
           ),

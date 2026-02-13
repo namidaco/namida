@@ -1,10 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-// ignore: depend_on_referenced_packages
-import 'package:crypto/crypto.dart';
 // ignore: depend_on_referenced_packages
 import 'package:dio/dio.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';

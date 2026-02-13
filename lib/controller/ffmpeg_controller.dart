@@ -40,7 +40,7 @@ class NamidaFFMPEG {
     OperationType.ytdlpThumbnailFix: OperationProgress().obs,
   };
 
-  Future<MediaInfo?> extractMetadata(String path) async {
+  Future<MediaInfo?> ffmpegExtractMetadata(String path) async {
     return _executer.extractMetadata(path);
   }
 
@@ -80,7 +80,7 @@ class NamidaFFMPEG {
     ];
 
     final oldTagsToApply = <String, String>{};
-    final oldMetadata = await extractMetadata(tempFile.path);
+    final oldMetadata = await ffmpegExtractMetadata(tempFile.path);
 
     // -- not all of them but always one of them
     const opusEtcFormats = {'opus', 'ogg', 'oga', 'ogx', 'flac', 'alac'};

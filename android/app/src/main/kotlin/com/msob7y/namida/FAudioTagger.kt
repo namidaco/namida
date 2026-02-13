@@ -116,6 +116,17 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
           result.error("Failure", "path parameter isn't provided", "")
         }
       }
+      "getArtwork" -> {
+        val path: String? = call.argument<String?>("path")
+        if (path != null) {
+          CoroutineScope(Dispatchers.IO).launch {
+            val bytes = getArtwork(path)
+            result.success(bytes)
+          }
+        } else {
+          result.error("Failure", "path parameter isn't provided", "")
+        }
+      }
       "streamReady" -> {
         val streamKey = call.argument<Number?>("streamKey") ?: 0
         val count = call.argument<Number?>("count") ?: 0
@@ -234,6 +245,15 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
       map[ident] = true
     }
     return map
+  }
+
+  fun getArtwork(path: String): ByteArray? {
+      return try {
+          val audioFile = AudioFileIO.read(File(path))
+          audioFile.tag?.firstArtwork?.binaryData
+      } catch (e: Exception) {
+          null
+      }
   }
 
   fun readAllData(

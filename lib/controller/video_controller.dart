@@ -649,7 +649,7 @@ class VideoController {
       var l = local[i];
       if (_videoPathsInfoMap[l] == null) {
         try {
-          final v = await NamidaFFMPEG.inst.extractMetadata(l);
+          final v = await NamidaFFMPEG.inst.ffmpegExtractMetadata(l);
           if (v != null) {
             ThumbnailManager.inst.extractVideoThumbnailAndSave(
               videoPath: l,
@@ -790,7 +790,7 @@ class VideoController {
       idOrFileNameWithExt: id,
       forceExtract: false,
     );
-    final info = await NamidaFFMPEG.inst.extractMetadata(path);
+    final info = await NamidaFFMPEG.inst.ffmpegExtractMetadata(path);
     return _getNVFromFFMPEGMap(
       mediaInfo: info,
       stats: stats,
@@ -800,7 +800,7 @@ class VideoController {
   }
 
   NamidaVideo _getNVFromFFMPEGMap({required String path, MediaInfo? mediaInfo, required FileStat stats, String? ytID}) {
-    final videoStream = mediaInfo?.streams?.firstWhereEff((element) => element.streamType == StreamType.video);
+    final videoStream = mediaInfo?.getVideoStream();
 
     double? frameratePrecise;
     final framerateField = videoStream?.rFrameRate?.split('/');

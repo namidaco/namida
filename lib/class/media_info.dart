@@ -13,6 +13,7 @@ class MediaInfo {
   });
 
   MIStream? getAudioStream() => streams?.firstWhereEff((e) => e.streamType == StreamType.audio) ?? streams?.firstOrNull;
+  MIStream? getVideoStream() => streams?.firstWhereEff((e) => e.streamType == StreamType.video) ?? streams?.firstOrNull;
   static const _losslessFormats = {'flac', 'alac', 'wav', 'pcm_s16le', 'pcm_s24le', 'pcm_s32le', 'ape'};
 
   bool? isLossless([MIStream? audioStream]) {

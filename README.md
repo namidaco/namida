@@ -46,6 +46,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - [Installation](#installation)
 - [Permission Note](#permission-note)
 - [Special Thanks](#special-thanks)
+- [Translate](#translate)
 - [Contribute](#contribute)
 - [Donate](#donate)
 - [Social](#social)
@@ -85,6 +86,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - Tags config for downloads
 - Optional Auto title/artist/album extraction for downloads and scrobbling
 - Downloads output filename builder (similar to yt-dlp)
+- Multi Library Support (Local/YT/Subsonic/WebDAV)
 
 <details>
 
@@ -352,9 +354,12 @@ sudo pacman -S mpv        # Arch/Manjaro
 
 > ### © Logo by @midjourney
 
-# Contribute
+# Translate
 
 - You can help translating Namida to your language on [Translation Repo](https://github.com/namidaco/namida-translations)
+
+# Contribute
+
 - Building is not currently directly possible, see why on https://github.com/namidaco/namida/issues/37#issuecomment-1780341883
 
 <!-- [![Translation status](https://translate.codeberg.org/widget/namida-translations/namicomponent/horizontal-auto.svg)](https://translate.codeberg.org/engage/namida-translations/) -->

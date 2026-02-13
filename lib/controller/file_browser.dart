@@ -693,7 +693,10 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     _initIconsLookup();
 
     if (isDesktop) {
-      _onBackupPickerLaunch(_effectiveAllowedExtensions);
+      Timer(
+        const Duration(milliseconds: 200), // give time for ui to layout to avoid hittest errors
+        () => _onBackupPickerLaunch(_effectiveAllowedExtensions),
+      );
     }
   }
 

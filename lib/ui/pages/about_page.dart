@@ -149,7 +149,7 @@ class _AboutPageState extends State<AboutPage> {
                               errorBuilder: (context, error, stackTrace) => fallbackAvatar,
                             ),
                           ),
-                          title: 'Developer',
+                          title: lang.DEVELOPER,
                           subtitle: 'MSOB7YY',
                           link: 'https://github.com/MSOB7YY',
                         ),
@@ -219,8 +219,8 @@ class _AboutPageState extends State<AboutPage> {
             ),
             SettingsCard(
               icon: Broken.link_circle,
-              title: 'Social',
-              subtitle: 'join us on our platforms for updates, tips, discussion & ideas',
+              title: lang.SOCIALS,
+              subtitle: lang.SOCIALS_SUBTITLE,
               child: Column(
                 children: [
                   const NamidaAboutListTile(
@@ -243,21 +243,21 @@ class _AboutPageState extends State<AboutPage> {
             const StatsSection(),
             SettingsCard(
               icon: Broken.hierarchy,
-              title: 'Developement',
+              title: lang.DEVELOPMENT,
               subtitle: null,
               child: Column(
                 children: [
-                  const NamidaAboutListTile(
+                  NamidaAboutListTile(
                     icon: Broken.message_programming,
                     title: 'GitHub',
-                    subtitle: 'See Project Code on Github',
+                    subtitle: lang.SEE_PROJECT_CODE_ON_SITE.replaceFirst('_SITE_', 'Github'),
                     link: AppSocial.GITHUB,
                   ),
-                  const NamidaAboutListTile(
+                  NamidaAboutListTile(
                     // icon: Broken.bezier,
                     icon: Broken.command_square,
-                    title: 'Issues/Features',
-                    subtitle: 'Have an issue or suggestion? open an issue on GitHub',
+                    title: '${lang.ISSUES}/${lang.FEATURES}',
+                    subtitle: lang.SUGGESTION_SUBTITLE.replaceFirst('_SITE_', 'Github'),
                     link: AppSocial.GITHUB_ISSUES,
                   ),
                   ObxO(
@@ -265,7 +265,7 @@ class _AboutPageState extends State<AboutPage> {
                     builder: (context, isLoading) => NamidaAboutListTile(
                       icon: Broken.activity,
                       title: lang.CHANGELOG,
-                      subtitle: 'See what\'s newly added/fixed inside Namida',
+                      subtitle: lang.CHANGELOG_SUBTITLE,
                       trailing: isLoading ? const LoadingIndicator() : null,
                       onTap: () async {
                         _loadingChangelog.value = true;
@@ -307,8 +307,8 @@ class _AboutPageState extends State<AboutPage> {
             ),
             SettingsCard(
               icon: Broken.heart_circle,
-              title: 'Donate',
-              subtitle: 'If you think it deserves',
+              title: lang.DONATE,
+              subtitle: lang.DONATE_SUBTITLE,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
@@ -348,7 +348,7 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
             SettingsCard(
-              title: 'Others',
+              title: lang.OTHERS,
               icon: Broken.record_circle,
               subtitle: null,
               child: Column(
@@ -361,8 +361,8 @@ class _AboutPageState extends State<AboutPage> {
                     ),
                   NamidaAboutListTile(
                     icon: Broken.archive_book,
-                    title: 'License',
-                    subtitle: 'Licenses & Agreements Used by Namida',
+                    title: lang.LICENSE,
+                    subtitle: lang.LICENSE_SUBTITLE,
                     onTap: () {
                       showLicensePage(
                         context: context,
@@ -373,7 +373,7 @@ class _AboutPageState extends State<AboutPage> {
                   ),
                   NamidaAboutListTile(
                     icon: Broken.cpu,
-                    title: 'App Version',
+                    title: lang.APP_VERSION,
                     subtitle: currentVersionText,
                     link: isBeta ? AppSocial.GITHUB_RELEASES_BETA : AppSocial.GITHUB_RELEASES,
                     trailing: NamidaInkWell(
@@ -412,7 +412,7 @@ class _AboutPageState extends State<AboutPage> {
                   ),
                   NamidaAboutListTile(
                     icon: Broken.clipboard_text,
-                    title: 'Share Logs',
+                    title: lang.SHARE_LOGS,
                     trailing: NamidaIconButton(
                       iconColor: context.defaultIconColor(),
                       icon: Broken.direct_send,

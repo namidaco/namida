@@ -110,6 +110,7 @@ extension FolderUtils<T extends Folder, E extends Track> on T {
   }
 
   R? performInbetweenFoldersBuild<R>(R? Function(T folder) callback) {
+    if (path.startsWith('http')) return callback(Folder.fromType<T>(path));
     final bufferPathSoFar = StringBuffer();
     for (final part in parts) {
       if (part.isEmpty) continue;

@@ -72,6 +72,16 @@ class NamidaTaggerController {
     );
   }
 
+  Future<FArtwork?> extractArtwork({
+    required String trackPath,
+    required bool isVideo,
+  }) async {
+    return _extractor.extractArtwork(
+      trackPath: trackPath,
+      isVideo: isVideo,
+    );
+  }
+
   /// [commentToInsert] is applicable for first track only
   Future<void> updateTracksMetadata({
     required List<Track> tracks,

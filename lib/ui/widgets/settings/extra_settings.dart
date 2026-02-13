@@ -400,12 +400,14 @@ class ExtrasSettings extends SettingSubpageProvider {
                           onPressed: () {
                             settings.removeFromList(trackSearchFilterAll: TrackSearchFilter.values);
 
-                            settings.save(trackSearchFilter: [
-                              TrackSearchFilter.filename,
-                              TrackSearchFilter.title,
-                              TrackSearchFilter.artist,
-                              TrackSearchFilter.album,
-                            ]);
+                            settings.save(
+                              trackSearchFilter: [
+                                TrackSearchFilter.filename,
+                                TrackSearchFilter.title,
+                                TrackSearchFilter.artist,
+                                TrackSearchFilter.album,
+                              ],
+                            );
                           },
                         ),
                         DoneButton(
@@ -513,7 +515,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                             const Icon(
                                               Broken.close_circle,
                                               size: 18.0,
-                                            )
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -581,7 +583,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                           const Icon(
                                             Broken.add_circle,
                                             size: 18.0,
-                                          )
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -916,11 +918,14 @@ class ExtrasSettings extends SettingSubpageProvider {
                         ),
                       );
                     } else {
+                      final remainingCount = CurrentColor.inst.getRemainingColorsToExtractCount(allTracksInLibrary);
                       NamidaNavigator.inst.navigateDialog(
                         dialog: CustomBlurryDialog(
                           title: lang.NOTE,
-                          bodyText: lang.EXTRACT_ALL_COLOR_PALETTES_SUBTITLE
-                              .replaceFirst('_REMAINING_COLOR_PALETTES_', '' /* '${allTracksInLibrary.length - Indexer.inst.colorPalettesInStorage.value}' */),
+                          bodyText: lang.EXTRACT_ALL_COLOR_PALETTES_SUBTITLE.replaceFirst(
+                            '_REMAINING_COLOR_PALETTES_',
+                            '$remainingCount',
+                          ),
                           actions: [
                             const CancelButton(),
                             NamidaButton(

@@ -86,6 +86,17 @@ class FoldersController<T extends Folder, E extends Track> {
     return !stepOut();
   }
 
+  void _resetToRoot() {
+    isHome.value = true;
+    _pathsTreeMapCurrent = _pathsTreeMapRoot;
+
+    indexToScrollTo.value = null;
+    _trackToScrollTo = null;
+
+    currentFolderslist.value = _pathsTreeMapRoot.foldersList;
+    currentFolder.value = _pathsTreeMapRoot.parent;
+  }
+
   void stepIn(T? folder, {E? trackToScrollTo, double jumpTo = 0, bool isFromStepOut = false}) {
     if (folder == null || folder.path == '') {
       isHome.value = true;
@@ -100,11 +111,16 @@ class FoldersController<T extends Folder, E extends Track> {
     }
 
     if (nextNode == null) {
-      nextNode = _pathsTreeMapRoot;
-      if (nextNode.children.keys.length == 1) {
-        nextNode = nextNode.children.values.first;
-      }
+      _resetToRoot();
+      return;
     }
+
+    //   if (nextNode == null) {
+    //   nextNode = _pathsTreeMapRoot;
+    //   if (nextNode.children.keys.length == 1) {
+    //     nextNode = nextNode.children.values.first;
+    //   }
+    // }
 
     _pathsTreeMapCurrent = nextNode;
 
@@ -404,7 +420,7 @@ class _FolderNode<T extends Folder, E extends Track> {
     final mainInMap = children[folder];
     if (mainInMap != null) return current;
 
-    return folder.performInbetweenFoldersBuild(
+    final res = folder.performInbetweenFoldersBuild(
           (f) {
             final newNode = current.children[f];
             if (newNode == null) return current;
@@ -413,6 +429,8 @@ class _FolderNode<T extends Folder, E extends Track> {
           },
         ) ??
         current;
+    // -- vip, we use current as a dummy node once the initial check is done
+    return (identical(res, current) ? null : res);
   }
 
   int? getFoldersCountInsideFolder(T folder, {bool recursive = false}) {

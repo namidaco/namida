@@ -18,7 +18,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
     required bool isNetwork,
     String? networkId,
   }) async {
-    final ffmpegInfo = await executer?.extractMetadata(trackPath) ?? await ffmpegController.extractMetadata(trackPath);
+    final ffmpegInfo = await executer?.extractMetadata(trackPath) ?? await ffmpegController.ffmpegExtractMetadata(trackPath);
 
     if (ffmpegInfo != null && isVideo) {
       try {
@@ -114,6 +114,22 @@ class _TagsExtractorDesktop extends TagsExtractor {
     }
     executer.dispose();
     currentPathsBeingExtracted.remove(key);
+  }
+
+  @override
+  Future<FArtwork?> extractArtwork({required String trackPath, required bool isVideo}) async {
+    Uint8List? bytes;
+
+    final File? tempFile = await TagsExtractor.extractThumbnailCustom(
+      trackPath: trackPath,
+      filename: null,
+      artworkDirectory: null,
+      isVideo: isVideo,
+    );
+    bytes = await tempFile?.readAsBytes();
+    tempFile?.tryDeleting();
+
+    return bytes == null ? null : FArtwork(bytes: bytes);
   }
 
   @override

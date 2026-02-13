@@ -42,6 +42,11 @@ abstract class TagsExtractor {
     required bool isNetwork,
   });
 
+  Future<FArtwork?> extractArtwork({
+    required String trackPath,
+    required bool isVideo,
+  });
+
   Future<bool> writeTags({
     required String path,
     required FTags newTags,

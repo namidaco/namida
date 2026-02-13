@@ -289,6 +289,23 @@ class CurrentColor {
     return null;
   }
 
+  int getRemainingColorsToExtractCount(List<Track> tracks) {
+    int remainingCount = 0;
+    for (final tr in tracks) {
+      if (_colorsMap[tr.cacheKey] == null) {
+        remainingCount++;
+        continue;
+      }
+
+      final pf = _getPaletteFile(tr.cacheKey);
+      if (!pf.existsSync()) {
+        remainingCount++;
+        continue;
+      }
+    }
+    return remainingCount;
+  }
+
   Future<NamidaColor> getTrackColors(
     Track track, {
     required NetworkArtworkInfo? networkArtworkInfo,
@@ -351,6 +368,15 @@ class CurrentColor {
     _colorSchemeOfSubPages.value = colorWithAlpha;
   }
 
+  File _getPaletteFile(
+    String filename, {
+    Directory? paletteSaveDirectory,
+  }) {
+    paletteSaveDirectory ??= Directory(AppDirs.PALETTES);
+    final paletteFile = FileParts.join(paletteSaveDirectory.path, "$filename.palette");
+    return paletteFile;
+  }
+
   Future<NamidaColor?> extractPaletteFromImage(
     String imagePath, {
     Track? track,
@@ -360,11 +386,8 @@ class CurrentColor {
   }) async {
     // if (!forceReExtract && !await File(imagePath).exists()) return null; // _extractPaletteGenerator tries to get artwork from audio
 
-    paletteSaveDirectory ??= Directory(AppDirs.PALETTES);
-
     final filename = track != null ? track.cacheKey : imagePath.getFilenameWOExt;
-
-    final paletteFile = File("${paletteSaveDirectory.path}$filename.palette");
+    final paletteFile = _getPaletteFile(filename, paletteSaveDirectory: paletteSaveDirectory);
 
     // -- try reading the cached file
     if (!forceReExtract) {

@@ -52,6 +52,7 @@ abstract class LanguageKeys {
   String get ANIMATING_THUMBNAIL_INVERSED => _getKey('ANIMATING_THUMBNAIL_INVERSED');
   String get ANOTHER_PROCESS_IS_RUNNING => _getKey('ANOTHER_PROCESS_IS_RUNNING');
   String get APP_ICON => _getKey('APP_ICON');
+  String get APP_VERSION => _getKey('APP_VERSION');
   String get ARTIST => _getKey('ARTIST');
   String get ARTISTS => _getKey('ARTISTS');
   String get ARTWORK => _getKey('ARTWORK');
@@ -86,6 +87,7 @@ abstract class LanguageKeys {
   String get CANCELED => _getKey('CANCELED');
   String get CHANGED => _getKey('CHANGED');
   String get CHANGELOG => _getKey('CHANGELOG');
+  String get CHANGELOG_SUBTITLE => _getKey('CHANGELOG_SUBTITLE');
   String get CHANNEL => _getKey('CHANNEL');
   String get CHANNELS => _getKey('CHANNELS');
   String get CHECK => _getKey('CHECK');
@@ -160,6 +162,8 @@ abstract class LanguageKeys {
   String get DELETE_FILE_CACHE_SUBTITLE => _getKey('DELETE_FILE_CACHE_SUBTITLE');
   String get DELETE_TEMP_FILES => _getKey('DELETE_TEMP_FILES');
   String get DESCRIPTION => _getKey('DESCRIPTION');
+  String get DEVELOPER => _getKey('DEVELOPER');
+  String get DEVELOPMENT => _getKey('DEVELOPMENT');
   String get DID_YOU_MEAN => _getKey('DID_YOU_MEAN');
   String get DIM_INTENSITY => _getKey('DIM_INTENSITY');
   String get DIM_MINIPLAYER_AFTER_SECONDS => _getKey('DIM_MINIPLAYER_AFTER_SECONDS');
@@ -188,6 +192,8 @@ abstract class LanguageKeys {
   String get DISPLAY_THIRD_ROW_IN_TRACK_TILE => _getKey('DISPLAY_THIRD_ROW_IN_TRACK_TILE');
   String get DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE_SUBTITLE => _getKey('DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE_SUBTITLE');
   String get DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE => _getKey('DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE');
+  String get DONATE => _getKey('DONATE');
+  String get DONATE_SUBTITLE => _getKey('DONATE_SUBTITLE');
   String get DONE => _getKey('DONE');
   String get DONT_ASK_AGAIN => _getKey('DONT_ASK_AGAIN');
   String get DONT_DIM => _getKey('DONT_DIM');
@@ -261,6 +267,7 @@ abstract class LanguageKeys {
   String get FAILED_EDITS => _getKey('FAILED_EDITS');
   String get FAILED => _getKey('FAILED');
   String get FAVOURITES => _getKey('FAVOURITES');
+  String get FEATURES => _getKey('FEATURES');
   String get FETCHING => _getKey('FETCHING');
   String get FETCHING_OF_ALL_VIDEOS => _getKey('FETCHING_OF_ALL_VIDEOS');
   String get FILENAME_SHOULDNT_START_WITH => _getKey('FILENAME_SHOULDNT_START_WITH');
@@ -352,6 +359,7 @@ abstract class LanguageKeys {
   String get INTERACTION_REMINDER => _getKey('INTERACTION_REMINDER');
   String get INTRO => _getKey('INTRO');
   String get INVERT_SELECTION => _getKey('INVERT_SELECTION');
+  String get ISSUES => _getKey('ISSUES');
   String get ITEM => _getKey('ITEM');
   String get I_READ_AND_AGREE => _getKey('I_READ_AND_AGREE');
   String get JUMP_TO_DAY => _getKey('JUMP_TO_DAY');
@@ -370,6 +378,8 @@ abstract class LanguageKeys {
   String get LEGACY_AUTHENTICATION => _getKey('LEGACY_AUTHENTICATION');
   String get LIBRARY_TABS_REORDER => _getKey('LIBRARY_TABS_REORDER');
   String get LIBRARY_TABS => _getKey('LIBRARY_TABS');
+  String get LICENSE => _getKey('LICENSE');
+  String get LICENSE_SUBTITLE => _getKey('LICENSE_SUBTITLE');
   String get LIKE => _getKey('LIKE');
   String get LIKED => _getKey('LIKED');
   String get LINK => _getKey('LINK');
@@ -636,6 +646,7 @@ abstract class LanguageKeys {
   String get SEEKBAR => _getKey('SEEKBAR');
   String get SEEK_DURATION_INFO => _getKey('SEEK_DURATION_INFO');
   String get SEEK_DURATION => _getKey('SEEK_DURATION');
+  String get SEE_PROJECT_CODE_ON_SITE => _getKey('SEE_PROJECT_CODE_ON_SITE');
   String get SELECT_ALL => _getKey('SELECT_ALL');
   String get SELECTED_TRACKS => _getKey('SELECTED_TRACKS');
   String get SELECT_FILES_ALREADY_IN_LOCAL_LIBRARY => _getKey('SELECT_FILES_ALREADY_IN_LOCAL_LIBRARY');
@@ -654,6 +665,7 @@ abstract class LanguageKeys {
   String get SET_YOUTUBE_LINK => _getKey('SET_YOUTUBE_LINK');
   String get SETTINGS => _getKey('SETTINGS');
   String get SHARE => _getKey('SHARE');
+  String get SHARE_LOGS => _getKey('SHARE_LOGS');
   String get SHORTCUTS => _getKey('SHORTCUTS');
   String get SHOULD_DUCK => _getKey('SHOULD_DUCK');
   String get SHOULD_DUCK_NOTE => _getKey('SHOULD_DUCK_NOTE');
@@ -695,6 +707,8 @@ abstract class LanguageKeys {
   String get SKIP_SPONSOR_SEGMENTS_IN_VIDEOS => _getKey('SKIP_SPONSOR_SEGMENTS_IN_VIDEOS');
   String get SLEEP_AFTER => _getKey('SLEEP_AFTER');
   String get SLEEP_TIMER => _getKey('SLEEP_TIMER');
+  String get SOCIALS => _getKey('SOCIALS');
+  String get SOCIALS_SUBTITLE => _getKey('SOCIALS_SUBTITLE');
   String get SOME_WEB_SERVERS_REQUIRE_AUTHENTICATION => _getKey('SOME_WEB_SERVERS_REQUIRE_AUTHENTICATION');
   String get SORT_BY => _getKey('SORT_BY');
   String get SOURCE => _getKey('SOURCE');
@@ -717,6 +731,7 @@ abstract class LanguageKeys {
   String get SUBSCRIBER => _getKey('SUBSCRIBER');
   String get SUBSCRIBERS => _getKey('SUBSCRIBERS');
   String get SUCCEEDED => _getKey('SUCCEEDED');
+  String get SUGGESTION_SUBTITLE => _getKey('SUGGESTION_SUBTITLE');
   String get SUPPORT => _getKey('SUPPORT');
   String get SUPREMACY => _getKey('SUPREMACY');
   String get SUSSY_BAKA => _getKey('SUSSY_BAKA');

@@ -57,16 +57,14 @@ class _WebDAVServer extends MusicWebServer {
 
     final serverPath = Uri.decodeQueryComponent(id);
 
-    final res = await _fetchFile(
+    final res = await _fetchFileAndExtractArtwork(
       serverPath,
       null,
       api,
-      extractArtwork: true,
-      saveArtworkToCache: false,
     );
     if (res == null) return null;
 
-    final bytes = res.$1.tags.artwork.bytes;
+    final bytes = res.$1?.bytes;
 
     res.$3.tryDeleting();
 
@@ -153,7 +151,7 @@ class _WebDAVServer extends MusicWebServer {
         final futures = subfiles.map((file) async {
           final serverPath = file.path;
           if (serverPath == null) return null;
-          final res = await _fetchFile(serverPath, file.name, api);
+          final res = await _fetchFileAndExtractInfo(serverPath, file.name, api);
           if (res == null) return null;
           final trExt = await Indexer.convertTagToTrack(
             trackPath: res.$1.tags.path,
@@ -213,12 +211,53 @@ class _WebDAVServer extends MusicWebServer {
     }
   }
 
-  Future<(FAudioModel, String, File)?> _fetchFile(
+  Future<(FAudioModel, String, File)?> _fetchFileAndExtractInfo(
     String serverPath,
     String? name,
     _ClientApiWrapper api, {
     bool? extractArtwork,
     bool? saveArtworkToCache,
+  }) async {
+    return _fetchFileAnd(
+      serverPath,
+      name,
+      api,
+      builder: (tempFile, isVideo, networkId) {
+        return NamidaTaggerController.inst.extractMetadata(
+          trackPath: tempFile.path,
+          isVideo: isVideo,
+          extractArtwork: extractArtwork ?? Indexer.inst.isNetworkArtworkCachingEnabled,
+          saveArtworkToCache: saveArtworkToCache ?? Indexer.inst.isNetworkArtworkCachingEnabled,
+          isNetwork: true,
+          networkId: networkId,
+        );
+      },
+    );
+  }
+
+  Future<(FArtwork?, String, File)?> _fetchFileAndExtractArtwork(
+    String serverPath,
+    String? name,
+    _ClientApiWrapper api,
+  ) async {
+    return _fetchFileAnd(
+      serverPath,
+      name,
+      api,
+      builder: (tempFile, isVideo, networkId) {
+        return NamidaTaggerController.inst.extractArtwork(
+          trackPath: tempFile.path,
+          isVideo: isVideo,
+        );
+      },
+    );
+  }
+
+  Future<(T, String, File)?> _fetchFileAnd<T>(
+    String serverPath,
+    String? name,
+    _ClientApiWrapper api, {
+    required Future<T> Function(File tempFile, bool isVideo, String networkId) builder,
   }) async {
     name ??= serverPath.getFilename;
     final tempFile = FileParts.join(AppDirs.APP_CACHE, authDetails.dir.type.name, authDetails.auth.username, serverPath.toFastHashKey());
@@ -226,15 +265,8 @@ class _WebDAVServer extends MusicWebServer {
     try {
       await api.read2File(serverPath, tempFile.path);
       final isVideo = name.isVideo() == true;
-      final infoFull = await NamidaTaggerController.inst.extractMetadata(
-        trackPath: tempFile.path,
-        isVideo: isVideo,
-        extractArtwork: extractArtwork ?? Indexer.inst.isNetworkArtworkCachingEnabled,
-        saveArtworkToCache: saveArtworkToCache ?? Indexer.inst.isNetworkArtworkCachingEnabled,
-        isNetwork: true,
-        networkId: networkId,
-      );
-      return (infoFull, networkId, tempFile);
+      final res = await builder(tempFile, isVideo, networkId);
+      return (res, networkId, tempFile);
     } catch (_) {
       tempFile.tryDeleting();
       return Future.value(null);
