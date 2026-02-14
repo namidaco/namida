@@ -49,7 +49,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
     final textTheme = context.textTheme;
     final scrollController = LibraryTab.albums.scrollController;
     final countPerRowResolved = countPerRow.resolve(context);
-    final artistTypeColor = context.theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.8);
+    final artistTypeColor = context.theme.colorScheme.onSecondaryContainer.withOpacityExt(0.8);
     final isCustomList = albumIdentifiers != null;
 
     return BackgroundWrapper(

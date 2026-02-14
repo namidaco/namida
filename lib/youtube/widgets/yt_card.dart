@@ -83,7 +83,7 @@ class YoutubeCard extends StatelessWidget {
 
     late final borderSide = BorderSide(
       width: 2.0,
-      color: context.theme.colorScheme.secondary.withValues(alpha: 0.5),
+      color: context.theme.colorScheme.secondary.withOpacityExt(0.5),
     );
     final decoration = checkmarkStatus == true
         ? BoxDecoration(

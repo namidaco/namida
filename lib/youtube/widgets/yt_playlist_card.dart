@@ -169,7 +169,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
         builder: (context, value) {
           if (value == true) {
             return ThreeArchedCircle(
-              color: Colors.red.withValues(alpha: 0.4),
+              color: Colors.red.withOpacityExt(0.4),
               size: 12.0,
             );
           }

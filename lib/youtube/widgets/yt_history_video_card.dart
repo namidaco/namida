@@ -48,9 +48,9 @@ class VideoTilePropertiesProvider extends StatelessWidget {
     final backgroundColorNotPlaying = theme.cardTheme.color ?? Colors.transparent;
     final selectionColorLayer = theme.focusColor;
 
-    final itemsColor7 = Colors.white.withValues(alpha: 0.7);
-    final itemsColor6 = Colors.white.withValues(alpha: 0.6);
-    final itemsColor5 = Colors.white.withValues(alpha: 0.5);
+    final itemsColor7 = Colors.white.withOpacityExt(0.7);
+    final itemsColor6 = Colors.white.withOpacityExt(0.6);
+    final itemsColor5 = Colors.white.withOpacityExt(0.5);
 
     Widget? threeLines;
     Widget? threeLinesPlaying;
@@ -598,14 +598,14 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
         widget.bgColor ??
         (isCurrentlyPlaying
             ? (widget.properties.comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme).withAlpha(140)
-            : (theme.cardColor.withValues(alpha: widget.cardColorOpacity)));
+            : (theme.cardColor.withOpacityExt(widget.cardColorOpacity)));
 
     if (settings.gradientTiles.value) {
       Color? bgColorAlt;
       if (isCurrentlyPlaying) {
         final palette = CurrentColor.inst.miniplayerColorM.palette;
         if (palette.isNotEmpty) {
-          bgColorAlt = palette[0].withValues(alpha: 0.4);
+          bgColorAlt = palette[0].withOpacityExt(0.4);
         }
       }
       // -- has to be always gradient to animate properly
@@ -741,7 +741,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(borderRadiusRawValue.multipliedRadius),
-                      color: theme.cardColor.withValues(alpha: widget.fadeOpacity),
+                      color: theme.cardColor.withOpacityExt(widget.fadeOpacity),
                     ),
                   ),
                 ),

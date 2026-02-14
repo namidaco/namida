@@ -20,7 +20,7 @@ class MembershipCard extends StatelessWidget {
     final brM = 8.0.multipliedRadius;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: containerColor.withValues(alpha: 0.2),
+        color: containerColor.withOpacityExt(0.2),
         borderRadius: BorderRadius.circular(brL),
       ),
       child: Padding(
@@ -28,7 +28,7 @@ class MembershipCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
           decoration: BoxDecoration(
-            color: containerColor.withValues(alpha: 0.5),
+            color: containerColor.withOpacityExt(0.5),
             border: Border.all(
               color: containerColor,
             ),

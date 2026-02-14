@@ -134,7 +134,7 @@ class CustomSwitch extends StatelessWidget {
               offset: const Offset(0, 2),
               blurRadius: active ? 8 : 2,
               spreadRadius: 0,
-              color: (shadowColor ?? Color.alphaBlend(finalColor.withAlpha(180), theme.colorScheme.surface)).withValues(alpha: active ? 0.8 : 0.3),
+              color: (shadowColor ?? Color.alphaBlend(finalColor.withAlpha(180), theme.colorScheme.surface)).withOpacityExt(active ? 0.8 : 0.3),
             ),
           ],
         ),
@@ -1843,8 +1843,8 @@ class NamidaRawLikeButton extends StatelessWidget {
                   0.9,
                 ],
                 colors: [
-                  theme.colorScheme.primary.withValues(alpha: 0.75),
-                  Color.alphaBlend(theme.colorScheme.primary.withValues(alpha: 0.25), CurrentColor.inst.color).withValues(alpha: 0.75),
+                  theme.colorScheme.primary.withOpacityExt(0.75),
+                  Color.alphaBlend(theme.colorScheme.primary.withOpacityExt(0.25), CurrentColor.inst.color).withOpacityExt(0.75),
                 ],
               ).createShader(bounds),
               child: iconWidget,
@@ -3731,7 +3731,7 @@ class NamidaInkWellButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    final itemsColor = theme.colorScheme.onSurface.withValues(alpha: 0.8);
+    final itemsColor = theme.colorScheme.onSurface.withOpacityExt(0.8);
     final textGood = text.isNotEmpty;
     return IgnorePointer(
       ignoring: !enabled && disableWhenLoading,
@@ -3742,7 +3742,7 @@ class NamidaInkWellButton extends StatelessWidget {
           animationDurationMS: animationDurationMS,
           borderRadius: borderRadius * sizeMultiplier,
           padding: EdgeInsets.symmetric(horizontal: 12.0 * sizeMultiplier * paddingMultiplier, vertical: 6.0 * sizeMultiplier * paddingMultiplier),
-          bgColor: bgColor ?? theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
+          bgColor: bgColor ?? theme.colorScheme.secondaryContainer.withOpacityExt(0.5),
           decoration: decoration,
           onTap: onTap,
           enableSecondaryTap: false,
@@ -4581,7 +4581,7 @@ class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: verticalPadding),
                   decoration: BoxDecoration(
-                    color: theme.scaffoldBackgroundColor.withValues(alpha: 0.8),
+                    color: theme.scaffoldBackgroundColor.withOpacityExt(0.8),
                     borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                   ),
                   child: GestureDetector(
@@ -5908,11 +5908,11 @@ class NamidaUpdateButton extends StatelessWidget {
                         borderRadius: 12.0,
                         padding: const EdgeInsets.all(12.0),
                         height: 48.0,
-                        bgColor: CurrentColor.inst.color.withValues(alpha: 0.9),
+                        bgColor: CurrentColor.inst.color.withOpacityExt(0.9),
                         child: Center(
                           child: Text(
                             lang.UPDATE.toUpperCase(),
-                            style: textTheme.displayMedium?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                            style: textTheme.displayMedium?.copyWith(color: Colors.white.withOpacityExt(0.9)),
                           ),
                         ),
                       ),
@@ -6146,7 +6146,7 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
                                 onTap: addOrEditTapLocal,
                                 borderRadius: 4.0,
                                 padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                                bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.6),
+                                bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.6),
                                 child: Icon(
                                   Broken.edit_2,
                                   size: 13.0,
@@ -6162,7 +6162,7 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
                         onTap: addOrEditTapLocal,
                         borderRadius: 4.0,
                         padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                        bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.6),
+                        bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.6),
                         child: Icon(
                           Broken.add_circle,
                           size: 14.0,

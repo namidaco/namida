@@ -194,7 +194,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     final mainTheme = context.theme;
     final mainTextTheme = context.textTheme;
 
-    final miniplayerBGColor = Color.alphaBlend(mainTheme.secondaryHeaderColor.withValues(alpha: 0.25), mainTheme.scaffoldBackgroundColor);
+    final miniplayerBGColor = Color.alphaBlend(mainTheme.secondaryHeaderColor.withOpacityExt(0.25), mainTheme.scaffoldBackgroundColor);
 
     final miniplayerDimWidget = IgnorePointer(
       key: const Key('dimmie'),
@@ -209,7 +209,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                   builder: (context, dimOpacity) => ConstrainedBox(
                     constraints: const BoxConstraints.expand(),
                     child: ColoredBox(
-                      color: Colors.black.withValues(alpha: dimOpacity),
+                      color: Colors.black.withOpacityExt(dimOpacity),
                     ),
                   ),
                 )
@@ -531,7 +531,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                         IgnorePointer(
                                           child: ThreeArchedCircle(
                                             key: Key("${currentId}_button_loading_child"),
-                                            color: defaultIconColor.withValues(alpha: 0.3),
+                                            color: defaultIconColor.withOpacityExt(0.3),
                                             size: 36.0,
                                           ),
                                         ),
@@ -693,7 +693,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                     miniplayerBody,
                                                     IgnorePointer(
                                                       child: ColoredBox(
-                                                        color: miniplayerBGColor.withValues(alpha: 1 - percentageFast),
+                                                        color: miniplayerBGColor.withOpacityExt(1 - percentageFast),
                                                       ),
                                                     ),
                                                   ],
@@ -868,7 +868,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                 if (videoListens.isEmpty) return const SizedBox();
                                 return NamidaInkWell(
                                   borderRadius: 6.0,
-                                  bgColor: CurrentColor.inst.miniplayerColor.withValues(alpha: 0.7),
+                                  bgColor: CurrentColor.inst.miniplayerColor.withOpacityExt(0.7),
                                   onTap: () {
                                     showVideoListensDialog(currentId);
                                   },
@@ -876,7 +876,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                   child: Text(
                                     videoListens.length.formatDecimal(),
                                     style: mainTextTheme.displaySmall?.copyWith(
-                                      color: Colors.white.withValues(alpha: 0.6),
+                                      color: Colors.white.withOpacityExt(0.6),
                                     ),
                                   ),
                                 );
@@ -1308,7 +1308,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                             shimmerEnabled: shimmerEnabled && (comments == null || comments.isEmpty),
                             child: NamidaInkWell(
                               key: Key("${currentId}_top_comments_highlight"),
-                              bgColor: Color.alphaBlend(mainTheme.scaffoldBackgroundColor.withValues(alpha: 0.4), mainTheme.cardColor),
+                              bgColor: Color.alphaBlend(mainTheme.scaffoldBackgroundColor.withOpacityExt(0.4), mainTheme.cardColor),
                               margin: const EdgeInsets.symmetric(horizontal: 18.0),
                               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                               onTap: () {
@@ -1711,7 +1711,7 @@ class _StreamSegmentsRowState extends State<_StreamSegmentsRow> {
               animationDurationMS: 200,
               borderRadius: 6.0,
               width: thumbWidth + thumbHorizontalPadding * 2,
-              bgColor: isCurrentSegment ? context.theme.colorScheme.secondaryContainer : context.theme.cardColor.withValues(alpha: 0.4),
+              bgColor: isCurrentSegment ? context.theme.colorScheme.secondaryContainer : context.theme.cardColor.withOpacityExt(0.4),
               onTap: () {
                 final startSeconds = e.startSeconds;
                 if (startSeconds != null) {

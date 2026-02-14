@@ -136,7 +136,7 @@ Future<void> showVideoDownloadOptionsSheet({
                                 const SizedBox(width: 12.0),
                                 Icon(
                                   Broken.danger,
-                                  color: Colors.red.withValues(alpha: 0.7),
+                                  color: Colors.red.withOpacityExt(0.7),
                                 ),
                                 const SizedBox(width: 8.0),
                                 Text(

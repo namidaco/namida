@@ -991,7 +991,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                     : NamidaInkWell(
                         onTap: _refreshPermissionStatus,
                         borderRadius: 8.0,
-                        bgColor: Colors.red.withValues(alpha: 0.1),
+                        bgColor: Colors.red.withOpacityExt(0.1),
                         margin: EdgeInsets.symmetric(horizontal: 8.0),
                         padding: EdgeInsets.symmetric(vertical: 10.0),
                         child: Row(
@@ -1277,7 +1277,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                           ? Center(
                               key: const Key('loading'),
                               child: ThreeArchedCircle(
-                                color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                                color: theme.colorScheme.primary.withOpacityExt(0.5),
                                 size: 56.0,
                               ),
                             )
@@ -1469,7 +1469,7 @@ class _FileSystemChip extends StatelessWidget {
                   style: textTheme.displaySmall?.copyWith(
                     fontSize: 12.0,
                     fontWeight: FontWeight.w400,
-                    // color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    // color: theme.colorScheme.onSurface.withOpacityExt(0.7),
                   ),
                 ),
               ],

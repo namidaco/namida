@@ -336,7 +336,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
               boxShadow: [
                 BoxShadow(
                   blurRadius: 8.0,
-                  color: theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+                  color: theme.scaffoldBackgroundColor.withOpacityExt(0.7),
                 ),
               ],
             ),
@@ -389,7 +389,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           child: NamidaIconButton(
                             tooltip: () => lang.JUMP,
                             icon: Broken.cd,
-                            iconColor: context.theme.colorScheme.secondary.withValues(alpha: 0.6),
+                            iconColor: context.theme.colorScheme.secondary.withOpacityExt(0.6),
                             iconSize: 20.0,
                             onPressed: () {
                               _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true, force: true);
@@ -441,7 +441,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           child: NamidaIconButton(
                             tooltip: () => lang.EXIT,
                             icon: Broken.close_circle,
-                            iconColor: context.theme.colorScheme.secondary.withValues(alpha: 0.6),
+                            iconColor: context.theme.colorScheme.secondary.withOpacityExt(0.6),
                             iconSize: 20.0,
                             onPressed: widget.onCloseFullscreenButtonTap ?? toggleFullscreen,
                           ),
@@ -565,9 +565,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
               (context) => ColoredBox(
                 color: Color.alphaBlend(
                   // -- careful with making the result non-opaque, it will cause the foreground to dim as well (no idea how :/)
-                  CurrentColor.inst.miniplayerColor.withValues(alpha: 0.2),
-                  context.isDarkMode ? Colors.black.withValues(alpha: 0.9) : Colors.white.withValues(alpha: 0.9),
-                ).withValues(alpha: 1.0),
+                  CurrentColor.inst.miniplayerColor.withOpacityExt(0.2),
+                  context.isDarkMode ? Colors.black.withOpacityExt(0.9) : Colors.white.withOpacityExt(0.9),
+                ).withOpacityExt(1.0),
                 child: widget.videoOrImage,
               ),
             ),
@@ -588,7 +588,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                         final blur = 12.0 * mpAnimationValue;
                         late final maskColor = mpAnimationValue == 0
                             ? Colors.transparent
-                            : theme.scaffoldBackgroundColor.withValues(alpha: (fullscreen ? 0.8 : 0.5) * mpAnimationValue);
+                            : theme.scaffoldBackgroundColor.withOpacityExt((fullscreen ? 0.8 : 0.5) * mpAnimationValue);
                         return Stack(
                           children: [
                             NamidaBlur(
@@ -683,7 +683,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                             final selected = distanceDiffFromSelected == 0 || isBGLyrics || selectedLineTimestamp == lrc.timestamp;
                             final selectedAndEmpty = selected && _checkIfTextEmpty(text);
                             final bgColor = selected && !isBGLyrics
-                                ? Color.alphaBlend(color.withAlpha(140), theme.scaffoldBackgroundColor).withValues(alpha: selectedAndEmpty ? 0.1 : 0.5)
+                                ? Color.alphaBlend(color.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(selectedAndEmpty ? 0.1 : 0.5)
                                 : null;
                             final vMargin = (selected ? 2.0 : 0.0) + (fullscreen ? 2.0 : 0.0);
 
@@ -726,18 +726,18 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                               }
                               if (selected) {
                                 textStyle = normalTextStyle.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.75),
+                                  color: Colors.white.withOpacityExt(0.75),
                                 );
                               } else if (distanceDiffFromSelected != null && distanceDiffFromSelected <= 0) {
                                 // -- lines before current in word synced lyrics
                                 textStyle = normalTextStyle.copyWith(
-                                  color: normalTextStyle.color?.withValues(alpha: normalLineColorOpacity) ?? Colors.transparent,
+                                  color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
                                 );
                               } else {
                                 // -- lines after current in word synced lyrics
                                 normalLineColorOpacity = 0.2;
                                 textStyle = normalTextStyle.copyWith(
-                                  color: normalTextStyle.color?.withValues(alpha: normalLineColorOpacity) ?? Colors.transparent,
+                                  color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
                                 );
                               }
                             } else {
@@ -754,7 +754,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                 textStyle = normalTextStyle;
                               } else {
                                 textStyle = normalTextStyle.copyWith(
-                                  color: normalTextStyle.color?.withValues(alpha: normalLineColorOpacity) ?? Colors.transparent,
+                                  color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
                                 );
                               }
                             }

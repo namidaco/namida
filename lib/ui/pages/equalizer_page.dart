@@ -71,7 +71,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
                     borderRadius: 8.0,
                     sizeMultiplier: 0.9,
                     paddingMultiplier: 0.7,
-                    bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: is432HzEnabled ? 0.5 : 0.2),
+                    bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(is432HzEnabled ? 0.5 : 0.2),
                     onTap: () {
                       final newValue = is432HzEnabled ? 1.0 : hz432Value;
                       Player.inst.setPlayerPitch(newValue);
@@ -149,7 +149,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
                 borderRadius: 8.0,
                 sizeMultiplier: 0.9,
                 paddingMultiplier: 0.7,
-                bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: enabled ? 0.5 : 0.2),
+                bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(enabled ? 0.5 : 0.2),
                 onTap: () {
                   final newLinkValue = !settings.player.linkSpeedPitch.value;
                   final newValue = newLinkValue ? settings.player.speed.value : settings.player.pitch.value;
@@ -431,15 +431,15 @@ class EqualizerPageState extends State<EqualizerPage> {
                                   margin: const EdgeInsets.symmetric(horizontal: 4.0),
                                   padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                                   bgColor: _activePresetCustom.valueR
-                                      ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), theme.scaffoldBackgroundColor)
-                                      : theme.colorScheme.secondary.withValues(alpha: 0.15),
+                                      ? Color.alphaBlend(CurrentColor.inst.color.withOpacityExt(0.9), theme.scaffoldBackgroundColor)
+                                      : theme.colorScheme.secondary.withOpacityExt(0.15),
                                   onTap: _resetPreset,
                                   child: Text(
                                     lang.CUSTOM,
                                     style: textTheme.displaySmall?.copyWith(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 13.5,
-                                      color: _activePresetCustom.valueR ? Colors.white.withValues(alpha: 0.7) : null,
+                                      color: _activePresetCustom.valueR ? Colors.white.withOpacityExt(0.7) : null,
                                     ),
                                   ),
                                 ),
@@ -452,8 +452,8 @@ class EqualizerPageState extends State<EqualizerPage> {
                                     margin: const EdgeInsets.symmetric(horizontal: 4.0),
                                     padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                                     bgColor: _activePreset.valueR == e.value
-                                        ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), theme.scaffoldBackgroundColor)
-                                        : theme.colorScheme.secondary.withValues(alpha: 0.15),
+                                        ? Color.alphaBlend(CurrentColor.inst.color.withOpacityExt(0.9), theme.scaffoldBackgroundColor)
+                                        : theme.colorScheme.secondary.withOpacityExt(0.15),
                                     onTap: () async {
                                       _activePreset.value = e.value;
                                       _activePresetCustom.value = false;
@@ -464,7 +464,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                     child: Text(
                                       e.value,
                                       style: textTheme.displaySmall?.copyWith(
-                                        color: _activePreset.valueR == e.value ? Colors.white.withValues(alpha: 0.7) : null,
+                                        color: _activePreset.valueR == e.value ? Colors.white.withOpacityExt(0.7) : null,
                                         fontWeight: FontWeight.w700,
                                         fontSize: 13.5,
                                       ),
@@ -969,7 +969,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
         width: 6.0,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withValues(alpha: 0.2),
+            color: theme.colorScheme.secondary.withOpacityExt(0.2),
             borderRadius: const BorderRadius.all(
               Radius.circular(12.0),
             ),
@@ -1018,7 +1018,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
                     width: 8.0,
                     animateWidth: false,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                      color: theme.colorScheme.primary.withOpacityExt(0.5),
                       borderRadius: const BorderRadius.all(
                         Radius.circular(12.0),
                       ),

@@ -131,7 +131,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                 ...tabResult.itemsSort.map(
                   (s) => NamidaInkWell(
                     borderRadius: 10.0,
-                    bgColor: _currentSort?.title == s.title ? theme.colorScheme.secondaryContainer : theme.cardColor.withValues(alpha: 0.5),
+                    bgColor: _currentSort?.title == s.title ? theme.colorScheme.secondaryContainer : theme.cardColor.withOpacityExt(0.5),
                     margin: const EdgeInsets.symmetric(horizontal: 4.0),
                     padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                     onTap: () async {

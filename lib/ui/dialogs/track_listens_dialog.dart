@@ -107,7 +107,7 @@ void showListensDialog({
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                      color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
+                      color: theme.colorScheme.secondaryContainer.withOpacityExt(0.4),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),

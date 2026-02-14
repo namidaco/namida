@@ -529,7 +529,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                     margin: const EdgeInsets.all(2.0),
                                     padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
                                     decoration: BoxDecoration(
-                                      color: theme.cardTheme.color?.withValues(alpha: 1.0),
+                                      color: theme.cardTheme.color?.withOpacityExt(1.0),
                                       borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                                     ),
                                     child: InkWell(

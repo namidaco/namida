@@ -95,7 +95,7 @@ class AlbumCard extends StatelessWidget {
             }
             final itemImagePercentageMultiplier = imageSize * 0.015;
             double getFontSize(double m) => (remainingVerticalSpace * m * 0.9).withMaximum(15.0);
-            final playIconBgColor = theme.cardColor.withValues(alpha: (imageSize / 200).clampDouble(0, 1));
+            final playIconBgColor = theme.cardColor.withOpacityExt((imageSize / 200).clampDouble(0, 1));
 
             return NamidaInkWell(
               onTap: () => dummyCard ? null : NamidaOnTaps.inst.onAlbumTap(identifier),
@@ -152,7 +152,7 @@ class AlbumCard extends StatelessWidget {
                                       BoxShadow(
                                         blurRadius: 6.0,
                                         offset: const Offset(0.0, 2.0),
-                                        color: playIconBgColor.withValues(alpha: 0.4),
+                                        color: playIconBgColor.withOpacityExt(0.4),
                                       ),
                                     ],
                                   ),

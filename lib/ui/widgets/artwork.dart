@@ -373,7 +373,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                                       child!,
                                       Positioned.fill(
                                         child: IgnorePointer(
-                                          child: ColoredBox(color: theme.cardColor.withValues(alpha: value)),
+                                          child: ColoredBox(color: theme.cardColor.withOpacityExt(value)),
                                         ),
                                       ),
                                     ],

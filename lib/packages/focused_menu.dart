@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import 'package:namida/core/extensions.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class FocusedMenuHolder extends StatefulWidget {
@@ -155,7 +156,7 @@ class FocusedMenuDetails extends StatelessWidget {
                   ? BackdropFilter.grouped(
                       filter: ImageFilter.blur(sigmaX: blurSize, sigmaY: blurSize, tileMode: NamidaBlur.kDefaultTileMode),
                       child: Container(
-                        color: (blurBackgroundColor).withValues(alpha: backgroundOpacity),
+                        color: (blurBackgroundColor).withOpacityExt(backgroundOpacity),
                       ),
                     )
                   : Container(color: Colors.transparent),

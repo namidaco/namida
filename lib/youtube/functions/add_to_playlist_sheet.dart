@@ -342,7 +342,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
     }
     late final borderSide = BorderSide(
       width: 2.0,
-      color: theme.colorScheme.secondary.withValues(alpha: 0.5),
+      color: theme.colorScheme.secondary.withOpacityExt(0.5),
     );
     return NamidaLoadingSwitcher(
       showLoading: false,

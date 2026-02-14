@@ -1050,6 +1050,13 @@ extension StringPathUtils on String {
 
 extension ColorExtensions on Color {
   int get intValue => toARGB32();
+  Color withOpacityExt(double opacity) => Color.from(
+    alpha: opacity,
+    red: r,
+    green: g,
+    blue: b,
+    colorSpace: colorSpace,
+  );
 }
 
 extension ClamperExtInt on int {

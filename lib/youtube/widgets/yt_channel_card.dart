@@ -91,7 +91,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
     final dummyMaxWidthSubtitle = dummyMaxWidth * 0.95;
     return NamidaInkWell(
       margin: mininmalCard ? const EdgeInsets.symmetric(horizontal: 4.0) : EdgeInsets.symmetric(horizontal: 24.0, vertical: widget.vMargin),
-      bgColor: bgColor?.withValues(alpha: 0.12) ?? theme.cardColor,
+      bgColor: bgColor?.withOpacityExt(0.12) ?? theme.cardColor,
       animationDurationMS: 300,
       borderRadius: mininmalCard ? 16.0 : 20.0,
       onTap: () {

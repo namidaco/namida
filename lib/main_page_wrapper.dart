@@ -441,7 +441,7 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
     final brightness = theme.brightness;
     final buttonHeight = (height ?? 24.0) * 0.75;
     final buttonWidth = Platform.isWindows ? 42.0 : 18.0;
-    // final backgroundColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor, Colors.white.withValues(alpha: 0.25));
+    // final backgroundColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor, Colors.white.withOpacityExt(0.25));
     final backgroundColor = appBarTheme.backgroundColor ?? colorscheme.surface;
     final surfaceTintColor = appBarTheme.surfaceTintColor ?? colorscheme.surfaceTint;
     final logoImg = NamidaChannel.defaultIconForPlatform;
@@ -690,7 +690,7 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
             Positioned.fill(
               child: IgnorePointer(
                 child: ColoredBox(
-                  color: backgroundColor.withValues(alpha: 0.1),
+                  color: backgroundColor.withOpacityExt(0.1),
                 ),
               ),
             ),
@@ -725,7 +725,7 @@ class _DesktopShortcutIcon extends StatelessWidget {
   });
 
   static Color getColor(BuildContext context) {
-    return context.theme.colorScheme.secondary.withValues(alpha: 0.8);
+    return context.theme.colorScheme.secondary.withOpacityExt(0.8);
   }
 
   static const double iconSize = 15.0;

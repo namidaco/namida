@@ -514,7 +514,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                       alignment: Alignment.centerLeft,
                                       height: 2.0,
                                       decoration: BoxDecoration(
-                                        color: CurrentColor.inst.color.withValues(alpha: 0.6),
+                                        color: CurrentColor.inst.color.withOpacityExt(0.6),
                                         borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                       ),
                                       width: finalPercentage * constraints.maxWidth,
@@ -523,7 +523,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                     alignment: Alignment.centerLeft,
                                     height: 2.0,
                                     decoration: BoxDecoration(
-                                      color: CurrentColor.inst.color.withValues(alpha: 0.25),
+                                      color: CurrentColor.inst.color.withOpacityExt(0.25),
                                       borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                     ),
                                     width: 1.0 * constraints.maxWidth,

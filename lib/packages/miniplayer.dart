@@ -317,8 +317,8 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                         colors: [
-                                          Color.alphaBlend(theme.scaffoldBackgroundColor.withValues(alpha: 0.8), CurrentColor.inst.miniplayerColor).withValues(alpha: 1.0),
-                                          Color.alphaBlend(theme.scaffoldBackgroundColor.withValues(alpha: 0.5), CurrentColor.inst.miniplayerColor).withValues(alpha: 1.0),
+                                          Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.8), CurrentColor.inst.miniplayerColor).withOpacityExt(1.0),
+                                          Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.5), CurrentColor.inst.miniplayerColor).withOpacityExt(1.0),
                                         ],
                                       ),
                                     ),
@@ -1040,8 +1040,8 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
                   center: const Alignment(0.95, -0.95),
                   radius: 1.0,
                   colors: [
-                    theme.colorScheme.onSecondary.withValues(alpha: .3),
-                    theme.colorScheme.onSecondary.withValues(alpha: .2),
+                    theme.colorScheme.onSecondary.withOpacityExt(.3),
+                    theme.colorScheme.onSecondary.withOpacityExt(.2),
                   ],
                 ),
               ),

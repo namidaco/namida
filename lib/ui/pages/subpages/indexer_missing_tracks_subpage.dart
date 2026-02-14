@@ -261,7 +261,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
     final theme = context.theme;
     final textTheme = theme.textTheme;
     final cardColor = theme.cardColor;
-    final borderColor = theme.colorScheme.secondary.withValues(alpha: 0.6);
+    final borderColor = theme.colorScheme.secondary.withOpacityExt(0.6);
 
     return BackgroundWrapper(
       child: Stack(
@@ -312,7 +312,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                     child: Text(
                                       val,
                                       style: textTheme.displaySmall?.copyWith(
-                                        color: textTheme.displaySmall?.color?.withValues(alpha: opacity),
+                                        color: textTheme.displaySmall?.color?.withOpacityExt(opacity),
                                       ),
                                     ),
                                   );
@@ -352,7 +352,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                               (context) {
                                 final suggestion = _missingTracksSuggestions[path];
                                 final isSelected = _selectedTracksToUpdate[path] == true;
-                                final leftColor = theme.colorScheme.secondary.withValues(alpha: 0.3);
+                                final leftColor = theme.colorScheme.secondary.withOpacityExt(0.3);
                                 return NamidaInkWell(
                                   animationDurationMS: 300,
                                   borderRadius: 12.0,
@@ -497,10 +497,10 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                             return FloatingActionButton.small(
                               heroTag: 'indexer_missing_tracks_fab_hero_small',
                               tooltip: lang.SELECT_ALL,
-                              backgroundColor: allSelected ? CurrentColor.inst.color.withValues(alpha: 1.0) : theme.disabledColor.withValues(alpha: 1.0),
+                              backgroundColor: allSelected ? CurrentColor.inst.color.withOpacityExt(1.0) : theme.disabledColor.withOpacityExt(1.0),
                               child: Icon(
                                 allSelected ? Broken.tick_square : Broken.task_square,
-                                color: Colors.white.withValues(alpha: 0.8),
+                                color: Colors.white.withOpacityExt(0.8),
                               ),
                               onPressed: () {
                                 final allSelected =
@@ -523,7 +523,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                             final totalLength = _selectedTracksToUpdate.length;
                             return FloatingActionButton.extended(
                               heroTag: 'indexer_missing_tracks_fab_hero_extended',
-                              backgroundColor: (totalLength <= 0 ? theme.disabledColor : CurrentColor.inst.color).withValues(alpha: 1.0),
+                              backgroundColor: (totalLength <= 0 ? theme.disabledColor : CurrentColor.inst.color).withOpacityExt(1.0),
                               extendedPadding: const EdgeInsets.symmetric(horizontal: 12.0),
                               onPressed: () async {
                                 final isUpdating = false.obs;
@@ -563,13 +563,13 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                   Icon(
                                     Broken.pen_add,
                                     size: 20.0,
-                                    color: Colors.white.withValues(alpha: 0.8),
+                                    color: Colors.white.withOpacityExt(0.8),
                                   ),
                                   const SizedBox(width: 12.0),
                                   Text(
                                     "${lang.UPDATE} ($totalLength)",
                                     style: textTheme.displayMedium?.copyWith(
-                                      color: Colors.white.withValues(alpha: 0.8),
+                                      color: Colors.white.withOpacityExt(0.8),
                                     ),
                                   ),
                                 ],

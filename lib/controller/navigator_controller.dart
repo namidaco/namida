@@ -341,7 +341,7 @@ class NamidaNavigator {
             child: TapDetector(
               onTap: onWillPop,
               child: Container(
-                color: Colors.black.withValues(alpha: blackBg ? 1.0 : 0.45),
+                color: Colors.black.withOpacityExt(blackBg ? 1.0 : 0.45),
                 child: Transform.scale(
                   scale: scale,
                   child: Theme(
@@ -639,8 +639,8 @@ SnackbarController snackyy({
   isError ??= title == lang.ERROR;
   final context = namida.context;
   final view = context?.view ?? namida.platformView;
-  final backgroundColor = context?.theme.scaffoldBackgroundColor.withValues(alpha: 0.3) ?? Colors.black54;
-  final itemsColor = context?.theme.colorScheme.onSurface.withValues(alpha: 0.7) ?? Colors.white54;
+  final backgroundColor = context?.theme.scaffoldBackgroundColor.withOpacityExt(0.3) ?? Colors.black54;
+  final itemsColor = context?.theme.colorScheme.onSurface.withOpacityExt(0.7) ?? Colors.white54;
 
   TextStyle getTextStyle(FontWeight fontWeight, double size, {bool action = false}) => TextStyle(
     fontWeight: fontWeight,
@@ -760,11 +760,11 @@ SnackbarController snackyy({
           borderRadius: borderRadius == 0 ? null : BorderRadius.circular(borderRadius.multipliedRadius),
           border: isError
               ? Border.all(
-                  color: borderColor ?? Colors.red.withValues(alpha: 0.2),
+                  color: borderColor ?? Colors.red.withOpacityExt(0.2),
                   width: 1.5,
                 )
               : Border.all(
-                  color: borderColor ?? Colors.grey.withValues(alpha: 0.5),
+                  color: borderColor ?? Colors.grey.withOpacityExt(0.5),
                   width: 0.5,
                 ),
           boxShadow: isError

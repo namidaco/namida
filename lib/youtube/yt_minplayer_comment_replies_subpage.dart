@@ -142,7 +142,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                   boxShadow: [
                     BoxShadow(
                       blurRadius: 12.0,
-                      color: theme.secondaryHeaderColor.withValues(alpha: 0.5),
+                      color: theme.secondaryHeaderColor.withOpacityExt(0.5),
                     ),
                   ],
                 ),

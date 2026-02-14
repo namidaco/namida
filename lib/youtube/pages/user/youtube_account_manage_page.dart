@@ -159,8 +159,8 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    final accountColorActive = theme.colorScheme.secondaryContainer.withValues(alpha: 0.8);
-    final accountColorNonActive = theme.cardColor.withValues(alpha: 0.5);
+    final accountColorActive = theme.colorScheme.secondaryContainer.withOpacityExt(0.8);
+    final accountColorNonActive = theme.cardColor.withOpacityExt(0.5);
     return BackgroundWrapper(
       child: ObxO(
         rx: YoutubeAccountController.current.signedInAccounts,
@@ -187,9 +187,9 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                             title: hasMembership ? lang.MEMBERSHIP_MANAGE : "${lang.SIGNING_IN_ALLOWS_BASIC_USAGE}.\n${lang.SIGNING_IN_ALLOWS_BASIC_USAGE_SUBTITLE}",
                             icon: Broken.money_3,
                             bgColor: Color.alphaBlend(
-                              theme.cardTheme.color?.withValues(alpha: 0.3) ?? Colors.transparent,
+                              theme.cardTheme.color?.withOpacityExt(0.3) ?? Colors.transparent,
                               theme.colorScheme.secondaryContainer,
-                            ).withValues(alpha: 0.5),
+                            ).withOpacityExt(0.5),
                             trailingRaw: const MembershipCard(displayName: false),
                           );
                         },

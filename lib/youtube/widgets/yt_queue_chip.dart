@@ -216,7 +216,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
             //         padding: const EdgeInsets.all(12.0),
             //         child: FloatingActionButton(
             //           heroTag: 'yt_queue_fab_hero',
-            //           backgroundColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.9),
+            //           backgroundColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.9),
             //           onPressed: () => _animateSmallToBig(),
             //           child: const Icon(
             //             Broken.driver,
@@ -256,14 +256,14 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                           margin: smallChipMargin,
                           padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
                           height: minHeight,
-                          bgColor: Color.alphaBlend(theme.cardColor.withValues(alpha: 0.5), theme.scaffoldBackgroundColor).withValues(alpha: 0.95),
+                          bgColor: Color.alphaBlend(theme.cardColor.withOpacityExt(0.5), theme.scaffoldBackgroundColor).withOpacityExt(0.95),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
                                 Broken.airdrop,
                                 size: 24.0,
-                                color: theme.iconTheme.color?.withValues(alpha: 0.65),
+                                color: theme.iconTheme.color?.withOpacityExt(0.65),
                               ),
                               const SizedBox(width: 6.0),
                               Expanded(
@@ -367,7 +367,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
           child: Stack(
             children: [
               ColoredBox(
-                color: Color.alphaBlend(theme.cardColor.withValues(alpha: 0.5), theme.scaffoldBackgroundColor),
+                color: Color.alphaBlend(theme.cardColor.withOpacityExt(0.5), theme.scaffoldBackgroundColor),
                 child: Listener(
                   onPointerMove: (event) {
                     if (Player.inst.isModifyingQueue) return;
@@ -495,7 +495,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                               ),
                                               const SizedBox(width: 4.0),
                                               NamidaIconButton(
-                                                iconColor: context.defaultIconColor().withValues(alpha: 0.95),
+                                                iconColor: context.defaultIconColor().withOpacityExt(0.95),
                                                 icon: Broken.arrow_down_2,
                                                 onPressed: () => _animateBigToSmall(),
                                               ),
@@ -614,7 +614,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
             if (p == 1) return const SizedBox();
             final slowOpacity = ((1 - p) * 1.5 - 0.5).clampDouble(0.0, 1.0);
             return ColoredBox(
-              color: Colors.black.withValues(alpha: slowOpacity),
+              color: Colors.black.withOpacityExt(slowOpacity),
               child: Transform.translate(
                 offset: Offset(0, _bigBoxAnimation.value * maxHeight),
                 child: Container(
@@ -652,7 +652,7 @@ class _ActionItem extends StatelessWidget {
       style: ButtonStyle(
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         visualDensity: const VisualDensity(horizontal: -2.0, vertical: -2.0),
-        backgroundColor: WidgetStatePropertyAll(theme.colorScheme.secondary.withValues(alpha: 0.18)),
+        backgroundColor: WidgetStatePropertyAll(theme.colorScheme.secondary.withOpacityExt(0.18)),
       ),
       onPressed: onTap,
       icon: Icon(icon, size: 20.0),

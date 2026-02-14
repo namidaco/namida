@@ -805,7 +805,7 @@ Future<void> showGeneralPopupDialog(
                                 child: DecoratedBox(
                                   decoration: BoxDecoration(
                                     border: Border.all(
-                                      color: Colors.red.withValues(alpha: 0.3),
+                                      color: Colors.red.withOpacityExt(0.3),
                                     ),
                                     borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                                   ),
@@ -1539,7 +1539,7 @@ class _ArtworkManager extends StatelessWidget {
                           child: loading
                               ? Center(
                                   child: ThreeArchedCircle(
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                    color: theme.colorScheme.onSurface.withOpacityExt(0.5),
                                     size: 32.0,
                                   ),
                                 )

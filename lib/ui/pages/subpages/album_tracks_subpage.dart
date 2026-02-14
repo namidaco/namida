@@ -170,7 +170,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                                                 children: [
                                                   DecoratedBox(
                                                     decoration: BoxDecoration(
-                                                      color: Color.alphaBlend(theme.colorScheme.secondaryContainer.withValues(alpha: 0.5), theme.scaffoldBackgroundColor),
+                                                      color: Color.alphaBlend(theme.colorScheme.secondaryContainer.withOpacityExt(0.5), theme.scaffoldBackgroundColor),
                                                       borderRadius: BorderRadius.horizontal(
                                                         right: Radius.circular(6.0.multipliedRadius),
                                                       ),

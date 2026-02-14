@@ -293,12 +293,12 @@ class IndexerSettings extends SettingSubpageProvider {
                                   alignment: Alignment.center,
                                   animationDurationMS: 200,
                                   borderRadius: 8.0,
-                                  bgColor: color.withValues(alpha: 0.2),
+                                  bgColor: color.withOpacityExt(0.2),
                                   padding: const EdgeInsets.all(8.0),
                                   decoration: BoxDecoration(
                                     border: isSelected
                                         ? Border.all(
-                                            color: color.withValues(alpha: 0.6),
+                                            color: color.withOpacityExt(0.6),
                                             width: 1.2,
                                           )
                                         : null,

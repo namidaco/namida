@@ -4,6 +4,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -24,7 +25,7 @@ class SortByMenuTracks with SortByMenuBase {
         borderRadius: 10.0,
         margin: EdgeInsets.symmetric(horizontal: 6.0),
         padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-        bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
+        bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.4),
         onTap: () {
           NamidaNavigator.inst.popMenu();
           NamidaOnTaps.inst.onSubPageTracksSortIconTap(MediaType.track);

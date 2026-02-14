@@ -110,7 +110,7 @@ class YTUtils {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                  color: context.theme.scaffoldBackgroundColor.withValues(alpha: 0.5),
+                  color: context.theme.scaffoldBackgroundColor.withOpacityExt(0.5),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),

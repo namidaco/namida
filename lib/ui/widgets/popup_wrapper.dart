@@ -67,7 +67,7 @@ class NamidaPopupWrapper extends StatelessWidget {
     final textTheme = theme.textTheme;
     return childrenDefault.map(
       (e) {
-        final titleStyle = textTheme.displayMedium?.copyWith(color: e.enabled ? null : textTheme.displayMedium?.color?.withValues(alpha: 0.4));
+        final titleStyle = textTheme.displayMedium?.copyWith(color: e.enabled ? null : textTheme.displayMedium?.color?.withOpacityExt(0.4));
         Widget popupItem = Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6.0),
           child: Row(
@@ -77,8 +77,8 @@ class NamidaPopupWrapper extends StatelessWidget {
                       baseIcon: e.icon,
                       iconSize: 20.0,
                       secondaryIcon: e.secondaryIcon,
-                      baseIconColor: theme.iconTheme.color?.withValues(alpha: 0.8),
-                      secondaryIconColor: theme.iconTheme.color?.withValues(alpha: 0.8),
+                      baseIconColor: theme.iconTheme.color?.withOpacityExt(0.8),
+                      secondaryIconColor: theme.iconTheme.color?.withOpacityExt(0.8),
                       secondaryIconSize: 11.0,
                     )
                   : Icon(
@@ -90,7 +90,7 @@ class NamidaPopupWrapper extends StatelessWidget {
                           color: Color(0x10202020),
                         ),
                       ],
-                      color: theme.iconTheme.color?.withValues(alpha: 0.8),
+                      color: theme.iconTheme.color?.withOpacityExt(0.8),
                     ),
               const SizedBox(width: 6.0),
               Expanded(
@@ -185,7 +185,7 @@ class NamidaPopupWrapper extends StatelessWidget {
 
   CustomPopup _toCustomPopup(BuildContext context) {
     final colorScheme = CurrentColor.inst.color /* ?? context.theme.colorScheme.surface */;
-    final scaffoldBgColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor.withValues(alpha: 0.5), context.isDarkMode ? Colors.black : Colors.white);
+    final scaffoldBgColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor.withOpacityExt(0.5), context.isDarkMode ? Colors.black : Colors.white);
     return CustomPopup(
       controller: controller,
       openOnTap: openOnTap,
@@ -199,14 +199,14 @@ class NamidaPopupWrapper extends StatelessWidget {
           BoxDecoration(
             borderRadius: BorderRadius.circular(12.0.multipliedRadius),
             border: Border.all(
-              color: colorScheme.withValues(alpha: 0.8),
+              color: colorScheme.withOpacityExt(0.8),
             ),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color.alphaBlend(scaffoldBgColor.withValues(alpha: 0.90), colorScheme).withValues(alpha: 1.0),
-                Color.alphaBlend(scaffoldBgColor.withValues(alpha: 0.65), colorScheme).withValues(alpha: 1.0),
+                Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.90), colorScheme).withOpacityExt(1.0),
+                Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.65), colorScheme).withOpacityExt(1.0),
               ],
             ),
           ),

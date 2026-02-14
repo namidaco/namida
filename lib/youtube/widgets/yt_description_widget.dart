@@ -161,7 +161,7 @@ class YoutubeDescriptionWidgetManager {
         _latestAttachment = null;
       }
       child = ColoredBox(
-        color: linkColor.withValues(alpha: 0.1),
+        color: linkColor.withOpacityExt(0.1),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: hpadding, vertical: vpadding),
           child: child,

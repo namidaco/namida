@@ -270,7 +270,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     final selectedChannel = channel;
     final currentChannelThumbnail = currentChannelInfo?.thumbnails.pick()?.url;
 
-    final selectedChannelBgColor = theme.colorScheme.secondary.withValues(alpha: 0.1);
+    final selectedChannelBgColor = theme.colorScheme.secondary.withOpacityExt(0.1);
 
     return Column(
       children: [
@@ -313,7 +313,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                             borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                             border: Border.all(
                               width: 1.2,
-                              color: theme.colorScheme.secondary.withValues(alpha: 0.6),
+                              color: theme.colorScheme.secondary.withOpacityExt(0.6),
                             ),
                           ),
                           child: Padding(
@@ -331,7 +331,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                             borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                             border: Border.all(
                               width: 1.2,
-                              color: theme.colorScheme.secondary.withValues(alpha: 0.6),
+                              color: theme.colorScheme.secondary.withOpacityExt(0.6),
                             ),
                           ),
                           child: Padding(
@@ -620,7 +620,7 @@ class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> w
     final currentChannelInfo = _currentChannelInfo;
     final currentChannelThumbnail = currentChannelInfo?.thumbnails.pick()?.url;
 
-    final selectedChannelBgColor = theme.colorScheme.secondary.withValues(alpha: 0.1);
+    final selectedChannelBgColor = theme.colorScheme.secondary.withOpacityExt(0.1);
 
     final userChannelsResult = _userChannelsResult;
     final userChannels = userChannelsResult?.items ?? List<YoutiPieChannelInfo?>.filled(10, null);
@@ -797,7 +797,7 @@ class __YoutubeChannelVideosPageState extends State<_YoutubeChannelVideosPage> {
       return Center(
         child: ThreeArchedCircle(
           size: 48.0,
-          color: context.theme.colorScheme.onSurface.withValues(alpha: 0.5),
+          color: context.theme.colorScheme.onSurface.withOpacityExt(0.5),
         ),
       );
     }
@@ -928,7 +928,7 @@ class _ChannelsRowSlider<T> extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.only(bottom: _listBottomPadding, top: _listTopPadding),
         decoration: BoxDecoration(
-          color: Color.alphaBlend(theme.scaffoldBackgroundColor.withValues(alpha: 0.4), theme.cardTheme.color!),
+          color: Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.4), theme.cardTheme.color!),
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(12.0.multipliedRadius),
           ),
@@ -938,7 +938,7 @@ class _ChannelsRowSlider<T> extends StatelessWidget {
             NamidaInkWell(
               borderRadius: 10.0,
               animationDurationMS: 150,
-              bgColor: isAllSelected ? theme.colorScheme.secondary.withValues(alpha: 0.15) : null,
+              bgColor: isAllSelected ? theme.colorScheme.secondary.withOpacityExt(0.15) : null,
               width: _thumbSize,
               margin: EdgeInsets.symmetric(horizontal: horizontalPadding),
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding / 2),

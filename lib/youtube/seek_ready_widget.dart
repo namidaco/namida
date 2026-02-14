@@ -314,12 +314,12 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
     final progressBarBottomPosition = barHeight / 2 - (progressBarHeight / 2);
 
     final progressColor = widget.useReducedProgressColor
-        ? Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor).withValues(alpha: 0.8)
-        : CurrentColor.inst.miniplayerColor.withValues(alpha: 0.8);
-    final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(theme.secondaryHeaderColor.withValues(alpha: 0.25), theme.scaffoldBackgroundColor);
+        ? Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor).withOpacityExt(0.8)
+        : CurrentColor.inst.miniplayerColor.withOpacityExt(0.8);
+    final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(theme.secondaryHeaderColor.withOpacityExt(0.25), theme.scaffoldBackgroundColor);
     final bufferColorOg = fullscreen
         ? miniplayerBGColor.invert()
-        : Color.alphaBlend(progressColor.withValues(alpha: 0.25), miniplayerBGColor.invert().withValues(alpha: 0.5)).withValues(alpha: 0.5);
+        : Color.alphaBlend(progressColor.withOpacityExt(0.25), miniplayerBGColor.invert().withOpacityExt(0.5)).withOpacityExt(0.5);
     final bufferColor = widget.showBufferBars ? bufferColorOg : null;
 
     final circleWidget = AnimatedBuilder(
@@ -329,7 +329,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
         height: circleWidth,
         width: circleWidth,
         decoration: BoxDecoration(
-          color: CurrentColor.inst.miniplayerColor.withValues(alpha: 1.0),
+          color: CurrentColor.inst.miniplayerColor.withOpacityExt(1.0),
           borderRadius: const BorderRadius.all(Radius.circular(64.0)),
         ),
         child: Container(
@@ -537,7 +537,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                                     bottom: 0,
                                     child: DecoratedBox(
                                       decoration: BoxDecoration(
-                                        color: bufferColorOg.withValues(alpha: 0.12),
+                                        color: bufferColorOg.withOpacityExt(0.12),
                                         borderRadius: const BorderRadius.all(
                                           Radius.circular(6.0),
                                         ),
@@ -557,7 +557,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                                 bottom: 0,
                                 child: DecoratedBox(
                                   decoration: BoxDecoration(
-                                    color: bufferColor?.withValues(alpha: fullscreen ? 0.3 : 0.1),
+                                    color: bufferColor?.withOpacityExt(fullscreen ? 0.3 : 0.1),
                                     borderRadius: const BorderRadius.all(
                                       Radius.circular(6.0),
                                     ),
@@ -572,7 +572,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                               bottom: 0,
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
-                                  color: bufferColor?.withValues(alpha: fullscreen ? 0.8 : 0.2),
+                                  color: bufferColor?.withOpacityExt(fullscreen ? 0.8 : 0.2),
                                   borderRadius: const BorderRadius.all(
                                     Radius.circular(6.0),
                                   ),
@@ -632,7 +632,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                       offset: Offset(-halfCircle / 2 + pos.clampDouble(clampedEdge, maxWidth - clampedEdge), (barHeight / 4)),
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: CurrentColor.inst.miniplayerColor.withValues(alpha: 0.9),
+                          color: CurrentColor.inst.miniplayerColor.withOpacityExt(0.9),
                           borderRadius: const BorderRadius.all(
                             Radius.circular(6.0),
                           ),

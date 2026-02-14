@@ -147,7 +147,7 @@ class SearchPage extends StatelessWidget {
                               return NamidaOpacity(
                                 opacity: isForcelyEnabled ? 0.6 : 1.0,
                                 child: NamidaInkWell(
-                                  bgColor: isActive ? theme.colorScheme.secondary.withValues(alpha: 0.12) : null,
+                                  bgColor: isActive ? theme.colorScheme.secondary.withOpacityExt(0.12) : null,
                                   borderRadius: 8.0,
                                   onTap: () async {
                                     if (isForcelyEnabled) return;
@@ -164,7 +164,7 @@ class SearchPage extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                                   decoration: BoxDecoration(
                                     border: Border.all(
-                                      color: theme.colorScheme.secondary.withValues(alpha: 0.7),
+                                      color: theme.colorScheme.secondary.withOpacityExt(0.7),
                                       width: 1.5,
                                     ),
                                   ),
@@ -173,15 +173,15 @@ class SearchPage extends StatelessWidget {
                                       Text(
                                         e.toText(),
                                         style: textTheme.displayMedium?.copyWith(
-                                          color: theme.colorScheme.secondary.withValues(alpha: 0.7),
+                                          color: theme.colorScheme.secondary.withOpacityExt(0.7),
                                         ),
                                       ),
                                       const SizedBox(width: 8.0),
                                       NamidaCheckMark(
                                         size: 12.0,
                                         active: isActive,
-                                        activeColor: theme.colorScheme.secondary.withValues(alpha: 0.7),
-                                        inactiveColor: theme.colorScheme.secondary.withValues(alpha: 0.7),
+                                        activeColor: theme.colorScheme.secondary.withOpacityExt(0.7),
+                                        inactiveColor: theme.colorScheme.secondary.withOpacityExt(0.7),
                                       ),
                                     ],
                                   ),
@@ -539,7 +539,7 @@ class _FolderSmallCard extends StatelessWidget {
           isTracksRecursive: false,
         ),
         borderRadius: 8.0,
-        bgColor: theme.colorScheme.secondary.withValues(alpha: 0.12),
+        bgColor: theme.colorScheme.secondary.withOpacityExt(0.12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

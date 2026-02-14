@@ -113,7 +113,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                                 if (YTLocalSearchController.inst.didLoadLookupLists.valueR == false)
                                   IgnorePointer(
                                     child: ThreeArchedCircle(
-                                      color: context.defaultIconColor().withValues(alpha: 0.3),
+                                      color: context.defaultIconColor().withOpacityExt(0.3),
                                       size: 36.0,
                                     ),
                                   ),

@@ -149,7 +149,7 @@ class YtUtilsPlaylist {
                       child: NamidaInkWellButton(
                         icon: privacyIconsLookup[e],
                         text: e.toText(),
-                        bgColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: privacy == e ? 0.5 : 0.2),
+                        bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(privacy == e ? 0.5 : 0.2),
                         onTap: () => privacyRx.value = e,
                         trailing:
                             const SizedBox(
@@ -296,7 +296,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
                     final theme = context.theme;
                     final textTheme = theme.textTheme;
                     final iconSize = maxWidth * 0.5;
-                    final iconColor = theme.colorScheme.onSurface.withValues(alpha: 0.6);
+                    final iconColor = theme.colorScheme.onSurface.withOpacityExt(0.6);
                     return Padding(
                       padding: const EdgeInsets.all(32.0),
                       child: Column(
@@ -469,7 +469,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
               );
             }
             if (didSuccess == true) {
-              snackyy(title: lang.SUCCEEDED, message: (isInYTOnlineLibrary ? lang.REMOVED : lang.ADDED).capitalizeFirst(), borderColor: Colors.green.withValues(alpha: 0.5));
+              snackyy(title: lang.SUCCEEDED, message: (isInYTOnlineLibrary ? lang.REMOVED : lang.ADDED).capitalizeFirst(), borderColor: Colors.green.withOpacityExt(0.5));
             } else {
               snackyy(title: lang.ERROR, message: lang.FAILED, isError: true);
             }

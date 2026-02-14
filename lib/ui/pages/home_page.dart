@@ -1046,7 +1046,7 @@ class _HorizontalList extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     child: NamidaInkWell(
                       borderRadius: 10.0,
-                      bgColor: theme.cardColor.withValues(alpha: 0.5),
+                      bgColor: theme.cardColor.withOpacityExt(0.5),
                       padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                       child: Text(
                         switch (homepageItem) {
@@ -1148,7 +1148,7 @@ class _MixesCardState extends State<_MixesCard> {
                     ),
                     margin: const EdgeInsets.symmetric(horizontal: 32.0).add(const EdgeInsets.only(top: 12.0)),
                     padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
-                    bgColor: Color.alphaBlend(_cardColor?.withValues(alpha: 0.4) ?? Colors.transparent, Color.fromRGBO(80, 80, 80, 0.4)).withValues(alpha: 0.9),
+                    bgColor: Color.alphaBlend(_cardColor?.withOpacityExt(0.4) ?? Colors.transparent, Color.fromRGBO(80, 80, 80, 0.4)).withOpacityExt(0.9),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1181,7 +1181,7 @@ class _MixesCardState extends State<_MixesCard> {
                           },
                           borderRadius: 8.0,
                           padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
-                          bgColor: contentColor.withValues(alpha: 0.6),
+                          bgColor: contentColor.withOpacityExt(0.6),
                           child: Row(
                             children: [
                               const Icon(

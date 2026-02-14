@@ -144,7 +144,7 @@ class _SplitPageState extends State<_SplitPage> {
                         decoration: BoxDecoration(
                           border: isSelected
                               ? Border.all(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                                  color: theme.colorScheme.primary.withOpacityExt(0.6),
                                   width: 1.2,
                                 )
                               : null,

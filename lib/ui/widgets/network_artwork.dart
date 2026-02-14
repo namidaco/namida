@@ -370,7 +370,7 @@ class YtThumbnailOverlayBox extends StatelessWidget {
         clipBehavior: Clip.hardEdge,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5.0.multipliedRadius),
-          color: Colors.black.withValues(alpha: 0.3),
+          color: Colors.black.withOpacityExt(0.3),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 1.0),
@@ -381,14 +381,14 @@ class YtThumbnailOverlayBox extends StatelessWidget {
                 Icon(
                   icon,
                   size: 15.0,
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: Colors.white.withOpacityExt(0.8),
                 ),
               if (text != null && icon != null) const SizedBox(width: 2.0),
               if (text != null)
                 Text(
                   text!,
                   style: textTheme.displaySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Colors.white.withOpacityExt(0.8),
                     fontWeight: FontWeight.w600,
                   ),
                 ),

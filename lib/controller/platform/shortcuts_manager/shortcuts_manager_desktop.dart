@@ -308,7 +308,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       icon: Broken.flash_1,
       title: lang.SHORTCUTS,
       message: message,
-      borderColor: Colors.green.withValues(alpha: 0.6),
+      borderColor: Colors.green.withOpacityExt(0.6),
       top: false,
     );
   }

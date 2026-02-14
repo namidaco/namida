@@ -1307,14 +1307,14 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
                       enableSecondaryTap: false,
                       decoration: isEnabled
                           ? BoxDecoration(
-                              color: bgColor.withValues(alpha: 0.75),
+                              color: bgColor.withOpacityExt(0.75),
                               border: Border.all(
                                 color: bgColor,
                                 width: 1.5,
                               ),
                             )
                           : BoxDecoration(
-                              color: bgColor.withValues(alpha: 0.25),
+                              color: bgColor.withOpacityExt(0.25),
                             ),
                       onTap: () async {
                         await NamidaChannel.inst.changeAppIcon(e);
@@ -1345,7 +1345,7 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
                   padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                   enableSecondaryTap: false,
                   decoration: BoxDecoration(
-                    color: bgColor.withValues(alpha: 0.25),
+                    color: bgColor.withOpacityExt(0.25),
                   ),
                   onTap: _onAddTap,
                   child: Text(

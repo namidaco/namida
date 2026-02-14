@@ -460,7 +460,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
   ScrollController get scrollController => _controller;
 
   @override
-  Color? get sortChipBGColor => bgColor?.withValues(alpha: 0.6);
+  Color? get sortChipBGColor => bgColor?.withOpacityExt(0.6);
 
   @override
   void onSortChanged(void Function() fn) => refreshState(fn);

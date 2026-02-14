@@ -107,7 +107,7 @@ class __SkipSponsorButtonState extends State<SkipSponsorButton> {
               key: ValueKey('button_shown'),
               blur: 3.0,
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: Colors.black.withOpacityExt(0.2),
                 borderRadius: BorderRadius.horizontal(left: Radius.circular(6.0.multipliedRadius)),
                 border: Border(
                   right: BorderSide(

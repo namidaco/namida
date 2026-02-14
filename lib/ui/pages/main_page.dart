@@ -294,7 +294,7 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
         return CircularProgressIndicator(
           strokeWidth: 2.0,
           strokeCap: StrokeCap.round,
-          color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.4),
+          color: theme.colorScheme.onSecondaryContainer.withOpacityExt(0.4),
         );
       },
     );
@@ -303,7 +303,7 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
         message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
         child: FloatingActionButton(
           heroTag: 'main_page_fab_hero',
-          backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withValues(alpha: 0.6), theme.cardColor),
+          backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacityExt(0.6), theme.cardColor),
           onPressed: () {
             final fab = settings.floatingActionButton.value;
             final isMenuOpened = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
@@ -728,7 +728,7 @@ class __CustomRailBarState extends State<_CustomRailBar> {
     final showLogo = WindowController.instance?.usingCustomWindowTitleBar != true;
 
     final bgColor = Color.alphaBlend(
-      (theme.navigationRailTheme.backgroundColor ?? theme.colorScheme.surface).withValues(alpha: .5),
+      (theme.navigationRailTheme.backgroundColor ?? theme.colorScheme.surface).withOpacityExt(.5),
       theme.colorScheme.surfaceContainer,
     );
     Widget child = Material(

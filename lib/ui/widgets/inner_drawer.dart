@@ -120,7 +120,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                 child: IgnorePointer(
                   ignoring: animationValue == controller.lowerBound,
                   child: ColoredBox(
-                    color: Colors.black.withValues(alpha: (animationValue * 1.2).clampDouble(0.0, 1.0)),
+                    color: Colors.black.withOpacityExt((animationValue * 1.2).clampDouble(0.0, 1.0)),
                   ),
                 ),
               ),
@@ -180,7 +180,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
                   child: ObxO(
                     rx: _upperBoundRx,
                     builder: (context, upperBound) => ColoredBox(
-                      color: Colors.black.withValues(alpha: ((upperBound - animationValue) * 1.8).clampDouble(0.0, 1.0)),
+                      color: Colors.black.withOpacityExt(((upperBound - animationValue) * 1.8).clampDouble(0.0, 1.0)),
                     ),
                   ),
                 ),

@@ -449,7 +449,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                foregroundColor: Color.alphaBlend(Colors.grey.withValues(alpha: subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
+                foregroundColor: Color.alphaBlend(Colors.grey.withOpacityExt(subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
               ),
               child: NamidaButtonText(
                 subscribed ? lang.SUBSCRIBED : lang.SUBSCRIBE,

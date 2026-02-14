@@ -641,7 +641,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                         borderRadius: 12.0,
                         animationDurationMS: 200,
                         onTap: isTempFetched ? () => selectedLyrics.value = l : null,
-                        bgColor: namida.theme.cardColor.withValues(alpha: 0.4),
+                        bgColor: namida.theme.cardColor.withOpacityExt(0.4),
                         decoration: BoxDecoration(
                           border: selectedLyrics.valueR == l
                               ? Border.all(

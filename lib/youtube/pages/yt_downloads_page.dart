@@ -49,7 +49,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
     return Obx(
       (context) {
         final enabled = isOnGoing == YTOnGoingFinishedDownloads.inst.isOnGoingSelected.valueR;
-        final color = enabled ? Colors.white.withValues(alpha: 0.7) : null;
+        final color = enabled ? Colors.white.withOpacityExt(0.7) : null;
         return NamidaInkWell(
           bgColor: enabled ? CurrentColor.inst.color : theme.cardColor,
           borderRadius: 6.0,
@@ -201,7 +201,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
         builder: (context, loadingAllTasks) => loadingAllTasks
             ? Center(
                 child: ThreeArchedCircle(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                  color: theme.colorScheme.primary.withOpacityExt(0.5),
                   size: 56.0,
                 ),
               )

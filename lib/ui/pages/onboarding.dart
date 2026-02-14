@@ -194,7 +194,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                     decoration: BoxDecoration(
                                       boxShadow: [
                                         BoxShadow(
-                                          color: _shouldShowGlow.valueR ? CurrentColor.inst.color.withValues(alpha: 0.5) : Colors.transparent,
+                                          color: _shouldShowGlow.valueR ? CurrentColor.inst.color.withOpacityExt(0.5) : Colors.transparent,
                                           blurRadius: 12.0,
                                           spreadRadius: 2.0,
                                         ),
@@ -208,7 +208,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                         ),
                         Container(
                           decoration: BoxDecoration(
-                            color: Color.alphaBlend(theme.scaffoldBackgroundColor.withValues(alpha: 0.7), theme.cardColor),
+                            color: Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.7), theme.cardColor),
                             borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                           ),
                           child: Row(
@@ -221,9 +221,9 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                       border: Border.all(
                                         width: 1.5,
                                         color: didGrantStoragePermission
-                                            ? Colors.green.withValues(alpha: 0.3)
+                                            ? Colors.green.withOpacityExt(0.3)
                                             : didDenyStoragePermission
-                                            ? Colors.red.withValues(alpha: 0.3)
+                                            ? Colors.red.withOpacityExt(0.3)
                                             : Colors.transparent,
                                       ),
                                     ),

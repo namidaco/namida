@@ -335,7 +335,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                       decoration: _isReordering
                           ? BoxDecoration(
                               border: Border.all(
-                                color: theme.iconTheme.color?.withValues(alpha: 0.4) ?? theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
+                                color: theme.iconTheme.color?.withOpacityExt(0.4) ?? theme.colorScheme.primaryContainer.withOpacityExt(0.8),
                               ),
                             )
                           : const BoxDecoration(),
@@ -389,7 +389,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                     snackyy(
                                       icon: Broken.copy_success,
                                       message: '$importedSucessText\n$detailsText',
-                                      borderColor: Colors.green.withValues(alpha: 0.8),
+                                      borderColor: Colors.green.withOpacityExt(0.8),
                                     );
                                   },
                                   text: lang.PICK_FROM_STORAGE,

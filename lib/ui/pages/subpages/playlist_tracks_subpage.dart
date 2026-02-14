@@ -98,7 +98,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
     final dayHeaderBgColor = Color.alphaBlend(theme.cardTheme.color!.withAlpha(140), theme.scaffoldBackgroundColor);
     final dayHeaderSideColor = CurrentColor.inst.color;
 
-    final dayHeaderShadowColor = Color.alphaBlend(theme.shadowColor.withAlpha(140), theme.scaffoldBackgroundColor).withValues(alpha: 0.4);
+    final dayHeaderShadowColor = Color.alphaBlend(theme.shadowColor.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(0.4);
 
     final daysLength = historyDays.length;
 

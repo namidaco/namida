@@ -391,7 +391,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
     final topRightButton = _TopActionButton(
       icon: Broken.more,
       iconColor: onSecondary,
-      bgColor: theme.colorScheme.secondary.withValues(alpha: .2),
+      bgColor: theme.colorScheme.secondary.withOpacityExt(.2),
       onTapUp: (details) => widget.onMenuOpen(_getcurrentItem, details),
     );
 
@@ -701,7 +701,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                           Text(
                             "${currentIndex + 1}/${queue.length}",
                             style: TextStyle(
-                              color: onSecondary.withValues(alpha: .8),
+                              color: onSecondary.withOpacityExt(.8),
                               fontSize: 12.0.fontSize,
                               fontWeight: FontWeight.w500,
                             ),
@@ -714,7 +714,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 16.0.fontSize,
-                              color: onSecondary.withValues(alpha: .9),
+                              color: onSecondary.withOpacityExt(.9),
                             ),
                           ),
                         ],
@@ -1024,7 +1024,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
             //       color: CurrentColor.inst.miniplayerColor,
             //       borderRadius: BorderRadius.circular(50),
             //       //  color: Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor)
-            //       //   .withValues(alpha: velpy(a: .3, b: .22, c: icp)),
+            //       //   .withOpacityExt(velpy(a: .3, b: .22, c: icp)),
             //     ),
             //   ),
             // );
@@ -1186,7 +1186,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                         borderRadius: borderRadius,
                                         boxShadow: [
                                           BoxShadow(
-                                            color: theme.shadowColor.withValues(alpha: 0.2 + 0.1 * cp),
+                                            color: theme.shadowColor.withOpacityExt(0.2 + 0.1 * cp),
                                             blurRadius: 20.0,
                                           ),
                                         ],
@@ -1208,11 +1208,11 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                                     Color.alphaBlend(
                                                       theme.colorScheme.onSurface.withAlpha(100),
                                                       CurrentColor.inst.miniplayerColor,
-                                                    ).withValues(alpha: velpy(a: .38, b: .28, c: icp)),
+                                                    ).withOpacityExt(velpy(a: .38, b: .28, c: icp)),
                                                     Color.alphaBlend(
                                                       theme.colorScheme.onSurface.withAlpha(40),
                                                       CurrentColor.inst.miniplayerColor,
-                                                    ).withValues(alpha: velpy(a: .1, b: .22, c: icp)),
+                                                    ).withOpacityExt(velpy(a: .1, b: .22, c: icp)),
                                                   ],
                                                 ),
                                               ),
@@ -1810,8 +1810,8 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                         enableGradient: true,
                                         likedIcon: textData.likedIcon,
                                         normalIcon: textData.normalIcon,
-                                        enabledColor: theme.colorScheme.primary.withValues(alpha: 0.75),
-                                        disabledColor: theme.colorScheme.secondary.withValues(alpha: 0.75),
+                                        enabledColor: theme.colorScheme.primary.withOpacityExt(0.75),
+                                        disabledColor: theme.colorScheme.secondary.withOpacityExt(0.75),
                                         removeConfirmationAction: null, // manually managed
                                         isLiked: isUserLiked,
                                         onTap: (isLiked) async {
@@ -1835,8 +1835,8 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                     enableGradient: true,
                                     likedIcon: textData.likedIcon,
                                     normalIcon: textData.normalIcon,
-                                    enabledColor: theme.colorScheme.primary.withValues(alpha: 0.75),
-                                    disabledColor: theme.colorScheme.secondary.withValues(alpha: 0.75),
+                                    enabledColor: theme.colorScheme.primary.withOpacityExt(0.75),
+                                    disabledColor: theme.colorScheme.secondary.withOpacityExt(0.75),
                                     removeConfirmationAction: lang.REMOVE_FROM_FAVOURITES,
                                     isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
                                     onTap: textData.onLikeTap,

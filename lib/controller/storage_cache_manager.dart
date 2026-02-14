@@ -398,7 +398,7 @@ class StorageCacheManager {
                               decoration: BoxDecoration(
                                 border: isSelected
                                     ? Border.all(
-                                        color: theme.colorScheme.secondary.withValues(alpha: 0.5),
+                                        color: theme.colorScheme.secondary.withOpacityExt(0.5),
                                         width: 2.0,
                                       )
                                     : null,
