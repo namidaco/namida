@@ -1,7 +1,8 @@
 package com.msob7y.namida.glance
 
-import HomeWidgetGlanceState
-import HomeWidgetGlanceStateDefinition
+import es.antonborri.home_widget.HomeWidgetGlanceState 
+import es.antonborri.home_widget.HomeWidgetGlanceStateDefinition 
+import es.antonborri.home_widget.HomeWidgetGlanceWidgetReceiver
 import android.app.Activity
 import android.content.Context
 import android.content.Intent

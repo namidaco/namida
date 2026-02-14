@@ -9,7 +9,6 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build_android:
     runs-on: ubuntu-latest
 
@@ -68,13 +67,13 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/Yarn
           sudo rm -rf /opt/hostedtoolcache/Zephyr
           sudo rm -rf /opt/hostedtoolcache/zig
-          sudo rm -rf /opt/hostedtoolcache/azcopy  
+          sudo rm -rf /opt/hostedtoolcache/azcopy
 
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: "3.6.0"
 
-      - name: setup credentials 
+      - name: setup credentials
         run: |
           git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
           git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
@@ -93,7 +92,7 @@ jobs:
 
       - uses: actions/setup-java@v1
         with:
-          java-version: "21"
+          java-version: "17"
 
       - name: Create keystore & key.properties
         run: |
@@ -104,9 +103,9 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p build_final
-          flutter build apk --target-platform android-arm64 --release
+          flutter build apk --target-platform android-arm64 --split-per-abi --release
           mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version }}-arm64-v8a.apk
-          flutter build apk --target-platform android-arm --release
+          flutter build apk --target-platform android-arm --split-per-abi --release
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version }}-armeabi-v7a.apk
 
       - name: Creating clone repo & apks
@@ -122,9 +121,9 @@ jobs:
           echo ${{ secrets.ANDROID_SIGNING_KEYSTORE }} | base64 --decode > android/app/keystore.jks
           echo ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }} | base64 --decode > android/key.properties
           mkdir -p ../build_final
-          flutter build apk --target-platform android-arm64 --release
+          flutter build apk --target-platform android-arm64 --split-per-abi --release
           mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../build_final/namida-v${{ steps.extract_version.outputs.version }}-clone-arm64-v8a.apk
-          flutter build apk --target-platform android-arm --release
+          flutter build apk --target-platform android-arm --split-per-abi --release
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ../build_final/namida-v${{ steps.extract_version.outputs.version }}-clone-armeabi-v7a.apk
           cd ../
 

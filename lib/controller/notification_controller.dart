@@ -37,7 +37,7 @@ class NotificationManager {
 
   static Future<bool?> init() {
     final didInit = _flutterLocalNotificationsPlugin.initialize(
-      InitializationSettings(
+      settings: InitializationSettings(
         android: AndroidInitializationSettings('ic_stat_musicnote'),
         windows: WindowsInitializationSettings(
           appName: 'Namida',
@@ -76,10 +76,10 @@ class NotificationManager {
     final pic = imagePath == null ? null : FilePathAndroidBitmap(imagePath);
 
     _flutterLocalNotificationsPlugin.show(
-      id,
-      title,
-      subtitle,
-      NotificationDetails(
+      id: id,
+      title: title,
+      body: subtitle,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           '$id',
           'media',
@@ -139,7 +139,7 @@ class NotificationManager {
   }
 
   Future<void> removeDownloadingYoutubeNotification({required DownloadTaskFilename filenameWrapper}) async {
-    await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: filenameWrapper.key);
+    await _flutterLocalNotificationsPlugin.cancel(id: _youtubeDownloadID, tag: filenameWrapper.key);
   }
 
   void doneDownloadingYoutubeNotification({
@@ -150,7 +150,7 @@ class NotificationManager {
     String? imagePath,
   }) async {
     final key = filenameWrapper.key;
-    await _flutterLocalNotificationsPlugin.cancel(_youtubeDownloadID, tag: key);
+    await _flutterLocalNotificationsPlugin.cancel(id: _youtubeDownloadID, tag: key);
     _createNotification(
       id: _youtubeDownloadID,
       title: videoTitle,
@@ -216,10 +216,10 @@ class NotificationManager {
   }) {
     final pic = imagePath == null ? null : BigPictureStyleInformation(FilePathAndroidBitmap(imagePath));
     _flutterLocalNotificationsPlugin.show(
-      id,
-      title,
-      body,
-      NotificationDetails(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           '$id',
           channelName,
@@ -264,10 +264,10 @@ class NotificationManager {
     final pic = imagePath == null ? null : FilePathAndroidBitmap(imagePath);
 
     _flutterLocalNotificationsPlugin.show(
-      id,
-      title,
-      subtitle(sub),
-      NotificationDetails(
+      id: id,
+      title: title,
+      body: subtitle(sub),
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           '$id',
           channelName,
