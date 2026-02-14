@@ -237,7 +237,6 @@ class Lyrics {
     } else if (source != LyricsSource.internet && trackLyrics != '') {
       return trackLyrics;
     }
-
     /// download lyrics
     else if (source != LyricsSource.local) {
       final lyrics = await _fetchLyricsGoogle(lrcUtils.searchQueriesGoogle());
@@ -377,7 +376,8 @@ class _LRCSearchManager with PortsProvider<SendPort> {
             // -- prefer lyrics with closer duration (if info the same)
             jsonLists.sort(
               (a, b) {
-                final sameInfo = (a['trackName'] is String && a['trackName'] == b['trackName']) && //
+                final sameInfo =
+                    (a['trackName'] is String && a['trackName'] == b['trackName']) && //
                     (a['artistName'] is String && a['artistName'] == b['artistName']);
                 if (sameInfo) {
                   try {
@@ -418,24 +418,28 @@ class _LRCSearchManager with PortsProvider<SendPort> {
 
               final resultedLRC = lrcBuffer.toString();
 
-              fetched.add(LyricsModel(
-                lyrics: resultedLRC,
-                isInCache: false,
-                fromInternet: true,
-                synced: true,
-                file: null,
-                isEmbedded: false,
-              ));
+              fetched.add(
+                LyricsModel(
+                  lyrics: resultedLRC,
+                  isInCache: false,
+                  fromInternet: true,
+                  synced: true,
+                  file: null,
+                  isEmbedded: false,
+                ),
+              );
             } else if (plain != '') {
               // txt
-              fetched.add(LyricsModel(
-                lyrics: plain,
-                isInCache: false,
-                fromInternet: true,
-                synced: false,
-                file: null,
-                isEmbedded: false,
-              ));
+              fetched.add(
+                LyricsModel(
+                  lyrics: plain,
+                  isInCache: false,
+                  fromInternet: true,
+                  synced: false,
+                  file: null,
+                  isEmbedded: false,
+                ),
+              );
             }
           });
           fetched.removeDuplicates();

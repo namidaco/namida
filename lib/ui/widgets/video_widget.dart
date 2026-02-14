@@ -462,7 +462,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   color: color,
                   shadows: outlineShadow,
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -521,7 +521,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 ),
             ],
           ),
-          if (trailing != null) trailing,
+          ?trailing,
         ],
       ),
     );
@@ -785,25 +785,35 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
     final horizontalControlsPadding = widget.isFullScreen
         ? inLandscape
-            ? EdgeInsets.only(left: 12.0 + _deviceInsets.left, right: 12.0 + _deviceInsets.right) // lanscape videos
-            : EdgeInsets.only(left: 12.0 + _deviceInsets.left, right: 12.0 + _deviceInsets.right) // vertical videos
+              ? EdgeInsets.only(left: 12.0 + _deviceInsets.left, right: 12.0 + _deviceInsets.right) // lanscape videos
+              : EdgeInsets.only(left: 12.0 + _deviceInsets.left, right: 12.0 + _deviceInsets.right) // vertical videos
         : const EdgeInsets.symmetric(horizontal: 2.0);
 
     final safeAreaPadding = widget.isFullScreen
         ? inLandscape
-            ? EdgeInsets.only(left: _deviceInsets.left, right: _deviceInsets.right)
-            : EdgeInsets.zero // bcz we hide status bar and nav bar
+              ? EdgeInsets.only(left: _deviceInsets.left, right: _deviceInsets.right)
+              : EdgeInsets
+                    .zero // bcz we hide status bar and nav bar
         : EdgeInsets.zero;
 
     final bottomPadding = widget.isFullScreen
         ? inLandscape
-            ? 12.0 + _deviceInsets.bottom // lanscape videos
-            : 12.0 + 0.35 * _deviceInsets.bottom // vertical videos
+              ? 12.0 +
+                    _deviceInsets
+                        .bottom // lanscape videos
+              : 12.0 +
+                    0.35 *
+                        _deviceInsets
+                            .bottom // vertical videos
         : 2.0;
     final topPadding = widget.isFullScreen
         ? inLandscape
-            ? 12.0 + _deviceInsets.top // lanscape videos
-            : 12.0 + _deviceInsets.top // vertical videos
+              ? 12.0 +
+                    _deviceInsets
+                        .top // lanscape videos
+              : 12.0 +
+                    _deviceInsets
+                        .top // vertical videos
         : 2.0;
     final itemsColor = Colors.white.withAlpha(200);
     final shouldShowSliders = _canShowControls && widget.isFullScreen;
@@ -1052,7 +1062,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: SeekReadyWidget.normalKey.currentState?.createHitTestWidget(
+                child:
+                    SeekReadyWidget.normalKey.currentState?.createHitTestWidget(
                       expandHitTest: true,
                       allowTapping: false,
                       maxWidth: maxWidth,
@@ -1283,79 +1294,80 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   ),
                                   // ===== Audio Language Chip =====
                                   ObxO(
-                                      rx: YoutubeInfoController.current.currentYTStreams,
-                                      builder: (context, streams) {
-                                        final streamsMap = streams?.audioStreamsOrganizedByLanguage;
-                                        if (streamsMap == null || streamsMap.keys.length <= 1) return const SizedBox();
+                                    rx: YoutubeInfoController.current.currentYTStreams,
+                                    builder: (context, streams) {
+                                      final streamsMap = streams?.audioStreamsOrganizedByLanguage;
+                                      if (streamsMap == null || streamsMap.keys.length <= 1) return const SizedBox();
 
-                                        return NamidaPopupWrapper(
-                                          openOnTap: true,
-                                          onPop: _startTimer,
-                                          onTap: () {
-                                            _resetTimer();
-                                            setControlsVisibily(true);
-                                          },
-                                          children: () => streamsMap.values
-                                              .map(
-                                                (element) => Obx(
-                                                  (context) {
-                                                    bool isSelected = false;
-                                                    final audioTrack = element.audioTrack;
-                                                    final langCode = audioTrack?.langCode;
-                                                    if (langCode != null) {
-                                                      if (langCode == Player.inst.currentCachedAudio.valueR?.langaugeCode) {
-                                                        isSelected = true;
-                                                      } else if (langCode == Player.inst.currentAudioStream.valueR?.audioTrack?.langCode) {
-                                                        isSelected = true;
-                                                      }
+                                      return NamidaPopupWrapper(
+                                        openOnTap: true,
+                                        onPop: _startTimer,
+                                        onTap: () {
+                                          _resetTimer();
+                                          setControlsVisibily(true);
+                                        },
+                                        children: () => streamsMap.values
+                                            .map(
+                                              (element) => Obx(
+                                                (context) {
+                                                  bool isSelected = false;
+                                                  final audioTrack = element.audioTrack;
+                                                  final langCode = audioTrack?.langCode;
+                                                  if (langCode != null) {
+                                                    if (langCode == Player.inst.currentCachedAudio.valueR?.langaugeCode) {
+                                                      isSelected = true;
+                                                    } else if (langCode == Player.inst.currentAudioStream.valueR?.audioTrack?.langCode) {
+                                                      isSelected = true;
                                                     }
-                                                    final id = Player.inst.currentVideoR?.id;
-                                                    return _getQualityChip(
-                                                      title: audioTrack?.displayName ?? '?',
-                                                      subtitle: " • ${audioTrack?.langCode ?? 0}",
-                                                      onPlay: (isSelected) {
-                                                        if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized == true) {
-                                                          Player.inst.onItemPlayYoutubeIDSetAudio(
-                                                            stream: element,
-                                                            mainStreams: streams,
-                                                            cachedFile: null,
-                                                            useCache: true,
-                                                            videoId: Player.inst.currentVideo?.id ?? '',
-                                                          );
-                                                        }
-                                                      },
-                                                      selected: isSelected,
-                                                      isCached: element.getCachedFileSync(id) != null,
-                                                    );
-                                                  },
-                                                ),
-                                              )
-                                              .toList(),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(4.0),
-                                            child: NamidaBgBlurClipped(
-                                              blur: 3.0,
-                                              decoration: BoxDecoration(
-                                                color: Colors.black.withValues(alpha: 0.2),
-                                                borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                                  }
+                                                  final id = Player.inst.currentVideoR?.id;
+                                                  return _getQualityChip(
+                                                    title: audioTrack?.displayName ?? '?',
+                                                    subtitle: " • ${audioTrack?.langCode ?? 0}",
+                                                    onPlay: (isSelected) {
+                                                      if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized == true) {
+                                                        Player.inst.onItemPlayYoutubeIDSetAudio(
+                                                          stream: element,
+                                                          mainStreams: streams,
+                                                          cachedFile: null,
+                                                          useCache: true,
+                                                          videoId: Player.inst.currentVideo?.id ?? '',
+                                                        );
+                                                      }
+                                                    },
+                                                    selected: isSelected,
+                                                    isCached: element.getCachedFileSync(id) != null,
+                                                  );
+                                                },
                                               ),
-                                              child: Padding(
-                                                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                                child: Obx(
-                                                  (context) {
-                                                    final displayName =
-                                                        Player.inst.currentAudioStream.valueR?.audioTrack?.displayName ?? Player.inst.currentCachedAudio.valueR?.langaugeName;
-                                                    return Text(
-                                                      displayName ?? '?',
-                                                      style: textTheme.displaySmall?.copyWith(color: itemsColor),
-                                                    );
-                                                  },
-                                                ),
+                                            )
+                                            .toList(),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(4.0),
+                                          child: NamidaBgBlurClipped(
+                                            blur: 3.0,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withValues(alpha: 0.2),
+                                              borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                              child: Obx(
+                                                (context) {
+                                                  final displayName =
+                                                      Player.inst.currentAudioStream.valueR?.audioTrack?.displayName ?? Player.inst.currentCachedAudio.valueR?.langaugeName;
+                                                  return Text(
+                                                    displayName ?? '?',
+                                                    style: textTheme.displaySmall?.copyWith(color: itemsColor),
+                                                  );
+                                                },
                                               ),
                                             ),
                                           ),
-                                        );
-                                      }),
+                                        ),
+                                      );
+                                    },
+                                  ),
                                   // ===== Quality Chip =====
                                   NamidaPopupWrapper(
                                     openOnTap: true,
@@ -1379,8 +1391,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       } else {
                                         streams = YoutubeInfoController.current.currentYTStreams.value;
                                       }
-                                      final ytQualities =
-                                          streams?.videoStreams.withoutWebmIfNeccessaryOrExperimentalCodecs(allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs);
+                                      final ytQualities = streams?.videoStreams.withoutWebmIfNeccessaryOrExperimentalCodecs(
+                                        allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs,
+                                      );
                                       final cachedQualitiesAll = widget.isLocal
                                           ? VideoController.inst.currentVideoConfig.currentPossibleLocalVideos
                                           : YoutubeInfoController.current.currentCachedQualities;
@@ -1488,8 +1501,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               selected: widget.isLocal
                                                   ? VideoController.inst.currentVideo.valueR?.path == element.path
                                                   : settings.youtube.isAudioOnlyMode.valueR
-                                                      ? false
-                                                      : Player.inst.currentCachedVideo.valueR?.path == element.path,
+                                                  ? false
+                                                  : Player.inst.currentCachedVideo.valueR?.path == element.path,
                                               isCached: true,
                                             ),
                                           ),
@@ -1908,7 +1921,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                 ],
                                               ),
                                             ),
-                                          )
+                                          ),
                                         ],
                                       ),
                                       if (shouldShowSeekBar && !inLandscape) const SizedBox(height: 24.0),
@@ -2046,7 +2059,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       ),
 
                       // ===== Seek Animators ====
-
                       Positioned.fill(
                         child: Padding(
                           padding: safeAreaPadding,
@@ -2290,7 +2302,7 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
                                 const Icon(
                                   Broken.close_circle,
                                   size: 18.0,
-                                )
+                                ),
                               ],
                             ),
                           ),
@@ -2321,7 +2333,7 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
                   return null;
                 },
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -2665,15 +2677,15 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
                               },
                               onTopWidgets: e is EndScreenItemPlaylist
                                   ? (_) => [
-                                        Positioned(
-                                          bottom: 2.0,
-                                          right: 2.0,
-                                          child: YtThumbnailOverlayBox(
-                                            text: e.basicInfo.videosCount?.toString() ?? e.basicInfo.videosCountText,
-                                            icon: Broken.play_cricle,
-                                          ),
+                                      Positioned(
+                                        bottom: 2.0,
+                                        right: 2.0,
+                                        child: YtThumbnailOverlayBox(
+                                          text: e.basicInfo.videosCount?.toString() ?? e.basicInfo.videosCountText,
+                                          icon: Broken.play_cricle,
                                         ),
-                                      ]
+                                      ),
+                                    ]
                                   : null,
                             ),
                           ),
@@ -2815,7 +2827,7 @@ class _DropShadowWrapper extends StatelessWidget {
                   key: ValueKey('video_bg_blur_disabled'),
                 ),
         ),
-        child
+        child,
       ],
     );
   }

@@ -221,8 +221,8 @@ class BackupController {
       }
 
       final allFiles = [
-        if (tempAllLocal != null) tempAllLocal,
-        if (tempAllYoutube != null) tempAllYoutube,
+        ?tempAllLocal,
+        ?tempAllYoutube,
         ...compressedDirectories,
       ];
       await _zipManager.createZip(sourceDir: sourceDir, files: allFiles, zipFile: backupFile);

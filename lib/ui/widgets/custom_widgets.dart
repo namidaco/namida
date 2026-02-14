@@ -317,7 +317,8 @@ class CustomListTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               )
             : null,
-        trailing: trailingRaw ??
+        trailing:
+            trailingRaw ??
             (trailing == null && trailingText == null
                 ? null
                 : FittedBox(
@@ -434,13 +435,13 @@ class NamidaBgBlurClipped extends StatelessWidget {
               child: child,
             )
           : borderRadius != null && shape != BoxShape.rectangle
-              ? DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: borderRadius,
-                    shape: decoration?.shape ?? BoxShape.rectangle,
-                  ),
-                )
-              : child;
+          ? DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: borderRadius,
+                shape: decoration?.shape ?? BoxShape.rectangle,
+              ),
+            )
+          : child;
     }
 
     return ClipPath(
@@ -518,7 +519,7 @@ class DropShadow extends StatelessWidget {
             : Transform.scale(
                 scale: sizePercentage,
                 child: child,
-              )
+              ),
       ],
     );
   }
@@ -585,7 +586,7 @@ class CustomBlurryDialog extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     /// Title.
-                    if (titleWidget != null) titleWidget!,
+                    ?titleWidget,
                     if (titleWidgetInPadding != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
@@ -614,7 +615,7 @@ class CustomBlurryDialog extends StatelessWidget {
                                       style: ctxth.textTheme.displayLarge,
                                     ),
                                   ),
-                                  if (trailingWidgets != null) ...trailingWidgets!
+                                  if (trailingWidgets != null) ...trailingWidgets!,
                                 ],
                               ),
                             )
@@ -676,7 +677,7 @@ class CustomBlurryDialog extends StatelessWidget {
                                 leftAction!,
                                 const SizedBox(width: 6.0),
                               ],
-                              ...actions!.addSeparators(separator: const SizedBox(width: 6.0))
+                              ...actions!.addSeparators(separator: const SizedBox(width: 6.0)),
                             ],
                           ),
                         ),
@@ -825,7 +826,8 @@ class StatsContainer extends StatelessWidget {
         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 5.0),
-      child: child ??
+      child:
+          child ??
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -894,20 +896,21 @@ class SmallListTile extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
       ),
-      leading: leading ??
+      leading:
+          leading ??
           SizedBox(
             height: double.infinity,
             child: icon != null
                 ? Icon(icon, color: iconColor, size: iconSize)
                 : active
-                    ? const Icon(
-                        Broken.arrow_circle_right,
-                        size: 20.0,
-                      )
-                    : const Icon(
-                        Broken.arrow_right_3,
-                        size: 18.0,
-                      ),
+                ? const Icon(
+                    Broken.arrow_circle_right,
+                    size: 20.0,
+                  )
+                : const Icon(
+                    Broken.arrow_right_3,
+                    size: 18.0,
+                  ),
           ),
       visualDensity: visualDensity ?? (compact ? const VisualDensity(horizontal: -2.2, vertical: -2.2) : const VisualDensity(horizontal: -1.2, vertical: -1.2)),
       title: Text(
@@ -948,8 +951,8 @@ class SmallListTile extends StatelessWidget {
               ),
             )
           : trailingIcon != null
-              ? Icon(trailingIcon, color: color)
-              : trailing,
+          ? Icon(trailingIcon, color: color)
+          : trailing,
       onTap: onTap,
     );
   }
@@ -1008,51 +1011,52 @@ class ListTileWithCheckMark extends StatelessWidget {
             Text(
               subtitle,
               style: textTheme.displaySmall,
-            )
+            ),
         ],
       ),
     );
     return Material(
+      borderRadius: br,
+      color: tileColor ?? Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(tileAlpha), theme.cardTheme.color!),
+      child: InkWell(
         borderRadius: br,
-        color: tileColor ?? Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(tileAlpha), theme.cardTheme.color!),
-        child: InkWell(
-          borderRadius: br,
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-            child: Row(
-              mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
-              children: [
-                if (leading != null)
-                  leading!
-                else if (icon != null)
-                  Icon(
-                    icon,
-                    size: iconSize,
-                  ),
-                expanded
-                    ? Expanded(
-                        child: titleWidgetFinal,
-                      )
-                    : Flexible(
-                        child: titleWidgetFinal,
-                      ),
-                activeRx != null
-                    ? ObxO(
-                        rx: activeRx!,
-                        builder: (context, active) => NamidaCheckMark(
-                          size: 18.0,
-                          active: active,
-                        ),
-                      )
-                    : NamidaCheckMark(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          child: Row(
+            mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
+            children: [
+              if (leading != null)
+                leading!
+              else if (icon != null)
+                Icon(
+                  icon,
+                  size: iconSize,
+                ),
+              expanded
+                  ? Expanded(
+                      child: titleWidgetFinal,
+                    )
+                  : Flexible(
+                      child: titleWidgetFinal,
+                    ),
+              activeRx != null
+                  ? ObxO(
+                      rx: activeRx!,
+                      builder: (context, active) => NamidaCheckMark(
                         size: 18.0,
                         active: active,
-                      )
-              ],
-            ),
+                      ),
+                    )
+                  : NamidaCheckMark(
+                      size: 18.0,
+                      active: active,
+                    ),
+            ],
           ),
-        ));
+        ),
+      ),
+    );
   }
 }
 
@@ -1149,12 +1153,14 @@ class NamidaExpansionTile extends StatelessWidget {
         onExpansionChanged: onExpansionChanged,
         expandedAlignment: Alignment.centerLeft,
         tilePadding: EdgeInsets.only(left: 16.0, right: normalRightPadding ? 16.0 : 12.0),
-        leading: leading ??
+        leading:
+            leading ??
             Icon(
               icon,
               color: iconColor,
             ),
-        trailing: trailing ??
+        trailing:
+            trailing ??
             (trailingIcon == null
                 ? null
                 : IgnorePointer(
@@ -1169,7 +1175,8 @@ class NamidaExpansionTile extends StatelessWidget {
             Text(
               titleText,
               style: textTheme.displayMedium?.copyWith(
-                color: textColor ??
+                color:
+                    textColor ??
                     (textColorScheme == null
                         ? null
                         : Color.alphaBlend(
@@ -1285,8 +1292,8 @@ class StackedIcon extends StatelessWidget {
     return disableColor
         ? null
         : delightenColors && c != null
-            ? context.defaultIconColor(c)
-            : c ?? context.defaultIconColor();
+        ? context.defaultIconColor(c)
+        : c ?? context.defaultIconColor();
   }
 
   @override
@@ -1315,7 +1322,8 @@ class StackedIcon extends StatelessWidget {
                 ),
               ],
             ),
-            child: smallChild ??
+            child:
+                smallChild ??
                 (secondaryText != null
                     ? Text(
                         secondaryText!,
@@ -1327,7 +1335,7 @@ class StackedIcon extends StatelessWidget {
                         color: _getColory(context, secondaryIconColor),
                       )),
           ),
-        )
+        ),
       ],
     );
   }
@@ -1504,7 +1512,7 @@ class ContainerWithBorder extends StatelessWidget {
             color: theme.shadowColor.withAlpha(60),
             blurRadius: 4,
             offset: const Offset(0, 2.0),
-          )
+          ),
         ],
       ),
       child: Padding(
@@ -1547,10 +1555,10 @@ class NamidaWheelSlider extends StatefulWidget {
     this.topText,
     this.textPadding = 2.0,
     this.topTextPadding = 12.0,
-  })  : itemSize = 8,
-        squeeze = 1.8,
-        initValue = initValue < min ? max + 1 : initValue - min,
-        assert(min < max, 'min should be less than max');
+  }) : itemSize = 8,
+       squeeze = 1.8,
+       initValue = initValue < min ? max + 1 : initValue - min,
+       assert(min < max, 'min should be less than max');
 
   @override
   State<NamidaWheelSlider> createState() => _NamidaWheelSliderState();
@@ -1657,7 +1665,7 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
                 ),
               ),
             ),
-          ]
+          ],
         ],
       ),
     );
@@ -1940,7 +1948,8 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
             opacity: isPressed ? 0.5 : 1.0,
             child: Padding(
               padding: widget.padding ?? EdgeInsets.symmetric(horizontal: widget.horizontalPadding, vertical: widget.verticalPadding),
-              child: widget.child ??
+              child:
+                  widget.child ??
                   Icon(
                     widget.icon,
                     size: widget.iconSize,
@@ -2232,7 +2241,7 @@ class SubpageInfoContainer extends StatelessWidget {
                     ],
                   ),
                 ),
-              )
+              ),
             ],
           );
 
@@ -2538,7 +2547,7 @@ class SearchPageTitleRow extends StatelessWidget {
                   title,
                   style: textTheme.displayLarge?.copyWith(fontSize: 15.5),
                 ),
-                if (subtitleWidget != null) subtitleWidget!,
+                ?subtitleWidget,
                 if (subtitle != '')
                   Text(
                     subtitle,
@@ -3148,7 +3157,7 @@ class NamidaCircularPercentage extends StatelessWidget {
           Text(
             "${((percentage).clampDouble(0.01, 1.0) * 100).toStringAsFixed(0)}%",
             style: textTheme.displaySmall?.copyWith(fontSize: size / 3.2),
-          )
+          ),
       ],
     );
   }
@@ -3212,21 +3221,21 @@ class NamidaListView extends StatelessWidget {
             onReorderEnd: onReorderEnd,
           )
         : itemExtent != null
-            ? SliverFixedExtentList.builder(
-                itemExtent: itemExtent!,
-                itemBuilder: itemBuilder,
-                itemCount: itemCount,
-              )
-            : itemExtentBuilder != null
-                ? SliverVariedExtentList.builder(
-                    itemExtentBuilder: itemExtentBuilder!,
-                    itemBuilder: itemBuilder,
-                    itemCount: itemCount,
-                  )
-                : SuperSliverList.builder(
-                    itemBuilder: itemBuilder,
-                    itemCount: itemCount,
-                  );
+        ? SliverFixedExtentList.builder(
+            itemExtent: itemExtent!,
+            itemBuilder: itemBuilder,
+            itemCount: itemCount,
+          )
+        : itemExtentBuilder != null
+        ? SliverVariedExtentList.builder(
+            itemExtentBuilder: itemExtentBuilder!,
+            itemBuilder: itemBuilder,
+            itemCount: itemCount,
+          )
+        : SuperSliverList.builder(
+            itemBuilder: itemBuilder,
+            itemCount: itemCount,
+          );
     return NamidaListViewRaw(
       reverse: reverse,
       scrollController: scrollController,
@@ -3236,7 +3245,8 @@ class NamidaListView extends StatelessWidget {
       stickyHeader: stickyHeader,
       infoBox: infoBox,
       slivers: [list],
-      builder: listBuilder ??
+      builder:
+          listBuilder ??
           (list) => widgetsInColumn != null
               ? Column(
                   children: [
@@ -3739,7 +3749,7 @@ class NamidaInkWellButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (leading != null) leading!,
+              ?leading,
               if (!enabled && showLoadingWhenDisabled) ...[
                 const LoadingIndicator(boxHeight: 18.0),
                 SizedBox(width: 6.0 * sizeMultiplier),
@@ -3763,7 +3773,7 @@ class NamidaInkWellButton extends StatelessWidget {
                 ),
                 if (textGood) const SizedBox(width: 4.0),
               ],
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
         ),
@@ -4299,7 +4309,8 @@ class NamidaTabViewState extends State<NamidaTabView> with SingleTickerProviderS
           indicatorWeight: widget.compact ? 1.0 : 3.0,
           controller: controller,
           isScrollable: widget.isScrollable,
-          tabs: widget.tabs
+          tabs:
+              widget.tabs
                   ?.map(
                     (e) => Padding(
                       padding: itemsPadding,
@@ -5636,7 +5647,11 @@ class SwipeQueueAddTileInfo {
     this.videoTitle,
   });
 
-  Color? get getCurrentColor => queueSource == QueueSourceYoutubeID.playerQueue || queueSource == QueueSourceYoutubeID.playerQueue //
+  Color? get getCurrentColor =>
+      queueSource == QueueSourceYoutubeID.playerQueue ||
+          queueSource ==
+              QueueSourceYoutubeID
+                  .playerQueue //
       ? CurrentColor.inst.miniplayerColor
       : CurrentColor.inst.color;
 
@@ -5673,10 +5688,10 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
       direction: allowSwipeLeft && allowSwipeRight
           ? DismissDirection.horizontal
           : allowSwipeLeft
-              ? DismissDirection.endToStart
-              : allowSwipeRight
-                  ? DismissDirection.startToEnd
-                  : DismissDirection.none,
+          ? DismissDirection.endToStart
+          : allowSwipeRight
+          ? DismissDirection.startToEnd
+          : DismissDirection.none,
       removeOnDismiss: false,
       dismissThreshold: 0.12,
       friction: 0.58,
@@ -5735,7 +5750,7 @@ class _SwipeQueueActionBox extends StatelessWidget {
                 style: context.textTheme.displaySmall,
                 softWrap: false,
                 overflow: TextOverflow.fade,
-              )
+              ),
             ],
           ),
         ),
@@ -6364,8 +6379,8 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
     final ImageProvider<Object>? imgProvider = imgFile != null
         ? FileImage(imgFile)
         : imgBytes != null
-            ? MemoryImage(imgBytes)
-            : null;
+        ? MemoryImage(imgBytes)
+        : null;
     if (imgProvider == null) return;
 
     NamidaNavigator.inst.navigateDialog(

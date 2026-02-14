@@ -12,10 +12,10 @@ class CountPerRow {
   static const _auto = _CountPerRowAuto(128.0);
   static const _autoLarge = _CountPerRowAuto(164.0);
   static CountPerRow autoForTab(LibraryTab tab) => switch (tab) {
-        LibraryTab.albums || LibraryTab.genres || LibraryTab.playlists => CountPerRow._autoLarge,
-        LibraryTab.artists => CountPerRow._auto,
-        _ => CountPerRow._auto,
-      };
+    LibraryTab.albums || LibraryTab.genres || LibraryTab.playlists => CountPerRow._autoLarge,
+    LibraryTab.artists => CountPerRow._auto,
+    _ => CountPerRow._auto,
+  };
 
   bool get isAuto => rawValue < 1;
   int get rawValue => _recommended;

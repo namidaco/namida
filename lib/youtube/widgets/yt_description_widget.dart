@@ -133,8 +133,8 @@ class YoutubeDescriptionWidgetManager {
       fontWeight: sw.bold
           ? FontWeight.w800
           : sw.medium
-              ? FontWeight.w700
-              : FontWeight.w500,
+          ? FontWeight.w700
+          : FontWeight.w500,
       decoration: sw.strikethrough ? TextDecoration.lineThrough : null,
     );
 

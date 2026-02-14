@@ -81,7 +81,8 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
   @override
   double get maxDistance => 64.0;
 
-  late final YoutubeSubscription ch = YoutubeSubscriptionsController.inst.availableChannels.value[widget.channelID] ??
+  late final YoutubeSubscription ch =
+      YoutubeSubscriptionsController.inst.availableChannels.value[widget.channelID] ??
       YoutubeSubscription(
         channelID: widget.channelID.splitLast('/'),
         subscribed: false,
@@ -560,7 +561,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
                       tabFetcher: (fetch) => onRefresh(fetch, forceProceed: true),
                       onSuccessFetch: () => _aboutPageLastFetched = DateTime.now(),
                       shouldForceRequest: () => _didEnoughTimePass(_aboutPageLastFetched),
-                    )
+                    ),
                   ],
                 ),
               ),

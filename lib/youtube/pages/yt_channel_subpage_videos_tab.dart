@@ -186,10 +186,12 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                   playLast: false,
                 ),
                 videosCallback: () => streamsList
-                    ?.map((e) => YoutubeID(
-                          id: e.id,
-                          playlistID: null,
-                        ))
+                    ?.map(
+                      (e) => YoutubeID(
+                        id: e.id,
+                        playlistID: null,
+                      ),
+                    )
                     .toList(),
                 infoLookupCallback: () {
                   final streamsList = this.streamsList;
@@ -247,32 +249,32 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                             ),
                           )
                         : streamsList == null
-                            ? SliverToBoxAdapter(
-                                // child: Center(
-                                //   child: Text(
-                                //     lang.ERROR,
-                                //     style: textTheme.displayLarge,
-                                //   ),
-                                // ),
-                                )
-                            : SliverFixedExtentList.builder(
-                                itemExtent: thumbnailItemExtent,
-                                itemCount: streamsList.length,
-                                itemBuilder: (context, index) {
-                                  final item = streamsList[index];
-                                  return YoutubeVideoCard(
-                                    properties: properties,
-                                    key: Key(item.id),
-                                    thumbnailHeight: thumbnailHeight,
-                                    thumbnailWidth: thumbnailWidth,
-                                    isImageImportantInCache: false,
-                                    video: item,
-                                    playlistID: null,
-                                    thumbnailWidthPercentage: 0.8,
-                                    dateInsteadOfChannel: true,
-                                  );
-                                },
-                              ),
+                        ? SliverToBoxAdapter(
+                            // child: Center(
+                            //   child: Text(
+                            //     lang.ERROR,
+                            //     style: textTheme.displayLarge,
+                            //   ),
+                            // ),
+                          )
+                        : SliverFixedExtentList.builder(
+                            itemExtent: thumbnailItemExtent,
+                            itemCount: streamsList.length,
+                            itemBuilder: (context, index) {
+                              final item = streamsList[index];
+                              return YoutubeVideoCard(
+                                properties: properties,
+                                key: Key(item.id),
+                                thumbnailHeight: thumbnailHeight,
+                                thumbnailWidth: thumbnailWidth,
+                                isImageImportantInCache: false,
+                                video: item,
+                                playlistID: null,
+                                thumbnailWidthPercentage: 0.8,
+                                dateInsteadOfChannel: true,
+                              );
+                            },
+                          ),
                     SliverToBoxAdapter(
                       child: ObxO(
                         rx: isLoadingMoreUploads,

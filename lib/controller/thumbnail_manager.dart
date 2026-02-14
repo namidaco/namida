@@ -317,7 +317,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
       'isImportantInCache': isImportantInCache,
       'isTemp': isTemp,
       'destinationFile': destinationFile,
-      if (symlinkId != null) 'symlinkId': symlinkId,
+      'symlinkId': ?symlinkId,
     };
     if (!isInitialized) await initialize();
     await sendPort(p);

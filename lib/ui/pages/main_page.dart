@@ -61,7 +61,7 @@ class MainPage extends StatelessWidget {
           restorationScopeId: 'namida',
           requestFocus: false,
           observers: [NamidaNavigator.inst.heroController],
-          onGenerateInitialRoutes: (_, __) {
+          onGenerateInitialRoutes: (_, _) {
             NamidaNavigator.inst.onFirstLoad();
             return [MaterialPageRoute(builder: (_) => const SizedBox())];
           },
@@ -181,7 +181,7 @@ class MainPage extends StatelessWidget {
                           : const SizedBox(key: Key('emptyglow')),
                     );
                   },
-                )
+                ),
             ],
           ),
         ),
@@ -289,13 +289,15 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final searchProgressWidget = Builder(builder: (context) {
-      return CircularProgressIndicator(
-        strokeWidth: 2.0,
-        strokeCap: StrokeCap.round,
-        color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.4),
-      );
-    });
+    final searchProgressWidget = Builder(
+      builder: (context) {
+        return CircularProgressIndicator(
+          strokeWidth: 2.0,
+          strokeCap: StrokeCap.round,
+          color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.4),
+        );
+      },
+    );
     return Builder(
       builder: (context) => NamidaTooltip(
         message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
@@ -561,8 +563,9 @@ class _CustomAppBar extends StatelessWidget {
     final overlayStyle = _systemOverlayStyleForBrightness(ThemeData.estimateBrightnessForColor(backgroundColor), theme.useMaterial3 ? const Color(0x00000000) : null);
     final appbar = Obx(
       (context) {
-        final title =
-            ScrollSearchController.inst.isGlobalSearchMenuShown.valueR ? ScrollSearchController.inst.searchBarWidget : NamidaNavigator.inst.currentRouteR?.toTitle(context);
+        final title = ScrollSearchController.inst.isGlobalSearchMenuShown.valueR
+            ? ScrollSearchController.inst.searchBarWidget
+            : NamidaNavigator.inst.currentRouteR?.toTitle(context);
         final actions = NamidaNavigator.inst.currentRouteR?.toActions();
         return Row(
           children: [
@@ -691,7 +694,8 @@ class _CustomNavBar extends StatelessWidget {
                   offset: Offset(0, (kBottomNavigationBarHeight * animation.value).withMinimum(0)),
                   child: bottomNavBar,
                 );
-              }),
+              },
+            ),
     );
   }
 }
@@ -764,28 +768,30 @@ class __CustomRailBarState extends State<_CustomRailBar> {
                               margin: EdgeInsets.only(top: 6.0),
                               width: itemWidth - 4.0,
                             ),
-                            ...libraryTabs.map(
-                              (e) {
-                                final isSelected = selectedLibraryTab == e;
-                                return AnimatedDecoration(
-                                  duration: Duration(milliseconds: 400),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular((isSelected ? 16.0 : 24.0).multipliedRadius),
-                                    color: isSelected ? theme.colorScheme.secondaryContainer : null,
-                                  ),
-                                  child: NamidaIconButton(
-                                    tooltip: () => e.toText(),
-                                    padding: EdgeInsets.all(iconPadding),
-                                    icon: e.toIcon(),
-                                    iconColor: isSelected ? AppThemes.selectedNavigationIconColor : null,
-                                    iconSize: iconSize,
-                                    onPressed: () {
-                                      ScrollSearchController.inst.animatePageController(e);
-                                    },
-                                  ),
-                                );
-                              },
-                            ).addSeparators(separator: SizedBox(height: 6.0)),
+                            ...libraryTabs
+                                .map(
+                                  (e) {
+                                    final isSelected = selectedLibraryTab == e;
+                                    return AnimatedDecoration(
+                                      duration: Duration(milliseconds: 400),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular((isSelected ? 16.0 : 24.0).multipliedRadius),
+                                        color: isSelected ? theme.colorScheme.secondaryContainer : null,
+                                      ),
+                                      child: NamidaIconButton(
+                                        tooltip: () => e.toText(),
+                                        padding: EdgeInsets.all(iconPadding),
+                                        icon: e.toIcon(),
+                                        iconColor: isSelected ? AppThemes.selectedNavigationIconColor : null,
+                                        iconSize: iconSize,
+                                        onPressed: () {
+                                          ScrollSearchController.inst.animatePageController(e);
+                                        },
+                                      ),
+                                    );
+                                  },
+                                )
+                                .addSeparators(separator: SizedBox(height: 6.0)),
                           ],
                         ),
                       ),

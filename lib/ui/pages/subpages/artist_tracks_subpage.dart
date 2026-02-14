@@ -29,8 +29,8 @@ class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
     return type == MediaType.albumArtist
         ? RouteType.SUBPAGE_albumArtistTracks
         : type == MediaType.composer
-            ? RouteType.SUBPAGE_composerTracks
-            : RouteType.SUBPAGE_artistTracks;
+        ? RouteType.SUBPAGE_composerTracks
+        : RouteType.SUBPAGE_artistTracks;
   }
 
   @override
@@ -69,8 +69,8 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
     final queueSource = type == MediaType.albumArtist
         ? QueueSource.albumArtist
         : type == MediaType.composer
-            ? QueueSource.composer
-            : QueueSource.artist;
+        ? QueueSource.composer
+        : QueueSource.artist;
     final tracks = widget.tracks;
     return AnimationLimiter(
       child: BackgroundWrapper(
@@ -111,7 +111,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                         tracks.totalDurationFormatted,
                       ].join(' - '),
                       type: type,
-                    )
+                    ),
                   ],
                 ),
                 infoBox: (maxWidth) => SubpageInfoContainer(

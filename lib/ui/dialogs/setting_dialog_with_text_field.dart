@@ -159,7 +159,7 @@ Future<void> showSettingDialogWithTextField({
           alignment: Alignment.bottomCenter,
           // mainAxisSize: MainAxisSize.min,
           children: [
-            if (topWidget != null) topWidget,
+            ?topWidget,
             Padding(
               padding: const EdgeInsets.only(top: 14.0),
               child: TextFormField(

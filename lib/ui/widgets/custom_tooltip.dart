@@ -188,11 +188,11 @@ class Tooltip extends StatefulWidget {
     this.ignorePointer,
     this.child,
   }) : assert(
-          richMessage == null || textStyle == null,
-          'If `richMessage` is specified, `textStyle` will have no effect. '
-          'If you wish to provide a `textStyle` for a rich tooltip, add the '
-          '`textStyle` directly to the `richMessage` InlineSpan.',
-        );
+         richMessage == null || textStyle == null,
+         'If `richMessage` is specified, `textStyle` will have no effect. '
+         'If you wish to provide a `textStyle` for a rich tooltip, add the '
+         '`textStyle` directly to the `richMessage` InlineSpan.',
+       );
 
   final bool enabled;
 
@@ -400,18 +400,22 @@ class Tooltip extends StatefulWidget {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(StringProperty(
-      'message',
-      message?.call(),
-      showName: message == null,
-      defaultValue: message == null ? null : kNoDefaultValue,
-    ));
-    properties.add(StringProperty(
-      'richMessage',
-      richMessage?.call().toPlainText(),
-      showName: richMessage == null,
-      defaultValue: richMessage == null ? null : kNoDefaultValue,
-    ));
+    properties.add(
+      StringProperty(
+        'message',
+        message?.call(),
+        showName: message == null,
+        defaultValue: message == null ? null : kNoDefaultValue,
+      ),
+    );
+    properties.add(
+      StringProperty(
+        'richMessage',
+        richMessage?.call().toPlainText(),
+        showName: richMessage == null,
+        defaultValue: richMessage == null ? null : kNoDefaultValue,
+      ),
+    );
     properties.add(DoubleProperty('height', height, defaultValue: null));
     properties.add(DiagnosticsProperty<EdgeInsetsGeometry>('padding', padding, defaultValue: null));
     properties.add(DiagnosticsProperty<EdgeInsetsGeometry>('margin', margin, defaultValue: null));
@@ -786,13 +790,13 @@ class TooltipState extends State<Tooltip> with SingleTickerProviderStateMixin {
 
     final (TextStyle defaultTextStyle, BoxDecoration defaultDecoration) = switch (Theme.of(context)) {
       ThemeData(brightness: Brightness.dark, :final TextTheme textTheme, :final TargetPlatform platform) => (
-          textTheme.bodyMedium!.copyWith(color: Colors.black, fontSize: _getDefaultFontSize(platform)),
-          BoxDecoration(color: Colors.white.withValues(alpha: 0.9), borderRadius: const BorderRadius.all(Radius.circular(4))),
-        ),
+        textTheme.bodyMedium!.copyWith(color: Colors.black, fontSize: _getDefaultFontSize(platform)),
+        BoxDecoration(color: Colors.white.withValues(alpha: 0.9), borderRadius: const BorderRadius.all(Radius.circular(4))),
+      ),
       ThemeData(brightness: Brightness.light, :final TextTheme textTheme, :final TargetPlatform platform) => (
-          textTheme.bodyMedium!.copyWith(color: Colors.white, fontSize: _getDefaultFontSize(platform)),
-          BoxDecoration(color: Colors.grey[700]!.withValues(alpha: 0.9), borderRadius: const BorderRadius.all(Radius.circular(4))),
-        ),
+        textTheme.bodyMedium!.copyWith(color: Colors.white, fontSize: _getDefaultFontSize(platform)),
+        BoxDecoration(color: Colors.grey[700]!.withValues(alpha: 0.9), borderRadius: const BorderRadius.all(Radius.circular(4))),
+      ),
     };
 
     final TooltipThemeData tooltipTheme = _tooltipTheme;

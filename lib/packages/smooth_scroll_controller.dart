@@ -70,13 +70,14 @@ class _SmoothScrollPositionWithSingleContext extends ScrollPositionWithSingleCon
     super.oldPosition,
     super.debugLabel,
   }) {
-    controller = AnimationController.unbounded(
-      value: pixels,
-      duration: _duration,
-      vsync: context.vsync,
-    )
-      ..addListener(_listener)
-      ..addStatusListener(_statusListener);
+    controller =
+        AnimationController.unbounded(
+            value: pixels,
+            duration: _duration,
+            vsync: context.vsync,
+          )
+          ..addListener(_listener)
+          ..addStatusListener(_statusListener);
   }
 
   /// 滚动动画控制器，它的 value 与 [pixels] 同步，当 [pointerScroll] 每次接收到鼠标事件时，

@@ -99,88 +99,99 @@ class _YtFilenameRebuilder {
 
   String buildParamForFilename(String e) => '%($e)s';
 
-  String? _keywordToInfo(String keyword, String videoId, VideoStreamInfo? streamInfo, YoutiPieVideoPageResult? pageResult, StreamInfoItem? videoItem,
-      PlaylistBasicInfo? playlistInfo, VideoStream? videoStream, AudioStream? audioStream, int? originalIndex, int? totalLength) {
+  String? _keywordToInfo(
+    String keyword,
+    String videoId,
+    VideoStreamInfo? streamInfo,
+    YoutiPieVideoPageResult? pageResult,
+    StreamInfoItem? videoItem,
+    PlaylistBasicInfo? playlistInfo,
+    VideoStream? videoStream,
+    AudioStream? audioStream,
+    int? originalIndex,
+    int? totalLength,
+  ) {
     return switch (keyword) {
       'none' => '',
       'id' || 'video_id' => videoId,
       'url' || 'video_url' => YTUrlUtils.buildVideoUrl(videoId),
       'video_title' || 'fulltitle' => pageResult?.videoInfo?.title.nullifyEmpty() ?? videoItem?.title.nullifyEmpty() ?? streamInfo?.title.nullifyEmpty(),
       'title' => () {
-          final fulltitle = pageResult?.videoInfo?.title.nullifyEmpty() ?? videoItem?.title.nullifyEmpty() ?? streamInfo?.title.nullifyEmpty();
-          final splitted = fulltitle?.splitArtistAndTitle();
+        final fulltitle = pageResult?.videoInfo?.title.nullifyEmpty() ?? videoItem?.title.nullifyEmpty() ?? streamInfo?.title.nullifyEmpty();
+        final splitted = fulltitle?.splitArtistAndTitle();
 
-          if (fallbackExtractInfoFromDescription) {
-            final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(splitted, (infos) => infos.$2?.keepFeatKeywordsOnly(), streamInfo, pageResult, videoItem);
-            if (possibleExtracted != null) return possibleExtracted;
-          }
+        if (fallbackExtractInfoFromDescription) {
+          final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(splitted, (infos) => infos.$2?.keepFeatKeywordsOnly(), streamInfo, pageResult, videoItem);
+          if (possibleExtracted != null) return possibleExtracted;
+        }
 
-          return splitted?.$2?.keepFeatKeywordsOnly().nullifyEmpty() ?? streamInfo?.title.nullifyEmpty() ?? fulltitle?.nullifyEmpty();
-        }(),
+        return splitted?.$2?.keepFeatKeywordsOnly().nullifyEmpty() ?? streamInfo?.title.nullifyEmpty() ?? fulltitle?.nullifyEmpty();
+      }(),
       'artist' => () {
-          // tries extracting artist from video title, or else uses channel name
-          final fulltitle = pageResult?.videoInfo?.title.nullifyEmpty() ?? videoItem?.title.nullifyEmpty() ?? streamInfo?.title.nullifyEmpty();
+        // tries extracting artist from video title, or else uses channel name
+        final fulltitle = pageResult?.videoInfo?.title.nullifyEmpty() ?? videoItem?.title.nullifyEmpty() ?? streamInfo?.title.nullifyEmpty();
 
-          if (fulltitle != null) {
-            final splitted = fulltitle.splitArtistAndTitle();
-            if (fallbackExtractInfoFromDescription) {
-              final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(splitted, (infos) => infos.$1, streamInfo, pageResult, videoItem);
-              if (possibleExtracted != null) return possibleExtracted;
-            }
-            final String? artist = splitted.$1;
-            if (artist != null) return artist;
-          } else {
-            final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(null, (infos) => infos.$1, streamInfo, pageResult, videoItem);
+        if (fulltitle != null) {
+          final splitted = fulltitle.splitArtistAndTitle();
+          if (fallbackExtractInfoFromDescription) {
+            final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(splitted, (infos) => infos.$1, streamInfo, pageResult, videoItem);
             if (possibleExtracted != null) return possibleExtracted;
           }
+          final String? artist = splitted.$1;
+          if (artist != null) return artist;
+        } else {
+          final possibleExtracted = _extractArtistTitleFromDescriptionIfNecessary(null, (infos) => infos.$1, streamInfo, pageResult, videoItem);
+          if (possibleExtracted != null) return possibleExtracted;
+        }
 
-          final fullChannelName = pageResult?.channelInfo?.title?.nullifyEmpty() ?? videoItem?.channel?.title?.nullifyEmpty() ?? streamInfo?.channelName?.nullifyEmpty();
-          return fullChannelName == null ? null : _removeTopicKeyword(fullChannelName);
-        }(),
+        final fullChannelName = pageResult?.channelInfo?.title?.nullifyEmpty() ?? videoItem?.channel?.title?.nullifyEmpty() ?? streamInfo?.channelName?.nullifyEmpty();
+        return fullChannelName == null ? null : _removeTopicKeyword(fullChannelName);
+      }(),
       'genre' => () {
-          final fulltitle = pageResult?.videoInfo?.title.nullifyEmpty() ?? videoItem?.title.nullifyEmpty() ?? streamInfo?.title.nullifyEmpty();
-          if (fulltitle != null && fulltitle.contains(RegExp('nightcore', caseSensitive: false))) {
-            return 'Nightcore';
-          }
-          return null;
-        }(),
+        final fulltitle = pageResult?.videoInfo?.title.nullifyEmpty() ?? videoItem?.title.nullifyEmpty() ?? streamInfo?.title.nullifyEmpty();
+        if (fulltitle != null && fulltitle.contains(RegExp('nightcore', caseSensitive: false))) {
+          return 'Nightcore';
+        }
+        return null;
+      }(),
       'ext' => videoStream?.codecInfo.container.nullifyEmpty() ?? audioStream?.codecInfo.container.nullifyEmpty() ?? 'mp4',
       'channel_fulltitle' => pageResult?.channelInfo?.title?.nullifyEmpty() ?? videoItem?.channel?.title?.nullifyEmpty() ?? streamInfo?.channelName?.nullifyEmpty(),
       'uploader' || 'channel' => () {
-          final fullChannelName = pageResult?.channelInfo?.title?.nullifyEmpty() ?? videoItem?.channel?.title?.nullifyEmpty() ?? streamInfo?.channelName?.nullifyEmpty();
-          return fullChannelName == null ? null : _removeTopicKeyword(fullChannelName);
-        }(),
+        final fullChannelName = pageResult?.channelInfo?.title?.nullifyEmpty() ?? videoItem?.channel?.title?.nullifyEmpty() ?? streamInfo?.channelName?.nullifyEmpty();
+        return fullChannelName == null ? null : _removeTopicKeyword(fullChannelName);
+      }(),
       'uploader_id' || 'channel_id' => pageResult?.channelInfo?.id.nullifyEmpty() ?? videoItem?.channel?.id.nullifyEmpty() ?? streamInfo?.channelId?.nullifyEmpty(),
       'uploader_url' || 'channel_url' => () {
-          final id = pageResult?.channelInfo?.id.nullifyEmpty() ?? videoItem?.channel?.id.nullifyEmpty() ?? streamInfo?.channelId?.nullifyEmpty();
-          return id == null ? null : YTUrlUtils.buildChannelUrl(id);
-        }(),
+        final id = pageResult?.channelInfo?.id.nullifyEmpty() ?? videoItem?.channel?.id.nullifyEmpty() ?? streamInfo?.channelId?.nullifyEmpty();
+        return id == null ? null : YTUrlUtils.buildChannelUrl(id);
+      }(),
       'timestamp' =>
         (streamInfo?.publishDate.accurateDate ?? streamInfo?.uploadDate.accurateDate ?? pageResult?.videoInfo?.publishedAt.accurateDate ?? videoItem?.publishedAt.accurateDate)
             ?.millisecondsSinceEpoch
             .toString(),
       'upload_date' => () {
-          final date = streamInfo?.publishDate.accurateDate ?? streamInfo?.uploadDate.accurateDate ?? videoItem?.publishedAt.accurateDate;
-          return date == null ? null : DateFormat('yyyyMMdd').format(date.toLocal());
-        }(),
-      'view_count' => streamInfo?.viewsCount?.toString() ??
-          pageResult?.videoInfo?.viewsCount?.toString() ??
-          pageResult?.videoInfo?.viewsText?.nullifyEmpty() ??
-          videoItem?.viewsCount?.toString(),
+        final date = streamInfo?.publishDate.accurateDate ?? streamInfo?.uploadDate.accurateDate ?? videoItem?.publishedAt.accurateDate;
+        return date == null ? null : DateFormat('yyyyMMdd').format(date.toLocal());
+      }(),
+      'view_count' =>
+        streamInfo?.viewsCount?.toString() ??
+            pageResult?.videoInfo?.viewsCount?.toString() ??
+            pageResult?.videoInfo?.viewsText?.nullifyEmpty() ??
+            videoItem?.viewsCount?.toString(),
       'like_count' => pageResult?.videoInfo?.engagement?.likesCount?.toString() ?? pageResult?.videoInfo?.engagement?.likesCountText?.nullifyEmpty(),
       'description' => _getDescription(streamInfo, pageResult, videoItem),
       'duration' => (videoStream?.duration?.inSeconds ?? audioStream?.duration?.inSeconds ?? streamInfo?.durSeconds ?? videoItem?.durSeconds)?.toString(),
       'duration_string' => () {
-          final durSeconds = videoStream?.duration?.inSeconds ?? audioStream?.duration?.inSeconds ?? streamInfo?.durSeconds ?? videoItem?.durSeconds;
-          return durSeconds?.secondsLabel;
-        }(),
+        final durSeconds = videoStream?.duration?.inSeconds ?? audioStream?.duration?.inSeconds ?? streamInfo?.durSeconds ?? videoItem?.durSeconds;
+        return durSeconds?.secondsLabel;
+      }(),
       'playlist_title' => playlistInfo?.title,
       'playlist_id' => playlistInfo?.id,
       'playlist' => () {
-          var finalTitle = playlistInfo?.title;
-          if (finalTitle == null || finalTitle.isEmpty) finalTitle = playlistInfo?.id;
-          return finalTitle;
-        }(),
+        var finalTitle = playlistInfo?.title;
+        if (finalTitle == null || finalTitle.isEmpty) finalTitle = playlistInfo?.id;
+        return finalTitle;
+      }(),
       'playlist_count' => (totalLength ?? playlistInfo?.videosCount)?.toString(),
       'playlist_index' => originalIndex?.toString().padLeft((totalLength ?? playlistInfo?.videosCount)?.toString().length ?? 0, '0'),
       'playlist_autonumber' => originalIndex == null ? null : (originalIndex + 1).toString().padLeft((totalLength ?? playlistInfo?.videosCount)?.toString().length ?? 0, '0'),

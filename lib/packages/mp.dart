@@ -236,21 +236,25 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
     _resetValues();
   }
 
-  late final reverseOpacityAnimation = controller.drive(Animatable.fromCallback(
-    (value) {
-      final inversePerc = 1 - percentage;
-      final val = (inversePerc * 8 - 7).clampDouble(0.0, 1.0);
-      if (val > 0.99) return 1.0;
-      if (val < 0.01) return 0.0;
-      return val;
-    },
-  ));
-  late final dismissPercentageAnimation = controller.drive(Animatable.fromCallback(
-    (value) {
-      final controllerHeight = value * maxHeight;
-      return (controllerHeight / widget.minHeight).clampDouble(0.0, 1.0);
-    },
-  ));
+  late final reverseOpacityAnimation = controller.drive(
+    Animatable.fromCallback(
+      (value) {
+        final inversePerc = 1 - percentage;
+        final val = (inversePerc * 8 - 7).clampDouble(0.0, 1.0);
+        if (val > 0.99) return 1.0;
+        if (val < 0.01) return 0.0;
+        return val;
+      },
+    ),
+  );
+  late final dismissPercentageAnimation = controller.drive(
+    Animatable.fromCallback(
+      (value) {
+        final controllerHeight = value * maxHeight;
+        return (controllerHeight / widget.minHeight).clampDouble(0.0, 1.0);
+      },
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {

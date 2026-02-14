@@ -181,10 +181,12 @@ class _SubsonicWebServer extends MusicWebServer {
     required Uri serverUriParsed,
   }) {
     // -- dont use id cuz yt id matcher would catch it
-    final newUri = serverUriParsed.replace(queryParameters: {
-      ...serverUriParsed.queryParameters,
-      'd': media.id,
-    });
+    final newUri = serverUriParsed.replace(
+      queryParameters: {
+        ...serverUriParsed.queryParameters,
+        'd': media.id,
+      },
+    );
     final path = newUri.toString();
     final title = media.title;
     final artist = media.artist;

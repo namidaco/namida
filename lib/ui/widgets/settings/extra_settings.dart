@@ -69,29 +69,29 @@ class ExtrasSettings extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-        _ExtraSettingsKeys.collapsedTiles: [lang.USE_COLLAPSED_SETTING_TILES],
-        _ExtraSettingsKeys.bottomNavBar: [lang.ENABLE_BOTTOM_NAV_BAR, lang.ENABLE_BOTTOM_NAV_BAR_SUBTITLE],
-        _ExtraSettingsKeys.pip: [lang.ENABLE_PICTURE_IN_PICTURE],
-        _ExtraSettingsKeys.foldersHierarchy: [lang.ENABLE_FOLDERS_HIERARCHY],
-        _ExtraSettingsKeys.defaultLibraryTab: [lang.DEFAULT_LIBRARY_TAB],
-        _ExtraSettingsKeys.fabType: [lang.FLOATING_ACTION_BUTTON],
-        _ExtraSettingsKeys.libraryTabs: [lang.LIBRARY_TABS],
-        _ExtraSettingsKeys.filterTracksBy: [lang.FILTER_TRACKS_BY],
-        _ExtraSettingsKeys.ignoreCommonPrefixesFor: [lang.IGNORE_COMMON_PREFIXES_WHILE_SORTING],
-        _ExtraSettingsKeys.searchCleanup: [lang.ENABLE_SEARCH_CLEANUP, lang.ENABLE_SEARCH_CLEANUP_SUBTITLE],
-        _ExtraSettingsKeys.prioritizeEmbeddedLyrics: [lang.PRIORITIZE_EMBEDDED_LYRICS],
-        _ExtraSettingsKeys.lyricsSource: [lang.LYRICS_SOURCE],
-        _ExtraSettingsKeys.stretchLyricsDuration: [lang.STRETCH_LYRICS_DURATION],
-        _ExtraSettingsKeys.imageSource: [lang.IMAGE_SOURCE, lang.ALBUM, lang.ALBUMS],
-        _ExtraSettingsKeys.imageSourceAlbum: [lang.IMAGE_SOURCE, lang.ALBUM, lang.ALBUMS],
-        _ExtraSettingsKeys.imageSourceArtist: [lang.IMAGE_SOURCE, lang.ARTIST, lang.ARTISTS],
-        _ExtraSettingsKeys.immersiveMode: [lang.IMMERSIVE_MODE, lang.IMMERSIVE_MODE_SUBTITLE],
-        _ExtraSettingsKeys.swipeToOpenDrawer: [lang.SWIPE_TO_OPEN_DRAWER],
-        _ExtraSettingsKeys.alwaysExpandedSearchbar: [lang.ALWAYS_EXPANDED_SEARCHBAR],
-        _ExtraSettingsKeys.enableClipboardMonitoring: [lang.ENABLE_CLIPBOARD_MONITORING, lang.ENABLE_CLIPBOARD_MONITORING_SUBTITLE],
-        _ExtraSettingsKeys.vibrationType: [lang.VIBRATION_TYPE, lang.VIBRATION, lang.HAPTIC_FEEDBACK],
-        _ExtraSettingsKeys.extractAllPalettes: [lang.EXTRACT_ALL_COLOR_PALETTES],
-      };
+    _ExtraSettingsKeys.collapsedTiles: [lang.USE_COLLAPSED_SETTING_TILES],
+    _ExtraSettingsKeys.bottomNavBar: [lang.ENABLE_BOTTOM_NAV_BAR, lang.ENABLE_BOTTOM_NAV_BAR_SUBTITLE],
+    _ExtraSettingsKeys.pip: [lang.ENABLE_PICTURE_IN_PICTURE],
+    _ExtraSettingsKeys.foldersHierarchy: [lang.ENABLE_FOLDERS_HIERARCHY],
+    _ExtraSettingsKeys.defaultLibraryTab: [lang.DEFAULT_LIBRARY_TAB],
+    _ExtraSettingsKeys.fabType: [lang.FLOATING_ACTION_BUTTON],
+    _ExtraSettingsKeys.libraryTabs: [lang.LIBRARY_TABS],
+    _ExtraSettingsKeys.filterTracksBy: [lang.FILTER_TRACKS_BY],
+    _ExtraSettingsKeys.ignoreCommonPrefixesFor: [lang.IGNORE_COMMON_PREFIXES_WHILE_SORTING],
+    _ExtraSettingsKeys.searchCleanup: [lang.ENABLE_SEARCH_CLEANUP, lang.ENABLE_SEARCH_CLEANUP_SUBTITLE],
+    _ExtraSettingsKeys.prioritizeEmbeddedLyrics: [lang.PRIORITIZE_EMBEDDED_LYRICS],
+    _ExtraSettingsKeys.lyricsSource: [lang.LYRICS_SOURCE],
+    _ExtraSettingsKeys.stretchLyricsDuration: [lang.STRETCH_LYRICS_DURATION],
+    _ExtraSettingsKeys.imageSource: [lang.IMAGE_SOURCE, lang.ALBUM, lang.ALBUMS],
+    _ExtraSettingsKeys.imageSourceAlbum: [lang.IMAGE_SOURCE, lang.ALBUM, lang.ALBUMS],
+    _ExtraSettingsKeys.imageSourceArtist: [lang.IMAGE_SOURCE, lang.ARTIST, lang.ARTISTS],
+    _ExtraSettingsKeys.immersiveMode: [lang.IMMERSIVE_MODE, lang.IMMERSIVE_MODE_SUBTITLE],
+    _ExtraSettingsKeys.swipeToOpenDrawer: [lang.SWIPE_TO_OPEN_DRAWER],
+    _ExtraSettingsKeys.alwaysExpandedSearchbar: [lang.ALWAYS_EXPANDED_SEARCHBAR],
+    _ExtraSettingsKeys.enableClipboardMonitoring: [lang.ENABLE_CLIPBOARD_MONITORING, lang.ENABLE_CLIPBOARD_MONITORING_SUBTITLE],
+    _ExtraSettingsKeys.vibrationType: [lang.VIBRATION_TYPE, lang.VIBRATION, lang.HAPTIC_FEEDBACK],
+    _ExtraSettingsKeys.extractAllPalettes: [lang.EXTRACT_ALL_COLOR_PALETTES],
+  };
 
   Widget _getImageSourceTile({
     required _ExtraSettingsKeys key,
@@ -100,74 +100,73 @@ class ExtrasSettings extends SettingSubpageProvider {
     required RxList<LibraryImageSource> settingsKey,
     required Function(LibraryImageSource sources) onAdd,
     required Function(LibraryImageSource sources) onRemove,
-  }) =>
-      getItemWrapper(
-        key: key,
-        child: ObxO(
-          rx: settingsKey,
-          builder: (context, sources) => CustomListTile(
-            bgColor: getBgColor(key),
-            title: title,
-            icon: icon,
-            borderR: 16.0,
-            subtitle: LibraryImageSource.values.where((element) => sources.contains(element)).map((e) => e.toText()).join(', '), // to be sorted
-            visualDensity: VisualDensity(horizontal: -4.0, vertical: -4.0),
-            onTap: () {
-              void tileOnTap(LibraryImageSource source, {bool removeIfExists = true}) {
-                final alreadyExist = settingsKey.value.contains(source);
-                if (alreadyExist) {
-                  if (removeIfExists) {
-                    if (settingsKey.value.length <= 1) {
-                      showMinimumItemsSnack(1);
-                    } else {
-                      onRemove(source);
-                    }
-                  }
+  }) => getItemWrapper(
+    key: key,
+    child: ObxO(
+      rx: settingsKey,
+      builder: (context, sources) => CustomListTile(
+        bgColor: getBgColor(key),
+        title: title,
+        icon: icon,
+        borderR: 16.0,
+        subtitle: LibraryImageSource.values.where((element) => sources.contains(element)).map((e) => e.toText()).join(', '), // to be sorted
+        visualDensity: VisualDensity(horizontal: -4.0, vertical: -4.0),
+        onTap: () {
+          void tileOnTap(LibraryImageSource source, {bool removeIfExists = true}) {
+            final alreadyExist = settingsKey.value.contains(source);
+            if (alreadyExist) {
+              if (removeIfExists) {
+                if (settingsKey.value.length <= 1) {
+                  showMinimumItemsSnack(1);
                 } else {
-                  onAdd(source);
+                  onRemove(source);
                 }
               }
+            } else {
+              onAdd(source);
+            }
+          }
 
-              NamidaNavigator.inst.navigateDialog(
-                dialog: CustomBlurryDialog(
-                  title: title,
-                  actions: [
-                    IconButton(
-                      onPressed: () {
-                        for (final s in LibraryImageSource.values) {
-                          tileOnTap(s, removeIfExists: false);
-                        }
-                      },
-                      icon: const Icon(Broken.refresh),
-                    ),
-                    const DoneButton(),
-                  ],
-                  child: ObxO(
-                    rx: settingsKey,
-                    builder: (context, imageSources) => SuperSmoothListView(
-                      padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      children: [
-                        ...LibraryImageSource.values.map(
-                          (e) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
-                            child: ListTileWithCheckMark(
-                              active: imageSources.contains(e),
-                              icon: e.toIcon(),
-                              title: e.toText(),
-                              onTap: () => tileOnTap(e),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+          NamidaNavigator.inst.navigateDialog(
+            dialog: CustomBlurryDialog(
+              title: title,
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    for (final s in LibraryImageSource.values) {
+                      tileOnTap(s, removeIfExists: false);
+                    }
+                  },
+                  icon: const Icon(Broken.refresh),
                 ),
-              );
-            },
-          ),
-        ),
-      );
+                const DoneButton(),
+              ],
+              child: ObxO(
+                rx: settingsKey,
+                builder: (context, imageSources) => SuperSmoothListView(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  children: [
+                    ...LibraryImageSource.values.map(
+                      (e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12.0),
+                        child: ListTileWithCheckMark(
+                          active: imageSources.contains(e),
+                          icon: e.toIcon(),
+                          title: e.toText(),
+                          onTap: () => tileOnTap(e),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+  );
 
   void _showExtrasFlagsDialog() {
     NamidaNavigator.inst.navigateDialog(
@@ -344,24 +343,24 @@ class ExtrasSettings extends SettingSubpageProvider {
                           ),
                           const SizedBox(height: 12.0),
                           ...settings.libraryTabs.value.asMap().entries.map(
-                                (e) => Obx(
-                                  (context) => Container(
-                                    margin: const EdgeInsets.all(4.0),
-                                    child: ListTileWithCheckMark(
-                                      title: "${e.key + 1}. ${e.value.toText()}",
-                                      icon: e.value.toIcon(),
-                                      onTap: () {
-                                        settings.extra.save(
-                                          selectedLibraryTab: e.value,
-                                          staticLibraryTab: e.value,
-                                          autoLibraryTab: false,
-                                        );
-                                      },
-                                      active: !settings.extra.autoLibraryTab.valueR && settings.extra.selectedLibraryTab.valueR == e.value,
-                                    ),
-                                  ),
+                            (e) => Obx(
+                              (context) => Container(
+                                margin: const EdgeInsets.all(4.0),
+                                child: ListTileWithCheckMark(
+                                  title: "${e.key + 1}. ${e.value.toText()}",
+                                  icon: e.value.toIcon(),
+                                  onTap: () {
+                                    settings.extra.save(
+                                      selectedLibraryTab: e.value,
+                                      staticLibraryTab: e.value,
+                                      autoLibraryTab: false,
+                                    );
+                                  },
+                                  active: !settings.extra.autoLibraryTab.valueR && settings.extra.selectedLibraryTab.valueR == e.value,
                                 ),
                               ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1183,36 +1182,36 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   textAlign: TextAlign.center,
                 )
               : buttonsType == mtb.ThemeType.auto
-                  ? Text(
-                      lang.AUTO,
-                      textAlign: TextAlign.center,
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        mtb.DecoratedMinimizeButton(
-                          width: buttonWidth,
-                          height: buttonHeight,
-                          type: buttonsType,
-                          onPressed: () {},
-                        ),
-                        const SizedBox(width: 2.0),
-                        mtb.DecoratedMaximizeButton(
-                          width: buttonWidth,
-                          height: buttonHeight,
-                          type: buttonsType,
-                          onPressed: () {},
-                        ),
-                        const SizedBox(width: 2.0),
-                        mtb.DecoratedCloseButton(
-                          width: buttonWidth,
-                          height: buttonHeight,
-                          type: buttonsType,
-                          onPressed: () {},
-                        ),
-                      ],
-                    );
+              ? Text(
+                  lang.AUTO,
+                  textAlign: TextAlign.center,
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    mtb.DecoratedMinimizeButton(
+                      width: buttonWidth,
+                      height: buttonHeight,
+                      type: buttonsType,
+                      onPressed: () {},
+                    ),
+                    const SizedBox(width: 2.0),
+                    mtb.DecoratedMaximizeButton(
+                      width: buttonWidth,
+                      height: buttonHeight,
+                      type: buttonsType,
+                      onPressed: () {},
+                    ),
+                    const SizedBox(width: 2.0),
+                    mtb.DecoratedCloseButton(
+                      width: buttonWidth,
+                      height: buttonHeight,
+                      type: buttonsType,
+                      onPressed: () {},
+                    ),
+                  ],
+                );
           return ObxO(
             rx: settings.desktopTitlebarType,
             builder: (context, value) => NamidaInkWell(

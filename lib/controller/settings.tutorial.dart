@@ -29,8 +29,8 @@ class _TutorialSettings with SettingsFileWriter {
 
   @override
   Object get jsonToWrite => <String, dynamic>{
-        'llpfs': lyricsLongPressFullScreen,
-      };
+    'llpfs': lyricsLongPressFullScreen,
+  };
 
   Future<void> _writeToStorage() async => await writeToStorage();
 

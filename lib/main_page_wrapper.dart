@@ -247,7 +247,9 @@ class NamidaDrawer extends StatelessWidget {
                     afterTap: NamidaNavigator.inst.toggleDrawer,
                   ),
                 const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
-                ...LibraryTab.values.where((element) => element != LibraryTab.search).map(
+                ...LibraryTab.values
+                    .where((element) => element != LibraryTab.search)
+                    .map(
                       (e) => ObxO(
                         rx: settings.extra.selectedLibraryTab,
                         builder: (context, selectedLibraryTab) => NamidaDrawerListTile(
@@ -751,7 +753,8 @@ class _DesktopShortcutIcon extends StatelessWidget {
         alignment: Alignment.center,
         height: iconSize * 1.6,
         width: iconSize * 1.6,
-        child: child ??
+        child:
+            child ??
             Icon(
               icon,
               size: size ?? iconSize,

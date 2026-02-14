@@ -30,19 +30,21 @@ class TracksSearchWrapper {
     final addLyrics = filters.contains(TrackSearchFilter.lyrics);
     return {
       'tracks': tracks
-          .map((e) => {
-                'title': e.title,
-                'artist': e.originalArtist,
-                'album': e.album,
-                'albumArtist': e.albumArtist,
-                'genre': e.originalGenre,
-                'composer': e.composer,
-                'year': e.year,
-                'comment': e.comment,
-                if (addLyrics) 'lyrics': e.lyrics,
-                'path': e.path,
-                'v': e.isVideo,
-              })
+          .map(
+            (e) => {
+              'title': e.title,
+              'artist': e.originalArtist,
+              'album': e.album,
+              'albumArtist': e.albumArtist,
+              'genre': e.originalGenre,
+              'composer': e.composer,
+              'year': e.year,
+              'comment': e.comment,
+              if (addLyrics) 'lyrics': e.lyrics,
+              'path': e.path,
+              'v': e.isVideo,
+            },
+          )
           .toList(),
       'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
       'genresSplitConfig': GenresSplitConfig.settings().toMap(),

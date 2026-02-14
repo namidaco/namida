@@ -98,146 +98,148 @@ Future<void> showVideoDownloadOptionsSheet({
               ),
             Expanded(
               child: SuperSmoothListView(
-                children: [
-                  if (showSpecificFileOptions) ...[
-                    Obx(
-                      (context) => CustomSwitchListTile(
-                        icon: Broken.tick_circle,
-                        visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                        title: lang.KEEP_CACHED_VERSIONS,
-                        value: settings.downloadFilesKeepCachedVersions.valueR,
-                        onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
-                      ),
-                    ),
-                    Obx(
-                      (context) => CustomSwitchListTile(
-                        icon: Broken.document_code,
-                        visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                        title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
-                        value: settings.downloadFilesWriteUploadDate.valueR,
-                        onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
-                      ),
-                    ),
-                    Obx(
-                      (context) => CustomSwitchListTile(
-                        icon: Broken.music_library_2,
-                        visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                        title: lang.ADD_AUDIO_TO_LOCAL_LIBRARY,
-                        value: settings.downloadAddAudioToLocalLibrary.valueR,
-                        onChanged: (isTrue) => settings.save(downloadAddAudioToLocalLibrary: !isTrue),
-                      ),
-                    ),
-                  ],
-                  if (!supportTagging) ...[
-                    const SizedBox(height: 12.0),
-                    Row(
-                      children: [
-                        const SizedBox(width: 12.0),
-                        Icon(
-                          Broken.danger,
-                          color: Colors.red.withValues(alpha: 0.7),
-                        ),
-                        const SizedBox(width: 8.0),
-                        Text(
-                          lang.WEBM_NO_EDIT_TAGS_SUPPORT,
-                          style: textTheme.displayLarge,
-                        ),
-                        const SizedBox(width: 12.0),
-                      ],
-                    ),
-                    const SizedBox(height: 12.0),
-                  ],
-                  const NamidaContainerDivider(),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                    child: YTDownloadOptionFolderListTile(
-                      iconSize: 20.0,
-                      initialFolder: initialGroupName ?? '',
-                      playlistName: initialGroupName ?? '',
-                      onDownloadGroupNameChanged: onDownloadGroupNameChanged,
-                      visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Broken.document_code,
-                          size: 20.0,
-                        ),
-                        const SizedBox(width: 12.0),
-                        Expanded(
-                          child: ObxO(
-                            rx: settings.youtube.downloadFilenameBuilder,
-                            builder: (context, value) {
-                              if (value.isEmpty) value = settings.youtube.defaultFilenameBuilder;
-                              return Text(
-                                value,
-                                style: textTheme.displaySmall,
-                              );
-                            },
+                children:
+                    [
+                          if (showSpecificFileOptions) ...[
+                            Obx(
+                              (context) => CustomSwitchListTile(
+                                icon: Broken.tick_circle,
+                                visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                                title: lang.KEEP_CACHED_VERSIONS,
+                                value: settings.downloadFilesKeepCachedVersions.valueR,
+                                onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
+                              ),
+                            ),
+                            Obx(
+                              (context) => CustomSwitchListTile(
+                                icon: Broken.document_code,
+                                visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                                title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
+                                value: settings.downloadFilesWriteUploadDate.valueR,
+                                onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
+                              ),
+                            ),
+                            Obx(
+                              (context) => CustomSwitchListTile(
+                                icon: Broken.music_library_2,
+                                visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                                title: lang.ADD_AUDIO_TO_LOCAL_LIBRARY,
+                                value: settings.downloadAddAudioToLocalLibrary.valueR,
+                                onChanged: (isTrue) => settings.save(downloadAddAudioToLocalLibrary: !isTrue),
+                              ),
+                            ),
+                          ],
+                          if (!supportTagging) ...[
+                            const SizedBox(height: 12.0),
+                            Row(
+                              children: [
+                                const SizedBox(width: 12.0),
+                                Icon(
+                                  Broken.danger,
+                                  color: Colors.red.withValues(alpha: 0.7),
+                                ),
+                                const SizedBox(width: 8.0),
+                                Text(
+                                  lang.WEBM_NO_EDIT_TAGS_SUPPORT,
+                                  style: textTheme.displayLarge,
+                                ),
+                                const SizedBox(width: 12.0),
+                              ],
+                            ),
+                            const SizedBox(height: 12.0),
+                          ],
+                          const NamidaContainerDivider(),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                            child: YTDownloadOptionFolderListTile(
+                              iconSize: 20.0,
+                              initialFolder: initialGroupName ?? '',
+                              playlistName: initialGroupName ?? '',
+                              onDownloadGroupNameChanged: onDownloadGroupNameChanged,
+                              visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6.0),
-                        NamidaIconButton(
-                          tooltip: () => lang.OUTPUT,
-                          icon: Broken.edit_2,
-                          iconSize: 20.0,
-                          onPressed: () {
-                            YTUtils.showFilenameBuilderOutputSheet(
-                              showEditTags: false,
-                              groupName: initialGroupName ?? '',
-                              onChanged: onDownloadFilenameChanged,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const NamidaContainerDivider(),
-                  getTextChip(FFMPEGTagField.title),
-                  getRow([
-                    FFMPEGTagField.artist,
-                    FFMPEGTagField.album,
-                  ]),
-                  getRow([
-                    FFMPEGTagField.genre,
-                    FFMPEGTagField.year,
-                  ]),
-                  getRow([
-                    FFMPEGTagField.trackNumber,
-                    FFMPEGTagField.discNumber,
-                  ]),
-                  getTextChip(FFMPEGTagField.comment),
-                  getTextChip(FFMPEGTagField.description),
-                  getTextChip(FFMPEGTagField.synopsis),
-                  getTextChip(FFMPEGTagField.lyrics),
-                  NamidaExpansionTile(
-                    icon: Broken.more_square,
-                    titleText: lang.SHOW_MORE,
-                    children: [
-                      ...[
-                        FFMPEGTagField.albumArtist,
-                        FFMPEGTagField.composer,
-                        FFMPEGTagField.remixer,
-                        FFMPEGTagField.lyricist,
-                        FFMPEGTagField.language,
-                        FFMPEGTagField.recordLabel,
-                        FFMPEGTagField.country,
-                      ].map((e) => getTextChip(e)),
-                    ]
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Broken.document_code,
+                                  size: 20.0,
+                                ),
+                                const SizedBox(width: 12.0),
+                                Expanded(
+                                  child: ObxO(
+                                    rx: settings.youtube.downloadFilenameBuilder,
+                                    builder: (context, value) {
+                                      if (value.isEmpty) value = settings.youtube.defaultFilenameBuilder;
+                                      return Text(
+                                        value,
+                                        style: textTheme.displaySmall,
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 6.0),
+                                NamidaIconButton(
+                                  tooltip: () => lang.OUTPUT,
+                                  icon: Broken.edit_2,
+                                  iconSize: 20.0,
+                                  onPressed: () {
+                                    YTUtils.showFilenameBuilderOutputSheet(
+                                      showEditTags: false,
+                                      groupName: initialGroupName ?? '',
+                                      onChanged: onDownloadFilenameChanged,
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const NamidaContainerDivider(),
+                          getTextChip(FFMPEGTagField.title),
+                          getRow([
+                            FFMPEGTagField.artist,
+                            FFMPEGTagField.album,
+                          ]),
+                          getRow([
+                            FFMPEGTagField.genre,
+                            FFMPEGTagField.year,
+                          ]),
+                          getRow([
+                            FFMPEGTagField.trackNumber,
+                            FFMPEGTagField.discNumber,
+                          ]),
+                          getTextChip(FFMPEGTagField.comment),
+                          getTextChip(FFMPEGTagField.description),
+                          getTextChip(FFMPEGTagField.synopsis),
+                          getTextChip(FFMPEGTagField.lyrics),
+                          NamidaExpansionTile(
+                            icon: Broken.more_square,
+                            titleText: lang.SHOW_MORE,
+                            children:
+                                [
+                                      ...[
+                                        FFMPEGTagField.albumArtist,
+                                        FFMPEGTagField.composer,
+                                        FFMPEGTagField.remixer,
+                                        FFMPEGTagField.lyricist,
+                                        FFMPEGTagField.language,
+                                        FFMPEGTagField.recordLabel,
+                                        FFMPEGTagField.country,
+                                      ].map((e) => getTextChip(e)),
+                                    ]
+                                    .addSeparators(
+                                      separator: const SizedBox(height: 12.0),
+                                    )
+                                    .toList(),
+                          ),
+                        ]
                         .addSeparators(
                           separator: const SizedBox(height: 12.0),
                         )
                         .toList(),
-                  )
-                ]
-                    .addSeparators(
-                      separator: const SizedBox(height: 12.0),
-                    )
-                    .toList(),
               ),
             ),
             const SizedBox(height: 8.0),
@@ -467,8 +469,8 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
                     final icon = name == widget.playlistName
                         ? Broken.music_playlist
                         : name == ''
-                            ? Broken.folder_2
-                            : Broken.folder;
+                        ? Broken.folder_2
+                        : Broken.folder;
                     final count = availableDirectoriesNames[name];
                     final countText = count == null || count == 0 ? '' : " ($count)";
                     return NamidaPopupItem(
@@ -490,12 +492,13 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                          groupName == widget.playlistName
-                              ? Broken.music_playlist
-                              : groupName == ''
-                                  ? Broken.folder_2
-                                  : Broken.folder,
-                          size: 18.0),
+                        groupName == widget.playlistName
+                            ? Broken.music_playlist
+                            : groupName == ''
+                            ? Broken.folder_2
+                            : Broken.folder,
+                        size: 18.0,
+                      ),
                       const SizedBox(width: 6.0),
                       Flexible(
                         child: ConstrainedBox(

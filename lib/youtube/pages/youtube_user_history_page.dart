@@ -110,20 +110,20 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
                         if (!isShortsVisible && item.isShortContent) return const SizedBox.shrink();
                         return switch (item.runtimeType) {
                           const (StreamInfoItem) => YoutubeVideoCard(
-                              properties: properties,
-                              thumbnailHeight: thumbnailHeight,
-                              thumbnailWidth: thumbnailWidth,
-                              isImageImportantInCache: false,
-                              video: item as StreamInfoItem,
-                              playlistID: null,
-                            ),
+                            properties: properties,
+                            thumbnailHeight: thumbnailHeight,
+                            thumbnailWidth: thumbnailWidth,
+                            isImageImportantInCache: false,
+                            video: item as StreamInfoItem,
+                            playlistID: null,
+                          ),
                           const (StreamInfoItemShort) => YoutubeShortVideoCard(
-                              queueSource: properties.configs.queueSource,
-                              thumbnailHeight: thumbnailHeight,
-                              thumbnailWidth: thumbnailWidth,
-                              short: item as StreamInfoItemShort,
-                              playlistID: null,
-                            ),
+                            queueSource: properties.configs.queueSource,
+                            thumbnailHeight: thumbnailHeight,
+                            thumbnailWidth: thumbnailWidth,
+                            short: item as StreamInfoItemShort,
+                            playlistID: null,
+                          ),
                           _ => dummyCard,
                         };
                       },

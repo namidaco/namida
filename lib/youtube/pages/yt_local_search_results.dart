@@ -188,24 +188,24 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                               ),
                             )
                           : searchResults.isEmpty
-                              ? const SliverToBoxAdapter()
-                              : SliverFixedExtentList.builder(
-                                  itemExtent: thumbnailItemExtent,
-                                  itemCount: searchResults.length,
-                                  itemBuilder: (context, index) {
-                                    final item = searchResults[index];
-                                    return YoutubeVideoCard(
-                                      properties: properties,
-                                      fontMultiplier: 0.9,
-                                      thumbnailHeight: thumbnailHeight,
-                                      thumbnailWidth: thumbnailWidth,
-                                      isImageImportantInCache: false,
-                                      video: item,
-                                      playlistID: null,
-                                      onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
-                                    );
-                                  },
-                                ),
+                          ? const SliverToBoxAdapter()
+                          : SliverFixedExtentList.builder(
+                              itemExtent: thumbnailItemExtent,
+                              itemCount: searchResults.length,
+                              itemBuilder: (context, index) {
+                                final item = searchResults[index];
+                                return YoutubeVideoCard(
+                                  properties: properties,
+                                  fontMultiplier: 0.9,
+                                  thumbnailHeight: thumbnailHeight,
+                                  thumbnailWidth: thumbnailWidth,
+                                  isImageImportantInCache: false,
+                                  video: item,
+                                  playlistID: null,
+                                  onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
+                                );
+                              },
+                            ),
                       kBottomPaddingWidgetSliver,
                     ],
                   ),

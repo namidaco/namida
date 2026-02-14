@@ -30,7 +30,8 @@ enum _LoadingProgress {
   collectingPlaylistTracks('Collecting playlist tracks'),
   findingHistoryTracks('Finding history tracks'),
   findingLibraryTracks('Finding library tracks'),
-  findingPlaylistTracks('Finding playlist tracks');
+  findingPlaylistTracks('Finding playlist tracks')
+  ;
 
   final String value;
   const _LoadingProgress(this.value);
@@ -318,7 +319,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                 },
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -407,7 +408,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                                     Text(
                                                       " --> $suggestion",
                                                       style: textTheme.displaySmall,
-                                                    )
+                                                    ),
                                                 ],
                                               ),
                                             ),
@@ -449,7 +450,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                             style: textTheme.displaySmall,
                                           ),
                                         ),
-                                      )
+                                      ),
                                     ],
                                   ),
                                 );
@@ -502,7 +503,8 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                 color: Colors.white.withValues(alpha: 0.8),
                               ),
                               onPressed: () {
-                                final allSelected = _selectedTracksToUpdate.isNotEmpty &&
+                                final allSelected =
+                                    _selectedTracksToUpdate.isNotEmpty &&
                                     _missingTracksPaths.every((e) => _missingTracksSuggestions[e] == null || _selectedTracksToUpdate[e] == true);
                                 if (allSelected) {
                                   _selectedTracksToUpdate.clear();
@@ -551,25 +553,27 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                             },
                                           ),
                                         ),
-                                      )
+                                      ),
                                     ],
                                   ),
                                 );
                               },
-                              label: Row(children: [
-                                Icon(
-                                  Broken.pen_add,
-                                  size: 20.0,
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                ),
-                                const SizedBox(width: 12.0),
-                                Text(
-                                  "${lang.UPDATE} ($totalLength)",
-                                  style: textTheme.displayMedium?.copyWith(
+                              label: Row(
+                                children: [
+                                  Icon(
+                                    Broken.pen_add,
+                                    size: 20.0,
                                     color: Colors.white.withValues(alpha: 0.8),
                                   ),
-                                ),
-                              ]),
+                                  const SizedBox(width: 12.0),
+                                  Text(
+                                    "${lang.UPDATE} ($totalLength)",
+                                    style: textTheme.displayMedium?.copyWith(
+                                      color: Colors.white.withValues(alpha: 0.8),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             );
                           },
                         ),

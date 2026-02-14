@@ -49,8 +49,8 @@ class YoutubeItemDownloadConfig {
     required this.playlistId,
     required this.playlistInfo,
     required DateTime? addedAt,
-  })  : _filename = filename.obs,
-        this.addedAt = addedAt ?? DateTime.now();
+  }) : _filename = filename.obs,
+       this.addedAt = addedAt ?? DateTime.now();
 
   /// Using this method is restricted only for the function that will rename all the other instances in other parts.
   @protected

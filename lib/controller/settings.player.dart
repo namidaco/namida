@@ -180,14 +180,16 @@ class _PlayerSettings with SettingsFileWriter {
       }
       internalPlayer.value = InternalPlayerType.getAvailableForCurrentPlatform().getEnum(json['internalPlayer']) ?? internalPlayer.value;
       onInterrupted
-        ..value.addAll(getEnumMap_(
-              json['onInterrupted'],
-              InterruptionType.values,
-              InterruptionType.unknown,
-              InterruptionAction.values,
-              InterruptionAction.doNothing,
-            ) ??
-            onInterrupted.map((key, value) => MapEntry(key, value)))
+        ..value.addAll(
+          getEnumMap_(
+                json['onInterrupted'],
+                InterruptionType.values,
+                InterruptionType.unknown,
+                InterruptionAction.values,
+                InterruptionAction.doNothing,
+              ) ??
+              onInterrupted.map((key, value) => MapEntry(key, value)),
+        )
         ..refresh();
     } catch (e, st) {
       printy(e, isError: true);
@@ -197,42 +199,42 @@ class _PlayerSettings with SettingsFileWriter {
 
   @override
   Object get jsonToWrite => <String, dynamic>{
-        'enableVolumeFadeOnPlayPause': enableVolumeFadeOnPlayPause.value,
-        'volume': volume.value,
-        'speed': speed.value,
-        'pitch': pitch.value,
-        'longPressSpeed': longPressSpeed.value,
-        'linkSpeedPitch': linkSpeedPitch.value,
-        'speeds': speeds,
-        'seekDurationInSeconds': seekDurationInSeconds.value,
-        'seekDurationInPercentage': seekDurationInPercentage.value,
-        'isSeekDurationPercentage': isSeekDurationPercentage.value,
-        'playFadeDurInMilli': playFadeDurInMilli.value,
-        'pauseFadeDurInMilli': pauseFadeDurInMilli.value,
-        'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
-        'interruptionResumeThresholdMin': interruptionResumeThresholdMin.value,
-        'volume0ResumeThresholdMin': volume0ResumeThresholdMin.value,
-        'enableGaplessPlayback': enableGaplessPlayback.value,
-        'enableCrossFade': enableCrossFade.value,
-        'crossFadeDurationMS': crossFadeDurationMS.value,
-        'crossFadeAutoTriggerSeconds': crossFadeAutoTriggerSeconds.value,
-        'playOnNextPrev': playOnNextPrev.value,
-        'skipSilenceEnabled': skipSilenceEnabled.value,
-        'shuffleAllTracks': shuffleAllTracks.value,
-        'pauseOnVolume0': pauseOnVolume0.value,
-        'resumeAfterOnVolume0Pause': resumeAfterOnVolume0Pause.value,
-        'resumeAfterWasInterrupted': resumeAfterWasInterrupted.value,
-        'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
-        'repeatMode': repeatMode.value.name,
-        'killAfterDismissingApp': killAfterDismissingApp.value.name,
-        'lockscreenArtwork': lockscreenArtwork.value,
-        'replayGainType': replayGainType.value.name,
-        'internalPlayer': internalPlayer.value.name,
-        'infiniyQueueOnNextPrevious': infiniyQueueOnNextPrevious.value,
-        'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
-        'displayActualPositionWhenSeeking': displayActualPositionWhenSeeking.value,
-        'onInterrupted': onInterrupted.map((key, value) => MapEntry(key.name, value.name)),
-      };
+    'enableVolumeFadeOnPlayPause': enableVolumeFadeOnPlayPause.value,
+    'volume': volume.value,
+    'speed': speed.value,
+    'pitch': pitch.value,
+    'longPressSpeed': longPressSpeed.value,
+    'linkSpeedPitch': linkSpeedPitch.value,
+    'speeds': speeds,
+    'seekDurationInSeconds': seekDurationInSeconds.value,
+    'seekDurationInPercentage': seekDurationInPercentage.value,
+    'isSeekDurationPercentage': isSeekDurationPercentage.value,
+    'playFadeDurInMilli': playFadeDurInMilli.value,
+    'pauseFadeDurInMilli': pauseFadeDurInMilli.value,
+    'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
+    'interruptionResumeThresholdMin': interruptionResumeThresholdMin.value,
+    'volume0ResumeThresholdMin': volume0ResumeThresholdMin.value,
+    'enableGaplessPlayback': enableGaplessPlayback.value,
+    'enableCrossFade': enableCrossFade.value,
+    'crossFadeDurationMS': crossFadeDurationMS.value,
+    'crossFadeAutoTriggerSeconds': crossFadeAutoTriggerSeconds.value,
+    'playOnNextPrev': playOnNextPrev.value,
+    'skipSilenceEnabled': skipSilenceEnabled.value,
+    'shuffleAllTracks': shuffleAllTracks.value,
+    'pauseOnVolume0': pauseOnVolume0.value,
+    'resumeAfterOnVolume0Pause': resumeAfterOnVolume0Pause.value,
+    'resumeAfterWasInterrupted': resumeAfterWasInterrupted.value,
+    'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
+    'repeatMode': repeatMode.value.name,
+    'killAfterDismissingApp': killAfterDismissingApp.value.name,
+    'lockscreenArtwork': lockscreenArtwork.value,
+    'replayGainType': replayGainType.value.name,
+    'internalPlayer': internalPlayer.value.name,
+    'infiniyQueueOnNextPrevious': infiniyQueueOnNextPrevious.value,
+    'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
+    'displayActualPositionWhenSeeking': displayActualPositionWhenSeeking.value,
+    'onInterrupted': onInterrupted.map((key, value) => MapEntry(key.name, value.name)),
+  };
 
   Future<void> _writeToStorage() async => await writeToStorage();
 

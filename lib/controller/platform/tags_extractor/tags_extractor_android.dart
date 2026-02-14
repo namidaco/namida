@@ -218,19 +218,21 @@ class _TagsExtractorAndroid extends TagsExtractor {
       Map<String, dynamic>? trackInfoMap,
     }) {
       extractMetadata(
-        trackPath: path,
-        tagger: false,
-        artworkDirectory: isVideo ? videoArtworkDirectory : audioArtworkDirectory,
-        identifiers: identifiersSet,
-        extractArtwork: extractArtwork,
-        overrideArtwork: overrideArtwork,
-        isVideo: isVideo,
-        isNetwork: isNetwork,
-        trackInfo: trackInfoMap == null ? null : FAudioModel.fromMap(trackInfoMap),
-      ).catchError((e, st) {
-        logger.error('ffmpeg fallback extracton failed', e: e, st: st);
-        return _getFallbackFAudioModel(path, trackInfoMap);
-      }).then((value) => onExtract(value, index));
+            trackPath: path,
+            tagger: false,
+            artworkDirectory: isVideo ? videoArtworkDirectory : audioArtworkDirectory,
+            identifiers: identifiersSet,
+            extractArtwork: extractArtwork,
+            overrideArtwork: overrideArtwork,
+            isVideo: isVideo,
+            isNetwork: isNetwork,
+            trackInfo: trackInfoMap == null ? null : FAudioModel.fromMap(trackInfoMap),
+          )
+          .catchError((e, st) {
+            logger.error('ffmpeg fallback extracton failed', e: e, st: st);
+            return _getFallbackFAudioModel(path, trackInfoMap);
+          })
+          .then((value) => onExtract(value, index));
     }
 
     final channelEvent = EventChannel('faudiotagger/stream/$streamKey');

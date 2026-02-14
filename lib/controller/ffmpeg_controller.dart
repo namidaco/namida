@@ -336,7 +336,8 @@ class NamidaFFMPEG {
       var filee = allFiles[i];
       currentProgress++;
       if (filee is File) {
-        final tr = Indexer.inst.allTracksMappedByPath[filee.path] ??
+        final tr =
+            Indexer.inst.allTracksMappedByPath[filee.path] ??
             await Indexer.inst.getTrackInfo(
               trackPath: filee.path,
               onMinDurTrigger: () => null,

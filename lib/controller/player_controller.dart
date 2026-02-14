@@ -84,7 +84,8 @@ class Player {
   Duration get getCurrentVideoDurationR {
     Duration? playerDuration = currentItemDuration.valueR;
     if (playerDuration == null || playerDuration == Duration.zero) {
-      playerDuration = currentAudioStream.valueR?.duration ??
+      playerDuration =
+          currentAudioStream.valueR?.duration ??
           currentVideoStream.valueR?.duration ??
           (currentVideo == null
               ? VideoController.inst.currentVideo.valueR?.durationMS.milliseconds
@@ -97,10 +98,16 @@ class Player {
   Duration get getCurrentVideoDuration {
     Duration? playerDuration = currentItemDuration.value;
     if (playerDuration == null || playerDuration == Duration.zero) {
-      playerDuration = currentAudioStream.value?.duration ??
+      playerDuration =
+          currentAudioStream.value?.duration ??
           currentVideoStream.value?.duration ??
           (currentVideo == null
-              ? VideoController.inst.currentVideo.value?.durationMS.milliseconds //
+              ? VideoController
+                    .inst
+                    .currentVideo
+                    .value
+                    ?.durationMS
+                    .milliseconds //
               : YoutubeInfoController.current.currentYTStreams.valueR?.videoStreams.firstOrNull?.duration) ??
           Duration.zero;
     }

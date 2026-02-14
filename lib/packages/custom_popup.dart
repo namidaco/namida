@@ -188,7 +188,8 @@ class _PopupContent extends StatelessWidget {
             bottom: arrowDirection == _ArrowDirection.top ? 0 : null,
           ),
           constraints: const BoxConstraints(minWidth: 50),
-          decoration: contentDecoration ??
+          decoration:
+              contentDecoration ??
               BoxDecoration(
                 color: backgroundColor ?? Colors.white,
                 borderRadius: BorderRadius.circular(contentRadius ?? 10),
@@ -528,8 +529,8 @@ class _PopupRoute extends PopupRoute<void> {
 
 abstract class Screen {
   static MediaQueryData get mediaQuery => MediaQueryData.fromView(
-        PlatformDispatcher.instance.views.first,
-      );
+    PlatformDispatcher.instance.views.first,
+  );
 
   /// screen width
   static double get width => mediaQuery.size.width;

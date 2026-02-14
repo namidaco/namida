@@ -22,9 +22,7 @@ class Folder {
 
   late final parts = splitParts();
 
-  Folder.explicit(this.path)
-      : folderName = path.pathReverseSplitter(_pathSeparator),
-        _key = _computeKey(path);
+  Folder.explicit(this.path) : folderName = path.pathReverseSplitter(_pathSeparator), _key = _computeKey(path);
 
   static T fromType<T extends Folder>(String path) {
     return T == VideoFolder ? VideoFolder.explicit(path) as T : Folder.explicit(path) as T;

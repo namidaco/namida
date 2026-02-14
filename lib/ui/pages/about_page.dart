@@ -390,23 +390,23 @@ class _AboutPageState extends State<AboutPage> {
                                 ),
                               ]
                             : latestVersion.isUpdate() ?? false
-                                ? [
-                                    Text(
-                                      latestVersion.prettyVersion,
-                                      style: textTheme.displaySmall,
-                                    ),
-                                    const SizedBox(width: 4.0),
-                                    const Icon(
-                                      Broken.arrow_up_1,
-                                      size: 14.0,
-                                    ),
-                                  ]
-                                : [
-                                    const Icon(
-                                      Broken.tick_circle,
-                                      size: 14.0,
-                                    ),
-                                  ],
+                            ? [
+                                Text(
+                                  latestVersion.prettyVersion,
+                                  style: textTheme.displaySmall,
+                                ),
+                                const SizedBox(width: 4.0),
+                                const Icon(
+                                  Broken.arrow_up_1,
+                                  size: 14.0,
+                                ),
+                              ]
+                            : [
+                                const Icon(
+                                  Broken.tick_circle,
+                                  size: 14.0,
+                                ),
+                              ],
                       ),
                     ),
                   ),
@@ -432,7 +432,7 @@ class _AboutPageState extends State<AboutPage> {
                       final filePaths = await AppPaths.getAllExistingLogsAndSettingsAsZip();
                       NamidaUtils.shareFiles(filePaths);
                     },
-                  )
+                  ),
                 ],
               ),
             ),
@@ -564,7 +564,8 @@ class NamidaAboutListTile extends StatelessWidget {
       title: title,
       subtitle: subtitle,
       trailing: trailing,
-      onTap: onTap ??
+      onTap:
+          onTap ??
           () {
             if (link != null) {
               NamidaLinkUtils.openLink(link!);
@@ -606,13 +607,16 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
       _controller?.duration = Duration(milliseconds: duration);
 
       final end = playLongerVer ? 200.0 : 4.0 + newSpeedLevel;
-      final decelerateCurve = Tween<double>(
-        begin: 0.0,
-        end: end,
-      ).animate(CurvedAnimation(
-        parent: _controller!,
-        curve: Curves.decelerate,
-      ));
+      final decelerateCurve =
+          Tween<double>(
+            begin: 0.0,
+            end: end,
+          ).animate(
+            CurvedAnimation(
+              parent: _controller!,
+              curve: Curves.decelerate,
+            ),
+          );
 
       setState(() => _animation = decelerateCurve);
       _controller?.forward(from: 0).then((_) => _speedLevel = 0);

@@ -273,11 +273,13 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
   }
 
   void _executeMiniPlayers(
-      void Function(
-        MiniPlayerController localPlayer,
-        NamidaYTMiniplayerState? ytPlayer,
-        YTMiniplayerQueueChipState? ytQueueChip,
-      ) callback) {
+    void Function(
+      MiniPlayerController localPlayer,
+      NamidaYTMiniplayerState? ytPlayer,
+      YTMiniplayerQueueChipState? ytQueueChip,
+    )
+    callback,
+  ) {
     callback(
       MiniPlayerController.inst,
       MiniPlayerController.inst.ytMiniplayerKey.currentState,

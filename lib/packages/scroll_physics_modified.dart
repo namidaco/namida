@@ -102,13 +102,14 @@ class BouncingScrollPhysicsModified extends ScrollPhysics {
       }
 
       return BouncingScrollSimulation(
-          spring: spring,
-          position: position.pixels,
-          velocity: velocity,
-          leadingExtent: position.minScrollExtent,
-          trailingExtent: position.maxScrollExtent,
-          tolerance: tolerance,
-          constantDeceleration: constantDeceleration);
+        spring: spring,
+        position: position.pixels,
+        velocity: velocity,
+        leadingExtent: position.minScrollExtent,
+        trailingExtent: position.maxScrollExtent,
+        tolerance: tolerance,
+        constantDeceleration: constantDeceleration,
+      );
     }
     return null;
   }

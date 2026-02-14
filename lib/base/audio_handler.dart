@@ -60,11 +60,11 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   AudioPipeline? get audioPipeline => AudioPipeline(
-        androidAudioEffects: [
-          equalizer,
-          loudnessEnhancer._loudnessEnhancer,
-        ],
-      );
+    androidAudioEffects: [
+      equalizer,
+      loudnessEnhancer._loudnessEnhancer,
+    ],
+  );
 
   late final equalizer = AndroidEqualizer();
   late final loudnessEnhancer = AndroidLoudnessEnhancerExtended();
@@ -527,7 +527,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         if (playWhenReady.value && !isPlaying.value) play();
         VibratorController.light();
       },
-      canRestructureQueueOnly: canRestructureQueueOnly ??
+      canRestructureQueueOnly:
+          canRestructureQueueOnly ??
           (currentItem, itemToPlay) {
             if (itemToPlay is Selectable && currentItem is Selectable) {
               return itemToPlay.track.path == currentItem.track.path;
@@ -686,18 +687,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final videoOptions = !settings.enableVideoPlayback.value
         ? null
         : initialVideo == null
-            ? isVideo
-                ? VideoSourceOptions(
-                    source: await item.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
-                    loop: false,
-                    videoOnly: true,
-                  )
-                : null
-            : VideoSourceOptions(
-                source: AudioVideoSource.file(initialVideo.path),
-                loop: VideoController.inst.canLoopVideo(initialVideo, duration.inMilliseconds),
-                videoOnly: false,
-              );
+        ? isVideo
+              ? VideoSourceOptions(
+                  source: await item.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
+                  loop: false,
+                  videoOnly: true,
+                )
+              : null
+        : VideoSourceOptions(
+            source: AudioVideoSource.file(initialVideo.path),
+            loop: VideoController.inst.canLoopVideo(initialVideo, duration.inMilliseconds),
+            videoOnly: false,
+          );
     return ItemPrepareConfigSelectable(
       await tr.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
       itemExists: await tr.exists(),
@@ -1161,14 +1162,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     // -- Adding recently cached audio to cache map, to be displayed on cards.
     AudioCacheController.inst.removeFromCacheMap(videoId, audioCacheFile.path); // removing previous same entries
     AudioCacheController.inst.addToCacheMap(
-        videoId,
-        AudioCacheDetails(
-          youtubeId: videoId,
-          file: audioCacheFile,
-          bitrate: prevAudioBitrate,
-          langaugeCode: prevAudioLangCode,
-          langaugeName: prevAudioLangName,
-        ));
+      videoId,
+      AudioCacheDetails(
+        youtubeId: videoId,
+        file: audioCacheFile,
+        bitrate: prevAudioBitrate,
+        langaugeCode: prevAudioLangCode,
+        langaugeName: prevAudioLangName,
+      ),
+    );
 
     // -- Writing metadata too
     // -- x (currently disabled, no need as to avoid issues, and downloading will already write tags)
@@ -1568,10 +1570,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           bool isAudioStreamRequiredBetterThanCachedSet = cachedAudioSet == null
               ? true
               : prefferedAudioStream == null
-                  ? false
-                  : _allowSwitchingVideoStreamIfCachedPlaying
-                      ? prefferedAudioStream.bitrate > prefferedAudioStream.bitrate
-                      : false;
+              ? false
+              : _allowSwitchingVideoStreamIfCachedPlaying
+              ? prefferedAudioStream.bitrate > prefferedAudioStream.bitrate
+              : false;
           if (isAudioStreamRequiredBetterThanCachedSet) {
             currentAudioStream.value = prefferedAudioStream;
             if (prefferedAudioStream != null) {
@@ -1596,10 +1598,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               bool isVideoStreamRequiredBetterThanCachedSet = cachedVideoSet == null
                   ? true
                   : prefferedVideoStream == null
-                      ? false
-                      : _allowSwitchingVideoStreamIfCachedPlaying
-                          ? prefferedVideoStream.width > cachedVideoSet.width
-                          : false;
+                  ? false
+                  : _allowSwitchingVideoStreamIfCachedPlaying
+                  ? prefferedVideoStream.width > cachedVideoSet.width
+                  : false;
 
               if (isVideoStreamRequiredBetterThanCachedSet) {
                 currentVideoStream.value = prefferedVideoStream;
@@ -1892,11 +1894,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   PlayerConfig get defaultPlayerConfig => PlayerConfig(
-        skipSilence: settings.player.skipSilenceEnabled.value && currentItem.value is! YoutubeID,
-        speed: settings.player.speed.value,
-        volume: _userPlayerVolume * replayGainLinearVolume.value,
-        pitch: settings.player.pitch.value,
-      );
+    skipSilence: settings.player.skipSilenceEnabled.value && currentItem.value is! YoutubeID,
+    speed: settings.player.speed.value,
+    volume: _userPlayerVolume * replayGainLinearVolume.value,
+    pitch: settings.player.pitch.value,
+  );
 
   final replayGainLinearVolume = 1.0.obs;
 

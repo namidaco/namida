@@ -445,33 +445,33 @@ class EqualizerPageState extends State<EqualizerPage> {
                                 ),
                               ),
                               ..._equalizerPresets.asMap().entries.map(
-                                    (e) => Obx(
-                                      (context) => NamidaInkWell(
-                                        animationDurationMS: 200,
-                                        borderRadius: 5.0,
-                                        margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                                        bgColor: _activePreset.valueR == e.value
-                                            ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), theme.scaffoldBackgroundColor)
-                                            : theme.colorScheme.secondary.withValues(alpha: 0.15),
-                                        onTap: () async {
-                                          _activePreset.value = e.value;
-                                          _activePresetCustom.value = false;
-                                          settings.equalizer.save(preset: e.key);
-                                          final newPreset = await _equalizer.setPreset(e.key);
-                                          if (newPreset != e.key) snackyy(message: lang.ERROR, top: false, isError: true);
-                                        },
-                                        child: Text(
-                                          e.value,
-                                          style: textTheme.displaySmall?.copyWith(
-                                            color: _activePreset.valueR == e.value ? Colors.white.withValues(alpha: 0.7) : null,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 13.5,
-                                          ),
-                                        ),
+                                (e) => Obx(
+                                  (context) => NamidaInkWell(
+                                    animationDurationMS: 200,
+                                    borderRadius: 5.0,
+                                    margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                                    bgColor: _activePreset.valueR == e.value
+                                        ? Color.alphaBlend(CurrentColor.inst.color.withValues(alpha: 0.9), theme.scaffoldBackgroundColor)
+                                        : theme.colorScheme.secondary.withValues(alpha: 0.15),
+                                    onTap: () async {
+                                      _activePreset.value = e.value;
+                                      _activePresetCustom.value = false;
+                                      settings.equalizer.save(preset: e.key);
+                                      final newPreset = await _equalizer.setPreset(e.key);
+                                      if (newPreset != e.key) snackyy(message: lang.ERROR, top: false, isError: true);
+                                    },
+                                    child: Text(
+                                      e.value,
+                                      style: textTheme.displaySmall?.copyWith(
+                                        color: _activePreset.valueR == e.value ? Colors.white.withValues(alpha: 0.7) : null,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 13.5,
                                       ),
                                     ),
                                   ),
+                                ),
+                              ),
                               const SizedBox(width: 8.0),
                             ],
                           ),
@@ -628,9 +628,9 @@ class _SliderTextWidget extends StatelessWidget {
             onPressed: onManualChange == null
                 ? null
                 : () => _showPreciseValueConfig(
-                      initial: value,
-                      onChanged: onManualChange!,
-                    ),
+                    initial: value,
+                    onChanged: onManualChange!,
+                  ),
           ),
           const SizedBox(width: 6.0),
           Flexible(
@@ -652,7 +652,7 @@ class _SliderTextWidget extends StatelessWidget {
             ),
           ),
           if (featuredButton != null) const SizedBox(width: 2.0),
-          if (featuredButton != null) featuredButton!,
+          ?featuredButton,
           const SizedBox(width: 6.0),
           if (restoreDefault != null)
             NamidaIconButton(
@@ -662,7 +662,7 @@ class _SliderTextWidget extends StatelessWidget {
               iconSize: 20.0,
               onPressed: restoreDefault,
             ),
-          if (trailing != null) trailing!,
+          ?trailing,
           const SizedBox(width: 8.0),
           const SizedBox(width: 6.0),
         ],
@@ -977,77 +977,79 @@ class _VerticalSliderState extends State<VerticalSlider> {
         ),
       ),
     );
-    return LayoutBuilder(builder: (context, constraints) {
-      final finalVal = (widget.value - widget.min) / (widget.max - widget.min);
-      final height = constraints.maxHeight * finalVal;
-      return GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTapDown: (details) {
-          if (widget.tapToUpdate()) _updateValue(constraints, total, details.localPosition.dy);
-          _isPointerDown.value = true;
-        },
-        onTapUp: (details) => _isPointerDown.value = false,
-        onVerticalDragEnd: (_) {
-          _isPointerDown.value = false;
-          if (widget.value.abs() <= 0.4) {
-            // -- clamp if near center
-            widget.onChanged(0);
-            VibratorController.high();
-          }
-        },
-        onVerticalDragCancel: () => _isPointerDown.value = false,
-        onVerticalDragStart: (details) {
-          _updateValue(constraints, total, details.localPosition.dy);
-        },
-        onVerticalDragUpdate: (details) {
-          _updateValue(constraints, total, details.localPosition.dy);
-        },
-        child: SizedBox(
-          width: circleWidth * 2,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              topButton,
-              Positioned(
-                bottom: 0,
-                child: AnimatedSizedBox(
-                  duration: const Duration(milliseconds: 50),
-                  height: height,
-                  width: 8.0,
-                  animateWidth: false,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(12.0),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final finalVal = (widget.value - widget.min) / (widget.max - widget.min);
+        final height = constraints.maxHeight * finalVal;
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTapDown: (details) {
+            if (widget.tapToUpdate()) _updateValue(constraints, total, details.localPosition.dy);
+            _isPointerDown.value = true;
+          },
+          onTapUp: (details) => _isPointerDown.value = false,
+          onVerticalDragEnd: (_) {
+            _isPointerDown.value = false;
+            if (widget.value.abs() <= 0.4) {
+              // -- clamp if near center
+              widget.onChanged(0);
+              VibratorController.high();
+            }
+          },
+          onVerticalDragCancel: () => _isPointerDown.value = false,
+          onVerticalDragStart: (details) {
+            _updateValue(constraints, total, details.localPosition.dy);
+          },
+          onVerticalDragUpdate: (details) {
+            _updateValue(constraints, total, details.localPosition.dy);
+          },
+          child: SizedBox(
+            width: circleWidth * 2,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                topButton,
+                Positioned(
+                  bottom: 0,
+                  child: AnimatedSizedBox(
+                    duration: const Duration(milliseconds: 50),
+                    height: height,
+                    width: 8.0,
+                    animateWidth: false,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(12.0),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 50),
-                bottom: height - circleHeight / 2,
-                child: Obx(
-                  (context) => AnimatedScale(
-                    duration: const Duration(milliseconds: 200),
-                    scale: _isPointerDown.valueR ? 1.2 : 1.0,
-                    child: Container(
-                      width: circleWidth,
-                      height: circleHeight,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(12.0),
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 50),
+                  bottom: height - circleHeight / 2,
+                  child: Obx(
+                    (context) => AnimatedScale(
+                      duration: const Duration(milliseconds: 200),
+                      scale: _isPointerDown.valueR ? 1.2 : 1.0,
+                      child: Container(
+                        width: circleWidth,
+                        height: circleHeight,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(12.0),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              )
-            ],
+              ],
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 }

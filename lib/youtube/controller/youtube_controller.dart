@@ -65,7 +65,9 @@ class _YTNotificationDataHolder {
   FutureOr<String?> titleCallback(DownloadTaskVideoId videoId) {
     final valInMap = _titlesLookupTemp[videoId];
     if (valInMap != null) return valInMap;
-    return YoutubeInfoController.utils.getVideoName(videoId.videoId).then(
+    return YoutubeInfoController.utils
+        .getVideoName(videoId.videoId)
+        .then(
           (value) => _titlesLookupTemp[videoId] = value,
         );
   }
@@ -73,7 +75,9 @@ class _YTNotificationDataHolder {
   FutureOr<File?> imageCallback(DownloadTaskVideoId videoId) {
     final valInMap = _imagesLookupTemp[videoId];
     if (valInMap != null) return valInMap;
-    return ThumbnailManager.inst.getYoutubeThumbnailFromCache(id: videoId.videoId, type: ThumbnailType.video).then(
+    return ThumbnailManager.inst
+        .getYoutubeThumbnailFromCache(id: videoId.videoId, type: ThumbnailType.video)
+        .then(
           (value) => _imagesLookupTemp[videoId] = value,
         );
   }
@@ -901,7 +905,17 @@ class YoutubeController {
     }
 
     final finalFilenameTempRebuilt = filenameBuilder.rebuildFilenameWithDecodedParams(
-        finalFilenameTemp, id.videoId, streamInfo, pageResult, config.streamInfoItem, playlistInfo, videoStream, audioStream, config.originalIndex, config.totalLength);
+      finalFilenameTemp,
+      id.videoId,
+      streamInfo,
+      pageResult,
+      config.streamInfoItem,
+      playlistInfo,
+      videoStream,
+      audioStream,
+      config.originalIndex,
+      config.totalLength,
+    );
     if (finalFilenameTempRebuilt != null && finalFilenameTempRebuilt.isNotEmpty) {
       finalFilenameTemp = finalFilenameTempRebuilt;
       requiresRenaming = true;
@@ -1201,13 +1215,13 @@ class YoutubeController {
           }
 
           await Future.wait([
-            if (videoFile != null /* && videoStream != null */)
+            if (videoFile != null /* && videoStream != null */ )
               renameOrCopy(
                 file: videoFile,
                 path: output,
                 isCachedVersion: isVideoFileCached,
               ),
-            if (audioFile != null /* && audioStream != null */) // stream not really needed, especially for unavailable videos
+            if (audioFile != null /* && audioStream != null */ ) // stream not really needed, especially for unavailable videos
               renameOrCopy(
                 file: audioFile,
                 path: output,
@@ -1450,7 +1464,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
     _onFileFinish(filePath, const _UserCanceledException());
     final p = {
       'files': [file],
-      'stop': true
+      'stop': true,
     };
     await sendPort(p);
   }

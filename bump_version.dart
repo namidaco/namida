@@ -125,7 +125,9 @@ Future<bool> _runProcess({
   }
 
   final stderrStream = process.stderr;
-  stderrStream.transform(utf8.decoder).listen(
+  stderrStream
+      .transform(utf8.decoder)
+      .listen(
         (data) => print('$program error: $data'),
       );
 

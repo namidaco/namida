@@ -80,11 +80,11 @@ class ScrollSearchController {
     final isPageNext = tab.toInt() > settings.extra.selectedLibraryTab.value.toInt();
     final transition = isVertical
         ? isPageNext
-            ? Transition.downToUp
-            : Transition.upToDown
+              ? Transition.downToUp
+              : Transition.upToDown
         : isPageNext
-            ? Transition.rightToLeft
-            : Transition.leftToRight;
+        ? Transition.rightToLeft
+        : Transition.leftToRight;
 
     _updateScrollPositions(settings.extra.selectedLibraryTab.value, tab);
     settings.extra.save(selectedLibraryTab: tab);

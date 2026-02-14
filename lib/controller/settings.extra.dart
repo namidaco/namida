@@ -105,23 +105,23 @@ class _ExtraSettings with SettingsFileWriter {
 
   @override
   Object get jsonToWrite => <String, dynamic>{
-        'selectedLibraryTab': selectedLibraryTab.value.name,
-        'staticLibraryTab': staticLibraryTab.value.name,
-        'autoLibraryTab': autoLibraryTab.value,
-        'ytInitialHomePage': ytInitialHomePage.value.name,
-        if (tapToScroll != null) 'tapToScroll': tapToScroll,
-        if (enhancedDragToScroll != null) 'enhancedDragToScroll': enhancedDragToScroll,
-        if (smoothScrolling != null) 'smoothScrolling': smoothScrolling,
-        if (floatingArtworkEffect != null) 'floatingArtworkEffect': floatingArtworkEffect,
-        if (tiltingCardsEffect != null) 'tiltingCardsEffect': tiltingCardsEffect,
-        if (mediaWaveHaptic != null) 'mediaWaveHaptic': mediaWaveHaptic,
-        if (artistAlbumsExpanded != null) 'artistAlbumsExpanded': artistAlbumsExpanded,
-        if (artistSinglesExpanded != null) 'artistSinglesExpanded': artistSinglesExpanded,
-        'lastPlayedIndex': lastPlayedIndex,
-        'ytAddToPlaylistsTabIndex': ytAddToPlaylistsTabIndex,
-        'ytPlaylistsPageIndex': ytPlaylistsPageIndex,
-        'ytChannelsPageIndex': ytChannelsPageIndex,
-      };
+    'selectedLibraryTab': selectedLibraryTab.value.name,
+    'staticLibraryTab': staticLibraryTab.value.name,
+    'autoLibraryTab': autoLibraryTab.value,
+    'ytInitialHomePage': ytInitialHomePage.value.name,
+    if (tapToScroll != null) 'tapToScroll': tapToScroll,
+    if (enhancedDragToScroll != null) 'enhancedDragToScroll': enhancedDragToScroll,
+    if (smoothScrolling != null) 'smoothScrolling': smoothScrolling,
+    if (floatingArtworkEffect != null) 'floatingArtworkEffect': floatingArtworkEffect,
+    if (tiltingCardsEffect != null) 'tiltingCardsEffect': tiltingCardsEffect,
+    if (mediaWaveHaptic != null) 'mediaWaveHaptic': mediaWaveHaptic,
+    if (artistAlbumsExpanded != null) 'artistAlbumsExpanded': artistAlbumsExpanded,
+    if (artistSinglesExpanded != null) 'artistSinglesExpanded': artistSinglesExpanded,
+    'lastPlayedIndex': lastPlayedIndex,
+    'ytAddToPlaylistsTabIndex': ytAddToPlaylistsTabIndex,
+    'ytPlaylistsPageIndex': ytPlaylistsPageIndex,
+    'ytChannelsPageIndex': ytChannelsPageIndex,
+  };
 
   Future<void> _writeToStorage() async => await writeToStorage();
 

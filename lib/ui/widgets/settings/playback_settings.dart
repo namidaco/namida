@@ -67,32 +67,32 @@ class PlaybackSettings extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-        _PlaybackSettingsKeys.enableVideoPlayback: [lang.ENABLE_VIDEO_PLAYBACK],
-        _PlaybackSettingsKeys.videoSource: [lang.VIDEO_PLAYBACK_SOURCE],
-        _PlaybackSettingsKeys.videoQuality: [lang.VIDEO_QUALITY],
-        _PlaybackSettingsKeys.localVideoMatching: [lang.LOCAL_VIDEO_MATCHING],
-        _PlaybackSettingsKeys.keepScreenAwake: [lang.KEEP_SCREEN_AWAKE_WHEN],
-        _PlaybackSettingsKeys.displayFavButtonInNotif: [lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION],
-        _PlaybackSettingsKeys.displayStopButtonInNotif: [lang.DISPLAY_STOP_BUTTON_IN_NOTIFICATION],
-        _PlaybackSettingsKeys.displayArtworkOnLockscreen: [lang.DISPLAY_ARTWORK_ON_LOCKSCREEN],
-        _PlaybackSettingsKeys.killPlayerAfterDismissing: [lang.KILL_PLAYER_AFTER_DISMISSING_APP],
-        _PlaybackSettingsKeys.onNotificationTap: [lang.ON_NOTIFICATION_TAP],
-        _PlaybackSettingsKeys.dismissibleMiniplayer: [lang.DISMISSIBLE_MINIPLAYER],
-        _PlaybackSettingsKeys.replayGain: [lang.NORMALIZE_AUDIO, lang.NORMALIZE_AUDIO_SUBTITLE],
-        _PlaybackSettingsKeys.skipSilence: [lang.SKIP_SILENCE],
-        _PlaybackSettingsKeys.gaplessPlayback: [lang.GAPLESS_PLAYBACK],
-        _PlaybackSettingsKeys.crossfade: [lang.ENABLE_CROSSFADE_EFFECT, lang.CROSSFADE_DURATION, lang.CROSSFADE_TRIGGER_SECONDS],
-        _PlaybackSettingsKeys.fadeEffectOnPlayPause: [lang.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE, lang.PLAY_FADE_DURATION, lang.PAUSE_FADE_DURATION],
-        _PlaybackSettingsKeys.autoPlayOnNextPrev: [lang.PLAY_AFTER_NEXT_PREV],
-        _PlaybackSettingsKeys.infinityQueue: [lang.INFINITY_QUEUE_ON_NEXT_PREV, lang.INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE],
-        _PlaybackSettingsKeys.onVolume0: [lang.ON_VOLUME_ZERO],
-        _PlaybackSettingsKeys.onInterruption: [lang.ON_INTERRUPTION],
-        _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing: [lang.JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH],
-        _PlaybackSettingsKeys.previousButtonReplays: [lang.PREVIOUS_BUTTON_REPLAYS, lang.PREVIOUS_BUTTON_REPLAYS_SUBTITLE],
-        _PlaybackSettingsKeys.seekDuration: [lang.SEEK_DURATION, lang.SEEK_DURATION_INFO],
-        _PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition: [lang.MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION],
-        _PlaybackSettingsKeys.countListenAfter: [lang.MIN_VALUE_TO_COUNT_TRACK_LISTEN],
-      };
+    _PlaybackSettingsKeys.enableVideoPlayback: [lang.ENABLE_VIDEO_PLAYBACK],
+    _PlaybackSettingsKeys.videoSource: [lang.VIDEO_PLAYBACK_SOURCE],
+    _PlaybackSettingsKeys.videoQuality: [lang.VIDEO_QUALITY],
+    _PlaybackSettingsKeys.localVideoMatching: [lang.LOCAL_VIDEO_MATCHING],
+    _PlaybackSettingsKeys.keepScreenAwake: [lang.KEEP_SCREEN_AWAKE_WHEN],
+    _PlaybackSettingsKeys.displayFavButtonInNotif: [lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION],
+    _PlaybackSettingsKeys.displayStopButtonInNotif: [lang.DISPLAY_STOP_BUTTON_IN_NOTIFICATION],
+    _PlaybackSettingsKeys.displayArtworkOnLockscreen: [lang.DISPLAY_ARTWORK_ON_LOCKSCREEN],
+    _PlaybackSettingsKeys.killPlayerAfterDismissing: [lang.KILL_PLAYER_AFTER_DISMISSING_APP],
+    _PlaybackSettingsKeys.onNotificationTap: [lang.ON_NOTIFICATION_TAP],
+    _PlaybackSettingsKeys.dismissibleMiniplayer: [lang.DISMISSIBLE_MINIPLAYER],
+    _PlaybackSettingsKeys.replayGain: [lang.NORMALIZE_AUDIO, lang.NORMALIZE_AUDIO_SUBTITLE],
+    _PlaybackSettingsKeys.skipSilence: [lang.SKIP_SILENCE],
+    _PlaybackSettingsKeys.gaplessPlayback: [lang.GAPLESS_PLAYBACK],
+    _PlaybackSettingsKeys.crossfade: [lang.ENABLE_CROSSFADE_EFFECT, lang.CROSSFADE_DURATION, lang.CROSSFADE_TRIGGER_SECONDS],
+    _PlaybackSettingsKeys.fadeEffectOnPlayPause: [lang.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE, lang.PLAY_FADE_DURATION, lang.PAUSE_FADE_DURATION],
+    _PlaybackSettingsKeys.autoPlayOnNextPrev: [lang.PLAY_AFTER_NEXT_PREV],
+    _PlaybackSettingsKeys.infinityQueue: [lang.INFINITY_QUEUE_ON_NEXT_PREV, lang.INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE],
+    _PlaybackSettingsKeys.onVolume0: [lang.ON_VOLUME_ZERO],
+    _PlaybackSettingsKeys.onInterruption: [lang.ON_INTERRUPTION],
+    _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing: [lang.JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH],
+    _PlaybackSettingsKeys.previousButtonReplays: [lang.PREVIOUS_BUTTON_REPLAYS, lang.PREVIOUS_BUTTON_REPLAYS_SUBTITLE],
+    _PlaybackSettingsKeys.seekDuration: [lang.SEEK_DURATION, lang.SEEK_DURATION_INFO],
+    _PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition: [lang.MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION],
+    _PlaybackSettingsKeys.countListenAfter: [lang.MIN_VALUE_TO_COUNT_TRACK_LISTEN],
+  };
 
   Widget getNormalizeAudioWidget() {
     return getItemWrapper(
@@ -405,7 +405,6 @@ class PlaybackSettings extends SettingSubpageProvider {
                     //   onPressed: () => tileOnTap(0),
                     //   icon: const Icon(Broken.refresh),
                     // ),
-
                     DoneButton(),
                   ],
                   child: DefaultTextStyle(
@@ -427,16 +426,16 @@ class PlaybackSettings extends SettingSubpageProvider {
                               padding: EdgeInsets.zero,
                               children: [
                                 ...kStockVideoQualities.asMap().entries.map(
-                                      (e) => Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                        child: ListTileWithCheckMark(
-                                          icon: Broken.story,
-                                          active: youtubeVideoQualities.contains(e.value),
-                                          title: e.value,
-                                          onTap: () => tileOnTap(e.value, e.key),
-                                        ),
-                                      ),
+                                  (e) => Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                    child: ListTileWithCheckMark(
+                                      icon: Broken.story,
+                                      active: youtubeVideoQualities.contains(e.value),
+                                      title: e.value,
+                                      onTap: () => tileOnTap(e.value, e.key),
                                     ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -799,8 +798,8 @@ class PlaybackSettings extends SettingSubpageProvider {
                   title: disabled
                       ? lang.DONT_RESUME
                       : valInSet == 0
-                          ? lang.RESUME_IF_WAS_PAUSED_BY_VOLUME
-                          : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.player.volume0ResumeThresholdMin.valueR}"),
+                      ? lang.RESUME_IF_WAS_PAUSED_BY_VOLUME
+                      : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.player.volume0ResumeThresholdMin.valueR}"),
                   trailing: NamidaWheelSlider(
                     max: max,
                     initValue: valInSet,
@@ -814,8 +813,8 @@ class PlaybackSettings extends SettingSubpageProvider {
                     text: disabled
                         ? lang.NEVER
                         : valInSet == 0
-                            ? lang.ALWAYS
-                            : "${valInSet}m",
+                        ? lang.ALWAYS
+                        : "${valInSet}m",
                   ),
                 );
               },
@@ -888,8 +887,8 @@ class PlaybackSettings extends SettingSubpageProvider {
                   title: disabled
                       ? lang.DONT_RESUME
                       : valInSet == 0
-                          ? lang.RESUME_IF_WAS_INTERRUPTED
-                          : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.player.interruptionResumeThresholdMin.valueR}"),
+                      ? lang.RESUME_IF_WAS_INTERRUPTED
+                      : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.player.interruptionResumeThresholdMin.valueR}"),
                   trailing: NamidaWheelSlider(
                     max: max,
                     initValue: valInSet,
@@ -903,8 +902,8 @@ class PlaybackSettings extends SettingSubpageProvider {
                     text: disabled
                         ? lang.NEVER
                         : valInSet == 0
-                            ? lang.ALWAYS
-                            : "${valInSet}m",
+                        ? lang.ALWAYS
+                        : "${valInSet}m",
                   ),
                 );
               },
@@ -957,8 +956,8 @@ class PlaybackSettings extends SettingSubpageProvider {
                 text: valInSet == 0
                     ? lang.ALWAYS_RESTORE
                     : valInSet <= -1
-                        ? lang.DONT_RESTORE_POSITION
-                        : "${valInSet}m",
+                    ? lang.DONT_RESTORE_POSITION
+                    : "${valInSet}m",
               ),
             );
           },

@@ -83,7 +83,7 @@ class _ThreeArchedCircleState extends State<ThreeArchedCircle> with SingleTicker
       height: size,
       child: AnimatedBuilder(
         animation: _animationController,
-        builder: (_, __) {
+        builder: (_, _) {
           return _animationController.value <= 0.5
               ? Transform.rotate(
                   angle: Tween<double>(
@@ -198,19 +198,18 @@ class Arc extends CustomPainter {
     required double strokeWidth,
     required double startAngle,
     required double endAngle,
-  }) =>
-      SizedBox(
-        width: size,
-        height: size,
-        child: CustomPaint(
-          painter: Arc._(
-            color,
-            strokeWidth,
-            startAngle,
-            endAngle,
-          ),
-        ),
-      );
+  }) => SizedBox(
+    width: size,
+    height: size,
+    child: CustomPaint(
+      painter: Arc._(
+        color,
+        strokeWidth,
+        startAngle,
+        endAngle,
+      ),
+    ),
+  );
 
   @override
   void paint(Canvas canvas, Size size) {

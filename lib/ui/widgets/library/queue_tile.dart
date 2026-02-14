@@ -39,7 +39,7 @@ class QueueTile extends StatelessWidget {
             color: theme.shadowColor.withAlpha(20),
             blurRadius: 12.0,
             offset: const Offset(0, 2),
-          )
+          ),
         ],
       ),
       child: Stack(

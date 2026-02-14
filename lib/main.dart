@@ -434,14 +434,14 @@ void _initializeIntenties() {
   if (NamidaFeaturesVisibility.recieveSharingIntents) {
     // -- Recieving Initial Android Shared Intent.
     FlutterSharingIntent.instance.getInitialSharing().then(
-          (items) => NamidaReceiveIntentManager.executeReceivedItems(items, (f) => f.value, (f) => f.realPath),
-        );
+      (items) => NamidaReceiveIntentManager.executeReceivedItems(items, (f) => f.value, (f) => f.realPath),
+    );
 
     // -- Listening to Android Shared Intents.
     FlutterSharingIntent.instance.getMediaStream().listen(
-          (items) => NamidaReceiveIntentManager.executeReceivedItems(items, (f) => f.value, (f) => f.realPath),
-          onError: (err) => NamidaReceiveIntentManager.showErrorPlayingFileSnackbar(error: err.toString()),
-        );
+      (items) => NamidaReceiveIntentManager.executeReceivedItems(items, (f) => f.value, (f) => f.realPath),
+      onError: (err) => NamidaReceiveIntentManager.showErrorPlayingFileSnackbar(error: err.toString()),
+    );
   }
 }
 
@@ -478,34 +478,34 @@ class Namida extends StatefulWidget {
 
 class _NamidaState extends State<Namida> {
   Widget buildMainApp(Widget widget, Brightness? platformBrightness) => Directionality(
-        textDirection: TextDirection.ltr,
-        child: ScrollConfiguration(
-          behavior: const ScrollBehaviorModified(),
-          child: ObxO(
-            rx: settings.selectedLanguage,
-            builder: (context, selectedLanguage) {
-              return Obx(
-                key: ValueKey(selectedLanguage),
-                (context) {
-                  final mode = settings.themeMode.valueR;
-                  final isLight = mode.isLight(platformBrightness);
-                  final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
-                  final mainChild = WindowController.instance?.usingCustomWindowTitleBar == true
-                      ? WrapWithWindowGoodies(
-                          child: widget,
-                        )
-                      : widget;
+    textDirection: TextDirection.ltr,
+    child: ScrollConfiguration(
+      behavior: const ScrollBehaviorModified(),
+      child: ObxO(
+        rx: settings.selectedLanguage,
+        builder: (context, selectedLanguage) {
+          return Obx(
+            key: ValueKey(selectedLanguage),
+            (context) {
+              final mode = settings.themeMode.valueR;
+              final isLight = mode.isLight(platformBrightness);
+              final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
+              final mainChild = WindowController.instance?.usingCustomWindowTitleBar == true
+                  ? WrapWithWindowGoodies(
+                      child: widget,
+                    )
+                  : widget;
 
-                  return Theme(
-                    data: theme,
-                    child: mainChild,
-                  );
-                },
+              return Theme(
+                data: theme,
+                child: mainChild,
               );
             },
-          ),
-        ),
-      );
+          );
+        },
+      ),
+    ),
+  );
 
   bool? _shouldShowOnBoarding;
 
@@ -666,12 +666,12 @@ class _NamidaState extends State<Namida> {
 
 class _HttpCacheCustomCacheConfig extends GlobalCacheConfig {
   _HttpCacheCustomCacheConfig._(RhttpCompatibleClient client)
-      : super(
-          cacheDirectory: Directory(''),
-          maxBufferSize: 5 * 1024 * 1024,
-          rangeRequestSplitThreshold: (0.5 * 1024 * 1024).round(),
-          customHttpClient: client,
-        );
+    : super(
+        cacheDirectory: Directory(''),
+        maxBufferSize: 5 * 1024 * 1024,
+        rangeRequestSplitThreshold: (0.5 * 1024 * 1024).round(),
+        customHttpClient: client,
+      );
 }
 
 class ScrollBehaviorModified extends ScrollBehavior {

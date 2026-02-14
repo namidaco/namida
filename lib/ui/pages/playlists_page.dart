@@ -233,7 +233,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                 NamidaNavigator.inst.closeDialog();
                 PlaylistController.inst.removeTracksFromPlaylist(playlist, indexes);
               },
-            )
+            ),
           ],
         ),
       );
@@ -333,6 +333,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       const SizedBox(width: 12.0),
+
                                       // Expanded(
                                       //   child: ObxO(
                                       //     rx: PlaylistController.inst.playlistsMap,
@@ -345,7 +346,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                       //   ),
                                       // ),
                                       // const SizedBox(width: 12.0),
-
                                       NamidaButton(
                                         icon: Broken.add,
                                         text: lang.ADD,
@@ -624,62 +624,62 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                     },
                                                   )
                                                 : countPerRowResolved > 1
-                                                    ? SliverGrid.builder(
-                                                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                                          crossAxisCount: countPerRowResolved,
-                                                          childAspectRatio: 0.8,
-                                                          mainAxisSpacing: 8.0,
+                                                ? SliverGrid.builder(
+                                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                      crossAxisCount: countPerRowResolved,
+                                                      childAspectRatio: 0.8,
+                                                      mainAxisSpacing: 8.0,
+                                                    ),
+                                                    itemCount: playlistSearchList.length,
+                                                    itemBuilder: (context, i) {
+                                                      final key = playlistSearchList[i];
+                                                      final playlist = playlistsMap[key]!;
+                                                      final extraText = extraTextResolver?.call(playlist);
+                                                      return AnimatingGrid(
+                                                        columnCount: playlistSearchList.length,
+                                                        position: i,
+                                                        shouldAnimate: _shouldAnimate,
+                                                        child: MultiArtworkCard(
+                                                          enableHero: enableHero,
+                                                          heroTag: 'playlist_${playlist.name}',
+                                                          tracks: playlist.tracks.toTracks(),
+                                                          name: playlist.name.translatePlaylistName(),
+                                                          countPerRow: widget.countPerRow,
+                                                          showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
+                                                          onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
+                                                          artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
+                                                          widgetsInStack: [
+                                                            if (playlist.m3uPath != null)
+                                                              Positioned(
+                                                                bottom: 8.0,
+                                                                right: 8.0,
+                                                                child: NamidaTooltip(
+                                                                  message: () => "${lang.M3U_PLAYLIST}\n${playlist.m3uPath?.formatPath()}",
+                                                                  child: const Icon(Broken.music_filter, size: 18.0),
+                                                                ),
+                                                              ),
+                                                            if (extraText != null && extraText.isNotEmpty)
+                                                              Positioned(
+                                                                top: 0,
+                                                                right: 0,
+                                                                child: NamidaBlurryContainer(
+                                                                  child: Text(
+                                                                    extraText,
+                                                                    style: textTheme.displaySmall?.copyWith(
+                                                                      fontSize: 12.0,
+                                                                      fontWeight: FontWeight.bold,
+                                                                    ),
+                                                                    softWrap: false,
+                                                                    overflow: TextOverflow.fade,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                          ],
                                                         ),
-                                                        itemCount: playlistSearchList.length,
-                                                        itemBuilder: (context, i) {
-                                                          final key = playlistSearchList[i];
-                                                          final playlist = playlistsMap[key]!;
-                                                          final extraText = extraTextResolver?.call(playlist);
-                                                          return AnimatingGrid(
-                                                            columnCount: playlistSearchList.length,
-                                                            position: i,
-                                                            shouldAnimate: _shouldAnimate,
-                                                            child: MultiArtworkCard(
-                                                              enableHero: enableHero,
-                                                              heroTag: 'playlist_${playlist.name}',
-                                                              tracks: playlist.tracks.toTracks(),
-                                                              name: playlist.name.translatePlaylistName(),
-                                                              countPerRow: widget.countPerRow,
-                                                              showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
-                                                              onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
-                                                              artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
-                                                              widgetsInStack: [
-                                                                if (playlist.m3uPath != null)
-                                                                  Positioned(
-                                                                    bottom: 8.0,
-                                                                    right: 8.0,
-                                                                    child: NamidaTooltip(
-                                                                      message: () => "${lang.M3U_PLAYLIST}\n${playlist.m3uPath?.formatPath()}",
-                                                                      child: const Icon(Broken.music_filter, size: 18.0),
-                                                                    ),
-                                                                  ),
-                                                                if (extraText != null && extraText.isNotEmpty)
-                                                                  Positioned(
-                                                                    top: 0,
-                                                                    right: 0,
-                                                                    child: NamidaBlurryContainer(
-                                                                      child: Text(
-                                                                        extraText,
-                                                                        style: textTheme.displaySmall?.copyWith(
-                                                                          fontSize: 12.0,
-                                                                          fontWeight: FontWeight.bold,
-                                                                        ),
-                                                                        softWrap: false,
-                                                                        overflow: TextOverflow.fade,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                              ],
-                                                            ),
-                                                          );
-                                                        },
-                                                      )
-                                                    : const SizedBox();
+                                                      );
+                                                    },
+                                                  )
+                                                : const SizedBox();
                                           },
                                         ),
                                       ),

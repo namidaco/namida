@@ -100,138 +100,138 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
                 size: 64.0,
               )
             : aboutResult == null
-                ? Center(
-                    child: Text(
-                      lang.ERROR,
-                      style: textTheme.displayLarge,
+            ? Center(
+                child: Text(
+                  lang.ERROR,
+                  style: textTheme.displayLarge,
+                ),
+              )
+            : SuperSmoothListView(
+                controller: widget.scrollController,
+                children: [
+                  const SizedBox(height: 24.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: NamidaSelectableAutoLinkText(
+                      text: aboutResult.description ?? '',
+                      fontScale: 1.08,
                     ),
-                  )
-                : SuperSmoothListView(
-                    controller: widget.scrollController,
-                    children: [
-                      const SizedBox(height: 24.0),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                        child: NamidaSelectableAutoLinkText(
-                          text: aboutResult.description ?? '',
-                          fontScale: 1.08,
+                  ),
+                  dividerContainer,
+                  ...aboutResult.aboutLinks.map(
+                    (e) {
+                      final iconUrl = e.icons.pick()?.url;
+                      return NamidaInkWell(
+                        onTap: () {
+                          final url = _getWorkingUrl(e);
+                          NamidaLinkUtils.openLinkPreferNamida(url);
+                        },
+                        onLongPress: () {
+                          final url = _getWorkingUrl(e);
+                          _copyUrlToClipboard(url);
+                        },
+                        margin: const EdgeInsets.symmetric(vertical: 4.0),
+                        padding: const EdgeInsets.symmetric(vertical: 10.0),
+                        bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.01),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            width: 1.5,
+                            color: theme.colorScheme.secondary.withValues(alpha: 0.2),
+                          ),
                         ),
-                      ),
-                      dividerContainer,
-                      ...aboutResult.aboutLinks.map(
-                        (e) {
-                          final iconUrl = e.icons.pick()?.url;
-                          return NamidaInkWell(
-                            onTap: () {
-                              final url = _getWorkingUrl(e);
-                              NamidaLinkUtils.openLinkPreferNamida(url);
-                            },
-                            onLongPress: () {
-                              final url = _getWorkingUrl(e);
-                              _copyUrlToClipboard(url);
-                            },
-                            margin: const EdgeInsets.symmetric(vertical: 4.0),
-                            padding: const EdgeInsets.symmetric(vertical: 10.0),
-                            bgColor: theme.colorScheme.secondaryContainer.withValues(alpha: 0.01),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                width: 1.5,
-                                color: theme.colorScheme.secondary.withValues(alpha: 0.2),
-                              ),
-                            ),
-                            borderRadius: 10.0,
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 12.0),
-                                YoutubeThumbnail(
-                                  key: ValueKey(iconUrl),
-                                  width: 24.0,
-                                  height: 24.0,
-                                  isCircle: true,
-                                  isImportantInCache: false,
-                                  type: ThumbnailType.other,
-                                  customUrl: iconUrl,
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Colors.white,
-                                      blurRadius: 0,
-                                      spreadRadius: 1.5,
-                                    )
-                                  ],
+                        borderRadius: 10.0,
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 12.0),
+                            YoutubeThumbnail(
+                              key: ValueKey(iconUrl),
+                              width: 24.0,
+                              height: 24.0,
+                              isCircle: true,
+                              isImportantInCache: false,
+                              type: ThumbnailType.other,
+                              customUrl: iconUrl,
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.white,
+                                  blurRadius: 0,
+                                  spreadRadius: 1.5,
                                 ),
-                                const SizedBox(width: 12.0),
-                                Expanded(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        e.title,
-                                        style: textTheme.displayMedium?.copyWith(
-                                          fontSize: 15.0,
-                                          color: Color.alphaBlend(
-                                            theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.5),
-                                            theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        e.linkText,
-                                        style: textTheme.displaySmall?.copyWith(
-                                          fontSize: 11.5,
-                                          // color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 12.0),
                               ],
                             ),
-                          );
-                        },
-                      ),
-                      dividerContainer,
-                      NamidaInkWell(
-                        bgColor: theme.cardColor.withValues(alpha: 0.5),
-                        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-                        child: Column(
-                          children: [
-                            _SmolInfo(
-                              title: aboutResult.canonicalChannelUrl?.splitLast('/'),
-                              icon: Broken.link,
-                              onTap: () {
-                                final url = aboutResult.canonicalChannelUrl;
-                                if (url == null) return;
-                                _copyUrlToClipboard(url);
-                              },
+                            const SizedBox(width: 12.0),
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    e.title,
+                                    style: textTheme.displayMedium?.copyWith(
+                                      fontSize: 15.0,
+                                      color: Color.alphaBlend(
+                                        theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.5),
+                                        theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    e.linkText,
+                                    style: textTheme.displaySmall?.copyWith(
+                                      fontSize: 11.5,
+                                      // color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            _SmolInfo(
-                              title: aboutResult.subscriberCount?.displaySubscribersKeywordShort ?? aboutResult.subscriberCountText, // short cuz its not acc
-                              icon: Broken.profile_2user,
-                            ),
-                            _SmolInfo(
-                              title: aboutResult.videoCount?.displayVideoKeyword ?? aboutResult.videoCountText,
-                              icon: Broken.video,
-                            ),
-                            _SmolInfo(
-                              title: aboutResult.viewCount?.displayViewsKeyword ?? aboutResult.viewCountText,
-                              icon: Broken.activity,
-                            ),
-                            _SmolInfo(
-                              title: aboutResult.joinedText,
-                              icon: Broken.clock,
-                            ),
-                            _SmolInfo(
-                              title: aboutResult.country,
-                              icon: Broken.global,
-                            ),
+                            const SizedBox(width: 12.0),
                           ],
                         ),
-                      ),
-                      kBottomPaddingWidget,
-                    ],
+                      );
+                    },
                   ),
+                  dividerContainer,
+                  NamidaInkWell(
+                    bgColor: theme.cardColor.withValues(alpha: 0.5),
+                    padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+                    child: Column(
+                      children: [
+                        _SmolInfo(
+                          title: aboutResult.canonicalChannelUrl?.splitLast('/'),
+                          icon: Broken.link,
+                          onTap: () {
+                            final url = aboutResult.canonicalChannelUrl;
+                            if (url == null) return;
+                            _copyUrlToClipboard(url);
+                          },
+                        ),
+                        _SmolInfo(
+                          title: aboutResult.subscriberCount?.displaySubscribersKeywordShort ?? aboutResult.subscriberCountText, // short cuz its not acc
+                          icon: Broken.profile_2user,
+                        ),
+                        _SmolInfo(
+                          title: aboutResult.videoCount?.displayVideoKeyword ?? aboutResult.videoCountText,
+                          icon: Broken.video,
+                        ),
+                        _SmolInfo(
+                          title: aboutResult.viewCount?.displayViewsKeyword ?? aboutResult.viewCountText,
+                          icon: Broken.activity,
+                        ),
+                        _SmolInfo(
+                          title: aboutResult.joinedText,
+                          icon: Broken.clock,
+                        ),
+                        _SmolInfo(
+                          title: aboutResult.country,
+                          icon: Broken.global,
+                        ),
+                      ],
+                    ),
+                  ),
+                  kBottomPaddingWidget,
+                ],
+              ),
       ),
     );
   }

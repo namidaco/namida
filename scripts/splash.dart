@@ -58,10 +58,12 @@ void _renameAndroidFiles(String suffix) {
 void _replaceInDart() {
   final prefixComment = '// $_kPrefixComment';
   final suffixComment = '// $_kSuffixComment';
-  final iconsEnum = _appIcons.map((e) {
-    final authorInfo = e.authorInfos.map((e) => e.toClassString()).join(', ');
-    return '  ${e.dartName}("${e.assetPath}", [$authorInfo]),';
-  }).join('\n');
+  final iconsEnum = _appIcons
+      .map((e) {
+        final authorInfo = e.authorInfos.map((e) => e.toClassString()).join(', ');
+        return '  ${e.dartName}("${e.assetPath}", [$authorInfo]),';
+      })
+      .join('\n');
   _replaceAllInFile(
     _FilePaths.namida_channel_base_dart,
     (content) => content.replaceFirst(
@@ -105,7 +107,8 @@ void _replaceInManifest() {
 
   final String manifestCode = _appIcons
       .map(
-        (icon) => '''<activity-alias
+        (icon) =>
+            '''<activity-alias
             android:enabled="${icon == _appIcons[0] ? true : false}"
             android:name="com.msob7y.namida.${icon.manifestName}"
             android:targetActivity=".NamidaMainActivity"
@@ -136,7 +139,8 @@ void _replaceInKotlin() {
   final suffixComment = '// $_kSuffixComment';
   const indent = '        ';
   final iconsMatches = _appIcons.map((e) => '$indent    "${e.dartName}" -> LauncherIcon.${e.kotlinName}').join('\n');
-  final kotlinCode = '''"changeAppIcon" -> {
+  final kotlinCode =
+      '''"changeAppIcon" -> {
           val key = call.argument<String>("key")
           val nativeIcon = when (key) {
 $iconsMatches
@@ -150,7 +154,8 @@ $iconsMatches
               result.error("INVALID_ICON", "No matching icon for key: \$key", null)
           }
         }''';
-  final kotlinCode2 = '''"isAppIconEnabled" -> {
+  final kotlinCode2 =
+      '''"isAppIconEnabled" -> {
           val key = call.argument<String>("key")
           val nativeIcon = when (key) {
 $iconsMatches
@@ -172,10 +177,12 @@ $iconsMatches
     ),
   );
 
-  final iconsConstructor = _appIcons.mapIndexed((e, i) {
-    final trailing = i == _appIcons.length - 1 ? ';' : ',';
-    return '  ${e.kotlinName}("${e.manifestName}", R.mipmap.${e.mipmapName})$trailing';
-  }).join('\n');
+  final iconsConstructor = _appIcons
+      .mapIndexed((e, i) {
+        final trailing = i == _appIcons.length - 1 ? ';' : ',';
+        return '  ${e.kotlinName}("${e.manifestName}", R.mipmap.${e.mipmapName})$trailing';
+      })
+      .join('\n');
 
   _replaceAllInFile(
     _FilePaths.launcher_icon_controller_kt,

@@ -108,8 +108,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   YoutubeItemDownloadConfig _getDummyDownloadConfig(String id, int originalIndex, DownloadTaskGroupName group, {String? defaultFilename, required DateTime timeNow}) {
     final streamInfoItem = widget.infoLookup[id];
     final filenameBuilderSettings = settings.youtube.downloadFilenameBuilder.value;
-    final filename =
-        filenameBuilderSettings.isNotEmpty ? filenameBuilderSettings : (defaultFilename ?? streamInfoItem?.title ?? YoutubeInfoController.utils.getVideoNameSync(id) ?? id);
+    final filename = filenameBuilderSettings.isNotEmpty
+        ? filenameBuilderSettings
+        : (defaultFilename ?? streamInfoItem?.title ?? YoutubeInfoController.utils.getVideoNameSync(id) ?? id);
     return YoutubeItemDownloadConfig(
       originalIndex: originalIndex,
       totalLength: widget.playlistInfo?.videosCount ?? widget.ids.length,
@@ -167,24 +168,24 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     const visualDensity = null;
 
     List<NamidaPopupItem> qualityMenuChildren() => [
-          NamidaPopupItem(
-            icon: Broken.musicnote,
-            title: lang.AUDIO,
-            onTap: () {
-              _updateAudioOnly(true);
-            },
-          ),
-          ...kStockVideoQualities.map(
-            (e) => NamidaPopupItem(
-              icon: Broken.story,
-              title: e,
-              onTap: () {
-                _updateAudioOnly(false);
-                preferredQuality.value = e;
-              },
-            ),
-          )
-        ];
+      NamidaPopupItem(
+        icon: Broken.musicnote,
+        title: lang.AUDIO,
+        onTap: () {
+          _updateAudioOnly(true);
+        },
+      ),
+      ...kStockVideoQualities.map(
+        (e) => NamidaPopupItem(
+          icon: Broken.story,
+          title: e,
+          onTap: () {
+            _updateAudioOnly(false);
+            preferredQuality.value = e;
+          },
+        ),
+      ),
+    ];
 
     final textTheme = context.textTheme;
     NamidaNavigator.inst.navigateDialog(
@@ -344,8 +345,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           value: _selectedList.isEmpty
                               ? false
                               : _selectedList.length != widget.ids.length
-                                  ? null
-                                  : true,
+                              ? null
+                              : true,
                           onChanged: (value) {
                             if (_selectedList.length != widget.ids.length) {
                               _addAllYTIDsToSelected();
@@ -443,9 +444,10 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                 decoration: isSelected
                                     ? BoxDecoration(
                                         border: Border.all(
-                                        color: theme.colorScheme.secondary.withValues(alpha: 0.5),
-                                        width: 2.0,
-                                      ))
+                                          color: theme.colorScheme.secondary.withValues(alpha: 0.5),
+                                          width: 2.0,
+                                        ),
+                                      )
                                     : const BoxDecoration(),
                                 onTap: () {
                                   _onItemTap(id);
@@ -612,7 +614,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                             .map(
                               (id) =>
                                   _configMap.value[id] ??
-
                                   // -- this is not really used since initState() calls onRenameAllTasks() which fills _configMap
                                   _getDummyDownloadConfig(
                                     id,

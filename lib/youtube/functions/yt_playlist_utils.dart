@@ -43,29 +43,27 @@ class YtUtilsPlaylist {
 
   Future<void> promptCreatePlaylist({
     required FutureOr<bool> Function(String title, PlaylistPrivacy? privacy) onButtonConfirm,
-  }) =>
-      _promptCreateOrEditPlaylist(
-        isEdit: false,
-        playlistId: null,
-        initialTitle: null,
-        initialDescription: null,
-        initialPrivacy: null,
-        onButtonConfirm: (text, _, privacy) => onButtonConfirm(text, privacy),
-      );
+  }) => _promptCreateOrEditPlaylist(
+    isEdit: false,
+    playlistId: null,
+    initialTitle: null,
+    initialDescription: null,
+    initialPrivacy: null,
+    onButtonConfirm: (text, _, privacy) => onButtonConfirm(text, privacy),
+  );
 
   Future<void> promptEditPlaylist({
     required YoutiPiePlaylistResult playlist,
     required PlaylistInfoItemUser userPlaylist,
     required FutureOr<bool> Function(String title, String? description, PlaylistPrivacy? privacy) onButtonConfirm,
-  }) =>
-      _promptCreateOrEditPlaylist(
-        isEdit: true,
-        playlistId: playlist.info.id.isNotEmpty ? playlist.info.id : userPlaylist.id,
-        initialTitle: playlist.info.title.isNotEmpty ? playlist.info.title : userPlaylist.title,
-        initialDescription: playlist.info.description,
-        initialPrivacy: playlist.info.privacy ?? userPlaylist.privacy,
-        onButtonConfirm: onButtonConfirm,
-      );
+  }) => _promptCreateOrEditPlaylist(
+    isEdit: true,
+    playlistId: playlist.info.id.isNotEmpty ? playlist.info.id : userPlaylist.id,
+    initialTitle: playlist.info.title.isNotEmpty ? playlist.info.title : userPlaylist.title,
+    initialDescription: playlist.info.description,
+    initialPrivacy: playlist.info.privacy ?? userPlaylist.privacy,
+    onButtonConfirm: onButtonConfirm,
+  );
 
   Future<void> _promptCreateOrEditPlaylist({
     required bool isEdit,
@@ -153,22 +151,23 @@ class YtUtilsPlaylist {
                         text: e.toText(),
                         bgColor: context.theme.colorScheme.secondaryContainer.withValues(alpha: privacy == e ? 0.5 : 0.2),
                         onTap: () => privacyRx.value = e,
-                        trailing: const SizedBox(
-                          width: 16.0,
-                          height: 16.0,
-                          child: Checkbox.adaptive(
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(6.0)),
+                        trailing:
+                            const SizedBox(
+                              width: 16.0,
+                              height: 16.0,
+                              child: Checkbox.adaptive(
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(6.0)),
+                                ),
+                                value: true,
+                                onChanged: null,
+                              ),
+                            ).animateEntrance(
+                              showWhen: privacy == e,
+                              allCurves: Curves.fastLinearToSlowEaseIn,
+                              durationMS: 300,
                             ),
-                            value: true,
-                            onChanged: null,
-                          ),
-                        ).animateEntrance(
-                          showWhen: privacy == e,
-                          allCurves: Curves.fastLinearToSlowEaseIn,
-                          durationMS: 300,
-                        ),
                       ),
                     );
                   },

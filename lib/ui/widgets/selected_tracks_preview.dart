@@ -79,8 +79,8 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                 builder: (context, isMenuMinimized) {
                                   double extra = isPressed
                                       ? isMenuMinimized
-                                          ? 5.0
-                                          : -5.0
+                                            ? 5.0
+                                            : -5.0
                                       : 0.0;
                                   return AnimatedSizedBox(
                                     duration: const Duration(seconds: 1),
@@ -166,14 +166,16 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
       );
     }
 
-    final opacityAnimation = animation.drive(Animatable.fromCallback(
-      (animationValue) {
-        final isMini = animationValue <= 1.0;
-        final isInQueue = !isMini;
-        final percentage = isMini ? animationValue : animationValue - 1;
-        return (isInQueue ? percentage : 1 - percentage).clampDouble(0, 1);
-      },
-    ));
+    final opacityAnimation = animation.drive(
+      Animatable.fromCallback(
+        (animationValue) {
+          final isMini = animationValue <= 1.0;
+          final isInQueue = !isMini;
+          final percentage = isMini ? animationValue : animationValue - 1;
+          return (isInQueue ? percentage : 1 - percentage).clampDouble(0, 1);
+        },
+      ),
+    );
     return AnimatedBuilder(
       animation: animation,
       builder: (context, _) {
@@ -236,7 +238,7 @@ class SelectedTracksRow extends StatelessWidget {
                     Text(
                       selectedTracks.totalDurationFormatted,
                       style: theme.textTheme.displayMedium,
-                    )
+                    ),
                 ],
               );
             },
@@ -289,11 +291,13 @@ class SelectedTracksRow extends StatelessWidget {
               QueueSource.selectedTracks,
               thirdLineText: tracks.length == 1
                   ? tracks.first.title
-                  : tracks.map((e) {
-                      final title = e.toTrackExt().title;
-                      final maxLet = 20 - tracks.length.clampInt(0, 17);
-                      return '${title.substring(0, (title.length > maxLet ? maxLet : title.length))}..';
-                    }).join(', '),
+                  : tracks
+                        .map((e) {
+                          final title = e.toTrackExt().title;
+                          final maxLet = 20 - tracks.length.clampInt(0, 17);
+                          return '${title.substring(0, (title.length > maxLet ? maxLet : title.length))}..';
+                        })
+                        .join(', '),
               tracksWithDates: SelectedTracksController.inst.selectedTracks.value.tracksWithDates.toList(),
               playlistName: selectedPl.length == 1 ? selectedPl.first : null,
             );
@@ -306,7 +310,7 @@ class SelectedTracksRow extends StatelessWidget {
           icon: const Icon(Broken.category),
           tooltip: lang.SELECT_ALL,
         ),
-        SelectedTracksController.inst.isMenuMinimized.value ? const Icon(Broken.arrow_up_3) : const Icon(Broken.arrow_down_2)
+        SelectedTracksController.inst.isMenuMinimized.value ? const Icon(Broken.arrow_up_3) : const Icon(Broken.arrow_down_2),
       ],
     );
   }

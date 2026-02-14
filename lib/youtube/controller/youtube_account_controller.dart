@@ -176,12 +176,15 @@ class YoutubeAccountController {
   static Future<void> _executePendingRequestsImmediate() async {
     final copy = Map<String, Future<void> Function()>.from(_pendingRequests);
     for (final e in copy.entries) {
-      e.value().then((value) {
-        _pendingRequests.remove(e.key);
-        if (_pendingRequests.isEmpty) {
-          ConnectivityController.inst.removeOnConnectionRestored(_executePendingRequestsImmediate);
-        }
-      }).catchError((_) {});
+      e
+          .value()
+          .then((value) {
+            _pendingRequests.remove(e.key);
+            if (_pendingRequests.isEmpty) {
+              ConnectivityController.inst.removeOnConnectionRestored(_executePendingRequestsImmediate);
+            }
+          })
+          .catchError((_) {});
     }
   }
 
@@ -264,11 +267,11 @@ class YoutubeAccountController {
               const YoutubeManageSubscriptionPage().navigate,
             )
           : manageAccountButton
-              ? (
-                  lang.SIGN_IN,
-                  const YoutubeAccountManagePage().navigate,
-                )
-              : null,
+          ? (
+              lang.SIGN_IN,
+              const YoutubeAccountManagePage().navigate,
+            )
+          : null,
     );
   }
 

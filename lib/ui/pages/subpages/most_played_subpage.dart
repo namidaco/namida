@@ -90,7 +90,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                   if (trailing != null) ...[
                     const SizedBox(width: 2.0),
                     trailing(textColor)!,
-                  ]
+                  ],
                 ],
               ),
             ),
@@ -216,7 +216,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                 itemCount: itemsCount,
               ),
             ],
-          )
+          ),
         ],
       ),
     );

@@ -19,22 +19,22 @@ class NamidaColor {
   });
 
   NamidaColor.single(Color color)
-      : this(
-          used: null,
-          // mix: color,
-          mix2: color,
-          palette: [color],
-        );
+    : this(
+        used: null,
+        // mix: color,
+        mix2: color,
+        palette: [color],
+      );
 
   NamidaColor.create({
     Color? used,
     required List<Color> palette,
   }) : this(
-          used: used,
-          // mix: NamidaColor.mixIntColors(palette),
-          mix2: NamidaColor.mixIntColors(palette.takeFew()),
-          palette: palette,
-        );
+         used: used,
+         // mix: NamidaColor.mixIntColors(palette),
+         mix2: NamidaColor.mixIntColors(palette.takeFew()),
+         palette: palette,
+       );
 
   static Color mixIntColors(Iterable<Color> colors) {
     if (colors.isEmpty) return Colors.transparent;

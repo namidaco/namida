@@ -116,12 +116,14 @@ class CurrentColor {
   void updateColorAfterThemeModeChange() {
     if (settings.autoColor.value) {
       final nc = _namidaColor.value ?? _defaultNamidaColor;
-      _namidaColor.set(NamidaColor(
-        used: nc.used?.withAlpha(colorAlpha),
-        // mix: nc.mix,
-        mix2: nc.mix2,
-        palette: nc.palette,
-      ));
+      _namidaColor.set(
+        NamidaColor(
+          used: nc.used?.withAlpha(colorAlpha),
+          // mix: nc.mix,
+          mix2: nc.mix2,
+          palette: nc.palette,
+        ),
+      );
     } else {
       final nc = playerStaticColor.lighter;
       _namidaColor.set(NamidaColor.single(nc));
@@ -340,8 +342,12 @@ class CurrentColor {
   }
 
   /// Equivalent to calling [getTrackColors] with [delightnedAndAlpha == true]
-  Future<Color> getTrackDelightnedColor(Track track, NetworkArtworkInfo? networkArtworkInfo,
-      {bool fallbackToPlayerStaticColor = false, bool useIsolate = _defaultUseIsolate}) async {
+  Future<Color> getTrackDelightnedColor(
+    Track track,
+    NetworkArtworkInfo? networkArtworkInfo, {
+    bool fallbackToPlayerStaticColor = false,
+    bool useIsolate = _defaultUseIsolate,
+  }) async {
     final nc = await getTrackColors(
       track,
       networkArtworkInfo: networkArtworkInfo,
@@ -451,11 +457,11 @@ class CurrentColor {
     final currentRouteType = currentRoute?.route;
     switch (currentRouteType) {
       case RouteType.SUBPAGE_albumArtistTracks ||
-            RouteType.SUBPAGE_albumTracks ||
-            RouteType.SUBPAGE_artistTracks ||
-            RouteType.SUBPAGE_albumArtistTracks ||
-            RouteType.SUBPAGE_composerTracks ||
-            RouteType.SUBPAGE_genreTracks:
+          RouteType.SUBPAGE_albumTracks ||
+          RouteType.SUBPAGE_artistTracks ||
+          RouteType.SUBPAGE_albumArtistTracks ||
+          RouteType.SUBPAGE_composerTracks ||
+          RouteType.SUBPAGE_genreTracks:
         currentRoute?.updateColorScheme();
       default:
         null;

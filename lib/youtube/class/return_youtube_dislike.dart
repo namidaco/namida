@@ -16,10 +16,9 @@ class ReturnYoutubeDislikeSettings {
 
   ReturnYoutubeDislikeSettings copyWith({
     bool? enabled,
-  }) =>
-      ReturnYoutubeDislikeSettings.custom(
-        enabled ?? this.enabled,
-      );
+  }) => ReturnYoutubeDislikeSettings.custom(
+    enabled ?? this.enabled,
+  );
 
   factory ReturnYoutubeDislikeSettings.fromJson(Map<String, dynamic>? json) {
     if (json == null) return ReturnYoutubeDislikeSettings();
@@ -32,6 +31,6 @@ class ReturnYoutubeDislikeSettings {
   }
 
   Map<String, dynamic> toJson() => {
-        'enabled': enabled,
-      };
+    'enabled': enabled,
+  };
 }

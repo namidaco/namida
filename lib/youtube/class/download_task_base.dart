@@ -9,11 +9,10 @@ class DownloadTaskFilename {
 
   static DownloadTaskFilename create({
     required String initialFilename,
-  }) =>
-      DownloadTaskFilename._(
-        filename: initialFilename,
-        key: _createKey(),
-      );
+  }) => DownloadTaskFilename._(
+    filename: initialFilename,
+    key: _createKey(),
+  );
 
   DownloadTaskFilename._({
     required this.filename,

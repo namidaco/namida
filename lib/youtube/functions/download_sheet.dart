@@ -184,7 +184,8 @@ Future<void> showDownloadVideoBottomSheet({
       }
     }
     if (settings.downloadAudioOnly.value == false) {
-      selectedVideoOnlyStream.value = await streams?.videoStreams.firstWhereEffAsync(
+      selectedVideoOnlyStream.value =
+          await streams?.videoStreams.firstWhereEffAsync(
             (e) async {
               final cached = await e.getCachedFile(videoId);
               if (cached != null) return true;
@@ -492,7 +493,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                 return Text(
                                                   [
                                                     videoInfo?.durSeconds?.secondsLabel ?? "00:00",
-                                                    if (dateFormatted != null) dateFormatted,
+                                                    ?dateFormatted,
                                                   ].join(' - '),
                                                   style: textTheme.displaySmall,
                                                 );
@@ -558,7 +559,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                       size: 16.0,
                                                     ),
                                                   ),
-                                                )
+                                                ),
                                             ],
                                           );
                                         },
@@ -753,8 +754,8 @@ Future<void> showDownloadVideoBottomSheet({
                                       if (value == null) return lang.PLEASE_ENTER_A_NAME;
                                       final file = FileParts.join(AppDirs.YOUTUBE_DOWNLOADS, groupName, value);
                                       void updateVal(bool exist) => WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                                            filenameExists.value = exist;
-                                          });
+                                        filenameExists.value = exist;
+                                      });
                                       if (file.existsSync()) {
                                         updateVal(true);
                                         return "${lang.FILE_ALREADY_EXISTS}, ${lang.DOWNLOADING_WILL_OVERRIDE_IT} (${file.fileSizeFormatted() ?? 0})";

@@ -122,25 +122,25 @@ extension LibraryTabUtils on LibraryTab {
     return switch (this) {
       LibraryTab.tracks => TracksPage(animateTiles: animateTiles),
       LibraryTab.albums => AlbumsPage(
-          countPerRow: gridCount,
-          animateTiles: animateTiles,
-          enableHero: enableHero,
-        ),
+        countPerRow: gridCount,
+        animateTiles: animateTiles,
+        enableHero: enableHero,
+      ),
       LibraryTab.artists => ArtistsPage(
-          countPerRow: gridCount,
-          animateTiles: animateTiles,
-          enableHero: enableHero,
-        ),
+        countPerRow: gridCount,
+        animateTiles: animateTiles,
+        enableHero: enableHero,
+      ),
       LibraryTab.genres => GenresPage(
-          countPerRow: gridCount,
-          animateTiles: animateTiles,
-          enableHero: enableHero,
-        ),
+        countPerRow: gridCount,
+        animateTiles: animateTiles,
+        enableHero: enableHero,
+      ),
       LibraryTab.playlists => PlaylistsPage(
-          countPerRow: gridCount,
-          animateTiles: animateTiles,
-          enableHero: enableHero,
-        ),
+        countPerRow: gridCount,
+        animateTiles: animateTiles,
+        enableHero: enableHero,
+      ),
       LibraryTab.folders => FoldersPage.tracksAndVideos(),
       LibraryTab.foldersMusic => FoldersPage.tracks(),
       LibraryTab.foldersVideos => FoldersPage.videos(),
@@ -375,11 +375,11 @@ extension MediaInfoToFAudioModel on MediaInfo {
       channels: audioStream?.channels == null
           ? null
           : {
-                0: null,
-                1: 'mono',
-                2: 'stereo',
-              }[audioStream?.channels] ??
-              'unknown',
+                  0: null,
+                  1: 'mono',
+                  2: 'stereo',
+                }[audioStream?.channels] ??
+                'unknown',
       format: format,
       sampleRate: parsy(audioStream?.sampleRate),
       bits: audioStream?.bitsPerSample,
@@ -605,10 +605,12 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
   }
 
   void executePlayingItem(Playable currentItem) {
-    final queueSource = currentItem.execute(
-      selectable: (_) => QueueSource.playerQueue,
-      youtubeID: (_) => QueueSourceYoutubeID.playerQueue,
-    ) as QueueSourceBase;
+    final queueSource =
+        currentItem.execute(
+              selectable: (_) => QueueSource.playerQueue,
+              youtubeID: (_) => QueueSourceYoutubeID.playerQueue,
+            )
+            as QueueSourceBase;
     this.execute(
       currentItem,
       info: SwipeQueueAddTileInfo(
@@ -668,7 +670,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
                 track: track,
                 compressed: false,
               ),
-              onSave: (_, __) => EditDeleteController.inst.saveTrackArtworkToStorage(track),
+              onSave: (_, _) => EditDeleteController.inst.saveTrackArtworkToStorage(track),
               themeColor: null,
             );
             details.openInFullscreen();
@@ -689,7 +691,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
                   type: ThumbnailType.video,
                 ),
               ),
-              onSave: (_, __) => YTUtils.copyThumbnailToStorage(videoId),
+              onSave: (_, _) => YTUtils.copyThumbnailToStorage(videoId),
               themeColor: null,
             );
             details.openInFullscreen();
@@ -921,7 +923,8 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
       case OnYoutubeLinkOpenAction.playAfter:
         return Player.inst.addToQueue(getPlayables(), insertAfterLatest: true);
       case OnYoutubeLinkOpenAction.alwaysAsk:
-        final videoNamesSubtitle = await ids
+        final videoNamesSubtitle =
+            await ids
                 .take(3)
                 .mapAsync((id) async => await YoutubeInfoController.utils.getVideoName(id) ?? id) //
                 .join(', ') +
@@ -1337,7 +1340,8 @@ extension RouteUtils on NamidaRoute {
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
-      child: displaySettingSearch //
+      child:
+          displaySettingSearch //
           ? NamidaSettingSearchBar.keyed(closedChild: finalWidget)
           : finalWidget ?? ScrollSearchController.inst.searchBarWidget,
     );
@@ -1361,7 +1365,8 @@ extension RouteUtils on NamidaRoute {
   }
 
   List<Widget> toActions() {
-    final shouldShowInitialActions = route != RouteType.PAGE_stats &&
+    final shouldShowInitialActions =
+        route != RouteType.PAGE_stats &&
         route != RouteType.SETTINGS_page &&
         route != RouteType.SETTINGS_subpage &&
         route != RouteType.YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE &&
@@ -1373,7 +1378,8 @@ extension RouteUtils on NamidaRoute {
 
     final queue = route == RouteType.SUBPAGE_queueTracks ? name?.getQueue() : null;
 
-    final showMainMenu = route == RouteType.SUBPAGE_albumTracks ||
+    final showMainMenu =
+        route == RouteType.SUBPAGE_albumTracks ||
         route == RouteType.SUBPAGE_artistTracks ||
         route == RouteType.SUBPAGE_albumArtistTracks ||
         route == RouteType.SUBPAGE_composerTracks ||
@@ -1578,9 +1584,9 @@ extension QueueFromMap on int {
 
 extension ThemeDefaultColors on BuildContext {
   Color defaultIconColor([Color? mainColor, Color? secondaryColor]) => Color.alphaBlend(
-        (mainColor ?? CurrentColor.inst.color).withAlpha(120),
-        secondaryColor ?? theme.colorScheme.onSurface,
-      );
+    (mainColor ?? CurrentColor.inst.color).withAlpha(120),
+    secondaryColor ?? theme.colorScheme.onSurface,
+  );
 }
 
 extension InterruptionMediaUtils on InterruptionType {
@@ -2019,7 +2025,7 @@ class _NamidaConverters {
         VideoPlaybackSource.auto: lang.VIDEO_PLAYBACK_SOURCE_AUTO_SUBTITLE,
         VideoPlaybackSource.youtube: lang.VIDEO_PLAYBACK_SOURCE_YOUTUBE_SUBTITLE,
         VideoPlaybackSource.local: lang.VIDEO_PLAYBACK_SOURCE_LOCAL_SUBTITLE,
-      }
+      },
     };
 
     // =================================================

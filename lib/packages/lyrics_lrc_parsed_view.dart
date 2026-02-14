@@ -355,8 +355,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
               final textData = item is Selectable
                   ? NamidaMiniPlayerTrack.textBuilder(item)
                   : item is YoutubeID
-                      ? NamidaMiniPlayerYoutubeIDState.textBuilder(context, item)
-                      : null;
+                  ? NamidaMiniPlayerYoutubeIDState.textBuilder(context, item)
+                  : null;
               return ConstrainedBox(
                 constraints: BoxConstraints(
                   minWidth: context.width, // vip
@@ -498,54 +498,55 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   enabled: false,
                   tag: 'MINIPLAYER_DURATION',
                   child: ObxO(
-                      rx: settings.player.displayRemainingDurInsteadOfTotal,
-                      builder: (context, displayRemainingDurInsteadOfTotal) => displayRemainingDurInsteadOfTotal
-                          ? ObxO(
-                              rx: _currentItemDurationMS,
-                              builder: (context, durMS) {
-                                int finalDurMS = durMS ?? 0;
+                    rx: settings.player.displayRemainingDurInsteadOfTotal,
+                    builder: (context, displayRemainingDurInsteadOfTotal) => displayRemainingDurInsteadOfTotal
+                        ? ObxO(
+                            rx: _currentItemDurationMS,
+                            builder: (context, durMS) {
+                              int finalDurMS = durMS ?? 0;
 
-                                return ObxO(
-                                  rx: Player.inst.currentItem,
-                                  builder: (context, currentItem) {
-                                    if (finalDurMS == 0 && currentItem is Selectable) {
-                                      finalDurMS = currentItem.track.durationMS;
-                                    }
-                                    return ObxO(
-                                      rx: Player.inst.nowPlayingPosition,
-                                      builder: (context, toSubtract) {
-                                        final msToDisplay = finalDurMS - toSubtract;
-                                        return Text(
-                                          "- ${msToDisplay.milliSecondsLabel}",
-                                          style: textTheme.displaySmall,
-                                        );
-                                      },
-                                    );
-                                  },
-                                );
-                              },
-                            )
-                          : ObxO(
-                              rx: _currentItemDurationMS,
-                              builder: (context, milliseconds) {
-                                if (milliseconds == null || milliseconds == 0) {
+                              return ObxO(
+                                rx: Player.inst.currentItem,
+                                builder: (context, currentItem) {
+                                  if (finalDurMS == 0 && currentItem is Selectable) {
+                                    finalDurMS = currentItem.track.durationMS;
+                                  }
                                   return ObxO(
-                                    rx: Player.inst.currentItem,
-                                    builder: (context, currentItem) {
-                                      final milliseconds = currentItem is Selectable ? currentItem.track.durationMS : 0;
+                                    rx: Player.inst.nowPlayingPosition,
+                                    builder: (context, toSubtract) {
+                                      final msToDisplay = finalDurMS - toSubtract;
                                       return Text(
-                                        milliseconds.milliSecondsLabel,
+                                        "- ${msToDisplay.milliSecondsLabel}",
                                         style: textTheme.displaySmall,
                                       );
                                     },
                                   );
-                                }
-                                return Text(
-                                  milliseconds.milliSecondsLabel,
-                                  style: textTheme.displaySmall,
+                                },
+                              );
+                            },
+                          )
+                        : ObxO(
+                            rx: _currentItemDurationMS,
+                            builder: (context, milliseconds) {
+                              if (milliseconds == null || milliseconds == 0) {
+                                return ObxO(
+                                  rx: Player.inst.currentItem,
+                                  builder: (context, currentItem) {
+                                    final milliseconds = currentItem is Selectable ? currentItem.track.durationMS : 0;
+                                    return Text(
+                                      milliseconds.milliSecondsLabel,
+                                      style: textTheme.displaySmall,
+                                    );
+                                  },
                                 );
-                              },
-                            )),
+                              }
+                              return Text(
+                                milliseconds.milliSecondsLabel,
+                                style: textTheme.displaySmall,
+                              );
+                            },
+                          ),
+                  ),
                 ),
                 const Spacer(),
               ],
@@ -585,8 +586,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                       builder: (context, child) {
                         final mpAnimationValue = mpAnimation.value;
                         final blur = 12.0 * mpAnimationValue;
-                        late final maskColor =
-                            mpAnimationValue == 0 ? Colors.transparent : theme.scaffoldBackgroundColor.withValues(alpha: (fullscreen ? 0.8 : 0.5) * mpAnimationValue);
+                        late final maskColor = mpAnimationValue == 0
+                            ? Colors.transparent
+                            : theme.scaffoldBackgroundColor.withValues(alpha: (fullscreen ? 0.8 : 0.5) * mpAnimationValue);
                         return Stack(
                           children: [
                             NamidaBlur(
@@ -596,7 +598,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                 children: [
                                   widget.videoOrImage,
                                   Positioned.fill(
-                                    child: !_isCurrentLineEmpty && mpAnimationValue == 1 // animate color only when not animating mp itself
+                                    child:
+                                        !_isCurrentLineEmpty &&
+                                            mpAnimationValue ==
+                                                1 // animate color only when not animating mp itself
                                         ? AnimatedColoredBox(
                                             duration: const Duration(milliseconds: _lrcOpacityDurationMS),
                                             color: maskColor,
@@ -741,8 +746,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                 normalLineColorOpacity = distanceDiffFromSelectedAbs == 1
                                     ? 0.5
                                     : distanceDiffFromSelectedAbs == 2
-                                        ? 0.4
-                                        : 0.25;
+                                    ? 0.4
+                                    : 0.25;
                               }
 
                               if (selected) {

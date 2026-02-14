@@ -45,45 +45,44 @@ class _ZipManagerGeneric extends ZipManager {
   Future<void> extractZip({
     required File zipFile,
     required Directory destinationDir,
-  }) =>
-      Isolate.run(
-        () async {
-          final outputPath = destinationDir.path;
+  }) => Isolate.run(
+    () async {
+      final outputPath = destinationDir.path;
 
-          final input = InputFileStream(zipFile.path);
-          final archive = ZipDecoder().decodeStream(input);
+      final input = InputFileStream(zipFile.path);
+      final archive = ZipDecoder().decodeStream(input);
+      try {
+        for (final file in archive) {
           try {
-            for (final file in archive) {
+            final filePath = path.join(outputPath, path.normalize(file.name));
+            if (!_isWithinOutputPath(outputPath, filePath)) {
+              continue;
+            }
+
+            if (file.isDirectory && !file.isSymbolicLink) {
+              Directory(filePath).createSync(recursive: true);
+              continue;
+            }
+
+            if (file.isFile) {
+              final output = OutputFileStream(filePath);
               try {
-                final filePath = path.join(outputPath, path.normalize(file.name));
-                if (!_isWithinOutputPath(outputPath, filePath)) {
-                  continue;
-                }
-
-                if (file.isDirectory && !file.isSymbolicLink) {
-                  Directory(filePath).createSync(recursive: true);
-                  continue;
-                }
-
-                if (file.isFile) {
-                  final output = OutputFileStream(filePath);
-                  try {
-                    file.writeContent(output);
-                  } catch (_) {
-                  } finally {
-                    await output.close();
-                  }
-                }
+                file.writeContent(output);
               } catch (_) {
-                // file name too long for example, or contains illegal chars on this platform
+              } finally {
+                await output.close();
               }
             }
-          } finally {
-            await input.close();
-            await archive.clear();
+          } catch (_) {
+            // file name too long for example, or contains illegal chars on this platform
           }
-        },
-      );
+        }
+      } finally {
+        await input.close();
+        await archive.clear();
+      }
+    },
+  );
 
   static bool _isWithinOutputPath(String outputDir, String filePath) {
     return path.isWithin(path.canonicalize(outputDir), path.canonicalize(filePath));

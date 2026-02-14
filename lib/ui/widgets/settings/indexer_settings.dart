@@ -77,26 +77,26 @@ class IndexerSettings extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-        _IndexerSettingsKeys.preventDuplicatedTracks: [lang.PREVENT_DUPLICATED_TRACKS, lang.PREVENT_DUPLICATED_TRACKS_SUBTITLE],
-        _IndexerSettingsKeys.respectNoMedia: [lang.RESPECT_NO_MEDIA, lang.RESPECT_NO_MEDIA_SUBTITLE],
-        _IndexerSettingsKeys.extractFtArtist: [lang.EXTRACT_FEAT_ARTIST, lang.EXTRACT_FEAT_ARTIST_SUBTITLE],
-        _IndexerSettingsKeys.artworksCache: [lang.ENABLE_ARTWORK_CACHE, lang.ENABLE_ARTWORK_CACHE_SUBTITLE],
-        _IndexerSettingsKeys.groupArtworksByAlbum: [lang.GROUP_ARTWORKS_BY_ALBUM],
-        _IndexerSettingsKeys.uniqueArtworkHash: [lang.UNIQUE_ARTWORK_HASH],
-        _IndexerSettingsKeys.albumIdentifiers: [lang.ALBUM_IDENTIFIERS],
-        _IndexerSettingsKeys.artistSeparators: [lang.TRACK_ARTISTS_SEPARATOR],
-        _IndexerSettingsKeys.genreSeparators: [lang.TRACK_GENRES_SEPARATOR],
-        _IndexerSettingsKeys.minimumFileSize: [lang.MIN_FILE_SIZE],
-        _IndexerSettingsKeys.minimumTrackDur: [lang.MIN_FILE_DURATION],
-        _IndexerSettingsKeys.useMediaStore: [lang.USE_MEDIA_STORE, lang.USE_MEDIA_STORE_SUBTITLE],
-        _IndexerSettingsKeys.includeVideos: [lang.INCLUDE_VIDEOS],
-        _IndexerSettingsKeys.refreshOnStartup: [lang.REFRESH_ON_STARTUP],
-        _IndexerSettingsKeys.missingTracks: [lang.MISSING_TRACKS],
-        _IndexerSettingsKeys.reindex: [lang.RE_INDEX, lang.RE_INDEX_SUBTITLE],
-        _IndexerSettingsKeys.refreshLibrary: [lang.REFRESH_LIBRARY, lang.REFRESH_LIBRARY_SUBTITLE],
-        _IndexerSettingsKeys.foldersToScan: [lang.LIST_OF_FOLDERS],
-        _IndexerSettingsKeys.foldersToExclude: [lang.EXCLUDED_FODLERS],
-      };
+    _IndexerSettingsKeys.preventDuplicatedTracks: [lang.PREVENT_DUPLICATED_TRACKS, lang.PREVENT_DUPLICATED_TRACKS_SUBTITLE],
+    _IndexerSettingsKeys.respectNoMedia: [lang.RESPECT_NO_MEDIA, lang.RESPECT_NO_MEDIA_SUBTITLE],
+    _IndexerSettingsKeys.extractFtArtist: [lang.EXTRACT_FEAT_ARTIST, lang.EXTRACT_FEAT_ARTIST_SUBTITLE],
+    _IndexerSettingsKeys.artworksCache: [lang.ENABLE_ARTWORK_CACHE, lang.ENABLE_ARTWORK_CACHE_SUBTITLE],
+    _IndexerSettingsKeys.groupArtworksByAlbum: [lang.GROUP_ARTWORKS_BY_ALBUM],
+    _IndexerSettingsKeys.uniqueArtworkHash: [lang.UNIQUE_ARTWORK_HASH],
+    _IndexerSettingsKeys.albumIdentifiers: [lang.ALBUM_IDENTIFIERS],
+    _IndexerSettingsKeys.artistSeparators: [lang.TRACK_ARTISTS_SEPARATOR],
+    _IndexerSettingsKeys.genreSeparators: [lang.TRACK_GENRES_SEPARATOR],
+    _IndexerSettingsKeys.minimumFileSize: [lang.MIN_FILE_SIZE],
+    _IndexerSettingsKeys.minimumTrackDur: [lang.MIN_FILE_DURATION],
+    _IndexerSettingsKeys.useMediaStore: [lang.USE_MEDIA_STORE, lang.USE_MEDIA_STORE_SUBTITLE],
+    _IndexerSettingsKeys.includeVideos: [lang.INCLUDE_VIDEOS],
+    _IndexerSettingsKeys.refreshOnStartup: [lang.REFRESH_ON_STARTUP],
+    _IndexerSettingsKeys.missingTracks: [lang.MISSING_TRACKS],
+    _IndexerSettingsKeys.reindex: [lang.RE_INDEX, lang.RE_INDEX_SUBTITLE],
+    _IndexerSettingsKeys.refreshLibrary: [lang.REFRESH_LIBRARY, lang.REFRESH_LIBRARY_SUBTITLE],
+    _IndexerSettingsKeys.foldersToScan: [lang.LIST_OF_FOLDERS],
+    _IndexerSettingsKeys.foldersToExclude: [lang.EXCLUDED_FODLERS],
+  };
 
   void _maybeShowRefreshPromptDialog(bool didModifyFolder) {
     if (!isInFirstConfigScreen) showRefreshPromptDialog(didModifyFolder);
@@ -659,7 +659,8 @@ class IndexerSettings extends SettingSubpageProvider {
                   final isServer = e is DirectoryIndexServer;
                   return CustomListTile(
                     visualDensity: VisualDensity.compact,
-                    leading: assetWidget ??
+                    leading:
+                        assetWidget ??
                         Icon(
                           e.type.toIcon(),
                           size: 20.0,
@@ -671,8 +672,8 @@ class IndexerSettings extends SettingSubpageProvider {
                             e.username,
                           ].joinText(separator: ' - ')
                         : mediaStoreEnabled
-                            ? lang.MEDIA_STORE_IS_ENABLED_THIS_WILL_HAVE_NO_EFFECT
-                            : null,
+                        ? lang.MEDIA_STORE_IS_ENABLED_THIS_WILL_HAVE_NO_EFFECT
+                        : null,
                     trailingRaw: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -982,7 +983,8 @@ class IndexerSettings extends SettingSubpageProvider {
                         Obx(
                           (context) {
                             return NamidaButton(
-                              enabled: settings.albumIdentifiers.valueR.any((element) => !tempList.contains(element)) ||
+                              enabled:
+                                  settings.albumIdentifiers.valueR.any((element) => !tempList.contains(element)) ||
                                   tempList.valueR.any((element) => !settings.albumIdentifiers.contains(element)), // isEqualTo wont work cuz order shouldnt matter
                               text: lang.SAVE,
                               onPressed: () async {
@@ -1346,7 +1348,7 @@ class IndexerSettings extends SettingSubpageProvider {
                             const Icon(
                               Broken.close_circle,
                               size: 18.0,
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -1377,7 +1379,7 @@ class IndexerSettings extends SettingSubpageProvider {
                 ),
                 controller: separatorsController,
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -1569,15 +1571,17 @@ class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: paths
-                      .map((e) => Padding(
-                            padding: widget.itemPadding,
-                            child: Text(
-                              e,
-                              maxLines: _isPathsExpanded ? null : 1,
-                              overflow: _isPathsExpanded ? null : TextOverflow.ellipsis,
-                              style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
-                            ),
-                          ))
+                      .map(
+                        (e) => Padding(
+                          padding: widget.itemPadding,
+                          child: Text(
+                            e,
+                            maxLines: _isPathsExpanded ? null : 1,
+                            overflow: _isPathsExpanded ? null : TextOverflow.ellipsis,
+                            style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                          ),
+                        ),
+                      )
                       .toList(),
                 );
         },

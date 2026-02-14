@@ -6,7 +6,7 @@ import 'package:namida/core/utils.dart';
 
 class LibraryItemMap {
   LibraryItemMap()
-      : _rxMap = LinkedHashMap<String, List<Track>>(equals: (item1, item2) => item1.toLowerCase() == item2.toLowerCase(), hashCode: (p0) => p0.toLowerCase().hashCode).obs;
+    : _rxMap = LinkedHashMap<String, List<Track>>(equals: (item1, item2) => item1.toLowerCase() == item2.toLowerCase(), hashCode: (p0) => p0.toLowerCase().hashCode).obs;
 
   RxBaseCore<LinkedHashMap<String, List<Track>>> get rx => _rxMap;
 

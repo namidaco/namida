@@ -30,16 +30,18 @@ class _WindowManagerDesktop extends NamidaWindowManager {
       windowManager.addListener(_NamidaWindowListener());
     }
 
-    screenRetriever.addListener(_CustomScreenListener(
-      listener: (_) async {
-        // display-removed or display-added
-        final bounds = await windowManager.getBounds();
-        final shiftedBounds = await _ensureBoundsWithinScreenSizeShift(bounds);
-        if (bounds != shiftedBounds) {
-          await windowManager.setBounds(shiftedBounds);
-        }
-      },
-    ));
+    screenRetriever.addListener(
+      _CustomScreenListener(
+        listener: (_) async {
+          // display-removed or display-added
+          final bounds = await windowManager.getBounds();
+          final shiftedBounds = await _ensureBoundsWithinScreenSizeShift(bounds);
+          if (bounds != shiftedBounds) {
+            await windowManager.setBounds(shiftedBounds);
+          }
+        },
+      ),
+    );
   }
 
   @override

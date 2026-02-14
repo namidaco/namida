@@ -420,7 +420,8 @@ class _FolderNode<T extends Folder, E extends Track> {
     final mainInMap = children[folder];
     if (mainInMap != null) return current;
 
-    final res = folder.performInbetweenFoldersBuild(
+    final res =
+        folder.performInbetweenFoldersBuild(
           (f) {
             final newNode = current.children[f];
             if (newNode == null) return current;

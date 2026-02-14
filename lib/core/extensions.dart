@@ -504,10 +504,12 @@ extension TRACKPLAYMODE on TrackPlayMode {
 
   List<Track> generateQueue(Track trackPre, {List<Track>? searchQueue}) {
     final track = trackPre.toTrackExt();
-    final queue = switch (this) {
+    final queue =
+        switch (this) {
           TrackPlayMode.selectedTrack => [trackPre],
-          TrackPlayMode.searchResults => searchQueue ??
-              (SearchSortController.inst.trackSearchTemp.value.isNotEmpty ? SearchSortController.inst.trackSearchTemp.value : SearchSortController.inst.trackSearchList.value),
+          TrackPlayMode.searchResults =>
+            searchQueue ??
+                (SearchSortController.inst.trackSearchTemp.value.isNotEmpty ? SearchSortController.inst.trackSearchTemp.value : SearchSortController.inst.trackSearchList.value),
           TrackPlayMode.trackAlbum => track.albumIdentifier.getAlbumTracks(),
           TrackPlayMode.trackArtist => track.artistsList.firstOrNull?.getArtistTracks(),
           TrackPlayMode.trackGenre => track.artistsList.firstOrNull?.getGenresTracks(),
@@ -1093,12 +1095,14 @@ extension DirectoryIndexUtils on List<DirectoryIndex> {
 
 extension DirectoryIndexServerUtils on Iterable<DirectoryIndexServer> {
   String toBodyText({bool? Function(DirectoryIndexServer d)? stillExistsCallback}) {
-    return this.map((e) {
-      final type = e.type.toText();
-      final title = [type, e.username ?? '?'].joinText(separator: ' - ');
-      final stillExists = stillExistsCallback?.call(e) ?? true;
-      final removedText = stillExists ? '' : ' (${lang.REMOVED})';
-      return "$title$removedText:\n${e.source}";
-    }).join('\n\n');
+    return this
+        .map((e) {
+          final type = e.type.toText();
+          final title = [type, e.username ?? '?'].joinText(separator: ' - ');
+          final stillExists = stillExistsCallback?.call(e) ?? true;
+          final removedText = stillExists ? '' : ' (${lang.REMOVED})';
+          return "$title$removedText:\n${e.source}";
+        })
+        .join('\n\n');
   }
 }

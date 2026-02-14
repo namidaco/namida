@@ -20,7 +20,9 @@ abstract class LrcSearchUtils {
       final tr = item.track;
       return LrcSearchUtilsSelectable(tr.toTrackExt(), tr);
     } else if (item is YoutubeID) {
-      return YoutubeInfoController.utils.getVideoName(item.id).then(
+      return YoutubeInfoController.utils
+          .getVideoName(item.id)
+          .then(
             (value) => LrcSearchUtilsYoutubeID(item, value),
           );
     }

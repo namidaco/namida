@@ -215,8 +215,13 @@ class EditDeleteController {
     }
   }
 
-  Future<void> updateDirectoryInEveryPartOfNamida(String oldDir, String newDir, DirectoryIndexType? newDirType,
-      {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
+  Future<void> updateDirectoryInEveryPartOfNamida(
+    String oldDir,
+    String newDir,
+    DirectoryIndexType? newDirType, {
+    Iterable<String>? forThesePathsOnly,
+    bool ensureNewFileExists = false,
+  }) async {
     if (!settings.directoriesToScan.value.any((dir) => newDir.startsWith(dir.source))) settings.save(directoriesToScan: [DirectoryIndex.guess(newDir, newDirType)]);
     final pathSeparator = Platform.pathSeparator;
     if (!oldDir.endsWith(pathSeparator)) oldDir += pathSeparator;

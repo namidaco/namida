@@ -90,8 +90,9 @@ class VideoTilePropertiesProvider extends StatelessWidget {
               }
               final currentPlayingVideo = Player.inst.currentVideoR;
 
-              final backgroundColorPlaying =
-                  comingFromQueue || settings.autoColor.valueR ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme; // always follow track color
+              final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
+                  ? CurrentColor.inst.miniplayerColor
+                  : CurrentColor.inst.currentColorScheme; // always follow track color
 
               final properties = VideoTileProperties(
                 threeLines: threeLines,
@@ -210,10 +211,10 @@ class YTHistoryVideoCard extends YTHistoryVideoCardBase {
     super.preferFetchNewInfo,
     required super.properties,
   }) : super(
-          mainList: videos,
-          info: null,
-          itemToYTVideoId: _itemToYTVideoId,
-        );
+         mainList: videos,
+         info: null,
+         itemToYTVideoId: _itemToYTVideoId,
+       );
 
   static (String, YTWatch?) _itemToYTVideoId<T>(T e) {
     e as YoutubeID;
@@ -382,10 +383,13 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
       }(),
       () async {
         if (newVideoTitle?.isEmpty ?? true) {
-          newVideoTitle = await YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: () {
-            VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
-            newIsVideoUnavailable = true;
-          });
+          newVideoTitle = await YoutubeInfoController.utils.getVideoName(
+            videoId,
+            onMissingInfo: () {
+              VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
+              newIsVideoUnavailable = true;
+            },
+          );
         } else if (newVideoTitle?.isYTTitleFaulty() == true) {
           VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
           newIsVideoUnavailable = true;
@@ -511,7 +515,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
     }
 
     final children = [
-      if (threeLines != null) threeLines,
+      ?threeLines,
       Stack(
         alignment: Alignment.center,
         children: [
@@ -532,55 +536,56 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
                 smallBoxIcon: willSleepAfterThis
                     ? Broken.timer_1
                     : _isVideoUnavailable
-                        ? Broken.danger
-                        : null,
+                    ? Broken.danger
+                    : null,
                 reduceInitialFlashes: configs.draggingEnabled,
                 forceSquared: true, // -- if false, low quality images with black bars would appear
               ),
             ),
           ),
-          if (draggingThumbWidget != null) draggingThumbWidget
+          ?draggingThumbWidget,
         ],
       ),
       const SizedBox(width: 8.0),
       Expanded(
         child: Padding(
-            padding: widget.minimalCard ? const EdgeInsets.fromLTRB(4.0, 0, 4.0, 4.0) : EdgeInsets.zero,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          padding: widget.minimalCard ? const EdgeInsets.fromLTRB(4.0, 0, 4.0, 4.0) : EdgeInsets.zero,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                videoTitle ?? videoId,
+                maxLines: widget.minimalCard && (displayVideoChannel || displayDateText) ? 1 : 2,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.displayMedium?.copyWith(
+                  fontSize: widget.minimalCard ? 12.0 * widget.minimalCardFontMultiplier : null,
+                  color: itemsColor7,
+                ),
+              ),
+              if (displayVideoChannel)
                 Text(
-                  videoTitle ?? videoId,
-                  maxLines: widget.minimalCard && (displayVideoChannel || displayDateText) ? 1 : 2,
+                  videoChannel,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: textTheme.displayMedium?.copyWith(
-                    fontSize: widget.minimalCard ? 12.0 * widget.minimalCardFontMultiplier : null,
-                    color: itemsColor7,
+                  style: textTheme.displaySmall?.copyWith(
+                    fontSize: widget.minimalCard ? 11.5 * widget.minimalCardFontMultiplier : null,
+                    color: itemsColor6,
                   ),
                 ),
-                if (displayVideoChannel)
-                  Text(
-                    videoChannel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.displaySmall?.copyWith(
-                      fontSize: widget.minimalCard ? 11.5 * widget.minimalCardFontMultiplier : null,
-                      color: itemsColor6,
-                    ),
+              if (displayDateText)
+                Text(
+                  dateText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.displaySmall?.copyWith(
+                    fontSize: widget.minimalCard ? 11.0 * widget.minimalCardFontMultiplier : null,
+                    color: itemsColor5,
                   ),
-                if (displayDateText)
-                  Text(
-                    dateText,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.displaySmall?.copyWith(
-                      fontSize: widget.minimalCard ? 11.0 * widget.minimalCardFontMultiplier : null,
-                      color: itemsColor5,
-                    ),
-                  ),
-              ],
-            )),
+                ),
+            ],
+          ),
+        ),
       ),
       const SizedBox(width: 6.0 + 12.0), // right + iconWidth
       const SizedBox(width: 8.0),
@@ -589,7 +594,8 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
     final borderRadiusRawValue = widget.minimalCard ? YTHistoryVideoCardBase.kDefaultBorderRadiusMinimalCard : YTHistoryVideoCardBase.kDefaultBorderRadius;
 
     BoxDecoration decoration;
-    final bgColor = widget.bgColor ??
+    final bgColor =
+        widget.bgColor ??
         (isCurrentlyPlaying
             ? (widget.properties.comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme).withAlpha(140)
             : (theme.cardColor.withValues(alpha: widget.cardColorOpacity)));
@@ -638,7 +644,8 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
         animationDurationMS: 300,
         borderRadius: borderRadiusRawValue,
         width: widget.minimalCard ? thumbWidth : null,
-        onTap: widget.onTap ??
+        onTap:
+            widget.onTap ??
             () {
               YTUtils.expandMiniplayer();
               if (widget.properties.comingFromQueue) {

@@ -143,7 +143,7 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                                   if (widget.displayloadingIndicator) ...[
                                     const SizedBox(width: 8.0),
                                     const LoadingIndicator(),
-                                  ]
+                                  ],
                                 ],
                               ),
                             ),
@@ -263,10 +263,11 @@ class SortByMenu extends StatelessWidget {
           style: const ButtonStyle(
             visualDensity: VisualDensity.compact,
           ),
-          onPressed: onSortTap ??
+          onPressed:
+              onSortTap ??
               () => NamidaPopupWrapper(
-                    children: () => popupMenuChild?.children(context) ?? [],
-                  ).showPopupMenu(context),
+                children: () => popupMenuChild?.children(context) ?? [],
+              ).showPopupMenu(context),
           child: NamidaButtonText(title, style: const TextStyle(fontSize: 14.5)),
         ),
         NamidaIconButton(
@@ -274,7 +275,7 @@ class SortByMenu extends StatelessWidget {
           icon: isCurrentlyReversed ? Broken.arrow_up_3 : Broken.arrow_down_2,
           iconSize: 20.0,
           onPressed: onReverseIconTap,
-        )
+        ),
       ],
     );
   }
@@ -291,13 +292,13 @@ class ChangeGridCountWidget extends StatelessWidget {
   });
 
   IconData _resolveIcon(int count) => switch (count) {
-        1 => Broken.row_vertical,
-        2 => forStaggered ? Broken.grid_3 : Broken.grid_2,
-        3 => Broken.grid_8,
-        4 => Broken.grid_1,
-        < 0 => Broken.autobrightness,
-        _ => Broken.grid_1,
-      };
+    1 => Broken.row_vertical,
+    2 => forStaggered ? Broken.grid_3 : Broken.grid_2,
+    3 => Broken.grid_8,
+    4 => Broken.grid_1,
+    < 0 => Broken.autobrightness,
+    _ => Broken.grid_1,
+  };
 
   void _onTap(CountPerRow? count) {
     if (count != null) {

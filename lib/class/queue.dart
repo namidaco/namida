@@ -21,7 +21,8 @@ class Queue {
   /// // Converts empty queue to AllTracksList.
   /// BREAKING(>v2.5.6): no longer reads empty queue as allTracks.
   factory Queue.fromJson(Map<String, dynamic> json) {
-    final finalTracks = (json['tracks'] as List?)?.map((e) {
+    final finalTracks =
+        (json['tracks'] as List?)?.map((e) {
           if (e is Map) {
             return Track.fromJson(e['t'] as String, isVideo: e['v'] == true);
           }

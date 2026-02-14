@@ -41,7 +41,7 @@ class _DotsTriangleState extends State<DotsTriangle> with SingleTickerProviderSt
 
     return AnimatedBuilder(
       animation: _animationController,
-      builder: (_, __) => SizedBox(
+      builder: (_, _) => SizedBox(
         width: size,
         height: size,
         child: Center(
@@ -164,14 +164,15 @@ class BuildSides extends StatelessWidget {
     final Widget firstChild = Visibility(
       visible: forward ? controller.value <= middleInterval : controller.value >= middleInterval,
       child: Transform.translate(
-        offset: Tween<Offset>(
-          begin: forward ? Offset.zero : Offset(offset, 0),
-          end: forward ? Offset(offset, 0) : Offset.zero,
-        )
-            .animate(
-              forward ? leftCurvedAnimation : rightCurvedAnimation,
-            )
-            .value,
+        offset:
+            Tween<Offset>(
+                  begin: forward ? Offset.zero : Offset(offset, 0),
+                  end: forward ? Offset(offset, 0) : Offset.zero,
+                )
+                .animate(
+                  forward ? leftCurvedAnimation : rightCurvedAnimation,
+                )
+                .value,
         child: RoundedRectangle.horizontal(
           width: Tween<double>(begin: forward ? depth : maxLength, end: forward ? maxLength : depth)
               .animate(
@@ -187,14 +188,15 @@ class BuildSides extends StatelessWidget {
     final Widget secondChild = Visibility(
       visible: forward ? controller.value >= middleInterval : controller.value <= middleInterval,
       child: Transform.translate(
-        offset: Tween<Offset>(
-          begin: forward ? Offset(-offset, 0) : Offset.zero,
-          end: forward ? Offset.zero : Offset(-offset, 0),
-        )
-            .animate(
-              forward ? rightCurvedAnimation : leftCurvedAnimation,
-            )
-            .value,
+        offset:
+            Tween<Offset>(
+                  begin: forward ? Offset(-offset, 0) : Offset.zero,
+                  end: forward ? Offset.zero : Offset(-offset, 0),
+                )
+                .animate(
+                  forward ? rightCurvedAnimation : leftCurvedAnimation,
+                )
+                .value,
         child: RoundedRectangle.horizontal(
           width: Tween<double>(begin: forward ? maxLength : depth, end: forward ? depth : maxLength)
               .animate(

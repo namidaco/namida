@@ -91,200 +91,201 @@ void showListensDialog({
     },
     lighterDialogColor: false,
     dialog: ObxO(
-        rx: color,
-        builder: (context, dialogColor) {
-          final theme = AppThemes.inst.getAppTheme(dialogColor, null, false);
-          return AnimatedThemeOrTheme(
-            data: theme,
-            child: CustomBlurryDialog(
-              theme: theme,
-              normalTitleStyle: true,
-              title: lang.TOTAL_LISTENS,
-              titleWidgetInPadding: Row(
-                children: [
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(minWidth: 24.0),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                        child: Text(
-                          '${datesOfListen.length}',
-                          style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
-                          textAlign: TextAlign.center,
-                        ),
+      rx: color,
+      builder: (context, dialogColor) {
+        final theme = AppThemes.inst.getAppTheme(dialogColor, null, false);
+        return AnimatedThemeOrTheme(
+          data: theme,
+          child: CustomBlurryDialog(
+            theme: theme,
+            normalTitleStyle: true,
+            title: lang.TOTAL_LISTENS,
+            titleWidgetInPadding: Row(
+              children: [
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 24.0),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                      color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                      child: Text(
+                        '${datesOfListen.length}',
+                        style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12.0),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        lang.TOTAL_LISTENS,
+                        style: theme.textTheme.displayLarge,
+                      ),
+                      if (subtitle != null && subtitle.isNotEmpty)
                         Text(
-                          lang.TOTAL_LISTENS,
-                          style: theme.textTheme.displayLarge,
+                          subtitle,
+                          style: theme.textTheme.displaySmall,
                         ),
-                        if (subtitle != null && subtitle.isNotEmpty)
-                          Text(
-                            subtitle,
-                            style: theme.textTheme.displaySmall,
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 8.0),
-                  ObxO(
-                    rx: settings.heatmapListensView,
-                    builder: (context, heatmapListensView) => Row(
-                      children: [
-                        if (!heatmapListensView)
-                          ObxO(
-                            rx: settings.reverseListensView,
-                            builder: (context, reverseListensView) => NamidaIconButton(
-                              horizontalPadding: 6.0,
-                              icon: reverseListensView ? Broken.arrow_up_3 : Broken.arrow_down_2,
-                              iconSize: 20.0,
-                              onPressed: () => settings.save(reverseListensView: !settings.reverseListensView.value),
-                            ),
+                ),
+                const SizedBox(width: 8.0),
+                ObxO(
+                  rx: settings.heatmapListensView,
+                  builder: (context, heatmapListensView) => Row(
+                    children: [
+                      if (!heatmapListensView)
+                        ObxO(
+                          rx: settings.reverseListensView,
+                          builder: (context, reverseListensView) => NamidaIconButton(
+                            horizontalPadding: 6.0,
+                            icon: reverseListensView ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                            iconSize: 20.0,
+                            onPressed: () => settings.save(reverseListensView: !settings.reverseListensView.value),
                           ),
-                        NamidaIconButton(
-                          horizontalPadding: 6.0,
-                          icon: heatmapListensView ? Broken.row_vertical : Broken.calendar_1,
-                          iconSize: heatmapListensView ? 18.0 : 20.0,
-                          onPressed: () => settings.save(heatmapListensView: !settings.heatmapListensView.value),
                         ),
-                      ],
-                    ),
+                      NamidaIconButton(
+                        horizontalPadding: 6.0,
+                        icon: heatmapListensView ? Broken.row_vertical : Broken.calendar_1,
+                        iconSize: heatmapListensView ? 18.0 : 20.0,
+                        onPressed: () => settings.save(heatmapListensView: !settings.heatmapListensView.value),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: SizedBox(
-                height: namida.height * 0.5,
-                width: namida.width,
-                child: ObxO(
-                  rx: settings.reverseListensView,
-                  builder: (context, reverseListensView) => ObxO(
-                    rx: settings.heatmapListensView,
-                    builder: (context, heatmapListensView) {
-                      if (heatmapListensView) {
-                        initializeDatesCalendarMapIfNeccessary();
-                        return Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: PagedVerticalCalendar(
-                            minDate: firstListen.subtract(const Duration(days: 8)),
-                            maxDate: lastListen.add(const Duration(days: 8)),
-                            initialDate: lastListen,
-                            invisibleMonthsThreshold: 3,
-                            startWeekWithSunday: true,
-                            onDayPressed: (value) => datesMapByDay[value] == null ? null : () => onListenTap(value.millisecondsSinceEpoch),
-                            monthBuilder: (context, month, year) {
-                              final monthDate = DateTime(year, month);
-                              final monthListens = datesMapByMonth[monthDate]?.length ?? 0;
-                              final monthListensText = monthListens > 0 ? ' ($monthListens)' : '';
-                              final dots = (monthListens / 5).ceil();
-                              final monthsDateFormatted = DateFormat('MMMM yyyy').format(monthDate);
-                              final monthsAgo = TimeAgoController.dateFromNow(monthDate);
-                              return Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Column(
-                                  children: [
-                                    SmoothSingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: List.filled(
-                                          dots,
-                                          Padding(
-                                            padding: const EdgeInsets.all(2.0),
-                                            child: CircleAvatar(
-                                              backgroundColor: dialogColor,
-                                              maxRadius: 5.0,
-                                              minRadius: 2.0,
-                                            ),
+                ),
+              ],
+            ),
+            child: SizedBox(
+              height: namida.height * 0.5,
+              width: namida.width,
+              child: ObxO(
+                rx: settings.reverseListensView,
+                builder: (context, reverseListensView) => ObxO(
+                  rx: settings.heatmapListensView,
+                  builder: (context, heatmapListensView) {
+                    if (heatmapListensView) {
+                      initializeDatesCalendarMapIfNeccessary();
+                      return Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: PagedVerticalCalendar(
+                          minDate: firstListen.subtract(const Duration(days: 8)),
+                          maxDate: lastListen.add(const Duration(days: 8)),
+                          initialDate: lastListen,
+                          invisibleMonthsThreshold: 3,
+                          startWeekWithSunday: true,
+                          onDayPressed: (value) => datesMapByDay[value] == null ? null : () => onListenTap(value.millisecondsSinceEpoch),
+                          monthBuilder: (context, month, year) {
+                            final monthDate = DateTime(year, month);
+                            final monthListens = datesMapByMonth[monthDate]?.length ?? 0;
+                            final monthListensText = monthListens > 0 ? ' ($monthListens)' : '';
+                            final dots = (monthListens / 5).ceil();
+                            final monthsDateFormatted = DateFormat('MMMM yyyy').format(monthDate);
+                            final monthsAgo = TimeAgoController.dateFromNow(monthDate);
+                            return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                children: [
+                                  SmoothSingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: List.filled(
+                                        dots,
+                                        Padding(
+                                          padding: const EdgeInsets.all(2.0),
+                                          child: CircleAvatar(
+                                            backgroundColor: dialogColor,
+                                            maxRadius: 5.0,
+                                            minRadius: 2.0,
                                           ),
                                         ),
                                       ),
                                     ),
-                                    Text(
-                                      monthsDateFormatted,
-                                      style: theme.textTheme.titleLarge,
-                                    ),
-                                    Text(
-                                      '$monthsAgo$monthListensText',
-                                      style: theme.textTheme.displaySmall,
-                                    ),
+                                  ),
+                                  Text(
+                                    monthsDateFormatted,
+                                    style: theme.textTheme.titleLarge,
+                                  ),
+                                  Text(
+                                    '$monthsAgo$monthListensText',
+                                    style: theme.textTheme.displaySmall,
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          dayBuilder: (context, date) {
+                            final isToday = date.toDaysSince1970() == DateTime.now().toDaysSince1970();
+                            final listens = datesMapByDay[date]?.length ?? 0;
+                            return NamidaInkWell(
+                              decoration: BoxDecoration(border: isToday ? Border.all(color: dialogColor) : null),
+                              margin: const EdgeInsets.all(2.0),
+                              bgColor: dialogColor.withAlpha((listens * 5).clampInt(0, 255)), // *5 since 50 listens a days is already a lot
+                              borderRadius: 6.0,
+                              onTap: datesMapByDay[date] == null ? null : () => onListenTap(date.millisecondsSinceEpoch),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text("${date.day}", style: theme.textTheme.displaySmall),
+                                  if (listens > 0) ...[
+                                    const SizedBox(height: 2.0),
+                                    Text("$listens", style: theme.textTheme.displaySmall?.copyWith(fontSize: 9.0)),
                                   ],
-                                ),
-                              );
-                            },
-                            dayBuilder: (context, date) {
-                              final isToday = date.toDaysSince1970() == DateTime.now().toDaysSince1970();
-                              final listens = datesMapByDay[date]?.length ?? 0;
-                              return NamidaInkWell(
-                                decoration: BoxDecoration(border: isToday ? Border.all(color: dialogColor) : null),
-                                margin: const EdgeInsets.all(2.0),
-                                bgColor: dialogColor.withAlpha((listens * 5).clampInt(0, 255)), // *5 since 50 listens a days is already a lot
-                                borderRadius: 6.0,
-                                onTap: datesMapByDay[date] == null ? null : () => onListenTap(date.millisecondsSinceEpoch),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text("${date.day}", style: theme.textTheme.displaySmall),
-                                    if (listens > 0) ...[
-                                      const SizedBox(height: 2.0),
-                                      Text("$listens", style: theme.textTheme.displaySmall?.copyWith(fontSize: 9.0)),
-                                    ]
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      } else {
-                        return NamidaListView(
-                          listBottomPadding: 0,
-                          itemBuilder: (context, indexPre) {
-                            final i = reverseListensView ? datesOfListen.length - indexPre - 1 : indexPre;
-                            final t = datesOfListen[i];
-                            return SmallListTile(
-                              key: ValueKey(i),
-                              borderRadius: 14.0,
-                              title: t.dateAndClockFormattedOriginal,
-                              subtitle: TimeAgoController.dateMSSEFromNow(t),
-                              leading: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                  color: theme.cardColor,
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
-                                  child: ConstrainedBox(
-                                    constraints: const BoxConstraints(minWidth: 8.0),
-                                    child: Text(
-                                      (i + 1).toString(),
-                                      textAlign: TextAlign.center,
-                                    ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    } else {
+                      return NamidaListView(
+                        listBottomPadding: 0,
+                        itemBuilder: (context, indexPre) {
+                          final i = reverseListensView ? datesOfListen.length - indexPre - 1 : indexPre;
+                          final t = datesOfListen[i];
+                          return SmallListTile(
+                            key: ValueKey(i),
+                            borderRadius: 14.0,
+                            title: t.dateAndClockFormattedOriginal,
+                            subtitle: TimeAgoController.dateMSSEFromNow(t),
+                            leading: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                color: theme.cardColor,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(minWidth: 8.0),
+                                  child: Text(
+                                    (i + 1).toString(),
+                                    textAlign: TextAlign.center,
                                   ),
                                 ),
                               ),
-                              onTap: () => onListenTap(t),
-                            );
-                          },
-                          itemCount: datesOfListen.length,
-                          itemExtent: null,
-                        );
-                      }
-                    },
-                  ),
+                            ),
+                            onTap: () => onListenTap(t),
+                          );
+                        },
+                        itemCount: datesOfListen.length,
+                        itemExtent: null,
+                      );
+                    }
+                  },
                 ),
               ),
             ),
-          );
-        }),
+          ),
+        );
+      },
+    ),
   );
 }

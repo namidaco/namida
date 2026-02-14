@@ -47,10 +47,14 @@ enum _YoutubeSettingKeys with SettingKeysBase {
   dimIntensity,
   downloadsMetadataTags,
   downloadLocation,
-  downloadNotifications(NamidaFeaturesAvailablityGroup(items: [
-    NamidaFeaturesAvailablity.windows,
-    NamidaFeaturesAvailablity.linux,
-  ])),
+  downloadNotifications(
+    NamidaFeaturesAvailablityGroup(
+      items: [
+        NamidaFeaturesAvailablity.windows,
+        NamidaFeaturesAvailablity.linux,
+      ],
+    ),
+  ),
   onOpeningYTLink,
   seekbar,
   ;
@@ -68,28 +72,28 @@ class YoutubeSettings extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-        _YoutubeSettingKeys.manageYourAccounts: [lang.MANAGE_YOUR_ACCOUNTS],
-        _YoutubeSettingKeys.sponsorBlock: [lang.SPONSORBLOCK, lang.SKIP_SPONSOR_SEGMENTS_IN_VIDEOS],
-        _YoutubeSettingKeys.ryd: [lang.RETURN_YOUTUBE_DISLIKE],
-        _YoutubeSettingKeys.youtubeStyleMiniplayer: [lang.YOUTUBE_STYLE_MINIPLAYER],
-        _YoutubeSettingKeys.rememberAudioOnly: [lang.REMEMBER_AUDIO_ONLY_MODE],
-        _YoutubeSettingKeys.showShortsIn: [lang.SHOW_SHORT_VIDEOS_IN],
-        _YoutubeSettingKeys.showMixesIn: [lang.SHOW_MIX_PLAYLISTS_IN],
-        _YoutubeSettingKeys.topComments: [lang.TOP_COMMENTS, lang.TOP_COMMENTS_SUBTITLE],
-        _YoutubeSettingKeys.preferNewComments: [lang.YT_PREFER_NEW_COMMENTS, lang.YT_PREFER_NEW_COMMENTS_SUBTITLE],
-        _YoutubeSettingKeys.showChannelWatermarkFullscreen: [lang.SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN],
-        _YoutubeSettingKeys.showVideoEndcards: [lang.SHOW_VIDEO_ENDCARDS],
-        _YoutubeSettingKeys.autoStartRadio: [lang.AUTO_START_RADIO, lang.AUTO_START_RADIO_SUBTITLE],
-        _YoutubeSettingKeys.personalizedRelatedVideos: [lang.PERSONALIZED_RELATED_VIDEOS, lang.PERSONALIZED_RELATED_VIDEOS_SUBTITLE],
-        _YoutubeSettingKeys.searchCleanup: [lang.ENABLE_SEARCH_CLEANUP],
-        _YoutubeSettingKeys.dimMiniplayerAfter: [lang.DIM_MINIPLAYER_AFTER_SECONDS],
-        _YoutubeSettingKeys.dimIntensity: [lang.DIM_INTENSITY],
-        _YoutubeSettingKeys.seekbar: [lang.SEEKBAR, lang.TAP_TO_SEEK, lang.DRAG_TO_SEEK],
-        _YoutubeSettingKeys.downloadsMetadataTags: [lang.DOWNLOADS_METADATA_TAGS, lang.DOWNLOADS_METADATA_TAGS_SUBTITLE],
-        _YoutubeSettingKeys.downloadLocation: [lang.DEFAULT_DOWNLOAD_LOCATION],
-        _YoutubeSettingKeys.downloadNotifications: [lang.NOTIFICATIONS, lang.DOWNLOADS],
-        _YoutubeSettingKeys.onOpeningYTLink: [lang.ON_OPENING_YOUTUBE_LINK],
-      };
+    _YoutubeSettingKeys.manageYourAccounts: [lang.MANAGE_YOUR_ACCOUNTS],
+    _YoutubeSettingKeys.sponsorBlock: [lang.SPONSORBLOCK, lang.SKIP_SPONSOR_SEGMENTS_IN_VIDEOS],
+    _YoutubeSettingKeys.ryd: [lang.RETURN_YOUTUBE_DISLIKE],
+    _YoutubeSettingKeys.youtubeStyleMiniplayer: [lang.YOUTUBE_STYLE_MINIPLAYER],
+    _YoutubeSettingKeys.rememberAudioOnly: [lang.REMEMBER_AUDIO_ONLY_MODE],
+    _YoutubeSettingKeys.showShortsIn: [lang.SHOW_SHORT_VIDEOS_IN],
+    _YoutubeSettingKeys.showMixesIn: [lang.SHOW_MIX_PLAYLISTS_IN],
+    _YoutubeSettingKeys.topComments: [lang.TOP_COMMENTS, lang.TOP_COMMENTS_SUBTITLE],
+    _YoutubeSettingKeys.preferNewComments: [lang.YT_PREFER_NEW_COMMENTS, lang.YT_PREFER_NEW_COMMENTS_SUBTITLE],
+    _YoutubeSettingKeys.showChannelWatermarkFullscreen: [lang.SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN],
+    _YoutubeSettingKeys.showVideoEndcards: [lang.SHOW_VIDEO_ENDCARDS],
+    _YoutubeSettingKeys.autoStartRadio: [lang.AUTO_START_RADIO, lang.AUTO_START_RADIO_SUBTITLE],
+    _YoutubeSettingKeys.personalizedRelatedVideos: [lang.PERSONALIZED_RELATED_VIDEOS, lang.PERSONALIZED_RELATED_VIDEOS_SUBTITLE],
+    _YoutubeSettingKeys.searchCleanup: [lang.ENABLE_SEARCH_CLEANUP],
+    _YoutubeSettingKeys.dimMiniplayerAfter: [lang.DIM_MINIPLAYER_AFTER_SECONDS],
+    _YoutubeSettingKeys.dimIntensity: [lang.DIM_INTENSITY],
+    _YoutubeSettingKeys.seekbar: [lang.SEEKBAR, lang.TAP_TO_SEEK, lang.DRAG_TO_SEEK],
+    _YoutubeSettingKeys.downloadsMetadataTags: [lang.DOWNLOADS_METADATA_TAGS, lang.DOWNLOADS_METADATA_TAGS_SUBTITLE],
+    _YoutubeSettingKeys.downloadLocation: [lang.DEFAULT_DOWNLOAD_LOCATION],
+    _YoutubeSettingKeys.downloadNotifications: [lang.NOTIFICATIONS, lang.DOWNLOADS],
+    _YoutubeSettingKeys.onOpeningYTLink: [lang.ON_OPENING_YOUTUBE_LINK],
+  };
 
   void _showYTFlagsDialog() {
     NamidaNavigator.inst.navigateDialog(
@@ -452,11 +456,11 @@ class YoutubeSettings extends SettingSubpageProvider {
                   title: valInSet == 0
                       ? lang.ALWAYS_DIM
                       : valInSet <= -1
-                          ? lang.DONT_DIM
-                          : lang.DIM_MINIPLAYER_AFTER_SECONDS.replaceFirst(
-                              '_SECONDS_',
-                              "$valInSet",
-                            ),
+                      ? lang.DONT_DIM
+                      : lang.DIM_MINIPLAYER_AFTER_SECONDS.replaceFirst(
+                          '_SECONDS_',
+                          "$valInSet",
+                        ),
                   trailing: NamidaWheelSlider(
                     max: 120,
                     initValue: valInSet,
@@ -522,7 +526,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                           ),
                         );
                       },
-                    )
+                    ),
                   ],
                 ),
                 title: lang.DIM_INTENSITY,
@@ -754,7 +758,7 @@ class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
                     NamidaButton(
                       text: lang.DONE,
                       onPressed: NamidaNavigator.inst.closeDialog,
-                    )
+                    ),
                   ],
                   child: ObxO(
                     rx: activeMapRx,
@@ -812,49 +816,49 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
   }
 
   List<NamidaPopupItem> get _innertubeChildren => [
-        NamidaPopupItem(
-          icon: Broken.video_horizontal,
-          title: lang.DEFAULT,
-          onTap: () {
-            setState(() => settings.youtube.save(setDefaultInnertubeClient: true));
-          },
-        ),
-        ...InnertubeClients.values.map(
-          (e) => NamidaPopupItem(
-            icon: Broken.video_octagon,
-            title: e.name,
-            onTap: () {
-              setState(() => settings.youtube.save(innertubeClient: e));
-            },
-          ),
-        ),
-      ];
+    NamidaPopupItem(
+      icon: Broken.video_horizontal,
+      title: lang.DEFAULT,
+      onTap: () {
+        setState(() => settings.youtube.save(setDefaultInnertubeClient: true));
+      },
+    ),
+    ...InnertubeClients.values.map(
+      (e) => NamidaPopupItem(
+        icon: Broken.video_octagon,
+        title: e.name,
+        onTap: () {
+          setState(() => settings.youtube.save(innertubeClient: e));
+        },
+      ),
+    ),
+  ];
 
   static List<NamidaPopupItem> _dataSaverChildren([void Function()? onSave]) => [
-        ...DataSaverMode.values.map(
-          (e) => NamidaPopupItem(
-            icon: Broken.cd,
-            title: e.toText(),
-            onTap: () {
-              settings.youtube.save(dataSaverMode: e);
-              onSave?.call();
-            },
-          ),
-        ),
-      ];
+    ...DataSaverMode.values.map(
+      (e) => NamidaPopupItem(
+        icon: Broken.cd,
+        title: e.toText(),
+        onTap: () {
+          settings.youtube.save(dataSaverMode: e);
+          onSave?.call();
+        },
+      ),
+    ),
+  ];
 
   static List<NamidaPopupItem> _dataSaverMobileChildren([void Function()? onSave]) => [
-        ...DataSaverMode.values.map(
-          (e) => NamidaPopupItem(
-            icon: Broken.cd,
-            title: e.toText(),
-            onTap: () {
-              settings.youtube.save(dataSaverModeMobile: e);
-              onSave?.call();
-            },
-          ),
-        ),
-      ];
+    ...DataSaverMode.values.map(
+      (e) => NamidaPopupItem(
+        icon: Broken.cd,
+        title: e.toText(),
+        onTap: () {
+          settings.youtube.save(dataSaverModeMobile: e);
+          onSave?.call();
+        },
+      ),
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -997,12 +1001,12 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                 trailingText: maxPageCacheDurationMin < 0
                     ? 'always valid'
                     : maxPageCacheDurationMin > settings.youtube.kMinutesInMaxDaysForPageCache
-                        ? 'always invalid'
-                        : maxPageCacheDurationMin > 24 * 60
-                            ? '${(maxPageCacheDurationMin / 24 / 60).toStringAsFixed(1)} days'
-                            : maxPageCacheDurationMin > 60
-                                ? '${(maxPageCacheDurationMin / 60).toStringAsFixed(1)} hours'
-                                : '$maxPageCacheDurationMin min',
+                    ? 'always invalid'
+                    : maxPageCacheDurationMin > 24 * 60
+                    ? '${(maxPageCacheDurationMin / 24 / 60).toStringAsFixed(1)} days'
+                    : maxPageCacheDurationMin > 60
+                    ? '${(maxPageCacheDurationMin / 60).toStringAsFixed(1)} hours'
+                    : '$maxPageCacheDurationMin min',
               ),
               CustomListTile(
                 leading: StackedIcon(
@@ -1047,7 +1051,8 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                             final total = totalAndActual.$1;
                             final actual = totalAndActual.$2;
                             snackyy(
-                                message: '${lang.TOTAL_TRACKS.capitalizeFirst()}: ${total.displayTrackKeyword} | ${lang.ADDED.capitalizeFirst()}: ${actual.displayTrackKeyword}');
+                              message: '${lang.TOTAL_TRACKS.capitalizeFirst()}: ${total.displayTrackKeyword} | ${lang.ADDED.capitalizeFirst()}: ${actual.displayTrackKeyword}',
+                            );
                           },
                         ),
                       ],
@@ -1120,12 +1125,12 @@ class _MaxPageCacheDurationDialogState extends State<_MaxPageCacheDurationDialog
             final minutesTotal = daysRx.value > _MaxPageCacheDurationDialogState.maxDays
                 ? settings.youtube.kMinutesInMaxDaysForPageCache + 1
                 : minutesRx.value < 0
-                    ? -1
-                    : (minutesRx.value) + (hoursRx.value * 60) + (daysRx.value * 60 * 24);
+                ? -1
+                : (minutesRx.value) + (hoursRx.value * 60) + (daysRx.value * 60 * 24);
             widget.onSave(minutesTotal);
             NamidaNavigator.inst.closeDialog();
           },
-        )
+        ),
       ],
       child: SmoothSingleChildScrollView(
         child: Column(

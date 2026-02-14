@@ -95,8 +95,8 @@ class MiniPlayerParent extends StatelessWidget {
                                 ),
                               )
                             : currentItem is Selectable
-                                ? const NamidaMiniPlayerTrack(key: Key('local_miniplayer'))
-                                : const SizedBox(key: Key('empty_miniplayer')),
+                            ? const NamidaMiniPlayerTrack(key: Key('local_miniplayer'))
+                            : const SizedBox(key: Key('empty_miniplayer')),
                       ),
               ),
             ),
@@ -167,15 +167,15 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
   const NamidaMiniPlayerTrack({super.key});
 
   static void openMenu(TrackWithDate? trackWithDate, Track track) => NamidaDialogs.inst.showTrackDialog(
-        track,
-        source: QueueSource.playerQueue,
-        heroTag: TrackTile.obtainHeroTag(trackWithDate, track, -1, true),
-      );
+    track,
+    source: QueueSource.playerQueue,
+    heroTag: TrackTile.obtainHeroTag(trackWithDate, track, -1, true),
+  );
   static void openInfoMenu(TrackWithDate? trackWithDate, Track track) => showTrackInfoDialog(
-        track,
-        true,
-        heroTag: TrackTile.obtainHeroTag(trackWithDate, track, -1, true),
-      );
+    track,
+    true,
+    heroTag: TrackTile.obtainHeroTag(trackWithDate, track, -1, true),
+  );
 
   static MiniplayerInfoData<Track, SortType> textBuilder(Playable playable) {
     String firstLine = '';
@@ -377,7 +377,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                 ),
                               ]
                             : null,
-                      )
+                      ),
                   ],
                 ),
                 maxLines: 2,
@@ -409,7 +409,10 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                 style: textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: theme.colorScheme.onSecondaryContainer),
                 children: [
                   if (videoBlockedByIcon != null) ...[
-                    TextSpan(text: " • ", style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(15.0))),
+                    TextSpan(
+                      text: " • ",
+                      style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(15.0)),
+                    ),
                     WidgetSpan(
                       child: Icon(
                         videoBlockedByIcon,
@@ -427,7 +430,10 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                     ),
                   // --
                   if (videoTotalSize > 0) ...[
-                    TextSpan(text: " • ", style: TextStyle(color: theme.colorScheme.primary, fontSize: fontSizeMultiplier(14.0))),
+                    TextSpan(
+                      text: " • ",
+                      style: TextStyle(color: theme.colorScheme.primary, fontSize: fontSizeMultiplier(14.0)),
+                    ),
                     TextSpan(
                       text: downloadedBytes == null ? videoTotalSize.fileSizeFormatted : "${downloadedBytes.fileSizeFormatted}/${videoTotalSize.fileSizeFormatted}",
                       style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(10.0)),
@@ -601,7 +607,8 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
           '',
       onTopTextTap: (currentItem) async {
         final pageChannel = YoutubeInfoController.current.currentVideoPage.value?.channelInfo;
-        final channelId = pageChannel?.id ??
+        final channelId =
+            pageChannel?.id ??
             YoutubeInfoController.current.currentYTStreams.value?.info?.channelId ?? //
             await YoutubeInfoController.utils.getVideoChannelID((currentItem as YoutubeID).id);
         if (channelId != null) YTChannelSubpage(channelID: channelId, channel: pageChannel).navigate();
@@ -672,7 +679,10 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
                   style: textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: theme.colorScheme.onSecondaryContainer),
                   children: [
                     if (stream == null && cached == null && !ConnectivityController.inst.hasConnectionR) ...[
-                      TextSpan(text: " • ", style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(15.0))),
+                      TextSpan(
+                        text: " • ",
+                        style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(15.0)),
+                      ),
                       WidgetSpan(
                         child: Icon(
                           Broken.global_refresh,
@@ -690,7 +700,10 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
                       ),
                     // --
                     if (sizeFinal > 0) ...[
-                      TextSpan(text: " • ", style: TextStyle(color: theme.colorScheme.primary, fontSize: fontSizeMultiplier(14.0))),
+                      TextSpan(
+                        text: " • ",
+                        style: TextStyle(color: theme.colorScheme.primary, fontSize: fontSizeMultiplier(14.0)),
+                      ),
                       TextSpan(
                         text: sizeFinal.fileSizeFormatted,
                         style: TextStyle(color: onSecondary, fontSize: fontSizeMultiplier(10.0)),
@@ -874,8 +887,8 @@ class _AnimatingThumnailWidget extends StatelessWidget {
                             final animatingScale = MiniPlayerController.inst.animation.value == 0
                                 ? WaveformController.inst.getCurrentAnimatingScaleMinimized(nowPlayingPosition)
                                 : shoulShowLyricsView
-                                    ? WaveformController.inst.getCurrentAnimatingScaleLyrics(nowPlayingPosition)
-                                    : WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
+                                ? WaveformController.inst.getCurrentAnimatingScaleLyrics(nowPlayingPosition)
+                                : WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
                             final finalScale = additionalScaleLRC + additionalScaleVideo + animatingScale;
                             return AnimatedScale(
                               duration: const Duration(milliseconds: 100),

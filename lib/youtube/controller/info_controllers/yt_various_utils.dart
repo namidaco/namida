@@ -103,12 +103,14 @@ class _YoutubeInfoUtils {
   }
 
   String? getVideoNameSync(String videoId, {void Function()? onMissingInfo, bool checkFromStorage = true /* am sorry every follow me */}) {
-    String? title = _tempInfoTitle[videoId]?.nullifyTitle() ??
+    String? title =
+        _tempInfoTitle[videoId]?.nullifyTitle() ??
         tempVideoInfosFromStreams[videoId]?.title.nullifyTitle(onMissingInfo) ??
         tempBackupVideoInfo[videoId]?.title.nullifyTitle(onMissingInfo);
     if (title != null || checkFromStorage == false) return title;
 
-    title = _tempInfoTitle[videoId] ??= getStreamInfoSync(videoId)?.title.nullifyTitle(onMissingInfo) ??
+    title = _tempInfoTitle[videoId] ??=
+        getStreamInfoSync(videoId)?.title.nullifyTitle(onMissingInfo) ??
         _getVideoStreamResultSync(videoId)?.info?.title.nullifyTitle(onMissingInfo) ?? //
         _getVideoPageResultSync(videoId)?.videoInfo?.title.nullifyTitle(onMissingInfo);
 
@@ -123,7 +125,8 @@ class _YoutubeInfoUtils {
   String? getVideoChannelNameSync(String videoId, {bool checkFromStorage = true}) {
     String? name = _tempInfoChannelTitle[videoId] ?? tempVideoInfosFromStreams[videoId]?.channelName?.nullifyEmpty() ?? tempBackupVideoInfo[videoId]?.channel.nullifyEmpty();
     if (name != null || checkFromStorage == false) return name;
-    return _tempInfoChannelTitle[videoId] ??= getStreamInfoSync(videoId)?.channelName?.nullifyEmpty() ??
+    return _tempInfoChannelTitle[videoId] ??=
+        getStreamInfoSync(videoId)?.channelName?.nullifyEmpty() ??
         _getVideoStreamResultSync(videoId)?.info?.channelName?.nullifyEmpty() ?? //
         _getVideoPageResultSync(videoId)?.channelInfo?.title?.nullifyEmpty() ?? //
         _getMissingInfoSync(videoId)?.channelName?.nullifyEmpty();
@@ -133,7 +136,8 @@ class _YoutubeInfoUtils {
     String? chId =
         _tempInfoChannelID[videoId] ?? tempVideoInfosFromStreams[videoId]?.channelId?.nullifyEmpty() ?? tempBackupVideoInfo[videoId]?.channelUrl.nullifyEmpty()?.splitLast('/');
     if (chId != null || checkFromStorage == false) return chId;
-    return _tempInfoChannelID[videoId] ??= getStreamInfoSync(videoId)?.channelId?.nullifyEmpty() ??
+    return _tempInfoChannelID[videoId] ??=
+        getStreamInfoSync(videoId)?.channelId?.nullifyEmpty() ??
         _getVideoStreamResultSync(videoId)?.info?.channelId?.nullifyEmpty() ?? //
         _getVideoPageResultSync(videoId)?.channelInfo?.id.nullifyEmpty() ?? //
         _getMissingInfoSync(videoId)?.channelId?.nullifyEmpty();
@@ -181,7 +185,8 @@ class _YoutubeInfoUtils {
     String? title = tempVideoInfosFromStreams[videoId]?.title.nullifyTitle(onMissingInfo) ?? tempBackupVideoInfo[videoId]?.title.nullifyTitle(onMissingInfo);
     if (title != null || checkFromStorage == false) return title;
 
-    title = _tempInfoTitle[videoId] ??= (await getStreamInfo(videoId))?.title.nullifyTitle(onMissingInfo) ??
+    title = _tempInfoTitle[videoId] ??=
+        (await getStreamInfo(videoId))?.title.nullifyTitle(onMissingInfo) ??
         (await _getVideoStreamResult(videoId))?.info?.title.nullifyTitle(onMissingInfo) ?? //
         (await _getVideoPageResult(videoId))?.videoInfo?.title.nullifyTitle(onMissingInfo);
 
@@ -195,7 +200,8 @@ class _YoutubeInfoUtils {
   }
 
   Future<String?> getVideoDescription(String videoId) async {
-    return _tempInfoDescription[videoId] ??= (await _getVideoPageResult(videoId))?.videoInfo?.description?.rawText?.nullifyEmpty() ??
+    return _tempInfoDescription[videoId] ??=
+        (await _getVideoPageResult(videoId))?.videoInfo?.description?.rawText?.nullifyEmpty() ??
         (await _getVideoStreamResult(videoId))?.info?.description?.nullifyEmpty() ??
         tempVideoInfosFromStreams[videoId]?.availableDescription?.nullifyEmpty() ??
         (await getStreamInfo(videoId))?.availableDescription?.nullifyEmpty() ?? //
@@ -205,14 +211,16 @@ class _YoutubeInfoUtils {
   Future<String?> getVideoChannelName(String videoId, {bool checkFromStorage = true}) async {
     String? name = tempVideoInfosFromStreams[videoId]?.channelName?.nullifyEmpty() ?? tempBackupVideoInfo[videoId]?.channel.nullifyEmpty();
     if (name != null || checkFromStorage == false) return name;
-    return _tempInfoChannelTitle[videoId] ??= (await getStreamInfo(videoId))?.channelName?.nullifyEmpty() ??
+    return _tempInfoChannelTitle[videoId] ??=
+        (await getStreamInfo(videoId))?.channelName?.nullifyEmpty() ??
         (await _getVideoStreamResult(videoId))?.info?.channelName?.nullifyEmpty() ?? //
         (await _getVideoPageResult(videoId))?.channelInfo?.title?.nullifyEmpty() ?? //
         (await _getMissingInfo(videoId))?.channelName?.nullifyEmpty();
   }
 
   Future<String?> getVideoChannelID(String videoId) async {
-    return _tempInfoChannelID[videoId] ??= tempVideoInfosFromStreams[videoId]?.channelId?.nullifyEmpty() ??
+    return _tempInfoChannelID[videoId] ??=
+        tempVideoInfosFromStreams[videoId]?.channelId?.nullifyEmpty() ??
         (await getStreamInfo(videoId))?.channelId?.nullifyEmpty() ??
         (await _getVideoStreamResult(videoId))?.info?.channelId?.nullifyEmpty() ?? //
         (await _getVideoPageResult(videoId))?.channelInfo?.id.nullifyEmpty() ?? //
@@ -221,7 +229,8 @@ class _YoutubeInfoUtils {
 
   Future<DateTime?> getVideoReleaseDate(String videoId) async {
     // -- we check for streams result first cuz others are approximation.
-    return _tempInfoVideoReleaseDate[videoId] ??= (await _getVideoStreamResult(videoId))?.info?.publishedAt.accurateDate ??
+    return _tempInfoVideoReleaseDate[videoId] ??=
+        (await _getVideoStreamResult(videoId))?.info?.publishedAt.accurateDate ??
         tempVideoInfosFromStreams[videoId]?.publishedAt.accurateDate ??
         (await getStreamInfo(videoId))?.publishedAt.accurateDate ?? //
         (await _getVideoPageResult(videoId))?.videoInfo?.publishedAt.accurateDate ?? //
@@ -236,7 +245,8 @@ class _YoutubeInfoUtils {
   Future<int?> getVideoDurationSeconds(String videoId) async {
     final cached = tempVideoInfosFromStreams[videoId]?.durSeconds;
     if (cached != null) return cached;
-    return _tempInfoVideoDurationSeconds[videoId] ??= (await getStreamInfo(videoId))?.durSeconds ?? //
+    return _tempInfoVideoDurationSeconds[videoId] ??=
+        (await getStreamInfo(videoId))?.durSeconds ?? //
         (await _getVideoStreamResult(videoId))?.info?.durSeconds ?? //
         (await _getMissingInfo(videoId))?.durSeconds;
   }

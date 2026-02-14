@@ -38,34 +38,34 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
   });
 
   factory FoldersPage.tracksAndVideos({Key? key}) => FoldersPage._(
-        QueueSource.folder,
-        key: key,
-        route: RouteType.PAGE_folders,
-        foldersController: FoldersController.tracksAndVideos,
-        tab: LibraryTab.folders,
-        mediaType: () => MediaType.folder,
-        config: FoldersPageConfig.tracksAndVideos(),
-      );
+    QueueSource.folder,
+    key: key,
+    route: RouteType.PAGE_folders,
+    foldersController: FoldersController.tracksAndVideos,
+    tab: LibraryTab.folders,
+    mediaType: () => MediaType.folder,
+    config: FoldersPageConfig.tracksAndVideos(),
+  );
 
   factory FoldersPage.tracks({Key? key}) => FoldersPage._(
-        QueueSource.folderMusic,
-        key: key,
-        route: RouteType.PAGE_folders_music,
-        foldersController: FoldersController.tracks,
-        tab: LibraryTab.foldersMusic,
-        mediaType: () => MediaType.folderMusic,
-        config: FoldersPageConfig.tracks(),
-      );
+    QueueSource.folderMusic,
+    key: key,
+    route: RouteType.PAGE_folders_music,
+    foldersController: FoldersController.tracks,
+    tab: LibraryTab.foldersMusic,
+    mediaType: () => MediaType.folderMusic,
+    config: FoldersPageConfig.tracks(),
+  );
 
   factory FoldersPage.videos({Key? key}) => FoldersPage._(
-        QueueSource.folderVideos,
-        key: key,
-        route: RouteType.PAGE_folders_videos,
-        foldersController: FoldersController.videos,
-        tab: LibraryTab.foldersVideos,
-        mediaType: () => MediaType.folderVideo,
-        config: FoldersPageConfig.videos(),
-      );
+    QueueSource.folderVideos,
+    key: key,
+    route: RouteType.PAGE_folders_videos,
+    foldersController: FoldersController.videos,
+    tab: LibraryTab.foldersVideos,
+    mediaType: () => MediaType.folderVideo,
+    config: FoldersPageConfig.videos(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +126,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                           onPressed: () {
                                             NamidaOnTaps.inst.onSubPageTracksSortIconTap(mediaType());
                                           },
-                                        )
+                                        ),
                                       ],
                                     ),
                                   );
@@ -190,7 +190,6 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                           ),
                         ],
                       )
-
                     // == All Folders
                     : Column(
                         children: [

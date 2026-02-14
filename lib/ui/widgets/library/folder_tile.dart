@@ -108,7 +108,7 @@ class _FolderTileState extends State<FolderTile> {
             [
               server.type.toText(),
               server.username,
-            ].join(' - ')
+            ].join(' - '),
           ].join('\n');
           final assetImagePath = server.type.toAssetImage();
           trailingWidget = assetImagePath == null
@@ -208,19 +208,19 @@ class _FolderTileState extends State<FolderTile> {
                                     forceSquared: true,
                                   )
                                 : widget.tracks.isEmpty && widget.dirInsideCount > 0
-                                    ? Icon(
-                                        Broken.folder_open,
-                                        size: thumbSize,
-                                      )
-                                    : ArtworkWidget(
-                                        key: ValueKey(widget.tracks.firstOrNull),
-                                        track: widget.tracks.firstOrNull,
-                                        blur: 3.0,
-                                        borderRadius: 5.0,
-                                        thumbnailSize: thumbSize,
-                                        path: widget.tracks.firstOrNull?.pathToImage,
-                                        forceSquared: true,
-                                      ),
+                                ? Icon(
+                                    Broken.folder_open,
+                                    size: thumbSize,
+                                  )
+                                : ArtworkWidget(
+                                    key: ValueKey(widget.tracks.firstOrNull),
+                                    track: widget.tracks.firstOrNull,
+                                    blur: 3.0,
+                                    borderRadius: 5.0,
+                                    thumbnailSize: thumbSize,
+                                    path: widget.tracks.firstOrNull?.pathToImage,
+                                    forceSquared: true,
+                                  ),
                           ),
                         ),
                       ],

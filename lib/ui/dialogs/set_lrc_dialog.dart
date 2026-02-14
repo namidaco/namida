@@ -133,7 +133,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
               updateForCurrentTrack();
               NamidaNavigator.inst.closeDialog();
             },
-          )
+          ),
         ],
         bodyText: '${lang.DELETE}: "${l.file?.path}"?',
       ),
@@ -236,7 +236,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
 
               NamidaNavigator.inst.closeDialog();
             },
-          )
+          ),
         ],
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -292,7 +292,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   final parsed = int.tryParse(value);
                   if (parsed != null) newOffset.value = parsed;
                 },
-              )
+              ),
             ],
           ),
         ),
@@ -393,7 +393,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
           NamidaButton(
             text: lang.ADD.toUpperCase(),
             onPressed: savePastedLRC,
-          )
+          ),
         ],
         trailingWidgets: [
           NamidaIconButton(
@@ -478,7 +478,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
           NamidaButton(
             text: lang.SAVE.toUpperCase(),
             onPressed: saveEditedLRC,
-          )
+          ),
         ],
         child: SizedBox(
           width: namida.width,
@@ -585,7 +585,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
               },
             );
           },
-        )
+        ),
       ],
       child: SizedBox(
         width: namida.width,
@@ -613,7 +613,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   onPressed: () {
                     searchController.text = initialSearchTextHint;
                   },
-                )
+                ),
               ],
             ),
             const SizedBox(height: 6.0),
@@ -634,8 +634,8 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                     final cacheText = l.file == null
                         ? ''
                         : l.isInCache
-                            ? lang.CACHE
-                            : lang.LOCAL;
+                        ? lang.CACHE
+                        : lang.LOCAL;
                     return Obx(
                       (context) => NamidaInkWell(
                         borderRadius: 12.0,
@@ -786,7 +786,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                         },
                                       ),
                                     ),
-                                  )
+                                  ),
                                 ],
                               ),
                             ),

@@ -96,8 +96,8 @@ Future<void> showGeneralPopupDialog(
   final trackToExtractColorFrom = tracks.isEmpty
       ? null
       : forceSingleArtwork
-          ? tracks[tracks.indexOfImage]
-          : tracks.first;
+      ? tracks[tracks.indexOfImage]
+      : tracks.first;
 
   final colorDelightened = Colors.transparent.obso;
   final iconColor = Colors.transparent.obso;
@@ -177,8 +177,8 @@ Future<void> showGeneralPopupDialog(
                   subtitle,
                   style: namida.textTheme.displaySmall?.copyWith(fontSize: 12.0),
                   maxLines: 1,
-                )
-              ]
+                ),
+              ],
             ],
           ),
         ),
@@ -386,7 +386,7 @@ Future<void> showGeneralPopupDialog(
                 },
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -484,7 +484,7 @@ Future<void> showGeneralPopupDialog(
                       icon: cleanup ? Broken.shield_cross : Broken.shield_search,
                       onPressed: () => shouldCleanUp.value = !shouldCleanUp.value,
                     ),
-                  )
+                  ),
                 ],
               ),
               const SizedBox(height: 8.0),
@@ -772,7 +772,7 @@ Future<void> showGeneralPopupDialog(
                                         color: Color.alphaBlend(colorDelightened.withAlpha(40), theme.textTheme.displayMedium!.color!),
                                       ),
                                     ),
-                                  ]
+                                  ],
                                 ],
                               ),
                             ),
@@ -882,18 +882,17 @@ Future<void> showGeneralPopupDialog(
                                     ),
                                   ),
                               ],
-                              if (openInYtViewWidget != null) openInYtViewWidget,
-                              if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
-                              if (playlistUtilsRow != null) playlistUtilsRow,
-                              if (removeQueueTile != null) removeQueueTile,
-                              if (advancedStuffListTile != null) advancedStuffListTile,
+                              ?openInYtViewWidget,
+                              ?removeFromPlaylistListTile,
+                              ?playlistUtilsRow,
+                              ?removeQueueTile,
+                              ?advancedStuffListTile,
                               const SizedBox(height: 8.0),
                             ],
                           )
                         :
-
-                        /// List Items
-                        Column(
+                          /// List Items
+                          Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               if (availableAlbums.length == 1 && albumToAddFrom == null)
@@ -951,7 +950,7 @@ Future<void> showGeneralPopupDialog(
                                           ),
                                         ),
                                       ],
-                                    )
+                                    ),
                                   ],
                                 ),
                               if (artistToAddFrom != null)
@@ -1009,7 +1008,7 @@ Future<void> showGeneralPopupDialog(
                                           ),
                                         ),
                                       ],
-                                    )
+                                    ),
                                   ],
                                 ),
 
@@ -1167,11 +1166,11 @@ Future<void> showGeneralPopupDialog(
                                     : null,
                               ),
                               // --- Advanced dialog
-                              if (advancedStuffListTile != null) advancedStuffListTile,
+                              ?advancedStuffListTile,
 
-                              if (openInYtViewWidget != null) openInYtViewWidget,
+                              ?openInYtViewWidget,
 
-                              if (removeQueueTile != null) removeQueueTile,
+                              ?removeQueueTile,
 
                               if (Player.inst.currentItem.value is Selectable && Player.inst.latestInsertedIndex > Player.inst.currentIndex.value)
                                 () {
@@ -1222,13 +1221,13 @@ Future<void> showGeneralPopupDialog(
                                   ),
                                 ),
 
-                              if (removeFromPlaylistListTile != null) removeFromPlaylistListTile,
+                              ?removeFromPlaylistListTile,
 
-                              if (playlistUtilsRow != null) playlistUtilsRow,
+                              ?playlistUtilsRow,
 
                               /// Track Utils
                               /// todo: support for multiple tracks editing
-                              if (isSingle /*  && playlistUtilsRow == null */)
+                              if (isSingle /*  && playlistUtilsRow == null */ )
                                 Row(
                                   children: [
                                     const SizedBox(width: 24.0),
@@ -1545,70 +1544,70 @@ class _ArtworkManager extends StatelessWidget {
                                   ),
                                 )
                               : fetchPossibleArtworksFn == null
-                                  ? null
-                                  : urls == null || urls.isEmpty
-                                      ? Icon(
-                                          Broken.emoji_sad,
-                                          size: 48.0,
-                                        )
-                                      : SmoothGridView.builder(
-                                          padding: EdgeInsets.zero,
-                                          shrinkWrap: true,
-                                          cacheExtent: context.height * 3,
-                                          itemCount: urls.length,
-                                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 3,
-                                            mainAxisSpacing: 6.0,
-                                            crossAxisSpacing: 4.0,
-                                          ),
-                                          itemBuilder: (context, index) {
-                                            final url = urls[index];
-                                            return BorderRadiusClip(
-                                              borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                                              child: FutureBuilder(
-                                                future: Rhttp.getBytes(url),
-                                                builder: (context, snapshot) {
-                                                  final bytes = snapshot.data?.body;
-                                                  return AnimatedSwitcher(
-                                                    layoutBuilder: (currentChild, previousChildren) {
-                                                      return Stack(
-                                                        alignment: Alignment.center,
-                                                        children: <Widget>[
-                                                          ...previousChildren,
-                                                          if (currentChild != null) Positioned.fill(child: currentChild),
-                                                        ],
-                                                      );
-                                                    },
-                                                    duration: const Duration(milliseconds: 200),
-                                                    child: bytes == null
-                                                        ? ColoredBox(
-                                                            color: theme.cardColor,
-                                                          )
-                                                        : TapDetector(
-                                                            onTap: () async {
-                                                              NamidaNavigator.inst.closeDialog();
-                                                              Uint8List? fullResbytes;
-                                                              try {
-                                                                final fullResUrl = url.replaceAll(RegExp(r'\/i\/u\/(.+)\/'), '/i/u/ar0/');
-                                                                final res = await Rhttp.getBytes(fullResUrl);
-                                                                fullResbytes = res.body;
-                                                              } catch (_) {}
+                              ? null
+                              : urls == null || urls.isEmpty
+                              ? Icon(
+                                  Broken.emoji_sad,
+                                  size: 48.0,
+                                )
+                              : SmoothGridView.builder(
+                                  padding: EdgeInsets.zero,
+                                  shrinkWrap: true,
+                                  cacheExtent: context.height * 3,
+                                  itemCount: urls.length,
+                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 3,
+                                    mainAxisSpacing: 6.0,
+                                    crossAxisSpacing: 4.0,
+                                  ),
+                                  itemBuilder: (context, index) {
+                                    final url = urls[index];
+                                    return BorderRadiusClip(
+                                      borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                                      child: FutureBuilder(
+                                        future: Rhttp.getBytes(url),
+                                        builder: (context, snapshot) {
+                                          final bytes = snapshot.data?.body;
+                                          return AnimatedSwitcher(
+                                            layoutBuilder: (currentChild, previousChildren) {
+                                              return Stack(
+                                                alignment: Alignment.center,
+                                                children: <Widget>[
+                                                  ...previousChildren,
+                                                  if (currentChild != null) Positioned.fill(child: currentChild),
+                                                ],
+                                              );
+                                            },
+                                            duration: const Duration(milliseconds: 200),
+                                            child: bytes == null
+                                                ? ColoredBox(
+                                                    color: theme.cardColor,
+                                                  )
+                                                : TapDetector(
+                                                    onTap: () async {
+                                                      NamidaNavigator.inst.closeDialog();
+                                                      Uint8List? fullResbytes;
+                                                      try {
+                                                        final fullResUrl = url.replaceAll(RegExp(r'\/i\/u\/(.+)\/'), '/i/u/ar0/');
+                                                        final res = await Rhttp.getBytes(fullResUrl);
+                                                        fullResbytes = res.body;
+                                                      } catch (_) {}
 
-                                                              try {
-                                                                await customArtworkManager.setArtworkFile(null, fullResbytes ?? bytes);
-                                                                showSnackInfo();
-                                                              } catch (e) {
-                                                                showSnackInfo(e);
-                                                              }
-                                                            },
-                                                            child: Image.memory(bytes),
-                                                          ),
-                                                  );
-                                                },
-                                              ),
-                                            );
-                                          },
-                                        ),
+                                                      try {
+                                                        await customArtworkManager.setArtworkFile(null, fullResbytes ?? bytes);
+                                                        showSnackInfo();
+                                                      } catch (e) {
+                                                        showSnackInfo(e);
+                                                      }
+                                                    },
+                                                    child: Image.memory(bytes),
+                                                  ),
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                ),
                         ),
                       ),
                     ],
@@ -1713,24 +1712,26 @@ void showSetTrackStatsDialog({
               text: lang.SAVE,
               onPressed: () async {
                 isEditing.value = true;
-                await NamidaTaggerController.inst.updateTracksMetadata(
-                  tracks: [firstTrack],
-                  editedTags: {
-                    TagField.rating: ratingController.text,
-                    TagField.mood: moodsController.text,
-                    TagField.tags: tagsController.text,
-                  },
-                  onStatsEdit: onEdit,
-                  onEdit: (didUpdate, error, _) {
-                    if (!didUpdate) {
-                      var msg = lang.METADATA_EDIT_FAILED;
-                      if (error != null) msg += '\n$error';
-                      snackyy(title: lang.WARNING, message: msg, isError: true);
-                    }
-                  },
-                  keepFileDates: true,
-                  trimWhiteSpaces: false, // we did here
-                ).ignoreError();
+                await NamidaTaggerController.inst
+                    .updateTracksMetadata(
+                      tracks: [firstTrack],
+                      editedTags: {
+                        TagField.rating: ratingController.text,
+                        TagField.mood: moodsController.text,
+                        TagField.tags: tagsController.text,
+                      },
+                      onStatsEdit: onEdit,
+                      onEdit: (didUpdate, error, _) {
+                        if (!didUpdate) {
+                          var msg = lang.METADATA_EDIT_FAILED;
+                          if (error != null) msg += '\n$error';
+                          snackyy(title: lang.WARNING, message: msg, isError: true);
+                        }
+                      },
+                      keepFileDates: true,
+                      trimWhiteSpaces: false, // we did here
+                    )
+                    .ignoreError();
                 isEditing.value = false;
                 NamidaNavigator.inst.closeDialog();
               },

@@ -42,8 +42,9 @@ class TrackTilePropertiesProvider extends StatelessWidget {
     final backgroundColorNotPlaying = theme.cardTheme.color ?? Colors.transparent;
     final selectionColorLayer = theme.focusColor;
 
-    final listenToTopHistoryItems =
-        settings.trackItem.values.any((element) => element == TrackTileItem.listenCount || element == TrackTileItem.latestListenDate || element == TrackTileItem.firstListenDate);
+    final listenToTopHistoryItems = settings.trackItem.values.any(
+      (element) => element == TrackTileItem.listenCount || element == TrackTileItem.latestListenDate || element == TrackTileItem.firstListenDate,
+    );
 
     return ObxO(
       rx: settings.forceSquaredTrackThumbnail,
@@ -255,19 +256,19 @@ class TrackTile extends StatelessWidget {
   String get _heroTag => obtainHeroTag(_twd, _tr, index, properties.comingFromQueue);
 
   void _triggerTrackDialog() => NamidaDialogs.inst.showTrackDialog(
-        _tr,
-        playlistName: properties.configs.playlistName,
-        index: index,
-        trackWithDate: trackOrTwd.trackWithDate,
-        source: properties.configs.queueSource,
-        heroTag: _heroTag,
-      );
+    _tr,
+    playlistName: properties.configs.playlistName,
+    index: index,
+    trackWithDate: trackOrTwd.trackWithDate,
+    source: properties.configs.queueSource,
+    heroTag: _heroTag,
+  );
 
   void _triggerTrackInfoDialog() => showTrackInfoDialog(
-        _tr,
-        true,
-        heroTag: _heroTag,
-      );
+    _tr,
+    true,
+    heroTag: _heroTag,
+  );
 
   void _selectTrack({required bool ranged}) =>
       SelectedTracksController.inst.selectOrUnselect(trackOrTwd, index, properties.configs.queueSource, properties.configs.playlistName, ranged: ranged);
@@ -343,8 +344,8 @@ class TrackTile extends StatelessWidget {
       final row3Text = thirdLineText != null && thirdLineText.isNotEmpty
           ? thirdLineText
           : properties.displayThirdRow
-              ? TrackTileManager._joinTrackItems(_TrackTileRowOrder.third, track)
-              : null;
+          ? TrackTileManager._joinTrackItems(_TrackTileRowOrder.third, track)
+          : null;
 
       threeLinesColumn = Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -408,7 +409,8 @@ class TrackTile extends StatelessWidget {
           child: Material(
             type: MaterialType.transparency,
             child: InkWell(
-              onTap: onTap ??
+              onTap:
+                  onTap ??
                   () async {
                     if (SelectedTracksController.inst.selectedTracks.value.isNotEmpty && !isInSelectedTracksPreview) {
                       _selectTrack(ranged: false);
@@ -506,7 +508,7 @@ class TrackTile extends StatelessWidget {
                                               size: 16.0,
                                             ),
                                           ),
-                                        )
+                                        ),
                                     ],
                                   ),
                                 ),

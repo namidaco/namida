@@ -116,11 +116,13 @@ sealed class DirectoryIndex {
         return source;
       case DirectoryIndexServer():
         final uri = Uri.parse(source);
-        final newUri = uri.replace(queryParameters: {
-          ...uri.queryParameters,
-          'namida_t': type.name,
-          'namida_u': username,
-        });
+        final newUri = uri.replace(
+          queryParameters: {
+            ...uri.queryParameters,
+            'namida_t': type.name,
+            'namida_u': username,
+          },
+        );
         return newUri.toString();
     }
   }
@@ -220,17 +222,17 @@ enum DirectoryIndexType {
     return switch (this) {
       DirectoryIndexType.local || DirectoryIndexType.unknown => null,
       DirectoryIndexType.subsonic => MusicWebServerAuthDetailsDemo(
-          type: this,
-          url: 'https://demo.navidrome.org',
-          username: 'demo',
-          password: 'demo',
-        ),
+        type: this,
+        url: 'https://demo.navidrome.org',
+        username: 'demo',
+        password: 'demo',
+      ),
       DirectoryIndexType.webdav => MusicWebServerAuthDetailsDemo(
-          type: this,
-          url: 'http://localhost:8080',
-          username: '',
-          password: '',
-        ),
+        type: this,
+        url: 'http://localhost:8080',
+        username: '',
+        password: '',
+      ),
     };
   }
 }

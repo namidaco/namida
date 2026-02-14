@@ -22,8 +22,8 @@ class _YoutubeIDStatsManager {
     final stats = await getStats(item);
     final rating = ratingString != null
         ? ratingString.isEmpty
-            ? null
-            : int.tryParse(ratingString) ?? stats?.rating
+              ? null
+              : int.tryParse(ratingString) ?? stats?.rating
         : stats?.rating;
     final tags = tagsString != null ? Indexer.splitByCommaList(tagsString) : stats?.tags;
     final moods = moodsString != null ? Indexer.splitByCommaList(moodsString) : stats?.moods;

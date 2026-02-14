@@ -105,7 +105,7 @@ class SettingsSubPage extends StatelessWidget with NamidaRouteWidget {
                 kBottomPaddingWidget,
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -224,11 +224,11 @@ class CustomCollapsedListTile extends StatelessWidget {
         final r = rawPage != null
             ? rawPage!()
             : page != null
-                ? SettingsSubPage(
-                    title: title,
-                    child: page!(),
-                  )
-                : null;
+            ? SettingsSubPage(
+                title: title,
+                child: page!(),
+              )
+            : null;
         r?.navigate();
       },
     );

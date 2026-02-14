@@ -10,7 +10,8 @@ class NamidaReadMoreText extends StatefulWidget {
     bool isExpanded,
     bool exceededMaxLines,
     void Function() toggle,
-  ) builder;
+  )
+  builder;
 
   const NamidaReadMoreText({
     super.key,

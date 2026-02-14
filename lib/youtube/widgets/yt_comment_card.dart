@@ -199,8 +199,8 @@ class _YTCommentCardState extends State<YTCommentCard> {
         title: lang.GO_TO_CHANNEL,
         onTap: _openChannelPage,
       ),
-      if (editCommentOrReply != null) editCommentOrReply,
-      if (deleteCommentOrReply != null) deleteCommentOrReply,
+      ?editCommentOrReply,
+      ?deleteCommentOrReply,
       NamidaPopupItem(
         icon: Broken.message_add_1,
         title: lang.REPLY,
@@ -360,72 +360,73 @@ class _YTCommentCardState extends State<YTCommentCard> {
                               ),
                               const SizedBox(height: 4.0),
                               AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 200),
-                                  child: commentContent == null
-                                      ? Column(
-                                          children: [
-                                            ...List.filled(
-                                              (4 - 1).getRandomNumberBelow(1),
-                                              const Padding(
-                                                padding: EdgeInsets.only(top: 2.0),
-                                                child: NamidaDummyContainer(
-                                                  width: null,
-                                                  height: 12.0,
-                                                  borderRadius: 4.0,
-                                                  shimmerEnabled: true,
-                                                  child: null,
-                                                ),
+                                duration: const Duration(milliseconds: 200),
+                                child: commentContent == null
+                                    ? Column(
+                                        children: [
+                                          ...List.filled(
+                                            (4 - 1).getRandomNumberBelow(1),
+                                            const Padding(
+                                              padding: EdgeInsets.only(top: 2.0),
+                                              child: NamidaDummyContainer(
+                                                width: null,
+                                                height: 12.0,
+                                                borderRadius: 4.0,
+                                                shimmerEnabled: true,
+                                                child: null,
                                               ),
                                             ),
-                                          ],
-                                        )
-                                      : commentContent.rawText == null
-                                          ? const SizedBox()
-                                          : YoutubeDescriptionWidget(
-                                              videoId: widget.videoId,
-                                              content: commentContent,
-                                              linkColor: theme.colorScheme.primary.withAlpha(210),
-                                              childBuilder: (span) {
-                                                return NamidaReadMoreText(
-                                                  span: span,
-                                                  lines: 5,
-                                                  builder: (span, lines, isExpanded, exceededMaxLines, toggle) {
-                                                    return Column(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Text.rich(
-                                                          span,
-                                                          maxLines: lines,
-                                                        ),
-                                                        if (exceededMaxLines)
-                                                          Padding(
-                                                            padding: const EdgeInsets.all(8.0),
-                                                            child: TapDetector(
-                                                              onTap: toggle,
-                                                              child: Row(
-                                                                mainAxisAlignment: MainAxisAlignment.end,
-                                                                children: [
-                                                                  Text(
-                                                                    isExpanded ? '' : lang.SHOW_MORE,
-                                                                    style: textTheme.displaySmall?.copyWith(color: readmoreColor),
-                                                                  ),
-                                                                  const SizedBox(width: 8),
-                                                                  Icon(
-                                                                    isExpanded ? Broken.arrow_up_3 : Broken.arrow_down_2,
-                                                                    size: 18.0,
-                                                                    color: readmoreColor,
-                                                                  ),
-                                                                ],
-                                                              ),
+                                          ),
+                                        ],
+                                      )
+                                    : commentContent.rawText == null
+                                    ? const SizedBox()
+                                    : YoutubeDescriptionWidget(
+                                        videoId: widget.videoId,
+                                        content: commentContent,
+                                        linkColor: theme.colorScheme.primary.withAlpha(210),
+                                        childBuilder: (span) {
+                                          return NamidaReadMoreText(
+                                            span: span,
+                                            lines: 5,
+                                            builder: (span, lines, isExpanded, exceededMaxLines, toggle) {
+                                              return Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text.rich(
+                                                    span,
+                                                    maxLines: lines,
+                                                  ),
+                                                  if (exceededMaxLines)
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0),
+                                                      child: TapDetector(
+                                                        onTap: toggle,
+                                                        child: Row(
+                                                          mainAxisAlignment: MainAxisAlignment.end,
+                                                          children: [
+                                                            Text(
+                                                              isExpanded ? '' : lang.SHOW_MORE,
+                                                              style: textTheme.displaySmall?.copyWith(color: readmoreColor),
                                                             ),
-                                                          ),
-                                                      ],
-                                                    );
-                                                  },
-                                                );
-                                              },
-                                            )),
+                                                            const SizedBox(width: 8),
+                                                            Icon(
+                                                              isExpanded ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                                                              size: 18.0,
+                                                              color: readmoreColor,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
+                              ),
                               const SizedBox(height: 8.0),
                               FittedBox(
                                 fit: BoxFit.scaleDown,

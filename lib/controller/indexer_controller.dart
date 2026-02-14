@@ -359,8 +359,11 @@ class Indexer<T extends Track> {
     for (final e in sortedMedias) {
       final fn = switch (e) {
         MediaType.track => () => SearchSortController.inst.searchTracks(LibraryTab.tracks.textSearchController?.text ?? ''),
-        MediaType.album || MediaType.artist || MediaType.albumArtist || MediaType.composer || MediaType.genre => () =>
-            SearchSortController.inst.searchMedia(e.toLibraryTab().textSearchController?.text ?? '', e),
+        MediaType.album ||
+        MediaType.artist ||
+        MediaType.albumArtist ||
+        MediaType.composer ||
+        MediaType.genre => () => SearchSortController.inst.searchMedia(e.toLibraryTab().textSearchController?.text ?? '', e),
         MediaType.folder => FoldersController.tracksAndVideos.refreshAfterSorting,
         MediaType.folderMusic => FoldersController.tracks.refreshAfterSorting,
         MediaType.folderVideo => FoldersController.videos.refreshAfterSorting,
@@ -944,14 +947,14 @@ class Indexer<T extends Track> {
     final splitConfig = _createSplitConfig();
 
     Future<TrackExtended?> extractFunction(FAudioModel item) => convertTagToTrack(
-          trackPath: item.tags.path,
-          trackInfo: item,
-          tryExtractingFromFilename: true,
-          onMinDurTrigger: () => null,
-          onMinSizeTrigger: () => null,
-          onError: (_) => null,
-          splittersConfigs: splitConfig,
-        );
+      trackPath: item.tags.path,
+      trackInfo: item,
+      tryExtractingFromFilename: true,
+      onMinDurTrigger: () => null,
+      onMinSizeTrigger: () => null,
+      onError: (_) => null,
+      splittersConfigs: splitConfig,
+    );
 
     final model = await NamidaTaggerController.inst.extractMetadata(
       trackPath: trackPath,
@@ -1005,14 +1008,14 @@ class Indexer<T extends Track> {
       final splitConfig = _createSplitConfig();
 
       Future<TrackExtended?> extractFunction(FAudioModel item) => convertTagToTrack(
-            trackPath: item.tags.path,
-            trackInfo: item,
-            tryExtractingFromFilename: true,
-            onMinDurTrigger: () => null,
-            onMinSizeTrigger: () => null,
-            onError: (_) => null,
-            splittersConfigs: splitConfig,
-          );
+        trackPath: item.tags.path,
+        trackInfo: item,
+        tryExtractingFromFilename: true,
+        onMinDurTrigger: () => null,
+        onMinSizeTrigger: () => null,
+        onError: (_) => null,
+        splittersConfigs: splitConfig,
+      );
 
       final keyWrapper = ExtractingPathKey.create();
       final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
@@ -1142,22 +1145,22 @@ class Indexer<T extends Track> {
 
         final splittersConfigs = _createSplitConfig();
         Future<TrackExtended?> extractFunction(FAudioModel item) => convertTagToTrack(
-              trackPath: item.tags.path,
-              trackInfo: item,
-              tryExtractingFromFilename: true,
-              minDur: minDur,
-              minSize: minSize,
-              onMinDurTrigger: () {
-                filteredForSizeDurationTracks.value++;
-                return null;
-              },
-              onMinSizeTrigger: () {
-                filteredForSizeDurationTracks.value++;
-                return null;
-              },
-              onError: (_) => null,
-              splittersConfigs: splittersConfigs,
-            );
+          trackPath: item.tags.path,
+          trackInfo: item,
+          tryExtractingFromFilename: true,
+          minDur: minDur,
+          minSize: minSize,
+          onMinDurTrigger: () {
+            filteredForSizeDurationTracks.value++;
+            return null;
+          },
+          onMinSizeTrigger: () {
+            filteredForSizeDurationTracks.value++;
+            return null;
+          },
+          onError: (_) => null,
+          splittersConfigs: splittersConfigs,
+        );
 
         final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
           paths: chunkList,
@@ -1278,8 +1281,8 @@ class Indexer<T extends Track> {
 
     final rating = ratingString != null
         ? ratingString.isEmpty
-            ? 0
-            : int.tryParse(ratingString) ?? track.effectiveRating
+              ? 0
+              : int.tryParse(ratingString) ?? track.effectiveRating
         : track.effectiveRating;
     final tags = tagsString != null ? splitByCommaList(tagsString) : track.effectiveTags;
     final moods = moodsString != null ? splitByCommaList(moodsString) : track.effectiveMoods;
@@ -1333,32 +1336,34 @@ class Indexer<T extends Track> {
           trackStatsMap.value = res;
         },
       ),
-      _IndexerIsolateExecuter._readTracksDataSync.thready([
-        AppPaths.TRACKS_DB_INFO,
-        AppPaths.TRACKS_OLD,
-        _createSplitConfig(),
-        mediaSorters,
-        mediaSortersReverse,
-        settings.albumIdentifiers.value,
-        TagsExtractor.defaultUniqueArtworkHash,
-        tracksRecievePort.sendPort,
-      ]).then(
-        (libraryGroup) async {
-          mainMapsGroup.updateFrom(libraryGroup);
+      _IndexerIsolateExecuter._readTracksDataSync
+          .thready([
+            AppPaths.TRACKS_DB_INFO,
+            AppPaths.TRACKS_OLD,
+            _createSplitConfig(),
+            mediaSorters,
+            mediaSortersReverse,
+            settings.albumIdentifiers.value,
+            TagsExtractor.defaultUniqueArtworkHash,
+            tracksRecievePort.sendPort,
+          ])
+          .then(
+            (libraryGroup) async {
+              mainMapsGroup.updateFrom(libraryGroup);
 
-          FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos.value);
-          FoldersController.tracksAndVideos.onFirstLoad();
+              FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos.value);
+              FoldersController.tracksAndVideos.onFirstLoad();
 
-          FoldersController.tracks.onMapChanged(mainMapFoldersTracks.value);
-          FoldersController.tracks.onFirstLoad();
-          FoldersController.videos.onMapChanged(mainMapFoldersVideos.value);
-          FoldersController.videos.onFirstLoad();
+              FoldersController.tracks.onMapChanged(mainMapFoldersTracks.value);
+              FoldersController.tracks.onFirstLoad();
+              FoldersController.videos.onMapChanged(mainMapFoldersVideos.value);
+              FoldersController.videos.onFirstLoad();
 
-          _refreshMediaTracksSubListsAfterSort(mediaSorters.keys);
+              _refreshMediaTracksSubListsAfterSort(mediaSorters.keys);
 
-          SearchSortController.inst.refreshPortsIfNecessary(); // -- vip to refresh filtering
-        },
-      ),
+              SearchSortController.inst.refreshPortsIfNecessary(); // -- vip to refresh filtering
+            },
+          ),
       handleRecieveTracks(),
     ].executeAllAndSilentReportErrors();
 
@@ -1471,8 +1476,10 @@ class Indexer<T extends Track> {
     if (!_defaultUseMediaStore) return [];
     final allMusic = await _audioQuery.querySongs();
     // -- folders selected will be ignored when [_defaultUseMediaStore] is enabled.
-    allMusic.retainWhere((element) =>
-        settings.directoriesToExclude.value.every((dir) => !element.data.startsWith(dir.source)) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */);
+    allMusic.retainWhere(
+      (element) =>
+          settings.directoriesToExclude.value.every((dir) => !element.data.startsWith(dir.source)) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */,
+    );
     final tracks = <TrackExtended>[];
     final artistsSplitConfig = ArtistsSplitConfig.settings();
     final genresSplitConfig = GenresSplitConfig.settings();

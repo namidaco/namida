@@ -155,55 +155,24 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                           ),
                           slivers: [
                             if (tracksMappedWithDisc != null && tracksMappedWithDisc.keys.any((n) => n > 1))
-                              ...tracksMappedWithDisc.entries.mapIndexed(
-                                (discEntry, discSectionIndex) {
-                                  final indicesToIncrement = tracksIndicesIncrement?[discEntry.key] ?? 0;
-                                  return SliverMainAxisGroup(
-                                    slivers: [
-                                      PinnedHeaderSliver(
-                                        child: Padding(
-                                          padding: EdgeInsets.only(bottom: 4.0),
-                                          child: Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              DecoratedBox(
-                                                decoration: BoxDecoration(
-                                                  color: Color.alphaBlend(theme.colorScheme.secondaryContainer.withValues(alpha: 0.5), theme.scaffoldBackgroundColor),
-                                                  borderRadius: BorderRadius.horizontal(
-                                                    right: Radius.circular(6.0.multipliedRadius),
-                                                  ),
-                                                ),
-                                                child: Padding(
-                                                  padding: EdgeInsets.symmetric(vertical: 6.0),
-                                                  child: Row(
-                                                    mainAxisSize: MainAxisSize.min,
-                                                    children: [
-                                                      SizedBox(width: 8.0),
-                                                      Icon(
-                                                        Broken.cd,
-                                                        size: 20.0,
-                                                      ),
-                                                      SizedBox(width: 4.0),
-                                                      Flexible(
-                                                        child: Text(
-                                                          " ${discEntry.key}",
-                                                          style: textTheme.displayMedium,
-                                                        ),
-                                                      ),
-                                                      SizedBox(width: 12.0),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              Flexible(
-                                                child: FittedBox(
-                                                  fit: BoxFit.scaleDown,
-                                                  child: DecoratedBox(
+                              ...tracksMappedWithDisc.entries
+                                  .mapIndexed(
+                                    (discEntry, discSectionIndex) {
+                                      final indicesToIncrement = tracksIndicesIncrement?[discEntry.key] ?? 0;
+                                      return SliverMainAxisGroup(
+                                        slivers: [
+                                          PinnedHeaderSliver(
+                                            child: Padding(
+                                              padding: EdgeInsets.only(bottom: 4.0),
+                                              child: Row(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  DecoratedBox(
                                                     decoration: BoxDecoration(
-                                                      color: theme.scaffoldBackgroundColor,
-                                                      borderRadius: BorderRadius.only(
-                                                        bottomLeft: Radius.circular(6.0.multipliedRadius),
+                                                      color: Color.alphaBlend(theme.colorScheme.secondaryContainer.withValues(alpha: 0.5), theme.scaffoldBackgroundColor),
+                                                      borderRadius: BorderRadius.horizontal(
+                                                        right: Radius.circular(6.0.multipliedRadius),
                                                       ),
                                                     ),
                                                     child: Padding(
@@ -212,58 +181,91 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                                                         mainAxisSize: MainAxisSize.min,
                                                         children: [
                                                           SizedBox(width: 8.0),
-                                                          Text(
-                                                            [
-                                                              discEntry.value.displayTrackKeyword,
-                                                              discEntry.value.totalDurationFormatted,
-                                                            ].join(' • '),
-                                                            style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                                          Icon(
+                                                            Broken.cd,
+                                                            size: 20.0,
+                                                          ),
+                                                          SizedBox(width: 4.0),
+                                                          Flexible(
+                                                            child: Text(
+                                                              " ${discEntry.key}",
+                                                              style: textTheme.displayMedium,
+                                                            ),
                                                           ),
                                                           SizedBox(width: 12.0),
                                                         ],
                                                       ),
                                                     ),
                                                   ),
-                                                ),
+                                                  Flexible(
+                                                    child: FittedBox(
+                                                      fit: BoxFit.scaleDown,
+                                                      child: DecoratedBox(
+                                                        decoration: BoxDecoration(
+                                                          color: theme.scaffoldBackgroundColor,
+                                                          borderRadius: BorderRadius.only(
+                                                            bottomLeft: Radius.circular(6.0.multipliedRadius),
+                                                          ),
+                                                        ),
+                                                        child: Padding(
+                                                          padding: EdgeInsets.symmetric(vertical: 6.0),
+                                                          child: Row(
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              SizedBox(width: 8.0),
+                                                              Text(
+                                                                [
+                                                                  discEntry.value.displayTrackKeyword,
+                                                                  discEntry.value.totalDurationFormatted,
+                                                                ].join(' • '),
+                                                                style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                                              ),
+                                                              SizedBox(width: 12.0),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      SliverVariedExtentList.builder(
-                                        itemCount: discEntry.value.length,
-                                        itemExtentBuilder: (i, _) {
-                                          final trackEffectiveIndex = i + indicesToIncrement;
-                                          if (shouldHideIndex(trackEffectiveIndex)) return 0;
-                                          return Dimensions.inst.trackTileItemExtent;
-                                        },
-                                        itemBuilder: (context, i) {
-                                          final track = discEntry.value[i];
-                                          final trackEffectiveIndex = i + indicesToIncrement;
-
-                                          if (shouldHideIndex(trackEffectiveIndex)) {
-                                            return const SizedBox();
-                                          }
-                                          return AnimatingTile(
-                                            key: ValueKey(i),
-                                            position: trackEffectiveIndex,
-                                            child: TrackTile(
-                                              properties: properties,
-                                              index: trackEffectiveIndex,
-                                              trackOrTwd: track,
-                                              tracks: tracks, // all tracks not just disc section
                                             ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ).addSeparators(
-                                separator: SliverPadding(
-                                  padding: EdgeInsets.symmetric(vertical: 12.0),
-                                ),
-                              )
+                                          ),
+                                          SliverVariedExtentList.builder(
+                                            itemCount: discEntry.value.length,
+                                            itemExtentBuilder: (i, _) {
+                                              final trackEffectiveIndex = i + indicesToIncrement;
+                                              if (shouldHideIndex(trackEffectiveIndex)) return 0;
+                                              return Dimensions.inst.trackTileItemExtent;
+                                            },
+                                            itemBuilder: (context, i) {
+                                              final track = discEntry.value[i];
+                                              final trackEffectiveIndex = i + indicesToIncrement;
+
+                                              if (shouldHideIndex(trackEffectiveIndex)) {
+                                                return const SizedBox();
+                                              }
+                                              return AnimatingTile(
+                                                key: ValueKey(i),
+                                                position: trackEffectiveIndex,
+                                                child: TrackTile(
+                                                  properties: properties,
+                                                  index: trackEffectiveIndex,
+                                                  trackOrTwd: track,
+                                                  tracks: tracks, // all tracks not just disc section
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  )
+                                  .addSeparators(
+                                    separator: SliverPadding(
+                                      padding: EdgeInsets.symmetric(vertical: 12.0),
+                                    ),
+                                  )
                             else
                               SliverVariedExtentList.builder(
                                 itemCount: tracks.length,
@@ -287,7 +289,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                                     ),
                                   );
                                 },
-                              )
+                              ),
                           ],
                         );
                       },

@@ -13,12 +13,14 @@ abstract class ShortcutsManager {
     );
   }
 
-  late final Map<ShortcutKeyActivator, VoidCallback> bindings = Map.fromEntries(_keysToRegister.map(
-    (e) => MapEntry(
-      e,
-      e.callback,
+  late final Map<ShortcutKeyActivator, VoidCallback> bindings = Map.fromEntries(
+    _keysToRegister.map(
+      (e) => MapEntry(
+        e,
+        e.callback,
+      ),
     ),
-  ));
+  );
 
   @protected
   List<ShortcutKeyActivator> get _keysToRegister;

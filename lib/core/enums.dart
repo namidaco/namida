@@ -29,7 +29,8 @@ enum SortType {
   shuffle,
   mostPlayed,
   latestPlayed,
-  firstListen;
+  firstListen
+  ;
 
   bool get requiresHistory => this == SortType.mostPlayed || this == SortType.latestPlayed || this == SortType.firstListen;
 }
@@ -169,7 +170,8 @@ enum QueueSource implements QueueSourceBase {
   homePageItem(false),
   recentlyAdded(false),
 
-  others(true);
+  others(true)
+  ;
 
   final bool canHaveDuplicates;
   const QueueSource(this.canHaveDuplicates);
@@ -196,7 +198,8 @@ enum QueueSourceYoutubeID implements QueueSourceBase {
 
   downloadTask(false),
   videoEndCard(false),
-  videoDescription(false);
+  videoDescription(false)
+  ;
 
   final bool canHaveDuplicates;
   const QueueSourceYoutubeID(this.canHaveDuplicates);
@@ -334,21 +337,22 @@ enum QueueInsertionType {
   algorithm,
   algorithmDiscoverDate,
   algorithmTimeRange,
-  mix;
+  mix
+  ;
 
   int? get recommendedSampleCount => switch (this) {
-        QueueInsertionType.algorithm => 10,
-        QueueInsertionType.algorithmDiscoverDate => 2,
-        QueueInsertionType.algorithmTimeRange => null,
-        _ => null,
-      };
+    QueueInsertionType.algorithm => 10,
+    QueueInsertionType.algorithmDiscoverDate => 2,
+    QueueInsertionType.algorithmTimeRange => null,
+    _ => null,
+  };
 
   int? get recommendedSampleDaysCount => switch (this) {
-        QueueInsertionType.algorithm => null,
-        QueueInsertionType.algorithmDiscoverDate => 28,
-        QueueInsertionType.algorithmTimeRange => 7,
-        _ => null,
-      };
+    QueueInsertionType.algorithm => null,
+    QueueInsertionType.algorithmDiscoverDate => 28,
+    QueueInsertionType.algorithmTimeRange => 7,
+    _ => null,
+  };
 }
 
 enum InsertionSortingType {
@@ -538,7 +542,8 @@ enum DownloadNotifications {
 enum DataSaverMode {
   off,
   medium,
-  extreme;
+  extreme
+  ;
 
   bool get canFetchNetworkVideoStream => this == DataSaverMode.off;
   bool canFetchNetworkVideoStreamShortContent(bool? isShortContent) {
@@ -553,7 +558,8 @@ enum InternalPlayerType {
   auto,
   exoplayer,
   exoplayer_sw,
-  mpv;
+  mpv
+  ;
 
   InternalPlayerType ensureResolved() {
     var instance = this;
@@ -616,7 +622,8 @@ enum ReplayGainType {
   off(false),
   platform_default(false),
   loudness_enhancer(true),
-  volume(true);
+  volume(true)
+  ;
 
   final bool _isValidMode;
   const ReplayGainType(this._isValidMode);
@@ -640,15 +647,13 @@ enum ReplayGainType {
 
 enum LibraryImageSource {
   local,
-  lastfm;
+  lastfm
+  ;
 
   bool get isNetwork => this == lastfm;
 }
 
-enum AlbumType {
-  single,
-  normal;
-}
+enum AlbumType { single, normal }
 
 enum DesktopTitlebarIconsType {
   none,

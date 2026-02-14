@@ -194,7 +194,8 @@ class NamidaPopupWrapper extends StatelessWidget {
       contentPadding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0),
       contentRadius: 12.0.multipliedRadius,
       position: PopupPosition.bottom,
-      contentDecoration: contentDecoration ??
+      contentDecoration:
+          contentDecoration ??
           BoxDecoration(
             borderRadius: BorderRadius.circular(12.0.multipliedRadius),
             border: Border.all(

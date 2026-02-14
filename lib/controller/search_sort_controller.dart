@@ -29,7 +29,8 @@ class SearchSortController extends SearchPortsProvider {
 
   String lastSearchText = '';
 
-  bool get isSearching => (trackSearchTemp.isNotEmpty ||
+  bool get isSearching =>
+      (trackSearchTemp.isNotEmpty ||
       albumSearchTemp.isNotEmpty ||
       artistSearchTemp.isNotEmpty ||
       albumArtistSearchTemp.isNotEmpty ||
@@ -207,54 +208,54 @@ class SearchSortController extends SearchPortsProvider {
   }
 
   String? Function(List<Track> tracks)? getGroupSortExtraTextResolver(GroupSortType sort, {GeneralPlaylist? playlist}) => switch (sort) {
-        GroupSortType.album => (tracks) => tracks.album,
-        GroupSortType.artistsList => (tracks) => tracks.firstOrNull?.originalArtist,
-        GroupSortType.composer => (tracks) => tracks.firstOrNull?.composer,
-        GroupSortType.albumArtist => (tracks) => tracks.albumArtist,
-        GroupSortType.label => (tracks) => tracks.firstOrNull?.label,
-        GroupSortType.genresList => (tracks) => tracks.firstOrNull?.originalGenre,
-        GroupSortType.numberOfTracks => (tracks) => tracks.length.toString(),
-        GroupSortType.duration => (tracks) => tracks.totalDurationFormatted,
-        GroupSortType.albumsCount => (tracks) => tracks.toUniqueAlbums().length.toString(),
-        GroupSortType.year => (tracks) => tracks.year.yearFormatted,
-        GroupSortType.dateModified => (tracks) => tracks.firstOrNull?.dateModified.dateFormatted,
-        GroupSortType.playCount => (tracks) => tracks.getTotalListenCount().toString(),
-        GroupSortType.firstListen => (tracks) => tracks.getFirstListen()?.dateFormattedOriginal ?? '',
-        GroupSortType.latestPlayed => (tracks) => tracks.getLatestListen()?.dateFormattedOriginal ?? '',
+    GroupSortType.album => (tracks) => tracks.album,
+    GroupSortType.artistsList => (tracks) => tracks.firstOrNull?.originalArtist,
+    GroupSortType.composer => (tracks) => tracks.firstOrNull?.composer,
+    GroupSortType.albumArtist => (tracks) => tracks.albumArtist,
+    GroupSortType.label => (tracks) => tracks.firstOrNull?.label,
+    GroupSortType.genresList => (tracks) => tracks.firstOrNull?.originalGenre,
+    GroupSortType.numberOfTracks => (tracks) => tracks.length.toString(),
+    GroupSortType.duration => (tracks) => tracks.totalDurationFormatted,
+    GroupSortType.albumsCount => (tracks) => tracks.toUniqueAlbums().length.toString(),
+    GroupSortType.year => (tracks) => tracks.year.yearFormatted,
+    GroupSortType.dateModified => (tracks) => tracks.firstOrNull?.dateModified.dateFormatted,
+    GroupSortType.playCount => (tracks) => tracks.getTotalListenCount().toString(),
+    GroupSortType.firstListen => (tracks) => tracks.getFirstListen()?.dateFormattedOriginal ?? '',
+    GroupSortType.latestPlayed => (tracks) => tracks.getLatestListen()?.dateFormattedOriginal ?? '',
 
-        // -- playlists
-        GroupSortType.title => (tracks) => playlist?.name ?? '',
-        GroupSortType.creationDate => (tracks) => playlist?.creationDate.dateFormatted ?? '',
-        GroupSortType.modifiedDate => (tracks) => playlist?.modifiedDate.dateFormatted ?? '',
-        // ----
-        GroupSortType.shuffle => null,
-        GroupSortType.custom => null,
-      };
+    // -- playlists
+    GroupSortType.title => (tracks) => playlist?.name ?? '',
+    GroupSortType.creationDate => (tracks) => playlist?.creationDate.dateFormatted ?? '',
+    GroupSortType.modifiedDate => (tracks) => playlist?.modifiedDate.dateFormatted ?? '',
+    // ----
+    GroupSortType.shuffle => null,
+    GroupSortType.custom => null,
+  };
 
   String? Function(LocalPlaylist playlist)? getGroupSortExtraTextResolverPlaylist(GroupSortType sort) => switch (sort) {
-        GroupSortType.album => (p) => p.tracks.firstOrNull?.track.album,
-        GroupSortType.artistsList => (p) => p.tracks.firstOrNull?.track.originalArtist,
-        GroupSortType.composer => (p) => p.tracks.firstOrNull?.track.composer,
-        GroupSortType.albumArtist => (p) => p.tracks.firstOrNull?.track.albumArtist,
-        GroupSortType.label => (p) => p.tracks.firstOrNull?.track.label,
-        GroupSortType.genresList => (p) => p.tracks.firstOrNull?.track.originalGenre,
-        GroupSortType.numberOfTracks => (p) => p.tracks.length.toString(),
-        GroupSortType.duration => (p) => p.tracks.totalDurationFormatted,
-        GroupSortType.albumsCount => (p) => p.tracks.toTracks().toUniqueAlbums().length.toString(),
-        GroupSortType.year => (p) => p.tracks.firstOrNull?.track.year.yearFormatted,
-        GroupSortType.dateModified => (p) => p.tracks.firstOrNull?.track.dateModified.dateFormatted,
-        GroupSortType.playCount => (p) => p.tracks.getTotalListenCount().toString(),
-        GroupSortType.firstListen => (p) => p.tracks.getFirstListen()?.dateFormattedOriginal,
-        GroupSortType.latestPlayed => (p) => p.tracks.getLatestListen()?.dateFormattedOriginal,
+    GroupSortType.album => (p) => p.tracks.firstOrNull?.track.album,
+    GroupSortType.artistsList => (p) => p.tracks.firstOrNull?.track.originalArtist,
+    GroupSortType.composer => (p) => p.tracks.firstOrNull?.track.composer,
+    GroupSortType.albumArtist => (p) => p.tracks.firstOrNull?.track.albumArtist,
+    GroupSortType.label => (p) => p.tracks.firstOrNull?.track.label,
+    GroupSortType.genresList => (p) => p.tracks.firstOrNull?.track.originalGenre,
+    GroupSortType.numberOfTracks => (p) => p.tracks.length.toString(),
+    GroupSortType.duration => (p) => p.tracks.totalDurationFormatted,
+    GroupSortType.albumsCount => (p) => p.tracks.toTracks().toUniqueAlbums().length.toString(),
+    GroupSortType.year => (p) => p.tracks.firstOrNull?.track.year.yearFormatted,
+    GroupSortType.dateModified => (p) => p.tracks.firstOrNull?.track.dateModified.dateFormatted,
+    GroupSortType.playCount => (p) => p.tracks.getTotalListenCount().toString(),
+    GroupSortType.firstListen => (p) => p.tracks.getFirstListen()?.dateFormattedOriginal,
+    GroupSortType.latestPlayed => (p) => p.tracks.getLatestListen()?.dateFormattedOriginal,
 
-        // -- playlists
-        GroupSortType.title => (playlist) => playlist.name,
-        GroupSortType.creationDate => (playlist) => playlist.creationDate.dateFormatted,
-        GroupSortType.modifiedDate => (playlist) => playlist.modifiedDate.dateFormatted,
-        // ----
-        GroupSortType.shuffle => null,
-        GroupSortType.custom => null,
-      };
+    // -- playlists
+    GroupSortType.title => (playlist) => playlist.name,
+    GroupSortType.creationDate => (playlist) => playlist.creationDate.dateFormatted,
+    GroupSortType.modifiedDate => (playlist) => playlist.modifiedDate.dateFormatted,
+    // ----
+    GroupSortType.shuffle => null,
+    GroupSortType.custom => null,
+  };
 
   bool? _preparedResources;
   Future<void> prepareResources() async {
@@ -547,12 +548,15 @@ class SearchSortController extends SearchPortsProvider {
     final textCleanedForSearch = _functionOfCleanup(cleanup);
     final textNonCleanedForSearch = cleanup ? _functionOfCleanup(false) : null;
 
-    final playlists = <({
-      LocalPlaylist pl,
-      String trName,
-      String dateCreatedFormatted,
-      String dateModifiedFormatted,
-    })>[];
+    final playlists =
+        <
+          ({
+            LocalPlaylist pl,
+            String trName,
+            String dateCreatedFormatted,
+            String dateModifiedFormatted,
+          })
+        >[];
     for (int i = 0; i < playlistsMap.length; i++) {
       var plMap = playlistsMap[i];
       final pl = LocalPlaylist.fromJson(plMap, (itemJson) => TrackWithDate.fromJson(itemJson), PlaylistController.sortFromJson);
@@ -679,11 +683,11 @@ class SearchSortController extends SearchPortsProvider {
         sortBy == null
             ? null
             : trackSortsSettings == null || trackSortsSettings.isEmpty
-                ? [sortBy]
-                : [
-                    if (!trackSortsSettings.contains(sortBy)) sortBy,
-                    ...trackSortsSettings,
-                  ],
+            ? [sortBy]
+            : [
+                if (!trackSortsSettings.contains(sortBy)) sortBy,
+                ...trackSortsSettings,
+              ],
         reverse,
       );
       Indexer.inst.sortMediaTracksSubLists([MediaType.track]);
@@ -699,8 +703,9 @@ class SearchSortController extends SearchPortsProvider {
     reverse ??= isAuto ? settings.mediaItemsTrackSortingReverse.value[MediaType.track] ?? settings.tracksSortSearchReversed.value : settings.tracksSortSearchReversed.value;
 
     if (canSkipSorting) {
-      final identicalToMainOne =
-          isAuto ? true : sortBy == settings.mediaItemsTrackSorting.value[MediaType.track]?.firstOrNull && reverse == settings.mediaItemsTrackSortingReverse.value[MediaType.track];
+      final identicalToMainOne = isAuto
+          ? true
+          : sortBy == settings.mediaItemsTrackSorting.value[MediaType.track]?.firstOrNull && reverse == settings.mediaItemsTrackSortingReverse.value[MediaType.track];
       if (identicalToMainOne) return; // since the looped list already has the same order
     }
 
@@ -864,15 +869,16 @@ class SearchSortController extends SearchPortsProvider {
     if (sortBy == GroupSortType.shuffle) {
       albumsList.shuffle();
     } else {
-      final allComparables = {
-        sortBy,
-        GroupSortType.album,
-        GroupSortType.year,
-        GroupSortType.dateModified,
-      }
-          .map((e) => e == sortBy ? _getMediaSortingComparable(e, overrideKey: GroupSortType.album, filter: TrackSearchFilter.album) : _getMediaSortingComparable(e))
-          .whereType<Comparable Function(MapEntry<String, List<Track>>)>()
-          .toList();
+      final allComparables =
+          {
+                sortBy,
+                GroupSortType.album,
+                GroupSortType.year,
+                GroupSortType.dateModified,
+              }
+              .map((e) => e == sortBy ? _getMediaSortingComparable(e, overrideKey: GroupSortType.album, filter: TrackSearchFilter.album) : _getMediaSortingComparable(e))
+              .whereType<Comparable Function(MapEntry<String, List<Track>>)>()
+              .toList();
       if (reverse) {
         albumsList.sortByReverseAlts(allComparables);
       } else {
@@ -903,31 +909,32 @@ class SearchSortController extends SearchPortsProvider {
         MediaType.composer => GroupSortType.composer,
         _ => null,
       };
-      final allComparables = {
-        sortBy,
-        if (fallbackGroupSortTitle != null) fallbackGroupSortTitle,
-        GroupSortType.year,
-        GroupSortType.dateModified,
-      }
-          .map(
-            (e) => e == sortBy
-                ? artistType == MediaType.artist && sortBy == GroupSortType.artistsList
-                    ? _getMediaSortingComparable(e, overrideKey: GroupSortType.artistsList, filter: TrackSearchFilter.artist)
-                    : artistType == MediaType.albumArtist && sortBy == GroupSortType.albumArtist
-                        ? _getMediaSortingComparable(e, overrideKey: GroupSortType.albumArtist, filter: TrackSearchFilter.albumartist)
-                        : artistType == MediaType.composer && sortBy == GroupSortType.composer
-                            ? _getMediaSortingComparable(e, overrideKey: GroupSortType.composer, filter: TrackSearchFilter.composer)
-                            : _getMediaSortingComparable(e, overrideKey: GroupSortType.artistsList, filter: TrackSearchFilter.artist)
-                : _getMediaSortingComparable(e),
-          )
-          .whereType<Comparable Function(MapEntry<String, List<Track>>)>()
-          .toList();
+      final allComparables =
+          {
+                sortBy,
+                ?fallbackGroupSortTitle,
+                GroupSortType.year,
+                GroupSortType.dateModified,
+              }
+              .map(
+                (e) => e == sortBy
+                    ? artistType == MediaType.artist && sortBy == GroupSortType.artistsList
+                          ? _getMediaSortingComparable(e, overrideKey: GroupSortType.artistsList, filter: TrackSearchFilter.artist)
+                          : artistType == MediaType.albumArtist && sortBy == GroupSortType.albumArtist
+                          ? _getMediaSortingComparable(e, overrideKey: GroupSortType.albumArtist, filter: TrackSearchFilter.albumartist)
+                          : artistType == MediaType.composer && sortBy == GroupSortType.composer
+                          ? _getMediaSortingComparable(e, overrideKey: GroupSortType.composer, filter: TrackSearchFilter.composer)
+                          : _getMediaSortingComparable(e, overrideKey: GroupSortType.artistsList, filter: TrackSearchFilter.artist)
+                    : _getMediaSortingComparable(e),
+              )
+              .whereType<Comparable Function(MapEntry<String, List<Track>>)>()
+              .toList();
       if (sortBy == GroupSortType.albumsCount) {
         final Comparable Function(MapEntry<String, List<Track>>) comparable = artistType == MediaType.albumArtist
             ? (e) => e.key.getAlbumArtistTracks().toUniqueAlbums().length
             : artistType == MediaType.composer
-                ? (e) => e.key.getComposerTracks().toUniqueAlbums().length
-                : (e) => e.key.getArtistTracks().toUniqueAlbums().length;
+            ? (e) => e.key.getComposerTracks().toUniqueAlbums().length
+            : (e) => e.key.getArtistTracks().toUniqueAlbums().length;
 
         allComparables.insert(0, comparable);
       }
@@ -960,15 +967,16 @@ class SearchSortController extends SearchPortsProvider {
     if (sortBy == GroupSortType.shuffle) {
       genresList.shuffle();
     } else {
-      final allComparables = {
-        sortBy,
-        GroupSortType.genresList,
-        GroupSortType.year,
-        GroupSortType.dateModified,
-      }
-          .map((e) => e == sortBy ? _getMediaSortingComparable(e, overrideKey: GroupSortType.genresList, filter: TrackSearchFilter.genre) : _getMediaSortingComparable(e))
-          .whereType<Comparable Function(MapEntry<String, List<Track>>)>()
-          .toList();
+      final allComparables =
+          {
+                sortBy,
+                GroupSortType.genresList,
+                GroupSortType.year,
+                GroupSortType.dateModified,
+              }
+              .map((e) => e == sortBy ? _getMediaSortingComparable(e, overrideKey: GroupSortType.genresList, filter: TrackSearchFilter.genre) : _getMediaSortingComparable(e))
+              .whereType<Comparable Function(MapEntry<String, List<Track>>)>()
+              .toList();
       if (reverse) {
         genresList.sortByReverseAlts(allComparables);
       } else {

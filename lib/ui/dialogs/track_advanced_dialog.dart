@@ -120,11 +120,12 @@ void showTrackAdvancedDialog({
               passedColor: colorScheme,
               title: lang.DELETE,
               subtitle: lang.DELETE_N_TRACKS_FROM_STORAGE.replaceFirst(
-                  '_NUM_',
-                  [
-                    if (tracksOnlyCount > 0) tracksOnlyCount.displayTrackKeyword,
-                    if (videosOnlyCount > 0) videosOnlyCount.displayVideoKeyword,
-                  ].join(' & ').addDQuotation()),
+                '_NUM_',
+                [
+                  if (tracksOnlyCount > 0) tracksOnlyCount.displayTrackKeyword,
+                  if (videosOnlyCount > 0) videosOnlyCount.displayVideoKeyword,
+                ].join(' & ').addDQuotation(),
+              ),
               icon: Broken.danger,
               onTap: () => showTrackDeletePermanentlyDialog(
                 tracks,
@@ -180,16 +181,18 @@ void showTrackAdvancedDialog({
                     ],
                     child: Column(
                       children: SetMusicAsAction.values
-                          .map((e) => Obx(
-                                (context) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                  child: ListTileWithCheckMark(
-                                    active: selected.contains(e),
-                                    title: e.toText(),
-                                    onTap: () => selected.addOrRemove(e),
-                                  ),
+                          .map(
+                            (e) => Obx(
+                              (context) => Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                child: ListTileWithCheckMark(
+                                  active: selected.contains(e),
+                                  title: e.toText(),
+                                  onTap: () => selected.addOrRemove(e),
                                 ),
-                              ))
+                              ),
+                            ),
+                          )
                           .toList(),
                     ),
                   ),
@@ -256,7 +259,7 @@ void showTrackAdvancedDialog({
                             await HistoryController.inst.replaceAllTracksInsideHistory(trackWillBeReplaced, newTrack);
                             NamidaNavigator.inst.closeDialog(3);
                           },
-                        )
+                        ),
                       ],
                       bodyText: lang.HISTORY_LISTENS_REPLACE_WARNING
                           .replaceFirst('_LISTENS_COUNT_', listens.length.formatDecimal())
@@ -278,9 +281,11 @@ void showTrackAdvancedDialog({
                   ? [
                       CurrentColor.inst.getTrackColors(kDummyTrack, networkArtworkInfo: networkArtworkInfo, delightnedAndAlpha: false, useIsolate: true),
                     ]
-                  : tracksForColorPalette.take(4).map(
-                        (e) => CurrentColor.inst.getTrackColors(e, networkArtworkInfo: null, delightnedAndAlpha: false, useIsolate: true),
-                      ),
+                  : tracksForColorPalette
+                        .take(4)
+                        .map(
+                          (e) => CurrentColor.inst.getTrackColors(e, networkArtworkInfo: null, delightnedAndAlpha: false, useIsolate: true),
+                        ),
             ),
             builder: (context, snapshot) {
               final trackColors = snapshot.data;
@@ -412,10 +417,10 @@ void _showTrackColorPaletteDialog({
   }
 
   Widget getColorWidget(Color? color, [Widget? child]) => CircleAvatar(
-        backgroundColor: color,
-        maxRadius: 14.0,
-        child: child,
-      );
+    backgroundColor: color,
+    maxRadius: 14.0,
+    child: child,
+  );
 
   Widget mixWidget({
     required String title,
@@ -424,15 +429,17 @@ void _showTrackColorPaletteDialog({
     return Row(
       children: [
         getText('$title  '),
-        ...allMixes.map(
-          (colors) {
-            final mixExtra = NamidaColor.mixIntColors(colors);
-            return TapDetector(
-              onTap: () => finalColorToBeUsed.value = mixExtra,
-              child: getColorWidget(mixExtra),
-            );
-          },
-        ).addSeparators(separator: const SizedBox(width: 4.0)),
+        ...allMixes
+            .map(
+              (colors) {
+                final mixExtra = NamidaColor.mixIntColors(colors);
+                return TapDetector(
+                  onTap: () => finalColorToBeUsed.value = mixExtra,
+                  child: getColorWidget(mixExtra),
+                );
+              },
+            )
+            .addSeparators(separator: const SizedBox(width: 4.0)),
       ],
     );
   }
@@ -456,32 +463,34 @@ void _showTrackColorPaletteDialog({
       child: Wrap(
         runSpacing: 8.0,
         children: [
-          ...palette.map((e) => Padding(
-                padding: const EdgeInsets.only(right: 6.0),
-                child: GestureDetector(
-                  onTap: () => onColorTap(e),
-                  onLongPress: () => onColorLongPress(e),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      getColorWidget(e),
-                      Container(
-                        padding: const EdgeInsets.all(2.0),
-                        decoration: BoxDecoration(
-                          color: theme.scaffoldBackgroundColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Text('✓'),
-                      ).animateEntrance(
-                        showWhen: displayCheckMark(e),
-                        allCurves: Curves.easeInOutQuart,
-                        durationMS: 100,
+          ...palette.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(right: 6.0),
+              child: GestureDetector(
+                onTap: () => onColorTap(e),
+                onLongPress: () => onColorLongPress(e),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    getColorWidget(e),
+                    Container(
+                      padding: const EdgeInsets.all(2.0),
+                      decoration: BoxDecoration(
+                        color: theme.scaffoldBackgroundColor,
+                        shape: BoxShape.circle,
                       ),
-                    ],
-                  ),
+                      child: const Text('✓'),
+                    ).animateEntrance(
+                      showWhen: displayCheckMark(e),
+                      allCurves: Curves.easeInOutQuart,
+                      durationMS: 100,
+                    ),
+                  ],
                 ),
-              )),
-          if (additionalWidget != null) additionalWidget,
+              ),
+            ),
+          ),
+          ?additionalWidget,
         ],
       ),
     );
@@ -637,7 +646,7 @@ void _showTrackColorPaletteDialog({
                 ),
                 const SizedBox(width: 12.0),
               ],
-            )
+            ),
           ],
         ),
       );
@@ -660,7 +669,8 @@ void showTrackDeletePermanentlyDialog(List<Selectable> tracks, Color? colorSchem
       theme: theme,
       normalTitleStyle: true,
       isWarning: true,
-      bodyText: "${lang.DELETE_N_TRACKS_FROM_STORAGE.replaceFirst('_NUM_', [
+      bodyText:
+          "${lang.DELETE_N_TRACKS_FROM_STORAGE.replaceFirst('_NUM_', [
             if (tracksOnlyCount > 0) tracksOnlyCount.displayTrackKeyword,
             if (videosOnlyCount > 0) videosOnlyCount.displayVideoKeyword,
           ].join(' & ').addDQuotation())}?",
@@ -742,7 +752,7 @@ void showLibraryTracksChooseDialog({
             text: lang.CONFIRM,
             onPressed: () => onChoose(selectedTrack.value!),
           ),
-        )
+        ),
       ],
       child: SizedBox(
         width: namida.width,
@@ -791,7 +801,7 @@ void showLibraryTracksChooseDialog({
                             : const SizedBox(),
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),

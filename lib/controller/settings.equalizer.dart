@@ -59,13 +59,13 @@ class EqualizerSettings with SettingsFileWriter {
 
   @override
   Object get jsonToWrite => <String, dynamic>{
-        "preset": preset,
-        "equalizerEnabled": equalizerEnabled,
-        "equalizer": equalizer.map((key, value) => MapEntry(key.toString(), value)),
-        "loudnessEnhancerEnabled": loudnessEnhancerEnabled,
-        "loudnessEnhancer": loudnessEnhancer,
-        "uiTapToUpdate": uiTapToUpdate.value,
-      };
+    "preset": preset,
+    "equalizerEnabled": equalizerEnabled,
+    "equalizer": equalizer.map((key, value) => MapEntry(key.toString(), value)),
+    "loudnessEnhancerEnabled": loudnessEnhancerEnabled,
+    "loudnessEnhancer": loudnessEnhancer,
+    "uiTapToUpdate": uiTapToUpdate.value,
+  };
 
   Future<void> _writeToStorage() async => await writeToStorage();
 

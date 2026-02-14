@@ -80,8 +80,8 @@ class NamidaDialogs {
     final queueSource = type == MediaType.albumArtist
         ? QueueSource.albumArtist
         : type == MediaType.composer
-            ? QueueSource.composer
-            : QueueSource.artist;
+        ? QueueSource.composer
+        : QueueSource.artist;
     await showGeneralPopupDialog(
       tracks,
       name.overflow,
@@ -223,7 +223,7 @@ class NamidaDialogs {
                   NamidaNavigator.inst.closeDialog();
                 },
               ),
-            )
+            ),
           ],
           child: Padding(
             padding: const EdgeInsets.all(12.0),

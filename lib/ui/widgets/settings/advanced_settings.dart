@@ -57,19 +57,19 @@ class AdvancedSettings extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-        _AdvancedSettingKeys.performanceMode: [lang.PERFORMANCE_MODE],
-        _AdvancedSettingKeys.rescanVideos: [lang.RESCAN_VIDEOS],
-        _AdvancedSettingKeys.removeSourceHistory: [lang.REMOVE_SOURCE_FROM_HISTORY],
-        _AdvancedSettingKeys.updateDirPath: [lang.UPDATE_DIRECTORY_PATH],
-        _AdvancedSettingKeys.fixYTDLPBigThumbnail: [lang.FIX_YTDLP_BIG_THUMBNAIL_SIZE],
-        _AdvancedSettingKeys.compressImages: [lang.COMPRESS_IMAGES],
-        _AdvancedSettingKeys.maxImageCache: [lang.MAX_IMAGE_CACHE_SIZE],
-        _AdvancedSettingKeys.maxAudioCache: [lang.MAX_AUDIO_CACHE_SIZE],
-        _AdvancedSettingKeys.maxVideoCache: [lang.MAX_VIDEO_CACHE_SIZE],
-        _AdvancedSettingKeys.clearImageCache: [lang.CLEAR_IMAGE_CACHE],
-        _AdvancedSettingKeys.clearAudioCache: [lang.CLEAR_AUDIO_CACHE],
-        _AdvancedSettingKeys.clearVideoCache: [lang.CLEAR_VIDEO_CACHE],
-      };
+    _AdvancedSettingKeys.performanceMode: [lang.PERFORMANCE_MODE],
+    _AdvancedSettingKeys.rescanVideos: [lang.RESCAN_VIDEOS],
+    _AdvancedSettingKeys.removeSourceHistory: [lang.REMOVE_SOURCE_FROM_HISTORY],
+    _AdvancedSettingKeys.updateDirPath: [lang.UPDATE_DIRECTORY_PATH],
+    _AdvancedSettingKeys.fixYTDLPBigThumbnail: [lang.FIX_YTDLP_BIG_THUMBNAIL_SIZE],
+    _AdvancedSettingKeys.compressImages: [lang.COMPRESS_IMAGES],
+    _AdvancedSettingKeys.maxImageCache: [lang.MAX_IMAGE_CACHE_SIZE],
+    _AdvancedSettingKeys.maxAudioCache: [lang.MAX_AUDIO_CACHE_SIZE],
+    _AdvancedSettingKeys.maxVideoCache: [lang.MAX_VIDEO_CACHE_SIZE],
+    _AdvancedSettingKeys.clearImageCache: [lang.CLEAR_IMAGE_CACHE],
+    _AdvancedSettingKeys.clearAudioCache: [lang.CLEAR_AUDIO_CACHE],
+    _AdvancedSettingKeys.clearVideoCache: [lang.CLEAR_VIDEO_CACHE],
+  };
 
   void _onPerformanceTileTap(BuildContext context) {
     final theme = context.theme;
@@ -353,7 +353,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                 snackyy(title: lang.NOTE, message: "${lang.REMOVED} ${removedNum.displayTrackKeyword}");
               },
             ),
-          )
+          ),
         ],
         child: Obx(
           (context) => Column(
@@ -365,10 +365,12 @@ class AdvancedSettings extends SettingSubpageProvider {
                   const SizedBox(width: 8.0),
                   const Icon(Broken.danger),
                   const SizedBox(width: 8.0),
-                  Obx((context) => Text(
-                        '${lang.TOTAL_TRACKS}: ${totalTracksToBeRemoved.valueR}',
-                        style: context.textTheme.displayMedium,
-                      )),
+                  Obx(
+                    (context) => Text(
+                      '${lang.TOTAL_TRACKS}: ${totalTracksToBeRemoved.valueR}',
+                      style: context.textTheme.displayMedium,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12.0),
@@ -789,7 +791,8 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
                             active: dirsChoosen.contains(e),
                             dense: true,
                             icon: Broken.cpu_setting,
-                            title: e.splitLastM(
+                            title:
+                                e.splitLastM(
                                   Platform.pathSeparator,
                                   onMatch: (part) {
                                     if (part.isNotEmpty) return part;
@@ -990,7 +993,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                                       NamidaNavigator.inst.closeDialog();
                                       await okUpdate();
                                     },
-                                  )
+                                  ),
                                 ],
                                 bodyText: lang.OLD_DIRECTORY_STILL_HAS_TRACKS,
                               ),
@@ -1051,7 +1054,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                           if (dir != null) newDirController.text = dir;
                         },
                         icon: Broken.folder,
-                      )
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12.0),

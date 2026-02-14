@@ -176,49 +176,55 @@ class FocusedMenuDetails extends StatelessWidget {
                 child: Container(
                   constraints: BoxConstraints(maxWidth: maxMenuWidth),
                   height: menuHeight,
-                  decoration: menuBoxDecoration ??
+                  decoration:
+                      menuBoxDecoration ??
                       BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
-                          boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 10, spreadRadius: 1)]),
-                  child: menuWidget ??
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+                        boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 10, spreadRadius: 1)],
+                      ),
+                  child:
+                      menuWidget ??
                       SuperSmoothListView.builder(
                         itemCount: menuItems.length,
                         padding: EdgeInsets.zero,
                         itemBuilder: (context, index) {
                           final FocusedMenuItem item = menuItems[index];
                           final Widget listItem = TapDetector(
-                              onTap: () {
-                                if (popOnItemTap) Navigator.pop(context);
-                                item.onPressed();
-                              },
-                              child: Container(
-                                  alignment: Alignment.center,
-                                  margin: const EdgeInsets.only(bottom: 1),
-                                  color: item.backgroundColor,
-                                  height: menuItemExtent,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 14),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: <Widget>[
-                                        item.title,
-                                        if (item.trailingIcon != null) ...[item.trailingIcon!]
-                                      ],
-                                    ),
-                                  )));
+                            onTap: () {
+                              if (popOnItemTap) Navigator.pop(context);
+                              item.onPressed();
+                            },
+                            child: Container(
+                              alignment: Alignment.center,
+                              margin: const EdgeInsets.only(bottom: 1),
+                              color: item.backgroundColor,
+                              height: menuItemExtent,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 14),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    item.title,
+                                    if (item.trailingIcon != null) ...[item.trailingIcon!],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
                           if (animateMenuItems) {
                             return TweenAnimationBuilder(
-                                builder: (context, dynamic value, child) {
-                                  return Transform(
-                                    transform: Matrix4.rotationX(1.5708 * value),
-                                    alignment: Alignment.bottomCenter,
-                                    child: child,
-                                  );
-                                },
-                                tween: Tween(begin: 1.0, end: 0.0),
-                                duration: Duration(milliseconds: index * itemsAnimationDurationMS),
-                                child: listItem);
+                              builder: (context, dynamic value, child) {
+                                return Transform(
+                                  transform: Matrix4.rotationX(1.5708 * value),
+                                  alignment: Alignment.bottomCenter,
+                                  child: child,
+                                );
+                              },
+                              tween: Tween(begin: 1.0, end: 0.0),
+                              duration: Duration(milliseconds: index * itemsAnimationDurationMS),
+                              child: listItem,
+                            );
                           } else {
                             return listItem;
                           }

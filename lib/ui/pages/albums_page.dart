@@ -67,8 +67,9 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
 
                     final finalAlbumsLength = finalAlbums.length;
                     final totalAlbumsLength = Indexer.inst.mainMapAlbums.valueR.length;
-                    String leftText =
-                        finalAlbumsLength != totalAlbumsLength ? '$finalAlbumsLength/${totalAlbumsLength.displayAlbumKeyword}' : finalAlbumsLength.displayAlbumKeyword;
+                    String leftText = finalAlbumsLength != totalAlbumsLength
+                        ? '$finalAlbumsLength/${totalAlbumsLength.displayAlbumKeyword}'
+                        : finalAlbumsLength.displayAlbumKeyword;
 
                     return ExpandableBox(
                       enableHero: enableHero,
@@ -124,7 +125,8 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                     settings.albumListTileHeight.valueR;
 
                     final sort = settings.albumSort.valueR;
-                    final sortTextIsUseless = sort == GroupSortType.album ||
+                    final sortTextIsUseless =
+                        sort == GroupSortType.album ||
                         sort == GroupSortType.year ||
                         sort == GroupSortType.albumArtist ||
                         sort == GroupSortType.numberOfTracks ||
@@ -159,59 +161,59 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                               ),
                             )
                           : settings.useAlbumStaggeredGridView.valueR
-                              ? Expanded(
-                                  child: SmoothMasonryGridView.builder(
-                                    controller: scrollController,
-                                    padding: kBottomPaddingInsets,
-                                    itemCount: finalAlbums.length,
-                                    mainAxisSpacing: 8.0,
-                                    gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: countPerRowResolved,
-                                    ),
-                                    itemBuilder: (context, i) {
-                                      final albumId = finalAlbums[i];
-                                      final tracks = albumId.getAlbumTracks();
-                                      return AnimatingGrid(
-                                        columnCount: finalAlbums.length,
-                                        position: i,
-                                        shouldAnimate: _shouldAnimate,
-                                        child: AlbumCard(
-                                          identifier: albumId,
-                                          album: tracks,
-                                          staggered: true,
-                                          extraInfo: extraTextResolver?.call(tracks),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                )
-                              : Expanded(
-                                  child: SmoothGridView.builder(
-                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: countPerRowResolved,
-                                      childAspectRatio: 0.75,
-                                      mainAxisSpacing: 8.0,
-                                    ),
-                                    controller: scrollController,
-                                    itemCount: finalAlbums.length,
-                                    padding: kBottomPaddingInsets,
-                                    itemBuilder: (BuildContext context, int i) {
-                                      final albumId = finalAlbums[i];
-                                      final tracks = albumId.getAlbumTracks();
-                                      return AnimatingGrid(
-                                        columnCount: finalAlbums.length,
-                                        position: i,
-                                        shouldAnimate: _shouldAnimate,
-                                        child: AlbumCard(
-                                          identifier: albumId,
-                                          album: tracks,
-                                          staggered: false,
-                                          extraInfo: extraTextResolver?.call(tracks),
-                                        ),
-                                      );
-                                    },
-                                  ),
+                          ? Expanded(
+                              child: SmoothMasonryGridView.builder(
+                                controller: scrollController,
+                                padding: kBottomPaddingInsets,
+                                itemCount: finalAlbums.length,
+                                mainAxisSpacing: 8.0,
+                                gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: countPerRowResolved,
                                 ),
+                                itemBuilder: (context, i) {
+                                  final albumId = finalAlbums[i];
+                                  final tracks = albumId.getAlbumTracks();
+                                  return AnimatingGrid(
+                                    columnCount: finalAlbums.length,
+                                    position: i,
+                                    shouldAnimate: _shouldAnimate,
+                                    child: AlbumCard(
+                                      identifier: albumId,
+                                      album: tracks,
+                                      staggered: true,
+                                      extraInfo: extraTextResolver?.call(tracks),
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
+                          : Expanded(
+                              child: SmoothGridView.builder(
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: countPerRowResolved,
+                                  childAspectRatio: 0.75,
+                                  mainAxisSpacing: 8.0,
+                                ),
+                                controller: scrollController,
+                                itemCount: finalAlbums.length,
+                                padding: kBottomPaddingInsets,
+                                itemBuilder: (BuildContext context, int i) {
+                                  final albumId = finalAlbums[i];
+                                  final tracks = albumId.getAlbumTracks();
+                                  return AnimatingGrid(
+                                    columnCount: finalAlbums.length,
+                                    position: i,
+                                    shouldAnimate: _shouldAnimate,
+                                    child: AlbumCard(
+                                      identifier: albumId,
+                                      album: tracks,
+                                      staggered: false,
+                                      extraInfo: extraTextResolver?.call(tracks),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                     );
                   },
                 ),

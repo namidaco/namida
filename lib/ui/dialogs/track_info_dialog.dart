@@ -252,7 +252,7 @@ Future<void> showTrackInfoDialog(
                                       track: track,
                                       compressed: false,
                                     ),
-                                    onSave: (_, __) => EditDeleteController.inst.saveTrackArtworkToStorage(track),
+                                    onSave: (_, _) => EditDeleteController.inst.saveTrackArtworkToStorage(track),
                                     themeColor: () => color.value,
                                   ),
                                   const SizedBox(width: 10.0),
@@ -320,7 +320,8 @@ Future<void> showTrackInfoDialog(
 
                               if (shouldShowTheField(trackExt.hasUnknownArtist))
                                 TrackInfoListTile(
-                                  title: Indexer.splitArtist(
+                                  title:
+                                      Indexer.splitArtist(
                                             title: trackExt.title,
                                             originalArtist: trackExt.originalArtist,
                                             config: ArtistsSplitConfig.settings(addFeatArtist: false),
@@ -528,7 +529,8 @@ class TrackInfoListTile extends StatelessWidget {
               const SizedBox(width: 4.0),
               Padding(
                 padding: textToIconPaddingCorrector,
-                child: child ??
+                child:
+                    child ??
                     (hasLinks
                         ? NamidaSelectableAutoLinkText(text: value == '' ? '?' : value)
                         : Text(
@@ -557,7 +559,7 @@ class TrackInfoListTile extends StatelessWidget {
                   )
                   .addSeparators(
                     separator: const SizedBox(width: 4.0),
-                  )
+                  ),
             ],
           ),
         ),

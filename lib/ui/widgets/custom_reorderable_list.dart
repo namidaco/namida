@@ -125,11 +125,11 @@ class ReorderableList extends StatefulWidget {
     this.restorationId,
     this.clipBehavior = Clip.hardEdge,
     this.autoScrollerVelocityScalar,
-  })  : assert(itemCount >= 0),
-        assert(
-          (itemExtent == null && prototypeItem == null) || (itemExtent == null && itemExtentBuilder == null) || (prototypeItem == null && itemExtentBuilder == null),
-          'You can only pass one of itemExtent, prototypeItem and itemExtentBuilder.',
-        );
+  }) : assert(itemCount >= 0),
+       assert(
+         (itemExtent == null && prototypeItem == null) || (itemExtent == null && itemExtentBuilder == null) || (prototypeItem == null && itemExtentBuilder == null),
+         'You can only pass one of itemExtent, prototypeItem and itemExtentBuilder.',
+       );
 
   /// {@template flutter.widgets.reorderable_list.itemBuilder}
   /// Called, as needed, to build list item widgets.
@@ -455,12 +455,12 @@ class SliverReorderableList extends StatefulWidget {
     this.prototypeItem,
     this.proxyDecorator,
     double? autoScrollerVelocityScalar,
-  })  : autoScrollerVelocityScalar = autoScrollerVelocityScalar ?? _kDefaultAutoScrollVelocityScalar,
-        assert(itemCount >= 0),
-        assert(
-          (itemExtent == null && prototypeItem == null) || (itemExtent == null && itemExtentBuilder == null) || (prototypeItem == null && itemExtentBuilder == null),
-          'You can only pass one of itemExtent, prototypeItem and itemExtentBuilder.',
-        );
+  }) : autoScrollerVelocityScalar = autoScrollerVelocityScalar ?? _kDefaultAutoScrollVelocityScalar,
+       assert(itemCount >= 0),
+       assert(
+         (itemExtent == null && prototypeItem == null) || (itemExtent == null && itemExtentBuilder == null) || (prototypeItem == null && itemExtentBuilder == null),
+         'You can only pass one of itemExtent, prototypeItem and itemExtentBuilder.',
+       );
 
   // An eyeballed value for a smooth scrolling experience.
   static const double _kDefaultAutoScrollVelocityScalar = 50;
@@ -1128,19 +1128,20 @@ class _ReorderableItemState extends State<_ReorderableItem> {
       _targetOffset = newTargetOffset;
       if (animate) {
         if (_offsetAnimation == null) {
-          _offsetAnimation = AnimationController(
-            vsync: _listState,
-            duration: const Duration(milliseconds: 250),
-          )
-            ..addListener(rebuild)
-            ..addStatusListener((AnimationStatus status) {
-              if (status == AnimationStatus.completed) {
-                _startOffset = _targetOffset;
-                _offsetAnimation!.dispose();
-                _offsetAnimation = null;
-              }
-            })
-            ..forward();
+          _offsetAnimation =
+              AnimationController(
+                  vsync: _listState,
+                  duration: const Duration(milliseconds: 250),
+                )
+                ..addListener(rebuild)
+                ..addStatusListener((AnimationStatus status) {
+                  if (status == AnimationStatus.completed) {
+                    _startOffset = _targetOffset;
+                    _offsetAnimation!.dispose();
+                    _offsetAnimation = null;
+                  }
+                })
+                ..forward();
         } else {
           _startOffset = offset;
           _offsetAnimation!.forward(from: 0.0);
@@ -1345,16 +1346,17 @@ class _DragInfo extends Drag {
   }
 
   void startDrag() {
-    _proxyAnimation = AnimationController(
-      vsync: tickerProvider,
-      duration: const Duration(milliseconds: 250),
-    )
-      ..addStatusListener((AnimationStatus status) {
-        if (status == AnimationStatus.dismissed) {
-          _dropCompleted();
-        }
-      })
-      ..forward();
+    _proxyAnimation =
+        AnimationController(
+            vsync: tickerProvider,
+            duration: const Duration(milliseconds: 250),
+          )
+          ..addStatusListener((AnimationStatus status) {
+            if (status == AnimationStatus.dismissed) {
+              _dropCompleted();
+            }
+          })
+          ..forward();
   }
 
   @override

@@ -104,10 +104,13 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
       () async {
         String? title = info?.title;
         if (title == null || title.isEmpty) {
-          title = await YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: () {
-            isTitleFetchedFromMissingInfo = true;
-            VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
-          });
+          title = await YoutubeInfoController.utils.getVideoName(
+            videoId,
+            onMissingInfo: () {
+              isTitleFetchedFromMissingInfo = true;
+              VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
+            },
+          );
         } else if (title.isYTTitleFaulty()) {
           title = await YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: null);
           isTitleFetchedFromMissingInfo = true;
@@ -294,7 +297,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                         icon: Broken.refresh,
                         iconSize: 16.0,
                         onPressed: () => _fillMissingInfoForce().then((_) => _isLoadingInfo.value = false),
-                      )
+                      ),
                     ],
                   ],
                 ),
@@ -315,7 +318,8 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                     child: ObxO(
                       rx: _videoPageInfo,
                       builder: (context, videoPageInfo) {
-                        final viewsCountText = (videoPageInfo?.videoInfo?.viewsCount)?.formatDecimalShort() ??
+                        final viewsCountText =
+                            (videoPageInfo?.videoInfo?.viewsCount)?.formatDecimalShort() ??
                             videoPageInfo?.videoInfo?.viewCountTextShort ??
                             videoPageInfo?.videoInfo?.viewCountTextLong;
                         return Text(
@@ -436,7 +440,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                           ),
                         )
                       : SizedBox(),
-                )
+                ),
               ],
               fetchMissingIfRequired: true,
               onImageFetchStart: () => _isLoadingThumbnail.value = true,
@@ -451,191 +455,192 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                     child: SmoothSingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 24.0),
-                          NamidaInkWell(
-                            padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-                            onTap: () => showVideoListensDialog(videoId, colorScheme: _themeColor),
-                            borderRadius: 12.0,
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 2.0),
-                                NamidaArtworkExpandableToFullscreen(
-                                  artwork: artwork,
-                                  heroTag: null,
-                                  imageFile: () => ThumbnailManager.inst.getYoutubeThumbnailFromCache(
-                                    id: videoId,
-                                    type: ThumbnailType.video,
-                                    isTemp: null,
-                                  ),
-                                  fetchImage: () async => FArtwork(
-                                    file: await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
-                                      id: videoId,
-                                      type: ThumbnailType.video,
+                        children:
+                            [
+                                  const SizedBox(height: 24.0),
+                                  NamidaInkWell(
+                                    padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                                    onTap: () => showVideoListensDialog(videoId, colorScheme: _themeColor),
+                                    borderRadius: 12.0,
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(width: 2.0),
+                                        NamidaArtworkExpandableToFullscreen(
+                                          artwork: artwork,
+                                          heroTag: null,
+                                          imageFile: () => ThumbnailManager.inst.getYoutubeThumbnailFromCache(
+                                            id: videoId,
+                                            type: ThumbnailType.video,
+                                            isTemp: null,
+                                          ),
+                                          fetchImage: () async => FArtwork(
+                                            file: await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+                                              id: videoId,
+                                              type: ThumbnailType.video,
+                                            ),
+                                          ),
+                                          onSave: (_, _) => YTUtils.copyThumbnailToStorage(videoId),
+                                          themeColor: () => _themeColor,
+                                        ),
+                                        const SizedBox(width: 10.0),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  const Icon(
+                                                    Broken.hashtag_1,
+                                                    size: 18.0,
+                                                  ),
+                                                  const SizedBox(width: 4.0),
+                                                  Expanded(
+                                                    child: Wrap(
+                                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                                      children: [
+                                                        Text(
+                                                          '${lang.TOTAL_LISTENS}: ',
+                                                          style: theme.textTheme.displaySmall,
+                                                        ),
+                                                        Text(
+                                                          '${totalListens.length}',
+                                                          style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8.0),
+                                              Row(
+                                                children: [
+                                                  const Icon(
+                                                    Broken.cake,
+                                                    size: 18.0,
+                                                  ),
+                                                  const SizedBox(width: 4.0),
+                                                  Expanded(
+                                                    child: Text(
+                                                      firstListenTrack?.dateAndClockFormattedOriginal ?? lang.MAKE_YOUR_FIRST_LISTEN,
+                                                      style: theme.textTheme.displaySmall,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12.0),
+                                      ],
                                     ),
                                   ),
-                                  onSave: (_, __) => YTUtils.copyThumbnailToStorage(videoId),
-                                  themeColor: () => _themeColor,
-                                ),
-                                const SizedBox(width: 10.0),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
+                                  const SizedBox(height: 16.0),
+                                  if (_videoIsMissingOriginalInfo)
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          const Icon(
-                                            Broken.hashtag_1,
-                                            size: 18.0,
+                                          Icon(
+                                            Broken.danger,
+                                            size: 21.0,
                                           ),
-                                          const SizedBox(width: 4.0),
+                                          SizedBox(width: 6.0),
                                           Expanded(
-                                            child: Wrap(
-                                              crossAxisAlignment: WrapCrossAlignment.center,
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Text(
-                                                  '${lang.TOTAL_LISTENS}: ',
+                                                  lang.THIS_VIDEO_IS_LIKELY_DELETED_OR_SET_TO_PRIVATE,
                                                   style: theme.textTheme.displaySmall,
                                                 ),
-                                                Text(
-                                                  '${totalListens.length}',
-                                                  style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
-                                                ),
+                                                if (playabilityText.isNotEmpty && playabilityText != 'Video unavailable' && playabilityText != 'This video is unavailable')
+                                                  Text(
+                                                    playabilityText.addDQuotation(),
+                                                    style: theme.textTheme.displaySmall?.copyWith(
+                                                      fontSize: 11.0,
+                                                    ),
+                                                  ),
+                                                if (sourcesText != null)
+                                                  Text(
+                                                    "${lang.SOURCE}: ${sourcesText!}",
+                                                    style: theme.textTheme.displaySmall?.copyWith(
+                                                      fontSize: 11.0,
+                                                    ),
+                                                  ),
                                               ],
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 8.0),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Broken.cake,
-                                            size: 18.0,
-                                          ),
-                                          const SizedBox(width: 4.0),
-                                          Expanded(
-                                            child: Text(
-                                              firstListenTrack?.dateAndClockFormattedOriginal ?? lang.MAKE_YOUR_FIRST_LISTEN,
-                                              style: theme.textTheme.displaySmall,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 12.0),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16.0),
-                          if (_videoIsMissingOriginalInfo)
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Broken.danger,
-                                    size: 21.0,
-                                  ),
-                                  SizedBox(width: 6.0),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          lang.THIS_VIDEO_IS_LIKELY_DELETED_OR_SET_TO_PRIVATE,
-                                          style: theme.textTheme.displaySmall,
-                                        ),
-                                        if (playabilityText.isNotEmpty && playabilityText != 'Video unavailable' && playabilityText != 'This video is unavailable')
-                                          Text(
-                                            playabilityText.addDQuotation(),
-                                            style: theme.textTheme.displaySmall?.copyWith(
-                                              fontSize: 11.0,
-                                            ),
-                                          ),
-                                        if (sourcesText != null)
-                                          Text(
-                                            "${lang.SOURCE}: ${sourcesText!}",
-                                            style: theme.textTheme.displaySmall?.copyWith(
-                                              fontSize: 11.0,
-                                            ),
-                                          ),
-                                      ],
                                     ),
+                                  TrackInfoListTile(
+                                    title: lang.TITLE,
+                                    value: videoTitle ?? '',
+                                    icon: Broken.text,
                                   ),
-                                ],
-                              ),
-                            ),
-                          TrackInfoListTile(
-                            title: lang.TITLE,
-                            value: videoTitle ?? '',
-                            icon: Broken.text,
-                          ),
-                          TrackInfoListTile(
-                            title: lang.CHANNEL,
-                            value: channelTitle ?? '',
-                            icon: Broken.user,
-                          ),
-                          TrackInfoListTile(
-                            title: lang.DATE,
-                            value: dateText ?? '',
-                            cards: [dateAgo],
-                            icon: Broken.calendar,
-                          ),
-                          TrackInfoListTile(
-                            title: lang.DURATION,
-                            value: durationSeconds?.secondsLabel ?? '',
-                            icon: Broken.clock,
-                          ),
-                          TrackInfoListTile(
-                            title: 'ID',
-                            value: isDummyVideoId ? '' : videoId,
-                            icon: Broken.video_square,
-                          ),
-                          TrackInfoListTile(
-                            title: lang.LINK,
-                            value: isDummyVideoId ? '' : YTUrlUtils.buildVideoUrl(videoId),
-                            hasLinks: true,
-                            icon: Broken.link_1,
-                          ),
-                          TrackInfoListTile(
-                            title: "${lang.LINK} (${lang.CHANNEL})",
-                            value: channelId != null && channelId!.isNotEmpty ? YTUrlUtils.buildChannelUrl(channelId!) : '?',
-                            hasLinks: true,
-                            icon: Broken.link_1,
-                          ),
-                          if (saveLocation != null)
-                            TrackInfoListTile(
-                              title: lang.PATH,
-                              value: saveLocation,
-                              icon: Broken.location,
-                            ),
-                          TrackInfoListTile(
-                            title: lang.DESCRIPTION,
-                            value: description ?? '',
-                            icon: Broken.message_text_1,
-                            child: descriptionWidget,
-                          ),
-                          if (tags != null)
-                            TrackInfoListTile(
-                              title: lang.TAGS,
-                              value: tags.entries.map((e) => e.value == null ? null : "- ${e.key}: ${e.value}").whereType<String>().join('\n'),
-                              icon: Broken.tag,
-                            ),
-                        ]
-                            .addSeparators(
-                              separator: NamidaContainerDivider(
-                                height: 1.5,
-                                colorForce: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                              ),
-                              skipFirst: 4,
-                            )
-                            .toList(),
+                                  TrackInfoListTile(
+                                    title: lang.CHANNEL,
+                                    value: channelTitle ?? '',
+                                    icon: Broken.user,
+                                  ),
+                                  TrackInfoListTile(
+                                    title: lang.DATE,
+                                    value: dateText ?? '',
+                                    cards: [dateAgo],
+                                    icon: Broken.calendar,
+                                  ),
+                                  TrackInfoListTile(
+                                    title: lang.DURATION,
+                                    value: durationSeconds?.secondsLabel ?? '',
+                                    icon: Broken.clock,
+                                  ),
+                                  TrackInfoListTile(
+                                    title: 'ID',
+                                    value: isDummyVideoId ? '' : videoId,
+                                    icon: Broken.video_square,
+                                  ),
+                                  TrackInfoListTile(
+                                    title: lang.LINK,
+                                    value: isDummyVideoId ? '' : YTUrlUtils.buildVideoUrl(videoId),
+                                    hasLinks: true,
+                                    icon: Broken.link_1,
+                                  ),
+                                  TrackInfoListTile(
+                                    title: "${lang.LINK} (${lang.CHANNEL})",
+                                    value: channelId != null && channelId!.isNotEmpty ? YTUrlUtils.buildChannelUrl(channelId!) : '?',
+                                    hasLinks: true,
+                                    icon: Broken.link_1,
+                                  ),
+                                  if (saveLocation != null)
+                                    TrackInfoListTile(
+                                      title: lang.PATH,
+                                      value: saveLocation,
+                                      icon: Broken.location,
+                                    ),
+                                  TrackInfoListTile(
+                                    title: lang.DESCRIPTION,
+                                    value: description ?? '',
+                                    icon: Broken.message_text_1,
+                                    child: descriptionWidget,
+                                  ),
+                                  if (tags != null)
+                                    TrackInfoListTile(
+                                      title: lang.TAGS,
+                                      value: tags.entries.map((e) => e.value == null ? null : "- ${e.key}: ${e.value}").whereType<String>().join('\n'),
+                                      icon: Broken.tag,
+                                    ),
+                                ]
+                                .addSeparators(
+                                  separator: NamidaContainerDivider(
+                                    height: 1.5,
+                                    colorForce: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                                  ),
+                                  skipFirst: 4,
+                                )
+                                .toList(),
                       ),
                     ),
                   ),

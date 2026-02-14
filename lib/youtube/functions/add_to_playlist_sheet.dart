@@ -32,7 +32,8 @@ void showAddToPlaylistSheet({
   required Map<String, String?> idsNamesLookup,
   String playlistNameToAdd = '',
 }) async {
-  final videoNamesSubtitle = await ids
+  final videoNamesSubtitle =
+      await ids
           .take(3)
           .mapAsync((id) async => idsNamesLookup[id] ?? await YoutubeInfoController.utils.getVideoName(id) ?? id) //
           .join(', ') +
@@ -287,8 +288,10 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
         final confirmed = await _confirmRemoveVideos();
         if (confirmed) _onRemoveFromPlaylistTap(pl, onStart, onEnd);
       } else {
-        final action = await NamidaOnTaps.inst
-            .showDuplicatedDialogAction([PlaylistAddDuplicateAction.addAllAndRemoveOldOnes, PlaylistAddDuplicateAction.justAddEverything], displayTitle: false);
+        final action = await NamidaOnTaps.inst.showDuplicatedDialogAction([
+          PlaylistAddDuplicateAction.addAllAndRemoveOldOnes,
+          PlaylistAddDuplicateAction.justAddEverything,
+        ], displayTitle: false);
         if (action == PlaylistAddDuplicateAction.justAddEverything) {
           await _onAddToPlaylistTap(pl, onStart, onEnd);
         } else if (action == PlaylistAddDuplicateAction.addAllAndRemoveOldOnes) {
@@ -407,22 +410,22 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                         child: CircularProgressIndicator(strokeWidth: 2.0),
                       )
                     : isSingle
-                        ? Padding(
-                            padding: const EdgeInsets.all(2.0),
-                            child: Checkbox.adaptive(
-                              value: _newContainsVideo[pl.playlistId] ?? pl.containsVideo,
-                              onChanged: (value) => _onPlaylistTap(pl, loadingController.startLoading, loadingController.stopLoading),
-                            ),
-                          )
-                        : _newContainsVideo[pl.playlistId] == true
-                            ? const Icon(
-                                Broken.tick_circle,
-                                size: 22.0,
-                              )
-                            : const Icon(
-                                Broken.add_circle,
-                                size: 22.0,
-                              ),
+                    ? Padding(
+                        padding: const EdgeInsets.all(2.0),
+                        child: Checkbox.adaptive(
+                          value: _newContainsVideo[pl.playlistId] ?? pl.containsVideo,
+                          onChanged: (value) => _onPlaylistTap(pl, loadingController.startLoading, loadingController.stopLoading),
+                        ),
+                      )
+                    : _newContainsVideo[pl.playlistId] == true
+                    ? const Icon(
+                        Broken.tick_circle,
+                        size: 22.0,
+                      )
+                    : const Icon(
+                        Broken.add_circle,
+                        size: 22.0,
+                      ),
               ),
               const SizedBox(width: 12.0),
             ],

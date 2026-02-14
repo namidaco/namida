@@ -47,10 +47,7 @@ class HomePage extends StatefulWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.PAGE_Home;
 
-  HomePage.tracks({super.key})
-      : historyManager = HistoryController.inst,
-        playlistManager = PlaylistController.inst,
-        generator = NamidaGenerator.inst;
+  HomePage.tracks({super.key}) : historyManager = HistoryController.inst, playlistManager = PlaylistController.inst, generator = NamidaGenerator.inst;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -132,8 +129,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
     // -- Recent Listens --
     if (_recentListened.isEmpty) {
-      _recentListened
-          .addAll(widget.generator.generateItemsFromHistoryDates(DateTime(timeNow.year, timeNow.month, timeNow.day - 3), timeNow, sortByListensInRangeIfRequired: false).take(40));
+      _recentListened.addAll(
+        widget.generator.generateItemsFromHistoryDates(DateTime(timeNow.year, timeNow.month, timeNow.day - 3), timeNow, sortByListensInRangeIfRequired: false).take(40),
+      );
     }
 
     // -- Top Recents --
@@ -287,7 +285,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
       _mixes.addAll([
         MapEntry(lang.NEW_TRACKS_RECOMMENDED, recommendedMixTracks),
-        if (supremacyEntry != null) supremacyEntry,
+        ?supremacyEntry,
         MapEntry(lang.TOP_RECENTS, topRecentListenedKeys),
         MapEntry(lang.UNDERRATED, underrated),
         MapEntry(lang.LOST_PARTNERS, lostPartners),
@@ -390,45 +388,47 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
             children: [
               Expanded(
                 flex: 6,
-                child: Builder(builder: (context) {
-                  return ObxO(
-                    rx: settings.homePageItems,
-                    builder: (context, homePageItems) => NamidaListView(
-                      itemExtent: null,
-                      scrollController: mainListController,
-                      itemCount: homePageItems.length,
-                      itemBuilder: (context, index) {
-                        final item = homePageItems[index];
-                        return Material(
-                          key: ValueKey(item),
-                          type: MaterialType.transparency,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
-                            child: ListTileWithCheckMark(
-                              active: true,
-                              icon: Broken.recovery_convert,
-                              title: item.toText(),
-                              onTap: () {
-                                if (settings.homePageItems.length <= 3) {
-                                  showMinimumItemsSnack(3);
-                                  return;
-                                }
-                                subList.add(item);
-                                settings.removeFromList(homePageItem1: item);
-                              },
+                child: Builder(
+                  builder: (context) {
+                    return ObxO(
+                      rx: settings.homePageItems,
+                      builder: (context, homePageItems) => NamidaListView(
+                        itemExtent: null,
+                        scrollController: mainListController,
+                        itemCount: homePageItems.length,
+                        itemBuilder: (context, index) {
+                          final item = homePageItems[index];
+                          return Material(
+                            key: ValueKey(item),
+                            type: MaterialType.transparency,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: ListTileWithCheckMark(
+                                active: true,
+                                icon: Broken.recovery_convert,
+                                title: item.toText(),
+                                onTap: () {
+                                  if (settings.homePageItems.length <= 3) {
+                                    showMinimumItemsSnack(3);
+                                    return;
+                                  }
+                                  subList.add(item);
+                                  settings.removeFromList(homePageItem1: item);
+                                },
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                      onReorder: (oldIndex, newIndex) {
-                        if (newIndex > oldIndex) newIndex -= 1;
-                        final item = settings.homePageItems.value.elementAt(oldIndex);
-                        settings.removeFromList(homePageItem1: item);
-                        settings.insertInList(newIndex, homePageItem1: item);
-                      },
-                    ),
-                  );
-                }),
+                          );
+                        },
+                        onReorder: (oldIndex, newIndex) {
+                          if (newIndex > oldIndex) newIndex -= 1;
+                          final item = settings.homePageItems.value.elementAt(oldIndex);
+                          settings.removeFromList(homePageItem1: item);
+                          settings.insertInList(newIndex, homePageItem1: item);
+                        },
+                      ),
+                    );
+                  },
+                ),
               ),
               const NamidaContainerDivider(height: 4.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
               if (subList.isNotEmpty)
@@ -526,200 +526,202 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                 NamidaIconButton(
                                   icon: Broken.setting_4,
                                   onPressed: showReorderHomeItemsDialog,
-                                )
+                                ),
                               ],
                             ),
                           ),
                         ),
-                        ...homePageItems.map(
-                          (element) {
-                            switch (element) {
-                              case HomePageItems.mixes:
-                                return SliverToBoxAdapter(
-                                  child: _HorizontalList(
-                                    homepageItem: element,
-                                    isLoading: _isLoading,
-                                    title: lang.MIXES,
-                                    icon: Broken.scanning,
-                                    height: 186.0 + 12.0,
-                                    itemCount: _isLoading ? _shimmerList.length : _mixes.length,
-                                    itemExtent: 240.0,
-                                    itemBuilder: (context, index) {
-                                      final entry = _isLoading ? null : _mixes[index];
-                                      return _MixesCard(
-                                        key: entry == null ? const Key("") : Key("${entry.key}_${entry.value.firstOrNull}"),
-                                        title: entry?.key ?? '',
-                                        width: 240.0,
+                        ...homePageItems
+                            .map(
+                              (element) {
+                                switch (element) {
+                                  case HomePageItems.mixes:
+                                    return SliverToBoxAdapter(
+                                      child: _HorizontalList(
+                                        homepageItem: element,
+                                        isLoading: _isLoading,
+                                        title: lang.MIXES,
+                                        icon: Broken.scanning,
                                         height: 186.0 + 12.0,
-                                        index: index,
-                                        dummyContainer: _isLoading,
-                                        tracks: entry?.value ?? [],
-                                      );
-                                    },
-                                  ),
-                                );
-
-                              case HomePageItems.recentListens:
-                                return _TracksList(
-                                  listId: 'recentListens',
-                                  homepageItem: element,
-                                  isLoading: _isLoading,
-                                  title: lang.RECENT_LISTENS,
-                                  icon: Broken.command_square,
-                                  listy: _recentListened,
-                                  onTap: NamidaOnTaps.inst.onHistoryPlaylistTap,
-                                  topRightText: (track) {
-                                    if (track?.trackWithDate == null) return null;
-                                    return TimeAgoController.dateMSSEFromNow(track!.trackWithDate!.dateAdded, long: false);
-                                  },
-                                );
-
-                              case HomePageItems.topRecentListens:
-                                return _TracksList(
-                                  listId: 'topRecentListens',
-                                  homepageItem: element,
-                                  isLoading: _isLoading,
-                                  title: lang.TOP_RECENTS,
-                                  icon: Broken.crown_1,
-                                  listy: const [],
-                                  listWithListens: _topRecentListened,
-                                  onTap: () {
-                                    _onGoingToMostPlayedPage(
-                                      mptr: _topRecentsTimeRange,
+                                        itemCount: _isLoading ? _shimmerList.length : _mixes.length,
+                                        itemExtent: 240.0,
+                                        itemBuilder: (context, index) {
+                                          final entry = _isLoading ? null : _mixes[index];
+                                          return _MixesCard(
+                                            key: entry == null ? const Key("") : Key("${entry.key}_${entry.value.firstOrNull}"),
+                                            title: entry?.key ?? '',
+                                            width: 240.0,
+                                            height: 186.0 + 12.0,
+                                            index: index,
+                                            dummyContainer: _isLoading,
+                                            tracks: entry?.value ?? [],
+                                          );
+                                        },
+                                      ),
                                     );
-                                  },
-                                );
 
-                              case HomePageItems.lostMemories:
-                                return _TracksList(
-                                  listId: 'lostMemories_$currentYearLostMemories',
-                                  controller: _lostMemoriesScrollController,
-                                  homepageItem: element,
-                                  isLoading: _isLoading,
-                                  title: lang.LOST_MEMORIES,
-                                  subtitle: () {
-                                    final diff = DateTime.now().year - currentYearLostMemories;
-                                    return lang.LOST_MEMORIES_SUBTITLE.replaceFirst('_NUM_', '$diff');
-                                  }(),
-                                  icon: Broken.link_21,
-                                  listy: const [],
-                                  listWithListens: _sameTimeYearAgo,
-                                  onTap: () {
-                                    _onGoingToMostPlayedPage(
-                                      mptr: MostPlayedTimeRange.custom,
-                                      dateCustom: currentYearLostMemoriesDateRange,
+                                  case HomePageItems.recentListens:
+                                    return _TracksList(
+                                      listId: 'recentListens',
+                                      homepageItem: element,
+                                      isLoading: _isLoading,
+                                      title: lang.RECENT_LISTENS,
+                                      icon: Broken.command_square,
+                                      listy: _recentListened,
+                                      onTap: NamidaOnTaps.inst.onHistoryPlaylistTap,
+                                      topRightText: (track) {
+                                        if (track?.trackWithDate == null) return null;
+                                        return TimeAgoController.dateMSSEFromNow(track!.trackWithDate!.dateAdded, long: false);
+                                      },
                                     );
-                                  },
-                                  thirdWidget: SizedBox(
-                                    height: 32.0,
-                                    width: context.width,
-                                    child: SmoothSingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(top: 4.0),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: _lostMemoriesYears
-                                              .map(
-                                                (e) => Padding(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                                                  child: TapDetector(
-                                                    onTap: () {
-                                                      _updateSameTimeNYearsAgo(DateTime.now(), e);
-                                                      if (mounted) setState(() {});
-                                                    },
-                                                    child: AnimatedDecoration(
-                                                      duration: const Duration(milliseconds: 250),
-                                                      decoration: BoxDecoration(
-                                                        color: currentYearLostMemories == e ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
-                                                        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                                                      ),
-                                                      child: Padding(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                                        child: Text(
-                                                          '$e',
-                                                          style: textTheme.displaySmall?.copyWith(
-                                                            color: currentYearLostMemories == e ? Colors.white.withAlpha(240) : null,
-                                                            fontWeight: FontWeight.w600,
+
+                                  case HomePageItems.topRecentListens:
+                                    return _TracksList(
+                                      listId: 'topRecentListens',
+                                      homepageItem: element,
+                                      isLoading: _isLoading,
+                                      title: lang.TOP_RECENTS,
+                                      icon: Broken.crown_1,
+                                      listy: const [],
+                                      listWithListens: _topRecentListened,
+                                      onTap: () {
+                                        _onGoingToMostPlayedPage(
+                                          mptr: _topRecentsTimeRange,
+                                        );
+                                      },
+                                    );
+
+                                  case HomePageItems.lostMemories:
+                                    return _TracksList(
+                                      listId: 'lostMemories_$currentYearLostMemories',
+                                      controller: _lostMemoriesScrollController,
+                                      homepageItem: element,
+                                      isLoading: _isLoading,
+                                      title: lang.LOST_MEMORIES,
+                                      subtitle: () {
+                                        final diff = DateTime.now().year - currentYearLostMemories;
+                                        return lang.LOST_MEMORIES_SUBTITLE.replaceFirst('_NUM_', '$diff');
+                                      }(),
+                                      icon: Broken.link_21,
+                                      listy: const [],
+                                      listWithListens: _sameTimeYearAgo,
+                                      onTap: () {
+                                        _onGoingToMostPlayedPage(
+                                          mptr: MostPlayedTimeRange.custom,
+                                          dateCustom: currentYearLostMemoriesDateRange,
+                                        );
+                                      },
+                                      thirdWidget: SizedBox(
+                                        height: 32.0,
+                                        width: context.width,
+                                        child: SmoothSingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(top: 4.0),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: _lostMemoriesYears
+                                                  .map(
+                                                    (e) => Padding(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                                                      child: TapDetector(
+                                                        onTap: () {
+                                                          _updateSameTimeNYearsAgo(DateTime.now(), e);
+                                                          if (mounted) setState(() {});
+                                                        },
+                                                        child: AnimatedDecoration(
+                                                          duration: const Duration(milliseconds: 250),
+                                                          decoration: BoxDecoration(
+                                                            color: currentYearLostMemories == e ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
+                                                            borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                                                          ),
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                                            child: Text(
+                                                              '$e',
+                                                              style: textTheme.displaySmall?.copyWith(
+                                                                color: currentYearLostMemories == e ? Colors.white.withAlpha(240) : null,
+                                                                fontWeight: FontWeight.w600,
+                                                              ),
+                                                            ),
                                                           ),
                                                         ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ),
-                                              )
-                                              .toList(),
+                                                  )
+                                                  .toList(),
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                );
+                                    );
 
-                              case HomePageItems.recentlyAdded:
-                                return _TracksList(
-                                  listId: 'recentlyAdded',
-                                  queueSource: QueueSource.recentlyAdded,
-                                  isLoading: _isLoading,
-                                  homepageItem: element,
-                                  title: lang.RECENTLY_ADDED,
-                                  icon: Broken.back_square,
-                                  listy: _recentlyAdded,
-                                  onTap: _navigateToRecentlyListened,
-                                  topRightText: (track) {
-                                    if (track == null) return null;
-                                    final creationDate = track.track.dateAdded;
-                                    if (creationDate > _lowestDateMSSEToDisplay) return TimeAgoController.dateMSSEFromNow(creationDate, long: false);
-                                    return null;
-                                  },
-                                );
+                                  case HomePageItems.recentlyAdded:
+                                    return _TracksList(
+                                      listId: 'recentlyAdded',
+                                      queueSource: QueueSource.recentlyAdded,
+                                      isLoading: _isLoading,
+                                      homepageItem: element,
+                                      title: lang.RECENTLY_ADDED,
+                                      icon: Broken.back_square,
+                                      listy: _recentlyAdded,
+                                      onTap: _navigateToRecentlyListened,
+                                      topRightText: (track) {
+                                        if (track == null) return null;
+                                        final creationDate = track.track.dateAdded;
+                                        if (creationDate > _lowestDateMSSEToDisplay) return TimeAgoController.dateMSSEFromNow(creationDate, long: false);
+                                        return null;
+                                      },
+                                    );
 
-                              case HomePageItems.recentAlbums:
-                                return _AlbumsList(
-                                  isLoading: _isLoading,
-                                  homepageItem: element,
-                                  title: lang.RECENT_ALBUMS,
-                                  mainIcon: Broken.undo,
-                                  albums: _listOrShimmer(_recentAlbums),
-                                  listens: null,
-                                );
+                                  case HomePageItems.recentAlbums:
+                                    return _AlbumsList(
+                                      isLoading: _isLoading,
+                                      homepageItem: element,
+                                      title: lang.RECENT_ALBUMS,
+                                      mainIcon: Broken.undo,
+                                      albums: _listOrShimmer(_recentAlbums),
+                                      listens: null,
+                                    );
 
-                              case HomePageItems.topRecentAlbums:
-                                final keys = _topRecentAlbums.keys.toList();
-                                return _AlbumsList(
-                                  isLoading: _isLoading,
-                                  homepageItem: element,
-                                  title: lang.TOP_RECENT_ALBUMS,
-                                  mainIcon: Broken.crown_1,
-                                  albums: _listOrShimmer(keys),
-                                  listens: (album) => _topRecentAlbums[album] ?? 0,
-                                );
+                                  case HomePageItems.topRecentAlbums:
+                                    final keys = _topRecentAlbums.keys.toList();
+                                    return _AlbumsList(
+                                      isLoading: _isLoading,
+                                      homepageItem: element,
+                                      title: lang.TOP_RECENT_ALBUMS,
+                                      mainIcon: Broken.crown_1,
+                                      albums: _listOrShimmer(keys),
+                                      listens: (album) => _topRecentAlbums[album] ?? 0,
+                                    );
 
-                              case HomePageItems.recentArtists:
-                                return _ArtistsList(
-                                  isLoading: _isLoading,
-                                  homepageItem: element,
-                                  title: lang.RECENT_ARTISTS,
-                                  mainIcon: Broken.undo,
-                                  artists: _listOrShimmer(_recentArtists),
-                                  listens: null,
-                                );
+                                  case HomePageItems.recentArtists:
+                                    return _ArtistsList(
+                                      isLoading: _isLoading,
+                                      homepageItem: element,
+                                      title: lang.RECENT_ARTISTS,
+                                      mainIcon: Broken.undo,
+                                      artists: _listOrShimmer(_recentArtists),
+                                      listens: null,
+                                    );
 
-                              case HomePageItems.topRecentArtists:
-                                final keys = _topRecentArtists.keys.toList();
-                                return _ArtistsList(
-                                  isLoading: _isLoading,
-                                  homepageItem: element,
-                                  title: lang.TOP_RECENT_ARTISTS,
-                                  mainIcon: Broken.crown_1,
-                                  artists: _listOrShimmer(keys),
-                                  listens: (artist) => _topRecentArtists[artist] ?? 0,
-                                );
-                            }
-                          },
-                        ).addSeparators(
-                          skipFirst: 1,
-                          separator: const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
-                        ),
+                                  case HomePageItems.topRecentArtists:
+                                    final keys = _topRecentArtists.keys.toList();
+                                    return _ArtistsList(
+                                      isLoading: _isLoading,
+                                      homepageItem: element,
+                                      title: lang.TOP_RECENT_ARTISTS,
+                                      mainIcon: Broken.crown_1,
+                                      artists: _listOrShimmer(keys),
+                                      listens: (artist) => _topRecentArtists[artist] ?? 0,
+                                    );
+                                }
+                              },
+                            )
+                            .addSeparators(
+                              skipFirst: 1,
+                              separator: const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
+                            ),
                         kBottomPaddingWidgetSliver,
                       ],
                     ),
@@ -810,30 +812,31 @@ class _TracksList extends StatelessWidget {
       final queue = listy.firstOrNull == null ? <Track>[] : finalList.cast<Selectable>();
       return SliverToBoxAdapter(
         child: _HorizontalList(
-            isLoading: isLoading,
-            homepageItem: homepageItem,
-            title: title,
-            icon: icon,
-            leading: leading,
-            height: 150.0 + 12.0,
-            itemCount: finalList.length,
-            itemExtent: 98.0 + 8.0,
-            onTap: onTap,
-            subtitle: subtitle,
-            thirdWidget: thirdWidget,
-            itemBuilder: (context, index) {
-              final tr = finalList[index];
-              return _TrackCard(
-                listId: listId,
-                homepageItem: homepageItem,
-                title: title,
-                index: index,
-                queue: queue,
-                width: 98.0,
-                track: tr?.track,
-                topRightText: topRightText == null ? null : topRightText!(tr),
-              );
-            }),
+          isLoading: isLoading,
+          homepageItem: homepageItem,
+          title: title,
+          icon: icon,
+          leading: leading,
+          height: 150.0 + 12.0,
+          itemCount: finalList.length,
+          itemExtent: 98.0 + 8.0,
+          onTap: onTap,
+          subtitle: subtitle,
+          thirdWidget: thirdWidget,
+          itemBuilder: (context, index) {
+            final tr = finalList[index];
+            return _TrackCard(
+              listId: listId,
+              homepageItem: homepageItem,
+              title: title,
+              index: index,
+              queue: queue,
+              width: 98.0,
+              track: tr?.track,
+              topRightText: topRightText == null ? null : topRightText!(tr),
+            );
+          },
+        ),
       );
     }
   }
@@ -1016,7 +1019,7 @@ class _HorizontalList extends StatelessWidget {
                         subtitle!,
                         style: textTheme.displaySmall,
                       ),
-                    if (thirdWidget != null) thirdWidget!,
+                    ?thirdWidget,
                   ],
                 ),
               ),
@@ -1028,7 +1031,7 @@ class _HorizontalList extends StatelessWidget {
                       size: 20.0,
                     ),
                 const SizedBox(width: 12.0),
-              ]
+              ],
             ],
           ),
         ),
@@ -1359,7 +1362,7 @@ class _MixesCardState extends State<_MixesCard> {
                   ],
                 ),
               ),
-            )
+            ),
         ],
       ),
     );
@@ -1429,7 +1432,7 @@ class _MixesCardState extends State<_MixesCard> {
                     const SizedBox(height: 4.0),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -1594,18 +1597,19 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
                     ),
                   if (widget.listens != null)
                     Positioned(
-                        bottom: 2.0,
-                        right: 2.0,
-                        child: CircleAvatar(
-                          radius: 10.0,
-                          backgroundColor: theme.cardColor,
-                          child: FittedBox(
-                            child: Text(
-                              widget.listens!.length.formatDecimal(),
-                              style: textTheme.displaySmall,
-                            ),
+                      bottom: 2.0,
+                      right: 2.0,
+                      child: CircleAvatar(
+                        radius: 10.0,
+                        backgroundColor: theme.cardColor,
+                        child: FittedBox(
+                          child: Text(
+                            widget.listens!.length.formatDecimal(),
+                            style: textTheme.displaySmall,
                           ),
-                        ))
+                        ),
+                      ),
+                    ),
                 ],
               ),
               const Spacer(),
@@ -1665,7 +1669,7 @@ class RecentlyAddedTracksPage extends StatelessWidget with NamidaRouteWidget {
               Text(
                 lang.RECENTLY_ADDED,
                 style: textTheme.displayLarge?.copyWith(fontSize: 18.0),
-              )
+              ),
             ],
           ),
         ),

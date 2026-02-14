@@ -42,7 +42,8 @@ class PlaylistTile extends StatelessWidget {
             border: Border(
               left: borderSide,
               bottom: borderSide,
-            ))
+            ),
+          )
         : null;
     return Padding(
       padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),

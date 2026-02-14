@@ -116,8 +116,9 @@ class YTUtils {
                   padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
                   child: Text(
                     listens.length.formatDecimal(),
-                    style:
-                        fontMultiplier != null ? textTheme.displaySmall?.copyWith(fontSize: (textTheme.displaySmall?.fontSize ?? 12.0) * fontMultiplier) : textTheme.displaySmall,
+                    style: fontMultiplier != null
+                        ? textTheme.displaySmall?.copyWith(fontSize: (textTheme.displaySmall?.fontSize ?? 12.0) * fontMultiplier)
+                        : textTheme.displaySmall,
                   ),
                 ),
               ),
@@ -446,7 +447,7 @@ class YTUtils {
               final videoLink = YTUrlUtils.buildVideoUrl(videoId);
               NamidaUtils.shareUri(videoLink);
             },
-          )
+          ),
         ],
       ),
     );
@@ -519,7 +520,7 @@ class YTUtils {
             );
           },
         ),
-      if (favouriteItem != null) favouriteItem,
+      ?favouriteItem,
       NamidaPopupItem(
         icon: Broken.music_library_2,
         title: lang.ADD_TO_PLAYLIST,
@@ -689,9 +690,20 @@ class YTUtils {
       for (final ib in initialBuilding.entries) {
         final userText = ib.value;
         if (userText != null) {
-          infoMap[ib.key] = YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
-                  userText, id, streamInfo, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength,
-                  fallback: '') ??
+          infoMap[ib.key] =
+              YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
+                userText,
+                id,
+                streamInfo,
+                videoPage,
+                streamInfoItem,
+                playlistInfo,
+                videoStream,
+                audioStream,
+                originalIndex,
+                totalLength,
+                fallback: '',
+              ) ??
               userText;
         }
       }
@@ -700,18 +712,40 @@ class YTUtils {
     final defaultInfoSett = settings.youtube.initialDefaultMetadataTags;
     for (final di in defaultInfoSett.entries) {
       final defaultText = di.value;
-      infoMap[di.key] ??= YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
-              defaultText, id, streamInfo, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength,
-              fallback: '') ??
+      infoMap[di.key] ??=
+          YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
+            defaultText,
+            id,
+            streamInfo,
+            videoPage,
+            streamInfoItem,
+            playlistInfo,
+            videoStream,
+            audioStream,
+            originalIndex,
+            totalLength,
+            fallback: '',
+          ) ??
           defaultText;
     }
 
     final defaultInfo = getDefaultTagsFieldsBuilders(autoExtract);
     for (final di in defaultInfo.entries) {
       final defaultText = di.value;
-      infoMap[di.key] ??= YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
-              defaultText, id, streamInfo, videoPage, streamInfoItem, playlistInfo, videoStream, audioStream, originalIndex, totalLength,
-              fallback: '') ??
+      infoMap[di.key] ??=
+          YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
+            defaultText,
+            id,
+            streamInfo,
+            videoPage,
+            streamInfoItem,
+            playlistInfo,
+            videoStream,
+            audioStream,
+            originalIndex,
+            totalLength,
+            fallback: '',
+          ) ??
           '';
     }
 
@@ -838,12 +872,14 @@ class YTUtils {
       fileTypeLookup[e.path] = 1;
     });
 
-    extraTilesBuilt?.loop((e) => e.items.loop((item) {
-          final data = e.itemBuilder(item);
-          final s = e.itemSize(item);
-          fileSizeLookup[data.path] = s;
-          fileTypeLookup[data.path] = 2;
-        }));
+    extraTilesBuilt?.loop(
+      (e) => e.items.loop((item) {
+        final data = e.itemBuilder(item);
+        final s = e.itemSize(item);
+        fileSizeLookup[data.path] = s;
+        fileTypeLookup[data.path] = 2;
+      }),
+    );
 
     const cm = StorageCacheManager();
     cm.getTempAudiosForID(videoId).then((value) => tempFilesSizeAudio.value = value);
@@ -1050,7 +1086,8 @@ class YTUtils {
                       tagMaps: settings.youtube.initialDefaultMetadataTags,
                       tagMapsForFillingInfoOnly: YTUtils.getDefaultTagsFieldsBuilders(settings.youtube.autoExtractVideoTagsFromInfo.value),
                       supportTagging: true,
-                      showSpecificFileOptions: false, onDownloadFilenameChanged: (filename) {}, // not visible
+                      showSpecificFileOptions: false,
+                      onDownloadFilenameChanged: (filename) {}, // not visible
                       onDownloadGroupNameChanged: (newGroupName) {}, // not visible
                       preWidget: (controllerFn, onChangedFn) => Padding(
                         padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),

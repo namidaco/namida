@@ -60,7 +60,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                     BoxShadow(
                       blurRadius: 12.0,
                       color: theme.secondaryHeaderColor.withValues(alpha: 0.5),
-                    )
+                    ),
                   ],
                 ),
                 child: const Column(
@@ -157,7 +157,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                                   )
                                 : const SliverToBoxAdapter(),
                           ),
-                          const SliverPadding(padding: EdgeInsets.only(bottom: kYTQueueSheetMinHeight + 12.0))
+                          const SliverPadding(padding: EdgeInsets.only(bottom: kYTQueueSheetMinHeight + 12.0)),
                         ],
                       ),
                     ),

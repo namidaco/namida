@@ -20,7 +20,8 @@ enum ThumbnailType {
   video(Broken.video),
   playlist(Broken.music_library_2),
   channel(Broken.user),
-  other(null);
+  other(null)
+  ;
 
   final IconData? icon;
   const ThumbnailType(this.icon);
@@ -138,7 +139,8 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
     if (imagePath == ArtworkWidget.kImagePathInitialValue) {
       // -- basic init
       if (widget.reduceInitialFlashes) {
-        imagePath = ThumbnailManager.inst
+        imagePath =
+            ThumbnailManager.inst
                 .imageUrlToCacheFile(
                   id: widget.videoId,
                   url: widget.customUrl,

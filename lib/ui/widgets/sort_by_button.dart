@@ -188,7 +188,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
                       ),
                     ),
                   ),
-                )
+                ),
               ],
             );
           },
@@ -203,41 +203,41 @@ class SortByMenuAlbums with SortByMenuBase {
 
   @override
   List<Widget> children(BuildContext context) => [
-        Padding(
-          padding: EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
-          child: ListTileWithCheckMark(
-            borderRadius: 10.0,
-            activeRx: settings.albumSortReversed,
-            onTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
-          ),
+    Padding(
+      padding: EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
+      child: ListTileWithCheckMark(
+        borderRadius: 10.0,
+        activeRx: settings.albumSortReversed,
+        onTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
+      ),
+    ),
+    ...[
+      GroupSortType.album,
+      GroupSortType.albumArtist,
+      GroupSortType.year,
+      GroupSortType.duration,
+      GroupSortType.numberOfTracks,
+      GroupSortType.playCount,
+      GroupSortType.firstListen,
+      GroupSortType.latestPlayed,
+      GroupSortType.dateModified,
+      GroupSortType.artistsList,
+      GroupSortType.composer,
+      GroupSortType.label,
+      GroupSortType.shuffle,
+    ].map(
+      (e) => ObxO(
+        rx: settings.albumSort,
+        builder: (context, albumsort) => SmallListTile(
+          borderRadius: 12.0,
+          visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+          title: e.toText(),
+          active: albumsort == e,
+          onTap: () => SearchSortController.inst.sortMedia(MediaType.album, groupSortBy: e),
         ),
-        ...[
-          GroupSortType.album,
-          GroupSortType.albumArtist,
-          GroupSortType.year,
-          GroupSortType.duration,
-          GroupSortType.numberOfTracks,
-          GroupSortType.playCount,
-          GroupSortType.firstListen,
-          GroupSortType.latestPlayed,
-          GroupSortType.dateModified,
-          GroupSortType.artistsList,
-          GroupSortType.composer,
-          GroupSortType.label,
-          GroupSortType.shuffle,
-        ].map(
-          (e) => ObxO(
-            rx: settings.albumSort,
-            builder: (context, albumsort) => SmallListTile(
-              borderRadius: 12.0,
-              visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
-              title: e.toText(),
-              active: albumsort == e,
-              onTap: () => SearchSortController.inst.sortMedia(MediaType.album, groupSortBy: e),
-            ),
-          ),
-        ),
-      ];
+      ),
+    ),
+  ];
 }
 
 class SortByMenuArtists with SortByMenuBase {
@@ -259,8 +259,8 @@ class SortByMenuArtists with SortByMenuBase {
         artistType == MediaType.albumArtist
             ? GroupSortType.albumArtist
             : artistType == MediaType.composer
-                ? GroupSortType.composer
-                : GroupSortType.artistsList,
+            ? GroupSortType.composer
+            : GroupSortType.artistsList,
         GroupSortType.numberOfTracks,
         GroupSortType.playCount,
         GroupSortType.firstListen,
@@ -293,41 +293,41 @@ class SortByMenuGenres with SortByMenuBase {
 
   @override
   List<Widget> children(BuildContext context) => [
-        Padding(
-          padding: EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
-          child: ListTileWithCheckMark(
-            borderRadius: 10.0,
-            activeRx: settings.genreSortReversed,
-            onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
-          ),
+    Padding(
+      padding: EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
+      child: ListTileWithCheckMark(
+        borderRadius: 10.0,
+        activeRx: settings.genreSortReversed,
+        onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
+      ),
+    ),
+    ...[
+      GroupSortType.genresList,
+      GroupSortType.duration,
+      GroupSortType.numberOfTracks,
+      GroupSortType.playCount,
+      GroupSortType.firstListen,
+      GroupSortType.latestPlayed,
+      GroupSortType.year,
+      GroupSortType.artistsList,
+      GroupSortType.album,
+      GroupSortType.albumArtist,
+      GroupSortType.dateModified,
+      GroupSortType.composer,
+      GroupSortType.shuffle,
+    ].map(
+      (e) => ObxO(
+        rx: settings.genreSort,
+        builder: (context, genreSort) => SmallListTile(
+          borderRadius: 12.0,
+          visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+          title: e.toText(),
+          active: genreSort == e,
+          onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, groupSortBy: e),
         ),
-        ...[
-          GroupSortType.genresList,
-          GroupSortType.duration,
-          GroupSortType.numberOfTracks,
-          GroupSortType.playCount,
-          GroupSortType.firstListen,
-          GroupSortType.latestPlayed,
-          GroupSortType.year,
-          GroupSortType.artistsList,
-          GroupSortType.album,
-          GroupSortType.albumArtist,
-          GroupSortType.dateModified,
-          GroupSortType.composer,
-          GroupSortType.shuffle,
-        ].map(
-          (e) => ObxO(
-            rx: settings.genreSort,
-            builder: (context, genreSort) => SmallListTile(
-              borderRadius: 12.0,
-              visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
-              title: e.toText(),
-              active: genreSort == e,
-              onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, groupSortBy: e),
-            ),
-          ),
-        ),
-      ];
+      ),
+    ),
+  ];
 }
 
 class SortByMenuPlaylist with SortByMenuBase {
@@ -335,36 +335,36 @@ class SortByMenuPlaylist with SortByMenuBase {
 
   @override
   List<Widget> children(BuildContext context) => [
-        Padding(
-          padding: EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
-          child: ListTileWithCheckMark(
-            borderRadius: 10.0,
-            activeRx: settings.playlistSortReversed,
-            onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
-          ),
+    Padding(
+      padding: EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
+      child: ListTileWithCheckMark(
+        borderRadius: 10.0,
+        activeRx: settings.playlistSortReversed,
+        onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
+      ),
+    ),
+    ...[
+      GroupSortType.title,
+      GroupSortType.creationDate,
+      GroupSortType.modifiedDate,
+      GroupSortType.duration,
+      GroupSortType.numberOfTracks,
+      GroupSortType.playCount,
+      GroupSortType.firstListen,
+      GroupSortType.latestPlayed,
+      GroupSortType.shuffle,
+      GroupSortType.custom,
+    ].map(
+      (e) => ObxO(
+        rx: settings.playlistSort,
+        builder: (context, playlistSort) => SmallListTile(
+          borderRadius: 12.0,
+          visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+          title: e.toText(),
+          active: playlistSort == e,
+          onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, groupSortBy: e),
         ),
-        ...[
-          GroupSortType.title,
-          GroupSortType.creationDate,
-          GroupSortType.modifiedDate,
-          GroupSortType.duration,
-          GroupSortType.numberOfTracks,
-          GroupSortType.playCount,
-          GroupSortType.firstListen,
-          GroupSortType.latestPlayed,
-          GroupSortType.shuffle,
-          GroupSortType.custom,
-        ].map(
-          (e) => ObxO(
-            rx: settings.playlistSort,
-            builder: (context, playlistSort) => SmallListTile(
-              borderRadius: 12.0,
-              visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
-              title: e.toText(),
-              active: playlistSort == e,
-              onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, groupSortBy: e),
-            ),
-          ),
-        ),
-      ];
+      ),
+    ),
+  ];
 }

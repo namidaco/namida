@@ -348,7 +348,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                           ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 )
               : Row(
@@ -729,7 +729,7 @@ class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> w
                     channelName ?? '',
                     style: textTheme.displaySmall,
                     overflow: TextOverflow.ellipsis,
-                  )
+                  ),
                 ],
               ),
             );
@@ -959,7 +959,7 @@ class _ChannelsRowSlider<T> extends StatelessWidget {
                           child: FittedBox(
                             child: loadingAllProgressWidget,
                           ),
-                        )
+                        ),
                     ],
                   ),
                   const SizedBox(height: 4.0),
@@ -1054,7 +1054,7 @@ class __ChannelSmallCardState extends State<_ChannelSmallCard> {
             channelName,
             style: textTheme.displaySmall,
             overflow: TextOverflow.ellipsis,
-          )
+          ),
         ],
       ),
     );

@@ -40,70 +40,71 @@ class _YoutubeUserPlaylistsPageState extends State<YoutubeUserPlaylistsPage> {
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
     final horizontalHistory = YoutubeUserHistoryPageHorizontal(pageKey: horizontalHistoryKey);
     return YoutubeMainPageFetcherAccBase<YoutiPieUserPlaylistsResult, PlaylistInfoItemUser>(
-        operation: YoutiPieOperation.fetchUserPlaylists,
-        transparentShimmer: true,
-        topPadding: 12.0,
-        pageHeader: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const _AccountHeader(),
-            horizontalHistory,
-          ],
-        ),
-        onInitState: (wrapper) {
-          YtUtilsPlaylist.activeUserPlaylistsList = wrapper;
+      operation: YoutiPieOperation.fetchUserPlaylists,
+      transparentShimmer: true,
+      topPadding: 12.0,
+      pageHeader: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const _AccountHeader(),
+          horizontalHistory,
+        ],
+      ),
+      onInitState: (wrapper) {
+        YtUtilsPlaylist.activeUserPlaylistsList = wrapper;
+      },
+      onDispose: (wrapper) {
+        YtUtilsPlaylist.activeUserPlaylistsList = null;
+      },
+      onPullToRefresh: () => (horizontalHistoryKey.currentState as dynamic)?.forceFetchFeed() as Future<void>,
+      title: lang.PLAYLISTS,
+      isSortable: true,
+      headerTrailing: NamidaIconButton(
+        icon: Broken.add_circle,
+        iconSize: 22.0,
+        onPressed: () {
+          YtUtilsPlaylist().promptCreatePlaylist(
+            onButtonConfirm: (playlistTitle, privacy) async {
+              privacy ??= PlaylistPrivacy.private;
+              final newPlaylistId = await YoutubeInfoController.userplaylist.createPlaylist(
+                mainList: YtUtilsPlaylist.activeUserPlaylistsList,
+                title: playlistTitle,
+                initialVideoIds: [],
+                privacy: privacy,
+              );
+              if (newPlaylistId != null) return true;
+              return false;
+            },
+          );
         },
-        onDispose: (wrapper) {
-          YtUtilsPlaylist.activeUserPlaylistsList = null;
-        },
-        onPullToRefresh: () => (horizontalHistoryKey.currentState as dynamic)?.forceFetchFeed() as Future<void>,
-        title: lang.PLAYLISTS,
-        isSortable: true,
-        headerTrailing: NamidaIconButton(
-          icon: Broken.add_circle,
-          iconSize: 22.0,
-          onPressed: () {
-            YtUtilsPlaylist().promptCreatePlaylist(
-              onButtonConfirm: (playlistTitle, privacy) async {
-                privacy ??= PlaylistPrivacy.private;
-                final newPlaylistId = await YoutubeInfoController.userplaylist.createPlaylist(
-                  mainList: YtUtilsPlaylist.activeUserPlaylistsList,
-                  title: playlistTitle,
-                  initialVideoIds: [],
-                  privacy: privacy,
-                );
-                if (newPlaylistId != null) return true;
-                return false;
-              },
-            );
-          },
-        ),
-        cacheReader: YoutiPie.cacheBuilder.forUserPlaylists(),
-        cacheReadFn: (reader) async {
-          final res = await reader.read();
-          await YoutiPie.userplaylist.injectDefaultPlaylistsInUserPlaylists(res);
-          return res;
-        },
-        networkFetcher: (details) => YoutubeInfoController.userplaylist.getUserPlaylists(details: details),
-        itemExtent: thumbnailItemExtent,
-        dummyCard: const YoutubeVideoCardDummy(
+      ),
+      cacheReader: YoutiPie.cacheBuilder.forUserPlaylists(),
+      cacheReadFn: (reader) async {
+        final res = await reader.read();
+        await YoutiPie.userplaylist.injectDefaultPlaylistsInUserPlaylists(res);
+        return res;
+      },
+      networkFetcher: (details) => YoutubeInfoController.userplaylist.getUserPlaylists(details: details),
+      itemExtent: thumbnailItemExtent,
+      dummyCard: const YoutubeVideoCardDummy(
+        thumbnailWidth: thumbnailWidth,
+        thumbnailHeight: thumbnailHeight,
+        shimmerEnabled: true,
+      ),
+      itemBuilder: (playlist, index, list) {
+        return YoutubePlaylistCard(
+          queueSource: QueueSourceYoutubeID.playlistHosted,
+          key: Key(playlist.id),
+          playlist: playlist,
+          subtitle: playlist.infoTexts?.join(' - '), // the second text is mostly like 'updated today' etc
           thumbnailWidth: thumbnailWidth,
           thumbnailHeight: thumbnailHeight,
-          shimmerEnabled: true,
-        ),
-        itemBuilder: (playlist, index, list) {
-          return YoutubePlaylistCard(
-            queueSource: QueueSourceYoutubeID.playlistHosted,
-            key: Key(playlist.id),
-            playlist: playlist,
-            subtitle: playlist.infoTexts?.join(' - '), // the second text is mostly like 'updated today' etc
-            thumbnailWidth: thumbnailWidth,
-            thumbnailHeight: thumbnailHeight,
-            firstVideoID: null,
-            isMixPlaylist: playlist.isMix,
-            playOnTap: false,
-          );
-        });
+          firstVideoID: null,
+          isMixPlaylist: playlist.isMix,
+          playOnTap: false,
+        );
+      },
+    );
   }
 }
 

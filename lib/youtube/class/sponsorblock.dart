@@ -65,15 +65,14 @@ class SponsorBlockSettings {
     int? hideSkipButtonAfterMS,
     int? minimumSegmentDurationMS,
     Map<SponsorBlockCategory, SponsorBlockCategoryConfig>? configs,
-  }) =>
-      SponsorBlockSettings.custom(
-        enabled ?? this.enabled,
-        trackSkipCount ?? this.trackSkipCount,
-        serverAddress ?? this.serverAddress,
-        hideSkipButtonAfterMS ?? this.hideSkipButtonAfterMS,
-        minimumSegmentDurationMS ?? this.minimumSegmentDurationMS,
-        configs ?? this.configs,
-      );
+  }) => SponsorBlockSettings.custom(
+    enabled ?? this.enabled,
+    trackSkipCount ?? this.trackSkipCount,
+    serverAddress ?? this.serverAddress,
+    hideSkipButtonAfterMS ?? this.hideSkipButtonAfterMS,
+    minimumSegmentDurationMS ?? this.minimumSegmentDurationMS,
+    configs ?? this.configs,
+  );
 
   factory SponsorBlockSettings.fromJson(Map<String, dynamic>? json) {
     if (json == null) return SponsorBlockSettings();
@@ -108,13 +107,13 @@ class SponsorBlockSettings {
   }
 
   Map<String, dynamic> toJson() => {
-        'enabled': enabled,
-        'trackSkipCount': trackSkipCount,
-        'serverAddress': serverAddress,
-        'hideSkipButtonAfterMS': hideSkipButtonAfterMS,
-        'minimumSegmentDurationMS': minimumSegmentDurationMS,
-        'configs': configs.map((k, v) => MapEntry(k.name, v.toJson())),
-      };
+    'enabled': enabled,
+    'trackSkipCount': trackSkipCount,
+    'serverAddress': serverAddress,
+    'hideSkipButtonAfterMS': hideSkipButtonAfterMS,
+    'minimumSegmentDurationMS': minimumSegmentDurationMS,
+    'configs': configs.map((k, v) => MapEntry(k.name, v.toJson())),
+  };
 }
 
 class SponsorBlockCategoryConfig {
@@ -129,11 +128,10 @@ class SponsorBlockCategoryConfig {
   SponsorBlockCategoryConfig copyWith({
     SponsorBlockAction? action,
     Color? color,
-  }) =>
-      SponsorBlockCategoryConfig(
-        action ?? this.action,
-        color ?? this.color,
-      );
+  }) => SponsorBlockCategoryConfig(
+    action ?? this.action,
+    color ?? this.color,
+  );
 
   factory SponsorBlockCategoryConfig.fromJson(Map<String, dynamic> valueJson, SponsorBlockCategory category) {
     final actionName = valueJson['action'] as String?;
@@ -147,9 +145,9 @@ class SponsorBlockCategoryConfig {
   }
 
   Map<String, dynamic> toJson() => {
-        'action': action.name,
-        'color': color.intValue,
-      };
+    'action': action.name,
+    'color': color.intValue,
+  };
 }
 
 enum SponsorBlockCategory {
@@ -162,7 +160,8 @@ enum SponsorBlockCategory {
   preview(SponsorBlockCategoryConfig(SponsorBlockAction.disabled, Color(0xB2008FD6))),
   hook(SponsorBlockCategoryConfig(SponsorBlockAction.disabled, Color(0xB2395699))),
   filler(SponsorBlockCategoryConfig(SponsorBlockAction.disabled, Color(0xB27300FF))),
-  music_offtopic(SponsorBlockCategoryConfig(SponsorBlockAction.showSkipButton, Color(0xB2FF9900)));
+  music_offtopic(SponsorBlockCategoryConfig(SponsorBlockAction.showSkipButton, Color(0xB2FF9900)))
+  ;
 
   const SponsorBlockCategory(this.defaultConfig);
   final SponsorBlockCategoryConfig defaultConfig;

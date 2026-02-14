@@ -270,8 +270,9 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                 child: Obx(
                                   (context) {
                                     final currentIndex = Player.inst.currentIndex.valueR;
-                                    final nextItem =
-                                        Player.inst.currentQueue.valueR.length - 1 >= currentIndex + 1 ? Player.inst.currentQueue.valueR[currentIndex + 1] as YoutubeID : null;
+                                    final nextItem = Player.inst.currentQueue.valueR.length - 1 >= currentIndex + 1
+                                        ? Player.inst.currentQueue.valueR[currentIndex + 1] as YoutubeID
+                                        : null;
                                     final nextItemName = nextItem == null ? '' : YoutubeInfoController.utils.getVideoNameSync(nextItem.id);
                                     final queueLength = Player.inst.currentQueue.valueR.length;
                                     return Column(
@@ -348,7 +349,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             ),
                           ),
                         ),
-                      )
+                      ),
                   ],
                 ),
                 builder: (context, child) {
@@ -684,7 +685,8 @@ class _ActionItemAlt extends StatelessWidget {
       visualDensity: VisualDensity.compact,
       style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
       tooltip: tooltip,
-      icon: iconWidget ??
+      icon:
+          iconWidget ??
           Icon(
             icon,
             size: iconSize,

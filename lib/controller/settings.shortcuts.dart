@@ -37,8 +37,8 @@ class _ShortcutsSettings with SettingsFileWriter {
 
   @override
   Object get jsonToWrite => <String, dynamic>{
-        'shortcuts': shortcuts.value.map((key, value) => MapEntry(key.name, value?.toMap())),
-      };
+    'shortcuts': shortcuts.value.map((key, value) => MapEntry(key.name, value?.toMap())),
+  };
 
   Future<void> _writeToStorage() async => await writeToStorage();
 

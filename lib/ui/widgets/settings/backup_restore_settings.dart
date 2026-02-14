@@ -43,14 +43,14 @@ class BackupAndRestore extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-        _BackupAndRestoreKeys.create: [lang.CREATE_BACKUP],
-        _BackupAndRestoreKeys.restore: [lang.RESTORE_BACKUP],
-        _BackupAndRestoreKeys.defaultLocation: [lang.DEFAULT_BACKUP_LOCATION],
-        _BackupAndRestoreKeys.autoBackupInterval: [lang.AUTO_BACKUP_INTERVAL],
-        _BackupAndRestoreKeys.crossPlatformSync: [lang.CROSS_PLATFORM_SYNC],
-        _BackupAndRestoreKeys.importYT: [lang.IMPORT_YOUTUBE_HISTORY],
-        _BackupAndRestoreKeys.importLastfm: [lang.IMPORT_LAST_FM_HISTORY],
-      };
+    _BackupAndRestoreKeys.create: [lang.CREATE_BACKUP],
+    _BackupAndRestoreKeys.restore: [lang.RESTORE_BACKUP],
+    _BackupAndRestoreKeys.defaultLocation: [lang.DEFAULT_BACKUP_LOCATION],
+    _BackupAndRestoreKeys.autoBackupInterval: [lang.AUTO_BACKUP_INTERVAL],
+    _BackupAndRestoreKeys.crossPlatformSync: [lang.CROSS_PLATFORM_SYNC],
+    _BackupAndRestoreKeys.importYT: [lang.IMPORT_YOUTUBE_HISTORY],
+    _BackupAndRestoreKeys.importLastfm: [lang.IMPORT_LAST_FM_HISTORY],
+  };
 
   bool _canDoImport({required bool isYT}) {
     if (JsonToHistoryParser.inst.isParsing.value || HistoryController.inst.isLoadingHistory || (isYT && YoutubeHistoryController.inst.isLoadingHistory)) {
@@ -343,10 +343,10 @@ class BackupAndRestore extends SettingSubpageProvider {
                           final isYoutubeIconChecked = youtubeForceFollowItems
                               ? isActive(items)
                               : !youtubeAvailable
-                                  ? false
-                                  : youtubeItems.isEmpty
-                                      ? false
-                                      : isActive(youtubeItems);
+                              ? false
+                              : youtubeItems.isEmpty
+                              ? false
+                              : isActive(youtubeItems);
                           return Row(
                             children: [
                               Expanded(
@@ -620,9 +620,9 @@ class BackupAndRestore extends SettingSubpageProvider {
 
                 void onConfirm(bool pickDirectory) async {
                   Widget getTitleText(String text) => Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: 10.0)),
-                        child: Text("- $text", style: namida.textTheme.displayLarge),
-                      );
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: 10.0)),
+                    child: Text("- $text", style: namida.textTheme.displayLarge),
+                  );
 
                   var jsonfiles = <File>[];
                   Directory? mainDirectory;
@@ -671,7 +671,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 );
                               },
                             ),
-                          )
+                          ),
                         ],
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -821,7 +821,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 matchAll: matchAll.value,
                               );
                             },
-                          )
+                          ),
                         ],
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

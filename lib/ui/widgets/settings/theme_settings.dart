@@ -52,15 +52,15 @@ class ThemeSetting extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-        _ThemeSettingsKeys.themeMode: [lang.THEME_MODE],
-        _ThemeSettingsKeys.autoColoring: [lang.AUTO_COLORING, lang.AUTO_COLORING_SUBTITLE],
-        _ThemeSettingsKeys.wallpaperColors: [lang.PICK_COLORS_FROM_DEVICE_WALLPAPER],
-        _ThemeSettingsKeys.forceMiniplayerColors: [lang.FORCE_MINIPLAYER_FOLLOW_TRACK_COLORS],
-        _ThemeSettingsKeys.pitchBlack: [lang.USE_PITCH_BLACK, lang.USE_PITCH_BLACK_SUBTITLE],
-        _ThemeSettingsKeys.defaultColor: [lang.DEFAULT_COLOR, lang.DEFAULT_COLOR_SUBTITLE],
-        _ThemeSettingsKeys.defaultColorDark: ["${lang.DEFAULT_COLOR} (${lang.THEME_MODE_DARK})", lang.DEFAULT_COLOR_SUBTITLE],
-        _ThemeSettingsKeys.language: [lang.LANGUAGE],
-      };
+    _ThemeSettingsKeys.themeMode: [lang.THEME_MODE],
+    _ThemeSettingsKeys.autoColoring: [lang.AUTO_COLORING, lang.AUTO_COLORING_SUBTITLE],
+    _ThemeSettingsKeys.wallpaperColors: [lang.PICK_COLORS_FROM_DEVICE_WALLPAPER],
+    _ThemeSettingsKeys.forceMiniplayerColors: [lang.FORCE_MINIPLAYER_FOLLOW_TRACK_COLORS],
+    _ThemeSettingsKeys.pitchBlack: [lang.USE_PITCH_BLACK, lang.USE_PITCH_BLACK_SUBTITLE],
+    _ThemeSettingsKeys.defaultColor: [lang.DEFAULT_COLOR, lang.DEFAULT_COLOR_SUBTITLE],
+    _ThemeSettingsKeys.defaultColorDark: ["${lang.DEFAULT_COLOR} (${lang.THEME_MODE_DARK})", lang.DEFAULT_COLOR_SUBTITLE],
+    _ThemeSettingsKeys.language: [lang.LANGUAGE],
+  };
 
   void _refreshColorCurrentPlayingItem() {
     final currentItem = Player.inst.currentItem.value;
@@ -160,7 +160,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   NamidaButton(
                     onPressed: () async => (await lang.update(lang: selectedLang.value)).closeDialog(),
                     text: lang.CONFIRM,
-                  )
+                  ),
                 ],
                 child: SizedBox(
                   height: namida.height * 0.5,
@@ -411,8 +411,8 @@ class ToggleThemeModeContainer extends StatelessWidget {
     return theme == ThemeMode.light
         ? Alignment.center
         : theme == ThemeMode.dark
-            ? Alignment.centerRight
-            : Alignment.centerLeft;
+        ? Alignment.centerRight
+        : Alignment.centerLeft;
   }
 
   @override

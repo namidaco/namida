@@ -425,8 +425,9 @@ class SearchPage extends StatelessWidget {
                                                         child: Obx(
                                                           (context) {
                                                             final isAuto = settings.tracksSortSearchIsAuto.valueR;
-                                                            final activeType =
-                                                                isAuto ? settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull : settings.tracksSortSearch.valueR;
+                                                            final activeType = isAuto
+                                                                ? settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull
+                                                                : settings.tracksSortSearch.valueR;
                                                             return Text(
                                                               (activeType?.toText() ?? '') + (isAuto ? ' (${lang.AUTO})' : ''),
                                                               style: textTheme.displaySmall?.copyWith(
@@ -487,7 +488,7 @@ class SearchPage extends StatelessWidget {
                                           ),
                                         ],
 
-                                        kBottomPaddingWidgetSliver
+                                        kBottomPaddingWidgetSliver,
                                       ],
                                     );
                                   },

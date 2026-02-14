@@ -90,7 +90,7 @@ class JsonToHistoryParser {
               _hideParsingDialog();
               NamidaNavigator.inst.closeDialog();
             },
-          )
+          ),
         ],
         child: Padding(
           padding: const EdgeInsets.all(12.0),
@@ -192,7 +192,7 @@ class JsonToHistoryParser {
                 NamidaNavigator.inst.closeDialog();
               },
               text: lang.CONFIRM,
-            )
+            ),
           ],
         ),
       );
@@ -582,15 +582,17 @@ class JsonToHistoryParser {
 
     final params = {
       'tracks': Indexer.inst.allTracksMappedByPath.values
-          .map((e) => {
-                'title': e.title,
-                'album': e.album,
-                'artist': e.originalArtist,
-                'path': e.path,
-                'filename': e.filename,
-                'comment': e.comment,
-                'v': e.isVideo,
-              })
+          .map(
+            (e) => {
+              'title': e.title,
+              'album': e.album,
+              'artist': e.originalArtist,
+              'path': e.path,
+              'filename': e.filename,
+              'comment': e.comment,
+              'v': e.isVideo,
+            },
+          )
           .toList(),
       'files': files,
       'isMatchingTypeLink': isMatchingTypeLink,
@@ -718,16 +720,18 @@ class JsonToHistoryParser {
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   static Future<
-      ({
-        Map<String, YoutubeVideoHistory>? affectedIds,
-        List<int> daysToSaveLocal,
-        List<int> daysToSaveYT,
-        int addedLocalHistoryCount,
-        int addedYTHistoryCount,
-        SplayTreeMap<int, List<TrackWithDate>> localHistory,
-        SplayTreeMap<int, List<YoutubeID>> ytHistory,
-        Map<_MissingListenEntry, List<int>> missingEntries,
-      })?> _parseYTHistoryJsonAndAddIsolate(Map params) async {
+    ({
+      Map<String, YoutubeVideoHistory>? affectedIds,
+      List<int> daysToSaveLocal,
+      List<int> daysToSaveYT,
+      int addedLocalHistoryCount,
+      int addedYTHistoryCount,
+      SplayTreeMap<int, List<TrackWithDate>> localHistory,
+      SplayTreeMap<int, List<YoutubeID>> ytHistory,
+      Map<_MissingListenEntry, List<int>> missingEntries,
+    })?
+  >
+  _parseYTHistoryJsonAndAddIsolate(Map params) async {
     final allTracks = params['tracks'] as List<Map>;
     final files = params['files'] as List<File>;
     final isMatchingTypeLink = params['isMatchingTypeLink'] as bool;
@@ -796,7 +800,7 @@ class JsonToHistoryParser {
               YTWatch(
                 dateMSNull: YoutubeImportController.parseDate(p['time'] ?? '')?.millisecondsSinceEpoch,
                 isYTMusic: p['header'] == "YouTube Music",
-              )
+              ),
             ],
           );
           // -- updating affected ids map, used to update youtube stats
@@ -937,29 +941,31 @@ class JsonToHistoryParser {
     }
 
     if (tracks.isEmpty && matchByTitleAndArtistIfNotFoundInMap) {
-      tracks = allTracks.firstWhereOrAllWhere(matchAll, (trMap) {
-        final title = trMap['title'] as String;
-        final album = trMap['album'] as String;
-        final originalArtist = trMap['artist'] as String;
-        final artistsList = Indexer.splitArtist(
-          title: title,
-          originalArtist: originalArtist,
-          config: artistsSplitConfig,
-        );
+      tracks = allTracks
+          .firstWhereOrAllWhere(matchAll, (trMap) {
+            final title = trMap['title'] as String;
+            final album = trMap['album'] as String;
+            final originalArtist = trMap['artist'] as String;
+            final artistsList = Indexer.splitArtist(
+              title: title,
+              originalArtist: originalArtist,
+              config: artistsSplitConfig,
+            );
 
-        /// matching has to meet 2 conditons:
-        /// 1. [json title] contains [track.title]
-        /// 2. - [json title] contains [track.artistsList.first]
-        ///     or
-        ///    - [json channel] contains [track.album]
-        ///    (useful for nightcore channels, album has to be the channel name)
-        ///     or
-        ///    - [json channel] contains [track.artistsList.first]
-        return vh.title.cleanUpForComparison.contains(title.cleanUpForComparison) &&
-            (vh.title.cleanUpForComparison.contains(artistsList.first.cleanUpForComparison) ||
-                vh.channel.cleanUpForComparison.contains(album.cleanUpForComparison) ||
-                vh.channel.cleanUpForComparison.contains(artistsList.first.cleanUpForComparison));
-      }).map((e) => Track.decide(e['path'] ?? '', e['v']));
+            /// matching has to meet 2 conditons:
+            /// 1. [json title] contains [track.title]
+            /// 2. - [json title] contains [track.artistsList.first]
+            ///     or
+            ///    - [json channel] contains [track.album]
+            ///    (useful for nightcore channels, album has to be the channel name)
+            ///     or
+            ///    - [json channel] contains [track.artistsList.first]
+            return vh.title.cleanUpForComparison.contains(title.cleanUpForComparison) &&
+                (vh.title.cleanUpForComparison.contains(artistsList.first.cleanUpForComparison) ||
+                    vh.channel.cleanUpForComparison.contains(album.cleanUpForComparison) ||
+                    vh.channel.cleanUpForComparison.contains(artistsList.first.cleanUpForComparison));
+          })
+          .map((e) => Track.decide(e['path'] ?? '', e['v']));
     }
 
     final tracksToAdd = <TrackWithDate>[];
@@ -974,24 +980,28 @@ class JsonToHistoryParser {
         );
         if (canAdd) {
           tracksToAdd.addAll(
-            tracks.map((tr) => TrackWithDate(
-                  dateAdded: d.dateMS,
-                  track: tr,
-                  source: d.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
-                )),
+            tracks.map(
+              (tr) => TrackWithDate(
+                dateAdded: d.dateMS,
+                track: tr,
+                source: d.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
+              ),
+            ),
           );
         }
       });
     } else {
       onMissingEntries(
         vh.watches
-            .map((e) => _MissingListenEntry(
-                  youtubeID: vh.id,
-                  dateMSSE: e.dateMS,
-                  source: e.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
-                  artistOrChannel: vh.channel,
-                  title: vh.title,
-                ))
+            .map(
+              (e) => _MissingListenEntry(
+                youtubeID: vh.id,
+                dateMSSE: e.dateMS,
+                source: e.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
+                artistOrChannel: vh.channel,
+                title: vh.title,
+              ),
+            )
             .toList(),
       );
     }
@@ -1015,12 +1025,14 @@ class JsonToHistoryParser {
 
     final params = {
       'tracks': Indexer.inst.allTracksMappedByPath.values
-          .map((e) => {
-                'title': e.title,
-                'artist': e.originalArtist,
-                'path': e.path,
-                'v': e.isVideo,
-              })
+          .map(
+            (e) => {
+              'title': e.title,
+              'artist': e.originalArtist,
+              'path': e.path,
+              'v': e.isVideo,
+            },
+          )
           .toList(),
       'oldestDay': oldestDate?.toDaysSince1970(),
       'newestDay': newestDate?.toDaysSince1970(),
@@ -1072,12 +1084,14 @@ class JsonToHistoryParser {
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   static Future<
-      ({
-        List<int> daysToSaveLocal,
-        int addedHistoryCount,
-        SplayTreeMap<int, List<TrackWithDate>> localHistory,
-        Map<_MissingListenEntry, List<int>> missingEntries,
-      })?> _addLastFmSourceIsolate(Map params) async {
+    ({
+      List<int> daysToSaveLocal,
+      int addedHistoryCount,
+      SplayTreeMap<int, List<TrackWithDate>> localHistory,
+      Map<_MissingListenEntry, List<int>> missingEntries,
+    })?
+  >
+  _addLastFmSourceIsolate(Map params) async {
     final allTracks = params['tracks'] as List<Map>;
     final oldestDay = params['oldestDay'] as int?;
     final newestDay = params['newestDay'] as int?;
@@ -1182,26 +1196,29 @@ class JsonToHistoryParser {
             /// matching has to meet 2 conditons:
             /// [csv artist] contains [track.artistsList.first]
             /// [csv title] contains [track.title], anything after ( or [ is ignored.
-            tracks.addAll(allTracks.firstWhereOrAllWhere(
-              matchAll,
-              (trMap) {
-                final title = trMap['title'] as String;
-                final matchingTitle = csvTitleCleaned.contains(title.splitFirst('(').splitFirst('[').cleanUpForComparison);
-                if (!matchingTitle) return false;
+            tracks.addAll(
+              allTracks.firstWhereOrAllWhere(
+                matchAll,
+                (trMap) {
+                  final title = trMap['title'] as String;
+                  final matchingTitle = csvTitleCleaned.contains(title.splitFirst('(').splitFirst('[').cleanUpForComparison);
+                  if (!matchingTitle) return false;
 
-                final originalArtist = trMap['artist'] as String;
-                final artistsList = tracksLookupArtistSplitsMap[trMap['path']] ??
-                    Indexer.splitArtist(
-                      title: title,
-                      originalArtist: originalArtist,
-                      config: artistsSplitConfig,
-                    );
-                final matchingArtist = artistsList.isNotEmpty && csvArtistCleaned.contains(artistsList.first.cleanUpForComparison);
-                if (!matchingArtist) return false;
+                  final originalArtist = trMap['artist'] as String;
+                  final artistsList =
+                      tracksLookupArtistSplitsMap[trMap['path']] ??
+                      Indexer.splitArtist(
+                        title: title,
+                        originalArtist: originalArtist,
+                        config: artistsSplitConfig,
+                      );
+                  final matchingArtist = artistsList.isNotEmpty && csvArtistCleaned.contains(artistsList.first.cleanUpForComparison);
+                  if (!matchingArtist) return false;
 
-                return true;
-              },
-            ));
+                  return true;
+                },
+              ),
+            );
           }
 
           totalAdded += tracks.length;

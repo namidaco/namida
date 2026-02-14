@@ -194,7 +194,7 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
           blurRadius: _SBDimensions.d5,
           spreadRadius: _SBDimensions.d0,
           color: _SBColor.black45,
-        )
+        ),
       ],
     ),
   );
@@ -229,24 +229,25 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
         decoration: BoxDecoration(
           color: showBgColor ? widget.searchBoxColour : _SBColor.transparent,
           border: Border.all(
-              color: !widget.enableBoxBorder
-                  ? _SBColor.transparent
-                  : showBgColor
-                      ? widget.searchBoxBorderColour!
-                      : _SBColor.transparent),
+            color: !widget.enableBoxBorder
+                ? _SBColor.transparent
+                : showBgColor
+                ? widget.searchBoxBorderColour!
+                : _SBColor.transparent,
+          ),
           borderRadius: BorderRadius.circular(_SBDimensions.d30),
           boxShadow: (!showBgColor)
               ? null
               : ((widget.enableBoxShadow)
-                  ? [
-                      const BoxShadow(
-                        color: _SBColor.black26,
-                        spreadRadius: -_SBDimensions.d10,
-                        blurRadius: _SBDimensions.d10,
-                        offset: Offset(_SBDimensions.d0, _SBDimensions.d7),
-                      ),
-                    ]
-                  : null),
+                    ? [
+                        const BoxShadow(
+                          color: _SBColor.black26,
+                          spreadRadius: -_SBDimensions.d10,
+                          blurRadius: _SBDimensions.d10,
+                          offset: Offset(_SBDimensions.d0, _SBDimensions.d7),
+                        ),
+                      ]
+                    : null),
         ),
         child: AnimatedContainer(
           duration: Duration(milliseconds: widget.durationInMilliSeconds),
@@ -275,8 +276,8 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                 left: (!_switcher)
                     ? _SBDimensions.d20
                     : (!widget.textAlignToRight)
-                        ? _SBDimensions.d35
-                        : _SBDimensions.d80,
+                    ? _SBDimensions.d35
+                    : _SBDimensions.d80,
                 curve: Curves.easeOut,
                 top: 0,
                 bottom: 0,
@@ -344,7 +345,7 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                                       blurRadius: _SBDimensions.d5,
                                       color: widget.buttonShadowColour!,
                                       spreadRadius: widget.buttonElevation,
-                                    )
+                                    ),
                                   ]
                                 : null,
                           ),
@@ -481,7 +482,8 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                 isDense: true,
                 floatingLabelBehavior: FloatingLabelBehavior.never,
                 hintText: widget.hintText,
-                hintStyle: widget.hintTextStyle?.call(kIsWeb ? _SBDimensions.d1_5 : _SBDimensions.d1_2) ??
+                hintStyle:
+                    widget.hintTextStyle?.call(kIsWeb ? _SBDimensions.d1_5 : _SBDimensions.d1_2) ??
                     const TextStyle(
                       color: _SBColor.grey,
                       fontSize: _SBDimensions.d15,

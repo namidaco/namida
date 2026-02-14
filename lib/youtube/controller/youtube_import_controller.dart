@@ -141,26 +141,26 @@ class YoutubeImportController {
       });
       YoutubePlaylistController.inst
           .addNewPlaylistRaw(
-        playlist.$1.name,
-        creationDate: details?.timeCreated?.millisecondsSinceEpoch,
-        modifiedDate: details?.timeUpdated?.millisecondsSinceEpoch,
-        playlistID: plID,
-        comment: details?.description ?? '',
-        tracks: newTracks,
-        convertItem: (id, dateAddedFallback, playlistID) => YoutubeID(
-          id: id,
-          source: TrackSource.youtube,
-          watchNull: YTWatch(
-            dateMSNull: newTracksDates[id] ?? dateAddedFallback,
-            isYTMusic: false,
-          ),
-          playlistID: playlistID,
-        ),
-        actionIfAlreadyExists: () => actionIfPlaylistsExist,
-      )
+            playlist.$1.name,
+            creationDate: details?.timeCreated?.millisecondsSinceEpoch,
+            modifiedDate: details?.timeUpdated?.millisecondsSinceEpoch,
+            playlistID: plID,
+            comment: details?.description ?? '',
+            tracks: newTracks,
+            convertItem: (id, dateAddedFallback, playlistID) => YoutubeID(
+              id: id,
+              source: TrackSource.youtube,
+              watchNull: YTWatch(
+                dateMSNull: newTracksDates[id] ?? dateAddedFallback,
+                isYTMusic: false,
+              ),
+              playlistID: playlistID,
+            ),
+            actionIfAlreadyExists: () => actionIfPlaylistsExist,
+          )
           .then((value) {
-        if (index == res.length - 1) completer.complete();
-      });
+            if (index == res.length - 1) completer.complete();
+          });
     });
 
     await completer.future;

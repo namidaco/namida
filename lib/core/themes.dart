@@ -103,11 +103,13 @@ class AppThemes {
             EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
           ),
           iconSize: const WidgetStatePropertyAll(21.0),
-          backgroundColor: WidgetStatePropertyAll(light
-              ? Color.alphaBlend(color.withAlpha(30), Colors.white)
-              : pitchBlack != null
-                  ? Color.alphaBlend(color.withAlpha(60), pitchBlack)
-                  : null),
+          backgroundColor: WidgetStatePropertyAll(
+            light
+                ? Color.alphaBlend(color.withAlpha(30), Colors.white)
+                : pitchBlack != null
+                ? Color.alphaBlend(color.withAlpha(60), pitchBlack)
+                : null,
+          ),
         ),
       ),
       focusColor: light ? const Color.fromARGB(200, 190, 190, 190) : const Color.fromARGB(150, 80, 80, 80),
@@ -116,11 +118,11 @@ class AppThemes {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius)),
         backgroundColor: lighterDialog
             ? light
-                ? Color.alphaBlend(getMainColorWithAlpha(60), Colors.white)
-                : Color.alphaBlend(getMainColorWithAlpha(20), pitchBlack ?? const Color.fromARGB(255, 12, 12, 12))
+                  ? Color.alphaBlend(getMainColorWithAlpha(60), Colors.white)
+                  : Color.alphaBlend(getMainColorWithAlpha(20), pitchBlack ?? const Color.fromARGB(255, 12, 12, 12))
             : light
-                ? Color.alphaBlend(getMainColorWithAlpha(35), Colors.white)
-                : Color.alphaBlend(getMainColorWithAlpha(12), pitchBlack ?? const Color.fromARGB(255, 16, 16, 16)),
+            ? Color.alphaBlend(getMainColorWithAlpha(35), Colors.white)
+            : Color.alphaBlend(getMainColorWithAlpha(12), pitchBlack ?? const Color.fromARGB(255, 16, 16, 16)),
       ),
       listTileTheme: ListTileThemeData(
         horizontalTitleGap: 16.0,
@@ -167,7 +169,7 @@ class AppThemes {
               color: Color.fromARGB(70, 12, 12, 12),
               blurRadius: 6.0,
               offset: Offset(0, 2),
-            )
+            ),
           ],
         ),
         textStyle: TextStyle(

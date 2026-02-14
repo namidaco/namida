@@ -356,12 +356,12 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                         ),
                                       ),
                                     ],
-                                  )
+                                  ),
                                 ],
                               ),
                             ],
                           ),
-                        )
+                        ),
                       ],
                     ),
                   );
@@ -439,8 +439,8 @@ class YTHostedPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
     super.key,
     required String playlistId,
     required this.userPlaylist,
-  })  : playlist = _EmptyPlaylistResult(playlistId: playlistId),
-        isMixPlaylist = PlaylistInfoItem.isMixPlaylist(playlistId);
+  }) : playlist = _EmptyPlaylistResult(playlistId: playlistId),
+       isMixPlaylist = PlaylistInfoItem.isMixPlaylist(playlistId);
 
   @override
   State<YTHostedPlaylistSubpage> createState() => _YTHostedPlaylistSubpageState();
@@ -588,8 +588,8 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
       final viewsCount = playlist.info.viewsCount;
       final viewsCountText = viewsCount == null ? playlist.info.viewsCountText : viewsCount.displayViewsKeywordShort;
       uploaderTitleAndViews = [
-        if (uploaderTitle != null) uploaderTitle,
-        if (viewsCountText != null) viewsCountText,
+        ?uploaderTitle,
+        ?viewsCountText,
       ].join(' - ');
       thumbnailUrl = playlist.info.thumbnails.pick()?.url;
       plId = playlist.playlistId;
@@ -772,12 +772,12 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                         ),
                                       ),
                                     ],
-                                  )
+                                  ),
                                 ],
                               ),
                             ],
                           ),
-                        )
+                        ),
                       ],
                     ),
                   );
@@ -879,11 +879,11 @@ class _EmptyPlaylistResult extends YoutiPiePlaylistResultBase {
   _EmptyPlaylistResult({
     required String playlistId,
   }) : super(
-          basicInfo: PlaylistBasicInfo(id: playlistId, title: '', videosCountText: null, videosCount: null, thumbnails: []),
-          items: [],
-          cacheKey: null,
-          continuation: null,
-        );
+         basicInfo: PlaylistBasicInfo(id: playlistId, title: '', videosCountText: null, videosCount: null, thumbnails: []),
+         items: [],
+         cacheKey: null,
+         continuation: null,
+       );
 
   @override
   Future<bool> fetchNextFunction(ExecuteDetails? details) async {

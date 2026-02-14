@@ -218,8 +218,8 @@ class MusicWebServerAuthDetails {
               authMap['s'], // new salt would result in auth error [40]
             )
           : (password?.startsWith('enc:') ?? false)
-              ? ServerAuthModel.encryptedPassword(username, password!)
-              : ServerAuthModel.rawPassword(username, password ?? ''),
+          ? ServerAuthModel.encryptedPassword(username, password!)
+          : ServerAuthModel.rawPassword(username, password ?? ''),
     );
   }
 

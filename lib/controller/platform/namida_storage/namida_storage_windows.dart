@@ -109,7 +109,7 @@ class _NamidaStorageWindows extends NamidaStorage {
       return files.whereType<File>().map((e) => e.path).toList();
     } else {
       final path = options.getFile()?.path;
-      return [if (path != null) path];
+      return [?path];
     }
   }
 }

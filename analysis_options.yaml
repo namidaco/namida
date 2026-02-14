@@ -16,7 +16,7 @@ analyzer:
 
 formatter:
   trailing_commas: preserve
-  page_width: 240
+  page_width: 180
 
 custom_lint:
 

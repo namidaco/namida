@@ -110,13 +110,14 @@ class YoutubeVideoCard extends StatelessWidget {
         title: video.title,
         subtitle: [
           if (viewsCountText != null && viewsCountText.isNotEmpty) viewsCountText,
-          if (uploadDateAgo != null) uploadDateAgo,
+          ?uploadDateAgo,
         ].join(' - '),
         displaythirdLineText: showThirdLine,
         thirdLineText: dateInsteadOfChannel ? video.badges?.join(' - ') ?? '' : video.channelName ?? '',
         displayChannelThumbnail: !dateInsteadOfChannel,
         channelThumbnailUrl: video.channel?.thumbnails.pick()?.url ?? YoutubeInfoController.utils.getVideoChannelThumbnailsSync(videoId, checkFromStorage: false)?.pick()?.url,
-        onTap: onTap ??
+        onTap:
+            onTap ??
             () async {
               _VideoCardUtils.onVideoTap(
                 videoId: videoId,
@@ -133,36 +134,36 @@ class YoutubeVideoCard extends StatelessWidget {
         onTopWidgets: percentageWatched == null && firstBadge == null
             ? null
             : (thumbWidth, thumbHeight, imageColors) => [
-                  if (percentageWatched != null)
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      child: SizedBox(
-                        height: 1.25,
-                        width: thumbWidth * percentageWatched,
-                        child: const DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(140, 255, 20, 20),
-                          ),
+                if (percentageWatched != null)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    child: SizedBox(
+                      height: 1.25,
+                      width: thumbWidth * percentageWatched,
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Color.fromARGB(140, 255, 20, 20),
                         ),
                       ),
                     ),
-                  if (firstBadge != null)
-                    Positioned(
-                      bottom: 3.0,
-                      right: 4.0,
-                      child: NamidaInkWell(
-                        borderRadius: 5.0,
-                        padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
-                        bgColor: firstBadge == 'LIVE' ? Color.fromARGB(100, 255, 20, 20) : context.theme.cardColor,
-                        child: Icon(
-                          Broken.radar_1,
-                          size: 14.0,
-                          color: Color.fromARGB(222, 222, 222, 222),
-                        ),
+                  ),
+                if (firstBadge != null)
+                  Positioned(
+                    bottom: 3.0,
+                    right: 4.0,
+                    child: NamidaInkWell(
+                      borderRadius: 5.0,
+                      padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
+                      bgColor: firstBadge == 'LIVE' ? Color.fromARGB(100, 255, 20, 20) : context.theme.cardColor,
+                      child: Icon(
+                        Broken.radar_1,
+                        size: 14.0,
+                        color: Color.fromARGB(222, 222, 222, 222),
                       ),
                     ),
-                ],
+                  ),
+              ],
       ),
     );
     if (properties.configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
@@ -249,7 +250,8 @@ class YoutubeShortVideoCard extends StatelessWidget {
         thirdLineText: '',
         displayChannelThumbnail: false,
         channelThumbnailUrl: null,
-        onTap: onTap ??
+        onTap:
+            onTap ??
             () {
               _VideoCardUtils.onVideoTap(
                 videoId: videoId,
@@ -298,10 +300,10 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
   }
 
   Future<void> _onShortTap() => _VideoCardUtils.onVideoTap(
-        videoId: short.id,
-        queueSource: queueSource,
-        openInFullScreen: true,
-      );
+    videoId: short.id,
+    queueSource: queueSource,
+    openInFullScreen: true,
+  );
 
   @override
   Widget build(BuildContext context) {

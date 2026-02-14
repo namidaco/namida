@@ -405,8 +405,8 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     final itemIcon = item.videoStream != null
         ? Broken.video
         : item.audioStream != null
-            ? Broken.musicnote
-            : null;
+        ? Broken.musicnote
+        : null;
     final infoFinal = _infoFinal;
     final duration = _duration;
     return NamidaPopupWrapper(
@@ -497,8 +497,8 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                   audioPerc != null
                                       ? lang.AUDIO
                                       : videoPerc != null
-                                          ? lang.VIDEO
-                                          : '',
+                                      ? lang.VIDEO
+                                      : '',
                                   style: textTheme.displaySmall,
                                 )
                               : const LoadingIndicator(),
@@ -571,29 +571,30 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                                 _onCancelDeleteDownloadTap([item], keepInList: true, delete: true);
                                                 _onResumeDownloadTap([item], context);
                                               }
-                                            })
+                                            },
+                                          )
                                         : willBeDownloaded || isDownloading || isFetching
-                                            ? _getChip(
-                                                context: context,
-                                                title: lang.PAUSE,
-                                                icon: Broken.pause,
-                                                iconColor: context.defaultIconColor(),
-                                                iconWidget: isDownloading
-                                                    ? null
-                                                    : (size) => StackedIcon(
-                                                          baseIcon: Broken.pause,
-                                                          secondaryIcon: Broken.timer,
-                                                          iconSize: size,
-                                                          secondaryIconSize: 10.0,
-                                                        ),
-                                                onTap: () => _onPauseDownloadTap([item]),
-                                              )
-                                            : _getChip(
-                                                context: context,
-                                                title: lang.RESUME,
-                                                icon: Broken.play,
-                                                onTap: () => _onResumeDownloadTap([item], context),
-                                              );
+                                        ? _getChip(
+                                            context: context,
+                                            title: lang.PAUSE,
+                                            icon: Broken.pause,
+                                            iconColor: context.defaultIconColor(),
+                                            iconWidget: isDownloading
+                                                ? null
+                                                : (size) => StackedIcon(
+                                                    baseIcon: Broken.pause,
+                                                    secondaryIcon: Broken.timer,
+                                                    iconSize: size,
+                                                    secondaryIconSize: 10.0,
+                                                  ),
+                                            onTap: () => _onPauseDownloadTap([item]),
+                                          )
+                                        : _getChip(
+                                            context: context,
+                                            title: lang.RESUME,
+                                            icon: Broken.play,
+                                            onTap: () => _onResumeDownloadTap([item], context),
+                                          );
                                   },
                                 ),
                                 fileExists
@@ -684,7 +685,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                     color: context.defaultIconColor(),
                                   ),
                           ],
-                        )
+                        ),
                       ],
                     ),
                   ],

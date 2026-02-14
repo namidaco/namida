@@ -40,7 +40,8 @@ class ConnectivityController {
       _hasConnection.value = false;
       _hasHighConnection.value = false;
     } else {
-      final highConnection = connections.contains(ConnectivityResult.wifi) ||
+      final highConnection =
+          connections.contains(ConnectivityResult.wifi) ||
           connections.contains(ConnectivityResult.ethernet) || //
           connections.contains(ConnectivityResult.other);
       _hasHighConnection.value = highConnection;

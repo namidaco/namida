@@ -86,8 +86,8 @@ class _NamidaVideoWidgetState extends State<NamidaVideoWidget> {
     final showControls = widget.isPip
         ? false
         : widget.fullscreen
-            ? true
-            : widget.enableControls;
+        ? true
+        : widget.enableControls;
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerMove: !widget.swipeUpToFullscreen
@@ -118,8 +118,8 @@ class _NamidaVideoWidgetState extends State<NamidaVideoWidget> {
         key: !showControls
             ? null
             : widget.fullscreen
-                ? VideoController.inst.videoControlsKeyFullScreen
-                : VideoController.inst.videoControlsKey,
+            ? VideoController.inst.videoControlsKeyFullScreen
+            : VideoController.inst.videoControlsKey,
         isLocal: widget.isLocal,
         onMinimizeTap: widget.onMinimizeTap,
         showControls: showControls,

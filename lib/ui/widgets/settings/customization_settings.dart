@@ -89,55 +89,55 @@ class CustomizationSettings extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-        _CustomizationSettingsKeys.enableBlur: [lang.ENABLE_BLUR_EFFECT],
-        _CustomizationSettingsKeys.enableGlow: [lang.ENABLE_GLOW_EFFECT],
-        _CustomizationSettingsKeys.enableParallax: [lang.ENABLE_PARALLAX_EFFECT],
-        _CustomizationSettingsKeys.displayRemainingDur: [lang.DISPLAY_REMAINING_DURATION_INSTEAD_OF_TOTAL],
-        _CustomizationSettingsKeys.displayActualPosition: [lang.DISPLAY_ACTUAL_POSITION_INSTEAD_OF_DIFFERENCE_WHILE_SEEKING],
-        _CustomizationSettingsKeys.brMultiplier: [lang.BORDER_RADIUS_MULTIPLIER],
-        _CustomizationSettingsKeys.fontScale: [lang.FONT_SCALE],
-        _CustomizationSettingsKeys.hourFormat12: [lang.HOUR_FORMAT_12],
-        _CustomizationSettingsKeys.dateTimeFormat: [lang.DATE_TIME_FORMAT],
-        // -----------
-        _CustomizationSettingsKeys.ALBUMTILECUSTOMIZATION: [lang.ALBUM_TILE_CUSTOMIZATION],
-        _CustomizationSettingsKeys.trackNumberInAlbumPage: [lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE, lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE_SUBTITLE],
-        _CustomizationSettingsKeys.albumCardTopRightDate: [lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE, lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE_SUBTITLE],
-        _CustomizationSettingsKeys.forceSquaredAlbumThumb: [lang.FORCE_SQUARED_ALBUM_THUMBNAIL],
-        _CustomizationSettingsKeys.staggeredAlbumGridview: [lang.STAGGERED_ALBUM_GRID_VIEW],
-        _CustomizationSettingsKeys.sizeOfAlbumThumb: [lang.ALBUM_THUMBNAIL_SIZE_IN_LIST],
-        _CustomizationSettingsKeys.heightOfAlbumTile: [lang.HEIGHT_OF_ALBUM_TILE],
-        // -----------
-        _CustomizationSettingsKeys.TRACKTILECUSTOMIZATION: [lang.TRACK_TILE_CUSTOMIZATION],
-        _CustomizationSettingsKeys.forceSquaredTrackThumb: [lang.FORCE_SQUARED_TRACK_THUMBNAIL],
-        _CustomizationSettingsKeys.sizeOfTrackThumb: [lang.TRACK_THUMBNAIL_SIZE_IN_LIST],
-        _CustomizationSettingsKeys.heightOfTrackTile: [lang.HEIGHT_OF_TRACK_TILE],
-        _CustomizationSettingsKeys.SWIPEACTIONS: [lang.SWIPE_ACTIONS, lang.ON_SWIPING, lang.LEFT_ACTION, lang.RIGHT_ACTION],
-        _CustomizationSettingsKeys.swipeLeftAction: [lang.SWIPE_ACTIONS, lang.LEFT_ACTION],
-        _CustomizationSettingsKeys.swipeRightAction: [lang.SWIPE_ACTIONS, lang.RIGHT_ACTION],
-        _CustomizationSettingsKeys.displayThirdRow: [lang.DISPLAY_THIRD_ROW_IN_TRACK_TILE],
-        _CustomizationSettingsKeys.displayThirdItemInRow: [lang.DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE],
-        _CustomizationSettingsKeys.displayFavButtonInTrackTile: [lang.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE],
-        _CustomizationSettingsKeys.itemsSeparator: [lang.TRACK_TILE_ITEMS_SEPARATOR],
-        // -----------
-        _CustomizationSettingsKeys.MINIPLAYERCUSTOMIZATION: [lang.MINIPLAYER_CUSTOMIZATION],
-        _CustomizationSettingsKeys.partyMode: [lang.ENABLE_PARTY_MODE, lang.ENABLE_PARTY_MODE_SUBTITLE],
-        _CustomizationSettingsKeys.edgeColorsSwitching: [lang.EDGE_COLORS_SWITCHING],
-        _CustomizationSettingsKeys.movingParticles: [lang.ENABLE_MINIPLAYER_PARTICLES],
-        _CustomizationSettingsKeys.THUMBANIMATIONINTENSITY: [lang.ANIMATING_THUMBNAIL_INTENSITY],
-        _CustomizationSettingsKeys.thumbAnimationIntensityExpanded: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.EXPANDED_MINIPLAYER],
-        _CustomizationSettingsKeys.thumbAnimationIntensityLyrics: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.LYRICS],
-        _CustomizationSettingsKeys.thumbAnimationIntensityMinimized: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.MINIMIZED_MINIPLAYER],
-        _CustomizationSettingsKeys.thumbInverseAnimation: [lang.ANIMATING_THUMBNAIL_INVERSED, lang.ANIMATING_THUMBNAIL_INVERSED_SUBTITLE],
-        _CustomizationSettingsKeys.ARTWORKGESTURES: [lang.ARTWORK_GESTURES],
-        _CustomizationSettingsKeys.scaleMultiplier: [lang.SCALE_MULTIPLIER],
-        _CustomizationSettingsKeys.doubleTapLyrics: [lang.DOUBLE_TAP_TO_TOGGLE_LYRICS],
-        _CustomizationSettingsKeys.artworkTapAction: [lang.TAP_ACTION, lang.ARTWORK],
-        _CustomizationSettingsKeys.artworkLongPressAction: [lang.LONG_PRESS_ACTION, lang.ARTWORK],
-        _CustomizationSettingsKeys.waveformBarsCount: [lang.WAVEFORM_BARS_COUNT],
-        _CustomizationSettingsKeys.displayAudioInfo: [lang.DISPLAY_AUDIO_INFO_IN_MINIPLAYER],
-        _CustomizationSettingsKeys.displayArtistBeforeTitle: [lang.DISPLAY_ARTIST_BEFORE_TITLE],
-        _CustomizationSettingsKeys.appIcons: [lang.APP_ICON],
-      };
+    _CustomizationSettingsKeys.enableBlur: [lang.ENABLE_BLUR_EFFECT],
+    _CustomizationSettingsKeys.enableGlow: [lang.ENABLE_GLOW_EFFECT],
+    _CustomizationSettingsKeys.enableParallax: [lang.ENABLE_PARALLAX_EFFECT],
+    _CustomizationSettingsKeys.displayRemainingDur: [lang.DISPLAY_REMAINING_DURATION_INSTEAD_OF_TOTAL],
+    _CustomizationSettingsKeys.displayActualPosition: [lang.DISPLAY_ACTUAL_POSITION_INSTEAD_OF_DIFFERENCE_WHILE_SEEKING],
+    _CustomizationSettingsKeys.brMultiplier: [lang.BORDER_RADIUS_MULTIPLIER],
+    _CustomizationSettingsKeys.fontScale: [lang.FONT_SCALE],
+    _CustomizationSettingsKeys.hourFormat12: [lang.HOUR_FORMAT_12],
+    _CustomizationSettingsKeys.dateTimeFormat: [lang.DATE_TIME_FORMAT],
+    // -----------
+    _CustomizationSettingsKeys.ALBUMTILECUSTOMIZATION: [lang.ALBUM_TILE_CUSTOMIZATION],
+    _CustomizationSettingsKeys.trackNumberInAlbumPage: [lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE, lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE_SUBTITLE],
+    _CustomizationSettingsKeys.albumCardTopRightDate: [lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE, lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE_SUBTITLE],
+    _CustomizationSettingsKeys.forceSquaredAlbumThumb: [lang.FORCE_SQUARED_ALBUM_THUMBNAIL],
+    _CustomizationSettingsKeys.staggeredAlbumGridview: [lang.STAGGERED_ALBUM_GRID_VIEW],
+    _CustomizationSettingsKeys.sizeOfAlbumThumb: [lang.ALBUM_THUMBNAIL_SIZE_IN_LIST],
+    _CustomizationSettingsKeys.heightOfAlbumTile: [lang.HEIGHT_OF_ALBUM_TILE],
+    // -----------
+    _CustomizationSettingsKeys.TRACKTILECUSTOMIZATION: [lang.TRACK_TILE_CUSTOMIZATION],
+    _CustomizationSettingsKeys.forceSquaredTrackThumb: [lang.FORCE_SQUARED_TRACK_THUMBNAIL],
+    _CustomizationSettingsKeys.sizeOfTrackThumb: [lang.TRACK_THUMBNAIL_SIZE_IN_LIST],
+    _CustomizationSettingsKeys.heightOfTrackTile: [lang.HEIGHT_OF_TRACK_TILE],
+    _CustomizationSettingsKeys.SWIPEACTIONS: [lang.SWIPE_ACTIONS, lang.ON_SWIPING, lang.LEFT_ACTION, lang.RIGHT_ACTION],
+    _CustomizationSettingsKeys.swipeLeftAction: [lang.SWIPE_ACTIONS, lang.LEFT_ACTION],
+    _CustomizationSettingsKeys.swipeRightAction: [lang.SWIPE_ACTIONS, lang.RIGHT_ACTION],
+    _CustomizationSettingsKeys.displayThirdRow: [lang.DISPLAY_THIRD_ROW_IN_TRACK_TILE],
+    _CustomizationSettingsKeys.displayThirdItemInRow: [lang.DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE],
+    _CustomizationSettingsKeys.displayFavButtonInTrackTile: [lang.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE],
+    _CustomizationSettingsKeys.itemsSeparator: [lang.TRACK_TILE_ITEMS_SEPARATOR],
+    // -----------
+    _CustomizationSettingsKeys.MINIPLAYERCUSTOMIZATION: [lang.MINIPLAYER_CUSTOMIZATION],
+    _CustomizationSettingsKeys.partyMode: [lang.ENABLE_PARTY_MODE, lang.ENABLE_PARTY_MODE_SUBTITLE],
+    _CustomizationSettingsKeys.edgeColorsSwitching: [lang.EDGE_COLORS_SWITCHING],
+    _CustomizationSettingsKeys.movingParticles: [lang.ENABLE_MINIPLAYER_PARTICLES],
+    _CustomizationSettingsKeys.THUMBANIMATIONINTENSITY: [lang.ANIMATING_THUMBNAIL_INTENSITY],
+    _CustomizationSettingsKeys.thumbAnimationIntensityExpanded: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.EXPANDED_MINIPLAYER],
+    _CustomizationSettingsKeys.thumbAnimationIntensityLyrics: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.LYRICS],
+    _CustomizationSettingsKeys.thumbAnimationIntensityMinimized: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.MINIMIZED_MINIPLAYER],
+    _CustomizationSettingsKeys.thumbInverseAnimation: [lang.ANIMATING_THUMBNAIL_INVERSED, lang.ANIMATING_THUMBNAIL_INVERSED_SUBTITLE],
+    _CustomizationSettingsKeys.ARTWORKGESTURES: [lang.ARTWORK_GESTURES],
+    _CustomizationSettingsKeys.scaleMultiplier: [lang.SCALE_MULTIPLIER],
+    _CustomizationSettingsKeys.doubleTapLyrics: [lang.DOUBLE_TAP_TO_TOGGLE_LYRICS],
+    _CustomizationSettingsKeys.artworkTapAction: [lang.TAP_ACTION, lang.ARTWORK],
+    _CustomizationSettingsKeys.artworkLongPressAction: [lang.LONG_PRESS_ACTION, lang.ARTWORK],
+    _CustomizationSettingsKeys.waveformBarsCount: [lang.WAVEFORM_BARS_COUNT],
+    _CustomizationSettingsKeys.displayAudioInfo: [lang.DISPLAY_AUDIO_INFO_IN_MINIPLAYER],
+    _CustomizationSettingsKeys.displayArtistBeforeTitle: [lang.DISPLAY_ARTIST_BEFORE_TITLE],
+    _CustomizationSettingsKeys.appIcons: [lang.APP_ICON],
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -827,19 +827,20 @@ class CustomizationSettings extends SettingSubpageProvider {
                       children: [
                         FittedBox(
                           child: Row(
-                            children: [
-                              TrackTilePosition.row1Item1,
-                              TrackTilePosition.row1Item2,
-                              if (settings.displayThirdItemInEachRow.valueR) TrackTilePosition.row1Item3,
-                            ]
-                                .map(
-                                  (e) => TrackItemSmallBox(
-                                    text: settings.trackItem[e]?.label,
-                                    onTap: () => _showTrackItemsDialog(e),
-                                  ),
-                                )
-                                .addSeparators(separator: const SizedBox(width: 6.0))
-                                .toList(),
+                            children:
+                                [
+                                      TrackTilePosition.row1Item1,
+                                      TrackTilePosition.row1Item2,
+                                      if (settings.displayThirdItemInEachRow.valueR) TrackTilePosition.row1Item3,
+                                    ]
+                                    .map(
+                                      (e) => TrackItemSmallBox(
+                                        text: settings.trackItem[e]?.label,
+                                        onTap: () => _showTrackItemsDialog(e),
+                                      ),
+                                    )
+                                    .addSeparators(separator: const SizedBox(width: 6.0))
+                                    .toList(),
                           ),
                         ),
                         const SizedBox(
@@ -847,19 +848,20 @@ class CustomizationSettings extends SettingSubpageProvider {
                         ),
                         FittedBox(
                           child: Row(
-                            children: [
-                              TrackTilePosition.row2Item1,
-                              TrackTilePosition.row2Item2,
-                              if (settings.displayThirdItemInEachRow.valueR) TrackTilePosition.row2Item3,
-                            ]
-                                .map(
-                                  (e) => TrackItemSmallBox(
-                                    text: settings.trackItem[e]?.label,
-                                    onTap: () => _showTrackItemsDialog(e),
-                                  ),
-                                )
-                                .addSeparators(separator: const SizedBox(width: 6.0))
-                                .toList(),
+                            children:
+                                [
+                                      TrackTilePosition.row2Item1,
+                                      TrackTilePosition.row2Item2,
+                                      if (settings.displayThirdItemInEachRow.valueR) TrackTilePosition.row2Item3,
+                                    ]
+                                    .map(
+                                      (e) => TrackItemSmallBox(
+                                        text: settings.trackItem[e]?.label,
+                                        onTap: () => _showTrackItemsDialog(e),
+                                      ),
+                                    )
+                                    .addSeparators(separator: const SizedBox(width: 6.0))
+                                    .toList(),
                           ),
                         ),
                         const SizedBox(
@@ -868,19 +870,20 @@ class CustomizationSettings extends SettingSubpageProvider {
                         if (settings.displayThirdRow.valueR)
                           FittedBox(
                             child: Row(
-                              children: [
-                                TrackTilePosition.row3Item1,
-                                TrackTilePosition.row3Item2,
-                                if (settings.displayThirdItemInEachRow.valueR) TrackTilePosition.row3Item3,
-                              ]
-                                  .map(
-                                    (e) => TrackItemSmallBox(
-                                      text: settings.trackItem[e]?.label,
-                                      onTap: () => _showTrackItemsDialog(e),
-                                    ),
-                                  )
-                                  .addSeparators(separator: const SizedBox(width: 6.0))
-                                  .toList(),
+                              children:
+                                  [
+                                        TrackTilePosition.row3Item1,
+                                        TrackTilePosition.row3Item2,
+                                        if (settings.displayThirdItemInEachRow.valueR) TrackTilePosition.row3Item3,
+                                      ]
+                                      .map(
+                                        (e) => TrackItemSmallBox(
+                                          text: settings.trackItem[e]?.label,
+                                          onTap: () => _showTrackItemsDialog(e),
+                                        ),
+                                      )
+                                      .addSeparators(separator: const SizedBox(width: 6.0))
+                                      .toList(),
                             ),
                           ),
                       ],
@@ -894,9 +897,9 @@ class CustomizationSettings extends SettingSubpageProvider {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       ...[
-                        TrackTilePosition.rightItem1,
-                        TrackTilePosition.rightItem2,
-                      ]
+                            TrackTilePosition.rightItem1,
+                            TrackTilePosition.rightItem2,
+                          ]
                           .map(
                             (e) => TrackItemSmallBox(
                               text: settings.trackItem[e]?.label,
@@ -912,7 +915,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                           removeConfirmationAction: null,
                           onTap: null,
                         ),
-                      ]
+                      ],
                     ],
                   ),
                   const SizedBox(width: 6.0),
@@ -923,7 +926,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 ],
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -1292,68 +1295,69 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
     final bgColor = theme.colorScheme.secondaryContainer;
     final iconsRow = Row(
       mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        ...NamidaAppIcons.values.map(
-          (e) {
-            final isEnabled = e == enabledIcon;
-            return NamidaInkWell(
-              animationDurationMS: 300,
-              borderRadius: 12.0,
-              padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-              enableSecondaryTap: false,
-              decoration: isEnabled
-                  ? BoxDecoration(
-                      color: bgColor.withValues(alpha: 0.75),
-                      border: Border.all(
-                        color: bgColor,
-                        width: 1.5,
+      children:
+          <Widget>[
+                ...NamidaAppIcons.values.map(
+                  (e) {
+                    final isEnabled = e == enabledIcon;
+                    return NamidaInkWell(
+                      animationDurationMS: 300,
+                      borderRadius: 12.0,
+                      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                      enableSecondaryTap: false,
+                      decoration: isEnabled
+                          ? BoxDecoration(
+                              color: bgColor.withValues(alpha: 0.75),
+                              border: Border.all(
+                                color: bgColor,
+                                width: 1.5,
+                              ),
+                            )
+                          : BoxDecoration(
+                              color: bgColor.withValues(alpha: 0.25),
+                            ),
+                      onTap: () async {
+                        await NamidaChannel.inst.changeAppIcon(e);
+                        await _refreshStatus();
+                      },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            e.assetPath,
+                            width: 34.0,
+                            height: 35.0,
+                            alignment: Alignment.center,
+                          ),
+                          SizedBox(height: 1.0),
+                          Text(
+                            e.name,
+                            style: textTheme.displaySmall,
+                          ),
+                        ],
                       ),
-                    )
-                  : BoxDecoration(
-                      color: bgColor.withValues(alpha: 0.25),
-                    ),
-              onTap: () async {
-                await NamidaChannel.inst.changeAppIcon(e);
-                await _refreshStatus();
-              },
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    e.assetPath,
-                    width: 34.0,
-                    height: 35.0,
-                    alignment: Alignment.center,
+                    );
+                  },
+                ),
+                NamidaInkWell(
+                  animationDurationMS: 300,
+                  borderRadius: 12.0,
+                  padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                  enableSecondaryTap: false,
+                  decoration: BoxDecoration(
+                    color: bgColor.withValues(alpha: 0.25),
                   ),
-                  SizedBox(height: 1.0),
-                  Text(
-                    e.name,
-                    style: textTheme.displaySmall,
+                  onTap: _onAddTap,
+                  child: Text(
+                    lang.ADD,
+                    style: textTheme.displayMedium,
                   ),
-                ],
-              ),
-            );
-          },
-        ),
-        NamidaInkWell(
-          animationDurationMS: 300,
-          borderRadius: 12.0,
-          padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-          enableSecondaryTap: false,
-          decoration: BoxDecoration(
-            color: bgColor.withValues(alpha: 0.25),
-          ),
-          onTap: _onAddTap,
-          child: Text(
-            lang.ADD,
-            style: textTheme.displayMedium,
-          ),
-        ),
-      ]
-          .addSeparators(
-            separator: SizedBox(width: 4.0),
-          )
-          .toList(),
+                ),
+              ]
+              .addSeparators(
+                separator: SizedBox(width: 4.0),
+              )
+              .toList(),
     );
 
     return Column(

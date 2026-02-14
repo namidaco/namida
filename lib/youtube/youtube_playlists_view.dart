@@ -108,7 +108,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                 NamidaNavigator.inst.closeDialog();
                 YoutubePlaylistController.inst.removeTracksFromPlaylist(playlist, indexes);
               },
-            )
+            ),
           ],
         ),
       );
@@ -182,10 +182,12 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                   rx: YoutubeHistoryController.inst.currentTopTracksMapListensReactive(currentMostPlayedTimeRange),
                   builder: (context, listensMap) {
                     final videos = listensMap.keysSortedByValue
-                        .map((e) => YoutubeID(
-                              id: e,
-                              playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
-                            ))
+                        .map(
+                          (e) => YoutubeID(
+                            id: e,
+                            playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
+                          ),
+                        )
                         .toList();
                     return _HorizontalSliverList(
                       queueSource: QueueSourceYoutubeID.mostPlayed,
@@ -391,7 +393,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                     );
                                   },
                                   text: lang.PICK_FROM_STORAGE,
-                                )
+                                ),
                               ],
                             ),
                           );
@@ -514,7 +516,8 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
               : ObxO(
                   rx: settings.ytPlaylistSort,
                   builder: (context, sort) {
-                    final sortTextIsUseless = sort == GroupSortType.title ||
+                    final sortTextIsUseless =
+                        sort == GroupSortType.title ||
                         sort == GroupSortType.numberOfTracks ||
                         sort == GroupSortType.duration ||
                         sort == GroupSortType.modifiedDate ||
@@ -690,7 +693,7 @@ class _HorizontalSliverList extends StatelessWidget {
                     trailing: const Icon(Broken.arrow_right_3),
                     onPressed: onPageOpen,
                   ),
-                  if (subHeader != null) subHeader!,
+                  ?subHeader,
                 ],
               ),
             ),

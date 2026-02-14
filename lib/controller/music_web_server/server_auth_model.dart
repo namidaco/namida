@@ -78,9 +78,9 @@ class _ServerAuthWithRawPassword extends ServerAuthModel {
 
   @override
   Map<String, String> toUrlParams() => {
-        'u': username,
-        'p': password,
-      };
+    'u': username,
+    'p': password,
+  };
 }
 
 class _ServerAuthWithEncryptedPassword extends ServerAuthModel {
@@ -90,9 +90,9 @@ class _ServerAuthWithEncryptedPassword extends ServerAuthModel {
 
   @override
   Map<String, String> toUrlParams() => {
-        'u': username,
-        'p': encryptedPassword,
-      };
+    'u': username,
+    'p': encryptedPassword,
+  };
 }
 
 class _ServerAuthWithToken extends ServerAuthModel {
@@ -103,10 +103,10 @@ class _ServerAuthWithToken extends ServerAuthModel {
 
   @override
   Map<String, String> toUrlParams() => {
-        'u': username,
-        's': salt,
-        't': token,
-      };
+    'u': username,
+    's': salt,
+    't': token,
+  };
 }
 
 extension ServerAuthModelExt on ServerAuthModel {

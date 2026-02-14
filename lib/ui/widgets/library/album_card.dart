@@ -81,7 +81,7 @@ class AlbumCard extends StatelessWidget {
               color: theme.shadowColor.withAlpha(50),
               blurRadius: 12,
               offset: const Offset(0, 2.0),
-            )
+            ),
           ],
         ),
         child: LayoutBuilder(
@@ -164,7 +164,7 @@ class AlbumCard extends StatelessWidget {
                                     size: 8.5 + 3.0 * itemImagePercentageMultiplier,
                                   ),
                                 ),
-                              )
+                              ),
                             ],
                     ),
                   ),

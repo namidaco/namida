@@ -320,7 +320,7 @@ class NamidaOnTaps {
                         onFinalUpdatePropertySort(newSorts!, newSortReverse);
                         NamidaNavigator.inst.closeDialog();
                       },
-                    )
+                    ),
                   ],
                 ),
               );
@@ -351,9 +351,9 @@ class NamidaOnTaps {
     final allSorts = allSortsList.obs;
 
     void resortVisualItems() => allSorts.sortByReverse((e) {
-          final active = sorters.contains(e);
-          return active ? sorters.length - sorters.value.indexOf(e) : sorters.value.indexOf(e);
-        });
+      final active = sorters.contains(e);
+      return active ? sorters.length - sorters.value.indexOf(e) : sorters.value.indexOf(e);
+    });
 
     resortVisualItems();
 
@@ -585,7 +585,7 @@ class NamidaOnTaps {
                           isRemoving.value = false;
                           NamidaNavigator.inst.closeDialog();
                         },
-                      )
+                      ),
                     ],
                   ),
                 );
@@ -1079,8 +1079,8 @@ class DirsFileFilter {
     required this.extensions,
     this.imageExtensions,
     this.strictNoMedia = true,
-  })  : _directoriesToScan = settings.directoriesToScan.value,
-        _respectNoMedia = settings.respectNoMedia.value;
+  }) : _directoriesToScan = settings.directoriesToScan.value,
+       _respectNoMedia = settings.respectNoMedia.value;
 
   Future<DirsFileFilterResult> filter() async {
     return await Isolate.run(() => _filterIsolate(this));
@@ -1484,7 +1484,7 @@ class TracksAddOnTap {
                                   '${minRating.valueR}%',
                                   style: textTheme.displaySmall,
                                 ),
-                              )
+                              ),
                             ],
                           ),
                           Column(
@@ -1504,7 +1504,7 @@ class TracksAddOnTap {
                                 ),
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ],
@@ -1738,7 +1738,10 @@ class TracksAddOnTap {
                   final items = mixPlaylist?.items;
                   if (items != null && items.isNotEmpty) {
                     final videos = (items.firstOrNull?.id == currentVideoId ? items.skip(1) : items).map(
-                      (e) => YoutubeID(id: e.id, playlistID: playlistId == null ? null : PlaylistID(id: playlistId)),
+                      (e) => YoutubeID(
+                        id: e.id,
+                        playlistID: playlistId == null ? null : PlaylistID(id: playlistId),
+                      ),
                     );
                     Player.inst
                         .addToQueue(
@@ -1904,16 +1907,18 @@ class TracksAddOnTap {
     required void Function()? onDisposing,
     required List<InsertionSortingType> Function()? disabledSorts,
     required List<Widget> Function(
-            Widget Function({
-              required String title,
-              required String subtitle,
-              required IconData icon,
-              required QueueInsertionType insertionType,
-              required void Function(QueueInsertionType insertionType) onTap,
-              Widget? trailingRaw,
-              bool? chip,
-            }) addTracksTile)
-        tiles,
+      Widget Function({
+        required String title,
+        required String subtitle,
+        required IconData icon,
+        required QueueInsertionType insertionType,
+        required void Function(QueueInsertionType insertionType) onTap,
+        Widget? trailingRaw,
+        bool? chip,
+      })
+      addTracksTile,
+    )
+    tiles,
   }) async {
     final shouldShowConfigureIcon = false.obs;
 
@@ -1955,7 +1960,7 @@ class TracksAddOnTap {
                 );
                 NamidaNavigator.inst.closeDialog();
               },
-            )
+            ),
           ],
           child: Column(
             children: [
@@ -2081,14 +2086,15 @@ class TracksAddOnTap {
           : Obx(
               (context) => Padding(
                 padding: trailingMargin,
-                child: NamidaIconButton(
-                  icon: Broken.setting_4,
-                  iconSize: chip == true ? 20.0 : 24.0,
-                  onPressed: () => openQueueInsertionConfigure(insertionType, title),
-                ).animateEntrance(
-                  showWhen: shouldShowConfigureIcon.valueR,
-                  durationMS: 200,
-                ),
+                child:
+                    NamidaIconButton(
+                      icon: Broken.setting_4,
+                      iconSize: chip == true ? 20.0 : 24.0,
+                      onPressed: () => openQueueInsertionConfigure(insertionType, title),
+                    ).animateEntrance(
+                      showWhen: shouldShowConfigureIcon.valueR,
+                      durationMS: 200,
+                    ),
               ),
             );
       return chip == true
@@ -2210,7 +2216,7 @@ class SussyBaka {
                 );
               },
               child: const Text('or you just wanna use it like that? mattaku'),
-            )
+            ),
           ],
         ),
       ),

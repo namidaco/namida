@@ -612,7 +612,8 @@ enum SnackDisplayDuration {
   long(3000),
   veryLong(4000),
   eternal(5000),
-  tutorial(8000);
+  tutorial(8000)
+  ;
 
   final int milliseconds;
   const SnackDisplayDuration(this.milliseconds);
@@ -642,13 +643,13 @@ SnackbarController snackyy({
   final itemsColor = context?.theme.colorScheme.onSurface.withValues(alpha: 0.7) ?? Colors.white54;
 
   TextStyle getTextStyle(FontWeight fontWeight, double size, {bool action = false}) => TextStyle(
-        fontWeight: fontWeight,
-        fontSize: size,
-        height: 1.25,
-        color: action ? null : itemsColor,
-        fontFamily: "LexendDeca",
-        fontFamilyFallback: const ['sans-serif', 'Roboto'],
-      );
+    fontWeight: fontWeight,
+    fontSize: size,
+    height: 1.25,
+    color: action ? null : itemsColor,
+    fontFamily: "LexendDeca",
+    fontFamilyFallback: const ['sans-serif', 'Roboto'],
+  );
 
   // -- currently has no effects cuz it looks dogshit
   // if (altDesign) {
@@ -771,13 +772,15 @@ SnackbarController snackyy({
                   BoxShadow(
                     color: Colors.red.withAlpha(15),
                     blurRadius: 16.0,
-                  )
+                  ),
                 ]
               : null,
         ),
         child: leftBarIndicatorColor != null
             ? DecoratedBox(
-                decoration: BoxDecoration(border: Border(left: BorderSide(color: leftBarIndicatorColor, width: 4.5))),
+                decoration: BoxDecoration(
+                  border: Border(left: BorderSide(color: leftBarIndicatorColor, width: 4.5)),
+                ),
                 child: content,
               )
             : content,

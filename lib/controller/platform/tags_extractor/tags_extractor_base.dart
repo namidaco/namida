@@ -4,9 +4,7 @@ abstract class TagsExtractor {
   final NamidaFFMPEG ffmpegController;
   final VideoController videoController;
 
-  TagsExtractor()
-      : this.ffmpegController = NamidaFFMPEG.inst,
-        this.videoController = VideoController.inst;
+  TagsExtractor() : this.ffmpegController = NamidaFFMPEG.inst, this.videoController = VideoController.inst;
 
   static TagsExtractor platform() {
     return NamidaPlatformBuilder.init(
@@ -66,11 +64,11 @@ abstract class TagsExtractor {
       final tempThumbnailSavePath = FileParts.joinPath(AppDirs.APP_CACHE, "${trackPath.hashCode}.png");
       res = isVideo
           ? await NamidaFFMPEG.inst
-              .extractVideoThumbnail(
-                videoPath: trackPath,
-                thumbnailSavePath: tempThumbnailSavePath,
-              )
-              .then((value) => value ? File(tempThumbnailSavePath) : null)
+                .extractVideoThumbnail(
+                  videoPath: trackPath,
+                  thumbnailSavePath: tempThumbnailSavePath,
+                )
+                .then((value) => value ? File(tempThumbnailSavePath) : null)
           : await NamidaFFMPEG.inst.extractAudioThumbnail(
               audioPath: trackPath,
               thumbnailSavePath: tempThumbnailSavePath,
@@ -130,8 +128,8 @@ abstract class TagsExtractor {
       String? title,
       String? artist,
     })
-            Function()
-        infoCallback,
+    Function()
+    infoCallback,
     required String? Function() hashKeyCallback,
   }) {
     final woext = buildImageFilenameWOExt(
@@ -159,8 +157,8 @@ abstract class TagsExtractor {
       String? title,
       String? artist,
     })
-            Function()
-        infoCallback,
+    Function()
+    infoCallback,
     required String? Function() hashKeyCallback,
   }) {
     final identifiersSet = identifiers ?? TagsExtractor.getAlbumIdentifiersSet();

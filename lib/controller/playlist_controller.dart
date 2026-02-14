@@ -39,13 +39,15 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   @override
   Track identifyBy(TrackWithDate item) => item.track;
 
-  void addNewPlaylist(String name,
-      {List<Track> tracks = const <Track>[],
-      int? creationDate,
-      String comment = '',
-      List<String> moods = const [],
-      String? m3uPath,
-      PlaylistAddDuplicateAction? actionIfAlreadyExists}) async {
+  void addNewPlaylist(
+    String name, {
+    List<Track> tracks = const <Track>[],
+    int? creationDate,
+    String comment = '',
+    List<String> moods = const [],
+    String? m3uPath,
+    PlaylistAddDuplicateAction? actionIfAlreadyExists,
+  }) async {
     super.addNewPlaylistRaw(
       name,
       tracks: tracks,
@@ -573,7 +575,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
                 NamidaNavigator.inst.closeDialog();
               },
             ),
-          )
+          ),
         ],
         title: lang.NOTE,
         child: Column(

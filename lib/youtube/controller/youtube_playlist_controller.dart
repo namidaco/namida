@@ -124,8 +124,12 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     settings.save(ytPlaylistSort: sortBy, ytPlaylistSortReversed: reverse);
   }
 
-  static void _performSortYTPlaylists(List<MapEntry<String, YoutubePlaylist>> playlistList,
-      {required GroupSortType sortBy, required bool reverse, required List<String>? customIndicesOrder}) {
+  static void _performSortYTPlaylists(
+    List<MapEntry<String, YoutubePlaylist>> playlistList, {
+    required GroupSortType sortBy,
+    required bool reverse,
+    required List<String>? customIndicesOrder,
+  }) {
     void sortThis(Comparable Function(MapEntry<String, YoutubePlaylist> p) comparable) => reverse ? playlistList.sortByReverse(comparable) : playlistList.sortBy(comparable);
 
     if (sortBy == GroupSortType.custom && customIndicesOrder == null) {
@@ -300,29 +304,29 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   }
 
   String Function(YoutubePlaylist playlist)? getGroupSortExtraTextResolverPlaylist(GroupSortType sort) => switch (sort) {
-        GroupSortType.title => (playlist) => playlist.name,
-        GroupSortType.creationDate => (playlist) => playlist.creationDate.dateFormatted,
-        GroupSortType.modifiedDate => (playlist) => playlist.modifiedDate.dateFormatted,
-        GroupSortType.numberOfTracks => (p) => p.tracks.length.toString(),
-        GroupSortType.playCount => (p) => p.tracks.getTotalListenCount().toString(),
-        GroupSortType.firstListen => (p) => p.tracks.getFirstListen()?.dateFormattedOriginal ?? '',
-        GroupSortType.latestPlayed => (p) => p.tracks.getLatestListen()?.dateFormattedOriginal ?? '',
-        GroupSortType.duration => null,
-        GroupSortType.shuffle => null,
-        GroupSortType.custom => null,
+    GroupSortType.title => (playlist) => playlist.name,
+    GroupSortType.creationDate => (playlist) => playlist.creationDate.dateFormatted,
+    GroupSortType.modifiedDate => (playlist) => playlist.modifiedDate.dateFormatted,
+    GroupSortType.numberOfTracks => (p) => p.tracks.length.toString(),
+    GroupSortType.playCount => (p) => p.tracks.getTotalListenCount().toString(),
+    GroupSortType.firstListen => (p) => p.tracks.getFirstListen()?.dateFormattedOriginal ?? '',
+    GroupSortType.latestPlayed => (p) => p.tracks.getLatestListen()?.dateFormattedOriginal ?? '',
+    GroupSortType.duration => null,
+    GroupSortType.shuffle => null,
+    GroupSortType.custom => null,
 
-        // -- local tracks
-        GroupSortType.album => null,
-        GroupSortType.artistsList => null,
-        GroupSortType.composer => null,
-        GroupSortType.albumArtist => null,
-        GroupSortType.label => null,
-        GroupSortType.genresList => null,
-        GroupSortType.albumsCount => null,
-        GroupSortType.year => null,
-        GroupSortType.dateModified => null,
-        // ----
-      };
+    // -- local tracks
+    GroupSortType.album => null,
+    GroupSortType.artistsList => null,
+    GroupSortType.composer => null,
+    GroupSortType.albumArtist => null,
+    GroupSortType.label => null,
+    GroupSortType.genresList => null,
+    GroupSortType.albumsCount => null,
+    GroupSortType.year => null,
+    GroupSortType.dateModified => null,
+    // ----
+  };
 
   Future<void> _ensureItemsHasDataForSorting(List<YTSortType> sorts, List<YoutubeID> items) async {
     if (sorts.contains(YTSortType.title)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoName(e.id)));

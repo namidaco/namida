@@ -115,13 +115,15 @@ class _IsolateExecuter {
     int page = 1;
     while (page < 100) {
       try {
-        final releases = await _requestReleasesApi(
-          currentVersion.isBeta,
-          queryParameters: {
-            'per_page': '$perPage',
-            'page': '$page',
-          },
-        ) as List<dynamic>;
+        final releases =
+            await _requestReleasesApi(
+                  currentVersion.isBeta,
+                  queryParameters: {
+                    'per_page': '$perPage',
+                    'page': '$page',
+                  },
+                )
+                as List<dynamic>;
 
         if (releases.isEmpty) break;
         final releasesAfterCurrent = _filterReleasesAfter(

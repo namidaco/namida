@@ -132,21 +132,21 @@ class CustomMPVPlayer implements AVPlayer {
 
   @override
   Stream<VideoInfoData> get videoInfoStream => _videoInfoStreamController.stream.map(
-        (event) => VideoInfoData(
-          id: '',
-          textureId: event.textureId,
-          width: event.width,
-          height: event.height,
-          frameRate: -1,
-          bitrate: -1,
-          sampleRate: -1,
-          encoderDelay: -1,
-          rotationDegrees: -1,
-          containerMimeType: '',
-          label: '',
-          language: '',
-        ),
-      );
+    (event) => VideoInfoData(
+      id: '',
+      textureId: event.textureId,
+      width: event.width,
+      height: event.height,
+      frameRate: -1,
+      bitrate: -1,
+      sampleRate: -1,
+      encoderDelay: -1,
+      rotationDegrees: -1,
+      containerMimeType: '',
+      label: '',
+      language: '',
+    ),
+  );
 
   @override
   Stream<Duration> get bufferedPositionStream => _player.stream.buffer;
@@ -330,10 +330,7 @@ class _VideoDetails {
     required this.textureId,
   });
 
-  const _VideoDetails.dummy()
-      : width = -1,
-        height = -1,
-        textureId = -1;
+  const _VideoDetails.dummy() : width = -1, height = -1, textureId = -1;
 
   @override
   int get hashCode => width ^ height ^ textureId;

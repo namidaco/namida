@@ -85,16 +85,16 @@ ${keys.map((e) => "  String get $e => _getKey('$e');").join('\n')}
 """);
 
     // -- Controller file
-//     final langFile = File(_controllerFilePath);
-//     final langController = await langFile.readAsString();
-//     const splitterOne = '// -- Keys Start ---------------------------------------------------------';
-//     const splitterTwo = '// -- Keys End ---------------------------------------------------------';
-//     final firstPiece = langController.split(splitterOne).first;
-//     final lastPiece = langController.split(splitterTwo).last;
-//     final mapText = keys.map((e) => '\t\t\t$e = getKey("$e");').join('\n');
-//     await langFile.writeAsString("""$firstPiece$splitterOne
-// $mapText
-// \t\t\t$splitterTwo$lastPiece""");
+    //     final langFile = File(_controllerFilePath);
+    //     final langController = await langFile.readAsString();
+    //     const splitterOne = '// -- Keys Start ---------------------------------------------------------';
+    //     const splitterTwo = '// -- Keys End ---------------------------------------------------------';
+    //     final firstPiece = langController.split(splitterOne).first;
+    //     final lastPiece = langController.split(splitterTwo).last;
+    //     final mapText = keys.map((e) => '\t\t\t$e = getKey("$e");').join('\n');
+    //     await langFile.writeAsString("""$firstPiece$splitterOne
+    // $mapText
+    // \t\t\t$splitterTwo$lastPiece""");
 
     // -- All Langauges files
     // const encoder = JsonEncoder.withIndent('  ');

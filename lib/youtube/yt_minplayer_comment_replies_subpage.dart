@@ -143,7 +143,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                     BoxShadow(
                       blurRadius: 12.0,
                       color: theme.secondaryHeaderColor.withValues(alpha: 0.5),
-                    )
+                    ),
                   ],
                 ),
                 child: Column(
@@ -237,7 +237,8 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                                 videoId: currentId,
                                 mainCommentForReplies: () => mainComment,
                                 mainRepliesList: _currentReplies,
-                                onCommentEdited: () => (c) => _currentMainComment.value = c,
+                                onCommentEdited: () =>
+                                    (c) => _currentMainComment.value = c,
                                 onCommentDeleted: () => NamidaNavigator.inst.popPage,
                               ),
                             ),
@@ -308,7 +309,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                                   )
                                 : const SliverToBoxAdapter(),
                           ),
-                          const SliverPadding(padding: EdgeInsets.only(bottom: kYTQueueSheetMinHeight + 12.0))
+                          const SliverPadding(padding: EdgeInsets.only(bottom: kYTQueueSheetMinHeight + 12.0)),
                         ],
                       ),
                     ),

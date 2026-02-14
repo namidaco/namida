@@ -40,8 +40,8 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> with ItemWithDate i
     required this.dateAdded,
     required Track track,
     TrackSource? source,
-  })  : _track = track,
-        sourceNull = source;
+  }) : _track = track,
+       sourceNull = source;
 
   factory TrackWithDate.fromJson(Map<String, dynamic> json) {
     final finalTrack = Track.fromJson(json['track'] as String, isVideo: json['v'] == true);
@@ -177,8 +177,8 @@ class PlayableItemStats {
     final moodsFinal = _cleanList(moods);
     final map = {
       if (rating > 0) 'rating': rating,
-      if (tagsFinal != null) 'tags': tagsFinal,
-      if (moodsFinal != null) 'moods': moodsFinal,
+      'tags': ?tagsFinal,
+      'moods': ?moodsFinal,
       if (lastPositionInMs > 0) 'lastPositionInMs': lastPositionInMs,
     };
     if (map.isEmpty) return null;

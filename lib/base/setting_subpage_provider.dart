@@ -36,35 +36,36 @@ abstract class SettingSubpageProvider extends StatelessWidget {
             bool finished = false;
             return Positioned.fill(
               child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18.0.multipliedRadius),
-                    color: Colors.grey.withAlpha(100),
-                  ),
-                ).animate(
-                  autoPlay: true,
-                  onComplete: (controller) async {
-                    if (!finished) {
-                      finished = true;
-                      Future<void> oneLap() async {
-                        await controller.animateTo(controller.upperBound);
-                        await controller.animateTo(controller.lowerBound);
-                      }
+                child:
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+                        color: Colors.grey.withAlpha(100),
+                      ),
+                    ).animate(
+                      autoPlay: true,
+                      onComplete: (controller) async {
+                        if (!finished) {
+                          finished = true;
+                          Future<void> oneLap() async {
+                            await controller.animateTo(controller.upperBound);
+                            await controller.animateTo(controller.lowerBound);
+                          }
 
-                      await oneLap();
-                      await oneLap();
-                    }
-                  },
-                  effects: [
-                    const FadeEffect(
-                      duration: Duration(milliseconds: 200),
-                      delay: Duration(milliseconds: 50),
+                          await oneLap();
+                          await oneLap();
+                        }
+                      },
+                      effects: [
+                        const FadeEffect(
+                          duration: Duration(milliseconds: 200),
+                          delay: Duration(milliseconds: 50),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
               ),
             );
-          }()
+          }(),
       ],
     );
   }

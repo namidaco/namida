@@ -323,13 +323,15 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                       text: "${lang.DID_YOU_MEAN}: ",
                                       style: textTheme.displaySmall?.copyWith(fontSize: 13.0),
                                       children: searchResult.correctedQuery
-                                          .map((c) => TextSpan(
-                                                text: c.text,
-                                                style: textTheme.displaySmall?.copyWith(
-                                                  fontSize: 14.0,
-                                                  fontWeight: c.corrected ? FontWeight.w700 : FontWeight.w500,
-                                                ),
-                                              ))
+                                          .map(
+                                            (c) => TextSpan(
+                                              text: c.text,
+                                              style: textTheme.displaySmall?.copyWith(
+                                                fontSize: 14.0,
+                                                fontWeight: c.corrected ? FontWeight.w700 : FontWeight.w500,
+                                              ),
+                                            ),
+                                          )
                                           .toList(),
                                     ),
                                   ),
@@ -344,130 +346,130 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                     _loadingFirstResults == null
                         ? const SliverToBoxAdapter()
                         : _loadingFirstResults == true
-                            ? SliverToBoxAdapter(
-                                child: Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(32.0),
-                                    child: ThreeArchedCircle(
-                                      color: CurrentColor.inst.color.withValues(alpha: 0.4),
-                                      size: Dimensions.inst.availableAppContentWidth * 0.35,
-                                    ),
-                                  ),
+                        ? SliverToBoxAdapter(
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(32.0),
+                                child: ThreeArchedCircle(
+                                  color: CurrentColor.inst.color.withValues(alpha: 0.4),
+                                  size: Dimensions.inst.availableAppContentWidth * 0.35,
                                 ),
-                              )
-                            : searchResult == null
-                                ? const SliverToBoxAdapter()
-                                : VideoTilePropertiesProvider(
-                                    configs: VideoTilePropertiesConfigs(
-                                      queueSource: QueueSourceYoutubeID.searchHosted,
-                                    ),
-                                    builder: (properties) => ObxO(
-                                      rx: settings.youtube.ytVisibleShorts,
-                                      builder: (context, visibleShorts) {
-                                        final isShortsVisible = visibleShorts[YTVisibleShortPlaces.search] ?? true;
-                                        return ObxO(
-                                          rx: settings.youtube.ytVisibleMixes,
-                                          builder: (context, visibleMixes) {
-                                            final isMixesVisible = visibleMixes[YTVisibleMixesPlaces.search] ?? true;
-                                            return SuperSliverList.builder(
-                                              itemCount: searchResult.length,
-                                              itemBuilder: (context, index) {
-                                                final chunk = searchResult.items[index];
-                                                final items = chunk.items;
-                                                int itemsLengthWithoutHiddens = items.length;
-                                                if (!isShortsVisible) itemsLengthWithoutHiddens -= chunk.shortsItemsCount.value;
-                                                if (!isMixesVisible) itemsLengthWithoutHiddens -= chunk.mixesPlaylistCount.value;
-                                                if (itemsLengthWithoutHiddens <= 0) return const SizedBox();
+                              ),
+                            ),
+                          )
+                        : searchResult == null
+                        ? const SliverToBoxAdapter()
+                        : VideoTilePropertiesProvider(
+                            configs: VideoTilePropertiesConfigs(
+                              queueSource: QueueSourceYoutubeID.searchHosted,
+                            ),
+                            builder: (properties) => ObxO(
+                              rx: settings.youtube.ytVisibleShorts,
+                              builder: (context, visibleShorts) {
+                                final isShortsVisible = visibleShorts[YTVisibleShortPlaces.search] ?? true;
+                                return ObxO(
+                                  rx: settings.youtube.ytVisibleMixes,
+                                  builder: (context, visibleMixes) {
+                                    final isMixesVisible = visibleMixes[YTVisibleMixesPlaces.search] ?? true;
+                                    return SuperSliverList.builder(
+                                      itemCount: searchResult.length,
+                                      itemBuilder: (context, index) {
+                                        final chunk = searchResult.items[index];
+                                        final items = chunk.items;
+                                        int itemsLengthWithoutHiddens = items.length;
+                                        if (!isShortsVisible) itemsLengthWithoutHiddens -= chunk.shortsItemsCount.value;
+                                        if (!isMixesVisible) itemsLengthWithoutHiddens -= chunk.mixesPlaylistCount.value;
+                                        if (itemsLengthWithoutHiddens <= 0) return const SizedBox();
 
-                                                if (settings.youtube.searchCleanup.value) {
-                                                  if (chunk.title.isNotEmpty) {
-                                                    return const SizedBox();
-                                                  }
-                                                }
+                                        if (settings.youtube.searchCleanup.value) {
+                                          if (chunk.title.isNotEmpty) {
+                                            return const SizedBox();
+                                          }
+                                        }
 
-                                                return Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    if (chunk.title.isNotEmpty)
-                                                      Padding(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                                        child: Text(
-                                                          chunk.title,
-                                                          style: textTheme.displayMedium,
-                                                        ),
-                                                      ),
-                                                    SizedBox(
-                                                      height: itemsLengthWithoutHiddens * thumbnailItemExtent,
-                                                      child: SuperSmoothListView.builder(
-                                                        padding: EdgeInsets.zero,
-                                                        primary: false,
-                                                        physics: const NeverScrollableScrollPhysics(),
-                                                        itemExtent: isShortsVisible && isMixesVisible ? thumbnailItemExtent : null,
-                                                        // -- we use extent builder only if shorts/mixes are hidden
-                                                        itemExtentBuilder: isShortsVisible && isMixesVisible
-                                                            ? null
-                                                            : (index, dimensions) {
-                                                                final item = items[index];
-                                                                if (!isShortsVisible && item.isShortContent) return 0;
-                                                                if (!isMixesVisible && item.isMixPlaylist) return 0;
-                                                                return thumbnailItemExtent;
-                                                              },
-                                                        itemCount: items.length,
-                                                        itemBuilder: (context, index) {
-                                                          final item = items[index];
-                                                          if (!isShortsVisible && item.isShortContent) return const SizedBox.shrink();
-                                                          if (!isMixesVisible && item.isMixPlaylist) return const SizedBox.shrink();
-                                                          return switch (item.runtimeType) {
-                                                            const (StreamInfoItem) => YoutubeVideoCard(
-                                                                properties: properties,
-                                                                thumbnailHeight: thumbnailHeight,
-                                                                thumbnailWidth: thumbnailWidth,
-                                                                isImageImportantInCache: false,
-                                                                video: item as StreamInfoItem,
-                                                                playlistID: null,
-                                                                onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
-                                                              ),
-                                                            const (StreamInfoItemShort) => YoutubeShortVideoCard(
-                                                                queueSource: QueueSourceYoutubeID.searchHosted,
-                                                                thumbnailHeight: thumbnailHeight,
-                                                                thumbnailWidth: thumbnailWidth,
-                                                                short: item as StreamInfoItemShort,
-                                                                playlistID: null,
-                                                              ),
-                                                            const (PlaylistInfoItem) => YoutubePlaylistCard(
-                                                                queueSource: QueueSourceYoutubeID.searchHosted,
-                                                                thumbnailHeight: thumbnailHeight,
-                                                                thumbnailWidth: thumbnailWidth,
-                                                                playOnTap: false,
-                                                                playlist: item as PlaylistInfoItem,
-                                                                firstVideoID: item.initialVideos.firstOrNull?.id,
-                                                                subtitle: item.subtitle.isNotEmpty ? item.subtitle : item.initialVideos.firstOrNull?.title,
-                                                                isMixPlaylist: item.isMix,
-                                                              ),
-                                                            const (YoutiPieChannelInfo) => YoutubeChannelCard(
-                                                                channel: item as YoutiPieChannelInfo,
-                                                                thumbnailSize: thumbnailHeight,
-                                                              ),
-                                                            _ => const YoutubeVideoCardDummy(
-                                                                shimmerEnabled: true,
-                                                                thumbnailHeight: thumbnailHeight,
-                                                                thumbnailWidth: thumbnailWidth,
-                                                              ),
-                                                          };
-                                                        },
-                                                      ),
+                                        return Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            if (chunk.title.isNotEmpty)
+                                              Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                                child: Text(
+                                                  chunk.title,
+                                                  style: textTheme.displayMedium,
+                                                ),
+                                              ),
+                                            SizedBox(
+                                              height: itemsLengthWithoutHiddens * thumbnailItemExtent,
+                                              child: SuperSmoothListView.builder(
+                                                padding: EdgeInsets.zero,
+                                                primary: false,
+                                                physics: const NeverScrollableScrollPhysics(),
+                                                itemExtent: isShortsVisible && isMixesVisible ? thumbnailItemExtent : null,
+                                                // -- we use extent builder only if shorts/mixes are hidden
+                                                itemExtentBuilder: isShortsVisible && isMixesVisible
+                                                    ? null
+                                                    : (index, dimensions) {
+                                                        final item = items[index];
+                                                        if (!isShortsVisible && item.isShortContent) return 0;
+                                                        if (!isMixesVisible && item.isMixPlaylist) return 0;
+                                                        return thumbnailItemExtent;
+                                                      },
+                                                itemCount: items.length,
+                                                itemBuilder: (context, index) {
+                                                  final item = items[index];
+                                                  if (!isShortsVisible && item.isShortContent) return const SizedBox.shrink();
+                                                  if (!isMixesVisible && item.isMixPlaylist) return const SizedBox.shrink();
+                                                  return switch (item.runtimeType) {
+                                                    const (StreamInfoItem) => YoutubeVideoCard(
+                                                      properties: properties,
+                                                      thumbnailHeight: thumbnailHeight,
+                                                      thumbnailWidth: thumbnailWidth,
+                                                      isImageImportantInCache: false,
+                                                      video: item as StreamInfoItem,
+                                                      playlistID: null,
+                                                      onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
                                                     ),
-                                                    if (chunk.title.isNotEmpty) const SizedBox(height: 8.0),
-                                                  ],
-                                                );
-                                              },
-                                            );
-                                          },
+                                                    const (StreamInfoItemShort) => YoutubeShortVideoCard(
+                                                      queueSource: QueueSourceYoutubeID.searchHosted,
+                                                      thumbnailHeight: thumbnailHeight,
+                                                      thumbnailWidth: thumbnailWidth,
+                                                      short: item as StreamInfoItemShort,
+                                                      playlistID: null,
+                                                    ),
+                                                    const (PlaylistInfoItem) => YoutubePlaylistCard(
+                                                      queueSource: QueueSourceYoutubeID.searchHosted,
+                                                      thumbnailHeight: thumbnailHeight,
+                                                      thumbnailWidth: thumbnailWidth,
+                                                      playOnTap: false,
+                                                      playlist: item as PlaylistInfoItem,
+                                                      firstVideoID: item.initialVideos.firstOrNull?.id,
+                                                      subtitle: item.subtitle.isNotEmpty ? item.subtitle : item.initialVideos.firstOrNull?.title,
+                                                      isMixPlaylist: item.isMix,
+                                                    ),
+                                                    const (YoutiPieChannelInfo) => YoutubeChannelCard(
+                                                      channel: item as YoutiPieChannelInfo,
+                                                      thumbnailSize: thumbnailHeight,
+                                                    ),
+                                                    _ => const YoutubeVideoCardDummy(
+                                                      shimmerEnabled: true,
+                                                      thumbnailHeight: thumbnailHeight,
+                                                      thumbnailWidth: thumbnailWidth,
+                                                    ),
+                                                  };
+                                                },
+                                              ),
+                                            ),
+                                            if (chunk.title.isNotEmpty) const SizedBox(height: 8.0),
+                                          ],
                                         );
                                       },
-                                    ),
-                                  ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
                     SliverToBoxAdapter(
                       child: Obx(
                         (context) => _isFetchingMoreResults.valueR
@@ -488,7 +490,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                 );
               },
             ),
-          )
+          ),
         ],
       ),
     );

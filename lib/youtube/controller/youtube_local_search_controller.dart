@@ -367,10 +367,11 @@ class YTLocalSearchController with PortsProvider<Map> {
   }
 
   static bool _isMatchFuzzy(Iterable<String> splittedText, _StreamResultInfoWrapper wrapper) {
-    return splittedText.every((element) =>
-            wrapper.titleCleaned.contains(element) || //
-            (wrapper.channelCleaned?.contains(element) ?? false) //
-        );
+    return splittedText.every(
+      (element) =>
+          wrapper.titleCleaned.contains(element) || //
+          (wrapper.channelCleaned?.contains(element) ?? false), //
+    );
   }
 
   Timer? _disposingTimer;

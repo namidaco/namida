@@ -174,10 +174,12 @@ class _WebDAVServer extends MusicWebServer {
           res.$3.tryDeleting();
 
           if (trExt != null) {
-            final newUri = serverUriParsed.replace(queryParameters: {
-              ...serverUriParsed.queryParameters,
-              'd': res.$2,
-            });
+            final newUri = serverUriParsed.replace(
+              queryParameters: {
+                ...serverUriParsed.queryParameters,
+                'd': res.$2,
+              },
+            );
             final newPath = newUri.toString();
             return trExt.copyWith(generatePathHash: true, path: newPath);
           }

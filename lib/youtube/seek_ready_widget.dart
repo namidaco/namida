@@ -267,11 +267,11 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
           onTapDown: !allowTapping
               ? null
               : !allowTapping
-                  ? null
-                  : (details) {
-                      if (!_canDragToSeek) return;
-                      if (_tapToSeek) _onDragStart(details.localPosition.dx, maxWidth, fromTap: true);
-                    },
+              ? null
+              : (details) {
+                  if (!_canDragToSeek) return;
+                  if (_tapToSeek) _onDragStart(details.localPosition.dx, maxWidth, fromTap: true);
+                },
           onTapUp: !allowTapping
               ? null
               : (_) {
@@ -317,8 +317,9 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
         ? Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor).withValues(alpha: 0.8)
         : CurrentColor.inst.miniplayerColor.withValues(alpha: 0.8);
     final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(theme.secondaryHeaderColor.withValues(alpha: 0.25), theme.scaffoldBackgroundColor);
-    final bufferColorOg =
-        fullscreen ? miniplayerBGColor.invert() : Color.alphaBlend(progressColor.withValues(alpha: 0.25), miniplayerBGColor.invert().withValues(alpha: 0.5)).withValues(alpha: 0.5);
+    final bufferColorOg = fullscreen
+        ? miniplayerBGColor.invert()
+        : Color.alphaBlend(progressColor.withValues(alpha: 0.25), miniplayerBGColor.invert().withValues(alpha: 0.5)).withValues(alpha: 0.5);
     final bufferColor = widget.showBufferBars ? bufferColorOg : null;
 
     final circleWidget = AnimatedBuilder(
@@ -577,16 +578,17 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                                   ),
                                 ),
                                 child: SizedBox(
-                                  width: maxWidth *
+                                  width:
+                                      maxWidth *
                                       ((videoCached && audioCached) || (audioCached && settings.youtube.isAudioOnlyMode.valueR)
                                           ? 1.0
                                           : buffered > Duration.zero && durMS > 0
-                                              ? buffered.inMilliseconds / durMS
-                                              : 0.0),
+                                          ? buffered.inMilliseconds / durMS
+                                          : 0.0),
                                 ),
                               ),
                             ),
-                          if (sponsorblockWidget != null) sponsorblockWidget,
+                          ?sponsorblockWidget,
                           Positioned(
                             left: 0,
                             top: 0,

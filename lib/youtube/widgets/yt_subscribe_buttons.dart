@@ -189,7 +189,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                       ),
                     );
                   },
-                )
+                ),
               ],
             ),
           ),
@@ -238,21 +238,21 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
   Widget? _notificationsToIcon(ChannelNotifications? noti, double iconSize) {
     return switch (noti) {
       ChannelNotifications.all => Icon(
-          Broken.notification_bing,
-          size: iconSize,
-          color: context.defaultIconColor(),
-        ),
+        Broken.notification_bing,
+        size: iconSize,
+        color: context.defaultIconColor(),
+      ),
       ChannelNotifications.personalized => Icon(
-          Broken.notification_1,
-          size: iconSize,
-          color: context.defaultIconColor(),
-        ),
+        Broken.notification_1,
+        size: iconSize,
+        color: context.defaultIconColor(),
+      ),
       ChannelNotifications.none => StackedIcon(
-          baseIcon: Broken.notification_1,
-          secondaryIcon: Broken.slash,
-          iconSize: iconSize,
-          secondaryIconSize: 11.0,
-        ),
+        baseIcon: Broken.notification_1,
+        secondaryIcon: Broken.slash,
+        iconSize: iconSize,
+        secondaryIconSize: 11.0,
+      ),
       null => null,
     };
   }
@@ -390,25 +390,26 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                     child: ObxO(
                       rx: currentGroups,
                       builder: (context, activeG) => Wrap(
-                          crossAxisAlignment: WrapCrossAlignment.start,
-                          // direction: Axis.vertical,
-                          children: allChannelGroups
-                              .map(
-                                (e) => Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: ListTileWithCheckMark(
-                                    icon: Broken.smileys,
-                                    title: e,
-                                    active: activeG.contains(e),
-                                    onTap: () {
-                                      didChangeCurrentGroups = true; // we could save here but would be inefficient. we instead save on pop
-                                      currentGroups.addOrRemove(e);
-                                    },
-                                    expanded: false,
-                                  ),
+                        crossAxisAlignment: WrapCrossAlignment.start,
+                        // direction: Axis.vertical,
+                        children: allChannelGroups
+                            .map(
+                              (e) => Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: ListTileWithCheckMark(
+                                  icon: Broken.smileys,
+                                  title: e,
+                                  active: activeG.contains(e),
+                                  onTap: () {
+                                    didChangeCurrentGroups = true; // we could save here but would be inefficient. we instead save on pop
+                                    currentGroups.addOrRemove(e);
+                                  },
+                                  expanded: false,
                                 ),
-                              )
-                              .toList()),
+                              ),
+                            )
+                            .toList(),
+                      ),
                     ),
                   ),
                 ),

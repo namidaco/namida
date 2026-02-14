@@ -327,7 +327,8 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
           : const SizedBox(),
     );
 
-    Widget header = widget.headerBuilder?.call(refreshIconWidget) ??
+    Widget header =
+        widget.headerBuilder?.call(refreshIconWidget) ??
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -403,9 +404,9 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
         onRefresh: widget.onPullToRefresh == null
             ? _fetchFeedSilent
             : () => Future.wait([
-                  _fetchFeedSilent(),
-                  widget.onPullToRefresh!(),
-                ]),
+                _fetchFeedSilent(),
+                widget.onPullToRefresh!(),
+              ]),
         child: ObxO(
           rx: YoutubeAccountController.membership.userMembershipTypeGlobal,
           builder: (context, membership) => ObxO(
@@ -498,23 +499,23 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                                               physics: const NeverScrollableScrollPhysics(),
                                               itemCount: 15,
                                               shrinkWrap: true,
-                                              itemBuilder: (_, __) {
+                                              itemBuilder: (_, _) {
                                                 return widget.dummyCard;
                                               },
                                             ),
                                           ),
                                         )
                                       : listItems == null
-                                          ? const SliverToBoxAdapter()
-                                          : widget.sliverListBuilder?.call(listItems, widget.itemBuilder, widget.dummyCard) ??
-                                              SliverFixedExtentList.builder(
-                                                itemCount: listItems.items.length,
-                                                itemExtent: widget.itemExtent,
-                                                itemBuilder: (context, i) {
-                                                  final item = listItems.items[i];
-                                                  return widget.itemBuilder(item, i, listItems);
-                                                },
-                                              ),
+                                      ? const SliverToBoxAdapter()
+                                      : widget.sliverListBuilder?.call(listItems, widget.itemBuilder, widget.dummyCard) ??
+                                            SliverFixedExtentList.builder(
+                                              itemCount: listItems.items.length,
+                                              itemExtent: widget.itemExtent,
+                                              itemBuilder: (context, i) {
+                                                final item = listItems.items[i];
+                                                return widget.itemBuilder(item, i, listItems);
+                                              },
+                                            ),
                                   SliverToBoxAdapter(
                                     child: ObxO(
                                       rx: _isLoadingNext,

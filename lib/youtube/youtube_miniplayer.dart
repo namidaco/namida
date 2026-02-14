@@ -302,7 +302,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                             String? uploadDate;
                             String? uploadDateAgo;
 
-                            DateTime? parsedDate = videoInfoStream?.publishedAt.date ??
+                            DateTime? parsedDate =
+                                videoInfoStream?.publishedAt.date ??
                                 videoInfoStream?.publishDate.date ??
                                 videoInfo?.publishedAt.accurateDate; // videoInfo?.publishedAt.date aint no way near accurate
                             bool accurateDate = true;
@@ -348,9 +349,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                             final epansionTileChildren = descriptionWidget != null || segmentsRow != null
                                 ? [
                                     const SizedBox(height: 12.0),
-                                    if (segmentsRow != null) segmentsRow,
+                                    ?segmentsRow,
                                     if (segmentsRow != null && descriptionWidget != null) const SizedBox(height: 12.0),
-                                    if (descriptionWidget != null) descriptionWidget,
+                                    ?descriptionWidget,
                                     const SizedBox(height: 12.0),
                                   ]
                                 : null;
@@ -425,39 +426,40 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                             MaterialPage(
                                                               maintainState: true,
                                                               child: _YTPlayerInnerPage(
-                                                                  canScrollQueue: _canScrollQueue,
-                                                                  currentId: currentId,
-                                                                  scrollController: _scrollController,
-                                                                  shimmerEnabled: shimmerEnabled,
-                                                                  shimmerEnabledDummyContainer: shimmerEnabledDummyContainer,
-                                                                  ytTopComments: ytTopComments,
-                                                                  videoTitle: videoTitle,
-                                                                  mainTheme: mainTheme,
-                                                                  isTitleExpanded: _isTitleExpanded,
-                                                                  mainTextTheme: mainTextTheme,
-                                                                  numberOfRepeats: _numberOfRepeats,
-                                                                  uploadDate: uploadDate,
-                                                                  uploadDateAgo: uploadDateAgo,
-                                                                  maxWidth: maxWidth,
-                                                                  videoViewCount: videoViewCount,
-                                                                  expansibleController: _expansibleController,
-                                                                  epansionTileChildren: epansionTileChildren,
-                                                                  videoLikeManager: _videoLikeManager,
-                                                                  videoInfo: videoInfo,
-                                                                  currentIdTask: currentIdTask,
-                                                                  downloadedFileExists: downloadedFileExists,
-                                                                  channelName: channelName,
-                                                                  channelThumbnail: channelThumbnail,
-                                                                  channelSubs: channelSubs,
-                                                                  channel: channel,
-                                                                  channelID: channelID,
-                                                                  channelIsVerified: channelIsVerified,
-                                                                  defaultIconColor: defaultIconColor,
-                                                                  dummyVideoCard: dummyVideoCard,
-                                                                  relatedThumbnailItemExtent: relatedThumbnailItemExtent,
-                                                                  relatedThumbnailHeight: relatedThumbnailHeight,
-                                                                  relatedThumbnailWidth: relatedThumbnailWidth,
-                                                                  shouldShowGlowUnderVideo: _shouldShowGlowUnderVideo),
+                                                                canScrollQueue: _canScrollQueue,
+                                                                currentId: currentId,
+                                                                scrollController: _scrollController,
+                                                                shimmerEnabled: shimmerEnabled,
+                                                                shimmerEnabledDummyContainer: shimmerEnabledDummyContainer,
+                                                                ytTopComments: ytTopComments,
+                                                                videoTitle: videoTitle,
+                                                                mainTheme: mainTheme,
+                                                                isTitleExpanded: _isTitleExpanded,
+                                                                mainTextTheme: mainTextTheme,
+                                                                numberOfRepeats: _numberOfRepeats,
+                                                                uploadDate: uploadDate,
+                                                                uploadDateAgo: uploadDateAgo,
+                                                                maxWidth: maxWidth,
+                                                                videoViewCount: videoViewCount,
+                                                                expansibleController: _expansibleController,
+                                                                epansionTileChildren: epansionTileChildren,
+                                                                videoLikeManager: _videoLikeManager,
+                                                                videoInfo: videoInfo,
+                                                                currentIdTask: currentIdTask,
+                                                                downloadedFileExists: downloadedFileExists,
+                                                                channelName: channelName,
+                                                                channelThumbnail: channelThumbnail,
+                                                                channelSubs: channelSubs,
+                                                                channel: channel,
+                                                                channelID: channelID,
+                                                                channelIsVerified: channelIsVerified,
+                                                                defaultIconColor: defaultIconColor,
+                                                                dummyVideoCard: dummyVideoCard,
+                                                                relatedThumbnailItemExtent: relatedThumbnailItemExtent,
+                                                                relatedThumbnailHeight: relatedThumbnailHeight,
+                                                                relatedThumbnailWidth: relatedThumbnailWidth,
+                                                                shouldShowGlowUnderVideo: _shouldShowGlowUnderVideo,
+                                                              ),
                                                             ),
                                                           ],
                                                         ),
@@ -466,7 +468,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                   ),
                                                   Positioned.fill(
                                                     child: miniplayerDimWidget, // -- dimming
-                                                  )
+                                                  ),
                                                 ],
                                               ),
                                             ),
@@ -620,8 +622,10 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                     final finalspace5sb = space5sb * inversePerc;
                                     final finalpadding = 4.0 * inversePerc;
                                     final finalbr = (8.0 * inversePerc).multipliedRadius;
-                                    final double finalthumbnailWidth =
-                                        (space2ForThumbnail + maxWidth * percentage).clampDouble(space2ForThumbnail, (maxWidth - finalspace1sb - finalspace3sb).toDouble());
+                                    final double finalthumbnailWidth = (space2ForThumbnail + maxWidth * percentage).clampDouble(
+                                      space2ForThumbnail,
+                                      (maxWidth - finalspace1sb - finalspace3sb).toDouble(),
+                                    );
                                     final finalthumbnailHeight = finalthumbnailWidth * 9 / 16;
 
                                     return Stack(
@@ -650,8 +654,10 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                     children: [
                                                       SizedBox(width: finalspace3sb),
                                                       SizedBox(
-                                                        width: (maxWidth - finalthumbnailWidth - finalspace1sb - finalspace3sb - finalspace4buttons - finalspace5sb)
-                                                            .clampDouble(0, maxWidth),
+                                                        width: (maxWidth - finalthumbnailWidth - finalspace1sb - finalspace3sb - finalspace4buttons - finalspace5sb).clampDouble(
+                                                          0,
+                                                          maxWidth,
+                                                        ),
                                                         child: titleChild,
                                                       ),
                                                       SizedBox(
@@ -696,7 +702,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                           ],
                                         ),
                                         Positioned(
-                                          top: finalthumbnailHeight -
+                                          top:
+                                              finalthumbnailHeight -
                                               (_extraPaddingForYTMiniplayer / 2 * inversePerc) -
                                               SeekReadyDimensions.barHeight +
                                               (SeekReadyDimensions.barHeight * (0.5 * inversePerc)) +
@@ -795,12 +802,12 @@ class _YTPlayerInnerPage extends StatelessWidget {
     required this.relatedThumbnailHeight,
     required this.relatedThumbnailWidth,
     required Rx<bool> shouldShowGlowUnderVideo,
-  })  : _canScrollQueue = canScrollQueue,
-        _scrollController = scrollController,
-        _isTitleExpanded = isTitleExpanded,
-        _numberOfRepeats = numberOfRepeats,
-        _videoLikeManager = videoLikeManager,
-        _shouldShowGlowUnderVideo = shouldShowGlowUnderVideo;
+  }) : _canScrollQueue = canScrollQueue,
+       _scrollController = scrollController,
+       _isTitleExpanded = isTitleExpanded,
+       _numberOfRepeats = numberOfRepeats,
+       _videoLikeManager = videoLikeManager,
+       _shouldShowGlowUnderVideo = shouldShowGlowUnderVideo;
 
   @override
   Widget build(BuildContext context) {
@@ -928,7 +935,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                   child: Text(
                                     [
                                       if (videoViewCount != null) isTitleExpanded ? videoViewCount.displayViewsKeyword : videoViewCount.displayViewsKeywordShort,
-                                      if (dateToShow != null) dateToShow,
+                                      ?dateToShow,
                                     ].join(' • '),
                                     style: mainTextTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
                                   ),
@@ -975,8 +982,8 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                       title: shimmerEnabled
                                           ? null
                                           : videoLikeCount < 1
-                                              ? lang.LIKE
-                                              : videoLikeCount.formatDecimalShort(isTitleExpanded),
+                                          ? lang.LIKE
+                                          : videoLikeCount.formatDecimalShort(isTitleExpanded),
                                       icon: Broken.like_1,
                                       smallIconWidget: NamidaLoadingSwitcher(
                                         size: 24.0,
@@ -1099,10 +1106,10 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                   final icon = (wasDownloading && !isDownloading)
                                       ? Broken.play_circle
                                       : wasDownloading
-                                          ? Broken.pause_circle
-                                          : downloadedFileExists
-                                              ? Broken.tick_circle
-                                              : Broken.import;
+                                      ? Broken.pause_circle
+                                      : downloadedFileExists
+                                      ? Broken.tick_circle
+                                      : Broken.import;
                                   return SmallYTActionButton(
                                     titleWidget: videoPercText == null && audioPercText == null && isDownloading ? const LoadingIndicator() : null,
                                     title: videoPercText ?? audioPercText ?? lang.DOWNLOAD,
@@ -1238,7 +1245,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                                     Broken.shield_tick,
                                                     size: 12.0,
                                                   ),
-                                                ]
+                                                ],
                                               ],
                                             ),
                                             const SizedBox(height: 2.0),
@@ -1372,7 +1379,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                       shimmerEnabled: loading,
                                       child: YTCommentCardCompact(comment: loading ? null : comments?.items.firstOrNull),
                                     ),
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
@@ -1385,7 +1392,9 @@ class _YTPlayerInnerPage extends StatelessWidget {
 
                   ObxO(
                     rx: YoutubeInfoController.current.currentRelatedVideos,
-                    builder: (context, currentRelatedVideos) => currentRelatedVideos == null // we display dummy boxes but shimmer would be disabled
+                    builder: (context, currentRelatedVideos) =>
+                        currentRelatedVideos ==
+                            null // we display dummy boxes but shimmer would be disabled
                         ? SliverToBoxAdapter(
                             key: Key("${currentId}_feed_shimmer"),
                             child: ShimmerWrapper(
@@ -1397,7 +1406,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                 physics: const NeverScrollableScrollPhysics(),
                                 itemCount: 15,
                                 shrinkWrap: true,
-                                itemBuilder: (_, __) => dummyVideoCard,
+                                itemBuilder: (_, _) => dummyVideoCard,
                               ),
                             ),
                           )
@@ -1469,33 +1478,33 @@ class _YTPlayerInnerPage extends StatelessWidget {
 
                                       return switch (item.runtimeType) {
                                         const (StreamInfoItem) => YoutubeVideoCard(
-                                            properties: properties,
-                                            key: Key((item as StreamInfoItem).id),
-                                            thumbnailHeight: relatedThumbnailHeight,
-                                            thumbnailWidth: relatedThumbnailWidth,
-                                            isImageImportantInCache: false,
-                                            video: item,
-                                            playlistID: null,
-                                          ),
+                                          properties: properties,
+                                          key: Key((item as StreamInfoItem).id),
+                                          thumbnailHeight: relatedThumbnailHeight,
+                                          thumbnailWidth: relatedThumbnailWidth,
+                                          isImageImportantInCache: false,
+                                          video: item,
+                                          playlistID: null,
+                                        ),
                                         const (StreamInfoItemShort) => YoutubeShortVideoCard(
-                                            queueSource: QueueSourceYoutubeID.relatedVideos,
-                                            key: Key("${(item as StreamInfoItemShort?)?.id}"),
-                                            thumbnailHeight: relatedThumbnailHeight,
-                                            thumbnailWidth: relatedThumbnailWidth,
-                                            short: item as StreamInfoItemShort,
-                                            playlistID: null,
-                                          ),
+                                          queueSource: QueueSourceYoutubeID.relatedVideos,
+                                          key: Key("${(item as StreamInfoItemShort?)?.id}"),
+                                          thumbnailHeight: relatedThumbnailHeight,
+                                          thumbnailWidth: relatedThumbnailWidth,
+                                          short: item as StreamInfoItemShort,
+                                          playlistID: null,
+                                        ),
                                         const (PlaylistInfoItem) => YoutubePlaylistCard(
-                                            queueSource: QueueSourceYoutubeID.relatedVideos,
-                                            key: Key((item as PlaylistInfoItem).id),
-                                            thumbnailHeight: relatedThumbnailHeight,
-                                            thumbnailWidth: relatedThumbnailWidth,
-                                            playlist: item,
-                                            subtitle: item.subtitle,
-                                            playOnTap: true,
-                                            firstVideoID: item.initialVideos.firstOrNull?.id,
-                                            isMixPlaylist: item.isMix,
-                                          ),
+                                          queueSource: QueueSourceYoutubeID.relatedVideos,
+                                          key: Key((item as PlaylistInfoItem).id),
+                                          thumbnailHeight: relatedThumbnailHeight,
+                                          thumbnailWidth: relatedThumbnailWidth,
+                                          playlist: item,
+                                          subtitle: item.subtitle,
+                                          playOnTap: true,
+                                          firstVideoID: item.initialVideos.firstOrNull?.id,
+                                          isMixPlaylist: item.isMix,
+                                        ),
                                         _ => dummyVideoCard,
                                       };
                                     },
@@ -1580,7 +1589,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                           : const SliverToBoxAdapter(),
                     ),
 
-                  const SliverPadding(padding: EdgeInsets.only(bottom: kYTQueueSheetMinHeight))
+                  const SliverPadding(padding: EdgeInsets.only(bottom: kYTQueueSheetMinHeight)),
                 ],
               ),
               ObxO(

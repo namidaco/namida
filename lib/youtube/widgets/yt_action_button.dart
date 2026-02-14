@@ -42,7 +42,8 @@ class SmallYTActionButton extends StatelessWidget {
           children: [
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: iconWidget ??
+              child:
+                  iconWidget ??
                   smallIconWidget ??
                   Icon(
                     icon,
@@ -58,7 +59,8 @@ class SmallYTActionButton extends StatelessWidget {
               child: ShimmerWrapper(
                 shimmerEnabled: title == null,
                 fadeDurationMS: titleWidget == null ? 600 : 100,
-                child: titleWidget ??
+                child:
+                    titleWidget ??
                     Text(
                       title ?? '',
                       style: textTheme.displaySmall,

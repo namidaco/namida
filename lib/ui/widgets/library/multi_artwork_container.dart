@@ -56,7 +56,7 @@ class MultiArtworkContainer extends StatelessWidget {
                 color: theme.shadowColor.withAlpha(180),
                 blurRadius: 8,
                 offset: const Offset(0, 2.0),
-              )
+              ),
             ],
           ),
           child: NamidaHero(
@@ -81,8 +81,8 @@ class MultiArtworkContainer extends StatelessWidget {
                       artworkFile: artworkFile,
                       fadeMilliSeconds: fadeMilliSeconds,
                     ),
-                  if (child != null) child!,
-                  if (onTopWidget != null) onTopWidget!,
+                  ?child,
+                  ?onTopWidget,
                 ],
               ),
             ),

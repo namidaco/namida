@@ -1069,7 +1069,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                     _onSelectionComplete([Directory(text) as T]);
                                   }
                                 },
-                              )
+                              ),
                             ],
                             child: Column(
                               children: [
@@ -1188,17 +1188,18 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                 ),
               if (pathSplitsChildren.isNotEmpty)
                 Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                    child: SizedBox(
-                      width: context.width,
-                      child: SmoothSingleChildScrollView(
-                        controller: _pathSplitsScrollController,
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: pathSplitsChildren,
-                        ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                  child: SizedBox(
+                    width: context.width,
+                    child: SmoothSingleChildScrollView(
+                      controller: _pathSplitsScrollController,
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: pathSplitsChildren,
                       ),
-                    )),
+                    ),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                 child: Row(
@@ -1281,87 +1282,86 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                               ),
                             )
                           : _currentFolders.isEmpty && _currentFiles.isEmpty
-                              ? SizedBox(
-                                  width: context.width,
-                                  child: Column(
-                                    key: const Key('empty'),
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(
-                                        Broken.emoji_sad,
-                                        size: 42.0,
-                                      ),
-                                      const SizedBox(height: 12.0),
-                                      Text(
-                                        "0 ${lang.FILES}",
-                                        style: textTheme.displayLarge,
-                                      ),
-                                    ],
+                          ? SizedBox(
+                              width: context.width,
+                              child: Column(
+                                key: const Key('empty'),
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Broken.emoji_sad,
+                                    size: 42.0,
                                   ),
-                                )
-                              : AnimationLimiter(
-                                  key: const Key('items'),
-                                  child: NamidaScrollbar(
-                                    controller: _scrollController,
-                                    child: SmoothCustomScrollView(
-                                      controller: _scrollController,
-                                      slivers: [
-                                        SuperSliverList.builder(
-                                          itemCount: _currentFolders.length,
-                                          itemBuilder: (context, index) {
-                                            final folder = _currentFolders[index];
-                                            final info = _currentInfoDirs[folder.path];
-                                            if (info == null && !_fetchingInfo && !_showEmptyFolders) return const SizedBox();
-                                            return _FileSystemChip(
-                                              position: index,
-                                              bgColor: chipColor,
-                                              onTap: () => _onFolderTap(folder),
-                                              onLongPress: () => _onFolderLongPress(folder),
-                                              displayCheckMark: _selectedFolders.isNotEmpty,
-                                              selected: _selectedFoldersLookup[folder.path] == true,
-                                              icon: Broken.folder,
-                                              title: _pathToName(folder.path),
-                                              subtitle: info == null
-                                                  ? 0.fileSizeFormatted
-                                                  : [
-                                                      "${info.size.fileSizeFormatted}${info.accurate ? '' : '?'}",
-                                                      if (info.filesCount > 0) "${info.filesCount.displayFilesKeyword}${info.accurate ? '' : '?'}",
-                                                      if (info.foldersCount > 0) "${info.foldersCount.displayFolderKeyword}${info.accurate ? '' : '?'}",
-                                                    ].join(' | '),
-                                            );
-                                          },
-                                        ),
-                                        if (_currentFolders.isNotEmpty && _currentFiles.isNotEmpty)
-                                          const SliverToBoxAdapter(
-                                            child: NamidaContainerDivider(
-                                              margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-                                            ),
-                                          ),
-                                        SuperSliverList.builder(
-                                          itemCount: _currentFiles.length,
-                                          itemBuilder: (context, index) {
-                                            final file = _currentFiles[index];
-                                            final info = _currentInfoFiles[file.path];
-                                            final image = _getFileImage(file);
-                                            return _FileSystemChip(
-                                              position: index + _currentFolders.length + 1,
-                                              bgColor: chipColor,
-                                              onTap: () => _onFileTap(file),
-                                              onLongPress: () => _onFileLongPress(file),
-                                              displayCheckMark: _selectedFiles.isNotEmpty,
-                                              selected: _selectedFilesLookup[file.path] == true,
-                                              icon: image == null ? _fileToIcon(file) : null,
-                                              leading: image != null ? _getFileImage(file) : null,
-                                              title: _pathToName(file.path),
-                                              subtitle:
-                                                  info == null ? '' : "${info.size.fileSizeFormatted} | ${info.modified.millisecondsSinceEpoch.dateAndClockFormattedOriginal}",
-                                            );
-                                          },
-                                        ),
-                                      ],
+                                  const SizedBox(height: 12.0),
+                                  Text(
+                                    "0 ${lang.FILES}",
+                                    style: textTheme.displayLarge,
+                                  ),
+                                ],
+                              ),
+                            )
+                          : AnimationLimiter(
+                              key: const Key('items'),
+                              child: NamidaScrollbar(
+                                controller: _scrollController,
+                                child: SmoothCustomScrollView(
+                                  controller: _scrollController,
+                                  slivers: [
+                                    SuperSliverList.builder(
+                                      itemCount: _currentFolders.length,
+                                      itemBuilder: (context, index) {
+                                        final folder = _currentFolders[index];
+                                        final info = _currentInfoDirs[folder.path];
+                                        if (info == null && !_fetchingInfo && !_showEmptyFolders) return const SizedBox();
+                                        return _FileSystemChip(
+                                          position: index,
+                                          bgColor: chipColor,
+                                          onTap: () => _onFolderTap(folder),
+                                          onLongPress: () => _onFolderLongPress(folder),
+                                          displayCheckMark: _selectedFolders.isNotEmpty,
+                                          selected: _selectedFoldersLookup[folder.path] == true,
+                                          icon: Broken.folder,
+                                          title: _pathToName(folder.path),
+                                          subtitle: info == null
+                                              ? 0.fileSizeFormatted
+                                              : [
+                                                  "${info.size.fileSizeFormatted}${info.accurate ? '' : '?'}",
+                                                  if (info.filesCount > 0) "${info.filesCount.displayFilesKeyword}${info.accurate ? '' : '?'}",
+                                                  if (info.foldersCount > 0) "${info.foldersCount.displayFolderKeyword}${info.accurate ? '' : '?'}",
+                                                ].join(' | '),
+                                        );
+                                      },
                                     ),
-                                  ),
+                                    if (_currentFolders.isNotEmpty && _currentFiles.isNotEmpty)
+                                      const SliverToBoxAdapter(
+                                        child: NamidaContainerDivider(
+                                          margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                                        ),
+                                      ),
+                                    SuperSliverList.builder(
+                                      itemCount: _currentFiles.length,
+                                      itemBuilder: (context, index) {
+                                        final file = _currentFiles[index];
+                                        final info = _currentInfoFiles[file.path];
+                                        final image = _getFileImage(file);
+                                        return _FileSystemChip(
+                                          position: index + _currentFolders.length + 1,
+                                          bgColor: chipColor,
+                                          onTap: () => _onFileTap(file),
+                                          onLongPress: () => _onFileLongPress(file),
+                                          displayCheckMark: _selectedFiles.isNotEmpty,
+                                          selected: _selectedFilesLookup[file.path] == true,
+                                          icon: image == null ? _fileToIcon(file) : null,
+                                          leading: image != null ? _getFileImage(file) : null,
+                                          title: _pathToName(file.path),
+                                          subtitle: info == null ? '' : "${info.size.fileSizeFormatted} | ${info.modified.millisecondsSinceEpoch.dateAndClockFormattedOriginal}",
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 ),
+                              ),
+                            ),
                     ),
                     pullToRefreshWidget,
                     Positioned(
@@ -1387,20 +1387,20 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                 ),
                               )
                             : T == Directory && (_selectedFolders.isNotEmpty || !isPathRoot(_currentFolderPath))
-                                ? FloatingActionButton(
-                                    heroTag: 'file_browser_fab_hero',
-                                    onPressed: () => _onSelectionComplete(
-                                      _selectedFolders.isNotEmpty ? _selectedFolders as List<T> : [Directory(_currentFolderPath) as T],
-                                    ),
-                                    child: const Icon(
-                                      Broken.tick_square,
-                                      size: 32.0,
-                                      color: AppThemes.fabForegroundColor,
-                                    ),
-                                  )
-                                : const SizedBox(),
+                            ? FloatingActionButton(
+                                heroTag: 'file_browser_fab_hero',
+                                onPressed: () => _onSelectionComplete(
+                                  _selectedFolders.isNotEmpty ? _selectedFolders as List<T> : [Directory(_currentFolderPath) as T],
+                                ),
+                                child: const Icon(
+                                  Broken.tick_square,
+                                  size: 32.0,
+                                  color: AppThemes.fabForegroundColor,
+                                ),
+                              )
+                            : const SizedBox(),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),

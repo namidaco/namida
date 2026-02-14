@@ -197,7 +197,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                           color: _shouldShowGlow.valueR ? CurrentColor.inst.color.withValues(alpha: 0.5) : Colors.transparent,
                                           blurRadius: 12.0,
                                           spreadRadius: 2.0,
-                                        )
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -223,8 +223,8 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                         color: didGrantStoragePermission
                                             ? Colors.green.withValues(alpha: 0.3)
                                             : didDenyStoragePermission
-                                                ? Colors.red.withValues(alpha: 0.3)
-                                                : Colors.transparent,
+                                            ? Colors.red.withValues(alpha: 0.3)
+                                            : Colors.transparent,
                                       ),
                                     ),
                                     onTap: _requestPermission,
@@ -279,7 +279,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                               ),
                             ],
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),

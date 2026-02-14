@@ -145,7 +145,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
               NamidaNavigator.inst.closeDialog();
             },
             text: (active ? lang.SIGN_OUT : lang.REMOVE).toUpperCase(),
-          )
+          ),
         ],
       ),
     );
@@ -240,7 +240,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                                             Text(
                                               acc.handler,
                                               style: theme.textTheme.displaySmall,
-                                            )
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -272,7 +272,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                             lang.SIGN_IN_YOU_DONT_HAVE_ACCOUNT,
                             style: textTheme.displayLarge,
                           ),
-                        )
+                        ),
                     ],
                   ),
                 ),
