@@ -152,6 +152,7 @@ class TrackTilePropertiesConfigs {
   final bool draggableThumbnail;
   final bool displayRightDragHandler;
   final bool displayTrackNumber;
+  final bool fallbackToAlbumCover;
   final bool horizontalGestures;
   final String? playlistName;
 
@@ -161,6 +162,7 @@ class TrackTilePropertiesConfigs {
     this.draggableThumbnail = false,
     this.displayRightDragHandler = false,
     this.displayTrackNumber = false,
+    this.fallbackToAlbumCover = false,
     this.horizontalGestures = true,
     this.playlistName,
   });
@@ -472,6 +474,7 @@ class TrackTile extends StatelessWidget {
                                     thumbnailSize: properties.thumbnailSize,
                                     path: track.pathToImage,
                                     forceSquared: properties.forceSquaredThumbnails,
+                                    fallbackToAlbumCover: properties.configs.fallbackToAlbumCover,
                                     icon: track is Video ? Broken.video : Broken.musicnote,
                                     iconSize: (properties.trackTileHeight.withMaximum(properties.thumbnailSize)) * 0.5,
                                     onTopWidgets: [

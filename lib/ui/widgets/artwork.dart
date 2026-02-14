@@ -18,6 +18,7 @@ import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
@@ -50,6 +51,7 @@ class ArtworkWidget extends StatefulWidget {
   final IconData? icon;
   final bool isCircle;
   final bool fallbackToFolderCover;
+  final bool fallbackToAlbumCover;
   final bool allowFloating;
   final BoxFit fit;
   final AlignmentGeometry alignment;
@@ -84,6 +86,7 @@ class ArtworkWidget extends StatefulWidget {
     this.icon,
     this.isCircle = false,
     this.fallbackToFolderCover = true,
+    this.fallbackToAlbumCover = false,
     this.allowFloating = false,
     this.fit = BoxFit.cover,
     this.alignment = Alignment.center,
@@ -190,11 +193,24 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
             .then(updateValues);
       }
 
-      bool stillInvalid() => _imagePath == _imagePathInitialValue && _bytes == null;
+      if (track != null) {
+        bool stillInvalid() => _imagePath == _imagePathInitialValue && _bytes == null;
 
-      if (stillInvalid() && track != null && widget.fallbackToFolderCover) {
-        final cover = Indexer.inst.getFallbackFolderArtworkPath(folder: track.folder);
-        if (cover != null && mounted) setState(() => _imagePath = cover);
+        if (widget.fallbackToFolderCover) {
+          if (stillInvalid()) {
+            final cover = Indexer.inst.getFallbackFolderArtworkPath(folder: track.folder);
+            if (cover != null && mounted) setState(() => _imagePath = cover);
+          }
+        }
+
+        if (widget.fallbackToAlbumCover) {
+          if (stillInvalid()) {
+            final albumIdentifier = track.albumIdentifier;
+            final info = NetworkArtworkInfo.albumAutoArtist(albumIdentifier);
+            final fallbackImagePath = info.toArtworkIfExistsAndValidAndEnabled()?.path ?? albumIdentifier.getAlbumTracks().trackOfImage?.pathToImage;
+            if (fallbackImagePath != null && mounted) setState(() => _imagePath = fallbackImagePath);
+          }
+        }
       }
 
       if (_imagePath == _imagePathInitialValue) {

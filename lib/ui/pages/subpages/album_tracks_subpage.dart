@@ -64,6 +64,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
           configs: TrackTilePropertiesConfigs(
             queueSource: QueueSource.album,
             displayTrackNumber: displayTrackNumberinAlbumPage,
+            fallbackToAlbumCover: false,
           ),
           builder: (properties) {
             return ObxO(
