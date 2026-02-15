@@ -3112,10 +3112,12 @@ class NamidaCircularPercentage extends StatelessWidget {
   final double size;
   final double percentage;
   final String heroTag;
+  final bool hero;
 
   const NamidaCircularPercentage({
     super.key,
     this.size = 48.0,
+    required this.hero,
     required this.percentage,
     required this.heroTag,
   });
@@ -3124,35 +3126,38 @@ class NamidaCircularPercentage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
+    final circularSlider = SleekCircularSlider(
+      appearance: CircularSliderAppearance(
+        customWidths: CustomSliderWidths(
+          trackWidth: size / 24,
+          progressBarWidth: size / 12,
+        ),
+        customColors: CustomSliderColors(
+          dotColor: Colors.transparent,
+          trackColor: theme.cardTheme.color,
+          dynamicGradient: true,
+          progressBarColors: [
+            theme.colorScheme.primary.withAlpha(100),
+            Colors.transparent,
+            theme.colorScheme.secondary.withAlpha(100),
+            Colors.transparent,
+            theme.colorScheme.primary.withAlpha(100),
+          ],
+          hideShadow: true,
+        ),
+        size: size,
+        spinnerMode: true,
+      ),
+    );
     return Stack(
       alignment: Alignment.center,
       children: [
-        Hero(
-          tag: heroTag,
-          child: SleekCircularSlider(
-            appearance: CircularSliderAppearance(
-              customWidths: CustomSliderWidths(
-                trackWidth: size / 24,
-                progressBarWidth: size / 12,
-              ),
-              customColors: CustomSliderColors(
-                dotColor: Colors.transparent,
-                trackColor: theme.cardTheme.color,
-                dynamicGradient: true,
-                progressBarColors: [
-                  theme.colorScheme.primary.withAlpha(100),
-                  Colors.transparent,
-                  theme.colorScheme.secondary.withAlpha(100),
-                  Colors.transparent,
-                  theme.colorScheme.primary.withAlpha(100),
-                ],
-                hideShadow: true,
-              ),
-              size: size,
-              spinnerMode: true,
-            ),
-          ),
-        ),
+        hero
+            ? Hero(
+                tag: heroTag,
+                child: circularSlider,
+              )
+            : circularSlider,
         if (percentage.isFinite)
           Text(
             "${((percentage).clampDouble(0.01, 1.0) * 100).toStringAsFixed(0)}%",

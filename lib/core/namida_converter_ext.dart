@@ -1402,13 +1402,13 @@ extension RouteUtils on NamidaRoute {
       ),
 
       // -- Parsing Json Icon
-      _getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0), shouldShow: shouldShowProgressPercentage),
+      _getAnimatedCrossFade(child: const ParsingJsonPercentage(size: 30.0, hero: false), shouldShow: shouldShowProgressPercentage),
 
       // -- Indexer Icon
-      _getAnimatedCrossFade(child: const IndexingPercentage(size: 30.0), shouldShow: shouldShowProgressPercentage),
+      _getAnimatedCrossFade(child: const IndexingPercentage(size: 30.0, hero: false), shouldShow: shouldShowProgressPercentage),
 
       // -- Videos Icon
-      _getAnimatedCrossFade(child: const VideosExtractingPercentage(size: 30.0), shouldShow: shouldShowProgressPercentage),
+      _getAnimatedCrossFade(child: const VideosExtractingPercentage(size: 30.0, hero: false), shouldShow: shouldShowProgressPercentage),
 
       _getAnimatedCrossFade(
         child: NamidaAppBarIcon(
