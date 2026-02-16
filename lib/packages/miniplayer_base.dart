@@ -432,6 +432,41 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
       ),
     );
 
+    final seekPositionTextChild = ObxO(
+      rx: MiniPlayerController.inst.seekValue,
+      builder: (context, seek) => ObxO(
+        rx: Player.inst.nowPlayingPosition,
+        builder: (context, nowPlayingPosition) => NamidaAnimatedSwitcher(
+          key: const ValueKey('seek_switcher'),
+          firstChild: Obx(
+            (context) {
+              String finalText;
+              if (settings.player.displayActualPositionWhenSeeking.value) {
+                final itemDur = Player.inst.currentItemDuration.value?.inMilliseconds;
+                int seekClamped = seek;
+                seekClamped = seekClamped.withMinimum(0);
+                if (itemDur != null) seekClamped = seekClamped.withMaximum(itemDur);
+                finalText = seekClamped.milliSecondsLabel;
+              } else {
+                final diffInMs = seek - nowPlayingPosition;
+                final plusOrMinus = diffInMs < 0 ? '' : '+';
+                final seekText = diffInMs.milliSecondsLabel;
+                finalText = "$plusOrMinus$seekText";
+              }
+              return Text(
+                finalText,
+                style: textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
+              );
+            },
+          ),
+          secondChild: const SizedBox(),
+          showFirst: seek != 0,
+          durationMS: 700,
+          allCurves: Curves.easeInOutQuart,
+        ),
+      ),
+    );
+
     final positionTextChild = TapDetector(
       behavior: HitTestBehavior.translucent,
       onTap: Player.inst.seekSecondsBackward,
@@ -439,51 +474,12 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
         onLongPress: () => Player.inst.seek(Duration.zero),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 12.0.spaceX),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ObxO(
-                rx: MiniPlayerController.inst.seekValue,
-                builder: (context, seek) => ObxO(
-                  rx: Player.inst.nowPlayingPosition,
-                  builder: (context, nowPlayingPosition) => NamidaAnimatedSwitcher(
-                    key: const ValueKey('seek_switcher'),
-                    firstChild: Obx(
-                      (context) {
-                        String finalText;
-                        if (settings.player.displayActualPositionWhenSeeking.value) {
-                          final itemDur = Player.inst.currentItemDuration.value?.inMilliseconds;
-                          int seekClamped = seek;
-                          seekClamped = seekClamped.withMinimum(0);
-                          if (itemDur != null) seekClamped = seekClamped.withMaximum(itemDur);
-                          finalText = seekClamped.milliSecondsLabel;
-                        } else {
-                          final diffInMs = seek - nowPlayingPosition;
-                          final plusOrMinus = diffInMs < 0 ? '' : '+';
-                          final seekText = diffInMs.milliSecondsLabel;
-                          finalText = "$plusOrMinus$seekText";
-                        }
-                        return Text(
-                          finalText,
-                          style: textTheme.displaySmall?.copyWith(fontSize: 10.0.fontSize),
-                        );
-                      },
-                    ),
-                    secondChild: const SizedBox(),
-                    showFirst: seek != 0,
-                    durationMS: 700,
-                    allCurves: Curves.easeInOutQuart,
-                  ),
-                ),
-              ),
-              ObxO(
-                rx: Player.inst.nowPlayingPosition,
-                builder: (context, nowPlayingPosition) => Text(
-                  nowPlayingPosition.milliSecondsLabel,
-                  style: textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
-                ),
-              ),
-            ],
+          child: ObxO(
+            rx: Player.inst.nowPlayingPosition,
+            builder: (context, nowPlayingPosition) => Text(
+              nowPlayingPosition.milliSecondsLabel,
+              style: textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
+            ),
           ),
         ),
       ),
@@ -1303,6 +1299,27 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 16.0),
                                   child: waveformChild,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        Material(
+                          type: MaterialType.transparency,
+                          child: FadeIgnoreTransition(
+                            opacity: slowOpacityAnimation,
+                            child: Transform.translate(
+                              offset: Offset(0, vOffsetWaveform - 64.0 - 8.0),
+                              child: _ScaleYIfNeeded(
+                                alignment: Alignment.bottomCenter,
+                                scale: waveformYScale,
+                                child: Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                    child: seekPositionTextChild,
+                                  ),
                                 ),
                               ),
                             ),
