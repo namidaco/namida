@@ -177,23 +177,6 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
   double _smallBoxDrag = 1.0;
   double _bigBoxDrag = 0.0;
 
-  void _onConfigureTap() {
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
-        icon: Broken.setting_3,
-        title: lang.CONFIGURE,
-        normalTitleStyle: true,
-        actions: [
-          NamidaButton(
-            text: lang.DONE,
-            onPressed: NamidaNavigator.inst.closeDialog,
-          ),
-        ],
-        child: const _QueueConfigureOptions(),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -248,89 +231,86 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                         }
                         _smallBoxDrag = 1.0;
                       },
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: NamidaInkWell(
-                          borderRadius: smallChipBorderRadius,
-                          onTap: () => _animateSmallToBig(),
-                          margin: smallChipMargin,
-                          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
-                          height: minHeight,
-                          bgColor: Color.alphaBlend(theme.cardColor.withOpacityExt(0.5), theme.scaffoldBackgroundColor).withOpacityExt(0.95),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Broken.airdrop,
-                                size: 24.0,
-                                color: theme.iconTheme.color?.withOpacityExt(0.65),
-                              ),
-                              const SizedBox(width: 6.0),
-                              Expanded(
-                                child: Obx(
-                                  (context) {
-                                    final currentIndex = Player.inst.currentIndex.valueR;
-                                    final nextItem = Player.inst.currentQueue.valueR.length - 1 >= currentIndex + 1
-                                        ? Player.inst.currentQueue.valueR[currentIndex + 1] as YoutubeID
-                                        : null;
-                                    final nextItemName = nextItem == null ? '' : YoutubeInfoController.utils.getVideoNameSync(nextItem.id);
-                                    final queueLength = Player.inst.currentQueue.valueR.length;
-                                    return Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
+                      child: NamidaInkWell(
+                        borderRadius: smallChipBorderRadius,
+                        onTap: () => _animateSmallToBig(),
+                        margin: smallChipMargin,
+                        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
+                        height: minHeight,
+                        bgColor: Color.alphaBlend(theme.cardColor.withOpacityExt(0.5), theme.scaffoldBackgroundColor).withOpacityExt(0.95),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Broken.airdrop,
+                              size: 24.0,
+                              color: theme.iconTheme.color?.withOpacityExt(0.65),
+                            ),
+                            const SizedBox(width: 6.0),
+                            Expanded(
+                              child: Obx(
+                                (context) {
+                                  final currentIndex = Player.inst.currentIndex.valueR;
+                                  final nextItem = Player.inst.currentQueue.valueR.length - 1 >= currentIndex + 1
+                                      ? Player.inst.currentQueue.valueR[currentIndex + 1] as YoutubeID
+                                      : null;
+                                  final nextItemName = nextItem == null ? '' : YoutubeInfoController.utils.getVideoNameSync(nextItem.id);
+                                  final queueLength = Player.inst.currentQueue.valueR.length;
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "${currentIndex + 1}/$queueLength",
+                                        style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                                      ),
+                                      // const SizedBox(height: 2.0),
+                                      if (nextItemName != null && nextItemName != '')
                                         Text(
-                                          "${currentIndex + 1}/$queueLength",
-                                          style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                                          "${lang.NEXT}: $nextItemName",
+                                          style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        // const SizedBox(height: 2.0),
-                                        if (nextItemName != null && nextItemName != '')
-                                          Text(
-                                            "${lang.NEXT}: $nextItemName",
-                                            style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 6.0),
-                              LongPressDetector(
-                                enableSecondaryTap: true,
-                                onLongPress: () {
-                                  showLRCSetDialog(Player.inst.currentItem.value!, CurrentColor.inst.miniplayerColor);
+                                    ],
+                                  );
                                 },
-                                child: _ActionItemAlt(
-                                  iconSize: 20.0, // not used
-                                  tooltip: null, // long press above
-                                  onTap: () {
-                                    settings.save(enableLyrics: !settings.enableLyrics.value);
-                                    Lyrics.inst.updateLyrics(Player.inst.currentItem.value!);
-                                  },
-                                  icon: null,
-                                  iconWidget: NamidaMiniPlayerBase.getLrcButton(
-                                    theme,
-                                    color: _ActionItemAlt.getIconColor(context),
-                                  ),
+                              ),
+                            ),
+                            const SizedBox(width: 6.0),
+                            LongPressDetector(
+                              enableSecondaryTap: true,
+                              onLongPress: () {
+                                showLRCSetDialog(Player.inst.currentItem.value!, CurrentColor.inst.miniplayerColor);
+                              },
+                              child: _ActionItemAlt(
+                                iconSize: 20.0, // not used
+                                tooltip: null, // long press above
+                                onTap: () {
+                                  settings.save(enableLyrics: !settings.enableLyrics.value);
+                                  Lyrics.inst.updateLyrics(Player.inst.currentItem.value!);
+                                },
+                                icon: null,
+                                iconWidget: NamidaMiniPlayerBase.getLrcButton(
+                                  theme,
+                                  color: _ActionItemAlt.getIconColor(context),
                                 ),
                               ),
-                              _ActionItemAlt(
-                                tooltip: lang.NEW_TRACKS_ADD,
-                                icon: Broken.add,
-                                iconSize: 22.0,
-                                onTap: () => TracksAddOnTap().onAddVideosTap(context),
-                              ),
-                              _ActionItemAlt(
-                                tooltip: lang.OPEN_QUEUE,
-                                icon: Broken.arrow_up_3,
-                                iconSize: 22.0,
-                                onTap: _animateSmallToBig,
-                              ),
-                            ],
-                          ),
+                            ),
+                            _ActionItemAlt(
+                              tooltip: lang.NEW_TRACKS_ADD,
+                              icon: Broken.add,
+                              iconSize: 22.0,
+                              onTap: () => TracksAddOnTap().onAddVideosTap(context),
+                            ),
+                            _ActionItemAlt(
+                              tooltip: lang.OPEN_QUEUE,
+                              icon: Broken.arrow_up_3,
+                              iconSize: 22.0,
+                              onTap: _animateSmallToBig,
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -410,105 +390,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                     },
                     child: Column(
                       children: [
-                        ConstrainedBox(
-                          constraints: BoxConstraints(minHeight: 42.0, maxHeight: (context.height * 0.15).withMinimum(42.0)),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12.0),
-                            child: LayoutWidthProvider(
-                              builder: (context, maxWidth) {
-                                final textMaxWidth = maxWidth * 0.4;
-                                final iconsMaxWidth = (maxWidth - textMaxWidth);
-                                return Row(
-                                  children: [
-                                    Expanded(
-                                      child: ConstrainedBox(
-                                        constraints: BoxConstraints(maxWidth: textMaxWidth),
-                                        child: FittedBox(
-                                          alignment: Alignment.centerLeft,
-                                          fit: BoxFit.scaleDown,
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(left: 12.0),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  lang.QUEUE,
-                                                  style: textTheme.displayMedium,
-                                                ),
-                                                Obx(
-                                                  (context) => Text(
-                                                    "${Player.inst.currentIndex.valueR + 1}/${Player.inst.currentQueue.valueR.length}",
-                                                    style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    ConstrainedBox(
-                                      constraints: BoxConstraints(maxWidth: iconsMaxWidth),
-                                      child: FittedBox(
-                                        alignment: Alignment.centerRight,
-                                        fit: BoxFit.scaleDown,
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(right: 12.0),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.end,
-                                            children: [
-                                              const SizedBox(width: 6.0),
-                                              _ActionItem(
-                                                icon: Broken.music_playlist,
-                                                tooltip: lang.ADD_TO_PLAYLIST,
-                                                onTap: () {
-                                                  showAddToPlaylistSheet(
-                                                    ids: Player.inst.currentQueue.value.whereType<YoutubeID>().map((e) => e.id),
-                                                    idsNamesLookup: const {},
-                                                  );
-                                                },
-                                              ),
-                                              const SizedBox(width: 6.0),
-                                              _ActionItem(
-                                                icon: Broken.import,
-                                                tooltip: lang.DOWNLOAD,
-                                                onTap: () {
-                                                  YTPlaylistDownloadPage(
-                                                    ids: Player.inst.currentQueue.value.whereType<YoutubeID>().toList(),
-                                                    playlistName: lang.QUEUE,
-                                                    infoLookup: const {},
-                                                    playlistInfo: PlaylistBasicInfo(
-                                                      id: '',
-                                                      title: lang.QUEUE,
-                                                      videosCountText: Player.inst.currentQueue.value.length.toString(),
-                                                      videosCount: Player.inst.currentQueue.value.length,
-                                                      thumbnails: [],
-                                                    ),
-                                                  ).navigate();
-                                                },
-                                              ),
-                                              const SizedBox(width: 6.0),
-                                              _ActionItem(
-                                                icon: Broken.setting_3,
-                                                tooltip: lang.CONFIGURE,
-                                                onTap: () => _onConfigureTap(),
-                                              ),
-                                              const SizedBox(width: 4.0),
-                                              NamidaIconButton(
-                                                iconColor: context.defaultIconColor().withOpacityExt(0.95),
-                                                icon: Broken.arrow_down_2,
-                                                onPressed: () => _animateBigToSmall(),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
+                        YTQueueChipHeaderRow(
+                          onArrowDownPressed: _animateBigToSmall,
                         ),
                         Expanded(
                           child: VideoTilePropertiesProvider(
@@ -629,6 +512,134 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
           },
         ),
       ],
+    );
+  }
+}
+
+class YTQueueChipHeaderRow extends StatelessWidget {
+  final void Function() onArrowDownPressed;
+  const YTQueueChipHeaderRow({super.key, required this.onArrowDownPressed});
+
+  void _onConfigureTap() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        icon: Broken.setting_3,
+        title: lang.CONFIGURE,
+        normalTitleStyle: true,
+        actions: [
+          NamidaButton(
+            text: lang.DONE,
+            onPressed: NamidaNavigator.inst.closeDialog,
+          ),
+        ],
+        child: const _QueueConfigureOptions(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: 42.0, maxHeight: (context.height * 0.15).withMinimum(42.0)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        child: LayoutWidthProvider(
+          builder: (context, maxWidth) {
+            final textMaxWidth = maxWidth * 0.4;
+            final iconsMaxWidth = (maxWidth - textMaxWidth);
+            return Row(
+              children: [
+                Expanded(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: textMaxWidth),
+                    child: FittedBox(
+                      alignment: Alignment.centerLeft,
+                      fit: BoxFit.scaleDown,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              lang.QUEUE,
+                              style: textTheme.displayMedium,
+                            ),
+                            Obx(
+                              (context) => Text(
+                                "${Player.inst.currentIndex.valueR + 1}/${Player.inst.currentQueue.valueR.length}",
+                                style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: iconsMaxWidth),
+                  child: FittedBox(
+                    alignment: Alignment.centerRight,
+                    fit: BoxFit.scaleDown,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 12.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          const SizedBox(width: 6.0),
+                          _ActionItem(
+                            icon: Broken.music_playlist,
+                            tooltip: lang.ADD_TO_PLAYLIST,
+                            onTap: () {
+                              showAddToPlaylistSheet(
+                                ids: Player.inst.currentQueue.value.whereType<YoutubeID>().map((e) => e.id),
+                                idsNamesLookup: const {},
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 6.0),
+                          _ActionItem(
+                            icon: Broken.import,
+                            tooltip: lang.DOWNLOAD,
+                            onTap: () {
+                              YTPlaylistDownloadPage(
+                                ids: Player.inst.currentQueue.value.whereType<YoutubeID>().toList(),
+                                playlistName: lang.QUEUE,
+                                infoLookup: const {},
+                                playlistInfo: PlaylistBasicInfo(
+                                  id: '',
+                                  title: lang.QUEUE,
+                                  videosCountText: Player.inst.currentQueue.value.length.toString(),
+                                  videosCount: Player.inst.currentQueue.value.length,
+                                  thumbnails: [],
+                                ),
+                              ).navigate();
+                            },
+                          ),
+                          const SizedBox(width: 6.0),
+                          _ActionItem(
+                            icon: Broken.setting_3,
+                            tooltip: lang.CONFIGURE,
+                            onTap: () => _onConfigureTap(),
+                          ),
+                          const SizedBox(width: 4.0),
+                          NamidaIconButton(
+                            iconColor: context.defaultIconColor().withOpacityExt(0.95),
+                            icon: Broken.arrow_down_2,
+                            onPressed: onArrowDownPressed,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }

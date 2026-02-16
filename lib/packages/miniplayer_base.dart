@@ -47,6 +47,7 @@ import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
+import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 
 class FocusedMenuOptions {
   final bool Function(Playable currentItem) onOpen;
@@ -574,12 +575,37 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
         ),
       );
     } else if (widget.videoTileConfigs != null) {
+      final colorScheme = CurrentColor.inst.color;
+      final scaffoldBgColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor.withOpacityExt(0.5), context.isDarkMode ? Colors.black : Colors.white);
       queueListChild = VideoTilePropertiesProvider(
         configs: widget.videoTileConfigs!,
-        builder: (properties) => _QueueListChildWrapper(
-          queueItemExtent: widget.queueItemExtent,
-          queueItemExtentBuilder: widget.queueItemExtentBuilder,
-          itemBuilder: (context, index, currentIndex, queue) => _queueItemBuilder(context, index, currentIndex, queue, trackTileProperties: null, videoTileProperties: properties),
+        builder: (properties) => Column(
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.90), colorScheme).withOpacityExt(0.75),
+                    Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.65), colorScheme).withOpacityExt(0.75),
+                  ],
+                ),
+              ),
+              child: YTQueueChipHeaderRow(
+                onArrowDownPressed: MiniPlayerController.inst.snapToExpanded,
+              ),
+            ),
+            const SizedBox(height: 2.0),
+            Expanded(
+              child: _QueueListChildWrapper(
+                queueItemExtent: widget.queueItemExtent,
+                queueItemExtentBuilder: widget.queueItemExtentBuilder,
+                itemBuilder: (context, index, currentIndex, queue) =>
+                    _queueItemBuilder(context, index, currentIndex, queue, trackTileProperties: null, videoTileProperties: properties),
+              ),
+            ),
+          ],
         ),
       );
     } else {
