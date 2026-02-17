@@ -18,10 +18,10 @@ class _SubsonicWebServer extends MusicWebServer {
           ),
         );
       },
-      baseUrl: authDetails.dir.source,
+      baseUrl: authDetails.dir.sourceRaw,
       auth: authDetails.auth.toSubsonicAuthModel(),
     );
-    _serverUri = Uri.parse(authDetails.dir.source);
+    _serverUri = Uri.parse(authDetails.dir.sourceRaw);
   }
 
   @override

@@ -9,13 +9,13 @@ class _WebDAVServer extends MusicWebServer {
     final authInfo = authDetails.auth.toWebDAVAuthModel();
     _api = _ClientApiWrapper(
       webdav.newClient(
-        authDetails.dir.source,
+        authDetails.dir.sourceRaw,
         user: authInfo.username,
         password: authInfo.password,
       ),
     );
 
-    _serverUri = Uri.parse(authDetails.dir.source);
+    _serverUri = Uri.parse(authDetails.dir.sourceRaw);
   }
 
   @override

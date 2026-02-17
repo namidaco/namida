@@ -1477,8 +1477,9 @@ class Indexer<T extends Track> {
     final allMusic = await _audioQuery.querySongs();
     // -- folders selected will be ignored when [_defaultUseMediaStore] is enabled.
     allMusic.retainWhere(
-      (element) =>
-          settings.directoriesToExclude.value.every((dir) => !element.data.startsWith(dir.source)) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */,
+      (element) => settings.directoriesToExclude.value.every(
+        (dir) => !element.data.startsWith(dir.sourceRaw),
+      ) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */,
     );
     final tracks = <TrackExtended>[];
     final artistsSplitConfig = ArtistsSplitConfig.settings();

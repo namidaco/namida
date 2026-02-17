@@ -1136,7 +1136,7 @@ class DirsFileFilter {
               final path = systemEntity.path;
 
               if (fillFolderCovers) {
-                final folder = Folder.explicit(d.source);
+                final folder = Folder.explicit(d.sourceRaw);
                 if (folderCovers[folder] == null) {
                   if (imageExtensions.isPathValid(path)) {
                     final filenameCleaned = path.getFilenameWOExt.toLowerCase();
@@ -1149,7 +1149,7 @@ class DirsFileFilter {
               }
 
               // -- skips if the file is included in one of the excluded folders.
-              if (directoriesToExclude != null && directoriesToExclude.any((exc) => path.startsWith(exc.source))) {
+              if (directoriesToExclude != null && directoriesToExclude.any((exc) => path.startsWith(exc.sourceRaw))) {
                 continue;
               }
 
@@ -1221,7 +1221,7 @@ class DirsFileFilter {
           if (strictNoMedia) {
             // strictly applies bool to all subdirectories.
             allAvailableDirectories.forEach((key, value) {
-              if (key.source.startsWith(d.source)) {
+              if (key.sourceRaw.startsWith(d.sourceRaw)) {
                 allAvailableDirectories[key] = true;
               }
             });

@@ -1108,7 +1108,7 @@ extension DirectoryIndexServerUtils on Iterable<DirectoryIndexServer> {
           final title = [type, e.username ?? '?'].joinText(separator: ' - ');
           final stillExists = stillExistsCallback?.call(e) ?? true;
           final removedText = stillExists ? '' : ' (${lang.REMOVED})';
-          return "$title$removedText:\n${e.source}";
+          return "$title$removedText:\n${e.toSourceInfo()}";
         })
         .join('\n\n');
   }

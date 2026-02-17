@@ -104,7 +104,7 @@ class _FolderTileState extends State<FolderTile> {
         if (folderTitle.startsWith('http') || folderTitle.contains('namida_t')) {
           final server = DirectoryIndexServer.parseFromEncodedUrlPath(folderTitle);
           folderTitle = [
-            server.source,
+            server.toSourceInfo(),
             [
               server.type.toText(),
               server.username,

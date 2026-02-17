@@ -170,7 +170,7 @@ class BackupAndRestore extends SettingSubpageProvider {
     final backupFolder = settings.defaultBackupLocation.value ?? AppDirs.BACKUPS;
     final musicFolders = settings.directoriesToScan.value;
 
-    final musicFoldersJoined = musicFolders.where((e) => e.source.isNotEmpty).map((e) => e).join(',');
+    final musicFoldersJoined = musicFolders.where((e) => e.sourceRaw.isNotEmpty).map((e) => e).join(',');
 
     bool requiresDownload = false;
     try {

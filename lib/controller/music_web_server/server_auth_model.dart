@@ -12,7 +12,7 @@ sealed class ServerAuthModel {
   final String username;
   const ServerAuthModel._(this.username);
 
-  static ServerAuthModel createModel(String username, String password, bool legacyAuth, bool legacyAuthEncrypt) {
+  static ServerAuthModel createModel(String username, String password, String? share, String? subdir, bool legacyAuth, bool legacyAuthEncrypt) {
     if (legacyAuth) {
       if (legacyAuthEncrypt) {
         return ServerAuthModel.encryptedPassword(username, 'enc:${_generateToken(password: password)}');
@@ -136,6 +136,18 @@ extension ServerAuthModelExt on ServerAuthModel {
     final password = authMap['p'] ?? '';
 
     return WebDAVAuth(
+      username: username,
+      password: password,
+    );
+  }
+
+  SMBAuth toSMBAuthModel() {
+    final authMap = toUrlParams();
+
+    final username = authMap['u'] ?? '';
+    final password = authMap['p'] ?? '';
+
+    return SMBAuth(
       username: username,
       password: password,
     );

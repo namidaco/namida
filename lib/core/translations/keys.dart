@@ -127,6 +127,7 @@ abstract class LanguageKeys {
   String get COULDNT_RENAME_PLAYLIST => _getKey('COULDNT_RENAME_PLAYLIST');
   String get COULDNT_SAVE_IMAGE => _getKey('COULDNT_SAVE_IMAGE');
   String get COUNTRY => _getKey('COUNTRY');
+  String get COUPON => _getKey('COUPON');
   String get CREATE_BACKUP => _getKey('CREATE_BACKUP');
   String get CREATE_NEW_PLAYLIST => _getKey('CREATE_NEW_PLAYLIST');
   String get CREATE => _getKey('CREATE');
@@ -271,6 +272,7 @@ abstract class LanguageKeys {
   String get FETCHING => _getKey('FETCHING');
   String get FETCHING_OF_ALL_VIDEOS => _getKey('FETCHING_OF_ALL_VIDEOS');
   String get FILENAME_SHOULDNT_START_WITH => _getKey('FILENAME_SHOULDNT_START_WITH');
+  String get FILE_BASED_SERVER_WARNING => _getKey('FILE_BASED_SERVER_WARNING');
   String get FILE_NAME_WO_EXT => _getKey('FILE_NAME_WO_EXT');
   String get FILE_NAME => _getKey('FILE_NAME');
   String get FILE => _getKey('FILE');
@@ -328,6 +330,7 @@ abstract class LanguageKeys {
   String get HISTORY_LISTENS_REPLACE_WARNING => _getKey('HISTORY_LISTENS_REPLACE_WARNING');
   String get HOME => _getKey('HOME');
   String get HOOK => _getKey('HOOK');
+  String get HOST => _getKey('HOST');
   String get HOURS => _getKey('HOURS');
   String get HOUR_FORMAT_12 => _getKey('HOUR_FORMAT_12');
   String get IF_NOT_PLAYING => _getKey('IF_NOT_PLAYING');
@@ -561,6 +564,7 @@ abstract class LanguageKeys {
   String get PLEASE_ENTER_A_LINK_SUBTITLE => _getKey('PLEASE_ENTER_A_LINK_SUBTITLE');
   String get PLEASE_ENTER_A_LINK => _getKey('PLEASE_ENTER_A_LINK');
   String get PLEASE_ENTER_A_NAME => _getKey('PLEASE_ENTER_A_NAME');
+  String get PORT => _getKey('PORT');
   String get PREVENT_DUPLICATED_TRACKS_SUBTITLE => _getKey('PREVENT_DUPLICATED_TRACKS_SUBTITLE');
   String get PREVENT_DUPLICATED_TRACKS => _getKey('PREVENT_DUPLICATED_TRACKS');
   String get PREVIEW => _getKey('PREVIEW');
@@ -726,6 +730,7 @@ abstract class LanguageKeys {
   String get STORAGE_PERMISSION_DENIED_SUBTITLE => _getKey('STORAGE_PERMISSION_DENIED_SUBTITLE');
   String get STORAGE_PERMISSION_DENIED => _getKey('STORAGE_PERMISSION_DENIED');
   String get STRETCH_LYRICS_DURATION => _getKey('STRETCH_LYRICS_DURATION');
+  String get SUBDIRECTORY => _getKey('SUBDIRECTORY');
   String get SUBSCRIBE => _getKey('SUBSCRIBE');
   String get SUBSCRIBED => _getKey('SUBSCRIBED');
   String get SUBSCRIBER => _getKey('SUBSCRIBER');

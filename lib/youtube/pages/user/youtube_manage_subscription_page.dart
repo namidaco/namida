@@ -309,7 +309,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                       child: NamidaExpansionTile(
                         initiallyExpanded: true,
                         icon: Broken.ticket_star,
-                        titleText: lang.MEMBERSHIP_FREE_COUPON,
+                        titleText: lang.COUPON,
                         trailing: ObxO(
                           rx: _isChecking,
                           builder: (context, isChecking) => ObxO(

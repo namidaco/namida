@@ -1,11 +1,16 @@
+// ignore_for_file: implementation_imports
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 
 // ignore: depend_on_referenced_packages
 import 'package:dio/dio.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:opensubsonic_api/opensubsonic_api.dart';
+import 'package:smb_connect/smb_connect.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 
 import 'package:namida/class/faudiomodel.dart';
@@ -27,6 +32,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 
+part 'smb_server.dart';
 part 'subsonic_web_server.dart';
 part 'webdav_server.dart';
 
@@ -39,6 +45,7 @@ abstract class MusicWebServer {
   }
 
   Future<MusicWebServerError?> ping();
+  Future<Set<String>?> getAvailableShares() async => null;
   Future<void> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback);
   FutureOr<WebStreamUriDetails?> getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal});
   Future<Uint8List?> getImage(String id);
@@ -62,7 +69,20 @@ abstract class MusicWebServer {
     return _executeIfHasServer(
       baseUrl,
       (s, id) => s.getStreamUrl(id, onFetchedIfLocal: onFetchedIfLocal),
-      () => WebStreamUriDetails.fromUri(Uri.file(baseUrl)),
+      (s, dir) {
+        try {
+          return WebStreamUriDetails.fromUri(Uri.file(baseUrl));
+        } catch (_) {}
+        if (s == null) {
+          final availableServersTexts = <String>[];
+          for (final e in _MusicWebServerAuthManager._cachedServers.entries) {
+            availableServersTexts.add('${e.key}: ${e.value.runtimeType}');
+          }
+          final requiredServer = '$dir';
+          throw Exception('No server found for this item: $baseUrl\n\nRequired Server:\n$requiredServer\n\nAvailable Servers:\n${availableServersTexts.join('\n')}');
+        }
+        return null;
+      },
       uri: uri,
     );
   }
@@ -71,7 +91,7 @@ abstract class MusicWebServer {
     return _executeIfHasServer(
       baseUrl,
       (s, id) => s.getImage(id),
-      () => null,
+      (_, _) => null,
     );
   }
 
@@ -85,7 +105,7 @@ abstract class MusicWebServer {
     return baseUri.queryParameters['d'];
   }
 
-  static T _executeIfHasServer<T>(String baseUrl, T Function(MusicWebServer s, String id) callback, T Function() fallback, {Uri? uri}) {
+  static T _executeIfHasServer<T>(String baseUrl, T Function(MusicWebServer s, String id) callback, T Function(MusicWebServer? s, DirectoryIndexServer dir) fallback, {Uri? uri}) {
     String? id;
     final dir = DirectoryIndexServer.parseFromEncodedUrlPath(
       baseUrl,
@@ -96,7 +116,7 @@ abstract class MusicWebServer {
     if (server != null && id != null) {
       return callback(server, id!);
     }
-    return fallback();
+    return fallback(server, dir);
   }
 }
 
@@ -186,20 +206,30 @@ class MusicWebServerAuthDetails {
   MusicWebServerAuthDetails.create({
     required this.dir,
     required String password,
+    required String? share,
+    required String? subdir,
     required bool legacyAuth,
-  }) : auth = _createAuthModel(dir, password, legacyAuth);
+  }) : auth = _createAuthModel(
+         dir,
+         password,
+         share,
+         subdir,
+         legacyAuth,
+       );
 
   MusicWebServerAuthDetails._({
     required this.dir,
     required this.auth,
   });
 
-  static ServerAuthModel _createAuthModel(DirectoryIndex dir, String password, bool legacyAuth) {
+  static ServerAuthModel _createAuthModel(DirectoryIndex dir, String password, String? share, String? subdir, bool legacyAuth) {
     return ServerAuthModel.createModel(
       dir.username ?? '',
       password,
+      share,
+      subdir,
       legacyAuth,
-      dir.type.legacyAuthEncrypt,
+      dir.type.check(DirectoryIndexTypeTag.legacyAuthEncrypt),
     );
   }
 
@@ -218,8 +248,14 @@ class MusicWebServerAuthDetails {
               authMap['s'], // new salt would result in auth error [40]
             )
           : (password?.startsWith('enc:') ?? false)
-          ? ServerAuthModel.encryptedPassword(username, password!)
-          : ServerAuthModel.rawPassword(username, password ?? ''),
+          ? ServerAuthModel.encryptedPassword(
+              username,
+              password!,
+            )
+          : ServerAuthModel.rawPassword(
+              username,
+              password ?? '',
+            ),
     );
   }
 
@@ -266,6 +302,7 @@ class _MusicWebServerAuthManager {
       DirectoryIndexType.local || DirectoryIndexType.unknown => null,
       DirectoryIndexType.subsonic => _SubsonicWebServer.init(authDetails),
       DirectoryIndexType.webdav => _WebDAVServer.init(authDetails),
+      DirectoryIndexType.smb => _SMBServer.init(authDetails),
     };
   }
 

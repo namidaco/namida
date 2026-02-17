@@ -38,21 +38,50 @@ final class DirectoryIndexLocal extends DirectoryIndex {
   }
 
   @override
-  String toDbKey() => source;
+  String toSourceInfo() {
+    return source;
+  }
 }
 
 final class DirectoryIndexServer extends DirectoryIndex {
-  const DirectoryIndexServer(
+  const DirectoryIndexServer.raw(
     String url,
     super.type,
     String username,
   ) : super(source: url, username: username);
 
+  factory DirectoryIndexServer.fromHost(
+    String host,
+    String? share,
+    String? subdir,
+    DirectoryIndexType type,
+    String username,
+    String? port,
+  ) {
+    final uri = Uri(
+      scheme: 'http',
+      host: host,
+      queryParameters: {
+        '_share': ?share,
+        '_subdir': ?subdir,
+        if (port != null && port.isNotEmpty) '_p': port,
+      },
+    );
+
+    return DirectoryIndexServer.raw(uri.toString(), type, username);
+  }
+
   factory DirectoryIndexServer.parseFromEncodedUrlPath(String path, {Uri? uri, void Function(String? id)? parseIdCallback}) {
     uri ??= Uri.parse(path);
     final username = uri.queryParameters['namida_u'];
     final type = DirectoryIndexType.values.getEnum(uri.queryParameters['namida_t']);
-    final uriClean = uri.replace(queryParameters: {});
+    // -- only remove specific params. there can be other useful like share and port, etc.
+    final cleanParams = Map<String, String>.from(uri.queryParameters)
+      ..remove('namida_u')
+      ..remove('namida_t')
+      ..remove('d');
+    final uriClean = uri.replace(queryParameters: cleanParams.isEmpty ? null : cleanParams);
+
     String uriCleanText = uriClean.toString();
     if (uriCleanText.endsWith('?')) uriCleanText = uriCleanText.substring(0, uriCleanText.length - 1);
 
@@ -61,7 +90,7 @@ final class DirectoryIndexServer extends DirectoryIndex {
       parseIdCallback(id);
     }
 
-    return DirectoryIndexServer(uriCleanText, type ?? DirectoryIndexType.unknown, username ?? '');
+    return DirectoryIndexServer.raw(uriCleanText, type ?? DirectoryIndexType.unknown, username ?? '');
   }
 
   @override
@@ -80,9 +109,31 @@ final class DirectoryIndexServer extends DirectoryIndex {
   Stream<FileSystemEntity>? list({bool recursive = false, bool followLinks = true}) {
     return null;
   }
+
+  @override
+  String toSourceInfo() {
+    if (type.check(DirectoryIndexTypeTag.isURLHost)) {
+      final uri = Uri.parse(source);
+      final port = uri.queryParameters['_p'];
+
+      final sourceInfo = [
+        [
+          uri.host,
+          if (port != null && port.isNotEmpty) port,
+        ].join(':'),
+        ...uri.pathSegments,
+        ...uri.queryParameters.values.where((element) => element != port), // share and subdir
+      ].where((s) => s.isNotEmpty).join('/');
+      return sourceInfo;
+    }
+    return source;
+  }
 }
 
 sealed class DirectoryIndex {
+  String get sourceRaw => source;
+
+  @protected
   final String source;
   final DirectoryIndexType type;
   final String? username;
@@ -93,11 +144,13 @@ sealed class DirectoryIndex {
     required this.username,
   });
 
+  String toSourceInfo();
+
   bool get isServer => this is DirectoryIndexServer;
 
   factory DirectoryIndex.guess(String source, DirectoryIndexType? type) {
     if (source.startsWith('http')) {
-      return DirectoryIndexServer(source, type ?? DirectoryIndexType.unknown, '');
+      return DirectoryIndexServer.raw(source, type ?? DirectoryIndexType.unknown, '');
     }
     return DirectoryIndexLocal(source);
   }
@@ -133,7 +186,7 @@ sealed class DirectoryIndex {
       final type = DirectoryIndexType.values.getEnum(value['type'] as String?);
       source = value['source'] as String;
       final username = value['u'] as String? ?? '';
-      if (type != null && type != DirectoryIndexType.local) return DirectoryIndexServer(source, type, username);
+      if (type != null && type != DirectoryIndexType.local) return DirectoryIndexServer.raw(source, type, username);
     } else if (value is String) {
       // -- backward compatibility
       source = value;
@@ -164,23 +217,57 @@ sealed class DirectoryIndex {
   int get hashCode => source.hashCode ^ type.hashCode ^ username.hashCode;
 }
 
+enum DirectoryIndexTypeTag {
+  server,
+  legacyAuthOnly,
+  legacyAuthEncrypt,
+  isURLHost,
+  supportsShare,
+  supportsSubdir,
+  supportsPort,
+  isFileBased,
+}
+
 enum DirectoryIndexType {
-  local(false, false, false),
-  subsonic(true, false, true),
-  webdav(true, true, false),
-  unknown(false, false, false),
+  local({}),
+  subsonic({
+    DirectoryIndexTypeTag.server,
+    DirectoryIndexTypeTag.legacyAuthEncrypt,
+  }),
+  webdav({
+    DirectoryIndexTypeTag.server,
+    DirectoryIndexTypeTag.legacyAuthOnly,
+    DirectoryIndexTypeTag.isFileBased,
+  }),
+  smb({
+    DirectoryIndexTypeTag.server,
+    DirectoryIndexTypeTag.legacyAuthOnly,
+    DirectoryIndexTypeTag.isURLHost,
+    DirectoryIndexTypeTag.supportsShare,
+    DirectoryIndexTypeTag.supportsSubdir,
+    DirectoryIndexTypeTag.supportsPort,
+    DirectoryIndexTypeTag.isFileBased,
+  }),
+  unknown({}),
   ;
 
-  final bool isServer;
-  final bool legacyAuthOnly;
-  final bool legacyAuthEncrypt;
-  const DirectoryIndexType(this.isServer, this.legacyAuthOnly, this.legacyAuthEncrypt);
+  final Set<DirectoryIndexTypeTag> tags;
+  const DirectoryIndexType(this.tags);
+
+  bool check(DirectoryIndexTypeTag tag) {
+    return tags.contains(tag);
+  }
+
+  bool checkAny(List<DirectoryIndexTypeTag> tags) {
+    return tags.any((t) => this.tags.contains(t));
+  }
 
   String toText() {
     return switch (this) {
       DirectoryIndexType.local => lang.LOCAL,
       DirectoryIndexType.subsonic => '(Open) Subsonic',
       DirectoryIndexType.webdav => 'WebDAV',
+      DirectoryIndexType.smb => 'Samba (SMB v2/v3)',
       DirectoryIndexType.unknown => lang.NONE,
     };
   }
@@ -190,6 +277,7 @@ enum DirectoryIndexType {
       DirectoryIndexType.local => lang.PICK_FROM_STORAGE,
       DirectoryIndexType.subsonic => 'Navidrome, Airsonic, Gonic, etc...',
       DirectoryIndexType.webdav => null,
+      DirectoryIndexType.smb => null,
       DirectoryIndexType.unknown => null,
     };
   }
@@ -199,6 +287,7 @@ enum DirectoryIndexType {
       DirectoryIndexType.local || DirectoryIndexType.unknown => null,
       DirectoryIndexType.subsonic => 'assets/icons/subsonic.png',
       DirectoryIndexType.webdav => null,
+      DirectoryIndexType.smb => null,
     };
   }
 
@@ -207,6 +296,7 @@ enum DirectoryIndexType {
       DirectoryIndexType.local || DirectoryIndexType.unknown => Broken.driver,
       DirectoryIndexType.subsonic => Broken.cloud,
       DirectoryIndexType.webdav => Broken.global,
+      DirectoryIndexType.smb => Broken.folder_cloud,
     };
   }
 
@@ -215,6 +305,7 @@ enum DirectoryIndexType {
       DirectoryIndexType.local || DirectoryIndexType.unknown => theme.colorScheme.primary,
       DirectoryIndexType.subsonic => const Color.fromARGB(255, 235, 211, 0),
       DirectoryIndexType.webdav => theme.colorScheme.primary,
+      DirectoryIndexType.smb => theme.colorScheme.primary,
     };
   }
 
@@ -230,6 +321,12 @@ enum DirectoryIndexType {
       DirectoryIndexType.webdav => MusicWebServerAuthDetailsDemo(
         type: this,
         url: 'http://localhost:8080',
+        username: '',
+        password: '',
+      ),
+      DirectoryIndexType.smb => MusicWebServerAuthDetailsDemo(
+        type: this,
+        url: '192.168.1.100',
         username: '',
         password: '',
       ),

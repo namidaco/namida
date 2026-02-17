@@ -137,14 +137,48 @@ class IndexerSettings extends SettingSubpageProvider {
     // types.remove(DirectoryIndexType.local);
     final types = [initialType];
 
+    final isURLHost = initialType.check(.isURLHost);
+    final initialSource = initialDir?.sourceRaw;
+
     final isAuthenticatingRx = false.obs;
     final possibleErrorRx = Rxn<MusicWebServerError>();
     final selectedTypeRx = initialType.obs;
-    final legacyAuthRx = initialType.legacyAuthOnly ? null : false.obs;
-    final urlController = TextEditingController(text: initialDir?.source);
+    final legacyAuthRx = initialType.check(.legacyAuthOnly) ? null : false.obs;
+    final urlOrHostController = TextEditingController(text: initialSource);
     final usernameController = TextEditingController(text: initialDir?.username);
     final passwordController = TextEditingController(text: null);
+    final shareController = initialType.check(.supportsShare) ? TextEditingController(text: null) : null;
+    final subdirController = initialType.check(.supportsSubdir) ? TextEditingController(text: null) : null;
+    final portController = initialType.check(.supportsSubdir) ? TextEditingController(text: null) : null;
+    final availableSharesRx = shareController == null ? null : <String>{}.obs;
     final formKey = GlobalKey<FormState>();
+
+    if (availableSharesRx != null) {
+      initialDir?.toWebServer()?.getAvailableShares().catchError((_) => null).then(
+        (value) {
+          availableSharesRx.value = value ?? <String>{};
+        },
+      );
+    }
+
+    String? initialDirSourceHint = initialSource;
+    String? shareHint;
+    String? subdirHint;
+    String? portHint;
+    if (initialSource != null && isURLHost) {
+      try {
+        final parsed = SMBServerInfo.fromUrl(initialSource);
+        initialDirSourceHint = parsed.host;
+        shareHint = parsed.share;
+        subdirHint = parsed.subdir;
+        portHint = parsed.port?.toString();
+
+        urlOrHostController.text = parsed.host;
+        shareController?.text = parsed.share ?? '';
+        subdirController?.text = parsed.subdir ?? '';
+        portController?.text = parsed.port?.toString() ?? '';
+      } catch (_) {}
+    }
 
     bool isDuplicated(DirectoryIndexServer dir) {
       if (initialDir == null) {
@@ -170,17 +204,28 @@ class IndexerSettings extends SettingSubpageProvider {
         return v;
       }
 
-      final url = urlController.text;
-      final username = usernameController.text;
-      final selectedType = selectedTypeRx.value;
+      // -- we already remove before adding
+      // final urlOrHost = urlOrHostController.text;
+      // final username = usernameController.text;
+      // final selectedType = selectedTypeRx.value;
 
-      if (initialDir == null) {
-        // -- only if adding new
-        final dir = DirectoryIndexServer(url, selectedType, username);
-        if (isDuplicated(dir)) {
-          return lang.ALREADY_EXISTS;
-        }
-      }
+      // if (initialDir == null) {
+      //   // -- only if adding new
+
+      //   final dir = isURLHost
+      //       ? DirectoryIndexServer.fromHost(
+      //           urlOrHost,
+      //           shareController?.text,
+      //           subdirController?.text,
+      //           selectedType,
+      //           username,
+      //           portController?.text,
+      //         )
+      //       : DirectoryIndexServer.raw(urlOrHost, selectedType, username);
+      //   if (isDuplicated(dir)) {
+      //     return lang.ALREADY_EXISTS;
+      //   }
+      // }
 
       return null;
     }
@@ -190,36 +235,61 @@ class IndexerSettings extends SettingSubpageProvider {
       if (v != null) {
         return v;
       }
-      final parsedUri = Uri.tryParse(value!);
-      if (parsedUri == null) {
-        return lang.NAME_CONTAINS_BAD_CHARACTER;
+      if (!isURLHost) {
+        final parsedUri = Uri.tryParse(value!);
+        if (parsedUri == null) {
+          return lang.NAME_CONTAINS_BAD_CHARACTER;
+        }
       }
+
       return null;
     }
 
-    Future<void> authenticate() async {
+    Future<void> authenticateRaw() async {
       if (formKey.currentState!.validate()) {
-        final url = urlController.text;
+        final urlOrHost = urlOrHostController.text;
         final username = usernameController.text;
         final password = passwordController.text;
+        final share = shareController?.text;
+        final subdir = subdirController?.text;
+        final port = portController?.text;
         final selectedType = selectedTypeRx.value;
-        final legacyAuth = legacyAuthRx?.value ?? initialType.legacyAuthOnly;
+        final legacyAuth = legacyAuthRx?.value ?? initialType.check(.legacyAuthOnly);
 
-        final dir = DirectoryIndexServer(url, selectedType, username);
+        final dir = isURLHost
+            ? DirectoryIndexServer.fromHost(
+                urlOrHost,
+                share,
+                subdir,
+                selectedType,
+                username,
+                port,
+              )
+            : DirectoryIndexServer.raw(
+                urlOrHost,
+                selectedType,
+                username,
+              );
         if (isDuplicated(dir)) {
           return;
         }
+
+        if (initialDir != null) settings.removeFromList(directoriesToScan1: initialDir);
+        settings.removeFromList(directoriesToScan1: dir);
 
         onSuccessChoose([dir]); // before db cuz this could remove old stuff
 
         final authInfo = MusicWebServerAuthDetails.create(
           dir: dir,
           password: password,
+          share: share,
+          subdir: subdir,
           legacyAuth: legacyAuth,
         );
         await authInfo.saveToDb(dir);
         possibleErrorRx.value = await dir.toWebServer()?.ping();
         if (possibleErrorRx.value != null) {
+          MusicWebServerAuthDetails.manager.deleteFromDb(dir);
           return;
         }
 
@@ -229,179 +299,289 @@ class IndexerSettings extends SettingSubpageProvider {
       }
     }
 
+    Future<void> authenticate() async {
+      isAuthenticatingRx.value = true;
+      await authenticateRaw().ignoreError();
+      isAuthenticatingRx.value = false;
+    }
+
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
         isAuthenticatingRx.close();
         possibleErrorRx.close();
         selectedTypeRx.close();
         legacyAuthRx?.close();
-        urlController.dispose();
+        urlOrHostController.dispose();
         usernameController.dispose();
         passwordController.dispose();
+        shareController?.dispose();
+        subdirController?.dispose();
+        portController?.dispose();
+        availableSharesRx?.close();
       },
-      dialogBuilder: (theme) => Form(
-        key: formKey,
-        child: CustomBlurryDialog(
-          theme: theme,
-          normalTitleStyle: true,
-          title: lang.CONFIGURE,
-          actions: [
-            ObxO(
-              rx: isAuthenticatingRx,
-              builder: (context, isAuthenticating) => AnimatedEnabled(
-                enabled: !isAuthenticating,
-                child: const CancelButton(),
-              ),
-            ),
-            ObxO(
-              rx: isAuthenticatingRx,
-              builder: (context, isAuthenticating) => AnimatedEnabled(
-                enabled: !isAuthenticating,
-                child: NamidaButton(
-                  text: lang.ADD,
-                  onPressed: authenticate,
+      dialogBuilder: (theme) {
+        final mainColorScheme = initialType.toColor(theme);
+        return Form(
+          key: formKey,
+          child: CustomBlurryDialog(
+            theme: theme,
+            normalTitleStyle: true,
+            title: lang.CONFIGURE,
+            actions: [
+              ObxO(
+                rx: isAuthenticatingRx,
+                builder: (context, isAuthenticating) => AnimatedEnabled(
+                  enabled: !isAuthenticating,
+                  child: const CancelButton(),
                 ),
               ),
-            ),
-          ],
-          child: ObxO(
-            rx: selectedTypeRx,
-            builder: (context, selectedType) {
-              late final demoInfo = selectedType.toDemoInfo();
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 8.0),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: types
-                          .map(
-                            (e) {
-                              final isSelected = e == selectedType;
-                              final assetImagePath = e.toAssetImage();
-                              final assetWidget = assetImagePath == null
-                                  ? null
-                                  : Image.asset(
-                                      assetImagePath,
-                                      height: 24.0,
-                                    );
-                              final color = e.toColor(theme);
-                              return Expanded(
-                                child: NamidaInkWell(
-                                  alignment: Alignment.center,
-                                  animationDurationMS: 200,
-                                  borderRadius: 8.0,
-                                  bgColor: color.withOpacityExt(0.2),
-                                  padding: const EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(
-                                    border: isSelected
-                                        ? Border.all(
-                                            color: color.withOpacityExt(0.6),
-                                            width: 1.2,
-                                          )
-                                        : null,
-                                    borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                                  ),
-                                  onTap: () {
-                                    selectedTypeRx.value = e;
-                                  },
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      if (assetWidget != null) ...[
-                                        assetWidget,
-                                        const SizedBox(width: 12.0),
-                                      ],
-                                      Flexible(
-                                        child: Text(
-                                          e.toText(),
-                                          style: theme.textTheme.displayMedium,
-                                          textAlign: TextAlign.center,
+              ObxO(
+                rx: isAuthenticatingRx,
+                builder: (context, isAuthenticating) => AnimatedEnabled(
+                  enabled: !isAuthenticating,
+                  child: NamidaButton(
+                    text: lang.ADD,
+                    onPressed: authenticate,
+                  ),
+                ),
+              ),
+            ],
+            child: ObxO(
+              rx: selectedTypeRx,
+              builder: (context, selectedType) {
+                late final demoInfo = selectedType.toDemoInfo();
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 8.0),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: types
+                            .map(
+                              (e) {
+                                final isSelected = e == selectedType;
+                                final assetImagePath = e.toAssetImage();
+                                Widget? assetWidget = assetImagePath == null
+                                    ? null
+                                    : Image.asset(
+                                        assetImagePath,
+                                        height: 24.0,
+                                      );
+                                assetWidget ??= Icon(
+                                  e.toIcon(),
+                                  size: 20.0,
+                                );
+                                final color = e.toColor(theme);
+                                return Expanded(
+                                  child: NamidaInkWell(
+                                    alignment: Alignment.center,
+                                    animationDurationMS: 200,
+                                    borderRadius: 8.0,
+                                    bgColor: color.withOpacityExt(0.2),
+                                    padding: const EdgeInsets.all(8.0),
+                                    decoration: BoxDecoration(
+                                      border: isSelected
+                                          ? Border.all(
+                                              color: color.withOpacityExt(0.6),
+                                              width: 1.2,
+                                            )
+                                          : null,
+                                      borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                                    ),
+                                    onTap: () {
+                                      selectedTypeRx.value = e;
+                                    },
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        ...[
+                                          assetWidget,
+                                          const SizedBox(width: 12.0),
+                                        ],
+                                        Flexible(
+                                          child: Text(
+                                            e.toText(),
+                                            style: theme.textTheme.displayMedium,
+                                            textAlign: TextAlign.center,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                          )
-                          .addSeparators(
-                            separator: SizedBox(width: 8.0),
-                            skipFirst: 1,
-                          )
-                          .toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 12.0),
-                  NamidaContainerDivider(
-                    margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                  ),
-                  const SizedBox(height: 12.0),
-                  if (legacyAuthRx != null) ...[
-                    ObxO(
-                      rx: legacyAuthRx,
-                      builder: (context, value) => CustomSwitchListTile(
-                        visualDensity: VisualDensity.compact,
-                        title: lang.LEGACY_AUTHENTICATION,
-                        value: value,
-                        onChanged: (_) => legacyAuthRx.toggle(),
+                                );
+                              },
+                            )
+                            .addSeparators(
+                              separator: SizedBox(width: 8.0),
+                              skipFirst: 1,
+                            )
+                            .toList(),
                       ),
                     ),
-                    const SizedBox(height: 12.0),
-                  ],
-                  CustomTagTextField(
-                    controller: urlController,
-                    hintText: initialDir?.source ?? demoInfo?.url ?? '',
-                    labelText: 'URL',
-                    validator: urlValidator,
-                  ),
-                  const SizedBox(height: 12.0),
-                  CustomTagTextField(
-                    controller: usernameController,
-                    hintText: initialDir?.username ?? demoInfo?.username ?? '',
-                    labelText: lang.LOGIN,
-                  ),
-                  const SizedBox(height: 12.0),
-                  CustomTagTextField(
-                    controller: passwordController,
-                    hintText: initialDir != null ? '' : demoInfo?.password ?? '',
-                    labelText: lang.PASSWORD,
-                    obscureText: true,
-                    maxLines: 1,
-                    keyboardType: TextInputType.visiblePassword,
-                  ),
-                  const SizedBox(height: 8.0),
-                  ObxO(
-                    rx: possibleErrorRx,
-                    builder: (context, err) => err == null
-                        ? const SizedBox()
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              NamidaContainerDivider(
-                                margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                              ),
-                              const SizedBox(height: 12.0),
-                              Text(
-                                "${lang.ERROR}: ${err.code}\n${err.message}",
-                                style: context.textTheme.displayMedium?.copyWith(
-                                  color: const Color.fromARGB(255, 221, 69, 58),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 12.0),
-                            ],
+                    if (initialType.check(.isFileBased)) ...[
+                      const SizedBox(height: 8.0),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                          color: mainColorScheme.withOpacityExt(0.08),
+                          border: Border.all(
+                            color: mainColorScheme.withOpacityExt(0.4),
                           ),
-                  ),
-                ],
-              );
-            },
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                          child: Text(
+                            lang.FILE_BASED_SERVER_WARNING,
+                            style: theme.textTheme.displaySmall,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12.0),
+                    NamidaContainerDivider(
+                      margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                    ),
+                    const SizedBox(height: 12.0),
+                    if (legacyAuthRx != null) ...[
+                      ObxO(
+                        rx: legacyAuthRx,
+                        builder: (context, value) => CustomSwitchListTile(
+                          visualDensity: VisualDensity.compact,
+                          title: lang.LEGACY_AUTHENTICATION,
+                          value: value,
+                          onChanged: (_) => legacyAuthRx.toggle(),
+                        ),
+                      ),
+                      const SizedBox(height: 12.0),
+                    ],
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 4,
+                          child: CustomTagTextField(
+                            controller: urlOrHostController,
+                            hintText: initialDirSourceHint ?? demoInfo?.url ?? '',
+                            labelText: '${isURLHost ? 'IP/${lang.HOST}' : 'URL'} *',
+                            validator: urlValidator,
+                          ),
+                        ),
+                        if (portController != null) ...[
+                          const SizedBox(width: 8.0),
+                          Expanded(
+                            flex: 2,
+                            child: CustomTagTextField(
+                              controller: portController,
+                              hintText: portHint ?? '',
+                              labelText: lang.PORT,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 12.0),
+                    if (shareController != null) ...[
+                      CustomTagTextField(
+                        controller: shareController,
+                        hintText: shareHint ?? '',
+                        labelText: lang.SHARE,
+                      ),
+                      const SizedBox(height: 12.0),
+                    ],
+                    if (availableSharesRx != null) ...[
+                      ObxO(
+                        rx: availableSharesRx,
+                        builder: (context, availableShares) {
+                          return AnimatedShow(
+                            show: availableShares.isNotEmpty,
+                            duration: const Duration(milliseconds: 300),
+                            child: Column(
+                              mainAxisSize: .min,
+                              children: [
+                                SmoothSingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: availableShares
+                                        .map(
+                                          (e) => NamidaInkWell(
+                                            borderRadius: 99.0,
+                                            bgColor: theme.cardColor,
+                                            margin: const EdgeInsets.symmetric(horizontal: 3.0),
+                                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                            onTap: () {
+                                              shareController?.text = e;
+                                            },
+                                            child: Text(
+                                              e,
+                                              style: context.textTheme.displayMedium,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                ),
+                                const SizedBox(height: 12.0),
+                                const SizedBox(height: 4.0),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                    if (subdirController != null) ...[
+                      CustomTagTextField(
+                        controller: subdirController,
+                        hintText: subdirHint ?? '',
+                        labelText: lang.SUBDIRECTORY,
+                      ),
+                      const SizedBox(height: 12.0),
+                    ],
+                    CustomTagTextField(
+                      controller: usernameController,
+                      hintText: initialDir?.username ?? demoInfo?.username ?? '',
+                      labelText: lang.LOGIN,
+                    ),
+                    const SizedBox(height: 12.0),
+                    CustomTagTextField(
+                      controller: passwordController,
+                      hintText: initialDir != null ? '' : demoInfo?.password ?? '',
+                      labelText: lang.PASSWORD,
+                      obscureText: true,
+                      maxLines: 1,
+                      keyboardType: TextInputType.visiblePassword,
+                    ),
+                    const SizedBox(height: 8.0),
+                    ObxO(
+                      rx: possibleErrorRx,
+                      builder: (context, err) => err == null
+                          ? const SizedBox()
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                NamidaContainerDivider(
+                                  margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                                ),
+                                const SizedBox(height: 12.0),
+                                Text(
+                                  "${lang.ERROR}: ${err.code}\n${err.message}",
+                                  style: context.textTheme.displayMedium?.copyWith(
+                                    color: const Color.fromARGB(255, 221, 69, 58),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 12.0),
+                              ],
+                            ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -437,7 +617,7 @@ class IndexerSettings extends SettingSubpageProvider {
                   switch (e) {
                     case DirectoryIndexType.local:
                       _pickLocalFolder(onSuccessChoose);
-                    case DirectoryIndexType.subsonic || DirectoryIndexType.webdav:
+                    case DirectoryIndexType.subsonic || DirectoryIndexType.webdav || DirectoryIndexType.smb:
                       _pickServerFolder(initialType: e, onSuccessChoose: onSuccessChoose);
                     case DirectoryIndexType.unknown:
                   }
@@ -665,7 +845,7 @@ class IndexerSettings extends SettingSubpageProvider {
                           e.type.toIcon(),
                           size: 20.0,
                         ),
-                    title: e.source,
+                    title: e.toSourceInfo(),
                     subtitle: isServer
                         ? [
                             e.type.toText(),
@@ -706,7 +886,7 @@ class IndexerSettings extends SettingSubpageProvider {
                                 displayDuration: SnackDisplayDuration.veryLong,
                               );
                             } else {
-                              String bodyText = "${lang.REMOVE} \"${e.source}\"?";
+                              String bodyText = "${lang.REMOVE} \"${e.toSourceInfo()}\"?";
                               if (e.isServer) {
                                 final title = [e.type.toText(), e.username ?? '?'].joinText(separator: ' - ');
                                 bodyText += "\n$title";
@@ -795,7 +975,7 @@ class IndexerSettings extends SettingSubpageProvider {
               : [
                   ...directoriesToExclude.map(
                     (e) => CustomListTile(
-                      title: e.source,
+                      title: e.toSourceInfo(),
                       subtitle: e.username,
                       trailingRaw: TextButton(
                         onPressed: () {
@@ -1395,18 +1575,21 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder) async {
   final deletedPathLength = Indexer.inst.getDeletedPaths(currentFiles).length;
   final settingsServers = settings.directoriesToScan.value.allServers();
   final hasServer = settingsServers.isNotEmpty || allTracksInLibrary.any((element) => element.isNetwork);
-  if (!hasServer && newPathsLength == 0 && deletedPathLength == 0) {
+  final noLocalChanges = newPathsLength == 0 && deletedPathLength == 0;
+  if (!hasServer && noLocalChanges) {
     snackyy(title: lang.NOTE, message: lang.NO_CHANGES_FOUND);
   } else {
-    String bodyText = lang.PROMPT_INDEXING_REFRESH
-        .replaceFirst(
-          '_NEW_FILES_',
-          newPathsLength.toString(),
-        )
-        .replaceFirst(
-          '_DELETED_FILES_',
-          deletedPathLength.toString(),
-        );
+    String bodyText = noLocalChanges
+        ? lang.NO_CHANGES_FOUND
+        : lang.PROMPT_INDEXING_REFRESH
+              .replaceFirst(
+                '_NEW_FILES_',
+                newPathsLength.toString(),
+              )
+              .replaceFirst(
+                '_DELETED_FILES_',
+                deletedPathLength.toString(),
+              );
     if (hasServer) {
       final tracksServers = <String, bool>{};
       for (final trExt in Indexer.inst.allTracksMappedByPath.values) {
@@ -1420,7 +1603,7 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder) async {
         servers[s] = true;
       }
       for (final ts in tracksServers.entries) {
-        if (servers.keys.any((element) => element.source == ts.key)) {
+        if (servers.keys.any((element) => element.sourceRaw == ts.key)) {
           // already exists and more detailed
         } else {
           final dir = DirectoryIndexServer.parseFromEncodedUrlPath(ts.key);

@@ -222,7 +222,7 @@ class EditDeleteController {
     Iterable<String>? forThesePathsOnly,
     bool ensureNewFileExists = false,
   }) async {
-    if (!settings.directoriesToScan.value.any((dir) => newDir.startsWith(dir.source))) settings.save(directoriesToScan: [DirectoryIndex.guess(newDir, newDirType)]);
+    if (!settings.directoriesToScan.value.any((dir) => newDir.startsWith(dir.sourceRaw))) settings.save(directoriesToScan: [DirectoryIndex.guess(newDir, newDirType)]);
     final pathSeparator = Platform.pathSeparator;
     if (!oldDir.endsWith(pathSeparator)) oldDir += pathSeparator;
     if (!newDir.endsWith(pathSeparator)) newDir += pathSeparator;

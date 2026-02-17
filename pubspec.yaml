@@ -88,6 +88,9 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/opensubsonic_api.dart
   webdav_client: ^1.2.2
+  smb_connect:
+    git:
+      url: https://github.com/MSOB7YY/smb_connect
 
   # ---- Audio Indexing & Playback ----
   just_audio:
