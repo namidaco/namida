@@ -30,6 +30,11 @@ class FoldersController<T extends Folder, E extends Track> {
   LibraryTab get libraryTab => _tab;
   QueueSource get queueSource => _config.queueSource;
 
+  String getCurrentFolderToBookmark() {
+    if (isHome.value) return '';
+    return currentFolder.value?.path ?? '';
+  }
+
   final RxMap<T, List<E>> _foldersMap;
   final LibraryTab _tab;
   final FoldersPageConfig _config;
@@ -53,8 +58,9 @@ class FoldersController<T extends Folder, E extends Track> {
   }
 
   List<E> getNodeTracks(T folder, {bool recursive = false}) {
-    return _pathsTreeMapCurrent?.getTracksCountInsideFolder(folder, recursive: recursive) ?? //
-        _pathsTreeMapRoot.getTracksCountInsideFolder(folder, recursive: recursive);
+    return _pathsTreeMapCurrent?.getTracksCountInsideFolder(folder, recursive: recursive).nullifyEmpty() ?? //
+        _pathsTreeMapRoot.getTracksCountInsideFolder(folder, recursive: recursive).nullifyEmpty() ??
+        [];
   }
 
   late var _pathsTreeMapRoot = _FolderNode<T, E>(null, null, folderToTracks);
@@ -86,17 +92,6 @@ class FoldersController<T extends Folder, E extends Track> {
     return !stepOut();
   }
 
-  void _resetToRoot() {
-    isHome.value = true;
-    _pathsTreeMapCurrent = _pathsTreeMapRoot;
-
-    indexToScrollTo.value = null;
-    _trackToScrollTo = null;
-
-    currentFolderslist.value = _pathsTreeMapRoot.foldersList;
-    currentFolder.value = _pathsTreeMapRoot.parent;
-  }
-
   void stepIn(T? folder, {E? trackToScrollTo, double jumpTo = 0, bool isFromStepOut = false}) {
     if (folder == null || folder.path == '') {
       isHome.value = true;
@@ -110,25 +105,26 @@ class FoldersController<T extends Folder, E extends Track> {
       nextNode = treeMap.children[folder] ?? _pathsTreeMapRoot.lookup(folder);
     }
 
+    bool isInitialNodeNested = false;
     if (nextNode == null) {
-      _resetToRoot();
-      return;
+      isHome.value = true;
+      isInitialNodeNested = true;
+      nextNode = _pathsTreeMapRoot;
+      if (nextNode.children.keys.length == 1) {
+        nextNode = nextNode.children.values.first;
+      }
     }
 
-    //   if (nextNode == null) {
-    //   nextNode = _pathsTreeMapRoot;
-    //   if (nextNode.children.keys.length == 1) {
-    //     nextNode = nextNode.children.values.first;
-    //   }
-    // }
+    if (!isInitialNodeNested && !isFromStepOut) {
+      isInside.value = true;
+      isHome.value = false;
+    }
+
+    final upcomingFolders = nextNode.foldersList;
 
     _pathsTreeMapCurrent = nextNode;
 
     if (!isFromStepOut) {
-      isInside.value = true;
-      isHome.value = false;
-
-      final upcomingFolders = nextNode.foldersList;
       if (upcomingFolders.length == 1 && folderToTracks(folder)?.isEmpty == true) {
         stepIn(upcomingFolders.first);
         return;
@@ -137,7 +133,7 @@ class FoldersController<T extends Folder, E extends Track> {
 
     _saveScrollOffset(currentFolder.value);
 
-    currentFolderslist.value = nextNode.foldersList;
+    currentFolderslist.value = upcomingFolders;
     currentFolder.value = folder;
 
     if (trackToScrollTo != null) {
@@ -373,7 +369,7 @@ class FoldersPageConfig {
       enableFoldersHierarchy: settings.enableFoldersHierarchy, // same settings
       onDefaultStartupFolderChanged: () {
         settings.save(
-          defaultFolderStartupLocation: FoldersController.tracksAndVideos.currentFolder.value?.path ?? '',
+          defaultFolderStartupLocation: FoldersController.tracksAndVideos.getCurrentFolderToBookmark(),
         );
       },
     );
@@ -385,7 +381,7 @@ class FoldersPageConfig {
       enableFoldersHierarchy: settings.enableFoldersHierarchy,
       onDefaultStartupFolderChanged: () {
         settings.save(
-          defaultFolderStartupLocation: FoldersController.tracks.currentFolder.value?.path ?? '',
+          defaultFolderStartupLocation: FoldersController.tracks.getCurrentFolderToBookmark(),
         );
       },
     );
@@ -397,7 +393,7 @@ class FoldersPageConfig {
       enableFoldersHierarchy: settings.enableFoldersHierarchyVideos,
       onDefaultStartupFolderChanged: () {
         settings.save(
-          defaultFolderStartupLocationVideos: FoldersController.videos.currentFolder.value?.path ?? '',
+          defaultFolderStartupLocationVideos: FoldersController.videos.getCurrentFolderToBookmark(),
         );
       },
     );
@@ -431,7 +427,7 @@ class _FolderNode<T extends Folder, E extends Track> {
         ) ??
         current;
     // -- vip, we use current as a dummy node once the initial check is done
-    return (identical(res, current) ? null : res);
+    return (identical(this, current) ? null : res);
   }
 
   int? getFoldersCountInsideFolder(T folder, {bool recursive = false}) {
@@ -495,4 +491,10 @@ class _FolderNode<T extends Folder, E extends Track> {
 
   @override
   String toString() => '_FolderNode(children: $children)';
+}
+
+extension<T> on List<T> {
+  List<T>? nullifyEmpty() {
+    return this.isEmpty ? null : this;
+  }
 }

@@ -93,15 +93,15 @@ class _FolderTileState extends State<FolderTile> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    final double iconSize = (settings.trackThumbnailSizeinList.value / 1.35).clampDouble(0, settings.trackListTileHeight.value);
-    final double thumbSize = (settings.trackThumbnailSizeinList.value / 2.6).clampDouble(0, settings.trackListTileHeight.value * 0.5);
+    final double iconSize = (settings.trackThumbnailSizeinList.value * 0.85).clampDouble(0, settings.trackListTileHeight.value);
+    final double thumbSize = iconSize * 0.7;
     final extraInfo = _getFolderExtraInfo(widget.folder);
 
     String folderTitle = widget.folder.folderName;
     Widget? trailingWidget;
     if (widget.isHome) {
       try {
-        if (folderTitle.startsWith('http')) {
+        if (folderTitle.startsWith('http') || folderTitle.contains('namida_t')) {
           final server = DirectoryIndexServer.parseFromEncodedUrlPath(folderTitle);
           folderTitle = [
             server.source,
@@ -195,33 +195,30 @@ class _FolderTileState extends State<FolderTile> {
                           size: iconSize,
                         ),
                         Positioned(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: thumbnailCoverPath != null
-                                ? ArtworkWidget(
-                                    key: ValueKey(thumbnailCoverPath),
-                                    track: widget.tracks.firstOrNull, // fallback
-                                    blur: 3.0,
-                                    borderRadius: 5.0,
-                                    thumbnailSize: thumbSize,
-                                    path: thumbnailCoverPath,
-                                    forceSquared: true,
-                                  )
-                                : widget.tracks.isEmpty && widget.dirInsideCount > 0
-                                ? Icon(
-                                    Broken.folder_open,
-                                    size: thumbSize,
-                                  )
-                                : ArtworkWidget(
-                                    key: ValueKey(widget.tracks.firstOrNull),
-                                    track: widget.tracks.firstOrNull,
-                                    blur: 3.0,
-                                    borderRadius: 5.0,
-                                    thumbnailSize: thumbSize,
-                                    path: widget.tracks.firstOrNull?.pathToImage,
-                                    forceSquared: true,
-                                  ),
-                          ),
+                          child: thumbnailCoverPath != null
+                              ? ArtworkWidget(
+                                  key: ValueKey(thumbnailCoverPath),
+                                  track: widget.tracks.firstOrNull, // fallback
+                                  blur: 3.0,
+                                  borderRadius: 6.0,
+                                  thumbnailSize: thumbSize,
+                                  path: thumbnailCoverPath,
+                                  forceSquared: true,
+                                )
+                              : widget.tracks.isEmpty && widget.dirInsideCount > 0
+                              ? Icon(
+                                  Broken.folder_open,
+                                  size: thumbSize * 0.75,
+                                )
+                              : ArtworkWidget(
+                                  key: ValueKey(widget.tracks.firstOrNull),
+                                  track: widget.tracks.firstOrNull,
+                                  blur: 3.0,
+                                  borderRadius: 6.0,
+                                  thumbnailSize: thumbSize,
+                                  path: widget.tracks.firstOrNull?.pathToImage,
+                                  forceSquared: true,
+                                ),
                         ),
                       ],
                     ),
