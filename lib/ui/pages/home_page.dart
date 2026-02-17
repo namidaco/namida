@@ -174,14 +174,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     if (_randomTracks.isEmpty) _randomTracks.addAll(widget.generator.getRandomTracks(min: 25, max: 26));
 
     final int mostRecentAdded7DaysMSSE = timeNow.subtract(Duration(days: 7)).millisecondsSinceEpoch;
-    final int mostRecentListened2DaysMSSE = timeNow.subtract(Duration(days: 2)).millisecondsSinceEpoch;
+    final int mostRecentListened14DaysMSSE = timeNow.subtract(Duration(days: 14)).millisecondsSinceEpoch;
     final underrated = allTracksInLibrary.getRandomSampleWhere(100, (tr) {
       if (widget.playlistManager.favouritesPlaylist.isSubItemFavourite(tr)) return false; // alr favourited
       final listensCount = historyManager.topTracksMapListens.value[tr]?.length;
       if (listensCount != null && listensCount > 8) return false; // alr listened enough
       if (tr.dateAdded > mostRecentAdded7DaysMSSE) return false; // its very recently added
       final lastListen = historyManager.topTracksMapListens.value[tr]?.lastOrNull;
-      if (lastListen != null && lastListen > mostRecentListened2DaysMSSE) return false; // recently listened
+      if (lastListen != null && lastListen > mostRecentListened14DaysMSSE) return false; // recently listened
       return true;
     });
 

@@ -75,11 +75,17 @@ class NamidaOnTaps {
 
     final albumIds = <String>[];
     final singlesIds = <String>[];
+    final extrasIds = <String>[];
     for (final a in albumIdsFinalList) {
-      if (a.value.length > 1) {
-        albumIds.add(a.key);
+      final albumArtist = (albumIdsMap[a.key] ?? a.key.getAlbumTracks()).albumArtist;
+      if (albumArtist.contains(name)) {
+        if (a.value.length > 1) {
+          albumIds.add(a.key);
+        } else {
+          singlesIds.add(a.key);
+        }
       } else {
-        singlesIds.add(a.key);
+        extrasIds.add(a.key);
       }
     }
 
@@ -88,6 +94,7 @@ class NamidaOnTaps {
       tracks: tracks,
       albumIdentifiers: albumIds,
       singlesIdentifiers: singlesIds,
+      extrasIdentifiers: extrasIds,
       type: type,
     ).navigate();
   }

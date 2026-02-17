@@ -39,6 +39,7 @@ class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
   final List<Track> tracks;
   final List<String> albumIdentifiers;
   final List<String> singlesIdentifiers;
+  final List<String> extrasIdentifiers;
   final MediaType type;
 
   const ArtistTracksPage({
@@ -47,6 +48,7 @@ class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
     required this.tracks,
     required this.albumIdentifiers,
     required this.singlesIdentifiers,
+    required this.extrasIdentifiers,
     required this.type,
   });
 
@@ -103,6 +105,16 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                       initiallyExpanded: settings.extra.artistSinglesExpanded ?? false, // cuz no space
                       onExpansionChanged: (value) => settings.extra.save(artistSinglesExpanded: value),
                     ),
+                    if (widget.extrasIdentifiers.isNotEmpty) ...[
+                      const SizedBox(height: 6.0),
+                      _AlbumsRow(
+                        title: lang.EXTRAS,
+                        icon: Broken.music_playlist,
+                        identifiers: widget.extrasIdentifiers,
+                        initiallyExpanded: false,
+                        onExpansionChanged: (value) {},
+                      ),
+                    ],
                     const SizedBox(height: 4.0),
                     TracksSearchWidgetBox(
                       state: this,

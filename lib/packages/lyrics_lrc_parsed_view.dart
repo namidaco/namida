@@ -180,15 +180,14 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     highlightTimestampsMap.clear();
     lyrics.clear();
 
-    lrc.lyrics.loopAdv(
-      (item, index) {
-        final lineTimeStamp = item.timestamp - Duration(milliseconds: lrc.offset ?? 0);
-        final calculatedForSpedUpVersions = cal == 0 ? lineTimeStamp : (lineTimeStamp * cal);
-        final newLrcLine = item.withTimeStamp(newTimestamp: calculatedForSpedUpVersions);
-        highlightTimestampsMap[calculatedForSpedUpVersions] ??= index;
-        lyrics.add(newLrcLine);
-      },
+    final uiInfo = lrc.forUiDisplay(
+      cal,
+      durationDifferenceToInsertEmptyLine: const Duration(seconds: 1),
+      romanize: false,
     );
+
+    lyrics = uiInfo.uiLyricsLines;
+    highlightTimestampsMap = uiInfo.highlightTimestampsMap;
 
     _updateHighlightedLine(Player.inst.nowPlayingPosition.value, jump: true);
   }
@@ -275,7 +274,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   final _latestUpdatedLineInfo = Rxn<(Duration?, int?)>();
 
   var lyrics = <LrcLine>[];
-  final highlightTimestampsMap = <Duration, int>{}; // timestamp: index
+  var highlightTimestampsMap = <Duration, int>{}; // timestamp: index
 
   late double _previousFontMultiplier = widget.isFullScreenView ? settings.fontScaleLRCFull : settings.fontScaleLRC;
   late double _fontMultiplier = widget.isFullScreenView ? settings.fontScaleLRCFull : settings.fontScaleLRC;

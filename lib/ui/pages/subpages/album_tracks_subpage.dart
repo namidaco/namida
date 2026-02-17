@@ -74,10 +74,11 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                 return ObxO(
                   rx: settings.mediaItemsTrackSorting,
                   builder: (context, sortingModes) {
-                    final sortStartsWithDisc = sortingModes[MediaType.album]?.firstOrNull == SortType.discNo;
+                    final firstSort = sortingModes[MediaType.album]?.firstOrNull;
+                    final shouldSplitToDiscSections = firstSort == SortType.discNo || firstSort == SortType.trackNo;
                     Map<int, List<Track>>? tracksMappedWithDisc;
                     Map<int, int>? tracksIndicesIncrement;
-                    if (sortStartsWithDisc) {
+                    if (shouldSplitToDiscSections) {
                       tracksMappedWithDisc = <int, List<Track>>{};
                       tracksIndicesIncrement = <int, int>{};
                       for (final tr in tracks) {
