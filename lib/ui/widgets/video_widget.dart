@@ -914,6 +914,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     );
 
     Widget videoControlsWidget = Listener(
+      behavior: HitTestBehavior.translucent,
       onPointerDown: (event) {
         _pointerDownedOnRight = event.position.dx > maxWidth / 2;
         _isPointerDown = true;
@@ -936,7 +937,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         behavior: HitTestBehavior.translucent,
         onHorizontalDragStart: !_isControlsEnabled ? null : (details) => _seekReady?.onHorizontalDragStartSimple(),
         onHorizontalDragUpdate: !_isControlsEnabled ? null : (event) => _seekReady?.onHorizontalDragUpdateSimple(event),
-        onHorizontalDragEnd: !_isControlsEnabled ? null : _seekReady?.onHorizontalDragEnd,
+        onHorizontalDragEnd: !_isControlsEnabled ? null : (event) => _seekReady?.onHorizontalDragEnd(allowMagnet: false),
         onHorizontalDragCancel: !_isControlsEnabled ? null : _seekReady?.onHorizontalDragCancel,
         onVerticalDragUpdate: !shouldShowSliders
             ? null
@@ -2113,7 +2114,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               children: [
                                 // ======= Brightness Slider ========
                                 Positioned(
-                                  left: maxWidth * 0.15,
+                                  right: maxWidth * 0.1,
                                   child: Obx(
                                     (context) {
                                       final bri = _canShowBrightnessSlider.valueR ? _currentBrigthnessDim.valueR : null;
@@ -2129,7 +2130,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 ),
                                 // ======= Volume Slider ========
                                 Positioned(
-                                  right: maxWidth * 0.15,
+                                  left: maxWidth * 0.1,
                                   child: ObxO(
                                     rx: _currentDeviceVolume,
                                     builder: (context, vol) => _getVerticalSliderWidget(

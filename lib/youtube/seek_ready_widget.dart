@@ -12,6 +12,7 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
@@ -63,7 +64,13 @@ class SeekReadyWidget extends StatefulWidget {
 
 class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProviderStateMixin {
   /// the percentage of the seek bar that causes a seek near the left edge to trigger a magnet effect to 0.
-  late final _defaultSeekLeftMagnet = widget.isFullscreen ? 0.01 : 0.05;
+  late final _defaultSeekLeftMagnet = isDesktop
+      ? widget.isFullscreen
+            ? 0.01
+            : 0.01
+      : widget.isFullscreen
+      ? 0.01
+      : 0.05;
   final _seekPercentage = 0.0.obs;
 
   late AnimationController _animation;
@@ -149,10 +156,10 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
     _onSeekDragUpdate(deltax, maxWidth);
   }
 
-  void _onDragFinish() {
+  void _onDragFinish({required bool allowMagnet}) {
     widget.onDraggingChange?.call(false);
 
-    if (_seekPercentage.value <= _defaultSeekLeftMagnet) {
+    if (allowMagnet && _seekPercentage.value <= _defaultSeekLeftMagnet) {
       // left magnet
       _seekPercentage.value = 0;
       VibratorController.veryhigh();
@@ -210,8 +217,8 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
     _onSeekDragUpdate(event.localPosition.dx, maxWidth);
   }
 
-  void onHorizontalDragEnd(dynamic _) {
-    _onDragFinish();
+  void onHorizontalDragEnd({required bool allowMagnet}) {
+    _onDragFinish(allowMagnet: allowMagnet);
   }
 
   void onHorizontalDragCancel() {
@@ -220,7 +227,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
     widget.onDraggingChange?.call(false);
   }
 
-  Widget createHitTestWidget({required bool expandHitTest, required bool allowTapping, required double maxWidth}) {
+  Widget createHitTestWidget({required bool expandHitTest, required bool allowTapping, bool allowMagnet = true, required double maxWidth}) {
     const barHeight = SeekReadyDimensions.barHeight;
     return Padding(
       padding: expandHitTest
@@ -258,11 +265,11 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
             if (_tapToSeek) _onDragStart(event.localPosition.dx, maxWidth, fromTap: true);
           },
           onPanEnd: (_) {
-            if (_tapToSeek) _onDragFinish();
+            if (_tapToSeek) _onDragFinish(allowMagnet: allowMagnet);
           },
           onHorizontalDragStart: (details) => onHorizontalDragStart(details, maxWidth),
           onHorizontalDragUpdate: (event) => onHorizontalDragUpdate(event, maxWidth),
-          onHorizontalDragEnd: onHorizontalDragEnd,
+          onHorizontalDragEnd: (_) => onHorizontalDragEnd(allowMagnet: allowMagnet),
           onHorizontalDragCancel: onHorizontalDragCancel,
           onTapDown: !allowTapping
               ? null
@@ -275,7 +282,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
           onTapUp: !allowTapping
               ? null
               : (_) {
-                  if (_tapToSeek) _onDragFinish();
+                  if (_tapToSeek) _onDragFinish(allowMagnet: allowMagnet);
                 },
           child: Padding(
             padding: !expandHitTest
