@@ -1526,10 +1526,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             final mixedUri = prefferedMixedStream.buildUrl();
             if (mixedUri != null) {
               finalMixedSource = HlsSource(mixedUri);
-              finalAudioSource = AudioVideoSource.file('');
             }
           }
           if (finalMixedSource != null) {
+            finalAudioSource = AudioVideoSource.file('');
             videoSourceOptions = VideoSourceOptions(
               source: finalMixedSource,
               loop: false,
@@ -1545,6 +1545,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             finalLiveSource = HlsSource(Uri.parse(streamsResult.hlsManifestUrl!));
           } else if (streamsResult.dashManifestUrl != null) {
             finalLiveSource = DashSource(Uri.parse(streamsResult.dashManifestUrl!));
+          }
+
+          if (finalLiveSource == null) {
+            // -- fallback to mixed streams for when live stream has already ended
+            final prefferedMixedStream = YoutubeController.getPreferredStreamQuality(mixedStreams, preferIncludeWebm: false);
+            currentVideoStream.value = prefferedMixedStream;
+            if (prefferedMixedStream != null) {
+              final mixedUri = prefferedMixedStream.buildUrl();
+              if (mixedUri != null) {
+                finalLiveSource = HlsSource(mixedUri);
+              }
+            }
           }
 
           if (finalLiveSource != null) {
