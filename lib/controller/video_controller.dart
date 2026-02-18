@@ -292,7 +292,7 @@ class VideoController {
     configToUpdate.resetAll();
     if (track == null || track == kDummyTrack) return null;
     if (!settings.enableVideoPlayback.value) return null;
-    if (track is Video) {
+    if (track is Video && track.isPhysical) {
       NamidaVideo? nv = _videoPathsInfoMap[track.path];
       if (nv == null) {
         final stats = await File(track.path).stat();

@@ -152,4 +152,16 @@ extension ServerAuthModelExt on ServerAuthModel {
       password: password,
     );
   }
+
+  JellyfinAuth toJellyfinAuthModel() {
+    final authMap = toUrlParams();
+
+    final username = authMap['u'] ?? '';
+    final password = authMap['p'] ?? '';
+
+    return JellyfinAuth(
+      username: username,
+      password: password,
+    );
+  }
 }

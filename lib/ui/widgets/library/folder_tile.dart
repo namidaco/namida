@@ -101,7 +101,7 @@ class _FolderTileState extends State<FolderTile> {
     Widget? trailingWidget;
     if (widget.isHome) {
       try {
-        if (folderTitle.startsWith('http') || folderTitle.contains('namida_t')) {
+        if (widget.folder.isNetwork) {
           final server = DirectoryIndexServer.parseFromEncodedUrlPath(folderTitle);
           folderTitle = [
             server.toSourceInfo(),
@@ -115,7 +115,7 @@ class _FolderTileState extends State<FolderTile> {
               ? null
               : Image.asset(
                   assetImagePath,
-                  height: 20.0,
+                  height: 18.0,
                 );
         }
       } catch (_) {}

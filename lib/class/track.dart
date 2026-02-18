@@ -432,7 +432,7 @@ class TrackExtended {
       format.toUpperCase(),
       if (channels.isNotEmpty && channels != '2' && !channels.contains('stereo')) "$channels ch",
       "$bitrate kbps",
-      "${sampleRate / 1000} kHz",
+      if (sampleRate > 0) "${sampleRate / 1000} kHz",
     ].joinText(separator: ' • ');
   }
 

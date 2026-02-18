@@ -367,11 +367,11 @@ class IndexerSettings extends SettingSubpageProvider {
                                     ? null
                                     : Image.asset(
                                         assetImagePath,
-                                        height: 24.0,
+                                        height: 22.0,
                                       );
                                 assetWidget ??= Icon(
                                   e.toIcon(),
-                                  size: 20.0,
+                                  size: 22.0,
                                 );
                                 final color = e.toColor(theme);
                                 return Expanded(
@@ -604,7 +604,7 @@ class IndexerSettings extends SettingSubpageProvider {
                   ? null
                   : Image.asset(
                       assetImagePath,
-                      height: 24.0,
+                      height: 20.0,
                     );
               return CustomListTile(
                 visualDensity: VisualDensity.compact,
@@ -617,7 +617,7 @@ class IndexerSettings extends SettingSubpageProvider {
                   switch (e) {
                     case DirectoryIndexType.local:
                       _pickLocalFolder(onSuccessChoose);
-                    case DirectoryIndexType.subsonic || DirectoryIndexType.webdav || DirectoryIndexType.smb:
+                    case DirectoryIndexType.subsonic || DirectoryIndexType.jellyfin || DirectoryIndexType.webdav || DirectoryIndexType.smb:
                       _pickServerFolder(initialType: e, onSuccessChoose: onSuccessChoose);
                     case DirectoryIndexType.unknown:
                   }

@@ -2,12 +2,12 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
 // ignore: depend_on_referenced_packages
 import 'package:dio/dio.dart';
+import 'package:jellyfin_dart/jellyfin_dart.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:opensubsonic_api/opensubsonic_api.dart';
 import 'package:smb_connect/smb_connect.dart';
@@ -17,6 +17,7 @@ import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/music_web_server/server_auth_model.dart';
@@ -32,6 +33,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 
+part 'jellyfin_server.dart';
 part 'smb_server.dart';
 part 'subsonic_web_server.dart';
 part 'webdav_server.dart';
@@ -301,6 +303,7 @@ class _MusicWebServerAuthManager {
     return switch (dir.type) {
       DirectoryIndexType.local || DirectoryIndexType.unknown => null,
       DirectoryIndexType.subsonic => _SubsonicWebServer.init(authDetails),
+      DirectoryIndexType.jellyfin => _JellyfinServer.init(authDetails),
       DirectoryIndexType.webdav => _WebDAVServer.init(authDetails),
       DirectoryIndexType.smb => _SMBServer.init(authDetails),
     };

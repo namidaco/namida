@@ -80,7 +80,7 @@ final class DirectoryIndexServer extends DirectoryIndex {
       ..remove('namida_u')
       ..remove('namida_t')
       ..remove('d');
-    final uriClean = uri.replace(queryParameters: cleanParams.isEmpty ? null : cleanParams);
+    final uriClean = uri.replace(queryParameters: cleanParams);
 
     String uriCleanText = uriClean.toString();
     if (uriCleanText.endsWith('?')) uriCleanText = uriCleanText.substring(0, uriCleanText.length - 1);
@@ -112,9 +112,14 @@ final class DirectoryIndexServer extends DirectoryIndex {
 
   @override
   String toSourceInfo() {
-    if (type.check(DirectoryIndexTypeTag.isURLHost)) {
+    if (type.check(.isURLHost)) {
       final uri = Uri.parse(source);
       final port = uri.queryParameters['_p'];
+
+      final newParams = {
+        ...uri.queryParameters,
+      };
+      newParams.remove('_p');
 
       final sourceInfo = [
         [
@@ -122,7 +127,7 @@ final class DirectoryIndexServer extends DirectoryIndex {
           if (port != null && port.isNotEmpty) port,
         ].join(':'),
         ...uri.pathSegments,
-        ...uri.queryParameters.values.where((element) => element != port), // share and subdir
+        ...newParams.values, // share and subdir
       ].where((s) => s.isNotEmpty).join('/');
       return sourceInfo;
     }
@@ -169,12 +174,14 @@ sealed class DirectoryIndex {
         return source;
       case DirectoryIndexServer():
         final uri = Uri.parse(source);
+        final params = {
+          ...uri.queryParameters,
+          'namida_t': type.name,
+          'namida_u': username,
+        };
+        params.remove('d');
         final newUri = uri.replace(
-          queryParameters: {
-            ...uri.queryParameters,
-            'namida_t': type.name,
-            'namida_u': username,
-          },
+          queryParameters: params,
         );
         return newUri.toString();
     }
@@ -231,22 +238,26 @@ enum DirectoryIndexTypeTag {
 enum DirectoryIndexType {
   local({}),
   subsonic({
-    DirectoryIndexTypeTag.server,
-    DirectoryIndexTypeTag.legacyAuthEncrypt,
+    .server,
+    .legacyAuthEncrypt,
+  }),
+  jellyfin({
+    .server,
+    .legacyAuthOnly,
   }),
   webdav({
-    DirectoryIndexTypeTag.server,
-    DirectoryIndexTypeTag.legacyAuthOnly,
-    DirectoryIndexTypeTag.isFileBased,
+    .server,
+    .legacyAuthOnly,
+    .isFileBased,
   }),
   smb({
-    DirectoryIndexTypeTag.server,
-    DirectoryIndexTypeTag.legacyAuthOnly,
-    DirectoryIndexTypeTag.isURLHost,
-    DirectoryIndexTypeTag.supportsShare,
-    DirectoryIndexTypeTag.supportsSubdir,
-    DirectoryIndexTypeTag.supportsPort,
-    DirectoryIndexTypeTag.isFileBased,
+    .server,
+    .legacyAuthOnly,
+    .isURLHost,
+    .supportsShare,
+    .supportsSubdir,
+    .supportsPort,
+    .isFileBased,
   }),
   unknown({}),
   ;
@@ -266,6 +277,7 @@ enum DirectoryIndexType {
     return switch (this) {
       DirectoryIndexType.local => lang.LOCAL,
       DirectoryIndexType.subsonic => '(Open) Subsonic',
+      DirectoryIndexType.jellyfin => 'Jellyfin',
       DirectoryIndexType.webdav => 'WebDAV',
       DirectoryIndexType.smb => 'Samba (SMB v2/v3)',
       DirectoryIndexType.unknown => lang.NONE,
@@ -276,6 +288,7 @@ enum DirectoryIndexType {
     return switch (this) {
       DirectoryIndexType.local => lang.PICK_FROM_STORAGE,
       DirectoryIndexType.subsonic => 'Navidrome, Airsonic, Gonic, etc...',
+      DirectoryIndexType.jellyfin => null,
       DirectoryIndexType.webdav => null,
       DirectoryIndexType.smb => null,
       DirectoryIndexType.unknown => null,
@@ -286,6 +299,7 @@ enum DirectoryIndexType {
     return switch (this) {
       DirectoryIndexType.local || DirectoryIndexType.unknown => null,
       DirectoryIndexType.subsonic => 'assets/icons/subsonic.png',
+      DirectoryIndexType.jellyfin => 'assets/icons/jellyfin.png',
       DirectoryIndexType.webdav => null,
       DirectoryIndexType.smb => null,
     };
@@ -295,6 +309,7 @@ enum DirectoryIndexType {
     return switch (this) {
       DirectoryIndexType.local || DirectoryIndexType.unknown => Broken.driver,
       DirectoryIndexType.subsonic => Broken.cloud,
+      DirectoryIndexType.jellyfin => Broken.cloud,
       DirectoryIndexType.webdav => Broken.global,
       DirectoryIndexType.smb => Broken.folder_cloud,
     };
@@ -304,6 +319,7 @@ enum DirectoryIndexType {
     return switch (this) {
       DirectoryIndexType.local || DirectoryIndexType.unknown => theme.colorScheme.primary,
       DirectoryIndexType.subsonic => const Color.fromARGB(255, 235, 211, 0),
+      DirectoryIndexType.jellyfin => const Color.fromARGB(255, 123, 104, 235),
       DirectoryIndexType.webdav => theme.colorScheme.primary,
       DirectoryIndexType.smb => theme.colorScheme.primary,
     };
@@ -317,6 +333,12 @@ enum DirectoryIndexType {
         url: 'https://demo.navidrome.org',
         username: 'demo',
         password: 'demo',
+      ),
+      DirectoryIndexType.jellyfin => MusicWebServerAuthDetailsDemo(
+        type: this,
+        url: 'http://localhost:8096',
+        username: '',
+        password: '',
       ),
       DirectoryIndexType.webdav => MusicWebServerAuthDetailsDemo(
         type: this,

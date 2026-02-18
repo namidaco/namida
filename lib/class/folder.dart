@@ -16,6 +16,8 @@ class VideoFolder extends Folder {
 }
 
 class Folder {
+  bool get isNetwork => folderName.startsWith('http') || folderName.contains('namida_t=');
+
   final String path;
   final String folderName;
   final String _key;
@@ -108,7 +110,9 @@ extension FolderUtils<T extends Folder, E extends Track> on T {
   }
 
   R? performInbetweenFoldersBuild<R>(R? Function(T folder) callback) {
-    if (path.startsWith('http')) return callback(Folder.fromType<T>(path));
+    if (isNetwork) {
+      return callback(Folder.fromType<T>(path));
+    }
     final bufferPathSoFar = StringBuffer();
     for (final part in parts) {
       if (part.isEmpty) continue;
