@@ -1427,9 +1427,8 @@ class Indexer<T extends Track> {
     final title = titleAndArtist.length >= 2 ? titleAndArtist[1].trimAll() : filenameWOEx;
     final artist = titleAndArtist.length >= 2 ? titleAndArtist[0].trimAll() : UnknownTags.ARTIST;
 
-    // TODO: split by ( and ) too, but retain Remixes and feat.
-    final cleanedUpTitle = title.splitFirst('[').trimAll();
-    final cleanedUpArtist = artist.splitLast(']').trimAll();
+    final cleanedUpTitle = title.splitFirst(RegExp("([")).trimAll();
+    final cleanedUpArtist = artist.splitLast(RegExp("])")).trimAll();
 
     return (cleanedUpTitle, cleanedUpArtist);
   }
