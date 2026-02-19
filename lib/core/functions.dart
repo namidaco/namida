@@ -246,7 +246,7 @@ class NamidaOnTaps {
     }
   }
 
-  void onSubPageTracksSortIconTap(MediaType media) {
+  void onSubPageTracksSortIconTap(MediaType media, {Widget? header}) {
     const defaultSorts = <MediaType, List<SortType>>{
       MediaType.track: [SortType.title, SortType.year, SortType.album],
       MediaType.album: [SortType.trackNo, SortType.year, SortType.title],
@@ -257,6 +257,7 @@ class NamidaOnTaps {
       MediaType.folderVideo: [SortType.filename],
     };
     return _onSubPageSortIconTap<SortType>(
+      header: header,
       minimumItems: 1,
       allSortsList: List<SortType>.from(SortType.values),
       sortToText: (sort) => sort.toText(),
@@ -341,6 +342,7 @@ class NamidaOnTaps {
   }
 
   void _onSubPageSortIconTap<S>({
+    Widget? header,
     required List<S> currentSorts,
     required List<S> allSortsList,
     required bool currentReverse,
@@ -394,6 +396,7 @@ class NamidaOnTaps {
           height: namida.height * 0.4,
           child: Column(
             children: [
+              ?header,
               ObxO(
                 rx: isReverse,
                 builder: (context, reverse) => ListTileWithCheckMark(

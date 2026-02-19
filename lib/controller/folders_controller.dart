@@ -185,6 +185,7 @@ class FoldersController<T extends Folder, E extends Track> {
   void onFoldersHierarchyChanged(bool enabled) {
     isHome.value = true;
     isInside.value = false;
+    stepIn(null);
   }
 
   void _saveScrollOffset(T? folder) {
@@ -353,12 +354,14 @@ class FoldersPageConfig {
   final QueueSource queueSource;
   final Rx<String?> defaultFolderStartupLocation;
   final Rx<bool> enableFoldersHierarchy;
+  final void Function() toggleFoldersHierarchy;
   final void Function() onDefaultStartupFolderChanged;
 
   const FoldersPageConfig._({
     required this.queueSource,
     required this.defaultFolderStartupLocation,
     required this.enableFoldersHierarchy,
+    required this.toggleFoldersHierarchy,
     required this.onDefaultStartupFolderChanged,
   });
 
@@ -367,6 +370,11 @@ class FoldersPageConfig {
       queueSource: QueueSource.folder,
       defaultFolderStartupLocation: settings.defaultFolderStartupLocation, // same settings
       enableFoldersHierarchy: settings.enableFoldersHierarchy, // same settings
+      toggleFoldersHierarchy: () {
+        final newValue = !settings.enableFoldersHierarchy.value;
+        settings.save(enableFoldersHierarchy: newValue);
+        FoldersController.tracksAndVideos.onFoldersHierarchyChanged(newValue);
+      },
       onDefaultStartupFolderChanged: () {
         settings.save(
           defaultFolderStartupLocation: FoldersController.tracksAndVideos.getCurrentFolderToBookmark(),
@@ -378,7 +386,12 @@ class FoldersPageConfig {
     return FoldersPageConfig._(
       queueSource: QueueSource.folderMusic,
       defaultFolderStartupLocation: settings.defaultFolderStartupLocation,
-      enableFoldersHierarchy: settings.enableFoldersHierarchy,
+      enableFoldersHierarchy: settings.enableFoldersHierarchyTracks,
+      toggleFoldersHierarchy: () {
+        final newValue = !settings.enableFoldersHierarchyTracks.value;
+        settings.save(enableFoldersHierarchyTracks: newValue);
+        FoldersController.tracks.onFoldersHierarchyChanged(newValue);
+      },
       onDefaultStartupFolderChanged: () {
         settings.save(
           defaultFolderStartupLocation: FoldersController.tracks.getCurrentFolderToBookmark(),
@@ -391,6 +404,11 @@ class FoldersPageConfig {
       queueSource: QueueSource.folderVideos,
       defaultFolderStartupLocation: settings.defaultFolderStartupLocationVideos,
       enableFoldersHierarchy: settings.enableFoldersHierarchyVideos,
+      toggleFoldersHierarchy: () {
+        final newValue = !settings.enableFoldersHierarchyVideos.value;
+        settings.save(enableFoldersHierarchyVideos: newValue);
+        FoldersController.videos.onFoldersHierarchyChanged(newValue);
+      },
       onDefaultStartupFolderChanged: () {
         settings.save(
           defaultFolderStartupLocationVideos: FoldersController.videos.getCurrentFolderToBookmark(),

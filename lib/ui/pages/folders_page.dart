@@ -67,6 +67,27 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
     config: FoldersPageConfig.videos(),
   );
 
+  Widget _getSortDialogHeader() {
+    return Column(
+      mainAxisSize: .min,
+      children: [
+        ObxO(
+          rx: config.enableFoldersHierarchy,
+          builder: (context, enabled) => CustomSwitchListTile(
+            visualDensity: VisualDensity.compact,
+            icon: Broken.folder_open,
+            title: lang.ENABLE_FOLDERS_HIERARCHY,
+            value: enabled,
+            onChanged: (_) => config.toggleFoldersHierarchy(),
+          ),
+        ),
+        const NamidaContainerDivider(
+          margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -106,12 +127,14 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                     trailingRaw: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
+                                        const SizedBox(width: 4.0),
                                         ObxO(
                                           rx: config.defaultFolderStartupLocation,
                                           builder: (context, defaultFolderStartupLocation) {
                                             final isDefaultFolderEmpty = defaultFolderStartupLocation == null || defaultFolderStartupLocation.isEmpty;
                                             return NamidaIconButton(
-                                              horizontalPadding: 8.0,
+                                              verticalPadding: 8.0,
+                                              horizontalPadding: 4.0,
                                               tooltip: () => lang.SET_AS_DEFAULT,
                                               icon: (isDefaultFolderEmpty && isHome)
                                                   ? Broken.archive_tick
@@ -123,13 +146,16 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                             );
                                           },
                                         ),
-                                        const SizedBox(width: 6.0),
+                                        const SizedBox(width: 4.0),
                                         NamidaIconButton(
                                           verticalPadding: 8.0,
-                                          horizontalPadding: 2.0,
+                                          horizontalPadding: 4.0,
                                           icon: Broken.sort,
                                           onPressed: () {
-                                            NamidaOnTaps.inst.onSubPageTracksSortIconTap(mediaType());
+                                            NamidaOnTaps.inst.onSubPageTracksSortIconTap(
+                                              mediaType(),
+                                              header: _getSortDialogHeader(),
+                                            );
                                           },
                                         ),
                                       ],
@@ -200,25 +226,32 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                         rx: foldersController.isHome,
                         builder: (context, isHome) => Column(
                           children: [
-                            ListTile(
-                              leading: SizedBox(
-                                height: double.infinity,
-                                child: Icon(
-                                  isHome ? Broken.home_2 : Broken.folder_2,
-                                  size: 22.0,
+                            ObxO(
+                              rx: foldersController.currentFolder,
+                              builder: (context, currentFolder) => CustomListTile(
+                                borderR: 16.0,
+                                icon: isHome ? Broken.home_2 : Broken.folder_2,
+                                title: isHome ? lang.HOME : currentFolder?.formattedPath() ?? lang.HOME,
+                                titleStyle: textTheme.displaySmall,
+                                onTap: () => foldersController.stepOut(),
+                                trailingRaw: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(width: 4.0),
+                                    NamidaIconButton(
+                                      verticalPadding: 8.0,
+                                      horizontalPadding: 4.0,
+                                      icon: Broken.sort,
+                                      onPressed: () {
+                                        NamidaOnTaps.inst.onSubPageTracksSortIconTap(
+                                          mediaType(),
+                                          header: _getSortDialogHeader(),
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ),
-
-                              title: ObxO(
-                                rx: foldersController.currentFolder,
-                                builder: (context, currentFolder) => Text(
-                                  isHome ? lang.HOME : currentFolder?.formattedPath() ?? lang.HOME,
-                                  style: textTheme.displaySmall,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              onTap: () => foldersController.stepOut(),
                             ),
                             Expanded(
                               child: NamidaScrollbar(

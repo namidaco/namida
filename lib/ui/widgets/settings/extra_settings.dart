@@ -8,7 +8,6 @@ import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -35,7 +34,6 @@ enum _ExtraSettingsKeys with SettingKeysBase {
   collapsedTiles,
   bottomNavBar,
   pip(NamidaFeaturesAvailablity.android),
-  foldersHierarchy,
   fabType,
   defaultLibraryTab,
   libraryTabs,
@@ -72,7 +70,6 @@ class ExtrasSettings extends SettingSubpageProvider {
     _ExtraSettingsKeys.collapsedTiles: [lang.USE_COLLAPSED_SETTING_TILES],
     _ExtraSettingsKeys.bottomNavBar: [lang.ENABLE_BOTTOM_NAV_BAR, lang.ENABLE_BOTTOM_NAV_BAR_SUBTITLE],
     _ExtraSettingsKeys.pip: [lang.ENABLE_PICTURE_IN_PICTURE],
-    _ExtraSettingsKeys.foldersHierarchy: [lang.ENABLE_FOLDERS_HIERARCHY],
     _ExtraSettingsKeys.defaultLibraryTab: [lang.DEFAULT_LIBRARY_TAB],
     _ExtraSettingsKeys.fabType: [lang.FLOATING_ACTION_BUTTON],
     _ExtraSettingsKeys.libraryTabs: [lang.LIBRARY_TABS],
@@ -238,36 +235,6 @@ class ExtrasSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.foldersHierarchy,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.foldersHierarchy),
-                icon: Broken.folder_open,
-                title: lang.ENABLE_FOLDERS_HIERARCHY,
-                value: settings.enableFoldersHierarchy.valueR,
-                onChanged: (p0) {
-                  settings.save(enableFoldersHierarchy: !p0);
-                  FoldersController.tracksAndVideos.onFoldersHierarchyChanged(!p0);
-                  FoldersController.tracks.onFoldersHierarchyChanged(!p0);
-                  FoldersController.videos.onFoldersHierarchyChanged(!p0);
-                },
-              ),
-            ),
-          ),
-          // TODO: Allow later
-          // Obx(
-          //   (context) => CustomSwitchListTile(
-          //     icon: Broken.folder_open,
-          //     title: lang.ENABLE_FOLDERS_HIERARCHY,
-          //     subtitle: lang.VIDEOS,
-          //     value: settings.enableFoldersHierarchyVideos.valueR,
-          //     onChanged: (p0) {
-          //       settings.save(enableFoldersHierarchyVideos: !p0);
-          //       FoldersController.videos.onFoldersHierarchyChanged(!p0);
-          //     },
-          //   ),
-          // ),
           getItemWrapper(
             key: _ExtraSettingsKeys.fabType,
             child: Obx(

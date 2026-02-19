@@ -142,6 +142,7 @@ class _SettingsController with SettingsFileWriter {
   final defaultFolderStartupLocation = kStoragePaths.firstOrNull.obs;
   final defaultFolderStartupLocationVideos = kStoragePaths.firstOrNull.obs;
   final enableFoldersHierarchy = true.obs;
+  final enableFoldersHierarchyTracks = true.obs;
   final enableFoldersHierarchyVideos = true.obs;
   final displayArtistBeforeTitle = true.obs;
   final heatmapListensView = false.obs;
@@ -553,6 +554,7 @@ class _SettingsController with SettingsFileWriter {
       defaultFolderStartupLocationVideos.value = json['defaultFolderStartupLocationVideos'] ?? defaultFolderStartupLocationVideos.value;
 
       enableFoldersHierarchy.value = json['enableFoldersHierarchy'] ?? enableFoldersHierarchy.value;
+      enableFoldersHierarchyTracks.value = json['enableFoldersHierarchyTracks'] ?? enableFoldersHierarchyTracks.value;
       enableFoldersHierarchyVideos.value = json['enableFoldersHierarchyVideos'] ?? enableFoldersHierarchyVideos.value;
       displayArtistBeforeTitle.value = json['displayArtistBeforeTitle'] ?? displayArtistBeforeTitle.value;
       heatmapListensView.value = json['heatmapListensView'] ?? heatmapListensView.value;
@@ -797,6 +799,7 @@ class _SettingsController with SettingsFileWriter {
     'defaultFolderStartupLocation': defaultFolderStartupLocation.value,
     'defaultFolderStartupLocationVideos': defaultFolderStartupLocationVideos.value,
     'enableFoldersHierarchy': enableFoldersHierarchy.value,
+    'enableFoldersHierarchyTracks': enableFoldersHierarchyTracks.value,
     'enableFoldersHierarchyVideos': enableFoldersHierarchyVideos.value,
     'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
     'heatmapListensView': heatmapListensView.value,
@@ -984,6 +987,7 @@ class _SettingsController with SettingsFileWriter {
     String? defaultFolderStartupLocation,
     String? defaultFolderStartupLocationVideos,
     bool? enableFoldersHierarchy,
+    bool? enableFoldersHierarchyTracks,
     bool? enableFoldersHierarchyVideos,
     bool? displayArtistBeforeTitle,
     bool? heatmapListensView,
@@ -1211,6 +1215,7 @@ class _SettingsController with SettingsFileWriter {
     if (defaultFolderStartupLocation != null) this.defaultFolderStartupLocation.value = defaultFolderStartupLocation;
     if (defaultFolderStartupLocationVideos != null) this.defaultFolderStartupLocationVideos.value = defaultFolderStartupLocationVideos;
     if (enableFoldersHierarchy != null) this.enableFoldersHierarchy.value = enableFoldersHierarchy;
+    if (enableFoldersHierarchyTracks != null) this.enableFoldersHierarchyTracks.value = enableFoldersHierarchyTracks;
     if (enableFoldersHierarchyVideos != null) this.enableFoldersHierarchyVideos.value = enableFoldersHierarchyVideos;
     if (displayArtistBeforeTitle != null) this.displayArtistBeforeTitle.value = displayArtistBeforeTitle;
     if (heatmapListensView != null) this.heatmapListensView.value = heatmapListensView;
