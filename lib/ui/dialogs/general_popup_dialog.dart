@@ -1633,15 +1633,38 @@ void showSetTrackStatsDialog({
 }) async {
   if (firstTrack == null) return;
 
-  final initialRating = stats.rating;
-  final initialMoods = stats.moods?.join(', ');
-  final initialTags = stats.tags?.join(', ');
-
-  final ratingController = TextEditingController(text: initialRating == 0 ? null : initialRating.toString());
-  final moodsController = TextEditingController(text: initialMoods);
-  final tagsController = TextEditingController(text: initialTags);
+  final selectedRatingRx = stats.rating.obs;
+  final selectedFixedRatingRx = stats.rating.obs;
+  final selectedMoodsRx = (stats.moods?.toSet() ?? {}).obs;
+  final selectedTagsRx = (stats.tags?.toSet() ?? {}).obs;
 
   final isEditing = false.obs;
+
+  final allAvailableMoodsCount = <String, int>{}.obs;
+  final allAvailableTagsCount = <String, int>{}.obs;
+
+  // -- moods/tags from stats
+  for (final tr in Indexer.inst.trackStatsMap.value.entries) {
+    tr.value.moods?.loop((mood) {
+      allAvailableMoodsCount.value.update(mood, (value) => value + 1, ifAbsent: () => 1);
+    });
+    tr.value.tags?.loop((tag) {
+      allAvailableTagsCount.value.update(tag, (value) => value + 1, ifAbsent: () => 1);
+    });
+  }
+
+  // -- moods/tags from track embedded tag
+  allTracksInLibrary.loop((tr) {
+    tr.moodList.loop((mood) {
+      allAvailableMoodsCount.value.update(mood, (value) => value + 1, ifAbsent: () => 1);
+    });
+    tr.tagsList.loop((tag) {
+      allAvailableTagsCount.value.update(tag, (value) => value + 1, ifAbsent: () => 1);
+    });
+  });
+
+  allAvailableMoodsCount.value.sortByReverse((e) => e.value);
+  allAvailableTagsCount.value.sortByReverse((e) => e.value);
 
   Widget getItemChip({
     required ThemeData theme,
@@ -1691,16 +1714,71 @@ void showSetTrackStatsDialog({
     return fieldWidget;
   }
 
+  void addCustomItems(String title, IconData icon, Rx<Set<String>> rxSet, RxMap<String, int> allAvailable) {
+    final controller = TextEditingController();
+    NamidaNavigator.inst.navigateDialog(
+      colorScheme: colorScheme,
+      lighterDialogColor: true,
+      onDisposing: () {
+        controller.dispose();
+      },
+      dialogBuilder: (theme) => CustomBlurryDialog(
+        title: lang.ADD,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.ADD,
+            onPressed: () async {
+              final items = Indexer.splitByCommaList(controller.text);
+              for (final e in items) {
+                final didAdd = rxSet.value.add(e);
+                if (didAdd) {
+                  allAvailable.value.update(e, (value) => value + 1, ifAbsent: () => 1);
+                }
+              }
+              rxSet.refresh();
+              allAvailable.refresh();
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: namida.height * 0.5),
+          child: SuperSmoothListView(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            shrinkWrap: true,
+            children: [
+              const SizedBox(height: 12.0),
+              getItemChip(
+                theme: theme,
+                controller: controller,
+                hintText: '',
+                labelText: title,
+                icon: icon,
+                subtitle: lang.SET_MOODS_SUBTITLE,
+              ),
+              const SizedBox(height: 12.0),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   await NamidaNavigator.inst.navigateDialog(
     colorScheme: colorScheme,
     lighterDialogColor: true,
     onDisposing: () {
-      ratingController.dispose();
-      moodsController.dispose();
-      tagsController.dispose();
+      allAvailableMoodsCount.close();
+      allAvailableTagsCount.close();
+      selectedRatingRx.close();
+      selectedFixedRatingRx.close();
+      selectedMoodsRx.close();
+      selectedTagsRx.close();
       isEditing.close();
     },
     dialogBuilder: (theme) => CustomBlurryDialog(
+      contentPadding: EdgeInsets.zero,
       title: lang.CONFIGURE,
       actions: [
         const CancelButton(),
@@ -1716,9 +1794,9 @@ void showSetTrackStatsDialog({
                     .updateTracksMetadata(
                       tracks: [firstTrack],
                       editedTags: {
-                        TagField.rating: ratingController.text,
-                        TagField.mood: moodsController.text,
-                        TagField.tags: tagsController.text,
+                        TagField.rating: selectedRatingRx.value.toString(),
+                        TagField.mood: selectedMoodsRx.value.join(', '),
+                        TagField.tags: selectedTagsRx.value.join(', '),
                       },
                       onStatsEdit: onEdit,
                       onEdit: (didUpdate, error, _) {
@@ -1745,43 +1823,202 @@ void showSetTrackStatsDialog({
           padding: const EdgeInsets.symmetric(horizontal: 6.0),
           shrinkWrap: true,
           children: [
-            // -- moods
-            const SizedBox(height: 12.0),
-            getItemChip(
-              theme: theme,
-              controller: moodsController,
-              hintText: initialMoods ?? '',
-              labelText: lang.SET_MOODS,
+            CustomListTile(
+              visualDensity: VisualDensity.compact,
               icon: Broken.smileys,
-              subtitle: lang.SET_MOODS_SUBTITLE,
+              title: lang.SET_MOODS,
+              trailing: NamidaInkWellButton(
+                text: lang.ADD,
+                icon: Broken.add_circle,
+                onTap: () {
+                  addCustomItems(
+                    lang.SET_MOODS,
+                    Broken.smileys,
+                    selectedMoodsRx,
+                    allAvailableMoodsCount,
+                  );
+                },
+              ),
+            ),
+            _SetMoodsTagsRows(
+              selectedRx: selectedMoodsRx,
+              allAvailableMapRx: allAvailableMoodsCount,
             ),
 
-            // -- tags
-            const SizedBox(height: 24.0),
-            getItemChip(
-              theme: theme,
-              controller: tagsController,
-              hintText: initialTags ?? '',
-              labelText: lang.SET_TAGS,
+            const NamidaContainerDivider(
+              margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 3.0),
+            ),
+
+            CustomListTile(
+              visualDensity: VisualDensity.compact,
               icon: Broken.ticket_discount,
-              subtitle: lang.SET_MOODS_SUBTITLE,
+              title: lang.SET_TAGS,
+              trailing: NamidaInkWellButton(
+                text: lang.ADD,
+                icon: Broken.add_circle,
+                onTap: () {
+                  addCustomItems(
+                    lang.SET_TAGS,
+                    Broken.ticket_discount,
+                    selectedTagsRx,
+                    allAvailableTagsCount,
+                  );
+                },
+              ),
+            ),
+            _SetMoodsTagsRows(
+              selectedRx: selectedTagsRx,
+              allAvailableMapRx: allAvailableTagsCount,
             ),
 
-            // -- rating
-            const SizedBox(height: 24.0),
-            getItemChip(
-              theme: theme,
-              controller: ratingController,
-              hintText: initialRating.toString(),
-              labelText: lang.SET_RATING,
+            const NamidaContainerDivider(
+              margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 3.0),
+            ),
+
+            const SizedBox(height: 6.0),
+            CustomListTile(
+              visualDensity: VisualDensity.compact,
               icon: Broken.grammerly,
-              number: true,
+              title: lang.SET_RATING,
+              trailing: ObxO(
+                rx: selectedFixedRatingRx,
+                builder: (context, fixedrating) => ObxO(
+                  rx: selectedRatingRx,
+                  builder: (context, rating) => NamidaWheelSlider(
+                    key: ValueKey(fixedrating), // rebuild on selecting fixed rating
+                    max: 100,
+                    initValue: rating,
+                    text: '$rating',
+                    onValueChanged: (val) => selectedRatingRx.value = val,
+                  ),
+                ),
+              ),
             ),
-
-            const SizedBox(height: 4.0),
+            const SizedBox(height: 6.0),
+            SmoothSingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: ObxO(
+                rx: selectedRatingRx,
+                builder: (context, selectedRating) => Row(
+                  children: const [50, 60, 70, 75, 80, 85, 90, 95, 100].map(
+                    (e) {
+                      final isSelected = e == selectedRating;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                        child: NamidaInkWellButton(
+                          borderRadius: 99.0,
+                          sizeMultiplier: 0.85,
+                          paddingMultiplier: 0.6,
+                          icon: null,
+                          leading:
+                              Icon(
+                                Broken.tick_circle,
+                                size: 12.0,
+                              ).animateEntrance(
+                                showWhen: isSelected,
+                                allCurves: Curves.fastLinearToSlowEaseIn,
+                                durationMS: 200,
+                              ),
+                          text: '$e',
+                          bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.2),
+                          onTap: () {
+                            selectedRatingRx.value = e;
+                            selectedFixedRatingRx.value = e;
+                          },
+                        ),
+                      );
+                    },
+                  ).toList(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12.0),
           ],
         ),
       ),
     ),
   );
+}
+
+class _SetMoodsTagsRows extends StatelessWidget {
+  final Rx<Set<String>> selectedRx;
+  final RxMap<String, int> allAvailableMapRx;
+  const _SetMoodsTagsRows({required this.selectedRx, required this.allAvailableMapRx});
+
+  @override
+  Widget build(BuildContext context) {
+    const horizontalPadding = EdgeInsets.symmetric(horizontal: 12.0);
+    return Column(
+      crossAxisAlignment: .start,
+      mainAxisSize: .min,
+      children: [
+        SmoothSingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: horizontalPadding,
+          child: ObxO(
+            rx: selectedRx,
+            builder: (context, selected) => Row(
+              children: selected.map(
+                (e) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                    child: NamidaInkWellButton(
+                      borderRadius: 99.0,
+                      paddingMultiplier: 0.8,
+                      icon: Broken.tick_circle,
+                      text: e,
+                      bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.5),
+                      onTap: () {
+                        selectedRx.value.remove(e);
+                        selectedRx.refresh();
+                      },
+                    ),
+                  );
+                },
+              ).toList(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6.0),
+        SmoothSingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: horizontalPadding,
+          child: ObxO(
+            rx: allAvailableMapRx,
+            builder: (context, allAvailableMap) {
+              final allAvailableMoodsList = allAvailableMap.keys.toList();
+              return ObxO(
+                rx: selectedRx,
+                builder: (context, selected) => Row(
+                  children: allAvailableMoodsList.map(
+                    (e) {
+                      final isSelected = selected.contains(e);
+                      if (isSelected) return SizedBox();
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                        child: NamidaInkWellButton(
+                          borderRadius: 99.0,
+                          paddingMultiplier: 0.8,
+                          icon: null,
+                          text: e,
+                          bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.2),
+                          onTap: () {
+                            final didRemove = selectedRx.value.remove(e);
+                            if (!didRemove) selectedRx.value.add(e);
+                            selectedRx.refresh();
+                          },
+                        ),
+                      );
+                    },
+                  ).toList(),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 6.0),
+      ],
+    );
+  }
 }

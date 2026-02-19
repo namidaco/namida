@@ -874,6 +874,7 @@ extension TrackUtils on Track {
   List<String> get genresList => toTrackExt().genresList;
   String get originalMood => toTrackExt().originalMood;
   List<String> get moodList => toTrackExt().moodList;
+  List<String> get tagsList => toTrackExt().tagsList;
   String get composer => toTrackExt().composer;
   int get trackNo => toTrackExt().trackNo;
   int get durationMS => toTrackExt().durationMS;
