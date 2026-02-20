@@ -5,6 +5,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/clipboard_controller.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -98,6 +99,66 @@ class SearchPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
+
+    final filterIChipsTypes = MediaType.values.toList();
+    filterIChipsTypes.remove(MediaType.track);
+    filterIChipsTypes.remove(MediaType.folder);
+
+    final filterChipsChildren = <Widget>[];
+
+    filterChipsChildren.add(
+      Obx(
+        (context) {
+          final trSearchTypes = settings.activeTrSearch.valueR;
+          final isActive = trSearchTypes[TrackTypeSearch.tr] ?? true;
+          final isForcelyEnabled = isActive && trSearchTypes[TrackTypeSearch.v] != true;
+          return _FilterChip(
+            isForcelyEnabled: isForcelyEnabled,
+            isActive: isActive,
+            type: MediaType.track,
+            title: lang.TRACKS,
+            customOnTap: () {
+              settings.updateActiveTrSearch(TrackTypeSearch.tr, !isActive);
+              SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
+            },
+          );
+        },
+      ),
+    );
+    filterChipsChildren.add(
+      Obx(
+        (context) {
+          final trSearchTypes = settings.activeTrSearch.valueR;
+          final isActive = trSearchTypes[TrackTypeSearch.v] ?? true;
+          final isForcelyEnabled = isActive && trSearchTypes[TrackTypeSearch.tr] != true;
+          return _FilterChip(
+            isForcelyEnabled: isForcelyEnabled,
+            isActive: isActive,
+            type: MediaType.track,
+            title: lang.VIDEOS,
+            customOnTap: () {
+              settings.updateActiveTrSearch(TrackTypeSearch.v, !isActive);
+              SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
+            },
+          );
+        },
+      ),
+    );
+
+    for (final e in filterIChipsTypes) {
+      final child = Obx(
+        (context) {
+          final list = settings.activeSearchMediaTypes.valueR;
+          final isActive = list.contains(e);
+          return _FilterChip(
+            isForcelyEnabled: false,
+            isActive: isActive,
+            type: e,
+          );
+        },
+      );
+      filterChipsChildren.add(child);
+    }
     return BackgroundWrapper(
       child: NamidaTabView(
         key: ScrollSearchController.inst.tabViewKey,
@@ -133,64 +194,7 @@ class SearchPage extends StatelessWidget {
               SmoothSingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: [
-                    ...MediaType.values
-                        .where(
-                          (element) => element != MediaType.folder,
-                        )
-                        .map(
-                          (e) => Obx(
-                            (context) {
-                              final list = settings.activeSearchMediaTypes.valueR;
-                              final isActive = list.contains(e);
-                              final isForcelyEnabled = e == MediaType.track;
-                              return NamidaOpacity(
-                                opacity: isForcelyEnabled ? 0.6 : 1.0,
-                                child: NamidaInkWell(
-                                  bgColor: isActive ? theme.colorScheme.secondary.withOpacityExt(0.12) : null,
-                                  borderRadius: 8.0,
-                                  onTap: () async {
-                                    if (isForcelyEnabled) return;
-                                    if (isActive) {
-                                      settings.removeFromList(activeSearchMediaTypes1: e);
-                                      await SearchSortController.inst.disposeMediaResources(e);
-                                    } else {
-                                      settings.save(activeSearchMediaTypes: [e]);
-                                      await SearchSortController.inst.prepareResources();
-                                      SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
-                                    }
-                                  },
-                                  margin: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 12.0),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: theme.colorScheme.secondary.withOpacityExt(0.7),
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        e.toText(),
-                                        style: textTheme.displayMedium?.copyWith(
-                                          color: theme.colorScheme.secondary.withOpacityExt(0.7),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8.0),
-                                      NamidaCheckMark(
-                                        size: 12.0,
-                                        active: isActive,
-                                        activeColor: theme.colorScheme.secondary.withOpacityExt(0.7),
-                                        inactiveColor: theme.colorScheme.secondary.withOpacityExt(0.7),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                  ],
+                  children: filterChipsChildren,
                 ),
               ),
               Expanded(
@@ -216,7 +220,7 @@ class SearchPage extends StatelessWidget {
                                   (context) {
                                     final activeList = settings.activeSearchMediaTypes.valueR;
 
-                                    final tracksSearchTemp = !activeList.contains(MediaType.track) ? null : SearchSortController.inst.trackSearchTemp.valueR;
+                                    final tracksSearchTemp = SearchSortController.inst.trackSearchTemp.valueR;
                                     final albumSearchTemp = !activeList.contains(MediaType.album) ? null : SearchSortController.inst.albumSearchTemp.valueR;
                                     final artistSearchTemp = !activeList.contains(MediaType.artist) ? null : SearchSortController.inst.artistSearchTemp.valueR;
                                     final albumArtistSearchTemp = !activeList.contains(MediaType.albumArtist) ? null : SearchSortController.inst.albumArtistSearchTemp.valueR;
@@ -232,6 +236,18 @@ class SearchPage extends StatelessWidget {
                                     final folderVideosSearchTemp = !isFolderVideosSearchActive
                                         ? null
                                         : SearchSortController.inst.folderVideosSearchTemp.valueR.where((f) => VideoFolder.explicit(f).tracksDedicated().isNotEmpty).toList();
+
+                                    final trSearchTypes = settings.activeTrSearch.valueR;
+                                    final trSearchTypesTrActive = trSearchTypes[TrackTypeSearch.tr] ?? true;
+                                    final trSearchTypesVideosActive = trSearchTypes[TrackTypeSearch.v] ?? true;
+                                    String tracksSearchTitle = lang.TRACKS;
+                                    if (!trSearchTypesTrActive) {
+                                      tracksSearchTitle = lang.VIDEOS;
+                                      tracksSearchTemp.removeWhere((element) => element is! Video);
+                                    }
+                                    if (!trSearchTypesVideosActive) {
+                                      tracksSearchTemp.removeWhere((element) => element is Video);
+                                    }
 
                                     return SmoothCustomScrollView(
                                       controller: sc,
@@ -409,12 +425,12 @@ class SearchPage extends StatelessWidget {
                                         ],
 
                                         // == Tracks ==
-                                        if (tracksSearchTemp != null && tracksSearchTemp.isNotEmpty) ...[
+                                        if (tracksSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: Tooltip(
                                               message: lang.TRACK_PLAY_MODE,
                                               child: SearchPageTitleRow(
-                                                title: '${lang.TRACKS} • ${tracksSearchTemp.length}',
+                                                title: '$tracksSearchTitle • ${tracksSearchTemp.length}',
                                                 icon: Broken.music_circle,
                                                 subtitleWidget: Row(
                                                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -524,6 +540,7 @@ class _FolderSmallCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final folderName = folder.folderNameTryFormatNetwork();
     final theme = context.theme;
     final textTheme = theme.textTheme;
     return ConstrainedBox(
@@ -558,13 +575,14 @@ class _FolderSmallCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    folder.folderName,
+                    folderName,
                     softWrap: false,
                     overflow: TextOverflow.fade,
                     style: textTheme.displayMedium?.copyWith(
                       fontSize: 13.0,
                     ),
                   ),
+                  const SizedBox(height: 1.0),
                   Text(
                     tracks.length.displayTrackKeyword,
                     softWrap: false,
@@ -577,6 +595,74 @@ class _FolderSmallCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12.0),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String? title;
+  final bool isForcelyEnabled;
+  final bool isActive;
+  final MediaType type;
+  final VoidCallback? customOnTap;
+  const _FilterChip({
+    this.title,
+    required this.isForcelyEnabled,
+    required this.isActive,
+    required this.type,
+    this.customOnTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    return NamidaOpacity(
+      opacity: isForcelyEnabled ? 0.6 : 1.0,
+      child: NamidaInkWell(
+        bgColor: isActive ? theme.colorScheme.secondary.withOpacityExt(0.12) : null,
+        borderRadius: 8.0,
+        onTap: () async {
+          if (isForcelyEnabled) return;
+          if (customOnTap != null) {
+            customOnTap!();
+            return;
+          }
+          if (isActive) {
+            settings.removeFromList(activeSearchMediaTypes1: type);
+            await SearchSortController.inst.disposeMediaResources(type);
+          } else {
+            settings.save(activeSearchMediaTypes: [type]);
+            await SearchSortController.inst.prepareResources();
+            SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
+          }
+        },
+        margin: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: theme.colorScheme.secondary.withOpacityExt(0.7),
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(
+              title ?? type.toText(),
+              style: textTheme.displayMedium?.copyWith(
+                color: theme.colorScheme.secondary.withOpacityExt(0.7),
+              ),
+            ),
+            const SizedBox(width: 8.0),
+            NamidaCheckMark(
+              size: 12.0,
+              active: isActive,
+              activeColor: theme.colorScheme.secondary.withOpacityExt(0.7),
+              inactiveColor: theme.colorScheme.secondary.withOpacityExt(0.7),
+            ),
           ],
         ),
       ),

@@ -653,7 +653,15 @@ enum LibraryImageSource {
   bool get isNetwork => this == lastfm;
 }
 
-enum AlbumType { single, normal }
+enum AlbumType {
+  single,
+  normal,
+}
+
+enum TrackTypeSearch {
+  tr,
+  v,
+}
 
 enum DesktopTitlebarIconsType {
   none,

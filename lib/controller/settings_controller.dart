@@ -100,6 +100,10 @@ class _SettingsController with SettingsFileWriter {
     AlbumType.single: true,
     AlbumType.normal: true,
   }.obs;
+  final activeTrSearch = <TrackTypeSearch, bool>{
+    TrackTypeSearch.tr: true,
+    TrackTypeSearch.v: true,
+  }.obs;
   final enableBlurEffect = false.obs;
   final enableGlowEffect = false.obs;
   final enableGlowBehindVideo = false.obs;
@@ -499,6 +503,15 @@ class _SettingsController with SettingsFileWriter {
           ..addAll(map)
           ..refresh();
       }
+      final activeTrSearchInStorage = json["activeTrSearch"];
+      if (activeTrSearchInStorage is Map && activeTrSearchInStorage.isNotEmpty) {
+        final map = <TrackTypeSearch, bool>{
+          for (final e in activeTrSearchInStorage.entries) TrackTypeSearch.values.getEnum(e.key) ?? TrackTypeSearch.tr: e.value ?? true,
+        };
+        activeTrSearch
+          ..addAll(map)
+          ..refresh();
+      }
       enableBlurEffect.value = json['enableBlurEffect'] ?? enableBlurEffect.value;
       enableGlowEffect.value = json['enableGlowEffect'] ?? enableGlowEffect.value;
       enableGlowBehindVideo.value = json['enableGlowBehindVideo'] ?? enableGlowBehindVideo.value;
@@ -760,6 +773,7 @@ class _SettingsController with SettingsFileWriter {
     'useSettingCollapsedTiles': useSettingCollapsedTiles.value,
     'mediaGridCounts': mediaGridCounts.value.map((key, value) => MapEntry(key.name, value?.rawValue)),
     'activeAlbumTypes': activeAlbumTypes.value.map((key, value) => MapEntry(key.name, value)),
+    'activeTrSearch': activeTrSearch.value.map((key, value) => MapEntry(key.name, value)),
     'enableBlurEffect': enableBlurEffect.value,
     'enableGlowEffect': enableGlowEffect.value,
     'enableGlowBehindVideo': enableGlowBehindVideo.value,
@@ -1460,6 +1474,11 @@ class _SettingsController with SettingsFileWriter {
 
   void updateActiveAlbumTypes(AlbumType type, bool active) {
     activeAlbumTypes[type] = active;
+    _writeToStorage();
+  }
+
+  void updateActiveTrSearch(TrackTypeSearch type, bool active) {
+    activeTrSearch[type] = active;
     _writeToStorage();
   }
 
