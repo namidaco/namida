@@ -496,30 +496,30 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     final artworkUrl = params['artworkUrl'] as String?;
     final relative = params['relative'] as bool? ?? true;
 
-    String findCommonPath(List<TrackWithDate> tracks) {
-      if (tracks.isEmpty) return '';
+    // String findCommonPath(List<TrackWithDate> tracks) {
+    //   if (tracks.isEmpty) return '';
 
-      // use absolute paths if playlist has network tracks
-      if (tracks[0].track.isNetwork) return '';
+    //   // use absolute paths if playlist has network tracks
+    //   if (tracks[0].track.isNetwork) return '';
 
-      String res = "";
-      final firstPath = tracks[0].track.path;
-      for (int i = 0; i < firstPath.length; i++) {
-        for (var twd in tracks) {
-          var tr = twd.track;
-          if (tr.isNetwork) return '';
-          var s = tr.path;
-          if (i >= s.length || firstPath[i] != s[i]) {
-            return res;
-          }
-        }
-        res += firstPath[i];
-      }
-      return res;
-    }
+    //   String res = "";
+    //   final firstPath = tracks[0].track.path;
+    //   for (int i = 0; i < firstPath.length; i++) {
+    //     for (var twd in tracks) {
+    //       var tr = twd.track;
+    //       if (tr.isNetwork) return '';
+    //       var s = tr.path;
+    //       if (i >= s.length || firstPath[i] != s[i]) {
+    //         return res;
+    //       }
+    //     }
+    //     res += firstPath[i];
+    //   }
+    //   return res;
+    // }
 
-    final commonParent = findCommonPath(tracks);
-    final commonParentIsGood = RegExp(r'[^\s]').hasMatch(commonParent); // ensure has any char
+    final commonParent = relative ? p.dirname(mainPath) : '';
+    final commonParentIsGood = commonParent.isNotEmpty && RegExp(r'[^\s]').hasMatch(commonParent); // ensure has any char
 
     final file = File(mainPath);
 
@@ -537,13 +537,12 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       sink.writeln('# this file should be put in `$commonParent` or a folder with similar structure');
       sink.writeln();
     }
-    final shouldDoRelative = relative && commonParentIsGood;
     for (int i = 0; i < tracks.length; i++) {
       var trwd = tracks[i];
       final tr = trwd.track;
       final trext = tr.track.toTrackExt();
       final infoLine = infoMap[tr.path] ?? '#EXTINF:${trext.durationMS / 1000},${trext.originalArtist} - ${trext.title}';
-      final pathLine = shouldDoRelative ? p.relative(tr.path, from: commonParent) : tr.path;
+      final pathLine = commonParentIsGood ? p.relative(tr.path, from: commonParent) : tr.path;
       sink.writeln(infoLine);
       sink.writeln(pathLine);
     }
