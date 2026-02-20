@@ -15,6 +15,8 @@ bool _wasExpanded = false;
 double _maxHeight = 0;
 
 class NamidaYTMiniplayer extends StatefulWidget {
+  static void setInitialExpanded(bool expanded) => _wasExpanded = expanded;
+
   final bool enforceExpanded;
   final double minHeight, maxHeight, bottomMargin;
   final Widget Function(double height, double percentage, Animation<double> reverseOpacityAnimation) builder;

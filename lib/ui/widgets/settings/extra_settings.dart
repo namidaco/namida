@@ -1295,6 +1295,13 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                     ),
                   ),
                 ),
+
+              CustomSwitchListTile(
+                icon: Broken.video_octagon,
+                value: settings.extra.ytStyleButtonSwitcher ?? false,
+                onChanged: (isTrue) => setState(() => settings.extra.save(ytStyleButtonSwitcher: !isTrue)),
+                title: 'yt_style_player_button_switcher'.toUpperCase(),
+              ),
             ],
           ),
         ),

@@ -22,6 +22,7 @@ class _ExtraSettings with SettingsFileWriter {
   bool? mediaWaveHaptic;
   bool? artistAlbumsExpanded;
   bool? artistSinglesExpanded;
+  bool? ytStyleButtonSwitcher;
 
   int lastPlayedIndex = 0;
 
@@ -42,6 +43,7 @@ class _ExtraSettings with SettingsFileWriter {
     bool? mediaWaveHaptic,
     bool? artistAlbumsExpanded,
     bool? artistSinglesExpanded,
+    bool? ytStyleButtonSwitcher,
     int? lastPlayedIndex,
     int? ytAddToPlaylistsTabIndex,
     int? ytPlaylistsPageIndex,
@@ -59,6 +61,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (mediaWaveHaptic != null) this.mediaWaveHaptic = mediaWaveHaptic;
     if (artistAlbumsExpanded != null) this.artistAlbumsExpanded = artistAlbumsExpanded;
     if (artistSinglesExpanded != null) this.artistSinglesExpanded = artistSinglesExpanded;
+    if (ytStyleButtonSwitcher != null) this.ytStyleButtonSwitcher = ytStyleButtonSwitcher;
     if (lastPlayedIndex != null) this.lastPlayedIndex = lastPlayedIndex;
     if (ytAddToPlaylistsTabIndex != null) this.ytAddToPlaylistsTabIndex = ytAddToPlaylistsTabIndex;
     if (ytPlaylistsPageIndex != null) this.ytPlaylistsPageIndex = ytPlaylistsPageIndex;
@@ -93,6 +96,7 @@ class _ExtraSettings with SettingsFileWriter {
       mediaWaveHaptic = json['mediaWaveHaptic'] ?? mediaWaveHaptic;
       artistAlbumsExpanded = json['artistAlbumsExpanded'] ?? artistAlbumsExpanded;
       artistSinglesExpanded = json['artistSinglesExpanded'] ?? artistSinglesExpanded;
+      ytStyleButtonSwitcher = json['ytStyleButtonSwitcher'] ?? ytStyleButtonSwitcher;
       lastPlayedIndex = json['lastPlayedIndex'] ?? lastPlayedIndex;
       ytAddToPlaylistsTabIndex = json['ytAddToPlaylistsTabIndex'] ?? ytAddToPlaylistsTabIndex;
       ytPlaylistsPageIndex = json['ytPlaylistsPageIndex'] ?? ytPlaylistsPageIndex;
@@ -117,6 +121,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (mediaWaveHaptic != null) 'mediaWaveHaptic': mediaWaveHaptic,
     if (artistAlbumsExpanded != null) 'artistAlbumsExpanded': artistAlbumsExpanded,
     if (artistSinglesExpanded != null) 'artistSinglesExpanded': artistSinglesExpanded,
+    if (ytStyleButtonSwitcher != null) 'ytStyleButtonSwitcher': ytStyleButtonSwitcher,
     'lastPlayedIndex': lastPlayedIndex,
     'ytAddToPlaylistsTabIndex': ytAddToPlaylistsTabIndex,
     'ytPlaylistsPageIndex': ytPlaylistsPageIndex,

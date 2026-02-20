@@ -1856,7 +1856,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               child: Row(
                                                 children: [
                                                   const SizedBox(width: 2.0),
-                                                  if (NamidaFeaturesVisibility.showRotateScreenInFullScreen && widget.isFullScreen)
+                                                  if (NamidaFeaturesVisibility.showRotateScreenInFullScreen && widget.isFullScreen) ...[
                                                     // -- rotate screen button
                                                     NamidaIconButton(
                                                       verticalPadding: 2.0,
@@ -1870,7 +1870,26 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                         NamidaNavigator.inst.setDeviceOrientations(!NamidaNavigator.inst.isInLanscape);
                                                       },
                                                     ),
-                                                  if (widget.isFullScreen) const SizedBox(width: 10.0),
+                                                    const SizedBox(width: 10.0),
+                                                  ],
+
+                                                  if (!widget.isFullScreen && settings.extra.ytStyleButtonSwitcher == true) ...[
+                                                    NamidaIconButton(
+                                                      verticalPadding: 2.0,
+                                                      horizontalPadding: 4.0,
+                                                      padding: EdgeInsets.zero,
+                                                      iconSize: 18.0,
+                                                      icon: Broken.video_octagon,
+                                                      iconColor: itemsColor,
+                                                      onPressed: () {
+                                                        settings.youtube.save(youtubeStyleMiniplayer: false);
+                                                        MiniPlayerController.inst.snapToExpanded(haptic: false);
+                                                        Player.inst.tryGenerateWaveform(Player.inst.currentVideo);
+                                                      },
+                                                    ),
+                                                    const SizedBox(width: 8.0),
+                                                  ],
+
                                                   RepeatModeIconButton(
                                                     compact: true,
                                                     color: itemsColor,

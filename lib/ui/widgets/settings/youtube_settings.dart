@@ -271,7 +271,11 @@ class YoutubeSettings extends SettingSubpageProvider {
             child: Obx(
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.youtubeStyleMiniplayer),
-                icon: Broken.video_octagon,
+                leading: const StackedIcon(
+                  baseIcon: Broken.external_drive,
+                  secondaryIcon: Broken.video_octagon,
+                  secondaryIconSize: 14.0,
+                ),
                 title: lang.YOUTUBE_STYLE_MINIPLAYER,
                 value: settings.youtube.youtubeStyleMiniplayer.valueR,
                 onChanged: (isTrue) {

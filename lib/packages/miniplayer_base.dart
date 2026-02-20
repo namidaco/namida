@@ -2,6 +2,7 @@
 // This is originally a part of [Tear Music](https://github.com/tearone/tearmusic), edited to fit Namida.
 // Credits goes for the original author @55nknown
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
@@ -36,6 +37,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/focused_menu.dart';
 import 'package:namida/packages/miniplayer_raw.dart';
+import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/pages/equalizer_page.dart';
@@ -151,7 +153,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   });
 
   @override
-  State<NamidaMiniPlayerBase> createState() => _NamidaMiniPlayerBaseState();
+  State<NamidaMiniPlayerBase<E, S>> createState() => _NamidaMiniPlayerBaseState<E, S>();
 
   static final clampedAnimationCP = _createClampedAnimation();
   static final clampedAnimationBCP = _createClampedAnimation2();
@@ -249,7 +251,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   }
 }
 
-class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
+class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>> {
   final isMenuOpened = false.obs;
   static const animationDuration = Duration(milliseconds: 150);
 
@@ -514,6 +516,30 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
       mainAxisAlignment: MainAxisAlignment.end,
       mainAxisSize: MainAxisSize.max,
       children: [
+        if (widget.videoTileConfigs != null && settings.extra.ytStyleButtonSwitcher == true)
+          _CustomIconButton(
+            tooltipCallback: () => lang.YOUTUBE_STYLE_MINIPLAYER,
+            onPressed: () {
+              MiniPlayerController.inst.snapToMini(haptic: false);
+              NamidaYTMiniplayer.setInitialExpanded(true);
+
+              settings.youtube.save(youtubeStyleMiniplayer: true);
+
+              Timer(
+                const Duration(milliseconds: 100),
+                () {
+                  final ytMiniplayer = MiniPlayerController.inst.ytMiniplayerKey.currentState;
+                  if (ytMiniplayer != null && ytMiniplayer.isExpanded == false) ytMiniplayer.animateToState(true, dur: const Duration(milliseconds: 200));
+                },
+              );
+            },
+            sizeRaw: 19.0,
+            icon: Icon(
+              Broken.video_octagon,
+              size: 19.0.size,
+              color: theme.colorScheme.onSecondaryContainer,
+            ),
+          ),
         RepeatModeIconButton(
           iconSize: _CustomIconButton.defaultIconSize.size,
           builder: (child, tooltipCallback, onTap) => _CustomIconButton(
@@ -523,7 +549,7 @@ class _NamidaMiniPlayerBaseState extends State<NamidaMiniPlayerBase> {
           ),
         ),
         SoundControlButton(
-          iconSize: _CustomIconButton.defaultIconSize.size,
+          iconSize: 21.0.size,
           builder: (child, tooltipCallback, onTap) => _CustomIconButton(
             icon: child,
             tooltipCallback: tooltipCallback,
