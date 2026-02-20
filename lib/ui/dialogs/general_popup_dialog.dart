@@ -55,6 +55,7 @@ Future<void> showGeneralPopupDialog(
   String title,
   String subtitle,
   QueueSource source, {
+  int? titleMaxLines = 1,
   NetworkArtworkInfo? networkArtworkInfo,
   CustomArtworkManager? customArtworkManager,
   void Function()? onTopBarTap,
@@ -743,7 +744,7 @@ Future<void> showGeneralPopupDialog(
                                     Text(
                                       title,
                                       overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
+                                      maxLines: titleMaxLines,
                                       style: theme.textTheme.displayLarge?.copyWith(
                                         fontSize: 17.0,
                                         height: 1.2,

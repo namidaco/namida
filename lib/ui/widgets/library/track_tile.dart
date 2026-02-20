@@ -345,14 +345,13 @@ class TrackTile extends StatelessWidget {
           ? thirdLineText
           : properties.displayThirdRow
           ? TrackTileManager._joinTrackItems(_TrackTileRowOrder.third, track)
-          : null;
+          : '';
 
       threeLinesColumn = Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // check if first row isnt empty
-          if (row1Text != '')
+          if (row1Text.isNotEmpty)
             Text(
               row1Text,
               overflow: TextOverflow.ellipsis,
@@ -362,8 +361,10 @@ class TrackTile extends StatelessWidget {
               ),
             ),
 
-          // check if second row isnt empty
-          if (row2Text != '')
+          // -- add small spacing if there is no third row
+          if (row3Text.isEmpty) const SizedBox(height: 1.0),
+
+          if (row2Text.isNotEmpty)
             Text(
               row2Text,
               style: textTheme.displaySmall?.copyWith(
@@ -374,8 +375,7 @@ class TrackTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
 
-          // check if third row isnt empty
-          if (row3Text != null && row3Text != '')
+          if (row3Text.isNotEmpty)
             Text(
               row3Text,
               style: textTheme.displaySmall?.copyWith(
@@ -531,11 +531,11 @@ class TrackTile extends StatelessWidget {
                           child: threeLinesColumn,
                         ),
                         const SizedBox(width: 6.0),
-                        if (properties.displayFavouriteIconInListTile || rightItem1Text != '' || rightItem2Text != '')
+                        if (properties.displayFavouriteIconInListTile || rightItem1Text.isNotEmpty || rightItem2Text.isNotEmpty)
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              if (rightItem1Text != '')
+                              if (rightItem1Text.isNotEmpty)
                                 Text(
                                   rightItem1Text,
                                   style: textTheme.displaySmall?.copyWith(
@@ -544,7 +544,7 @@ class TrackTile extends StatelessWidget {
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                              if (rightItem2Text != '')
+                              if (rightItem2Text.isNotEmpty)
                                 Text(
                                   rightItem2Text,
                                   style: textTheme.displaySmall?.copyWith(

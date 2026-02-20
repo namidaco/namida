@@ -4429,7 +4429,7 @@ class NamidaScrollbar extends StatelessWidget {
       scrollStep: scrollStep,
       thicknessWhileDragging: 8.5,
       minInteractiveSize: 60.0,
-      pressDuration: const Duration(milliseconds: 80),
+      pressDuration: isDesktop ? const Duration(milliseconds: 50) : const Duration(milliseconds: 80),
       tapToScroll: () => settings.extra.tapToScroll ?? false,
       enhancedDragToScroll: () => settings.extra.enhancedDragToScroll ?? true,
       onThumbLongPressStart: () => isScrollbarThumbDragging = true,

@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -16,15 +17,15 @@ class VideoFolder extends Folder {
 }
 
 class Folder {
-  bool get isNetwork => folderName.startsWith('http') || folderName.contains('namida_t=');
+  bool get isNetwork => folderNameRaw.startsWith('http') || folderNameRaw.contains('namida_t=');
 
   final String path;
-  final String folderName;
+  final String folderNameRaw;
   final String _key;
 
   late final parts = splitParts();
 
-  Folder.explicit(this.path) : folderName = path.pathReverseSplitter(_pathSeparator), _key = _computeKey(path);
+  Folder.explicit(this.path) : folderNameRaw = path.pathReverseSplitter(_pathSeparator), _key = _computeKey(path);
 
   static T fromType<T extends Folder>(String path) {
     return T == VideoFolder ? VideoFolder.explicit(path) as T : Folder.explicit(path) as T;
@@ -60,7 +61,31 @@ class Folder {
 
   List<String> splitParts() => _key.split(_pathSeparator);
 
-  String folderNameAvoidingConflicts() => hasSimilarFolderNames ? formattedPath() : folderName;
+  String folderNameAvoidingConflicts() => hasSimilarFolderNames ? formattedPath() : folderNameTryFormatNetwork();
+
+  String folderNameTryFormatNetwork() {
+    final parts = folderNameTryFormatNetworkAsParts();
+    if (parts != null && parts.isNotEmpty) {
+      return parts.join('\n');
+    }
+    return folderNameRaw;
+  }
+
+  List<String>? folderNameTryFormatNetworkAsParts() {
+    if (isNetwork) {
+      try {
+        final server = DirectoryIndexServer.parseFromEncodedUrlPath(folderNameRaw);
+        return [
+          server.toSourceInfo(),
+          [
+            server.type.toText(),
+            server.username,
+          ].join(' - '),
+        ];
+      } catch (_) {}
+    }
+    return null;
+  }
 
   String formattedPath() {
     // -- aint no formatting hehe
@@ -94,9 +119,9 @@ extension FolderUtils<T extends Folder, E extends Track> on T {
   /// Can be heplful to display full path in such case.
   bool get hasSimilarFolderNames {
     int count = 0;
-    var thisfolderLower = folderName.toLowerCase();
+    var thisfolderLower = folderNameRaw.toLowerCase();
     for (final k in _mainFoldersMapDedicated.keys) {
-      if (k.folderName.toLowerCase() == thisfolderLower) {
+      if (k.folderNameRaw.toLowerCase() == thisfolderLower) {
         count++;
         if (count > 1) return true;
       }

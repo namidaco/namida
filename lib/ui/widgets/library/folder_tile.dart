@@ -97,7 +97,7 @@ class _FolderTileState extends State<FolderTile> {
     final double thumbSize = iconSize * 0.7;
     final extraInfo = _getFolderExtraInfo(widget.folder);
 
-    String folderTitle = widget.folder.folderName;
+    String folderTitle = widget.folder.folderNameRaw;
     Widget? trailingWidget;
     if (widget.isHome) {
       try {

@@ -386,13 +386,11 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           bottom: 0,
                           top: 0,
                           child: NamidaIconButton(
-                            tooltip: () => lang.JUMP,
-                            icon: Broken.cd,
+                            tooltip: () => lang.EXIT,
+                            icon: Broken.arrow_left_2,
                             iconColor: context.theme.colorScheme.secondary.withOpacityExt(0.6),
-                            iconSize: 20.0,
-                            onPressed: () {
-                              _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true, force: true);
-                            },
+                            iconSize: 22.0,
+                            onPressed: widget.onCloseFullscreenButtonTap ?? toggleFullscreen,
                           ),
                         ),
                         Padding(
@@ -438,11 +436,13 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           bottom: 0,
                           top: 0,
                           child: NamidaIconButton(
-                            tooltip: () => lang.EXIT,
-                            icon: Broken.close_circle,
+                            tooltip: () => lang.JUMP,
+                            icon: Broken.cd,
                             iconColor: context.theme.colorScheme.secondary.withOpacityExt(0.6),
                             iconSize: 20.0,
-                            onPressed: widget.onCloseFullscreenButtonTap ?? toggleFullscreen,
+                            onPressed: () {
+                              _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true, force: true);
+                            },
                           ),
                         ),
                       ],

@@ -220,8 +220,8 @@ class FoldersController<T extends Folder, E extends Track> {
 
   void _sortMap(Map<T, List<dynamic>> map, _FolderNode<T, E> rootNode) {
     final folderToNameCompare = settings.ignoreCommonPrefixForTypes.value.contains(TrackSearchFilter.folder)
-        ? (T folder) => folder.folderName.toLowerCase().ignoreCommonPrefixes()
-        : (T folder) => folder.folderName.toLowerCase();
+        ? (T folder) => folder.folderNameRaw.toLowerCase().ignoreCommonPrefixes()
+        : (T folder) => folder.folderNameRaw.toLowerCase();
 
     final parsedMap = _buildParsedMap(map.keys.map((e) => folderToNameCompare(e)));
 

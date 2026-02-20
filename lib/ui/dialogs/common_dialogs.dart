@@ -281,13 +281,15 @@ class NamidaDialogs {
   }) async {
     if (isTracksRecursive) VibratorController.medium();
     final queueSource = controller.queueSource;
+    final titleParts = folder.folderNameTryFormatNetworkAsParts();
     await showGeneralPopupDialog(
       tracks,
-      folder.folderName,
+      titleParts?.join(' | ') ?? folder.folderNameRaw,
       [
         tracks.displayTrackKeyword,
         tracks.totalDurationFormatted,
       ].join(' • '),
+      titleMaxLines: 2,
       queueSource,
       thirdLineText: tracks.totalSizeFormatted,
       trailingIcon: isTracksRecursive ? Broken.cards : Broken.card,

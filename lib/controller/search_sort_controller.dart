@@ -1076,7 +1076,7 @@ class SearchSortController extends SearchPortsProvider {
       for (int i = 0; i < keys.length; i++) {
         var path = keys[i];
         final folder = Folder.explicit(path);
-        final folderName = folder.folderName;
+        final folderName = folder.folderNameRaw;
         keysCleaned.add(textCleanedForSearch(folderName)); // if adding failed we are cooked
         if (keysNonCleaned != null) {
           keysNonCleaned.add(textNonCleanedForSearch!(folderName));
