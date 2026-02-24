@@ -22,7 +22,7 @@ class PermissionManager {
     bool granted = false;
 
     final permissionsToRequest = <Permission>[];
-    if (NamidaDeviceInfo.sdkVersion < 33) {
+    if (NamidaDeviceInfo.useOldStoragePermission) {
       permissionsToRequest.add(Permission.storage);
     } else {
       permissionsToRequest.add(Permission.audio);

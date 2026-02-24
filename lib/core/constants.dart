@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart' as pp;
+import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -37,6 +38,7 @@ import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 final isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 
 class NamidaDeviceInfo {
+  static bool get useOldStoragePermission => sdkVersion < 33;
   static int sdkVersion = -1;
 
   static String? _deviceId;
@@ -563,6 +565,13 @@ class AppPaths {
       await deviceInfoFile.writeAsString(deviceInfo);
       existingPaths.add(deviceInfoFile);
     } catch (_) {}
+    final permissionsInfoFile = FileParts.join(tmpDirPath, 'permissions.txt');
+    try {
+      final permissionsInfo = await _getPermissionsInfo();
+      await permissionsInfoFile.create(recursive: true);
+      await permissionsInfoFile.writeAsString(permissionsInfo);
+      existingPaths.add(permissionsInfoFile);
+    } catch (_) {}
     for (final p in [
       AppPaths.LOGS,
       AppPaths.LOGS_FALLBACK,
@@ -618,6 +627,30 @@ class AppPaths {
         return FileParts.joinPath(Directory.systemTemp.path, 'namida_logs.txt');
       },
     );
+  }
+
+  static Future<String> _getPermissionsInfo() async {
+    const encoder = JsonEncoder.withIndent("  ");
+    Future<String> permissionToStatus(Permission p) async {
+      try {
+        return (await p.status).name;
+      } catch (e) {
+        return 'Unknown: $e';
+      }
+    }
+
+    final infoMap = {
+      'sdk_version': NamidaDeviceInfo.sdkVersion,
+      'uses_old_storage_permission': NamidaDeviceInfo.useOldStoragePermission,
+      'storage': await permissionToStatus(Permission.storage),
+      'audio': await permissionToStatus(Permission.audio),
+      'videos': await permissionToStatus(Permission.videos),
+      'photos': await permissionToStatus(Permission.photos),
+      'all_file_access': await permissionToStatus(Permission.manageExternalStorage),
+      'notification': await permissionToStatus(Permission.notification),
+      'ignore_battery_optimizations': await permissionToStatus(Permission.ignoreBatteryOptimizations),
+    };
+    return encoder.convert(infoMap);
   }
 
   static Future<String> _getDeviceInfo() async {
