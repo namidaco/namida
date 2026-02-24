@@ -661,7 +661,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               settings.player.save(enableCrossFade: false);
             }
           },
-          trailing: Obx((context) {
+          trailingBuilder: (_) => Obx((context) {
             return CustomSwitch(active: settings.player.enableCrossFade.valueR);
           }),
           children: [
@@ -732,7 +732,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             settings.player.save(enableVolumeFadeOnPlayPause: value);
             Player.inst.setVolume(settings.player.volume.value);
           },
-          trailing: Obx((context) => CustomSwitch(active: settings.player.enableVolumeFadeOnPlayPause.valueR)),
+          trailingBuilder: (_) => Obx((context) => CustomSwitch(active: settings.player.enableVolumeFadeOnPlayPause.valueR)),
           children: [
             Obx(
               (context) => CustomListTile(

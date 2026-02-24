@@ -1079,6 +1079,10 @@ class YTUtils {
                 child: CustomListTile(
                   icon: Broken.edit,
                   title: lang.EDIT_TAGS,
+                  trailing: const Icon(
+                    Broken.arrow_right_3,
+                    size: 22.0,
+                  ),
                   onTap: () async {
                     await showVideoDownloadOptionsSheet(
                       videoTitle: null,

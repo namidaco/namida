@@ -1091,11 +1091,10 @@ class NamidaCheckMark extends StatelessWidget {
   }
 }
 
-class NamidaExpansionTile extends StatelessWidget {
+class NamidaExpansionTile extends StatefulWidget {
   final IconData? icon;
   final Color? iconColor;
   final Widget? leading;
-  final IconData? trailingIcon;
   final double trailingIconSize;
   final String titleText;
   final Widget? subtitle;
@@ -1105,7 +1104,7 @@ class NamidaExpansionTile extends StatelessWidget {
   final List<Widget> children;
   final EdgeInsetsGeometry? childrenPadding;
   final bool initiallyExpanded;
-  final Widget? trailing;
+  final Widget Function(Widget iconWidget)? trailingBuilder;
   final ValueChanged<bool>? onExpansionChanged;
   final bool normalRightPadding;
   final Color? bgColor;
@@ -1118,7 +1117,6 @@ class NamidaExpansionTile extends StatelessWidget {
     this.icon,
     this.iconColor,
     this.leading,
-    this.trailingIcon = Broken.arrow_down_2,
     this.trailingIconSize = 20.0,
     required this.titleText,
     this.subtitle,
@@ -1128,7 +1126,7 @@ class NamidaExpansionTile extends StatelessWidget {
     this.children = const <Widget>[],
     this.childrenPadding = EdgeInsets.zero,
     this.initiallyExpanded = false,
-    this.trailing,
+    this.trailingBuilder,
     this.onExpansionChanged,
     this.normalRightPadding = false,
     this.bgColor,
@@ -1138,64 +1136,99 @@ class NamidaExpansionTile extends StatelessWidget {
   });
 
   @override
+  State<NamidaExpansionTile> createState() => _NamidaExpansionTileState();
+}
+
+class _NamidaExpansionTileState extends State<NamidaExpansionTile> {
+  final _rotationTurns = 0.0.obs;
+  void _rotateTrailingIcon([_]) {
+    _rotationTurns.value += 0.5;
+  }
+
+  void _onExpansionChanged(bool expanding) {
+    _rotateTrailingIcon();
+    widget.onExpansionChanged?.call(expanding);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initiallyExpanded) _rotateTrailingIcon();
+  }
+
+  @override
+  void dispose() {
+    _rotationTurns.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
-    return ListTileTheme(
-      dense: !bigahh,
-      child: ExpansionTile(
-        collapsedShape: borderless ? const Border() : null,
-        shape: borderless ? const Border() : null,
-        visualDensity: compact ? VisualDensity.compact : VisualDensity.comfortable,
-        controlAffinity: ListTileControlAffinity.trailing,
-        collapsedBackgroundColor: bgColor,
-        backgroundColor: bgColor,
-        initiallyExpanded: initiallyExpanded,
-        onExpansionChanged: onExpansionChanged,
-        expandedAlignment: Alignment.centerLeft,
-        tilePadding: EdgeInsets.only(left: 16.0, right: normalRightPadding ? 16.0 : 12.0),
-        leading:
-            leading ??
-            Icon(
-              icon,
-              color: iconColor,
+    final trailingIconWidget = IgnorePointer(
+      child: ObxO(
+        rx: _rotationTurns,
+        builder: (context, turns) => AnimatedRotation(
+          turns: turns,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.fastEaseInToSlowEaseOut,
+          child: IconButton(
+            onPressed: () {},
+            icon: Icon(
+              Broken.arrow_down_2,
+              size: widget.trailingIconSize,
             ),
-        trailing:
-            trailing ??
-            (trailingIcon == null
-                ? null
-                : IgnorePointer(
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: Icon(trailingIcon, size: trailingIconSize),
-                    ),
-                  )),
+          ),
+        ),
+      ),
+    );
+    return ListTileTheme(
+      dense: !widget.bigahh,
+      child: ExpansionTile(
+        collapsedShape: widget.borderless ? const Border() : null,
+        shape: widget.borderless ? const Border() : null,
+        visualDensity: widget.compact ? VisualDensity.compact : VisualDensity.comfortable,
+        controlAffinity: ListTileControlAffinity.trailing,
+        collapsedBackgroundColor: widget.bgColor,
+        backgroundColor: widget.bgColor,
+        initiallyExpanded: widget.initiallyExpanded,
+        onExpansionChanged: widget.onExpansionChanged == null ? _rotateTrailingIcon : _onExpansionChanged,
+        expandedAlignment: Alignment.centerLeft,
+        tilePadding: EdgeInsets.only(left: 16.0, right: widget.normalRightPadding ? 16.0 : 12.0),
+        leading:
+            widget.leading ??
+            Icon(
+              widget.icon,
+              color: widget.iconColor,
+            ),
+        trailing: widget.trailingBuilder?.call(trailingIconWidget) ?? trailingIconWidget,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              titleText,
+              widget.titleText,
               style: textTheme.displayMedium?.copyWith(
                 color:
-                    textColor ??
-                    (textColorScheme == null
+                    widget.textColor ??
+                    (widget.textColorScheme == null
                         ? null
                         : Color.alphaBlend(
-                            textColorScheme!.withAlpha(40),
+                            widget.textColorScheme!.withAlpha(40),
                             textTheme.displayMedium!.color!,
                           )),
               ),
             ),
-            if (subtitle != null)
-              subtitle!
-            else if (subtitleText != null)
+            if (widget.subtitle != null)
+              widget.subtitle!
+            else if (widget.subtitleText != null)
               Text(
-                subtitleText!,
+                widget.subtitleText!,
                 style: textTheme.displaySmall,
               ),
           ],
         ),
-        childrenPadding: childrenPadding,
-        children: children,
+        childrenPadding: widget.childrenPadding,
+        children: widget.children,
       ),
     );
   }
@@ -5341,7 +5374,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
       titleText: title,
       subtitleText: subtitle,
       icon: icon,
-      trailing: Row(
+      trailingBuilder: (iconWidget) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           DecoratedBox(
@@ -5355,7 +5388,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6.0),
-          const Icon(Broken.arrow_down_2, size: 20.0),
+          iconWidget,
         ],
       ),
       childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),

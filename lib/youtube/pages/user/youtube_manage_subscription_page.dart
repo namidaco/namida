@@ -168,7 +168,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                       initiallyExpanded: true,
                       icon: Broken.wallet_2,
                       titleText: 'Patreon',
-                      trailing: ObxO(
+                      trailingBuilder: (iconWidget) => ObxO(
                         rx: YoutubeAccountController.membership.userPatreonTier,
                         builder: (context, userPatreonTier) {
                           return Row(
@@ -191,10 +191,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                 iconSize: 20.0,
                               ),
                               const SizedBox(width: 4.0),
-                              const Icon(
-                                Broken.arrow_down_2,
-                                size: 20.0,
-                              ),
+                              iconWidget,
                               const SizedBox(width: 8.0),
                             ],
                           );
@@ -310,7 +307,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                         initiallyExpanded: true,
                         icon: Broken.ticket_star,
                         titleText: lang.COUPON,
-                        trailing: ObxO(
+                        trailingBuilder: (iconWidget) => ObxO(
                           rx: _isChecking,
                           builder: (context, isChecking) => ObxO(
                             rx: _isClaiming,
@@ -326,10 +323,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                   iconSize: 20.0,
                                 ),
                                 const SizedBox(width: 4.0),
-                                const Icon(
-                                  Broken.arrow_down_2,
-                                  size: 20.0,
-                                ),
+                                iconWidget,
                                 const SizedBox(width: 8.0),
                               ],
                             ),

@@ -1088,7 +1088,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               borderless: true,
               titleText: lang.ARTWORK_GESTURES,
               childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0),
-              trailing: Row(
+              trailingBuilder: (iconWidget) => Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   NamidaIconButton(
@@ -1105,7 +1105,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                     },
                   ),
                   const SizedBox(width: 4.0),
-                  const Icon(Broken.arrow_down_2, size: 20.0),
+                  iconWidget,
                   const SizedBox(width: 12.0),
                 ],
               ),

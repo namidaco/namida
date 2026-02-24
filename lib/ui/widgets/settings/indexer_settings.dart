@@ -732,7 +732,7 @@ class IndexerSettings extends SettingSubpageProvider {
             _promptClearArtworkCache(context);
           }
         },
-        trailing: Obx((context) {
+        trailingBuilder: (_) => Obx((context) {
           return CustomSwitch(active: settings.cacheArtworks.valueR);
         }),
         children: [
@@ -810,7 +810,7 @@ class IndexerSettings extends SettingSubpageProvider {
             icon: Broken.folder,
             titleText: lang.LIST_OF_FOLDERS,
             textColor: textTheme.displayLarge!.color,
-            trailing: Row(
+            trailingBuilder: (iconWidget) => Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 NamidaButton(
@@ -823,7 +823,7 @@ class IndexerSettings extends SettingSubpageProvider {
                   },
                 ),
                 const SizedBox(width: 8.0),
-                const Icon(Broken.arrow_down_2),
+                iconWidget,
               ],
             ),
             children: [
@@ -947,7 +947,7 @@ class IndexerSettings extends SettingSubpageProvider {
           icon: Broken.folder_minus,
           titleText: lang.EXCLUDED_FODLERS,
           textColor: textTheme.displayLarge!.color,
-          trailing: Row(
+          trailingBuilder: (iconWidget) => Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               NamidaButton(
@@ -960,7 +960,7 @@ class IndexerSettings extends SettingSubpageProvider {
                 },
               ),
               const SizedBox(width: 8.0),
-              const Icon(Broken.arrow_down_2),
+              iconWidget,
             ],
           ),
           children: directoriesToExclude.isEmpty
