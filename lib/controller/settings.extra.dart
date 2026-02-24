@@ -13,6 +13,7 @@ class _ExtraSettings with SettingsFileWriter {
   final staticLibraryTab = LibraryTab.tracks.obs;
   final autoLibraryTab = true.obs;
   final ytInitialHomePage = YTHomePages.playlists.obs;
+  final preferredSearchType = Rxn<SearchType>();
 
   bool? tapToScroll;
   bool? enhancedDragToScroll;
@@ -35,6 +36,7 @@ class _ExtraSettings with SettingsFileWriter {
     LibraryTab? staticLibraryTab,
     bool? autoLibraryTab,
     YTHomePages? ytInitialHomePage,
+    SearchType? preferredSearchType,
     bool? tapToScroll,
     bool? enhancedDragToScroll,
     bool? smoothScrolling,
@@ -53,6 +55,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (staticLibraryTab != null) this.staticLibraryTab.value = staticLibraryTab;
     if (autoLibraryTab != null) this.autoLibraryTab.value = autoLibraryTab;
     if (ytInitialHomePage != null) this.ytInitialHomePage.value = ytInitialHomePage;
+    if (preferredSearchType != null) this.preferredSearchType.value = preferredSearchType;
     if (tapToScroll != null) this.tapToScroll = tapToScroll;
     if (enhancedDragToScroll != null) this.enhancedDragToScroll = enhancedDragToScroll;
     if (smoothScrolling != null) this.smoothScrolling = smoothScrolling;
@@ -87,6 +90,7 @@ class _ExtraSettings with SettingsFileWriter {
           : LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
       autoLibraryTab.value = autoLibraryTabFinal;
       ytInitialHomePage.value = YTHomePages.values.getEnum(json['ytInitialHomePage']) ?? ytInitialHomePage.value;
+      preferredSearchType.value = SearchType.values.getEnum(json['preferredSearchType']) ?? preferredSearchType.value;
 
       tapToScroll = json['tapToScroll'] ?? tapToScroll;
       enhancedDragToScroll = json['enhancedDragToScroll'] ?? enhancedDragToScroll;
@@ -113,6 +117,7 @@ class _ExtraSettings with SettingsFileWriter {
     'staticLibraryTab': staticLibraryTab.value.name,
     'autoLibraryTab': autoLibraryTab.value,
     'ytInitialHomePage': ytInitialHomePage.value.name,
+    'preferredSearchType': ?preferredSearchType.value?.name,
     if (tapToScroll != null) 'tapToScroll': tapToScroll,
     if (enhancedDragToScroll != null) 'enhancedDragToScroll': enhancedDragToScroll,
     if (smoothScrolling != null) 'smoothScrolling': smoothScrolling,

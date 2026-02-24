@@ -404,7 +404,7 @@ enum NotificationTapAction {
 enum SearchType {
   localTracks,
   youtube,
-  localVideos,
+  auto, // must be at the end, indices are used
 }
 
 enum AlbumIdentifier {

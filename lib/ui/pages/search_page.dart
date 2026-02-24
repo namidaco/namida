@@ -159,14 +159,19 @@ class SearchPage extends StatelessWidget {
       );
       filterChipsChildren.add(child);
     }
+
+    var initialSearchType = settings.extra.preferredSearchType.value;
+    if (initialSearchType == null || initialSearchType == .auto) {
+      initialSearchType = ScrollSearchController.inst.currentSearchType.value;
+    }
     return BackgroundWrapper(
       child: NamidaTabView(
         key: ScrollSearchController.inst.tabViewKey,
-        initialIndex: ScrollSearchController.inst.currentSearchType.value.index,
+        initialIndex: initialSearchType.index,
         onIndexChanged: (index) async {
           final type = SearchType.values[index];
           switch (type) {
-            case SearchType.localTracks:
+            case SearchType.localTracks || SearchType.auto:
               ScrollSearchController.inst.currentSearchType.value = SearchType.localTracks;
               final srchTxt = ScrollSearchController.inst.searchTextEditingController.text;
               ClipboardController.inst.updateTextInControllerEmpty(srchTxt == '');
@@ -181,7 +186,6 @@ class SearchPage extends StatelessWidget {
                 ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: SearchSortController.inst.lastSearchText);
               }
               break;
-            case SearchType.localVideos:
           }
         },
         tabs: [

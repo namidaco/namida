@@ -1195,6 +1195,19 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
     ];
   }
 
+  static List<NamidaPopupItem> _getSearchTypeChildren([void Function()? onSave]) => [
+    ...SearchType.values.map(
+      (e) => NamidaPopupItem(
+        icon: Broken.cd,
+        title: e.name,
+        onTap: () {
+          settings.extra.save(preferredSearchType: e);
+          onSave?.call();
+        },
+      ),
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -1301,6 +1314,26 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                 value: settings.extra.ytStyleButtonSwitcher ?? false,
                 onChanged: (isTrue) => setState(() => settings.extra.save(ytStyleButtonSwitcher: !isTrue)),
                 title: 'yt_style_player_button_switcher'.toUpperCase(),
+              ),
+
+              NamidaPopupWrapper(
+                childrenDefault: _getSearchTypeChildren,
+                child: CustomListTile(
+                  visualDensity: VisualDensity.compact,
+                  icon: Broken.search_favorite,
+                  title: 'preferred_search_tab'.toUpperCase(),
+                  trailing: NamidaPopupWrapper(
+                    childrenDefault: _getSearchTypeChildren,
+                    child: ObxO(
+                      rx: settings.extra.preferredSearchType,
+                      builder: (context, type) => Text(
+                        (type ?? SearchType.auto).name,
+                        style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
