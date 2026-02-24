@@ -52,7 +52,11 @@ class NamidaFFMPEG {
   }) async {
     final originalFile = File(path);
     final originalStats = keepFileStats ? await originalFile.stat() : null;
-    final tempFile = await originalFile.copy(FileParts.joinPath(AppDirs.INTERNAL_STORAGE, ".temp_${path.hashCode}"));
+    String ext = 'm4a';
+    try {
+      ext = path.getExtension;
+    } catch (_) {}
+    final cacheFile = FileParts.join(AppDirs.INTERNAL_STORAGE, ".temp_${path.hashCode}.$ext");
 
     // if (tagsMap[FFMPEGTagField.trackNumber] != null || tagsMap[FFMPEGTagField.discNumber] != null) {
     //   oldTags ??= await extractMetadata(path).then((value) => value?.format?.tags);
@@ -76,11 +80,11 @@ class NamidaFFMPEG {
 
     final params = [
       '-i',
-      tempFile.path,
+      originalFile.path,
     ];
 
     final oldTagsToApply = <String, String>{};
-    final oldMetadata = await ffmpegExtractMetadata(tempFile.path);
+    final oldMetadata = await ffmpegExtractMetadata(originalFile.path);
 
     // -- not all of them but always one of them
     const opusEtcFormats = {'opus', 'ogg', 'oga', 'ogx', 'flac', 'alac'};
@@ -147,17 +151,17 @@ class NamidaFFMPEG {
       '-c',
       'copy',
       '-y',
-      path,
+      cacheFile.path,
     ]);
 
-    final didExecute = await _executer.ffmpegExecute(params);
+    final didSuccess = await _executer.ffmpegExecute(params);
 
-    // -- restoring original stats.
-    if (originalStats != null) {
-      await setFileStats(originalFile, originalStats);
-    }
-    await tempFile.tryDeleting();
-    return didExecute;
+    return await _ensureFileValidBeforeMovingBack(
+      didSuccess,
+      originalFile,
+      cacheFile,
+      originalStats,
+    );
   }
 
   Future<File?> extractAudioThumbnail({
@@ -216,20 +220,38 @@ class NamidaFFMPEG {
       '-y',
       cacheFile.path,
     ]);
+
+    return await _ensureFileValidBeforeMovingBack(
+      didSuccess,
+      audioFile,
+      cacheFile,
+      originalStats,
+    );
+  }
+
+  Future<bool> _ensureFileValidBeforeMovingBack(bool didSuccess, File originalFile, File cacheFile, FileStat? originalStats) async {
     bool canSafelyMoveBack = false;
     try {
-      canSafelyMoveBack = didSuccess && await cacheFile.exists() && await cacheFile.length() > 0;
+      int? preferredMinSize;
+      if (originalStats != null) {
+        if (originalStats.size > 0) {
+          preferredMinSize = (originalStats.size * 0.1).round().withMinimum(1);
+        }
+      }
+      preferredMinSize ??= 0;
+      canSafelyMoveBack = didSuccess && await cacheFile.exists() && await cacheFile.length() > preferredMinSize;
     } catch (_) {}
     if (canSafelyMoveBack) {
       // only move output file back in case of success.
-      await cacheFile.copy(audioPath);
+      await cacheFile.copy(originalFile.path);
 
       if (originalStats != null) {
-        await setFileStats(audioFile, originalStats);
+        await setFileStats(originalFile, originalStats);
       }
     }
 
-    cacheFile.deleteIfExists();
+    cacheFile.tryDeleting();
+
     return canSafelyMoveBack;
   }
 
