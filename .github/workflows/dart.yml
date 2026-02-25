@@ -69,10 +69,6 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/zig
           sudo rm -rf /opt/hostedtoolcache/azcopy
 
-      - uses: dart-lang/setup-dart@v1
-        with:
-          sdk: "3.11.0"
-
       - name: setup credentials
         run: |
           git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
@@ -112,13 +108,21 @@ jobs:
       - name: Creating clone repo & apks
         continue-on-error: true
         run: |
+          # without new clone, cache gets messed up
+          git clone https://github.com/namidaco/namida/ namida-clone
+          cd namida-clone
           flutter clean
           flutter pub upgrade
+          git submodule update --init --remote --recursive
           find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
+          echo ${{ secrets.ANDROID_SIGNING_KEYSTORE }} | base64 --decode > android/app/keystore.jks
+          echo ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }} | base64 --decode > android/key.properties
+          mkdir -p ../build_final
           flutter build apk --target-platform android-arm64 --split-per-abi --release
-          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version_name }}-clone-arm64-v8a.apk
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../build_final/namida-v${{ steps.extract_version.outputs.version_name }}-clone-arm64-v8a.apk
           flutter build apk --target-platform android-arm --split-per-abi --release
-          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version_name }}-clone-armeabi-v7a.apk
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ../build_final/namida-v${{ steps.extract_version.outputs.version_name }}-clone-armeabi-v7a.apk
+          cd ../
 
       # - name: Setup Linux
       #   run: |
@@ -205,9 +209,10 @@ jobs:
           make_latest: true
           draft: false
           tag_name: ${{ steps.extract_version.outputs.version}}
-          body_path: ./beta_changelog.md
+          # body_path: ./beta_changelog.md
           files: |
             build_final/*
+            ./beta_changelog.md
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
 
       - name: Upload all APKs
@@ -229,22 +234,11 @@ jobs:
           pacman -Sy --noconfirm archlinux-keyring
           pacman -Su --noconfirm
           pacman -S --noconfirm \
-            base-devel git curl wget jq openssh \
-            clang cmake ninja pkgconf \
-            gtk3 libstdc++ \
-            mpv \
-            unzip xz
-          pacman -S --noconfirm \
-            alsa-lib \
-            libx11 \
-            libxrender \
-            libxext \
-            mesa \
-            libgl \
-            libepoxy \
-            libdrm \
-            wayland \
-            libxkbcommon
+            base-devel git curl wget jq openssh unzip xz rust \
+            clang cmake ninja pkgconf gcc gtk3 libstdc++ \
+            mpv alsa-lib libx11 libxrender libxext mesa libgl \
+            libepoxy libdrm wayland libxkbcommon glibc binutils
+          pacman -Scc --noconfirm
 
       - uses: actions/checkout@v4
         with:
@@ -271,18 +265,10 @@ jobs:
           flutter precache --linux
           flutter config --no-analytics
 
-      - name: Install Dart SDK 3.11.0
-        run: |
-          curl -fsSL https://storage.googleapis.com/dart-archive/channels/stable/release/3.11.0/sdk/dartsdk-linux-x64-release.zip -o dart.zip
-          unzip -q dart.zip -d /opt/
-          echo "PATH=/opt/dart-sdk/bin:$PATH" >> $GITHUB_ENV
-          export PATH="/opt/dart-sdk/bin:$PATH"
-
       - name: Setup Flutter dependencies
         run: |
           export PATH="/opt/flutter/bin:/opt/dart-sdk/bin:$PATH"
           flutter clean
-          flutter pub get
           flutter pub upgrade
           git submodule update --init --remote --recursive
 
@@ -302,6 +288,11 @@ jobs:
           dart pub global activate --source git https://github.com/MSOB7YY/fastforge.git
           dart pub global activate --source git https://github.com/MSOB7YY/fastforge.git --git-path "packages/fastforge"
           echo "PATH=$HOME/.pub-cache/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Build Linux TEST
+        run: |
+          export PATH="/opt/flutter/bin:/opt/dart-sdk/bin:$HOME/.pub-cache/bin:$PATH"
+          flutter build linux --release --verbose
 
       - name: Build Linux deb/rpm/tar.gz
         run: |
@@ -323,14 +314,21 @@ jobs:
           chmod 700 ~/.ssh
           echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur
           chmod 600 ~/.ssh/aur
-          ssh-keyscan -H aur.archlinux.org >> ~/.ssh/known_hosts
+
+          touch ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          cat >> ~/.ssh/config << 'EOF'
+
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+          cat > ~/.ssh/config <<EOF
           Host aur.archlinux.org
+            HostName aur.archlinux.org
             IdentityFile ~/.ssh/aur
             User aur
+            IdentitiesOnly yes
             StrictHostKeyChecking yes
           EOF
+
           chmod 600 ~/.ssh/config
           # verify connection before proceeding
           ssh -T aur@aur.archlinux.org || true
@@ -388,7 +386,6 @@ jobs:
       - name: Setup dependencies
         run: |
           flutter clean
-          flutter pub get
           flutter pub upgrade
           git submodule update --init --remote --recursive
 
@@ -400,22 +397,13 @@ jobs:
           echo "version=$VERSION" >> $env:GITHUB_OUTPUT
           echo "version_name=$VERSION_NAME" >> $env:GITHUB_OUTPUT
 
-      - name: Build Windows app
+      - name: Set up Inno
         run: |
-          flutter config --enable-windows-desktop
-          flutter build windows --release
+          Invoke-WebRequest -Uri 'https://jrsoftware.org/download.php/is.exe' -OutFile 'inno.exe'
+          Start-Process -FilePath 'inno.exe' -ArgumentList '/VERYSILENT'
 
-      - name: Build ISS script
-        run: dart run inno_bundle:build --no-app --release --no-installer
-
-      - name: Get installer config
-        id: envs
-        run: echo $(dart run inno_bundle:build --envs --no-hf) | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
-
-      - name: Build installer
-        uses: C0rn3j/Inno-Setup-Action@v1.2.8
-        with:
-          path: ./build/windows/x64/installer/Release/inno-script.iss
+      - name: Build Windows Installer
+        run: dart run inno_bundle:build --release
 
       - name: Upload installer to Snapshot Release
         uses: softprops/action-gh-release@v2
@@ -425,5 +413,5 @@ jobs:
           draft: false
           tag_name: ${{ steps.extract_version.outputs.version }}
           files: |
-            ./build/windows/x64/installer/Release/${{ steps.envs.outputs.APP_NAME_CAMEL_CASE }}-x86_64-${{ steps.envs.outputs.APP_VERSION }}-Installer.exe
+            ./build/windows/x64/installer/Release/Namida-x86_64-${{ steps.extract_version.outputs.version_name }}-Installer.exe
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
