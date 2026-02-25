@@ -113,21 +113,11 @@ jobs:
       - name: Creating clone repo & apks
         continue-on-error: true
         run: |
-          git clone https://github.com/namidaco/namida/ namida-clone
-          cd namida-clone
-          flutter clean
-          flutter pub get
-          flutter pub upgrade
-          git submodule update --init --remote --recursive
           find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
-          echo ${{ secrets.ANDROID_SIGNING_KEYSTORE }} | base64 --decode > android/app/keystore.jks
-          echo ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }} | base64 --decode > android/key.properties
-          mkdir -p ../build_final
           flutter build apk --target-platform android-arm64 --split-per-abi --release
-          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../build_final/namida-v${{ steps.extract_version.outputs.version_name }}-clone-arm64-v8a.apk
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version_name }}-clone-arm64-v8a.apk
           flutter build apk --target-platform android-arm --split-per-abi --release
-          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ../build_final/namida-v${{ steps.extract_version.outputs.version_name }}-clone-armeabi-v7a.apk
-          cd ../
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version_name }}-clone-armeabi-v7a.apk
 
       # - name: Setup Linux
       #   run: |
