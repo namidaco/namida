@@ -4827,13 +4827,52 @@ class RepeatModeIconButton extends StatelessWidget {
     return repeat.buildText();
   }
 
+  List<Widget> _popupChildren(BuildContext context) {
+    return [
+      ...PlayerRepeatMode.values.map(
+        (e) {
+          final enabled = e == settings.player.repeatMode.value;
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+            child: NamidaInkWell(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+              borderRadius: 12.0,
+              bgColor: enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null,
+              onTap: () {
+                settings.player.save(repeatMode: e);
+                NamidaNavigator.inst.popMenu();
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    e.toIcon(),
+                    size: 22.0,
+                    color: context.defaultIconColor(),
+                  ),
+                  const SizedBox(width: 8.0),
+                  Expanded(
+                    child: Text(
+                      e.buildText(),
+                      style: context.textTheme.displayMedium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     final iconColor = color ?? theme.colorScheme.onSecondaryContainer;
 
-    return ObxO(
+    final rawWidget = ObxO(
       rx: settings.player.repeatMode,
       builder: (context, repeatMode) {
         final icon = repeatMode.toIcon();
@@ -4869,7 +4908,6 @@ class RepeatModeIconButton extends StatelessWidget {
 
         return compact
             ? NamidaIconButton(
-                tooltip: _buildTooltip,
                 icon: null,
                 verticalPadding: 2.0,
                 horizontalPadding: 4.0,
@@ -4881,20 +4919,21 @@ class RepeatModeIconButton extends StatelessWidget {
                 },
                 child: child,
               )
-            : NamidaTooltip(
-                message: _buildTooltip,
-                child: IconButton(
-                  visualDensity: VisualDensity.compact,
-                  style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                  padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
-                  onPressed: () {
-                    onPressed?.call();
-                    _switchMode();
-                  },
-                  icon: child,
-                ),
+            : IconButton(
+                visualDensity: VisualDensity.compact,
+                style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
+                onPressed: () {
+                  onPressed?.call();
+                  _switchMode();
+                },
+                icon: child,
               );
       },
+    );
+    return NamidaPopupWrapper(
+      children: () => _popupChildren(context),
+      child: rawWidget,
     );
   }
 }

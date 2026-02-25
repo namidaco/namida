@@ -498,7 +498,7 @@ extension FFMPEGTagFieldUtilsC on String {
 
 extension PlayerRepeatModeUtils on PlayerRepeatMode {
   String buildText() {
-    final repeat = settings.player.repeatMode.value;
+    final repeat = this;
     String tooltip = repeat.toRawText();
     if (repeat == PlayerRepeatMode.forNtimes) {
       tooltip = tooltip.replaceFirst('_NUM_', '${Player.inst.numberOfRepeats.value}');
