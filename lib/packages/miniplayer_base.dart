@@ -2149,21 +2149,25 @@ class _CustomIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final finalSize = sizeRaw.size;
-    return NamidaTooltip(
-      message: tooltipCallback,
-      child: IconButton(
-        visualDensity: VisualDensity.compact,
-        style: ButtonStyle(
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          minimumSize: WidgetStatePropertyAll(
-            Size(finalSize, finalSize) * 1.8,
-          ),
+    Widget child = IconButton(
+      visualDensity: VisualDensity.compact,
+      style: ButtonStyle(
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        minimumSize: WidgetStatePropertyAll(
+          Size(finalSize, finalSize) * 1.8,
         ),
-        padding: EdgeInsets.symmetric(vertical: 4.0.spaceY, horizontal: 6.0.spaceX),
-        onPressed: onPressed,
-        icon: icon,
       ),
+      padding: EdgeInsets.symmetric(vertical: 4.0.spaceY, horizontal: 6.0.spaceX),
+      onPressed: onPressed,
+      icon: icon,
     );
+    if (tooltipCallback != null) {
+      child = NamidaTooltip(
+        message: tooltipCallback,
+        child: child,
+      );
+    }
+    return child;
   }
 }
 

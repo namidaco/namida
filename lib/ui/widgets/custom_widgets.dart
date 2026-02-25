@@ -4806,7 +4806,7 @@ class RepeatModeIconButton extends StatelessWidget {
   final Color? color;
   final double iconSize;
   final VoidCallback? onPressed;
-  final Widget Function(Widget child, String Function() tooltipCallback, void Function() onTap)? builder;
+  final Widget Function(Widget child, String Function()? tooltipCallback, void Function() onTap)? builder;
 
   const RepeatModeIconButton({
     super.key,
@@ -4822,10 +4822,10 @@ class RepeatModeIconButton extends StatelessWidget {
     settings.player.save(repeatMode: e);
   }
 
-  String _buildTooltip() {
-    final repeat = settings.player.repeatMode.value;
-    return repeat.buildText();
-  }
+  // String _buildTooltip() {
+  //   final repeat = settings.player.repeatMode.value;
+  //   return repeat.buildText();
+  // }
 
   List<Widget> _popupChildren(BuildContext context) {
     return [
@@ -4898,7 +4898,7 @@ class RepeatModeIconButton extends StatelessWidget {
         if (builder != null) {
           return builder!(
             child,
-            _buildTooltip,
+            null,
             () {
               onPressed?.call();
               _switchMode();
