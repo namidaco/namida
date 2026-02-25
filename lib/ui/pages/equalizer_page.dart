@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -45,74 +46,105 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
       children: [
         verticalPadding,
         ObxO(
-          rx: settings.player.linkSpeedPitch,
-          builder: (context, enabled) => AnimatedEnabled(
-            enabled: !enabled,
-            child: Obx(
-              (context) {
-                final pitch = settings.player.pitch.valueR;
-                const hz432Value = 432.0 / 440.0;
-                final is432HzEnabled = pitch == hz432Value;
-                return _SliderTextWidget(
-                  icon: Broken.airpods,
-                  title: lang.PITCH,
-                  value: pitch,
-                  restoreDefault: () {
-                    Player.inst.setPlayerPitch(1.0);
-                    settings.player.save(pitch: 1.0);
-                    pitchKey.currentState?._updateVal(1.0);
-                  },
-                  onManualChange: (value) {
-                    pitchKey.currentState?._updateValNoRound(value);
-                  },
-                  featuredButton: NamidaInkWellButton(
-                    icon: null,
-                    text: '',
-                    borderRadius: 8.0,
-                    sizeMultiplier: 0.9,
-                    paddingMultiplier: 0.7,
-                    bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(is432HzEnabled ? 0.5 : 0.2),
+          rx: settings.player.useSemitones,
+          builder: (context, isSemitones) => ObxO(
+            rx: settings.player.linkSpeedPitch,
+            builder: (context, enabled) => AnimatedEnabled(
+              enabled: !enabled,
+              child: Obx(
+                (context) {
+                  final pitch = settings.player.pitch.valueR;
+                  const hz432Value = 432.0 / 440.0;
+                  final is432HzEnabled = pitch == hz432Value;
+                  return _SliderTextWidget(
+                    icon: Broken.airpods,
+                    min: isSemitones ? -12.0 : 0.0,
+                    max: isSemitones ? 12.0 : 2.0,
+                    title: lang.PITCH,
+                    subtitle: isSemitones ? '(${lang.SEMITONES})' : '(${lang.PERCENTAGE})',
                     onTap: () {
-                      final newValue = is432HzEnabled ? 1.0 : hz432Value;
-                      Player.inst.setPlayerPitch(newValue);
-                      settings.player.save(pitch: newValue);
-                      pitchKey.currentState?._updateValNoRound(newValue);
+                      settings.player.save(useSemitones: !settings.player.useSemitones.value);
                     },
-                    leading: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '✓ ',
-                          style: textTheme.displaySmall,
-                        ).animateEntrance(
-                          showWhen: is432HzEnabled,
-                          allCurves: Curves.fastLinearToSlowEaseIn,
-                          durationMS: 300,
-                        ),
-                        Text(
-                          '432Hz',
-                          style: textTheme.displaySmall,
-                        ),
-                      ],
+                    value: pitch,
+                    valToText: isSemitones ? _SliderTextWidget.toSemitones : _SliderTextWidget.toPercentage,
+                    valueModifier: isSemitones ? _SliderTextWidget.ratioToSemitonesRound : null,
+                    restoreDefault: () {
+                      Player.inst.setPlayerPitch(1.0);
+                      settings.player.save(pitch: 1.0);
+                      pitchKey.currentState?.updateValExternal(1.0);
+                    },
+                    onManualChange: (convertedValue) {
+                      pitchKey.currentState?._updateValNoRound(convertedValue); // no conversion
+                    },
+                    featuredButton: NamidaInkWellButton(
+                      icon: null,
+                      text: '',
+                      borderRadius: 8.0,
+                      sizeMultiplier: 0.9,
+                      paddingMultiplier: 0.7,
+                      bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(is432HzEnabled ? 0.5 : 0.2),
+                      onTap: () {
+                        final newValue = is432HzEnabled ? 1.0 : hz432Value;
+                        Player.inst.setPlayerPitch(newValue);
+                        settings.player.save(pitch: newValue);
+                        pitchKey.currentState?.updateValNoRoundExternal(newValue);
+                      },
+                      leading: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '✓ ',
+                            style: textTheme.displaySmall,
+                          ).animateEntrance(
+                            showWhen: is432HzEnabled,
+                            allCurves: Curves.fastLinearToSlowEaseIn,
+                            durationMS: 300,
+                          ),
+                          Text(
+                            '432Hz',
+                            style: textTheme.displaySmall,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
         ),
         ObxO(
-          rx: settings.player.linkSpeedPitch,
-          builder: (context, enabled) => AnimatedEnabled(
-            enabled: !enabled,
-            child: _CuteSlider(
-              key: pitchKey,
-              valueListenable: settings.player.pitch,
-              onChanged: (value) {
-                Player.inst.setPlayerPitch(value);
-                settings.player.save(pitch: value);
-              },
-              tapToUpdate: tapToUpdate,
+          rx: settings.player.useSemitones,
+          builder: (context, isSemitones) => ObxO(
+            rx: settings.player.linkSpeedPitch,
+            builder: (context, enabled) => AnimatedEnabled(
+              enabled: !enabled,
+              child: isSemitones
+                  ? _CuteSlider<double>(
+                      key: pitchKey,
+                      min: -12.0,
+                      max: 12.0,
+                      divisions: 24, // 24 steps = 0.5 semitone steps from -12 to +12
+                      incremental: 0.5,
+                      valueListenable: settings.player.pitch,
+                      valueModifier: _SliderTextWidget.ratioToSemitones,
+                      onChanged: (semitones) {
+                        final ratio = _SliderTextWidget.semitonesToRatio(semitones);
+                        Player.inst.setPlayerPitch(ratio);
+                        settings.player.save(pitch: ratio);
+                      },
+                      tapToUpdate: tapToUpdate,
+                      valToText: _SliderTextWidget.toSemitones,
+                    )
+                  : _CuteSlider(
+                      key: pitchKey,
+                      valueListenable: settings.player.pitch,
+                      onChanged: (value) {
+                        Player.inst.setPlayerPitch(value);
+                        settings.player.save(pitch: value);
+                      },
+                      tapToUpdate: tapToUpdate,
+                    ),
             ),
           ),
         ),
@@ -123,20 +155,20 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
             title: lang.SPEED,
             value: settings.player.speed.valueR,
             onManualChange: (value) {
-              speedKey.currentState?._updateValNoRound(value);
+              speedKey.currentState?.updateValNoRoundExternal(value);
               if (settings.player.linkSpeedPitch.value) {
-                pitchKey.currentState?._updateValNoRound(value);
+                pitchKey.currentState?.updateValNoRoundExternal(value);
               }
             },
             restoreDefault: () {
               Player.inst.setPlayerSpeed(1.0);
               settings.player.save(speed: 1.0);
-              speedKey.currentState?._updateVal(1.0);
+              speedKey.currentState?.updateValExternal(1.0);
 
               if (settings.player.linkSpeedPitch.value) {
                 Player.inst.setPlayerPitch(1.0);
                 settings.player.save(pitch: 1.0);
-                pitchKey.currentState?._updateVal(1.0);
+                pitchKey.currentState?.updateValExternal(1.0);
               }
             },
             useMaxToLimitPreciseValue: false,
@@ -155,7 +187,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
                   final newValue = newLinkValue ? settings.player.speed.value : settings.player.pitch.value;
                   Player.inst.setPlayerPitch(newValue);
                   settings.player.save(pitch: newValue, linkSpeedPitch: newLinkValue);
-                  pitchKey.currentState?._updateValNoRound(newValue);
+                  pitchKey.currentState?.updateValNoRoundExternal(newValue);
                 },
                 leading: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -208,12 +240,12 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
               max: 1.0,
               valToText: (val) => '${_SliderTextWidget.toPercentage(val)}$replayGainText',
               onManualChange: (value) {
-                volumeKey.currentState?._updateValNoRound(value);
+                volumeKey.currentState?.updateValNoRoundExternal(value);
               },
               restoreDefault: () {
                 Player.inst.setPlayerVolume(1.0);
                 settings.player.save(volume: 1.0);
-                volumeKey.currentState?._updateVal(1.0);
+                volumeKey.currentState?.updateValExternal(1.0);
               },
             );
           },
@@ -513,12 +545,12 @@ class EqualizerPageState extends State<EqualizerPage> {
                                         max: AndroidLoudnessEnhancerExtended.kMaxGain,
                                         valToText: (val) => '${_SliderTextWidget.toDecibelMultiplier(val)}$replayGainText',
                                         onManualChange: (newVal) {
-                                          _loudnessKey.currentState?._updateValNoRound(newVal);
+                                          _loudnessKey.currentState?.updateValNoRoundExternal(newVal);
                                         },
                                         restoreDefault: () {
                                           settings.equalizer.save(loudnessEnhancer: 0.0);
                                           _loudnessEnhancer.setTargetGainUser(0.0);
-                                          _loudnessKey.currentState?._updateVal(0.0);
+                                          _loudnessKey.currentState?.updateValExternal(0.0);
                                         },
                                         trailing: CustomSwitch(
                                           active: enabled,
@@ -557,6 +589,7 @@ class EqualizerPageState extends State<EqualizerPage> {
 class _SliderTextWidget extends StatelessWidget {
   final IconData icon;
   final String title;
+  final String? subtitle;
   final double value;
   final double min;
   final double max;
@@ -566,11 +599,14 @@ class _SliderTextWidget extends StatelessWidget {
   final Widget? trailing;
   final bool displayValue;
   final String Function(double val) valToText;
-  final void Function(double value)? onManualChange;
+  final double Function(double val)? valueModifier;
+  final void Function(double convertedValue)? onManualChange;
+  final void Function()? onTap;
 
   const _SliderTextWidget({
     required this.icon,
     required this.title,
+    this.subtitle,
     required this.value,
     this.min = 0.0,
     this.max = 2.0,
@@ -580,13 +616,32 @@ class _SliderTextWidget extends StatelessWidget {
     this.trailing,
     this.displayValue = true,
     this.valToText = toPercentage,
+    this.valueModifier,
     this.onManualChange,
+    this.onTap,
   });
 
   static String toPercentageInt(double val) => "${(val * 100).toStringAsFixed(0)}%";
   static String toPercentage(double val) => "${(val * 100).roundDecimals(2)}%";
   static String toXMultiplier(double val) => "${val.toStringAsFixed(2)}x";
   static String toDecibelMultiplier(double val) => "${val.toStringAsFixed(1)}dB";
+
+  static String toSemitones(double semitones) {
+    return '${semitones.toStringAsFixed(1)} st';
+  }
+
+  static double ratioToSemitonesRound(double ratio) {
+    return ratioToSemitones(ratio).roundDecimals(1);
+  }
+
+  static double ratioToSemitones(double ratio) {
+    if (ratio <= 0) return -12.0;
+    return 12.0 * math.log(ratio) / math.log(2);
+  }
+
+  static double semitonesToRatio(double semitones) {
+    return math.pow(2.0, semitones / 12.0).toDouble();
+  }
 
   void _showPreciseValueConfig({required double initial, required void Function(double val) onChanged}) {
     showNamidaBottomSheetWithTextField(
@@ -618,7 +673,9 @@ class _SliderTextWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
-    return Padding(
+    final valueActual = valueModifier?.call(value) ?? value;
+    final subtitle = this.subtitle;
+    Widget child = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: Row(
         children: [
@@ -628,7 +685,7 @@ class _SliderTextWidget extends StatelessWidget {
             onPressed: onManualChange == null
                 ? null
                 : () => _showPreciseValueConfig(
-                    initial: value,
+                    initial: valueActual,
                     onChanged: onManualChange!,
                   ),
           ),
@@ -637,15 +694,41 @@ class _SliderTextWidget extends StatelessWidget {
             child: Row(
               children: [
                 Flexible(
-                  child: Text(
-                    title,
-                    style: textTheme.displayLarge?.copyWith(fontSize: 16.0),
+                  child: Column(
+                    mainAxisSize: .min,
+                    crossAxisAlignment: .start,
+                    children: [
+                      Row(
+                        mainAxisSize: .min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              title,
+                              style: textTheme.displayLarge?.copyWith(fontSize: 16.0),
+                            ),
+                          ),
+
+                          if (onTap != null) const SizedBox(width: 4.0),
+                          if (onTap != null)
+                            Icon(
+                              Broken.arrange_circle_2,
+                              size: 12.0,
+                            ),
+                        ],
+                      ),
+
+                      if (subtitle != null && subtitle.isNotEmpty)
+                        Text(
+                          subtitle,
+                          style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                        ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 8.0),
                 if (displayValue)
                   Text(
-                    valToText(value),
+                    valToText(valueActual),
                     style: textTheme.displayMedium?.copyWith(fontSize: 13.5),
                   ),
               ],
@@ -668,6 +751,18 @@ class _SliderTextWidget extends StatelessWidget {
         ],
       ),
     );
+    if (onTap != null) {
+      child = NamidaInkWell(
+        borderRadius: 8.0,
+        padding: const EdgeInsetsGeometry.symmetric(vertical: 6.0),
+        onTap: onTap,
+        child: child,
+      );
+    }
+    return Padding(
+      padding: const EdgeInsetsGeometry.symmetric(vertical: 2.0),
+      child: child,
+    );
   }
 }
 
@@ -677,15 +772,21 @@ class _CuteSlider<T> extends StatefulWidget {
   final RxBaseCore<double> valueListenable;
   final void Function(double newValue) onChanged;
   final String Function(double val) valToText;
+  final double Function(double val)? valueModifier;
+  final double incremental;
+  final int divisions;
   final bool tapToUpdate;
 
   const _CuteSlider({
     required super.key,
     this.min = 0.0,
     this.max = 2.0,
+    this.divisions = 200,
     required this.valueListenable,
     required this.onChanged,
+    this.valueModifier,
     this.valToText = _SliderTextWidget.toPercentageInt,
+    this.incremental = 0.01,
     required this.tapToUpdate,
   });
 
@@ -698,7 +799,7 @@ class _CuteSliderState extends State<_CuteSlider> {
 
   @override
   void initState() {
-    _currentVal = widget.valueListenable.value;
+    _currentVal = widget.valueModifier?.call(widget.valueListenable.value) ?? widget.valueListenable.value;
     widget.valueListenable.addListener(_valueListener);
     super.initState();
   }
@@ -709,10 +810,26 @@ class _CuteSliderState extends State<_CuteSlider> {
     super.dispose();
   }
 
-  void _valueListener() {
-    _updateVal(widget.valueListenable.value, callOnChanged: false);
+  void updateValExternal(double newVal) {
+    final requiredValue = widget.valueModifier?.call(newVal) ?? newVal;
+    _updateVal(requiredValue);
   }
 
+  void updateValNoRoundExternal(double newVal) {
+    final requiredValue = widget.valueModifier?.call(newVal) ?? newVal;
+    _updateValNoRound(requiredValue);
+  }
+
+  void _valueListener() {
+    final ratio = widget.valueListenable.value;
+    final requiredValue = widget.valueModifier?.call(ratio) ?? ratio;
+
+    if (requiredValue != _currentVal) {
+      setState(() => _currentVal = requiredValue);
+    }
+  }
+
+  @protected
   void _updateVal(double newVal, {bool callOnChanged = true}) {
     final finalVal = newVal.roundDecimals(4);
     if (finalVal != _currentVal) {
@@ -723,18 +840,20 @@ class _CuteSliderState extends State<_CuteSlider> {
     }
   }
 
+  @protected
   void _updateValNoRound(double newVal) {
-    if (newVal != _currentVal) {
+    final finalVal = newVal;
+    if (finalVal != _currentVal) {
       setState(() {
-        _currentVal = newVal;
-        widget.onChanged(newVal);
+        _currentVal = finalVal;
+        widget.onChanged(finalVal);
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    const incremental = 0.01;
+    final incremental = widget.incremental;
     final interaction = widget.tapToUpdate ? SliderInteraction.tapAndSlide : SliderInteraction.slideOnly;
     return Row(
       children: [
@@ -752,7 +871,7 @@ class _CuteSliderState extends State<_CuteSlider> {
             max: widget.max,
             value: _currentVal.withMaximum(widget.max), // cuz it can be more
             onChanged: _updateVal,
-            divisions: 200,
+            divisions: widget.divisions,
             label: widget.valToText(_currentVal),
             allowedInteraction: interaction,
           ),
@@ -948,7 +1067,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
     super.dispose();
   }
 
-  void _updateValue(BoxConstraints constraints, double total, double dy) {
+  void updateValExternalue(BoxConstraints constraints, double total, double dy) {
     final inversePosition = constraints.maxHeight - dy;
     final heightPerc = inversePosition / constraints.maxHeight;
     final finalValue = (heightPerc * total + widget.min).clampDouble(widget.min, widget.max);
@@ -984,7 +1103,7 @@ class _VerticalSliderState extends State<VerticalSlider> {
         return GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTapDown: (details) {
-            if (widget.tapToUpdate()) _updateValue(constraints, total, details.localPosition.dy);
+            if (widget.tapToUpdate()) updateValExternalue(constraints, total, details.localPosition.dy);
             _isPointerDown.value = true;
           },
           onTapUp: (details) => _isPointerDown.value = false,
@@ -998,10 +1117,10 @@ class _VerticalSliderState extends State<VerticalSlider> {
           },
           onVerticalDragCancel: () => _isPointerDown.value = false,
           onVerticalDragStart: (details) {
-            _updateValue(constraints, total, details.localPosition.dy);
+            updateValExternalue(constraints, total, details.localPosition.dy);
           },
           onVerticalDragUpdate: (details) {
-            _updateValue(constraints, total, details.localPosition.dy);
+            updateValExternalue(constraints, total, details.localPosition.dy);
           },
           child: SizedBox(
             width: circleWidth * 2,
