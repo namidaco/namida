@@ -74,6 +74,9 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
         ? QueueSource.composer
         : QueueSource.artist;
     final tracks = widget.tracks;
+    final albumsInitiallyExpanded = settings.extra.artistAlbumsExpanded ?? true;
+    final singlesInitiallyExpanded = settings.extra.artistSinglesExpanded ?? false; // cuz no space
+    final extrasInitiallyExpanded = widget.albumIdentifiers.isEmpty && widget.singlesIdentifiers.isEmpty;
     return AnimationLimiter(
       child: BackgroundWrapper(
         child: TrackTilePropertiesProvider(
@@ -94,7 +97,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                       title: lang.ALBUMS,
                       icon: Broken.music_dashboard,
                       identifiers: widget.albumIdentifiers,
-                      initiallyExpanded: settings.extra.artistAlbumsExpanded ?? true,
+                      initiallyExpanded: albumsInitiallyExpanded,
                       onExpansionChanged: (value) => settings.extra.save(artistAlbumsExpanded: value),
                     ),
                     const SizedBox(height: 6.0),
@@ -102,7 +105,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                       title: lang.SINGLES,
                       icon: Broken.music_square,
                       identifiers: widget.singlesIdentifiers,
-                      initiallyExpanded: settings.extra.artistSinglesExpanded ?? false, // cuz no space
+                      initiallyExpanded: singlesInitiallyExpanded,
                       onExpansionChanged: (value) => settings.extra.save(artistSinglesExpanded: value),
                     ),
                     if (widget.extrasIdentifiers.isNotEmpty) ...[
@@ -111,7 +114,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                         title: lang.EXTRAS,
                         icon: Broken.music_playlist,
                         identifiers: widget.extrasIdentifiers,
-                        initiallyExpanded: false,
+                        initiallyExpanded: extrasInitiallyExpanded,
                         onExpansionChanged: (value) {},
                       ),
                     ],

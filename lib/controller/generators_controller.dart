@@ -9,7 +9,7 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
   static final NamidaGenerator inst = NamidaGenerator._internal();
   NamidaGenerator._internal() : super(HistoryController.inst);
 
-  static Iterable<String> getHighMatcheFilesFromFilename(Iterable<String> files, String filePathToMatch) {
+  static Iterable<String> getHighMatcheFilesFromFilename(Iterable<String> files, String filePathToMatch, {bool singleOnly = false}) {
     int? latestPriority;
     bool requiresSorting = false;
     final matches = <(String, int)>[];
@@ -38,11 +38,13 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
     for (final path in files) {
       final fileSystemFilename = path.getFilename;
       if (filenameToMatch == fileSystemFilename) {
+        if (singleOnly) return [path];
         addMatch(path, 0);
         continue;
       }
       final fileSystemFilenameWOExt = path.getFilenameWOExt;
       if (filenameWOExtToMatch == fileSystemFilenameWOExt) {
+        if (singleOnly) return [path];
         addMatch(path, 1);
         continue;
       }

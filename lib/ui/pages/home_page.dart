@@ -229,10 +229,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     if (_mixes.isEmpty) {
       // -- supermacy
       final ct = Player.inst.currentTrack?.track;
-      final maxCount = settings.queueInsertion.value[QueueInsertionType.algorithm]?.numberOfTracks.withMinimum(10) ?? 25;
+      final maxCount = settings.queueInsertion.value[QueueInsertionType.algorithm]?.numberOfTracks.withMinimum(10) ?? 50;
       MapEntry<String, List<Track>>? supremacyEntry;
       if (ct != null) {
-        final sameAsCurrent = widget.generator.generateRecommendedTrack(ct, sampleCount: 50).take(maxCount);
+        final sameAsCurrent = widget.generator.generateRecommendedTrack(ct).take(maxCount);
         if (sameAsCurrent.isNotEmpty) {
           final supremacy = [ct, ...sameAsCurrent];
           supremacyEntry = MapEntry('"${ct.title}" ${lang.SUPREMACY}', supremacy);
@@ -241,7 +241,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       final favsSample = widget.playlistManager.favouritesPlaylist.value.tracks.getRandomSample(25).tracks.toList();
       final topRecentListenedKeys = _topRecentListened.map((e) => e.key).toList();
 
-      final recentTopSortedByTotalListens = List.from(topRecentListenedKeys)..sortByReverse((e) => historyManager.topTracksMapListens.value[e.track]?.length ?? 0);
+      final recentTopSortedByTotalListens = List<Track>.from(topRecentListenedKeys)..sortByReverse((e) => historyManager.topTracksMapListens.value[e.track]?.length ?? 0);
       final recent30Tracks = historyManager.historyTracks.take(30).map(historyManager.mainItemToSubItem).toList();
 
       final topRecentListenedExpanded = historyManager.getMostListensInTimeRange(
@@ -309,6 +309,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       if (emptyOnes != null) _mixes.addAll(emptyOnes!);
     }
 
+    for (final m in _mixes) {
+      m.value.removeWhere((tr) => tr.toTrackExtOrNull() == null);
+    }
+
     _isLoading = false;
 
     if (mounted) setState(() {});
@@ -358,17 +362,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       }
     });
     final mainListController = NamidaScrollController.create();
-    void jumpToLast() {
-      mainListController.animateTo(
-        mainListController.positions.first.maxScrollExtent,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-      );
-    }
+    // void jumpToLast() {
+    //   mainListController.animateTo(
+    //     mainListController.positions.first.maxScrollExtent,
+    //     duration: const Duration(milliseconds: 200),
+    //     curve: Curves.easeInOut,
+    //   );
+    // }
 
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      jumpToLast();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+    //   jumpToLast();
+    // });
 
     await NamidaNavigator.inst.navigateDialog(
       scale: 1.0,
@@ -454,7 +458,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                     onTap: () {
                                       settings.save(homePageItems: [item]);
                                       subList.remove(item);
-                                      jumpToLast();
+                                      // jumpToLast();
                                     },
                                   ),
                                 ),

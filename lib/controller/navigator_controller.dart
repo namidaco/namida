@@ -232,8 +232,8 @@ class NamidaNavigator {
 
     await popRoot();
 
-    setDefaultSystemUIOverlayStyle();
     await setDeviceOrientations(false);
+    setDefaultSystemUIOverlayStyle();
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async => await MiniPlayerController.inst.setImmersiveMode(null), // let mp decides
     );

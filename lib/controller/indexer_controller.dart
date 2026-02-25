@@ -997,7 +997,7 @@ class Indexer<T extends Track> {
       if (isDir) {
         final files = await Directory(path).listAllIsolate(recursive: true).ignoreError() ?? [];
         for (final f in files) {
-          onPath(f.path);
+          if (f is File) onPath(f.path);
         }
       } else {
         onPath(path);
@@ -1131,7 +1131,7 @@ class Indexer<T extends Track> {
       final finalAudios = prevDuplicated ? audioFilesWithoutDuplicates : audioFiles.toList();
       int listParts;
       if (Platform.isAndroid || Platform.isIOS) {
-        listParts = (Platform.numberOfProcessors ~/ 2.5).withMinimum(2);
+        listParts = (Platform.numberOfProcessors * 0.5).round().withMinimum(2);
       } else {
         // lil bit more luxurious on desktop
         listParts = (Platform.numberOfProcessors * 0.8).round().withMinimum(2);

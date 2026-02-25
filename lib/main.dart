@@ -754,7 +754,11 @@ class NamidaReceiveIntentManager {
               YTHostedPlaylistSubpage.fromId(playlistId: plid, userPlaylist: null).navigate();
             }
           } else {
-            final existing = paths.where((element) => File(element).existsSync()); // this for sussy links
+            // -- this for sussy links
+            final existing = paths.where((element) {
+              final type = FileSystemEntity.typeSync(element);
+              return type == FileSystemEntityType.file || type == FileSystemEntityType.directory;
+            });
             final err = await _extractAndPlayExternalFiles(existing);
             if (err != null) showErrorPlayingFileSnackbar(error: err);
           }
@@ -811,24 +815,16 @@ class _NamidaDropRegion extends StatelessWidget {
           final reader = item.dataReader;
           if (reader == null) continue;
           if (reader.canProvide(Formats.plainText)) {
-            reader.getValue<String>(
-              Formats.plainText,
-              (value) {
-                if (value != null) {
-                  finalData.add(value);
-                }
-              },
-            );
+            final completer = Completer<String?>();
+            reader.getValue<String>(Formats.plainText, completer.complete, onError: (_) => completer.complete(null));
+            final value = await completer.future.ignoreError();
+            if (value != null) finalData.add(value);
           }
           if (reader.canProvide(Formats.fileUri)) {
-            reader.getValue(
-              Formats.fileUri,
-              (value) {
-                if (value != null) {
-                  finalData.add(value.toFilePath());
-                }
-              },
-            );
+            final completer = Completer<Uri?>();
+            reader.getValue<Uri>(Formats.fileUri, completer.complete, onError: (_) => completer.complete(null));
+            final value = await completer.future.ignoreError();
+            if (value != null) finalData.add(value.toFilePath());
           }
         }
         NamidaReceiveIntentManager.executeReceivedItems(finalData, (f) => f, (f) => f);

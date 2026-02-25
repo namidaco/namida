@@ -154,7 +154,7 @@ class CustomMPVPlayer implements AVPlayer {
   Stream<ProcessingState> get processingStateStream => _playerProcessingStateStreamController.stream.distinct();
 
   @override
-  Stream<Duration> get positionStream => _player.stream.position;
+  Stream<Duration> get positionStream => _player.stream.position.map(_normalizePosition);
   @override
   Stream<Duration?> get durationStream => _player.stream.duration;
   @override
@@ -173,7 +173,7 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   Duration get bufferedPosition => _player.state.buffer;
   @override
-  Duration get position => _player.state.position;
+  Duration get position => _normalizePosition(_player.state.position);
   @override
   Duration? get duration => _player.state.duration;
   @override
@@ -189,6 +189,11 @@ class CustomMPVPlayer implements AVPlayer {
   UriSource? get audioSource => _audioSource;
   @override
   bool get isDisposed => _disposed;
+
+  Duration _normalizePosition(Duration pos) {
+    if (pos < Duration.zero) return Duration.zero;
+    return pos;
+  }
 
   @override
   Future<Duration?> setSource<T>(ItemPrepareConfig<T, UriSource> config) async {

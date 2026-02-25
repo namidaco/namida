@@ -1539,6 +1539,7 @@ class _YTDownloadManager with PortsProvider<SendPort> {
                 fileStream.add(data);
                 progressPort.send(data.length);
               }
+              await onRequestFinish(); // flush and close first to avoid issues
               Object? movedException;
               if (moveTo != null && moveToRequiredBytes != null) {
                 try {
@@ -1557,7 +1558,6 @@ class _YTDownloadManager with PortsProvider<SendPort> {
                   movedException = e;
                 }
               }
-              await onRequestFinish(); // flush and close first to avoid issues
               return sendPort.send(MapEntry(filePath, movedException));
             } on RhttpCancelException catch (_) {
               // client force closed

@@ -75,7 +75,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                   rx: settings.mediaItemsTrackSorting,
                   builder: (context, sortingModes) {
                     final firstSort = sortingModes[MediaType.album]?.firstOrNull;
-                    final shouldSplitToDiscSections = firstSort == SortType.discNo || firstSort == SortType.trackNo;
+                    final shouldSplitToDiscSections = firstSort == SortType.discNo;
                     Map<int, List<Track>>? tracksMappedWithDisc;
                     Map<int, int>? tracksIndicesIncrement;
                     if (shouldSplitToDiscSections) {

@@ -131,9 +131,12 @@ class MiniPlayerController {
         (_) {
           if (isInQueue) {
             this.snapToQueue();
-          } else {
+          } else if (isMinimized) {
             this.snapToMini();
             this.ytMiniplayerKey.currentState?.animateToState(false, dur: Duration.zero, bypassEnforceExpanded: true);
+          } else {
+            this.snapToExpanded();
+            this.ytMiniplayerKey.currentState?.animateToState(true, dur: Duration.zero);
           }
         },
       );

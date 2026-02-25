@@ -196,41 +196,19 @@ extension TracksUtils on List<Track> {
     return this[indexOfImage];
   }
 
-  String get album {
+  String _firstNonEmpty(String Function(Track e) resolver) {
     if (isEmpty) return '';
-    for (int i = length - 1; i >= 0; i--) {
-      final a = this[i].album;
-      if (a != '') return a;
+    for (var i = 0; i < this.length; i++) {
+      final p = resolver(this[i]);
+      if (p.isNotEmpty) return p;
     }
     return '';
   }
 
-  String get albumArtist {
-    if (isEmpty) return '';
-    for (int i = length - 1; i >= 0; i--) {
-      final aa = this[i].albumArtist;
-      if (aa != '') return aa;
-    }
-    return '';
-  }
-
-  String get composer {
-    if (isEmpty) return '';
-    for (int i = length - 1; i >= 0; i--) {
-      final aa = this[i].composer;
-      if (aa != '') return aa;
-    }
-    return '';
-  }
-
-  String get recordLabel {
-    if (isEmpty) return '';
-    for (int i = length - 1; i >= 0; i--) {
-      final aa = this[i].label;
-      if (aa != '') return aa;
-    }
-    return '';
-  }
+  String get album => _firstNonEmpty((e) => e.album);
+  String get albumArtist => _firstNonEmpty((e) => e.albumArtist);
+  String get composer => _firstNonEmpty((e) => e.composer);
+  String get recordLabel => _firstNonEmpty((e) => e.label);
 }
 
 extension StringListJoiner on Iterable<String?> {

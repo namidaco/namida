@@ -27,6 +27,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/home_widget_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
@@ -789,7 +790,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     try {
       duration = await setPls();
-    } catch (e) {
+    } catch (e, st) {
       if (checkInterrupted()) return;
       final reallyError = !(duration != null && currentPositionMS.value > 0);
       if (reallyError) {
@@ -820,6 +821,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             errorPlayingTrack: e,
             source: QueueSource.playerQueue,
           );
+          logger.error('Error playing file', e: e, st: st);
           return;
         } else {
           final hasPermission = await requestManageStoragePermission();
@@ -2243,7 +2245,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     return _buildCacheableAVSource(
       uriDDL,
       cacheFile: cacheFile,
-      onFirstCacheDone: (cachedFile) => _onAudioFirstCacheDone(videoId, cachedFile),
+      onFirstCacheDone: onFirstCacheDone,
       onFetched: (cachedFile) {},
     );
   }

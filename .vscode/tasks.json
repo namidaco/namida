@@ -77,9 +77,6 @@
         "windows",
         "--release",
       ],
-      "dependsOn": [
-        "update submodules"
-      ],
       "group": {
         "kind": "build",
         "isDefault": false
@@ -112,10 +109,14 @@
         "run",
         "inno_bundle:build",
         "--release",
+        "--no-app"
       ],
       "group": {
         "kind": "build",
       },
+      "dependsOn": [
+        "flutter build windows"
+      ],
       "problemMatcher": [],
       "label": "build flutter windows inno installer",
       "detail": ""

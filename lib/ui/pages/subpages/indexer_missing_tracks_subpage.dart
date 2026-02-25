@@ -191,11 +191,8 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
     final subProgressPort = params.$6;
 
     String? getSuggestion(String path) {
-      final all = NamidaGenerator.getHighMatcheFilesFromFilename(allAudioFiles, path);
-      for (final p in all) {
-        if (Track.explicit(p).existsSync()) return p;
-      }
-      return null;
+      final all = NamidaGenerator.getHighMatcheFilesFromFilename(allAudioFiles, path, singleOnly: true);
+      return all.firstOrNull;
     }
 
     final missingTracksPaths = <String>[];

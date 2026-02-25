@@ -202,6 +202,11 @@ Future<void> showSettingDialogWithTextField({
                       return lang.VALUE_BETWEEN_50_200;
                     }
                   }
+                  if (borderRadiusMultiplier) {
+                    if ((double.parse(value!) < 0 || double.parse(value) > 5)) {
+                      return '0.0-5.0';
+                    }
+                  }
                   if (addNewPlaylist) {
                     return PlaylistController.inst.validatePlaylistName(value);
                   }
