@@ -234,7 +234,7 @@ jobs:
           pacman -Sy --noconfirm archlinux-keyring
           pacman -Su --noconfirm
           pacman -S --noconfirm \
-            base-devel git curl wget jq openssh unzip xz rust \
+            base-devel git curl wget jq openssh unzip xz \
             clang cmake ninja pkgconf gcc gtk3 libstdc++ \
             mpv alsa-lib libx11 libxrender libxext mesa libgl \
             libepoxy libdrm wayland libxkbcommon glibc binutils
@@ -265,6 +265,13 @@ jobs:
           flutter precache --linux
           flutter config --no-analytics
 
+      - name: Install Rust via rustup
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+          echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
+          source $HOME/.cargo/env
+          rustup show
+
       - name: Setup Flutter dependencies
         run: |
           export PATH="/opt/flutter/bin:/opt/dart-sdk/bin:$PATH"
@@ -288,11 +295,6 @@ jobs:
           dart pub global activate --source git https://github.com/MSOB7YY/fastforge.git
           dart pub global activate --source git https://github.com/MSOB7YY/fastforge.git --git-path "packages/fastforge"
           echo "PATH=$HOME/.pub-cache/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Build Linux TEST
-        run: |
-          export PATH="/opt/flutter/bin:/opt/dart-sdk/bin:$HOME/.pub-cache/bin:$PATH"
-          flutter build linux --release --verbose
 
       - name: Build Linux deb/rpm/tar.gz
         run: |
