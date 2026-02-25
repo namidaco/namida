@@ -237,6 +237,9 @@ jobs:
           token: ${{ secrets.PAT }}
           submodules: recursive
 
+      - name: Fix git ownership
+        run: git config --global --add safe.directory /__w/namida/namida
+
       - name: Setup Git credentials
         run: |
           git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
