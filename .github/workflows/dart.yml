@@ -223,6 +223,8 @@ jobs:
     steps:
       - name: Install base dependencies
         run: |
+          pacman-key --init
+          pacman-key --populate archlinux
           pacman -Sy --noconfirm archlinux-keyring
           pacman -Su --noconfirm
           pacman -S --noconfirm \
@@ -306,15 +308,20 @@ jobs:
         run: |
           # Setup SSH for AUR
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur
           chmod 600 ~/.ssh/aur
-          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
-          cat >> ~/.ssh/config << EOF
+          ssh-keyscan -H aur.archlinux.org >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          cat >> ~/.ssh/config << 'EOF'
           Host aur.archlinux.org
             IdentityFile ~/.ssh/aur
             User aur
+            StrictHostKeyChecking yes
           EOF
           chmod 600 ~/.ssh/config
+          # verify connection before proceeding
+          ssh -T aur@aur.archlinux.org || true
 
           # Parse version string (e.g. 5.6.5-beta+260114196)
           FULL_VERSION="${{ steps.extract_version.outputs.version }}"
@@ -347,3 +354,64 @@ jobs:
           git add PKGBUILD .SRCINFO
           git commit -m "update to v${PKGVER} (build ${BUILDNUMBER})"
           git push origin master
+
+  build_windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: pubspec.yaml
+
+      - name: Setup credentials
+        run: |
+          git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
+          git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
+
+      - name: Setup dependencies
+        run: |
+          flutter clean
+          flutter pub get
+          flutter pub upgrade
+          git submodule update --init --remote --recursive
+
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          $VERSION = (Select-String -Path pubspec.yaml -Pattern 'version:').Line.Split(' ')[1]
+          $VERSION_NAME = $VERSION.Split('+')[0]
+          echo "version=$VERSION" >> $env:GITHUB_OUTPUT
+          echo "version_name=$VERSION_NAME" >> $env:GITHUB_OUTPUT
+
+      - name: Build Windows app
+        run: |
+          flutter config --enable-windows-desktop
+          flutter build windows --release
+
+      - name: Build ISS script
+        run: dart run inno_bundle:build --no-app --release --no-installer
+
+      - name: Get installer config
+        id: envs
+        run: echo $(dart run inno_bundle:build --envs --no-hf) | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Build installer
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        with:
+          path: ./build/windows/x64/installer/Release/inno-script.iss
+
+      - name: Upload installer to Snapshot Release
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: namidaco/namida-snapshots
+          make_latest: true
+          draft: false
+          tag_name: ${{ steps.extract_version.outputs.version }}
+          files: |
+            ./build/windows/x64/installer/Release/${{ steps.envs.outputs.APP_NAME_CAMEL_CASE }}-x86_64-${{ steps.envs.outputs.APP_VERSION }}-Installer.exe
+          token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}

@@ -54,6 +54,7 @@ void main(List<String> args) async {
     [
       "build",
       "linux",
+      "-v",
       "--release",
       if (isKuru) "--dart-define=IS_KURU_BUILD=$isKuru",
     ],
