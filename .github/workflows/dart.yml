@@ -81,7 +81,6 @@ jobs:
       - name: Setup dependencies
         run: |
           flutter clean
-          flutter pub get
           flutter pub upgrade
           git submodule update --init --remote --recursive
 
@@ -113,6 +112,8 @@ jobs:
       - name: Creating clone repo & apks
         continue-on-error: true
         run: |
+          flutter clean
+          flutter pub upgrade
           find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
           flutter build apk --target-platform android-arm64 --split-per-abi --release
           mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version_name }}-clone-arm64-v8a.apk
@@ -233,6 +234,17 @@ jobs:
             gtk3 libstdc++ \
             mpv \
             unzip xz
+          pacman -S --noconfirm \
+            alsa-lib \
+            libx11 \
+            libxrender \
+            libxext \
+            mesa \
+            libgl \
+            libepoxy \
+            libdrm \
+            wayland \
+            libxkbcommon
 
       - uses: actions/checkout@v4
         with:
@@ -401,7 +413,7 @@ jobs:
         run: echo $(dart run inno_bundle:build --envs --no-hf) | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Build installer
-        uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+        uses: C0rn3j/Inno-Setup-Action@v1.2.8
         with:
           path: ./build/windows/x64/installer/Release/inno-script.iss
 
