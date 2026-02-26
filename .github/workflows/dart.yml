@@ -326,6 +326,7 @@ jobs:
         with:
           key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           known_hosts: ${{ secrets.AUR_KNOWN_HOSTS }}
+          name: id_ed25519
 
       - name: Publish to AUR
         run: |
@@ -403,9 +404,11 @@ jobs:
         with:
           path: ./build/windows/x64/installer/Release/inno-script.iss
 
-      - name: Move Installer
+      - name: Move Windows installer
         run: |
-          mv ./build/windows/x64/installer/Release/Namida-x86_64-${{ steps.extract_version.outputs.version }}-Installer.exe build_final/Namida-x86_64-${{ steps.extract_version.outputs.version_name }}-Installer.exe
+          mkdir -p build_final
+          $installer = Get-ChildItem "./build/windows/x64/installer/Release/" -Filter "*.exe" | Select-Object -First 1
+          Move-Item $installer.FullName "build_final/Namida-x86_64-${{ steps.extract_version.outputs.version_name }}-Installer.exe"
 
       - name: Upload installer to Snapshot Release
         uses: softprops/action-gh-release@v2
