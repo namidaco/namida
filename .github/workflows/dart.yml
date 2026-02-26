@@ -10,6 +10,7 @@ on:
 
 jobs:
   build_android:
+    if: false
     runs-on: ubuntu-latest
 
     steps:
@@ -237,7 +238,7 @@ jobs:
             base-devel git curl wget jq openssh unzip xz \
             clang cmake ninja pkgconf gcc gtk3 libstdc++ \
             mpv alsa-lib libx11 libxrender libxext mesa libgl \
-            libepoxy libdrm wayland libxkbcommon glibc binutils
+            libepoxy libdrm wayland libxkbcommon glibc binutils dpkg rpm-tools
           pacman -Scc --noconfirm
 
       - uses: actions/checkout@v4
@@ -299,7 +300,7 @@ jobs:
       - name: Build Linux deb/rpm/tar.gz
         run: |
           export PATH="/opt/flutter/bin:/opt/dart-sdk/bin:$HOME/.pub-cache/bin:$PATH"
-          dart ./scripts/bundle.dart
+          dart ./scripts/bundle.dart --no-aur
           mkdir -p build_final
           mv ./scripts/bundle_output/* build_final/ || echo "No files to move"
 
@@ -311,16 +312,14 @@ jobs:
 
       - name: Publish to AUR
         run: |
-          # Setup SSH for AUR
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur
           chmod 600 ~/.ssh/aur
 
-          touch ~/.ssh/known_hosts
+          # Hardcode AUR host key instead of ssh-keyscan
+          echo "aur.archlinux.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEuBKrPzbawxA/k2g6NcyV5jmqwJ2s+zpgZGZ7tpLIcN" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-
-          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
           cat > ~/.ssh/config <<EOF
           Host aur.archlinux.org
@@ -330,9 +329,7 @@ jobs:
             IdentitiesOnly yes
             StrictHostKeyChecking yes
           EOF
-
           chmod 600 ~/.ssh/config
-          # verify connection before proceeding
           ssh -T aur@aur.archlinux.org || true
 
           # Parse version string (e.g. 5.6.5-beta+260114196)
@@ -340,32 +337,10 @@ jobs:
           PKGVER=$(echo "$FULL_VERSION" | sed 's/-beta+.*//')
           BUILDNUMBER=$(echo "$FULL_VERSION" | sed 's/.*+//')
 
-          # Clone AUR package
-          git clone ssh://aur@aur.archlinux.org/namida-bin.git namida_aur
-          cd namida_aur
-
-          # Update version and build number in PKGBUILD
-          sed -i "s/^pkgver=.*/pkgver=${PKGVER}/" PKGBUILD
-          sed -i "s/^_buildnumber=.*/_buildnumber=${BUILDNUMBER}/" PKGBUILD
-          sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
-
-          # Calculate checksum from the local tarball
-          TARBALL="../build_final/namida-v${PKGVER}-beta.linux.tar.gz"
-          if [ -f "$TARBALL" ]; then
-            NEW_SHA256=$(sha256sum "$TARBALL" | awk '{print $1}')
-            sed -i "s/^sha256sums=.*/sha256sums=('${NEW_SHA256}')/" PKGBUILD
-          else
-            echo "Warning: Tarball not found at $TARBALL"
-            ls -la ../build_final/
-          fi
-
-          # Generate .SRCINFO
-          makepkg --printsrcinfo > .SRCINFO
-
-          # Commit and push to AUR
-          git add PKGBUILD .SRCINFO
-          git commit -m "update to v${PKGVER} (build ${BUILDNUMBER})"
-          git push origin master
+          # Clone and Publish AUR package
+          git clone ssh://aur@aur.archlinux.org/namida-bin.git namida-bin
+          cd namida-bin
+          bash bump.sh $PKGVER $BUILDNUMBER
 
   build_windows:
     runs-on: windows-latest
@@ -400,9 +375,7 @@ jobs:
           echo "version_name=$VERSION_NAME" >> $env:GITHUB_OUTPUT
 
       - name: Set up Inno
-        run: |
-          Invoke-WebRequest -Uri 'https://jrsoftware.org/download.php/ispack.exe' -OutFile 'inno.exe'
-          Start-Process -FilePath 'inno.exe' -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait
+        run: choco install innosetup -y
 
       - name: Build Windows Installer
         run: dart run inno_bundle:build --release

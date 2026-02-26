@@ -15,6 +15,7 @@ void main(List<String> args) async {
 
   final isKuru = args.remove('-kuru');
   final tarOnly = args.remove('-tar');
+  final noAurPublish = args.remove('--no-aur');
 
   print('====> Parsing version...');
 
@@ -110,8 +111,10 @@ void main(List<String> args) async {
     }
   }
 
-  print('====> updating aur files');
-  await _execute('bash', ['../namida_aur/bump.sh', versionOnly, buildNumberOnly]);
+  if (!noAurPublish) {
+    print('====> updating aur files');
+    await _execute('bash', ['../namida_aur/namida-bin/bump.sh', versionOnly, buildNumberOnly]);
+  }
 
   // await _execute('dart', ['bump_version.dart', '-y', '--skip-git', versionOnly, buildNumberOnly]);
 
