@@ -267,7 +267,7 @@ jobs:
 
       - name: Install Rust via rustup
         run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
           echo "PATH=$HOME/.cargo/bin:$PATH" >> $GITHUB_ENV
           source $HOME/.cargo/env
           rustup show
@@ -401,8 +401,8 @@ jobs:
 
       - name: Set up Inno
         run: |
-          Invoke-WebRequest -Uri 'https://jrsoftware.org/download.php/is.exe' -OutFile 'inno.exe'
-          Start-Process -FilePath 'inno.exe' -ArgumentList '/VERYSILENT'
+          Invoke-WebRequest -Uri 'https://jrsoftware.org/download.php/ispack.exe' -OutFile 'inno.exe'
+          Start-Process -FilePath 'inno.exe' -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Wait
 
       - name: Build Windows Installer
         run: dart run inno_bundle:build --release
