@@ -210,7 +210,7 @@ jobs:
           make_latest: true
           draft: false
           tag_name: ${{ steps.extract_version.outputs.version}}
-          # body_path: ./beta_changelog.md
+          body_path: ./beta_changelog.md
           files: |
             build_final/*
             ./beta_changelog.md
