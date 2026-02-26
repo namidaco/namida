@@ -310,28 +310,25 @@ jobs:
           name: linux-builds
           path: build_final/**
 
+      - name: Upload files to Snapshot Release
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: namidaco/namida-snapshots
+          make_latest: true
+          draft: false
+          tag_name: ${{ steps.extract_version.outputs.version }}
+          files: |
+            build_final/*
+          token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
+
+      - name: Install SSH key for AUR
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.AUR_KNOWN_HOSTS }}
+
       - name: Publish to AUR
         run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/aur
-          chmod 600 ~/.ssh/aur
-
-          # Hardcode AUR host key instead of ssh-keyscan
-          echo "aur.archlinux.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEuBKrPzbawxA/k2g6NcyV5jmqwJ2s+zpgZGZ7tpLIcN" >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-
-          cat > ~/.ssh/config <<EOF
-          Host aur.archlinux.org
-            HostName aur.archlinux.org
-            IdentityFile ~/.ssh/aur
-            User aur
-            IdentitiesOnly yes
-            StrictHostKeyChecking yes
-          EOF
-          chmod 600 ~/.ssh/config
-          ssh -T aur@aur.archlinux.org || true
-
           # Parse version string (e.g. 5.6.5-beta+260114196)
           FULL_VERSION="${{ steps.extract_version.outputs.version }}"
           PKGVER=$(echo "$FULL_VERSION" | sed 's/-beta+.*//')
@@ -374,11 +371,41 @@ jobs:
           echo "version=$VERSION" >> $env:GITHUB_OUTPUT
           echo "version_name=$VERSION_NAME" >> $env:GITHUB_OUTPUT
 
-      - name: Set up Inno
-        run: choco install innosetup -y
+      - name: Build Windows App
+        run: |
+          flutter config --enable-windows-desktop
+          flutter build windows --release
 
-      - name: Build Windows Installer
-        run: dart run inno_bundle:build --release
+      - name: Build iss script
+        run: dart run inno_bundle:build --no-app --release --no-installer
+
+      - name: Fix ISS script languages
+        run: |
+          $issPath = "./build/windows/x64/installer/Release/inno-script.iss"
+          $content = Get-Content $issPath -Raw
+          # Remove any language line whose .isl file doesn't exist on disk
+          $lines = Get-Content $issPath
+          $fixed = $lines | Where-Object {
+            if ($_ -match '\.isl"') {
+              $match = [regex]::Match($_, '"([^"]+\.isl)"')
+              if ($match.Success) {
+                $path = $match.Groups[1].Value
+                Test-Path $path  # only keep line if file actually exists
+              } else { $true }
+            } else { $true }
+          }
+          $fixed | Set-Content $issPath
+          Write-Host "Final languages in ISS:"
+          $fixed | Where-Object { $_ -match '\.isl' }
+
+      - name: Build installer
+        uses: C0rn3j/Inno-Setup-Action@v1.2.8
+        with:
+          path: ./build/windows/x64/installer/Release/inno-script.iss
+
+      - name: Move Installer
+        run: |
+          mv ./build/windows/x64/installer/Release/Namida-x86_64-${{ steps.extract_version.outputs.version }}-Installer.exe build_final/Namida-x86_64-${{ steps.extract_version.outputs.version_name }}-Installer.exe
 
       - name: Upload installer to Snapshot Release
         uses: softprops/action-gh-release@v2
@@ -388,5 +415,5 @@ jobs:
           draft: false
           tag_name: ${{ steps.extract_version.outputs.version }}
           files: |
-            ./build/windows/x64/installer/Release/Namida-x86_64-${{ steps.extract_version.outputs.version_name }}-Installer.exe
+            build_final/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
