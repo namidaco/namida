@@ -150,12 +150,6 @@ jobs:
             ./beta_changelog.md
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
 
-      - name: Upload all APKs
-        uses: actions/upload-artifact@v4
-        with:
-          name: all-apks
-          path: build_final/**
-
   build_windows:
     runs-on: windows-latest
 
@@ -319,12 +313,6 @@ jobs:
           mkdir -p build_final
           mv ./scripts/bundle_output/* build_final/ || echo "No files to move"
 
-      - name: Upload Linux artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-builds
-          path: build_final/**
-
       - name: Upload files to Snapshot Release
         uses: softprops/action-gh-release@v2
         with:
@@ -349,8 +337,14 @@ jobs:
           FULL_VERSION="${{ steps.extract_version.outputs.version }}"
           PKGVER=$(echo "$FULL_VERSION" | sed 's/-beta+.*//')
           BUILDNUMBER=$(echo "$FULL_VERSION" | sed 's/.*+//')
+          TARBALL=$(find build_final -name "*.tar.gz" | head -1)
+          if [ -z "$TARBALL" ]; then
+            echo "No tarball found in build_final:"
+            ls -la build_final/
+            exit 1
+          fi
 
           # Clone and Publish AUR package
           git clone ssh://aur@aur.archlinux.org/namida-bin.git namida-bin
           cd namida-bin
-          bash bump.sh $PKGVER $BUILDNUMBER
+          bash bump.sh "$PKGVER" "$BUILDNUMBER" "$TARBALL"
