@@ -139,29 +139,12 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
   }
 }
 
-class YTLikedVideosPage extends StatelessWidget with NamidaRouteWidget {
-  @override
-  RouteType get route => RouteType.YOUTUBE_LIKED_SUBPAGE;
-
-  const YTLikedVideosPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const YTNormalPlaylistSubpage(
-      playlistName: k_PLAYLIST_NAME_FAV,
-      isEditable: false,
-      reversedList: true,
-      queueSource: QueueSourceYoutubeID.favourites,
-    );
-  }
-}
-
 class YTNormalPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
   @override
   String? get name => playlistName;
 
   @override
-  RouteType get route => RouteType.YOUTUBE_PLAYLIST_SUBPAGE;
+  RouteType get route => playlistName == k_PLAYLIST_NAME_FAV ? RouteType.YOUTUBE_LIKED_SUBPAGE : RouteType.YOUTUBE_PLAYLIST_SUBPAGE;
 
   final String playlistName;
   final bool isEditable;
@@ -384,7 +367,18 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                       ),
                     ),
                     builder: (properties) => NamidaSliverReorderableList(
-                      onReorder: (oldIndex, newIndex) => YoutubePlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
+                      onReorder: widget.reversedList
+                          ? (oldIndex, newIndex) {
+                              if (widget.reversedList) {
+                                final length = playlist.tracks.length;
+                                oldIndex = length - 1 - oldIndex;
+                                newIndex = length - newIndex;
+                              }
+                              YoutubePlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex);
+                            }
+                          : (oldIndex, newIndex) {
+                              YoutubePlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex);
+                            },
                       itemExtent: Dimensions.youtubeCardItemExtent,
                       itemCount: playlist.tracks.length,
                       itemBuilder: (context, index) {

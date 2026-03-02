@@ -291,6 +291,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                 if (bits >= 24) 'Hi-Res',
                 if (isLossless == true) 'Lossless',
               ];
+              final bitsText = bitsTextParts.join(' ');
 
               return Text.rich(
                 TextSpan(
@@ -334,11 +335,13 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                               size: 32.0,
                                             ),
                                             const SizedBox(height: 12.0),
-                                            Text(
-                                              bitsTextParts.join(' '),
-                                              style: textTheme.displayLarge,
-                                            ),
-                                            const SizedBox(height: 6.0),
+                                            if (bitsText.isNotEmpty) ...[
+                                              Text(
+                                                bitsText,
+                                                style: textTheme.displayLarge,
+                                              ),
+                                              const SizedBox(height: 6.0),
+                                            ],
                                             Text(
                                               trExt.audioInfoFormattedAlt,
                                               style: textTheme.displayMedium,

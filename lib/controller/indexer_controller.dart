@@ -52,8 +52,8 @@ class Indexer<T extends Track> {
   bool get _isArtworkCachingEnabled => settings.cacheArtworks.value;
   bool get isNetworkArtworkCachingEnabled => true;
 
-  void _clearTracksDBAndReOpen() {
-    _tracksDBManager.deleteEverything();
+  Future<void> _clearTracksDBAndReOpen() async {
+    await _tracksDBManager.deleteEverything();
   }
 
   late final _tracksDBManager = DBWrapper.openFromInfo(
@@ -305,6 +305,7 @@ class Indexer<T extends Track> {
     }
 
     await _afterIndexing();
+    await _tracksDBManager.checkpoint().ignoreError();
     isIndexing.value = false;
 
     final isEmpty = tracksInfoList.value.isEmpty;
@@ -1054,14 +1055,14 @@ class Indexer<T extends Track> {
     this.mainMapsGroup.refreshAll();
   }
 
-  void _clearLists() {
+  Future<void> _clearLists() async {
     artworksInStorage.value = 0;
     artworksSizeInStorage.value = 0;
     tracksInfoList.clear();
     allTracksMappedByPath.clear();
-    _clearTracksDBAndReOpen();
     allTracksMappedByYTID.clear();
     _currentFileNamesMap.clear();
+    await _clearTracksDBAndReOpen();
 
     SearchSortController.inst.sortMedia(MediaType.track);
     SearchSortController.inst.refreshPortsIfNecessary();
@@ -1088,7 +1089,7 @@ class Indexer<T extends Track> {
     _resetCounters();
 
     if (forceReIndex) {
-      _clearLists();
+      await _clearLists();
       if (!useMediaStore) audioFiles = await getAudioFiles();
     }
 

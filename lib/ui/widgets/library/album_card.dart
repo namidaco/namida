@@ -118,53 +118,55 @@ class AlbumCard extends StatelessWidget {
                       displayIcon: displayIcon,
                       forceSquared: !staggered,
                       staggered: staggered,
-                      onTopWidgets: dummyCard || (topRightLine == null || topRightLine.isEmpty)
+                      onTopWidgets: dummyCard
                           ? null
                           : [
-                              Positioned(
-                                top: 0,
-                                right: 0,
-                                child: NamidaBlurryContainer(
-                                  child: ConstrainedBox(
-                                    constraints: BoxConstraints(maxWidth: imageSize * 0.8),
-                                    child: FittedBox(
-                                      fit: BoxFit.fitWidth,
-                                      child: Text(
-                                        topRightLine,
-                                        style: textTheme.displaySmall?.copyWith(
-                                          fontSize: getFontSize(0.18),
-                                          fontWeight: FontWeight.bold,
+                              if (topRightLine != null && topRightLine.isNotEmpty)
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: NamidaBlurryContainer(
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(maxWidth: imageSize * 0.8),
+                                      child: FittedBox(
+                                        fit: BoxFit.fitWidth,
+                                        child: Text(
+                                          topRightLine,
+                                          style: textTheme.displaySmall?.copyWith(
+                                            fontSize: getFontSize(0.18),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          softWrap: false,
+                                          overflow: TextOverflow.fade,
                                         ),
-                                        softWrap: false,
-                                        overflow: TextOverflow.fade,
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Positioned(
-                                bottom: 2.0 + itemImagePercentageMultiplier,
-                                right: 2.0 + itemImagePercentageMultiplier,
-                                child: NamidaInkWell(
-                                  decoration: BoxDecoration(
-                                    color: playIconBgColor,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        blurRadius: 6.0,
-                                        offset: const Offset(0.0, 2.0),
-                                        color: playIconBgColor.withOpacityExt(0.4),
-                                      ),
-                                    ],
-                                  ),
-                                  borderRadius: 8.0.withMaximum(imageSize * 0.07),
-                                  onTap: () => Player.inst.playOrPause(0, album, QueueSource.album, homePageItem: homepageItem),
-                                  padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
-                                  child: Icon(
-                                    Broken.play,
-                                    size: 8.5 + 3.0 * itemImagePercentageMultiplier,
+                              if (album.isNotEmpty)
+                                Positioned(
+                                  bottom: 2.0 + itemImagePercentageMultiplier,
+                                  right: 2.0 + itemImagePercentageMultiplier,
+                                  child: NamidaInkWell(
+                                    decoration: BoxDecoration(
+                                      color: playIconBgColor,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          blurRadius: 6.0,
+                                          offset: const Offset(0.0, 2.0),
+                                          color: playIconBgColor.withOpacityExt(0.4),
+                                        ),
+                                      ],
+                                    ),
+                                    borderRadius: 8.0.withMaximum(imageSize * 0.07),
+                                    onTap: () => Player.inst.playOrPause(0, album, QueueSource.album, homePageItem: homepageItem),
+                                    padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
+                                    child: Icon(
+                                      Broken.play,
+                                      size: 8.5 + 3.0 * itemImagePercentageMultiplier,
+                                    ),
                                   ),
                                 ),
-                              ),
                             ],
                     ),
                   ),

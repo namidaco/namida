@@ -81,6 +81,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   int? _currentIndex;
   String _currentLine = '';
 
+  static const _lrcJumpAnimationDuration = Duration(milliseconds: 300);
   static const int _lrcOpacityDurationMS = 500;
   late final bool _updateOpacityForEmptyLines = !widget.isFullScreenView;
   bool _isCurrentLineEmpty = true;
@@ -228,7 +229,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                 scrollController: _scrollController,
                 alignment: 0.4,
                 index: newIndex,
-                duration: (d) => const Duration(milliseconds: 300),
+                duration: (d) => _lrcJumpAnimationDuration,
                 curve: (d) => Curves.easeOut,
               );
         try {

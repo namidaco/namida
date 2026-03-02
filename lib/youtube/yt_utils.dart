@@ -782,7 +782,12 @@ class YTUtils {
   }
 
   static Future<void> onYoutubeLikedPlaylistTap() {
-    return const YTLikedVideosPage().navigate();
+    return const YTNormalPlaylistSubpage(
+      playlistName: k_PLAYLIST_NAME_FAV,
+      isEditable: false,
+      reversedList: true,
+      queueSource: QueueSourceYoutubeID.favourites,
+    ).navigate();
   }
 
   static Future<void> onYoutubeMostPlayedPlaylistTap() {

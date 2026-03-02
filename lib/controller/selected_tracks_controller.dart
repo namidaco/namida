@@ -149,7 +149,7 @@ class SelectedTracksController {
     // -- Adding playlist name if the current route is referring to a playlist
     final cr = routeTracks;
     if (cr != null) {
-      if (cr.route == RouteType.SUBPAGE_playlistTracks || cr.route == RouteType.SUBPAGE_historyTracks) {
+      if (cr.route == RouteType.SUBPAGE_playlistTracks || cr.route == RouteType.SUBPAGE_favPlaylistTracks || cr.route == RouteType.SUBPAGE_historyTracks) {
         playlistNameToAdd = cr.name;
       }
     }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:intl/intl.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -168,32 +169,20 @@ class BackupController {
     File? tempAllLocal;
     File? tempAllYoutube;
 
-    /// ensures auto created db files are included, to prevent locked/corrupted databases.
-    Future<List<File>> getPossibleDbJournalFiles(String path) async {
-      final possibleFiles = <File>[
-        File('$path-journal'),
-        File('$path-wal'),
-        File('$path-shm'),
-      ];
-
-      return await possibleFiles.whereAsync((f) => f.exists()).toList();
-    }
-
     for (final p in backupItemsPaths) {
-      if (await FileSystemEntity.type(p) == FileSystemEntityType.file) {
+      final type = await FileSystemEntity.type(p);
+      if (type == FileSystemEntityType.file) {
+        final file = File(p);
         if (p.startsWith(AppDirs.YOUTUBE_MAIN_DIRECTORY)) {
-          youtubeFilesOnly.add(File(p));
-          if (p.endsWith('.db')) {
-            youtubeFilesOnly.addAll(await getPossibleDbJournalFiles(p));
-          }
+          youtubeFilesOnly.add(file);
         } else {
-          localFilesOnly.add(File(p));
-          if (p.endsWith('.db')) {
-            localFilesOnly.addAll(await getPossibleDbJournalFiles(p));
-          }
+          localFilesOnly.add(file);
         }
-      }
-      if (await FileSystemEntity.type(p) == FileSystemEntityType.directory) {
+
+        if (p.endsWith('.db')) {
+          await _ensureDbCheckpointed(file);
+        }
+      } else if (type == FileSystemEntityType.directory) {
         dirsOnly.add(Directory(p));
       }
     }
@@ -241,6 +230,47 @@ class BackupController {
     }
 
     isCreatingBackup.value = false;
+  }
+
+  Future<void> _ensureDbCheckpointed(File file) async {
+    try {
+      final db = DBWrapper.openFromFile(
+        file,
+        config: const DBConfig(autoDisposeTimerDuration: null),
+      );
+      await db.claimFreeSpaceAndCheckpoint();
+      await db.close();
+    } catch (_) {}
+  }
+
+  Future<void> _ensureDbCheckpointedAndDeleteWALFilesForDir(String dirPath) async {
+    final toCheckpoint = <File>[];
+    final toDelete = <File>[];
+    const kDBWalNamesSuffixes = <String>{'-wal', '-shm', '-journal'};
+
+    await for (final f in Directory(dirPath).list(recursive: false)) {
+      if (f is File) {
+        final path = f.path;
+
+        if (path.endsWith('.db')) {
+          toCheckpoint.add(f);
+          continue;
+        }
+
+        if (kDBWalNamesSuffixes.any((s) => path.endsWith(s))) {
+          toDelete.add(f);
+          continue;
+        }
+      }
+    }
+    for (final f in toCheckpoint) {
+      await _ensureDbCheckpointed(f);
+    }
+    for (final f in toDelete) {
+      try {
+        await f.delete();
+      } catch (_) {}
+    }
   }
 
   static List<File> _getBackupFilesSortedSync(String dirPath) {
@@ -379,6 +409,13 @@ class BackupController {
           }
         }
       }
+
+      await [
+        _ensureDbCheckpointedAndDeleteWALFilesForDir(AppDirs.USER_DATA),
+        _ensureDbCheckpointedAndDeleteWALFilesForDir(AppDirs.YOUTUBE_MAIN_DIRECTORY),
+        _ensureDbCheckpointedAndDeleteWALFilesForDir(AppDirs.YOUTIPIE_CACHE),
+        _ensureDbCheckpointedAndDeleteWALFilesForDir(AppDirs.YT_DOWNLOAD_TASKS),
+      ].executeAllAndSilentReportErrors();
 
       Indexer.inst.calculateAllImageSizesInStorage();
       // Indexer.inst.updateColorPalettesSizeInStorage();

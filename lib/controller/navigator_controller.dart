@@ -555,9 +555,9 @@ class NamidaNavigator {
       } else if (route == RouteType.PAGE_folders_videos) {
         final canIgoBackPls = FoldersController.videos.onBackButton();
         if (!canIgoBackPls) return;
-      } else if (route == RouteType.SUBPAGE_playlistTracks) {
+      } else if (route == RouteType.SUBPAGE_playlistTracks || route == RouteType.SUBPAGE_favPlaylistTracks) {
         PlaylistController.inst.resetCanReorder();
-      } else if (route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE) {
+      } else if (route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE || route == RouteType.YOUTUBE_LIKED_SUBPAGE) {
         YoutubePlaylistController.inst.resetCanReorder();
       }
     }

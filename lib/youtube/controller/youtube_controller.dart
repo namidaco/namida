@@ -554,7 +554,7 @@ class YoutubeController {
         }
         downloadedFilesMap[groupName]?[c.filename] = null;
       }
-      downloadTasksGroupDB.claimFreeSpace();
+      // downloadTasksGroupDB.claimFreeSpaceAndCheckpoint();
 
       // -- remove groups if emptied.
       if (youtubeDownloadTasksMap.value[groupName]?.isEmpty == true) {
