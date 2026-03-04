@@ -628,6 +628,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
       openOnTap: false,
       openOnLongPress: configs.openMenuOnLongPress,
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
+        queueIndex: index,
         queueSource: configs.queueSource,
         downloadIndex: widget.downloadIndex,
         totalLength: widget.downloadTotalLength,
@@ -709,6 +710,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
                 right: 0.0,
                 child: NamidaPopupWrapper(
                   childrenDefault: () => YTUtils.getVideoCardMenuItems(
+                    queueIndex: index,
                     queueSource: configs.queueSource,
                     downloadIndex: widget.downloadIndex,
                     totalLength: widget.downloadTotalLength,

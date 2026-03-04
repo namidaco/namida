@@ -21,6 +21,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -467,6 +468,24 @@ class Player {
 
   Future<void> insertInQueue(Iterable<Playable> tracks, int index) async {
     await _audioHandler.insertInQueue(tracks, index);
+  }
+
+  Future<bool> moveToNext(int index, {bool vibrate = true}) async {
+    final done = await _audioHandler.moveToNext(index);
+    if (done && vibrate) VibratorController.light();
+    return done;
+  }
+
+  Future<bool> moveToAfterLatestInserted(int index, {bool vibrate = true}) async {
+    final done = await _audioHandler.moveToAfterLatestInserted(index);
+    if (done && vibrate) VibratorController.light();
+    return done;
+  }
+
+  Future<bool> moveToLast(int index, {bool vibrate = true}) async {
+    final done = await _audioHandler.moveToLast(index);
+    if (done && vibrate) VibratorController.light();
+    return done;
   }
 
   SnackbarController? _latestSnacky;

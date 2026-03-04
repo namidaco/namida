@@ -471,6 +471,7 @@ class YTUtils {
   }
 
   static Future<List<NamidaPopupItem>> getVideoCardMenuItems({
+    int? queueIndex,
     required QueueSourceYoutubeID queueSource,
     required int? downloadIndex,
     required int? totalLength,
@@ -497,6 +498,8 @@ class YTUtils {
     final currentVideo = Player.inst.currentVideo;
     final isCurrentlyPlaying = currentVideo != null && videoId == currentVideo.id;
     if (displayGoToChannel && (channelID == null || channelID.isEmpty)) channelID = await YoutubeInfoController.utils.getVideoChannelID(videoId);
+
+    final isFromQueue = queueIndex != null && queueSource == QueueSourceYoutubeID.playerQueue;
 
     NamidaPopupItem? favouriteItem;
     if (showFavouritesTile) {
@@ -583,6 +586,7 @@ class YTUtils {
         onTap: () {
           Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: true, showSnackBar: false);
         },
+        onLongPress: isFromQueue ? () => Player.inst.moveToNext(queueIndex) : null,
       ),
       if (playAfterVid != null)
         NamidaPopupItem(
@@ -593,6 +597,7 @@ class YTUtils {
           onTap: () {
             Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertAfterLatest: true, showSnackBar: false);
           },
+          onLongPress: isFromQueue ? () => Player.inst.moveToAfterLatestInserted(queueIndex) : null,
         ),
       NamidaPopupItem(
         icon: Broken.play_cricle,
@@ -600,6 +605,7 @@ class YTUtils {
         onTap: () {
           Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: false, showSnackBar: false);
         },
+        onLongPress: isFromQueue ? () => Player.inst.moveToLast(queueIndex) : null,
       ),
       if (playlistName != '' && videoYTID != null)
         NamidaPopupItem(

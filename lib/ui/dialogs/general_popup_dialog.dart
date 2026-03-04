@@ -94,6 +94,8 @@ Future<void> showGeneralPopupDialog(
     });
   }
 
+  final isSingleAndFromQueue = index != null && isSingle && source == QueueSource.playerQueue;
+
   final trackToExtractColorFrom = tracks.isEmpty
       ? null
       : forceSingleArtwork
@@ -1186,6 +1188,7 @@ Future<void> showGeneralPopupDialog(
                                       NamidaNavigator.inst.closeDialog();
                                       Player.inst.addToQueue(tracks, insertAfterLatest: true, showSnackBar: !isSingle);
                                     },
+                                    onLongPress: isSingleAndFromQueue ? () => Player.inst.moveToAfterLatestInserted(index).closeDialog() : null,
                                   );
                                 }(),
 
@@ -1363,6 +1366,7 @@ Future<void> showGeneralPopupDialog(
                                         NamidaNavigator.inst.closeDialog();
                                         Player.inst.addToQueue(tracks, insertNext: true, showSnackBar: !isSingle);
                                       },
+                                      onLongPress: isSingleAndFromQueue ? () => Player.inst.moveToNext(index).closeDialog() : null,
                                     ),
                                   ),
                                   Container(
@@ -1380,6 +1384,7 @@ Future<void> showGeneralPopupDialog(
                                         NamidaNavigator.inst.closeDialog();
                                         Player.inst.addToQueue(tracks, showSnackBar: !isSingle);
                                       },
+                                      onLongPress: isSingleAndFromQueue ? () => Player.inst.moveToLast(index).closeDialog() : null,
                                     ),
                                   ),
                                 ],

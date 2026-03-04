@@ -859,6 +859,7 @@ class SmallListTile extends StatelessWidget {
   final Color? color;
   final double? iconSize;
   final void Function()? onTap;
+  final void Function()? onLongPress;
   final EdgeInsetsGeometry? padding;
   final double? titleGap;
   final double borderRadius;
@@ -869,6 +870,7 @@ class SmallListTile extends StatelessWidget {
     super.key,
     required this.title,
     this.onTap,
+    this.onLongPress,
     this.trailing,
     this.active = false,
     this.icon,
@@ -954,6 +956,7 @@ class SmallListTile extends StatelessWidget {
           ? Icon(trailingIcon, color: color)
           : trailing,
       onTap: onTap,
+      onLongPress: onLongPress,
     );
   }
 }
