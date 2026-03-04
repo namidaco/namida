@@ -7,12 +7,17 @@ class TimeAgoController {
   TimeAgoController._();
 
   static Future<void> setLocale(String code) async {
+    await _trySetLocale(code) ||
+        await _trySetLocale(code.splitFirst('_')) || //
+        await _trySetLocale('en');
+  }
+
+  static Future<bool> _trySetLocale(String code) async {
     try {
       await Jiffy.setLocale(code);
-    } catch (e) {
-      try {
-        await Jiffy.setLocale(code.splitFirst('_'));
-      } catch (_) {}
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 

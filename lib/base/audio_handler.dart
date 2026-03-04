@@ -346,13 +346,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                   if (isFavourite == true)
                     ThumbnailToolbarButton(
                       getIco('favorited'),
-                      lang.REMOVE_FROM_FAVOURITES,
+                      lang.removeFromFavourites,
                       onFavOrUnfavPress,
                     )
                   else if (isFavourite == false)
                     ThumbnailToolbarButton(
                       getIco('favorite'),
-                      lang.ADD_TO_FAVOURITES,
+                      lang.addToFavourites,
                       onFavOrUnfavPress,
                     ),
                   ThumbnailToolbarButton(
@@ -362,28 +362,28 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                   ),
                   ThumbnailToolbarButton(
                     getIco('previous'),
-                    lang.PREVIOUS,
+                    lang.previous,
                     Player.inst.previous,
                   ),
                   isPlaying
                       ? ThumbnailToolbarButton(
                           getIco('pause'),
-                          lang.PAUSE,
+                          lang.pause,
                           Player.inst.pause,
                         )
                       : ThumbnailToolbarButton(
                           getIco('play'),
-                          lang.PLAY,
+                          lang.play,
                           Player.inst.play,
                         ),
                   ThumbnailToolbarButton(
                     getIco('next'),
-                    lang.NEXT,
+                    lang.next,
                     Player.inst.next,
                   ),
                   ThumbnailToolbarButton(
                     getIco('stop'),
-                    lang.STOP,
+                    lang.stop,
                     () => Player.inst.pause().whenComplete(Player.inst.dispose),
                     mode: ThumbnailToolbarButtonMode.dismissionClick,
                   ),
@@ -1489,7 +1489,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         fetchFullVideoPage();
 
         if (streamsResult == null) {
-          if (!okaySetFromCache()) snackyy(title: lang.ERROR, message: 'Failed to fetch streams', top: false, isError: true);
+          if (!okaySetFromCache()) snackyy(title: lang.error, message: 'Failed to fetch streams', top: false, isError: true);
           return;
         }
 
@@ -1506,7 +1506,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               final playabilty = streamsResult.playability;
               final extraReasons = [playabilty.reason, ...?playabilty.messages].whereType<String>();
               final extraReasonsText = extraReasons.isEmpty ? '' : ' | ${extraReasons.join(' | ')}';
-              snackyy(title: lang.ERROR, message: 'Empty audio streams. playabilty: `${playabilty.status.name}`$extraReasonsText', top: false, isError: true);
+              snackyy(title: lang.error, message: 'Empty audio streams. playabilty: `${playabilty.status.name}`$extraReasonsText', top: false, isError: true);
               if (_willPlayWhenReady) skipItem();
             }
             return;
@@ -1538,7 +1538,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               videoOnly: true,
             );
           } else {
-            if (!okaySetFromCache()) snackyy(title: lang.ERROR, message: 'Failed to get mixed source', top: false, isError: true);
+            if (!okaySetFromCache()) snackyy(title: lang.error, message: 'Failed to get mixed source', top: false, isError: true);
             return;
           }
         } else if (streamsResult.info?.isLive == true) {
@@ -1569,7 +1569,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               videoOnly: true,
             );
           } else {
-            if (!okaySetFromCache()) snackyy(title: lang.ERROR, message: 'Failed to set hls or dash source for live stream', top: false, isError: true);
+            if (!okaySetFromCache()) snackyy(title: lang.error, message: 'Failed to set hls or dash source for live stream', top: false, isError: true);
           }
         } else {
           AudioVideoSource? finalVideoSource;
@@ -1635,7 +1635,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           }
 
           if (finalAudioSource == null && finalVideoSource == null) {
-            if (!okaySetFromCache()) snackyy(title: lang.ERROR, message: 'Failed to get audio/video source', top: false, isError: true);
+            if (!okaySetFromCache()) snackyy(title: lang.error, message: 'Failed to get audio/video source', top: false, isError: true);
             return;
           }
 
@@ -1656,7 +1656,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
 
         if (finalAudioSource == null) {
-          if (!okaySetFromCache()) snackyy(title: lang.ERROR, message: 'Failed to get audio source', top: false, isError: true);
+          if (!okaySetFromCache()) snackyy(title: lang.error, message: 'Failed to get audio source', top: false, isError: true);
           return;
         }
 
@@ -1683,7 +1683,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         if (!okaySetFromCache()) {
           void showSnackError(String nextAction) {
             if (item == currentItem.value) {
-              snackyy(title: lang.ERROR, message: 'Error playing video, $nextAction: $e', top: false, isError: true);
+              snackyy(title: lang.error, message: 'Error playing video, $nextAction: $e', top: false, isError: true);
             }
           }
 

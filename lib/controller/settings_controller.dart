@@ -57,7 +57,7 @@ class _SettingsController with SettingsFileWriter {
   final tutorial = _TutorialSettings._internal();
   final shortcuts = _ShortcutsSettings._internal();
 
-  final selectedLanguage = kDefaultLang.obs;
+  final language = Rxn<NamidaLanguage>();
   final themeMode = ThemeMode.system.obs;
   final pitchBlack = false.obs;
   final autoColor = true.obs;
@@ -446,7 +446,15 @@ class _SettingsController with SettingsFileWriter {
 
     try {
       /// Assigning Values
-      selectedLanguage.value = NamidaLanguage.fromJson(json['selectedLanguage']);
+      language.value = json['language'] == null ? null : NamidaLanguage.fromJson(json['language']);
+      if (language.value == null && json['selectedLanguage'] != null) {
+        final l = NamidaLanguage.fromJson(json['selectedLanguage']);
+        if (l.codeOnly != 'en') {
+          // -- apply previous language only if it wasn't english, since this was the default
+          // -- cuz null just falls back to device language or english now
+          language.value = l;
+        }
+      }
       themeMode.value = ThemeMode.values.getEnum(json['themeMode']) ?? themeMode.value;
       pitchBlack.value = json['pitchBlack'] ?? pitchBlack.value;
       autoColor.value = json['autoColor'] ?? autoColor.value;
@@ -742,7 +750,7 @@ class _SettingsController with SettingsFileWriter {
 
   @override
   Object get jsonToWrite => {
-    'selectedLanguage': selectedLanguage.value.toJson(),
+    'language': language.value?.toJson(),
     'themeMode': themeMode.value.name,
     'pitchBlack': pitchBlack.value,
     'autoColor': autoColor.value,
@@ -927,7 +935,7 @@ class _SettingsController with SettingsFileWriter {
 
   /// Saves a value to the key, if [List] or [Set], then it will add to it.
   void save({
-    NamidaLanguage? selectedLanguage,
+    NamidaLanguage? language,
     ThemeMode? themeMode,
     bool? pitchBlack,
     bool? autoColor,
@@ -1085,7 +1093,7 @@ class _SettingsController with SettingsFileWriter {
     bool? didSupportNamida,
     bool? canAskForBatteryOptimizations,
   }) {
-    if (selectedLanguage != null) this.selectedLanguage.value = selectedLanguage;
+    if (language != null) this.language.value = language;
     if (themeMode != null) this.themeMode.value = themeMode;
     if (pitchBlack != null) this.pitchBlack.value = pitchBlack;
     if (autoColor != null) this.autoColor.value = autoColor;

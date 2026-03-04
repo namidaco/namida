@@ -43,7 +43,7 @@ class SettingsSearchPage extends StatelessWidget {
                                 Icon(details.icon),
                                 const SizedBox(width: 6.0),
                                 Text(
-                                  details.title,
+                                  details.title(),
                                   style: textTheme.displayLarge,
                                 ),
                               ],
@@ -59,7 +59,7 @@ class SettingsSearchPage extends StatelessWidget {
                         final title = item.titles.firstOrNull ?? '';
                         final subtitleParts = [
                           if (item.titles.length >= 2) item.titles[1],
-                          if (isNotAvailable) '${lang.NOT_AVAILABLE_FOR_YOUR_DEVICE} (${availability?.text})',
+                          if (isNotAvailable) '${lang.notAvailableForYourDevice} (${availability?.text})',
                         ];
                         final subtitle = subtitleParts.isNotEmpty ? subtitleParts.join('\n') : null;
 

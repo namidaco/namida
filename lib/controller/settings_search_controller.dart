@@ -28,61 +28,61 @@ extension _SettSearcherUtils on SettingSubpageEnum {
     switch (this) {
       case SettingSubpageEnum.theme:
         return CustomCollapsedListTile(
-          title: lang.THEME_SETTINGS,
-          subtitle: lang.THEME_SETTINGS_SUBTITLE,
+          title: () => lang.themeSettings,
+          subtitle: lang.themeSettingsSubtitle,
           icon: Broken.brush_2,
           page: () => ThemeSetting(initialItem: initialItem),
         );
       case SettingSubpageEnum.indexer:
         return CustomCollapsedListTile(
-          title: lang.INDEXER,
-          subtitle: lang.INDEXER_SUBTITLE,
+          title: () => lang.indexer,
+          subtitle: lang.indexerSubtitle,
           icon: Broken.component,
           page: () => IndexerSettings(initialItem: initialItem),
         );
 
       case SettingSubpageEnum.playback:
         return CustomCollapsedListTile(
-          title: lang.PLAYBACK_SETTING,
-          subtitle: lang.PLAYBACK_SETTING_SUBTITLE,
+          title: () => lang.playbackSetting,
+          subtitle: lang.playbackSettingSubtitle,
           icon: Broken.play_cricle,
           page: () => PlaybackSettings(initialItem: initialItem),
         );
       case SettingSubpageEnum.customization:
         return CustomCollapsedListTile(
-          title: lang.CUSTOMIZATIONS,
-          subtitle: lang.CUSTOMIZATIONS_SUBTITLE,
+          title: () => lang.customizations,
+          subtitle: lang.customizationsSubtitle,
           icon: Broken.brush_1,
           page: () => CustomizationSettings(initialItem: initialItem),
         );
 
       case SettingSubpageEnum.youtube:
         return CustomCollapsedListTile(
-          title: lang.YOUTUBE,
-          subtitle: lang.YOUTUBE_SETTINGS_SUBTITLE,
+          title: () => lang.youtube,
+          subtitle: lang.youtubeSettingsSubtitle,
           icon: Broken.video,
           page: () => YoutubeSettings(initialItem: initialItem),
         );
 
       case SettingSubpageEnum.extra:
         return CustomCollapsedListTile(
-          title: lang.EXTRAS,
-          subtitle: lang.EXTRAS_SUBTITLE,
+          title: () => lang.extras,
+          subtitle: lang.extrasSubtitle,
           icon: Broken.command_square,
           page: () => ExtrasSettings(initialItem: initialItem),
         );
       case SettingSubpageEnum.backupRestore:
         return CustomCollapsedListTile(
-          title: lang.BACKUP_AND_RESTORE,
-          subtitle: lang.BACKUP_AND_RESTORE_SUBTITLE,
+          title: () => lang.backupAndRestore,
+          subtitle: lang.backupAndRestoreSubtitle,
           icon: Broken.refresh_circle,
           page: () => BackupAndRestore(initialItem: initialItem),
         );
 
       case SettingSubpageEnum.advanced:
         return CustomCollapsedListTile(
-          title: lang.ADVANCED_SETTINGS,
-          subtitle: lang.ADVANCED_SETTINGS_SUBTITLE,
+          title: () => lang.advancedSettings,
+          subtitle: lang.advancedSettingsSubtitle,
           icon: Broken.hierarchy_3,
           page: () => AdvancedSettings(initialItem: initialItem),
         );
@@ -197,7 +197,7 @@ class SettingsSearchController {
     }
     if (page != null) {
       SettingsSubPage(
-        title: details?.title ?? '',
+        title: () => details?.title() ?? '',
         child: page(),
       ).navigate();
     }

@@ -57,7 +57,7 @@ class _YoutubeUserPlaylistsPageState extends State<YoutubeUserPlaylistsPage> {
         YtUtilsPlaylist.activeUserPlaylistsList = null;
       },
       onPullToRefresh: () => (horizontalHistoryKey.currentState as dynamic)?.forceFetchFeed() as Future<void>,
-      title: lang.PLAYLISTS,
+      title: lang.playlists,
       isSortable: true,
       headerTrailing: NamidaIconButton(
         icon: Broken.add_circle,

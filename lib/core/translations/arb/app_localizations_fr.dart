@@ -1,0 +1,2939 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for French (`fr`).
+class AppLocalizationsFr extends AppLocalizations {
+  AppLocalizationsFr([String locale = 'fr']) : super(locale);
+
+  @override
+  String get about => 'À propos';
+
+  @override
+  String get active => 'Actif';
+
+  @override
+  String get add => 'Ajouter';
+
+  @override
+  String get addAccount => 'Ajouter un compte';
+
+  @override
+  String get addAll => 'Tout ajouter';
+
+  @override
+  String get addAllAndRemoveOldOnes => 'Ajouter tout et supprimer les anciens';
+
+  @override
+  String get addAsANewPlaylist => 'Ajouter à une nouvelle playlist';
+
+  @override
+  String get addAudioToLocalLibrary => 'Ajouter les fichiers audio à la bibliothèque';
+
+  @override
+  String get addFolder => 'Ajouter un dossier';
+
+  @override
+  String get addLanguage => 'Ajouter une langue';
+
+  @override
+  String get addLanguageSubtitle => 'Aidez-nous à traduire Namida dans votre langue';
+
+  @override
+  String get addLrcFile => 'Ajouter un fichier LRC';
+
+  @override
+  String get addMoreFromThisAlbum => 'Ajouter d\'autres titres de cet album à la file d\'attente';
+
+  @override
+  String get addMoreFromThisArtist => 'Ajouter d\'autres titres de cet artiste à la file d\'attente';
+
+  @override
+  String get addMoreFromThisFolder => 'Ajouter d\'autres titres de ce dossier à la file d\'attente';
+
+  @override
+  String addMoreFromToQueue({required String media}) {
+    return 'Ajouter d\'autres titres de $media à la file d\'attente';
+  }
+
+  @override
+  String get addOnlyMissing => 'Ajouter uniquement les éléments manquants';
+
+  @override
+  String get addToFavourites => 'Ajouter aux favoris';
+
+  @override
+  String get addToPlaylist => 'Ajouter à la playlist';
+
+  @override
+  String get addTracksAtTheBeginning => 'Ajouter des pistes au début';
+
+  @override
+  String get added => 'Ajouté';
+
+  @override
+  String get advanced => 'Avancé';
+
+  @override
+  String get advancedSettings => 'Avancé';
+
+  @override
+  String get advancedSettingsSubtitle => 'Paramètres avancés, ne pas toucher';
+
+  @override
+  String get alarm => 'Alarme';
+
+  @override
+  String get album => 'Album';
+
+  @override
+  String get albumArtist => 'Artiste de l\'album';
+
+  @override
+  String get albumArtists => 'Artistes de l\'album';
+
+  @override
+  String get albumIdentifiers => 'Identifiants d\'album';
+
+  @override
+  String get albumThumbnailSizeInList => 'Taille de la miniature de l\'album';
+
+  @override
+  String get albumTileCustomization => 'Personnalisation des miniatures d\'album';
+
+  @override
+  String get albums => 'Albums';
+
+  @override
+  String get albumsCount => 'Nombre d\'albums';
+
+  @override
+  String get all => 'Tout';
+
+  @override
+  String get allTime => 'Tout le temps';
+
+  @override
+  String get alreadyExists => 'Existe déjà';
+
+  @override
+  String get always => 'Toujours';
+
+  @override
+  String get alwaysAsk => 'Toujours demander';
+
+  @override
+  String get alwaysDim => 'Toujours assombrir';
+
+  @override
+  String get alwaysExpandedSearchbar => 'Barre de recherche toujours élargie';
+
+  @override
+  String get alwaysRestore => 'Toujours restorer';
+
+  @override
+  String get animatingThumbnailIntensity => 'Intensité de l\'animation de la miniature';
+
+  @override
+  String get animatingThumbnailInversed => 'Animations inversées';
+
+  @override
+  String get animatingThumbnailInversedSubtitle => 'Les pics élevés auront pour effet de rétrécir la miniature';
+
+  @override
+  String get anotherProcessIsRunning => 'Un autre processus est déjà en cours d\'exécution.';
+
+  @override
+  String get appIcon => 'Icône de l\'application';
+
+  @override
+  String get appVersion => 'Version de l\'application';
+
+  @override
+  String get artist => 'Artiste';
+
+  @override
+  String get artists => 'Artistes';
+
+  @override
+  String get artwork => 'Illustration';
+
+  @override
+  String get artworkGestures => 'Gestes artistiques';
+
+  @override
+  String get artworks => 'Illustrations';
+
+  @override
+  String get audio => 'Audio';
+
+  @override
+  String get audioCache => 'Cache audio';
+
+  @override
+  String get audioOnly => 'Uniquement l\'audio';
+
+  @override
+  String get auto => 'Auto';
+
+  @override
+  String get autoBackupInterval => 'Intervalle de sauvegarde automatique';
+
+  @override
+  String get autoColoring => 'Coloration automatique';
+
+  @override
+  String get autoColoringSubtitle => 'Sélection automatique des couleurs du lecteur à partir des illustrations actuelles';
+
+  @override
+  String get autoExtractTagsFromFilename => 'Extraction automatique à partir du nom de fichier';
+
+  @override
+  String get autoExtractTitleAndArtistFromVideoTitle => 'Extraction automatique du Titre et de l\'Artiste à partir du titre de la vidéo';
+
+  @override
+  String get autoGenerated => 'Généré automatiquement';
+
+  @override
+  String get autoSkip => 'Passage automatique';
+
+  @override
+  String get autoSkipOnce => 'Passage automatique une fois';
+
+  @override
+  String get autoStartRadio => 'Démarrage automatique de la radio';
+
+  @override
+  String get autoStartRadioSubtitle => 'Ajoute automatiquement une playlist mix lors de la lecture d\'un seul titre';
+
+  @override
+  String get automaticBackup => 'Automatique';
+
+  @override
+  String get automaticBackupSubtitle => 'Applique automatiquement le fichier de sauvegarde le plus récent trouvé dans l\'emplacement de sauvegarde';
+
+  @override
+  String get backupAndRestore => 'Sauvegarde et Restauration';
+
+  @override
+  String get backupAndRestoreSubtitle => 'Sauvegardez votre base de données et vos paramètres';
+
+  @override
+  String get balanced => 'Équilibré';
+
+  @override
+  String get beta => 'Beta';
+
+  @override
+  String get betweenDates => 'Entre deux dates';
+
+  @override
+  String get bitrate => 'Débit binaire';
+
+  @override
+  String get blacklist => 'Liste noire';
+
+  @override
+  String get borderRadiusMultiplier => 'Multiplicateur de rayon de bordure';
+
+  @override
+  String get cache => 'Cache';
+
+  @override
+  String get cancel => 'Annuler';
+
+  @override
+  String get canceled => 'Annulé';
+
+  @override
+  String get changed => 'Changé';
+
+  @override
+  String get changelog => 'Journal des modifications';
+
+  @override
+  String get changelogSubtitle => 'Découvrez les nouveautés et les corrections apportées à Namida';
+
+  @override
+  String get channel => 'Chaîne';
+
+  @override
+  String get channels => 'Chaînes';
+
+  @override
+  String get check => 'Vérifier';
+
+  @override
+  String get checkForMore => 'En savoir plus';
+
+  @override
+  String get checkList => 'Liste de contrôle';
+
+  @override
+  String get choose => 'Choisir';
+
+  @override
+  String get chooseWhatToClear => 'Choisissez ce que vous souhaitez effacer';
+
+  @override
+  String get claim => 'Réclamer';
+
+  @override
+  String get clear => 'Effacer';
+
+  @override
+  String get clearAudioCache => 'Effacer le cache audio';
+
+  @override
+  String get clearImageCache => 'Effacer le cache d\'images';
+
+  @override
+  String get clearImageCacheWarning =>
+      'Avertissement : cette opération entraînera la création d’une bibliothèque sans images. À utiliser uniquement pour reconstruire le cache d’images.';
+
+  @override
+  String get clearTrackItem => 'Effacer la piste de lecture';
+
+  @override
+  String clearTrackItemMultiple({required int number}) {
+    final intl.NumberFormat numberNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String numberString = numberNumberFormat.format(number);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      number,
+      locale: localeName,
+      other: 'Clear $numberString Tracks\'',
+      one: 'Clear Track\'s',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get clearVideoCache => 'Effacer le cache de la vidéo';
+
+  @override
+  String get clearVideoCacheNote => 'Vous pouvez choisir les éléments à supprimer.';
+
+  @override
+  String get clock => 'Horloge';
+
+  @override
+  String get colorPalette => 'Palette de couleurs';
+
+  @override
+  String get colorPaletteNote1 => 'Appuyez longuement sur une couleur pour la supprimer';
+
+  @override
+  String get colorPaletteNote2 => 'Touchez un mélange pour l\'utiliser comme couleur par défaut';
+
+  @override
+  String get colorPalettes => 'Palettes de couleurs';
+
+  @override
+  String get comment => 'Commentaire';
+
+  @override
+  String get comments => 'Commentaires';
+
+  @override
+  String get composer => 'Compositeur';
+
+  @override
+  String get compress => 'Compresser';
+
+  @override
+  String get compressImages => 'Images compressées';
+
+  @override
+  String get compressionPercentage => 'Pourcentage de compression';
+
+  @override
+  String get configure => 'Configurer';
+
+  @override
+  String get confirm => 'Confirmer';
+
+  @override
+  String get confirmRefresh => 'Confirm Refresh?';
+
+  @override
+  String get copiedArtwork => 'Illustration copiée';
+
+  @override
+  String get copiedToClipboard => 'Copié dans le presse-papiers';
+
+  @override
+  String get copy => 'Copier';
+
+  @override
+  String get corruptedFile => 'Impossible d\'analyser le fichier, il est peut-être corrompu';
+
+  @override
+  String get couldntOpen => 'Ouverture impossible';
+
+  @override
+  String get couldntOpenYtLink => 'Aucun lien YouTube disponible pour ce titre';
+
+  @override
+  String get couldntPlayFile => 'Impossible de lire le fichier';
+
+  @override
+  String get couldntRenamePlaylist => 'Impossible de renommer la playlist';
+
+  @override
+  String get couldntSaveImage => 'Impossible d\'enregistrer l\'image';
+
+  @override
+  String countAlbumArtists({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Album Artists',
+      one: '$countString Album Artist',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countAlbums({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Albums',
+      one: '$countString Album',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countArtists({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Artists',
+      one: '$countString Artist',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countComposers({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Composers',
+      one: '$countString Composer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countDays({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Days',
+      one: '$countString Day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countFiles({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Files',
+      one: '$countString File',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countFolders({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Folders',
+      one: '$countString Folder',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countGenres({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Genres',
+      one: '$countString Genre',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countMonths({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Months',
+      one: '$countString Month',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countPlaylists({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Playlists',
+      one: '$countString Playlist',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countSubscribers({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Subscribers',
+      one: '$countString Subscriber',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countSubscribersShort({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.compact(
+      locale: localeName,
+    );
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Subscribers',
+      one: '$countString Subscriber',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countTracks({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Tracks',
+      one: '$countString Track',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countVideos({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Videos',
+      one: '$countString Video',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countViews({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Views',
+      one: '$countString View',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countViewsShort({required int count}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.compact(
+      locale: localeName,
+    );
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Views',
+      one: '$countString View',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get country => 'Pays';
+
+  @override
+  String get coupon => 'Coupon';
+
+  @override
+  String get create => 'Créer';
+
+  @override
+  String get createBackup => 'Créer une sauvegarde';
+
+  @override
+  String get createNewPlaylist => 'Créer une nouvelle playlist';
+
+  @override
+  String get createdBackupSuccessfully => 'Sauvegarde créée';
+
+  @override
+  String get createdBackupSuccessfullySub => 'Le fichier de sauvegarde a été créé avec succès';
+
+  @override
+  String get crossPlatformSync => 'Synchronisation Multi-platforme';
+
+  @override
+  String get crossfadeDuration => 'Durée du fondu enchaîné';
+
+  @override
+  String crossfadeTriggerSeconds({required int seconds}) {
+    final intl.NumberFormat secondsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String secondsString = secondsNumberFormat.format(seconds);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: 'Déclenchement automatique du fondu enchaîné dans les $secondsString dernières secondes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get crossfadeTriggerSecondsDisabled => 'Ne pas déclencher automatiquement le fondu enchaîné';
+
+  @override
+  String get custom => 'Sur mesure';
+
+  @override
+  String get customizations => 'Personnalisations';
+
+  @override
+  String get customizationsSubtitle => 'Personnalisez l\'apparence de votre lecteur';
+
+  @override
+  String dataIsProvidedByName({required String name}) {
+    return 'Les donnees sont fournies par: $name';
+  }
+
+  @override
+  String get dataSaver => 'Économiseur de données';
+
+  @override
+  String get dataSaverMode => 'Mode économie de données';
+
+  @override
+  String get database => 'Base de données';
+
+  @override
+  String get date => 'Date';
+
+  @override
+  String get dateAdded => 'Date d\'ajout';
+
+  @override
+  String get dateCreated => 'Date de création';
+
+  @override
+  String get dateModified => 'Date de modification';
+
+  @override
+  String get dateTimeFormat => 'Format de date et d\'heure';
+
+  @override
+  String get day => 'Jour';
+
+  @override
+  String get days => 'Jours';
+
+  @override
+  String get defaultBackupLocation => 'Emplacement de sauvegarde par défaut';
+
+  @override
+  String get defaultColor => 'Couleur par défaut';
+
+  @override
+  String get defaultColorSubtitle => 'Définissez une couleur à utiliser par le lecteur';
+
+  @override
+  String get defaultDownloadLocation => 'Emplacement de téléchargement par défaut';
+
+  @override
+  String get defaultLabel => 'Par défaut';
+
+  @override
+  String get defaultLibraryTab => 'Onglet Bibliothèque par défaut';
+
+  @override
+  String get delete => 'Supprimer';
+
+  @override
+  String deleteFileCacheSubtitle({required int count, required String totalSizeText}) {
+    final intl.NumberFormat countNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Supprimer $countString fichier(s) d\'une taille totale de $totalSizeText ?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String deleteNTracksFromStorage({required String numberText}) {
+    return 'Supprimer définitivement $numberText de votre stockage';
+  }
+
+  @override
+  String get deletePlaylist => 'Supprimer la playlist';
+
+  @override
+  String get deleteTempFiles => 'Supprimer les fichiers temporaires';
+
+  @override
+  String get deleted => 'Deleted';
+
+  @override
+  String get description => 'Description';
+
+  @override
+  String get developer => 'Développeur';
+
+  @override
+  String get development => 'Développement';
+
+  @override
+  String get didYouMean => 'Vouliez-vous dire';
+
+  @override
+  String get dimIntensity => 'Faible intensité';
+
+  @override
+  String dimMiniplayerAfterSeconds({required int seconds}) {
+    final intl.NumberFormat secondsNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String secondsString = secondsNumberFormat.format(seconds);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: 'Le mini-lecteur s\'éteint après $secondsString secondes d\'inactivité',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get directoryDoesntExist => 'Le répertoire n\'existe pas';
+
+  @override
+  String get disable => 'Désactiver';
+
+  @override
+  String get disableAll => 'Tout désactiver';
+
+  @override
+  String get disableReordering => 'Désactiver la réorganisation';
+
+  @override
+  String get disableSearchCleanup => 'Désactiver le nettoyage de la recherche';
+
+  @override
+  String get discNumber => 'Numéro de disque';
+
+  @override
+  String get discNumberTotal => 'Disque total';
+
+  @override
+  String get discover => 'Découverte';
+
+  @override
+  String get dislike => 'Ne pas aimer';
+
+  @override
+  String get dismissibleMiniplayer => 'Mini-lecteur irrecevable';
+
+  @override
+  String get displayActualPositionInsteadOfDifferenceWhileSeeking => 'Afficher la position réelle au lieu de la différence lors de la recherche';
+
+  @override
+  String get displayAlbumCardTopRightDate => 'Carte de l\'album en haut à droite';
+
+  @override
+  String get displayAlbumCardTopRightDateSubtitle => 'Afficher la date de l\'album en haut à droite de la fiche de l\'album';
+
+  @override
+  String get displayArtistBeforeTitle => 'Afficher l\'artiste avant le titre';
+
+  @override
+  String get displayArtworkOnLockscreen => 'Afficher les illustrations sur l\'écran de verrouillage';
+
+  @override
+  String get displayAudioInfoInMiniplayer => 'Afficher les informations audio';
+
+  @override
+  String get displayFavButtonInNotification => 'Afficher le bouton favori dans la notification';
+
+  @override
+  String get displayFavButtonInNotificationSubtitle => 'La miniature risque d\'être déplacée.';
+
+  @override
+  String get displayFavouriteIconInTrackTile => 'Afficher le bouton favori';
+
+  @override
+  String get displayRemainingDurationInsteadOfTotal => 'Afficher la durée restante au lieu de la durée totale';
+
+  @override
+  String get displayStopButtonInNotification => 'Afficher le bouton Arrêter dans la notification';
+
+  @override
+  String get displayThirdItemInRowInTrackTile => 'Afficher le troisième élément de chaque ligne';
+
+  @override
+  String get displayThirdRowInTrackTile => 'Afficher la troisième rangée';
+
+  @override
+  String get displayTrackNumberInAlbumPage => 'Afficher le numéro de piste sur la page de l\'album';
+
+  @override
+  String get displayTrackNumberInAlbumPageSubtitle => 'Afficher une petite case contenant le numéro de piste sur la page de l\'album';
+
+  @override
+  String get doNothing => 'Ne rien faire';
+
+  @override
+  String get donate => 'Faire un don';
+
+  @override
+  String get donateSubtitle => 'Si vous pensez que cela mérite';
+
+  @override
+  String get done => 'Terminé';
+
+  @override
+  String get dontAskAgain => 'Ne plus demander';
+
+  @override
+  String get dontDim => 'Ne pas baisser la luminosité';
+
+  @override
+  String get dontRestorePosition => 'Ne pas restaurer';
+
+  @override
+  String get dontResume => 'Ne pas reprendre';
+
+  @override
+  String get doubleTapToToggleLyrics => 'Appuyez deux fois pour afficher/masquer les paroles';
+
+  @override
+  String get download => 'Télécharger';
+
+  @override
+  String get downloadingWillOverrideIt => 'Le téléchargement l\'écrasera';
+
+  @override
+  String get downloads => 'Téléchargements';
+
+  @override
+  String get downloadsMetadataTags => 'Balises de métadonnées des téléchargements';
+
+  @override
+  String get downloadsMetadataTagsSubtitle => 'Extraire par défaut l\'artiste, le titre et l\'album des informations vidéo';
+
+  @override
+  String get dragToSeek => 'Faites glisser pour rechercher';
+
+  @override
+  String get duckAudio => 'Éviter l\'audio';
+
+  @override
+  String get duplicatedItemsAdding => 'Vous essayez d\'ajouter des éléments qui existent déjà dans cette playlist';
+
+  @override
+  String get duplicatedTracks => 'Titres dupliqués';
+
+  @override
+  String get duration => 'Durée';
+
+  @override
+  String get edgeColorsSwitching => 'Changement de couleur des bords';
+
+  @override
+  String get edit => 'Modifier';
+
+  @override
+  String get editArtwork => 'Modifier l\'illustration';
+
+  @override
+  String get editTags => 'Modifier les balises';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get emptyNonMeaningfulTagFields => 'Certains champs contiennent des valeurs vides ou non pertinentes ; assurez-vous de vouloir réellement les modifier.';
+
+  @override
+  String get emptyValue => 'Valeur vide';
+
+  @override
+  String get enableArtworkCache => 'Activer le cache des illustrations';
+
+  @override
+  String get enableArtworkCacheSubtitle => 'Chargement plus rapide et performances améliorées, mais utilise davantage d\'espace de stockage';
+
+  @override
+  String get enableBlurEffect => 'Activer l\'effet de flou';
+
+  @override
+  String get enableBottomNavBar => 'Activer la barre de navigation inférieure';
+
+  @override
+  String get enableBottomNavBarSubtitle => 'Les objets se trouvent dans le tiroir dans les deux sens';
+
+  @override
+  String get enableClipboardMonitoring => 'Activer la surveillance du presse-papiers';
+
+  @override
+  String get enableClipboardMonitoringSubtitle => 'Permet de coller des liens et du texte dans la barre de recherche en déplacement';
+
+  @override
+  String get enableCrossfadeEffect => 'Activer l\'effet de fondu enchaîné';
+
+  @override
+  String get enableFadeEffectOnPlayPause => 'Activer l\'effet de fondu en lecture/pause';
+
+  @override
+  String get enableFoldersHierarchy => 'Activer la hiérarchie des dossiers';
+
+  @override
+  String get enableGlowEffect => 'Activer l\'effet lumineux';
+
+  @override
+  String get enableM3uSync => 'Activer la synchronisation M3U';
+
+  @override
+  String get enableM3uSyncNote1 => 'M3U Sync permet d\'enregistrer les modifications apportées à la playlist dans le fichier M3U d\'origine';
+
+  @override
+  String enableM3uSyncNote2({required String playlistsBackupPath}) {
+    return 'En cas de problème, une sauvegarde de cette playlist se trouvera dans $playlistsBackupPath';
+  }
+
+  @override
+  String get enableM3uSyncSubtitle => 'En cas de refus, toutes les modifications apportées à cette playlist seront perdues au redémarrage.';
+
+  @override
+  String get enableMiniplayerParticles => 'Activer les particules en mouvement';
+
+  @override
+  String get enableParallaxEffect => 'Activer l\'effet de parallaxe';
+
+  @override
+  String get enablePartyMode => 'Activer le mode fête';
+
+  @override
+  String get enablePartyModeSubtitle => 'Appliquer un effet de respiration sophistiqué sur les bords';
+
+  @override
+  String get enablePictureInPicture => 'Activer le mode image dans l\'image';
+
+  @override
+  String get enableReordering => 'Activer la réorganisation';
+
+  @override
+  String get enableReturnYoutubeDislike => 'Activer le retour des dislikes YouTube';
+
+  @override
+  String get enableSearchCleanup => 'Activer le nettoyage de la recherche';
+
+  @override
+  String get enableSearchCleanupSubtitle => 'Tous les symboles et espaces seront ignorés';
+
+  @override
+  String get enableSponsorblock => 'Activer SponsorBlock';
+
+  @override
+  String get enableVideoPlayback => 'Activer la lecture vidéo';
+
+  @override
+  String get enterSymbol => 'Veuillez saisir un symbole';
+
+  @override
+  String get equalizer => 'Égaliseur';
+
+  @override
+  String get error => 'Erreur';
+
+  @override
+  String get errorFetchingVideoList => 'Error fetching video list';
+
+  @override
+  String get errorPlayingTrack => 'Erreur lors de la lecture du titre';
+
+  @override
+  String get excludedFodlers => 'Dossiers exclus';
+
+  @override
+  String get exit => 'Quitter';
+
+  @override
+  String get exitAppSubtitle => 'Appuyez de nouveau pour quitter';
+
+  @override
+  String get expandedMiniplayer => 'Mini-lecteur étendu';
+
+  @override
+  String get exportAsM3u => 'Exporter en M3U';
+
+  @override
+  String get extension => 'Extension';
+
+  @override
+  String get externalFiles => 'Fichiers externes';
+
+  @override
+  String get extract => 'Extraire';
+
+  @override
+  String get extractAllColorPalettes => 'Extraire toutes les palettes de couleurs';
+
+  @override
+  String extractAllColorPalettesSubtitle({required int number}) {
+    final intl.NumberFormat numberNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String numberString = numberNumberFormat.format(number);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      number,
+      locale: localeName,
+      other: 'Extraire les $numberString restantes ?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get extractFeatArtist => 'Extraire les artistes du titre';
+
+  @override
+  String get extractFeatArtistSubtitle => 'Extraits (feat. X) et (ft. X) artistes, en tant que nouvelle entrée d\'artiste.';
+
+  @override
+  String get extractingInfo => 'Informations d\'extraction';
+
+  @override
+  String get extras => 'Extras';
+
+  @override
+  String get extrasSubtitle => 'Paramètres supplémentaires pour améliorer votre expérience';
+
+  @override
+  String get extreme => 'Extrême';
+
+  @override
+  String get failed => 'Échec';
+
+  @override
+  String get failedEdits => 'Échec des modifications';
+
+  @override
+  String get favourites => 'Favoris';
+
+  @override
+  String get features => 'Caractéristiques';
+
+  @override
+  String get fetching => 'Récupérer';
+
+  @override
+  String get fetchingOfAllVideos => 'Récupération de toutes les vidéos';
+
+  @override
+  String get file => 'Fichier';
+
+  @override
+  String get fileAlreadyExists => 'Le fichier existe déjà';
+
+  @override
+  String get fileBasedServerWarning =>
+      'Les fichiers seront temporairement téléchargés pour être indexés. Assurez-vous que votre connexion est stable.\nIl est recommandé d\'utiliser une connexion Wi-Fi pour éviter une consommation excessive de données.';
+
+  @override
+  String get fileName => 'Nom du fichier';
+
+  @override
+  String get fileNameWoExt => 'Nom de fichier sans extension';
+
+  @override
+  String get filenameShouldntStartWith => 'Le nom de fichier ne doit pas commencer par';
+
+  @override
+  String get files => 'Dossiers';
+
+  @override
+  String get filler => 'Remplissage';
+
+  @override
+  String get filterAlbums => 'Filtrer les albums';
+
+  @override
+  String get filterArtists => 'Filtrer les artistes';
+
+  @override
+  String get filterGenres => 'Filtrer les genres';
+
+  @override
+  String get filterPlaylists => 'Filtrer les playlists';
+
+  @override
+  String get filterTracks => 'Filtrer les titres';
+
+  @override
+  String get filterTracksBy => 'Filtrer les titres dans les listes de recherche par';
+
+  @override
+  String get filtered => 'Filtered';
+
+  @override
+  String get filteredBySizeAndDuration => 'Titres filtrés par taille et durée';
+
+  @override
+  String get finished => 'Fini';
+
+  @override
+  String get finishedUpdatingLibrary => 'Mise à jour de la bibliothèque terminée';
+
+  @override
+  String get firstListen => 'Première écoute';
+
+  @override
+  String get fixYtdlpBigThumbnailSize => 'Correction de la taille des miniatures YT-DLP';
+
+  @override
+  String get floatingActionButton => 'Bouton d\'action flottant';
+
+  @override
+  String get folder => 'Dossier';
+
+  @override
+  String get folderName => 'Nom du dossier';
+
+  @override
+  String get folders => 'Dossiers';
+
+  @override
+  String get fontScale => 'Échelle de police';
+
+  @override
+  String get forceMiniplayerFollowTrackColors => 'Forcer le mini-lecteur à suivre les couleurs du titre';
+
+  @override
+  String get forceSquaredAlbumThumbnail => 'Forcer au format carré la miniature de l\'album';
+
+  @override
+  String get forceSquaredThumbnailNote =>
+      'La taille des miniatures et la hauteur des tuiles ne sont pas égales. L\'aspect carré ne sera pas celui escompté. Souhaitez-vous les égaliser ?';
+
+  @override
+  String get forceSquaredTrackThumbnail => 'Forcer au format carré la miniature du titre';
+
+  @override
+  String get forceStopColorPaletteGeneration => 'Interrompre l\'extraction des palettes de couleurs ? Vous pourrez la reprendre ultérieurement.';
+
+  @override
+  String get format => 'Format';
+
+  @override
+  String get fullscreen => 'Plein écran';
+
+  @override
+  String get gaplessPlayback => 'Lecture sans interruption';
+
+  @override
+  String get generate => 'Générer';
+
+  @override
+  String get generateFromDates => 'Période';
+
+  @override
+  String get generateFromDatesSubtitle => 'Générer les titres que vous avez écoutés dans une période donnée';
+
+  @override
+  String get generateRandomPlaylist => 'Générer une playlist aléatoire';
+
+  @override
+  String get genre => 'Genre';
+
+  @override
+  String get genres => 'Genres';
+
+  @override
+  String get goToAlbum => 'Aller à l\'album';
+
+  @override
+  String get goToArtist => 'Aller à l\'artiste';
+
+  @override
+  String get goToChannel => 'Aller à la chaîne';
+
+  @override
+  String get goToFolder => 'Aller au dossier';
+
+  @override
+  String get goodLooking => 'Belle apparence';
+
+  @override
+  String get grantStoragePermission => 'Autorisation de stockage';
+
+  @override
+  String get group => 'Grouper';
+
+  @override
+  String get groupArtworksByAlbum => 'Regrouper les illustrations par album';
+
+  @override
+  String get guide => 'Guide';
+
+  @override
+  String get hapticFeedback => 'Retour Haptique';
+
+  @override
+  String get heightOfAlbumTile => 'Hauteur de la tuile de l\'album';
+
+  @override
+  String get heightOfTrackTile => 'Hauteur de la tuile du titre';
+
+  @override
+  String get hideSkipButtonAfter => 'Masquer le bouton passer après';
+
+  @override
+  String get highMatches => 'Correspondance élevée';
+
+  @override
+  String get highPerformance => 'Haute performance';
+
+  @override
+  String get highlight => 'Souligner';
+
+  @override
+  String get history => 'Historique';
+
+  @override
+  String get historyImportMissingEntriesNote => 'Ces entrées sont introuvables dans la bibliothèque. Si vous pensez qu\'elles existent, veuillez les ajouter manuellement.';
+
+  @override
+  String historyListensReplaceWarning({required int listensCount, required String newTrackInfo, required String oldTrackInfo}) {
+    final intl.NumberFormat listensCountNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String listensCountString = listensCountNumberFormat.format(listensCount);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      listensCount,
+      locale: localeName,
+      other: '$listensCountString écoutes $oldTrackInfo sera remplacé par $newTrackInfo, confirmer ?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get home => 'Accueil';
+
+  @override
+  String get hook => 'Crochet';
+
+  @override
+  String get host => 'Hôte';
+
+  @override
+  String get hourFormat12 => 'Format 12 heures';
+
+  @override
+  String get hours => 'Heures';
+
+  @override
+  String get iReadAndAgree => 'J\'ai lu et je suis d\'accord';
+
+  @override
+  String get ifNotPlaying => 'Si vous ne jouez pas';
+
+  @override
+  String get ignoreBatteryOptimizationsSubtitle => 'Les téléchargements peuvent être limités lorsque l\'application est soumise à des restrictions de batterie.';
+
+  @override
+  String get ignoreCommonPrefixesWhileSorting => 'Ignorer les préfixes courants lors du tri';
+
+  @override
+  String get ignores => 'Ignore';
+
+  @override
+  String get imageSource => 'Image source';
+
+  @override
+  String get immersiveMode => 'Mode immersif';
+
+  @override
+  String get immersiveModeSubtitle => 'Masquer les barres d\'état et de navigation lorsque le mini-lecteur est développé';
+
+  @override
+  String get import => 'Importer';
+
+  @override
+  String get importAll => 'Tout importer';
+
+  @override
+  String get importLastFmHistory => 'Importer l\'historique de LastFm';
+
+  @override
+  String importLastFmHistoryGuide({required String lastfmCsvLink}) {
+    return '1. Aller sur $lastfmCsvLink\n\n2. Tapez votre nom d\'utilisateur, récupérez et téléchargez le fichier csv.\n\n3. Choisissez le fichier dans l\'écran suivant.';
+  }
+
+  @override
+  String get importTimeRange => 'Période d\'importation';
+
+  @override
+  String get importYoutubeHistory => 'Importer l\'historique YouTube';
+
+  @override
+  String importYoutubeHistoryGuide({required String takeoutLink}) {
+    return '1. Aller sur $takeoutLink\n\n2. Appuyez sur \"Formats multiples\" et à côté de \"Historique\" choisissez \"JSON\".\n\n3. Appuyez sur \"Toutes les données YouTube incluses\", Désélectionnez tout et choisissez uniquement l\'historique.\n\n4. Créez l\'Exportation, Téléchargez et Décompressez\n\n5. Choisissez \"watch-history.json\" dans l\'écran suivant.';
+  }
+
+  @override
+  String importedNChannelsSuccessfully({required int number}) {
+    final intl.NumberFormat numberNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String numberString = numberNumberFormat.format(number);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      number,
+      locale: localeName,
+      other: '$numberString canaux importés avec succès',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importedNPlaylistsSuccessfully({required int number, required String numberText}) {
+    String _temp0 = intl.Intl.pluralLogic(
+      number,
+      locale: localeName,
+      other: '$numberText playlists importées avec succès',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get includeVideos => 'Inclure des vidéos';
+
+  @override
+  String get indexRefreshRequired => 'Actualisez la page après avoir modifié ceci';
+
+  @override
+  String get indexer => 'Indexeur';
+
+  @override
+  String get indexerNote => 'Remarque : le nombre incomplet d\'illustrations fait référence aux illustrations en double et introuvables.';
+
+  @override
+  String get indexerSubtitle => 'Gérez votre bibliothèque musicale';
+
+  @override
+  String get infinityQueueOnNextPrev => 'File d\'attente infinie sur Suivant/Précédent';
+
+  @override
+  String get infinityQueueOnNextPrevSubtitle => 'Appuyer sur « suivant » pendant la lecture du dernier élément permettra de passer au premier, et inversement.';
+
+  @override
+  String get info => 'Info';
+
+  @override
+  String get inserted => 'inséré';
+
+  @override
+  String get instantlyApplies => 'S\'applique instantanément';
+
+  @override
+  String get interactionReminder => 'Rappel d\'interaction';
+
+  @override
+  String get intro => 'Introduction';
+
+  @override
+  String get invertSelection => 'Inverser la sélection';
+
+  @override
+  String get issues => 'Problèmes';
+
+  @override
+  String get item => 'Objet';
+
+  @override
+  String get jump => 'Sauter';
+
+  @override
+  String get jumpToDay => 'Passer au jour';
+
+  @override
+  String get jumpToFirstTrackAfterQueueFinish => 'Passez directement au premier titre après avoir terminé la file d\'attente';
+
+  @override
+  String get keepCachedVersions => 'Conserver les versions en cache';
+
+  @override
+  String get keepFileDates => 'Conserver les dates des dossiers';
+
+  @override
+  String get keepScreenAwakeMiniplayerExpanded => 'Le mini-lecteur est élargi';
+
+  @override
+  String get keepScreenAwakeMiniplayerExpandedAndVideo => 'Le mini-lecteur est étendu et une vidéo est en cours de lecture';
+
+  @override
+  String get keepScreenAwakeNone => 'Ne pas garder l\'écran éveillé';
+
+  @override
+  String get keepScreenAwakeWhen => 'Maintenir l\'écran éveillé lorsque';
+
+  @override
+  String get killPlayerAfterDismissingApp => 'Tuer le lecteur après avoir quitté l\'application';
+
+  @override
+  String get language => 'Langue';
+
+  @override
+  String get learnMore => 'En savoir plus';
+
+  @override
+  String get leftAction => 'Action gauche';
+
+  @override
+  String get legacyAuthentication => 'Authentification héritée';
+
+  @override
+  String get libraryTabs => 'Onglets de la bibliothèque';
+
+  @override
+  String get libraryTabsReorder => 'Vous pouvez réorganiser les onglets activés.';
+
+  @override
+  String get license => 'Licence';
+
+  @override
+  String get licenseSubtitle => 'Licences et accords utilisés par Namida';
+
+  @override
+  String get like => 'Aimer';
+
+  @override
+  String get liked => 'Aimé(s)';
+
+  @override
+  String get link => 'Lien';
+
+  @override
+  String get listOfFolders => 'Liste des dossiers';
+
+  @override
+  String get loadAll => 'Charger tout';
+
+  @override
+  String get loadingFile => 'Chargement du fichier';
+
+  @override
+  String get local => 'Local';
+
+  @override
+  String get localVideoMatching => 'Correspondance vidéo locale';
+
+  @override
+  String get login => 'Connexion';
+
+  @override
+  String get longPressAction => 'Action de pression prolongée';
+
+  @override
+  String get longPressTheLyricsToEnterFullscreen => 'Faites un appui long sur les paroles pour entrer en plein écran';
+
+  @override
+  String get lostMemories => 'Souvenirs perdus';
+
+  @override
+  String lostMemoriesSubtitle({required int number}) {
+    final intl.NumberFormat numberNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String numberString = numberNumberFormat.format(number);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      number,
+      locale: localeName,
+      other: 'à cette époque, il y a $numberString ans',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lostPartners => 'Partenaires Perdus';
+
+  @override
+  String get loudnessEnhancer => 'Amplificateur de volume';
+
+  @override
+  String get lyricist => 'Parolier';
+
+  @override
+  String get lyrics => 'Paroles';
+
+  @override
+  String get lyricsSource => 'Source des paroles';
+
+  @override
+  String get m3uPlaylist => 'Playlist M3U';
+
+  @override
+  String get makeYourFirstListen => 'Faites votre première écoute !';
+
+  @override
+  String get manage => 'Gérer';
+
+  @override
+  String get manageYourAccounts => 'Gérer vos comptes';
+
+  @override
+  String get manualBackup => 'Manuel';
+
+  @override
+  String get manualBackupSubtitle => 'prendre un dossier spécifique';
+
+  @override
+  String get markAsRead => 'Marquer comme lu';
+
+  @override
+  String get matchAllTracks => 'Correspondre à toutes les pistes';
+
+  @override
+  String get matchAllTracksNote => 'cela peut avoir un impact sur la vitesse de correspondance, car toutes les pistes de votre bibliothèque seront vérifiées.';
+
+  @override
+  String get matchingType => 'Type de correspondance';
+
+  @override
+  String get maxAudioCacheSize => 'Taille maximale du cache audio';
+
+  @override
+  String get maxImageCacheSize => 'Taille maximale du cache de l\'image';
+
+  @override
+  String get maxVideoCacheSize => 'Taille maximale du cache vidéo';
+
+  @override
+  String get maximum => 'Maximum';
+
+  @override
+  String get mediaStoreIsEnabledThisWillHaveNoEffect => 'Media Store est activé, ceci n\'aura aucun effet';
+
+  @override
+  String get medium => 'Moyen';
+
+  @override
+  String get membershipCode => 'Code';
+
+  @override
+  String get membershipCodeSentToEmail => 'Code envoyé à votre boite mail';
+
+  @override
+  String get membershipDidntChange => 'Le nombre de membres n\'a pas changé';
+
+  @override
+  String get membershipEnjoyNew => 'Profitez de votre nouvelle adhésion';
+
+  @override
+  String get membershipFreeCoupon => 'Coupon gratuit';
+
+  @override
+  String get membershipManage => 'Gérer votre adhésion';
+
+  @override
+  String get membershipNoSubscriptionsFoundForUser => 'Aucun abonnement trouvé pour cet utilisateur';
+
+  @override
+  String get membershipSignInToPatreonAccount => 'Connectez-vous à votre compte Patreon';
+
+  @override
+  String get membershipUnknown => 'Adhésion inconnue';
+
+  @override
+  String membershipYouNeedMembershipOfToAddMultipleAccounts({required String name1, required String name2}) {
+    return 'Vous devez être membre de $name1 ou $name2 pour ajouter plusieurs comptes';
+  }
+
+  @override
+  String get merge => 'Fusionner';
+
+  @override
+  String get metadataCache => 'Cache de métadonnées';
+
+  @override
+  String get metadataEditFailed => 'Échec de la modification des métadonnées';
+
+  @override
+  String get metadataReadFailed => 'Échec de la lecture des métadonnées';
+
+  @override
+  String get minFileDuration => 'Durée minimale de la piste';
+
+  @override
+  String get minFileSize => 'Taille minimale du fichier';
+
+  @override
+  String get minTrackDurationToRestoreLastPosition => 'Durée minimale de la piste pour rétablir la dernière position jouée';
+
+  @override
+  String get minValueCantBeMoreThanMax => 'La valeur minimale ne peut être supérieure à la valeur maximale';
+
+  @override
+  String get minValueToCountTrackListen => 'Compter une écoute après : ';
+
+  @override
+  String get minimizedMiniplayer => 'Minimisation du mini-lecteur';
+
+  @override
+  String get minimum => 'Minimum';
+
+  @override
+  String get minimumOneFolderSubtitle => 'Il doit y avoir au moins un dossier, ajoutez d\'autres dossiers si vous souhaitez supprimer celui-ci.';
+
+  @override
+  String get minimumOneItem => 'Impossible de supprimer l\'article';
+
+  @override
+  String minimumOneItemSubtitle({required int number}) {
+    final intl.NumberFormat numberNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String numberString = numberNumberFormat.format(number);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      number,
+      locale: localeName,
+      other: 'Il doit rester au moins $numberString éléments',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get minimumSegmentDuration => 'Durée minimale du segment';
+
+  @override
+  String get miniplayerCustomization => 'Personnalisations du mini-lecteur';
+
+  @override
+  String get minutes => 'minutes';
+
+  @override
+  String get missingEntries => 'Entrées manquantes';
+
+  @override
+  String get missingTracks => 'Pistes manquantes';
+
+  @override
+  String get mix => 'Mix';
+
+  @override
+  String get mixPlaylistGeneratedByYoutube => 'Mix playlist généré par YouTube';
+
+  @override
+  String get mixes => 'Mélanges';
+
+  @override
+  String get mobile => 'Mobile';
+
+  @override
+  String get month => 'Mois';
+
+  @override
+  String get months => 'Mois';
+
+  @override
+  String get mood => 'Humeur';
+
+  @override
+  String get moods => 'Humeurs';
+
+  @override
+  String get more => 'Plus';
+
+  @override
+  String get mostPlayed => 'Les plus joués';
+
+  @override
+  String get multipleTracksTagsEditNote => 'Vous êtes sur le point d\'éditer ces pistes,\nLes champs non modifiés restent intacts.';
+
+  @override
+  String get musicOfftopic => 'Musique hors sujet';
+
+  @override
+  String get name => 'Nom';
+
+  @override
+  String get nameContainsBadCharacter => 'Le nom contient un mauvais caractère';
+
+  @override
+  String get never => 'Jamais';
+
+  @override
+  String get newDirectory => 'Nouveau répertoire';
+
+  @override
+  String get newLabel => 'New';
+
+  @override
+  String get newTracksAdd => 'Ajouter des pistes';
+
+  @override
+  String get newTracksMoods => 'Humeur';
+
+  @override
+  String get newTracksMoodsSubtitle => 'Générer des pistes basées sur les ambiances disponibles';
+
+  @override
+  String get newTracksRandom => 'Aléatoire';
+
+  @override
+  String get newTracksRandomSubtitle => 'Choisissez des morceaux au hasard dans votre bibliothèque';
+
+  @override
+  String get newTracksRatings => 'Notations';
+
+  @override
+  String get newTracksRatingsSubtitle => 'Générer des pistes qui ont un classement spécifique';
+
+  @override
+  String get newTracksRecommended => 'Recommandé';
+
+  @override
+  String newTracksRecommendedSubtitle({required String currentTrack}) {
+    return 'Générer les pistes que vous écoutez habituellement avec $currentTrack.';
+  }
+
+  @override
+  String get newTracksSimilarrReleaseDate => 'Date de sortie similaire';
+
+  @override
+  String newTracksSimilarrReleaseDateSubtitle({required String currentTrack}) {
+    return 'Générer des pistes qui ont été publiées à peu près en même temps que $currentTrack.';
+  }
+
+  @override
+  String get newTracksUnknownYear => 'L\'année de la piste est inconnue';
+
+  @override
+  String get newest => 'Le plus récent';
+
+  @override
+  String get next => 'Suivant';
+
+  @override
+  String get no => 'non';
+
+  @override
+  String get noChangesFound => 'Aucune modification n\'a été trouvée.';
+
+  @override
+  String get noEnoughTracks => 'Vous n\'avez pas beaucoup de pistes..';
+
+  @override
+  String get noExcludedFolders => 'Vous n\'avez pas de dossiers exclus';
+
+  @override
+  String get noFolderChosen => 'Vous n\'avez choisi aucun dossier';
+
+  @override
+  String get noMoodsAvailable => 'Pas d\'ambiance disponible';
+
+  @override
+  String get noNetworkAvailableToFetchData => 'Pas de réseau disponible pour récupérer les données';
+
+  @override
+  String get noTracksFound => 'Aucune trace n\'a été trouvée';
+
+  @override
+  String get noTracksFoundBetweenDates => 'Cette gamme de temps n\'a pas de pistes.';
+
+  @override
+  String get noTracksFoundInDirectory => 'Aucune piste n\'a été trouvée dans ce répertoire';
+
+  @override
+  String get noTracksInHistory => 'Vous n\'avez pas assez de pistes dans l\'historique';
+
+  @override
+  String get nonActive => 'Non-actif';
+
+  @override
+  String get nonFavourites => 'Non-Favoris';
+
+  @override
+  String get none => 'Aucun';
+
+  @override
+  String get normalizeAudio => 'Normaliser l\'audio';
+
+  @override
+  String get normalizeAudioSubtitle => 'Normalise le volume en lisant la balise replay gain ou l\'information fournie par youtube';
+
+  @override
+  String get notAvailableForYourDevice => 'Non disponible pour votre appareil';
+
+  @override
+  String get notSupportedForNetworkFiles => 'Non pris en charge pour les fichiers réseau';
+
+  @override
+  String get note => 'Note';
+
+  @override
+  String get notification => 'Notification';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get numberOfTracks => 'Nombre de pistes';
+
+  @override
+  String get ofLabel => 'de';
+
+  @override
+  String get offlineSearch => 'Recherche hors ligne';
+
+  @override
+  String get offset => 'Décalage';
+
+  @override
+  String get oldDirectory => 'Ancien répertoire';
+
+  @override
+  String get oldDirectoryStillHasTracks => 'L\'ancien répertoire a encore des traces, confirmez-vous ?';
+
+  @override
+  String get oldestWatch => 'La plus ancienne montre';
+
+  @override
+  String get onInterruption => 'Sur l\'interruption';
+
+  @override
+  String get onNotificationTap => 'Sur l\'appui de notification';
+
+  @override
+  String get onOpeningYoutubeLink => 'En ouvrant le lien youtube';
+
+  @override
+  String get onSwiping => 'Au balayage';
+
+  @override
+  String get onVolumeZero => 'Sur le volume 0';
+
+  @override
+  String get ongoing => 'En cours';
+
+  @override
+  String get open => 'Ouvrir';
+
+  @override
+  String get openApp => 'Ouvrir l\'application';
+
+  @override
+  String get openInFileExplorer => 'Ouvrir dans l\'explorateur de fichiers';
+
+  @override
+  String get openInYoutubeView => 'Ouvrir en vue Youtube';
+
+  @override
+  String get openMiniplayer => 'Ouvrir le mini-lecteur';
+
+  @override
+  String get openQueue => 'Ouvrir une file d\'attente';
+
+  @override
+  String get openYoutubeLink => 'Ouvrir le lien Youtube';
+
+  @override
+  String operationRequiresAccount({required String name}) {
+    return 'L\'opération $name nécessite un compte, Se connecter pour continuer';
+  }
+
+  @override
+  String operationRequiresMembership({required String name, required String operation}) {
+    return 'L\'opération $operation nécessite au moins l\'adhésion $name';
+  }
+
+  @override
+  String get or => 'ou';
+
+  @override
+  String get others => 'Autres';
+
+  @override
+  String get output => 'Sorties';
+
+  @override
+  String get outro => 'Conclusion';
+
+  @override
+  String get overrideOldFilesInTheSameFolder => 'Remplacer les anciens fichiers dans le même dossier';
+
+  @override
+  String get palette => 'Palette';
+
+  @override
+  String get paletteMix => 'Mix';
+
+  @override
+  String get paletteNewMix => 'Nouveau Mix';
+
+  @override
+  String get paletteSelectedMix => 'Selectionner Mix';
+
+  @override
+  String get parallelDownloads => 'Téléchargements parallèles';
+
+  @override
+  String get parsed => 'analysé';
+
+  @override
+  String get password => 'Mot de passe';
+
+  @override
+  String get path => 'Chemin complet du fichier';
+
+  @override
+  String get pause => 'Pause';
+
+  @override
+  String get pauseFadeDuration => 'Durée du fondu en pause';
+
+  @override
+  String get pausePlayback => 'Pause de la lecture';
+
+  @override
+  String get percentage => 'Pourcentage';
+
+  @override
+  String get performanceMode => 'Mode performance';
+
+  @override
+  String get performanceNote => 'Peut affecter les performances';
+
+  @override
+  String get personalized => 'Personnalisé';
+
+  @override
+  String get personalizedRelatedVideos => 'Vidéos personnalisées';
+
+  @override
+  String get personalizedRelatedVideosSubtitle => 'La désactivation de cette fonction augmentera l\'utilisation des données';
+
+  @override
+  String get pickColorsFromDeviceWallpaper => 'Choisir les couleurs du fond d\'écran de l\'appareil';
+
+  @override
+  String get pickFromStorage => 'Choisir dans l\'espace de stockage';
+
+  @override
+  String get pinned => 'Épinglé';
+
+  @override
+  String get pitch => 'Tonalité';
+
+  @override
+  String get plain => 'Plat';
+
+  @override
+  String get play => 'Jouer';
+
+  @override
+  String get playAfter => 'Jouer après';
+
+  @override
+  String get playAfterNextPrev => 'Lecture automatique sur Suivant/Précédent';
+
+  @override
+  String get playAll => 'Jouer tout';
+
+  @override
+  String get playFadeDuration => 'Durée du fondu enchaîné';
+
+  @override
+  String get playLast => 'Jouer en dernier';
+
+  @override
+  String get playNext => 'Jouer Suivant';
+
+  @override
+  String get playbackSetting => 'Lecture';
+
+  @override
+  String get playbackSettingSubtitle => 'Il est possible d\'y accéder directement dans le lecteur en appuyant longuement sur le bouton audio.';
+
+  @override
+  String get playlist => 'Playlist';
+
+  @override
+  String get playlists => 'Playlists';
+
+  @override
+  String get playlistsImportM3uNative => 'Cela importera les playlists M3U à utiliser uniquement par namida, à utiliser si vous effectuez une migration.';
+
+  @override
+  String get playlistsImportM3uSynced =>
+      'Cela permet d\'importer automatiquement les playlists M3U à partir des dossiers d\'indexation et de les synchroniser avec le fichier M3U d\'origine. à activer si vous accédez aux playlists ou les modifiez à partir d\'autres applications.';
+
+  @override
+  String get playlistsImportM3uSyncedAutoImport => 'Importation automatique de playlists M3U';
+
+  @override
+  String get pleaseEnterADifferentName => 'Ce nom existe déjà :(\nveuillez essayer un autre nom fantaisiste.';
+
+  @override
+  String get pleaseEnterALink => 'Veuillez saisir un lien';
+
+  @override
+  String get pleaseEnterALinkSubtitle => 'umm... est-ce un lien youtube ?';
+
+  @override
+  String get pleaseEnterAName => 'Veuillez saisir un nom';
+
+  @override
+  String get port => 'Port';
+
+  @override
+  String get preventDuplicatedTracks => 'Empêcher la duplication des pistes';
+
+  @override
+  String get preventDuplicatedTracksSubtitle => 'Utilise le nom de fichier pour identifier les pistes de manière unique';
+
+  @override
+  String get preview => 'Aperçu';
+
+  @override
+  String get previous => 'Précédent';
+
+  @override
+  String get previousButtonReplays => 'Bouton précédent de rediffusion';
+
+  @override
+  String get previousButtonReplaysSubtitle => 'si l\'on a appuyé sur cette touche alors que la position actuelle était supérieure à la durée de la recherche';
+
+  @override
+  String get prioritizeEmbeddedLyrics => 'Priorité aux paroles intégrées';
+
+  @override
+  String get priority => 'Priorité';
+
+  @override
+  String get private => 'Privé';
+
+  @override
+  String get progress => 'Progression';
+
+  @override
+  String get promptToChangeTrackPath =>
+      'Cela se produit généralement lorsque vous supprimez/déplacez/renommez le fichier en dehors de namida, souhaitez-vous mettre à jour le chemin d\'accès actuel ?';
+
+  @override
+  String get public => 'Publique';
+
+  @override
+  String get queue => 'File d\'attente';
+
+  @override
+  String get queues => 'Files d\'attente';
+
+  @override
+  String get random => 'Aléatoire';
+
+  @override
+  String get randomPicks => 'Choix aléatoires';
+
+  @override
+  String get rating => 'Evaluation';
+
+  @override
+  String get reIndex => 'Ré-indexation';
+
+  @override
+  String get reIndexSubtitle => 'Reconstituez votre bibliothèque musicale à partir de zéro';
+
+  @override
+  String get reIndexWarning =>
+      'Ce processus peut prendre un certain temps, en fonction de la taille de votre bibliothèque.\n\nLes œuvres ne seront pas réindexées tant qu\'elles existeront.';
+
+  @override
+  String get recentAlbums => 'Albums récents';
+
+  @override
+  String get recentArtists => 'Artistes récents';
+
+  @override
+  String get recentListens => 'Écoutes récentes';
+
+  @override
+  String get recentlyAdded => 'Récemment ajouté';
+
+  @override
+  String get recordLabel => 'Label d\'enregistrement';
+
+  @override
+  String get refresh => 'Rafraîchir';
+
+  @override
+  String get refreshLibrary => 'Rafraîchir la bibliothèque';
+
+  @override
+  String get refreshLibrarySubtitle => 'Vérifier si de la musique a été ajoutée ou supprimée';
+
+  @override
+  String get refreshOnStartup => 'Actualiser au démarrage';
+
+  @override
+  String get relatedVideos => 'Vidéos associées';
+
+  @override
+  String get rememberAudioOnlyMode => 'Se souvenir du mode audio uniquement';
+
+  @override
+  String get remixer => 'Remixer';
+
+  @override
+  String get remove => 'Retirer';
+
+  @override
+  String get removeDuplicates => 'Supprimer les doublons';
+
+  @override
+  String get removeFromFavourites => 'Supprimer des favoris';
+
+  @override
+  String get removeFromLibrary => 'Supprimer de la bibliothèque';
+
+  @override
+  String get removeFromPlaylist => 'Retirer de la playlist';
+
+  @override
+  String get removeQueue => 'Supprimer la file d\'attente';
+
+  @override
+  String get removeSourceFromHistory => 'Supprimer la source de l\'historique';
+
+  @override
+  String get removeWhitespaces => 'Supprimer les espaces blancs';
+
+  @override
+  String get removed => 'Retiré';
+
+  @override
+  String get rename => 'Renommer';
+
+  @override
+  String get renamePlaylist => 'Renommer la playlist';
+
+  @override
+  String get reorderable => 'Réassortissable';
+
+  @override
+  String repeatForNTimes({required int number}) {
+    String _temp0 = intl.Intl.pluralLogic(
+      number,
+      locale: localeName,
+      other: 'Répéter pour $number fois supplémentaires',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get repeatMode => 'Mode répétition';
+
+  @override
+  String get repeatModeAll => 'Répétition de la file d\'attente';
+
+  @override
+  String get repeatModeNone => 'Arrêt sur la dernière piste';
+
+  @override
+  String get repeatModeOne => 'Répéter la piste actuelle';
+
+  @override
+  String get replaceAllListensWithAnotherTrack => 'Remplacer toutes les écoutes par une autre piste';
+
+  @override
+  String get replies => 'Réponses';
+
+  @override
+  String get reply => 'Répondre au commentaire';
+
+  @override
+  String get requiresClearingImageCacheAndReIndexing => 'Nécessite de vider la mémoire cache des images et de procéder à une nouvelle indexation';
+
+  @override
+  String get rescanVideos => 'Re-scanner les vidéos';
+
+  @override
+  String get resetBrightness => 'Réinitialiser la luminosité';
+
+  @override
+  String get resetToDefault => 'Régler sur';
+
+  @override
+  String get respectNoMedia => 'Respecter .nomedia';
+
+  @override
+  String get respectNoMediaSubtitle => 'Ne pas inclure les dossiers qui ont .nomedia';
+
+  @override
+  String get restart => 'Redémarrer';
+
+  @override
+  String get restoreBackup => 'Restaurer la sauvegarde';
+
+  @override
+  String get restoreDefaults => 'Rétablir les valeurs par défaut';
+
+  @override
+  String get restoredBackupSuccessfully => 'Sauvegarde restaurée';
+
+  @override
+  String get restoredBackupSuccessfullySub => 'Le fichier de sauvegarde a été restauré avec succès';
+
+  @override
+  String get resume => 'Recommencer';
+
+  @override
+  String get resumeIfWasInterrupted => 'Reprendre si l\'interruption a été interrompue';
+
+  @override
+  String get resumeIfWasPausedByVolume => 'Reprendre si le volume a été mis en pause';
+
+  @override
+  String resumeIfWasPausedForLessThanNMin({required int number}) {
+    final intl.NumberFormat numberNumberFormat = intl.NumberFormat.decimalPattern(localeName);
+    final String numberString = numberNumberFormat.format(number);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      number,
+      locale: localeName,
+      other: 'Reprendre si la pause a duré moins de $numberString minutes',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get returnYoutubeDislike => 'Retour de Youtube Dislike';
+
+  @override
+  String get reverseOrder => 'Ordre inverse';
+
+  @override
+  String get rightAction => 'Action droite';
+
+  @override
+  String get ringtone => 'Sonnerie';
+
+  @override
+  String get sameDirectoryOnly => 'Même répertoire uniquement';
+
+  @override
+  String get sample => 'Échantillon';
+
+  @override
+  String get sampleRate => 'Taux d\'échantillonnage';
+
+  @override
+  String get save => 'Enregistrer';
+
+  @override
+  String get saveToLibrary => 'Enregistrer dans la bibliothèque';
+
+  @override
+  String get savedIn => 'Sauvegardé dans';
+
+  @override
+  String get scaleMultiplier => 'Multiplicateur d\'échelle';
+
+  @override
+  String get search => 'Rechercher';
+
+  @override
+  String get searchYoutube => 'Rechercher YouTube';
+
+  @override
+  String get seconds => 'secondes';
+
+  @override
+  String seeProjectCodeOnSite({required String site}) {
+    return 'Voir le code du projet sur $site';
+  }
+
+  @override
+  String get seekDuration => 'Durée de la recherche';
+
+  @override
+  String get seekDurationInfo => 'Vous pouvez appuyer sur la durée actuelle pour rechercher en arrière et sur la durée totale pour rechercher en avant.';
+
+  @override
+  String get seekbar => 'Barre de recherche';
+
+  @override
+  String get selectAll => 'Sélectionner tout';
+
+  @override
+  String get selectFilesAlreadyInLocalLibrary => 'Sélectionner les fichiers dans la librairie locale';
+
+  @override
+  String get selectedTracks => 'Morceaux choisis';
+
+  @override
+  String get selfPromotion => 'Autopromotion';
+
+  @override
+  String get semitones => 'Demi-tons';
+
+  @override
+  String get separatorsBlacklistSubtitle => 'Ces mots ne seront pas divisés';
+
+  @override
+  String get separatorsMessage =>
+      'Il n\'est pas nécessaire d\'insérer des espaces, sauf si vous voulez utiliser une lettre/un symbole qui se trouve dans un mot entier (comme x et ft).';
+
+  @override
+  String get serverAddress => 'Adresse du serveur';
+
+  @override
+  String get setAs => 'Définir comme';
+
+  @override
+  String get setAsDefault => 'Définir par défaut';
+
+  @override
+  String get setFileLastModifiedAsVideoUploadDate => 'Définir la date de dernière modification du fichier comme date de chargement de la vidéo';
+
+  @override
+  String get setMoods => 'Créer des ambiances';
+
+  @override
+  String get setMoodsSubtitle => 'Utilisez des virgules (,) pour les séparer.';
+
+  @override
+  String get setRating => 'Évaluation définie';
+
+  @override
+  String get setTags => 'Définir les étiquettes';
+
+  @override
+  String get setYoutubeLink => 'Définir le lien Youtube';
+
+  @override
+  String get settings => 'Paramètres';
+
+  @override
+  String get setupFirstStartup => 'Mise en place du premier démarrage';
+
+  @override
+  String get share => 'Partager';
+
+  @override
+  String get shareLogs => 'Partager les journaux';
+
+  @override
+  String get shortcuts => 'Raccourcis';
+
+  @override
+  String get shouldDuck => 'Devrait canarder';
+
+  @override
+  String get shouldDuckNote => 'Indique que le volume doit être réduit. ex : notification';
+
+  @override
+  String get shouldPause => 'Doit faire une pause';
+
+  @override
+  String get shouldPauseNote => 'Indique que la lecture doit être mise en pause. ex : appels';
+
+  @override
+  String get showAll => 'Tout afficher';
+
+  @override
+  String get showChannelWatermarkInFullscreen => 'Afficher le filigrane de la chaîne en plein écran';
+
+  @override
+  String get showFailedOnly => 'Uniquement afficher les échecs';
+
+  @override
+  String get showHideUnknownFields => 'Afficher/masquer les champs inconnus';
+
+  @override
+  String get showInSeekbar => 'Afficher dans la barre de recherche';
+
+  @override
+  String get showMixPlaylistsIn => 'Afficher Mix dans';
+
+  @override
+  String get showMore => 'Afficher plus';
+
+  @override
+  String get showShortVideosIn => 'Afficher les Shorts dans';
+
+  @override
+  String get showSkipButton => 'Afficher le bouton Passer';
+
+  @override
+  String get showVideoEndcards => 'Afficher les cartes de fin de vidéo';
+
+  @override
+  String get showWebm => 'Afficher le webm';
+
+  @override
+  String get shuffle => 'Aléatoire';
+
+  @override
+  String get shuffleAll => 'Tout mélanger';
+
+  @override
+  String get shuffleNext => 'Lecture aléatoire suivante';
+
+  @override
+  String get signIn => 'S\'inscrire';
+
+  @override
+  String get signInCanceled => 'La connexion a été annulée';
+
+  @override
+  String get signInFailed => 'S\'inscrire a échoué';
+
+  @override
+  String get signInToYourAccount => 'Connectez-vous à votre compte';
+
+  @override
+  String get signInYouDontHaveAccount => 'Vous n\'avez pas de compte connecté';
+
+  @override
+  String get signInYouNeedAccountToViewPage => 'Vous avez besoin d\'un compte pour consulter cette page';
+
+  @override
+  String get signOut => 'Se déconnecter';
+
+  @override
+  String signOutFromName({required String name}) {
+    return 'Se déconnecter de $name';
+  }
+
+  @override
+  String get signingInAllowsBasicUsage => 'L\'inscription permet une utilisation de base';
+
+  @override
+  String get signingInAllowsBasicUsageSubtitle => 'Obtenez un accès anticipé grâce à patreon ou en utilisant le coupon';
+
+  @override
+  String get similarDiscoverDate => 'Date de découverte similaire';
+
+  @override
+  String similarDiscoverDateSubtitle({required String currentTrack}) {
+    return 'Générer des pistes qui ont été découvertes à peu près au même moment que $currentTrack';
+  }
+
+  @override
+  String get similarTimeRange => 'Plage de temps similaire';
+
+  @override
+  String similarTimeRangeSubtitle({required String currentTrack}) {
+    return 'Générer les pistes que vous avez écoutées à peu près au même moment que $currentTrack';
+  }
+
+  @override
+  String get singles => 'Singles';
+
+  @override
+  String get size => 'Taille';
+
+  @override
+  String get skip => 'Sauter';
+
+  @override
+  String get skipCountTracking => 'Suivi du comptage des sauts';
+
+  @override
+  String get skipSilence => 'Sauter le silence';
+
+  @override
+  String get skipSponsorSegmentsInVideos => 'Ignorer les segments publicitaires dans les vidéos';
+
+  @override
+  String get sleepAfter => 'Sommeil après';
+
+  @override
+  String get sleepTimer => 'Minuterie (veille)';
+
+  @override
+  String get socials => 'Réseaux sociaux';
+
+  @override
+  String get socialsSubtitle => 'Rejoignez-nous sur nos plateformes pour obtenir des mises à jour, des conseils, participer à des discussions et partager vos idées.';
+
+  @override
+  String get someWebServersRequireAuthentication =>
+      'Certains serveurs Web nécessitent une authentification. Veuillez mettre à jour vos identifiants pour conserver l\'accès à votre bibliothèque.';
+
+  @override
+  String get sortBy => 'Trier par';
+
+  @override
+  String get source => 'Source';
+
+  @override
+  String get speed => 'Vitesse';
+
+  @override
+  String get sponsor => 'Sponsor';
+
+  @override
+  String get sponsorblock => 'SponsorBlock';
+
+  @override
+  String get sponsorblockLeaderboard => 'Classement SponsorBlock';
+
+  @override
+  String get staggeredAlbumGridView => 'Grille d\'affichage des albums en quinconce';
+
+  @override
+  String get start => 'Démarrage';
+
+  @override
+  String get stats => 'Statistiques';
+
+  @override
+  String get statsSubtitle => 'Voici quelques informations concernant votre bibliothèque';
+
+  @override
+  String get stop => 'Stop';
+
+  @override
+  String get stopAfterThisTrack => 'S\'arrêter après cette piste';
+
+  @override
+  String get stopAfterThisVideo => 'Arrêter après cette vidéo';
+
+  @override
+  String get storagePermissionDenied => 'Permission refusée';
+
+  @override
+  String get storagePermissionDeniedSubtitle => 'Veuillez autoriser l\'accès pour pouvoir effectuer cette action';
+
+  @override
+  String get stretchLyricsDuration => 'Durée des paroles extensibles';
+
+  @override
+  String get subdirectory => 'Sous-répertoire';
+
+  @override
+  String get subscribe => 'S\'abonner';
+
+  @override
+  String get subscribed => 'Abonné';
+
+  @override
+  String get subscriber => 'Abonné';
+
+  @override
+  String get subscribers => 'Abonnés';
+
+  @override
+  String get succeeded => 'Réussi';
+
+  @override
+  String suggestionSubtitle({required String site}) {
+    return 'Vous avez un problème ou une suggestion ? Ouvrez un ticket sur $site';
+  }
+
+  @override
+  String get support => 'Support';
+
+  @override
+  String get supremacy => 'Suprématie';
+
+  @override
+  String get sussyBaka => 'Bruh pas de pistes';
+
+  @override
+  String get swipeActions => 'Actions de balayage';
+
+  @override
+  String get swipeToOpenDrawer => 'Glissez pour ouvrir le tiroir';
+
+  @override
+  String get synced => 'Synchronisé';
+
+  @override
+  String get synopsis => 'Synopsis';
+
+  @override
+  String get tagFields => 'Champs d\'étiquettes';
+
+  @override
+  String get tags => 'Étiquettes';
+
+  @override
+  String get tapAction => 'Action du bouton';
+
+  @override
+  String get tapToSeek => 'Tapez pour chercher';
+
+  @override
+  String get theFollowingChangesWereDetected => 'The following changes were detected';
+
+  @override
+  String get themeMode => 'Thème';
+
+  @override
+  String get themeModeDark => 'Sombre';
+
+  @override
+  String get themeModeLight => 'Clair';
+
+  @override
+  String get themeModeSystem => 'Système';
+
+  @override
+  String get themeSettings => 'Theme';
+
+  @override
+  String get themeSettingsSubtitle => 'L\'ambiance générale de votre lecteur';
+
+  @override
+  String get thisPlaylistHasActiveSortersDisableThemBeforeReordering => 'Cette playlist a des filtres activés, veuillez les désactiver avant de réordonner.';
+
+  @override
+  String get thisVideoIsLikelyDeletedOrSetToPrivate => 'Cette vidéo a probablement été supprimée ou mise en privé.';
+
+  @override
+  String get thumbnails => 'Vignettes';
+
+  @override
+  String get title => 'Titre';
+
+  @override
+  String get top => 'Haut';
+
+  @override
+  String get topComments => 'Top commentaires';
+
+  @override
+  String get topCommentsSubtitle => 'Afficher les commentaires en haut plutôt qu\'en bas';
+
+  @override
+  String get topRecentAlbums => 'Albums les plus récents';
+
+  @override
+  String get topRecentArtists => 'Principaux artistes récents';
+
+  @override
+  String get topRecents => 'Les plus récents';
+
+  @override
+  String get totalListenTime => 'Durée totale d\'écoute';
+
+  @override
+  String get totalListens => 'Nombre total d\'écoutes';
+
+  @override
+  String get totalTracks => 'Total des pistes';
+
+  @override
+  String get totalTracksDuration => 'Durée totale des pistes';
+
+  @override
+  String get track => 'Piste';
+
+  @override
+  String get trackArtistsSeparator => 'Séparateurs d\'artistes';
+
+  @override
+  String get trackGenresSeparator => 'Séparateurs de genres';
+
+  @override
+  String get trackInfo => 'Info piste';
+
+  @override
+  String get trackNotFound => 'Piste non trouvée';
+
+  @override
+  String get trackNumber => 'Numéro de piste';
+
+  @override
+  String get trackNumberTotal => 'Total de la piste';
+
+  @override
+  String trackPathOldNew({required String newName, required String oldName}) {
+    return 'Ancien nom: \"$oldName\"\n\nNouveau nom: \"$newName\"\n\nEtes vous sûr ?';
+  }
+
+  @override
+  String get trackPlayMode => 'Mode lecture';
+
+  @override
+  String get trackPlayModeSearchResults => 'Résultats de la recherche';
+
+  @override
+  String get trackPlayModeSelectedOnly => 'Piste sélectionnée uniquement';
+
+  @override
+  String get trackPlayModeTrackAlbum => 'Album de la piste';
+
+  @override
+  String get trackPlayModeTrackArtist => 'Artiste principal de la piste';
+
+  @override
+  String get trackPlayModeTrackGenre => 'Genre de la piste';
+
+  @override
+  String get trackThumbnailSizeInList => 'Taille de la vignette de la piste';
+
+  @override
+  String get trackTileCustomization => 'Personnalisation des tuiles de piste';
+
+  @override
+  String get trackTileItemsSeparator => 'Séparateur d\'éléments';
+
+  @override
+  String get tracks => 'Pistes';
+
+  @override
+  String get tracksExcludedByNomedia => 'Pistes exclues par .nomedia';
+
+  @override
+  String get tracksInfo => 'Informations sur les pistes';
+
+  @override
+  String get underrated => 'Sous-estimé';
+
+  @override
+  String get undo => 'Annuler';
+
+  @override
+  String get undoChanges => 'Annuler les changements?';
+
+  @override
+  String get undoChangesDeletedPlaylist => 'Annuler une playlist supprimée';
+
+  @override
+  String get undoChangesDeletedQueue => 'Annuler la file d\'attente supprimée';
+
+  @override
+  String get undoChangesDeletedTrack => 'Annuler la piste supprimée';
+
+  @override
+  String get uniqueArtworkHash => 'Hash d\'œuvre d\'art unique';
+
+  @override
+  String get unlimited => 'Illimité';
+
+  @override
+  String get unlisted => 'Non répertorié';
+
+  @override
+  String get unlock => 'Déverrouiller';
+
+  @override
+  String get update => 'Mise à jour';
+
+  @override
+  String get updateDirectoryPath => 'Mise à jour du chemin d\'accès au répertoire';
+
+  @override
+  String get updateMissingTracksOnly => 'Mise à jour des pistes manquantes uniquement';
+
+  @override
+  String get updating => 'Mise à jour...';
+
+  @override
+  String get useCollapsedSettingTiles => 'Utiliser des tuiles de réglage réduites';
+
+  @override
+  String get useMediaStore => 'Utiliser Media Store';
+
+  @override
+  String get useMediaStoreSubtitle =>
+      '✓ le temps d\'indexation instantané\nx le respect du temps .nomedia sera activé de force\nx certaines balises de métadonnées seront manquantes\nx l\'intégration de youtube pour la bibliothèque locale ne fonctionnera pas';
+
+  @override
+  String get usePitchBlack => 'Utiliser le noir absolu';
+
+  @override
+  String get usePitchBlackSubtitle => 'Utile pour les écrans AMOLED... et plus cool!';
+
+  @override
+  String get used => 'Utilisé';
+
+  @override
+  String get value => 'Valeur';
+
+  @override
+  String get valueBetween50200 => 'La valeur doit être comprise entre 50% et 200%.';
+
+  @override
+  String get vibration => 'Vibration';
+
+  @override
+  String get vibrationType => 'Type de vibration';
+
+  @override
+  String get video => 'Video';
+
+  @override
+  String get videoCache => 'Cache vidéo';
+
+  @override
+  String get videoCacheFile => 'Fichier vidéo mis en cache';
+
+  @override
+  String get videoCacheFiles => 'Fichier vidéo mis en cache';
+
+  @override
+  String get videoOnly => 'Vidéo uniquement';
+
+  @override
+  String get videoPlaybackSource => 'Source vidéo';
+
+  @override
+  String get videoPlaybackSourceAutoSubtitle => 'Cela donnera la priorité aux vidéos locales, si elles ne sont pas trouvées, elles seront récupérées sur YouTube.';
+
+  @override
+  String get videoPlaybackSourceLocal => 'Vidéos locales';
+
+  @override
+  String get videoPlaybackSourceLocalExampleSubtitle => 'Alan Walker - Faded.m4a\nVidéo Alan Walker - Faded (480p).mp4';
+
+  @override
+  String get videoPlaybackSourceLocalSubtitle =>
+      'Vérifie si un fichier vidéo (trouvé dans la liste des dossiers choisis) a un nom de fichier qui contient le nom de fichier de la piste.';
+
+  @override
+  String get videoPlaybackSourceYoutube => 'De Youtube';
+
+  @override
+  String get videoPlaybackSourceYoutubeSubtitle =>
+      'Vérifie dans le nom de fichier et le commentaire de la piste s\'il existe un lien youtube correspondant, les vidéos sont mises en cache pour une utilisation ultérieure.';
+
+  @override
+  String get videoQuality => 'Qualité vidéo';
+
+  @override
+  String get videoQualitySubtitle => 'La meilleure qualité disponible sera choisie.';
+
+  @override
+  String get videoQualitySubtitleNote =>
+      'Il est toujours bon de garder plus d\'alternatives au cas où une qualité ne serait pas trouvée, sinon le système se rabattra sur la qualité la plus mauvaise.';
+
+  @override
+  String get videos => 'Vidéos';
+
+  @override
+  String get view => 'vue';
+
+  @override
+  String get viewAll => 'Voir tout';
+
+  @override
+  String get views => 'vues';
+
+  @override
+  String get volume => 'Volume';
+
+  @override
+  String get warning => 'Attention';
+
+  @override
+  String get waveformBarsCount => 'Comptage des barres de la forme d\'onde';
+
+  @override
+  String get webmNoEditTagsSupport => 'Le format WEBM ne prend pas en charge l\'édition des balises';
+
+  @override
+  String get week => 'Semaine';
+
+  @override
+  String get year => 'Années';
+
+  @override
+  String get yes => 'oui';
+
+  @override
+  String yourCurrentMembershipIs({required String name}) {
+    return 'Votre adhésion actuelle est $name';
+  }
+
+  @override
+  String get yourCustomOrderWillBeLost => 'Votre commande personnalisée va être perdue, Êtes-vous sûr?';
+
+  @override
+  String get youtube => 'Youtube';
+
+  @override
+  String get youtubeMusic => 'Youtube Music';
+
+  @override
+  String get youtubeSettingsSubtitle => 'Personnaliser l\'expérience Youtube';
+
+  @override
+  String get youtubeStyleMiniplayer => 'Mini-lecteur de type Youtube';
+
+  @override
+  String get ytPreferNewComments => 'Privilégier les nouveaux commentaires lorsque c\'est possible';
+
+  @override
+  String get ytPreferNewCommentsSubtitle => 'La version mise en cache ne sera utilisée que lorsqu\'il n\'y a pas de connexion.';
+}

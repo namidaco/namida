@@ -57,23 +57,23 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
     Color color;
     switch (type) {
       case YoutiPieFetchAllResType.success:
-        message = lang.SUCCEEDED;
+        message = lang.succeeded;
         color = Colors.green;
       case YoutiPieFetchAllResType.fail:
-        message = lang.FAILED;
+        message = lang.failed;
         color = Colors.red;
       case YoutiPieFetchAllResType.alreadyCanceled:
-        message = lang.CANCELED;
+        message = lang.canceled;
         color = Colors.red;
       case YoutiPieFetchAllResType.alreadyDone:
-        message = lang.DONE;
+        message = lang.done;
         color = Colors.green;
       case YoutiPieFetchAllResType.inProgress:
-        message = lang.PROGRESS;
+        message = lang.progress;
         color = Colors.orange;
     }
     snackyy(
-      message: "${lang.FETCHING_OF_ALL_VIDEOS}: $message",
+      message: "${lang.fetchingOfAllVideos}: $message",
       borderColor: color.withOpacityExt(0.5),
     );
   }
@@ -126,7 +126,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                 sizeMultiplier: 0.95,
                 borderRadius: 8.0,
                 icon: Broken.task_square,
-                text: lang.LOAD_ALL,
+                text: lang.loadAll,
                 enabled: !isLoadingMoreUploads && hasMoreStreamsLeft,
                 disableWhenLoading: false,
                 showLoadingWhenDisabled: hasMoreStreamsLeft,
@@ -252,7 +252,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                         ? SliverToBoxAdapter(
                             // child: Center(
                             //   child: Text(
-                            //     lang.ERROR,
+                            //     lang.error,
                             //     style: textTheme.displayLarge,
                             //   ),
                             // ),

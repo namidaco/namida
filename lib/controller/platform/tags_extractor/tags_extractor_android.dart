@@ -321,7 +321,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
         await ffmpegController.editAudioThumbnail(audioPath: path, thumbnailPath: imageFile.path);
       }
       snackyy(
-        title: lang.WARNING,
+        title: lang.warning,
         message: 'FFMPEG was used. Some tags might not have been updated',
         isError: true,
       );

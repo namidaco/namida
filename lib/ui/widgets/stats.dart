@@ -36,8 +36,8 @@ class StatsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: lang.STATS,
-      subtitle: lang.STATS_SUBTITLE,
+      title: lang.stats,
+      subtitle: lang.statsSubtitle,
       icon: Broken.chart_21,
       child: SizedBox(
         width: context.width,
@@ -49,27 +49,27 @@ class StatsSection extends StatelessWidget {
               children: [
                 StatsContainer(
                   icon: Broken.music_circle,
-                  title: '${lang.TRACKS} :',
+                  title: '${lang.tracks} :',
                   value: allTracks.length.formatDecimal(),
                 ),
                 StatsContainer(
                   icon: Broken.music_dashboard,
-                  title: '${lang.ALBUMS} :',
+                  title: '${lang.albums} :',
                   value: Indexer.inst.mainMapAlbums.valueR.keys.length.formatDecimal(),
                 ),
                 StatsContainer(
                   icon: Broken.microphone,
-                  title: '${lang.ARTISTS} :',
+                  title: '${lang.artists} :',
                   value: Indexer.inst.mainMapArtists.valueR.length.formatDecimal(),
                 ),
                 StatsContainer(
                   icon: Broken.smileys,
-                  title: '${lang.GENRES} :',
+                  title: '${lang.genres} :',
                   value: Indexer.inst.mainMapGenres.valueR.length.formatDecimal(),
                 ),
                 StatsContainer(
                   icon: Broken.music_library_2,
-                  title: '${lang.TOTAL_TRACKS_DURATION} :',
+                  title: '${lang.totalTracksDuration} :',
                   value: allTracks.totalDurationFormatted,
                 ),
                 Obx(
@@ -78,7 +78,7 @@ class StatsSection extends StatelessWidget {
                     final trSec = map?[LibraryCategory.localTracks] ?? 0;
                     return StatsContainer(
                       icon: Broken.timer_1,
-                      title: '${lang.TOTAL_LISTEN_TIME} :',
+                      title: '${lang.totalListenTime} :',
                       value: trSec.secondsFormatted,
                     );
                   },
@@ -94,7 +94,7 @@ class StatsSection extends StatelessWidget {
                         secondaryIconSize: 12.0,
                       ),
                       icon: Broken.timer_1,
-                      title: '${lang.TOTAL_LISTEN_TIME} (${lang.YOUTUBE}) :',
+                      title: '${lang.totalListenTime} (${lang.youtube}) :',
                       value: sec.secondsFormatted,
                     );
                   },

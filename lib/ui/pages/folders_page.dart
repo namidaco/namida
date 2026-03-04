@@ -76,7 +76,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
           builder: (context, enabled) => CustomSwitchListTile(
             visualDensity: VisualDensity.compact,
             icon: Broken.folder_open,
-            title: lang.ENABLE_FOLDERS_HIERARCHY,
+            title: lang.enableFoldersHierarchy,
             value: enabled,
             onChanged: (_) => config.toggleFoldersHierarchy(),
           ),
@@ -121,7 +121,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                   return CustomListTile(
                                     borderR: 16.0,
                                     icon: isHome ? Broken.home_2 : Broken.folder_2,
-                                    title: isHome ? lang.HOME : currentFolder?.formattedPath() ?? lang.HOME,
+                                    title: isHome ? lang.home : currentFolder?.formattedPath() ?? lang.home,
                                     titleStyle: textTheme.displaySmall,
                                     onTap: () => foldersController.stepOut(),
                                     trailingRaw: Row(
@@ -135,7 +135,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                             return NamidaIconButton(
                                               verticalPadding: 8.0,
                                               horizontalPadding: 4.0,
-                                              tooltip: () => lang.SET_AS_DEFAULT,
+                                              tooltip: () => lang.setAsDefault,
                                               icon: (isDefaultFolderEmpty && isHome)
                                                   ? Broken.archive_tick
                                                   : currentFolder == null || isDefaultFolderEmpty || !currentFolder.hasSamePathAs(defaultFolderStartupLocation)
@@ -231,7 +231,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                               builder: (context, currentFolder) => CustomListTile(
                                 borderR: 16.0,
                                 icon: isHome ? Broken.home_2 : Broken.folder_2,
-                                title: isHome ? lang.HOME : currentFolder?.formattedPath() ?? lang.HOME,
+                                title: isHome ? lang.home : currentFolder?.formattedPath() ?? lang.home,
                                 titleStyle: textTheme.displaySmall,
                                 onTap: () => foldersController.stepOut(),
                                 trailingRaw: Row(

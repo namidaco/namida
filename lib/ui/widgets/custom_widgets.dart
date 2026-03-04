@@ -611,7 +611,7 @@ class CustomBlurryDialog extends StatelessWidget {
                                   ],
                                   Expanded(
                                     child: Text(
-                                      isWarning ? lang.WARNING : title ?? '',
+                                      isWarning ? lang.warning : title ?? '',
                                       style: ctxth.textTheme.displayLarge,
                                     ),
                                   ),
@@ -840,7 +840,7 @@ class StatsContainer extends StatelessWidget {
               Text(title ?? ''),
               const SizedBox(width: 8.0),
               Text(value ?? ''),
-              if (total != null) Text(" ${lang.OF} $total"),
+              if (total != null) Text(" ${lang.ofLabel} $total"),
             ],
           ),
     );
@@ -1004,7 +1004,7 @@ class ListTileWithCheckMark extends StatelessWidget {
         children: [
           titleWidget ??
               Text(
-                title ?? lang.REVERSE_ORDER,
+                title ?? lang.reverseOrder,
                 style: textTheme.displayMedium,
               ),
           if (subtitle != '')
@@ -1241,9 +1241,9 @@ class CreatePlaylistButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaButton(
       icon: Broken.add,
-      text: lang.CREATE,
+      text: lang.create,
       onPressed: () => showSettingDialogWithTextField(
-        title: lang.CREATE_NEW_PLAYLIST,
+        title: lang.createNewPlaylist,
         addNewPlaylist: true,
       ),
     );
@@ -1399,7 +1399,7 @@ class CancelButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: onPressed ?? () => NamidaNavigator.inst.closeDialog(),
-      child: NamidaButtonText(lang.CANCEL),
+      child: NamidaButtonText(lang.cancel),
     );
   }
 }
@@ -1413,7 +1413,7 @@ class DoneButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaButton(
       enabled: enabled,
-      text: lang.DONE,
+      text: lang.done,
       onPressed: () {
         NamidaNavigator.inst.closeDialog();
         if (additional != null) additional!();
@@ -1434,7 +1434,7 @@ class CollapsedSettingTileWidget extends StatelessWidget {
       builder: (context, useSettingCollapsedTiles) => CustomSwitchListTile(
         bgColor: bgColor,
         icon: Broken.archive,
-        title: lang.USE_COLLAPSED_SETTING_TILES,
+        title: lang.useCollapsedSettingTiles,
         value: useSettingCollapsedTiles,
         onChanged: (isTrue) async {
           settings.save(useSettingCollapsedTiles: !isTrue);
@@ -1453,7 +1453,7 @@ class AboutPageTileWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     Localizations.localeOf(context);
     return CustomCollapsedListTile(
-      title: lang.ABOUT,
+      title: () => lang.about,
       subtitle: null,
       icon: Broken.info_circle,
       page: null,
@@ -1810,7 +1810,7 @@ class NamidaRawLikeButton extends StatelessWidget {
       dialog: CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        bodyText: lang.CONFIRM,
+        bodyText: lang.confirm,
         actions: [
           const CancelButton(),
           NamidaButton(
@@ -1912,7 +1912,7 @@ class NamidaLocalLikeButton extends StatelessWidget {
         enabledColor: color,
         disabledColor: color,
         isLiked: favouritesPlaylist.isSubItemFavourite(track),
-        removeConfirmationAction: lang.REMOVE_FROM_FAVOURITES,
+        removeConfirmationAction: lang.removeFromFavourites,
         onTap: (isLiked) async => PlaylistController.inst.favouriteButtonOnPressed(track),
       ),
     );
@@ -2262,7 +2262,7 @@ class SubpageInfoContainer extends StatelessWidget {
                           secondaryIconSize: 13.0,
                         ),
                         label: Text(
-                          lang.PLAY_LAST,
+                          lang.playLast,
                           softWrap: false,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -3609,7 +3609,7 @@ class NamidaSupportButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaButton(
       icon: Broken.heart,
-      text: title ?? lang.SUPPORT,
+      text: title ?? lang.support,
       onPressed: () {
         closeDialog.closeDialog();
         NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE);
@@ -3858,13 +3858,13 @@ class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaAppBarIcon(
       icon: Broken.calendar,
-      tooltip: () => lang.JUMP_TO_DAY,
+      tooltip: () => lang.jumpToDay,
       onPressed: () {
         final initialDate = getCurrentDateFromScrollPosition();
         showCalendarDialog(
           historyController: controller,
-          title: lang.JUMP_TO_DAY,
-          buttonText: lang.JUMP,
+          title: lang.jumpToDay,
+          buttonText: lang.jump,
           calendarType: CalendarDatePicker2Type.single,
           useHistoryDates: true,
           initialDate: initialDate,
@@ -3904,15 +3904,15 @@ class _BetweenDatesTextButtonState extends State<BetweenDatesTextButton> {
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
-    final textWidget = Text(lang.BETWEEN_DATES);
+    final textWidget = Text(lang.betweenDates);
 
     return TextButton.icon(
       onPressed: () {
         showCalendarDialog(
           useHistoryDates: widget.useHistoryDates,
           lastDate: widget.maxToday ? DateTime.now() : null,
-          title: lang.BETWEEN_DATES,
-          buttonText: lang.CONFIRM,
+          title: lang.betweenDates,
+          buttonText: lang.confirm,
           onGenerate: (dates) {
             oldestDate = dates.firstOrNull;
             newestDate = dates.lastOrNull;
@@ -4733,21 +4733,21 @@ class QueueUtilsRow extends StatelessWidget {
         const SizedBox(width: 12.0),
         NamidaButton(
           style: buttonStyle,
-          tooltip: () => lang.REMOVE_DUPLICATES,
+          tooltip: () => lang.removeDuplicates,
           icon: Broken.broom,
           onPressed: () {
             final removed = Player.inst.removeDuplicatesFromQueue();
             snackyy(
               top: false,
               icon: Broken.filter_remove,
-              message: "${lang.REMOVED} ${itemsKeyword(removed)}",
+              message: "${lang.removed} ${itemsKeyword(removed)}",
             );
           },
         ),
         const SizedBox(width: 6.0),
         NamidaButton(
           style: buttonStyle,
-          tooltip: () => lang.NEW_TRACKS_ADD,
+          tooltip: () => lang.newTracksAdd,
           icon: Broken.add_circle,
           onPressed: () => onAddItemsTap(),
         ),
@@ -4780,8 +4780,8 @@ class QueueUtilsRow extends StatelessWidget {
 
             final menu = NamidaPopupWrapper(
               children: () => [
-                buildButton(lang.SHUFFLE_NEXT, Broken.forward, false),
-                buildButton(lang.SHUFFLE_ALL, Broken.task, true),
+                buildButton(lang.shuffleNext, Broken.forward, false),
+                buildButton(lang.shuffleAll, Broken.task, true),
               ],
             );
             menu.showPopupMenu(
@@ -4790,7 +4790,7 @@ class QueueUtilsRow extends StatelessWidget {
           },
           child: NamidaButton(
             style: buttonStyle,
-            text: lang.SHUFFLE,
+            text: lang.shuffle,
             icon: Broken.shuffle,
             onPressed: () => Player.inst.shuffleTracks(settings.player.shuffleAllTracks.value),
           ),
@@ -4959,12 +4959,12 @@ class SoundControlButton extends StatelessWidget {
   }
 
   String _buildTooltip() {
-    return lang.EQUALIZER;
+    return lang.equalizer;
   }
 
   @override
   Widget build(BuildContext context) {
-    final tooltip = lang.EQUALIZER;
+    final tooltip = lang.equalizer;
     final iconColor = color ?? context.theme.colorScheme.onSecondaryContainer;
     final child = StreamBuilder<bool>(
       initialData: Player.inst.equalizer.enabled,
@@ -5475,7 +5475,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
                 iconSize: 20.0,
                 color: theme.cardColor,
                 visualDensity: const VisualDensity(horizontal: -3.0, vertical: -3.0),
-                title: lang.DELETE_TEMP_FILES,
+                title: lang.deleteTempFiles,
                 subtitle: size.fileSizeFormatted,
                 active: false,
                 onTap: () {
@@ -5545,7 +5545,7 @@ class EnableDisablePlaylistReordering extends StatelessWidget {
       key: UniqueKey(), // i have no f idea why this happens.. namida ghosts are here again
       rx: playlistManager.canReorderItems,
       builder: (context, reorderable) => NamidaAppBarIcon(
-        tooltip: () => playlistManager.canReorderItems.value ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
+        tooltip: () => playlistManager.canReorderItems.value ? lang.disableReordering : lang.enableReordering,
         icon: reorderable ? Broken.forward_item : Broken.lock_1,
         onPressed: () {
           final playlist = playlistManager.getPlaylist(playlistName);
@@ -5553,8 +5553,8 @@ class EnableDisablePlaylistReordering extends StatelessWidget {
           if (playlist.sortsType?.isNotEmpty ?? false) {
             snackyy(
               isError: true,
-              title: lang.WARNING,
-              message: lang.THIS_PLAYLIST_HAS_ACTIVE_SORTERS_DISABLE_THEM_BEFORE_REORDERING,
+              title: lang.warning,
+              message: lang.thisPlaylistHasActiveSortersDisableThemBeforeReordering,
             );
             return;
           }
@@ -5628,11 +5628,11 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
       dialog: CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        bodyText: "${lang.UPDATE}: ${widget.countToText(count)}",
+        bodyText: "${lang.update}: ${widget.countToText(count)}",
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: lang.CONFIRM.toUpperCase(),
+            text: lang.confirm.toUpperCase(),
             onPressed: () async {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
@@ -5662,7 +5662,7 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
                     ),
                     const SizedBox(width: 6.0),
                     Text(
-                      lang.PRIORITY,
+                      lang.priority,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.displaySmall,
@@ -5974,7 +5974,7 @@ class NamidaUpdateButton extends StatelessWidget {
                       flex: 1,
                       child: TextButton(
                         onPressed: () => popSheet(context),
-                        child: NamidaButtonText(lang.CANCEL),
+                        child: NamidaButtonText(lang.cancel),
                       ),
                     ),
                     const SizedBox(width: 12.0),
@@ -5988,7 +5988,7 @@ class NamidaUpdateButton extends StatelessWidget {
                         bgColor: CurrentColor.inst.color.withOpacityExt(0.9),
                         child: Center(
                           child: Text(
-                            lang.UPDATE.toUpperCase(),
+                            lang.update.toUpperCase(),
                             style: textTheme.displayMedium?.copyWith(color: Colors.white.withOpacityExt(0.9)),
                           ),
                         ),
@@ -6110,7 +6110,7 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
   @override
   void initState() {
     for (final k in widget.manager.bindings.keys) {
-      organizedMap.addForce(k.title, k);
+      organizedMap.addForce(k.title(), k);
     }
 
     super.initState();
@@ -6163,7 +6163,7 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
               (e) {
                 var shortcutsTexts = <String>[];
                 String title = e.key;
-                if (title == lang.LIBRARY_TABS) {
+                if (title == lang.libraryTabs) {
                   shortcutsTexts = ['Ctrl + 1..9'];
                 } else {
                   shortcutsTexts = e.value.map((e) {
@@ -6367,13 +6367,13 @@ class _HotKeyRecorderDialogState extends State<_HotKeyRecorderDialog> {
     final isEdit = widget.initalHotKey != null;
     return CustomBlurryDialog(
       icon: isEdit ? Broken.edit : Broken.add_circle,
-      title: widget.title ?? (isEdit ? lang.EDIT : lang.ADD),
+      title: widget.title ?? (isEdit ? lang.edit : lang.add),
       normalTitleStyle: true,
       trailingWidgets: [
         if (isKeyGood)
           NamidaIconButton(
             icon: Broken.refresh,
-            tooltip: () => lang.CLEAR,
+            tooltip: () => lang.clear,
             onPressed: () {
               setState(() {
                 _hotKey = null;
@@ -6385,7 +6385,7 @@ class _HotKeyRecorderDialogState extends State<_HotKeyRecorderDialog> {
       actions: [
         const CancelButton(),
         NamidaButton(
-          text: lang.SAVE,
+          text: lang.save,
           onPressed: () {
             _confirmHotkey();
           },
@@ -6621,5 +6621,44 @@ class ObxPrefer<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return enabled ? ObxO(rx: rx, builder: builder) : builder(context, null);
+  }
+}
+
+class NamidaCoolBox extends StatelessWidget {
+  final Color colorScheme;
+  final String text;
+  final Widget Function(BuildContext context)? builder;
+  final bool extraVPadding;
+
+  const NamidaCoolBox({
+    super.key,
+    required this.colorScheme,
+    this.text = '',
+    this.builder,
+    this.extraVPadding = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    double vPadding = 6.0;
+    if (extraVPadding) vPadding += 4.0;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+        color: colorScheme.withOpacityExt(0.08),
+        border: Border.all(
+          color: colorScheme.withOpacityExt(0.4),
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: vPadding),
+        child:
+            builder?.call(context) ??
+            Text(
+              text,
+              style: context.theme.textTheme.displaySmall,
+            ),
+      ),
+    );
   }
 }

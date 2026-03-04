@@ -71,7 +71,7 @@ class SearchPage extends StatelessWidget {
           title: title,
           icon: icon,
           buttonIcon: Broken.category,
-          buttonText: lang.VIEW_ALL,
+          buttonText: lang.viewAll,
           onPressed: ArtistSearchResultsPage(artists: rxList(), type: type).navigate,
         ),
       ),
@@ -116,7 +116,7 @@ class SearchPage extends StatelessWidget {
             isForcelyEnabled: isForcelyEnabled,
             isActive: isActive,
             type: MediaType.track,
-            title: lang.TRACKS,
+            title: lang.tracks,
             customOnTap: () {
               settings.updateActiveTrSearch(TrackTypeSearch.tr, !isActive);
               SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
@@ -135,7 +135,7 @@ class SearchPage extends StatelessWidget {
             isForcelyEnabled: isForcelyEnabled,
             isActive: isActive,
             type: MediaType.track,
-            title: lang.VIDEOS,
+            title: lang.videos,
             customOnTap: () {
               settings.updateActiveTrSearch(TrackTypeSearch.v, !isActive);
               SearchSortController.inst.searchAll(ScrollSearchController.inst.searchTextEditingController.text);
@@ -189,8 +189,8 @@ class SearchPage extends StatelessWidget {
           }
         },
         tabs: [
-          lang.LOCAL,
-          lang.YOUTUBE,
+          lang.local,
+          lang.youtube,
         ],
         children: [
           Column(
@@ -244,9 +244,9 @@ class SearchPage extends StatelessWidget {
                                     final trSearchTypes = settings.activeTrSearch.valueR;
                                     final trSearchTypesTrActive = trSearchTypes[TrackTypeSearch.tr] ?? true;
                                     final trSearchTypesVideosActive = trSearchTypes[TrackTypeSearch.v] ?? true;
-                                    String tracksSearchTitle = lang.TRACKS;
+                                    String tracksSearchTitle = lang.tracks;
                                     if (!trSearchTypesTrActive) {
-                                      tracksSearchTitle = lang.VIDEOS;
+                                      tracksSearchTitle = lang.videos;
                                       tracksSearchTemp.removeWhere((element) => element is! Video);
                                     }
                                     if (!trSearchTypesVideosActive) {
@@ -260,10 +260,10 @@ class SearchPage extends StatelessWidget {
                                         if (albumSearchTemp != null && albumSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: SearchPageTitleRow(
-                                              title: '${lang.ALBUMS} • ${albumSearchTemp.length}',
+                                              title: '${lang.albums} • ${albumSearchTemp.length}',
                                               icon: Broken.music_dashboard,
                                               buttonIcon: Broken.category,
-                                              buttonText: lang.VIEW_ALL,
+                                              buttonText: lang.viewAll,
                                               onPressed: const AlbumSearchResultsPage().navigate,
                                             ),
                                           ),
@@ -289,7 +289,7 @@ class SearchPage extends StatelessWidget {
                                         // == Artists ==
                                         if (artistSearchTemp != null && artistSearchTemp.isNotEmpty)
                                           ..._getArtistSection(
-                                            title: '${lang.ARTISTS} • ${artistSearchTemp.length}',
+                                            title: '${lang.artists} • ${artistSearchTemp.length}',
                                             icon: Broken.user,
                                             list: artistSearchTemp,
                                             rxList: () => SearchSortController.inst.artistSearchTemp,
@@ -300,7 +300,7 @@ class SearchPage extends StatelessWidget {
                                         // == Album Artists ==
                                         if (albumArtistSearchTemp != null && albumArtistSearchTemp.isNotEmpty)
                                           ..._getArtistSection(
-                                            title: '${lang.ALBUM_ARTISTS} • ${albumArtistSearchTemp.length}',
+                                            title: '${lang.albumArtists} • ${albumArtistSearchTemp.length}',
                                             icon: Broken.user,
                                             list: albumArtistSearchTemp,
                                             rxList: () => SearchSortController.inst.albumArtistSearchTemp,
@@ -311,7 +311,7 @@ class SearchPage extends StatelessWidget {
                                         // == Composers ==
                                         if (composerSearchTemp != null && composerSearchTemp.isNotEmpty)
                                           ..._getArtistSection(
-                                            title: '${lang.COMPOSER} • ${composerSearchTemp.length}',
+                                            title: '${lang.composer} • ${composerSearchTemp.length}',
                                             icon: Broken.profile_2user,
                                             list: composerSearchTemp,
                                             rxList: () => SearchSortController.inst.composerSearchTemp,
@@ -323,7 +323,7 @@ class SearchPage extends StatelessWidget {
                                         if (genreSearchTemp != null && genreSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: SearchPageTitleRow(
-                                              title: '${lang.GENRES} • ${genreSearchTemp.length}',
+                                              title: '${lang.genres} • ${genreSearchTemp.length}',
                                               icon: Broken.smileys,
                                             ),
                                           ),
@@ -353,7 +353,7 @@ class SearchPage extends StatelessWidget {
                                         if (playlistSearchTemp != null && playlistSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: SearchPageTitleRow(
-                                              title: '${lang.PLAYLISTS} • ${playlistSearchTemp.length}',
+                                              title: '${lang.playlists} • ${playlistSearchTemp.length}',
                                               icon: Broken.music_library_2,
                                             ),
                                           ),
@@ -385,7 +385,7 @@ class SearchPage extends StatelessWidget {
                                         if (folderSearchTemp != null && folderSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: SearchPageTitleRow(
-                                              title: '${lang.FOLDERS} • ${folderSearchTemp.length}',
+                                              title: '${lang.folders} • ${folderSearchTemp.length}',
                                               icon: Broken.folder,
                                             ),
                                           ),
@@ -408,7 +408,7 @@ class SearchPage extends StatelessWidget {
                                         if (folderVideosSearchTemp != null && folderVideosSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: SearchPageTitleRow(
-                                              title: '${lang.VIDEOS} • ${folderVideosSearchTemp.length}',
+                                              title: '${lang.videos} • ${folderVideosSearchTemp.length}',
                                               icon: Broken.folder,
                                             ),
                                           ),
@@ -432,7 +432,7 @@ class SearchPage extends StatelessWidget {
                                         if (tracksSearchTemp.isNotEmpty) ...[
                                           SliverToBoxAdapter(
                                             child: Tooltip(
-                                              message: lang.TRACK_PLAY_MODE,
+                                              message: lang.trackPlayMode,
                                               child: SearchPageTitleRow(
                                                 title: '$tracksSearchTitle • ${tracksSearchTemp.length}',
                                                 icon: Broken.music_circle,
@@ -449,7 +449,7 @@ class SearchPage extends StatelessWidget {
                                                                 ? settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull
                                                                 : settings.tracksSortSearch.valueR;
                                                             return Text(
-                                                              (activeType?.toText() ?? '') + (isAuto ? ' (${lang.AUTO})' : ''),
+                                                              (activeType?.toText() ?? '') + (isAuto ? ' (${lang.auto})' : ''),
                                                               style: textTheme.displaySmall?.copyWith(
                                                                 color: isAuto ? null : theme.colorScheme.secondary,
                                                               ),

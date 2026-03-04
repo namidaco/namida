@@ -125,7 +125,7 @@ class ShortcutKeyData {
 
 class ShortcutKeyActivator extends SingleActivator {
   final HotkeyAction? action;
-  final String title;
+  final String Function() title;
   final LogicalKeyboardKey key;
   final void Function() callback;
 

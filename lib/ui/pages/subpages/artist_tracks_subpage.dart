@@ -94,7 +94,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                   children: [
                     const SizedBox(height: 4.0),
                     _AlbumsRow(
-                      title: lang.ALBUMS,
+                      title: lang.albums,
                       icon: Broken.music_dashboard,
                       identifiers: widget.albumIdentifiers,
                       initiallyExpanded: albumsInitiallyExpanded,
@@ -102,7 +102,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                     ),
                     const SizedBox(height: 6.0),
                     _AlbumsRow(
-                      title: lang.SINGLES,
+                      title: lang.singles,
                       icon: Broken.music_square,
                       identifiers: widget.singlesIdentifiers,
                       initiallyExpanded: singlesInitiallyExpanded,
@@ -111,7 +111,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                     if (widget.extrasIdentifiers.isNotEmpty) ...[
                       const SizedBox(height: 6.0),
                       _AlbumsRow(
-                        title: lang.EXTRAS,
+                        title: lang.extras,
                         icon: Broken.music_playlist,
                         identifiers: widget.extrasIdentifiers,
                         initiallyExpanded: extrasInitiallyExpanded,

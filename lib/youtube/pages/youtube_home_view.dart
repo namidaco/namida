@@ -65,8 +65,8 @@ class _ChannelsPage extends StatelessWidget {
       initialIndex: settings.extra.ytChannelsPageIndex ?? settings.extra.getPreferredTabIndexIfLoggedInYT(),
       onIndexChanged: (index) => settings.extra.save(ytChannelsPageIndex: index),
       pages: [
-        (lang.LOCAL, const YoutubeChannelsPage()),
-        (lang.YOUTUBE, const YoutubeChannelsHostedPage()),
+        (lang.local, const YoutubeChannelsPage()),
+        (lang.youtube, const YoutubeChannelsHostedPage()),
       ],
     );
   }
@@ -81,8 +81,8 @@ class _PlaylistsPage extends StatelessWidget {
       initialIndex: settings.extra.ytPlaylistsPageIndex ?? settings.extra.getPreferredTabIndexIfLoggedInYT(),
       onIndexChanged: (index) => settings.extra.save(ytPlaylistsPageIndex: index),
       pages: [
-        (lang.LOCAL, const YoutubePlaylistsView()),
-        (lang.YOUTUBE, const YoutubeUserPlaylistsPage()),
+        (lang.local, const YoutubePlaylistsView()),
+        (lang.youtube, const YoutubeUserPlaylistsPage()),
       ],
     );
   }

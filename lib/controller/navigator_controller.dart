@@ -584,7 +584,7 @@ class NamidaNavigator {
 
       snackyy(
         icon: Broken.logout,
-        message: lang.EXIT_APP_SUBTITLE,
+        message: lang.exitAppSubtitle,
         top: false,
         margin: const EdgeInsets.all(12.0),
         animationDurationMS: 500,
@@ -636,7 +636,7 @@ SnackbarController snackyy({
   bool? isError,
   int? maxLinesMessage,
 }) {
-  isError ??= title == lang.ERROR;
+  isError ??= title == lang.error;
   final context = namida.context;
   final view = context?.view ?? namida.platformView;
   final backgroundColor = context?.theme.scaffoldBackgroundColor.withOpacityExt(0.3) ?? Colors.black54;

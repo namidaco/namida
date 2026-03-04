@@ -27,7 +27,7 @@ class ReturnYoutubeDislikeSettingsPage extends StatelessWidget with NamidaRouteW
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: lang.RETURN_YOUTUBE_DISLIKE,
+      title: lang.returnYoutubeDislike,
       subtitle: null,
       icon: Broken.dislike,
       child: Column(
@@ -37,7 +37,7 @@ class ReturnYoutubeDislikeSettingsPage extends StatelessWidget with NamidaRouteW
               final isEnabled = _currentConfig.valueR.enabled;
               return CustomSwitchListTile(
                 icon: isEnabled ? Broken.dislike_filled : Broken.dislike,
-                title: lang.ENABLE_RETURN_YOUTUBE_DISLIKE,
+                title: lang.enableReturnYoutubeDislike,
                 value: isEnabled,
                 onChanged: (isTrue) {
                   final newConfigs = _currentConfigValue.copyWith(enabled: !isTrue);
@@ -57,9 +57,8 @@ class ReturnYoutubeDislikeSettingsPage extends StatelessWidget with NamidaRouteW
           ),
           CustomListTile(
             icon: Broken.info_circle,
-            title: lang.ABOUT,
-            subtitle:
-                "${lang.DATA_IS_PROVIDED_BY_NAME.replaceFirst('_NAME_', _currentConfigValue.defaultWebsiteUrl.replaceFirst('https://', '').addDQuotation())}. ${lang.LEARN_MORE}",
+            title: lang.about,
+            subtitle: "${lang.dataIsProvidedByName(name: _currentConfigValue.defaultWebsiteUrl.replaceFirst('https://', '').addDQuotation())}. ${lang.learnMore}",
             trailing: Icon(
               Broken.export_1,
               size: 18.0,

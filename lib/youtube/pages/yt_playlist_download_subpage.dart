@@ -156,7 +156,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       showSpecificFileOptionsInEditTagDialog: false,
       videoId: id,
       initialItemConfig: _configMap[id],
-      confirmButtonText: lang.CONFIRM,
+      confirmButtonText: lang.confirm,
       onConfirmButtonTap: (groupName, config) {
         _configMap.value[id] = config;
         return true;
@@ -170,7 +170,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     List<NamidaPopupItem> qualityMenuChildren() => [
       NamidaPopupItem(
         icon: Broken.musicnote,
-        title: lang.AUDIO,
+        title: lang.audio,
         onTap: () {
           _updateAudioOnly(true);
         },
@@ -190,14 +190,14 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     final textTheme = context.textTheme;
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: lang.CONFIGURE,
+        title: lang.configure,
         titleWidgetInPadding: Row(
           children: [
             const Icon(Broken.setting_3, size: 28.0),
             const SizedBox(width: 8.0),
             Expanded(
               child: Text(
-                lang.CONFIGURE,
+                lang.configure,
                 style: textTheme.displayLarge,
               ),
             ),
@@ -206,7 +206,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
         normalTitleStyle: true,
         actions: [
           NamidaButton(
-            text: lang.CONFIRM,
+            text: lang.confirm,
             onPressed: NamidaNavigator.inst.closeDialog,
           ),
         ],
@@ -236,7 +236,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               builder: (context, autoExtractVideoTagsFromInfo) => CustomSwitchListTile(
                 visualDensity: visualDensity,
                 icon: Broken.magicpen,
-                title: lang.AUTO_EXTRACT_TITLE_AND_ARTIST_FROM_VIDEO_TITLE,
+                title: lang.autoExtractTitleAndArtistFromVideoTitle,
                 value: autoExtractVideoTagsFromInfo,
                 onChanged: (isTrue) => settings.youtube.save(autoExtractVideoTagsFromInfo: !isTrue),
               ),
@@ -246,7 +246,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               builder: (context, downloadFilesKeepCachedVersions) => CustomSwitchListTile(
                 visualDensity: visualDensity,
                 icon: Broken.copy,
-                title: lang.KEEP_CACHED_VERSIONS,
+                title: lang.keepCachedVersions,
                 value: downloadFilesKeepCachedVersions,
                 onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
               ),
@@ -256,7 +256,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               builder: (context, downloadFilesWriteUploadDate) => CustomSwitchListTile(
                 visualDensity: visualDensity,
                 icon: Broken.document_code,
-                title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
+                title: lang.setFileLastModifiedAsVideoUploadDate,
                 value: downloadFilesWriteUploadDate,
                 onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
               ),
@@ -267,7 +267,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                 visualDensity: visualDensity,
                 enabled: true,
                 icon: Broken.music_library_2,
-                title: lang.ADD_AUDIO_TO_LOCAL_LIBRARY,
+                title: lang.addAudioToLocalLibrary,
                 value: addAudioToLocalLibrary,
                 onChanged: (isTrue) => settings.save(downloadAddAudioToLocalLibrary: !isTrue),
               ),
@@ -277,7 +277,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               builder: (context, override) => CustomSwitchListTile(
                 visualDensity: visualDensity,
                 icon: Broken.danger,
-                title: lang.OVERRIDE_OLD_FILES_IN_THE_SAME_FOLDER,
+                title: lang.overrideOldFilesInTheSameFolder,
                 value: override,
                 onChanged: (isTrue) => settings.save(downloadOverrideOldFiles: !isTrue),
               ),
@@ -287,10 +287,10 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               child: CustomListTile(
                 visualDensity: visualDensity,
                 icon: Broken.story,
-                title: lang.VIDEO_QUALITY,
+                title: lang.videoQuality,
                 trailing: NamidaPopupWrapper(
                   childrenDefault: qualityMenuChildren,
-                  child: Obx((context) => Text(settings.downloadAudioOnly.valueR ? lang.AUDIO_ONLY : preferredQuality.valueR)),
+                  child: Obx((context) => Text(settings.downloadAudioOnly.valueR ? lang.audioOnly : preferredQuality.valueR)),
                 ),
               ),
             ),
@@ -327,7 +327,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       NamidaIconButton(
-                        tooltip: () => lang.INVERT_SELECTION,
+                        tooltip: () => lang.invertSelection,
                         icon: Broken.recovery_convert,
                         onPressed: () {
                           widget.ids.loop((e) => _onItemTap(e.id));
@@ -401,7 +401,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                     ),
                     const SizedBox(width: 6.0),
                     NamidaIconButton(
-                      tooltip: () => lang.OUTPUT,
+                      tooltip: () => lang.output,
                       icon: Broken.edit_2,
                       iconSize: 20.0,
                       onPressed: () {
@@ -600,7 +600,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         color: Colors.white.withOpacityExt(0.7),
                       ),
                       label: Text(
-                        lang.DOWNLOAD,
+                        lang.download,
                         style: textTheme.displayMedium?.copyWith(
                           color: Colors.white.withOpacityExt(0.7),
                         ),

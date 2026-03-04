@@ -62,10 +62,10 @@ class YoutubeAccountController {
   };
 
   static String formatMembershipErrorMessage(YoutiPieOperation? operation, MembershipType? ms) {
-    final currentMSMessage = lang.YOUR_CURRENT_MEMBERSHIP_IS.replaceFirst('_NAME_', "`${ms?.name ?? MembershipType.unknown.name}`");
+    final currentMSMessage = lang.yourCurrentMembershipIs(name: "`${ms?.name ?? MembershipType.unknown.name}`");
     if (operation == null) return currentMSMessage;
 
-    final operationMessage = lang.OPERATION_REQUIRES_MEMBERSHIP.replaceFirst('_OPERATION_', '`${operation.name}`').replaceFirst('_NAME_', '`${MembershipType.cutie.name}`');
+    final operationMessage = lang.operationRequiresMembership(name: '`${MembershipType.cutie.name}`', operation: '`${operation.name}`');
     return '$operationMessage. $currentMSMessage';
   }
 
@@ -99,7 +99,7 @@ class YoutubeAccountController {
         if (current.activeAccountChannel.value == null) {
           // -- no account
           if (_canShowOperationError(operation)) {
-            _showError(lang.OPERATION_REQUIRES_ACCOUNT.replaceFirst('_NAME_', '`${operation.name}`'), manageAccountButton: true);
+            _showError(lang.operationRequiresAccount(name: '`${operation.name}`'), manageAccountButton: true);
           }
           return false;
         } else {
@@ -122,7 +122,7 @@ class YoutubeAccountController {
     YoutiPie.onOperationFailNoAccount = (operation) {
       if (current.activeAccountChannel.value == null) {
         if (_canShowOperationError(operation)) {
-          _showError(lang.OPERATION_REQUIRES_ACCOUNT.replaceFirst('_NAME_', '`${operation.name}`'), manageAccountButton: true);
+          _showError(lang.operationRequiresAccount(name: '`${operation.name}`'), manageAccountButton: true);
         }
         return true;
       }
@@ -207,7 +207,7 @@ class YoutubeAccountController {
         current.canAddMultiAccounts = true;
       } else {
         _showError(
-          '${lang.MEMBERSHIP_YOU_NEED_MEMBERSHIP_OF_TO_ADD_MULTIPLE_ACCOUNTS.replaceFirst('_NAME1_', '`${MembershipType.pookie.name}`').replaceFirst('_NAME2_', '`${MembershipType.patootie.name}`')}. ${lang.YOUR_CURRENT_MEMBERSHIP_IS.replaceFirst('_NAME_', "`${userMembershipType.name}`")}',
+          '${lang.membershipYouNeedMembershipOfToAddMultipleAccounts(name1: '`${MembershipType.pookie.name}`', name2: '`${MembershipType.patootie.name}`')}. ${lang.yourCurrentMembershipIs(name: "`${userMembershipType.name}`")}',
           manageSubscriptionButton: true,
         );
       }
@@ -221,7 +221,7 @@ class YoutubeAccountController {
       //   current.canAddMultiAccounts = false;
       // } else {
       // _showError(
-      //   "${lang.YOUR_CURRENT_MEMBERSHIP_IS.replaceFirst('_NAME_', "`${userMembershipType.name}`")}",
+      //   "${lang.yourCurrentMembershipIs("`${userMembershipType.name}`")}",
       //   manageSubscriptionButton: true,
       // );
       // }
@@ -247,7 +247,7 @@ class YoutubeAccountController {
   }
 
   static void _showError(String msg, {Object? exception, bool manageSubscriptionButton = false, bool manageAccountButton = false, bool messageAsTitle = false}) {
-    String title = lang.ERROR;
+    String title = lang.error;
     if (exception != null) title += ': $exception';
 
     if (messageAsTitle) {
@@ -263,12 +263,12 @@ class YoutubeAccountController {
       displayDuration: SnackDisplayDuration.long,
       button: manageSubscriptionButton
           ? (
-              lang.MANAGE,
+              lang.manage,
               const YoutubeManageSubscriptionPage().navigate,
             )
           : manageAccountButton
           ? (
-              lang.SIGN_IN,
+              lang.signIn,
               const YoutubeAccountManagePage().navigate,
             )
           : null,
@@ -283,9 +283,9 @@ class YoutubeAccountController {
     void onProgress(YoutiLoginProgress p, [AccountCookiesValidity? cookiesValidity]) {
       _signInProgress.value = p;
       if (p == YoutiLoginProgress.canceled) {
-        _showInfo(lang.SIGN_IN_CANCELED);
+        _showInfo(lang.signInCanceled);
       } else if (p == YoutiLoginProgress.failed) {
-        _showError("${lang.SIGN_IN_FAILED}\nCookies validity: ${cookiesValidity?.name ?? "?"}");
+        _showError("${lang.signInFailed}\nCookies validity: ${cookiesValidity?.name ?? "?"}");
       }
     }
 
@@ -343,12 +343,12 @@ class _CurrentMembership {
     redirectUrlCompleter = null;
 
     if (tier == null) {
-      YoutubeAccountController._showError(lang.FAILED);
+      YoutubeAccountController._showError(lang.failed);
       return;
     }
 
     if (tier.ammountUSD == null) {
-      YoutubeAccountController._showError(lang.MEMBERSHIP_NO_SUBSCRIPTIONS_FOUND_FOR_USER);
+      YoutubeAccountController._showError(lang.membershipNoSubscriptionsFoundForUser);
       // -- do not return, assign info
     }
 
@@ -361,7 +361,7 @@ class _CurrentMembership {
   Future<void> checkPatreon({bool showError = true}) async {
     final tier = await NamicoSubscriptionManager.patreon.getUserSupportTierWithoutLogin();
     if (tier == null) {
-      if (showError) YoutubeAccountController._showError(lang.MEMBERSHIP_NO_SUBSCRIPTIONS_FOUND_FOR_USER);
+      if (showError) YoutubeAccountController._showError(lang.membershipNoSubscriptionsFoundForUser);
       return;
     }
     userPatreonTier.value = tier;

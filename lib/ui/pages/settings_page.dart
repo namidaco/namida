@@ -77,11 +77,11 @@ class SettingsPage extends StatelessWidget with NamidaRouteWidget {
 
 class SettingsSubPage extends StatelessWidget with NamidaRouteWidget {
   @override
-  String? get name => title;
+  String? get name => title();
   @override
   RouteType get route => RouteType.SETTINGS_subpage;
 
-  final String title;
+  final String Function() title;
   final Widget child;
   const SettingsSubPage({super.key, required this.child, required this.title});
   @override
@@ -123,53 +123,53 @@ class CollapsedSettingTiles extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 8.0 + horizontalMargin),
       children: [
         CustomCollapsedListTile(
-          title: lang.THEME_SETTINGS,
-          subtitle: lang.THEME_SETTINGS_SUBTITLE,
+          title: () => lang.themeSettings,
+          subtitle: lang.themeSettingsSubtitle,
           icon: Broken.brush_2,
           page: () => const ThemeSetting(),
         ),
         CustomCollapsedListTile(
-          title: lang.INDEXER,
-          subtitle: lang.INDEXER_SUBTITLE,
+          title: () => lang.indexer,
+          subtitle: lang.indexerSubtitle,
           icon: Broken.component,
           page: () => const IndexerSettings(),
           trailing: const IndexingPercentage(size: 32.0),
         ),
         CustomCollapsedListTile(
-          title: lang.PLAYBACK_SETTING,
-          subtitle: lang.PLAYBACK_SETTING_SUBTITLE,
+          title: () => lang.playbackSetting,
+          subtitle: lang.playbackSettingSubtitle,
           icon: Broken.play_cricle,
           page: () => const PlaybackSettings(),
           trailing: const VideosExtractingPercentage(size: 32.0),
         ),
         CustomCollapsedListTile(
-          title: lang.CUSTOMIZATIONS,
-          subtitle: lang.CUSTOMIZATIONS_SUBTITLE,
+          title: () => lang.customizations,
+          subtitle: lang.customizationsSubtitle,
           icon: Broken.brush_1,
           page: () => const CustomizationSettings(),
         ),
         CustomCollapsedListTile(
-          title: lang.YOUTUBE,
-          subtitle: lang.YOUTUBE_SETTINGS_SUBTITLE,
+          title: () => lang.youtube,
+          subtitle: lang.youtubeSettingsSubtitle,
           icon: Broken.video,
           page: () => const YoutubeSettings(),
         ),
         CustomCollapsedListTile(
-          title: lang.EXTRAS,
-          subtitle: lang.EXTRAS_SUBTITLE,
+          title: () => lang.extras,
+          subtitle: lang.extrasSubtitle,
           icon: Broken.command_square,
           page: () => const ExtrasSettings(),
         ),
         CustomCollapsedListTile(
-          title: lang.BACKUP_AND_RESTORE,
-          subtitle: lang.BACKUP_AND_RESTORE_SUBTITLE,
+          title: () => lang.backupAndRestore,
+          subtitle: lang.backupAndRestoreSubtitle,
           icon: Broken.refresh_circle,
           page: () => const BackupAndRestore(),
           trailing: const ParsingJsonPercentage(size: 32.0),
         ),
         CustomCollapsedListTile(
-          title: lang.ADVANCED_SETTINGS,
-          subtitle: lang.ADVANCED_SETTINGS_SUBTITLE,
+          title: () => lang.advancedSettings,
+          subtitle: lang.advancedSettingsSubtitle,
           icon: Broken.hierarchy_3,
           page: () => const AdvancedSettings(),
         ),
@@ -183,7 +183,7 @@ class CollapsedSettingTiles extends StatelessWidget {
 
 class CustomCollapsedListTile extends StatelessWidget {
   final Color? bgColor;
-  final String title;
+  final String Function() title;
   final String? subtitle;
   final Widget Function()? page;
   final NamidaRouteWidget Function()? rawPage;
@@ -206,7 +206,7 @@ class CustomCollapsedListTile extends StatelessWidget {
     return CustomListTile(
       bgColor: bgColor,
       largeTitle: true,
-      title: title,
+      title: title(),
       subtitle: subtitle,
       icon: icon,
       visualDensity: const VisualDensity(horizontal: -1.5, vertical: -1.5),

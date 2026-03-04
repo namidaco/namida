@@ -80,7 +80,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                     ),
                     textField: CustomTextFiled(
                       textFieldController: LibraryTab.genres.textSearchControllerUI,
-                      textFieldHintText: lang.FILTER_GENRES,
+                      textFieldHintText: lang.filterGenres,
                       onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.genre),
                     ),
                   ),

@@ -148,11 +148,11 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
   (String, IconData) sortToTextAndIcon(YTVideosSorting sort) {
     switch (sort) {
       case YTVideosSorting.date:
-        return (lang.DATE, Broken.calendar);
+        return (lang.date, Broken.calendar);
       case YTVideosSorting.views:
-        return (lang.VIEWS.capitalizeFirst(), Broken.eye);
+        return (lang.views.capitalizeFirst(), Broken.eye);
       case YTVideosSorting.duration:
-        return (lang.DURATION, Broken.timer_1);
+        return (lang.duration, Broken.timer_1);
     }
   }
 

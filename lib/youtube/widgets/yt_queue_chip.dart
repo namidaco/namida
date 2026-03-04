@@ -268,7 +268,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                       // const SizedBox(height: 2.0),
                                       if (nextItemName != null && nextItemName != '')
                                         Text(
-                                          "${lang.NEXT}: $nextItemName",
+                                          "${lang.next}: $nextItemName",
                                           style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -299,13 +299,13 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                               ),
                             ),
                             _ActionItemAlt(
-                              tooltip: lang.NEW_TRACKS_ADD,
+                              tooltip: lang.newTracksAdd,
                               icon: Broken.add,
                               iconSize: 22.0,
                               onTap: () => TracksAddOnTap().onAddVideosTap(context),
                             ),
                             _ActionItemAlt(
-                              tooltip: lang.OPEN_QUEUE,
+                              tooltip: lang.openQueue,
                               icon: Broken.arrow_up_3,
                               iconSize: 22.0,
                               onTap: _animateSmallToBig,
@@ -405,7 +405,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                               showMoreIcon: true,
                               playlistInfo: () => PlaylistBasicInfo(
                                 id: '',
-                                title: lang.QUEUE,
+                                title: lang.queue,
                                 videosCountText: Player.inst.currentQueue.value.length.displayVideoKeyword,
                                 videosCount: Player.inst.currentQueue.value.length,
                                 thumbnails: [],
@@ -524,11 +524,11 @@ class YTQueueChipHeaderRow extends StatelessWidget {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         icon: Broken.setting_3,
-        title: lang.CONFIGURE,
+        title: lang.configure,
         normalTitleStyle: true,
         actions: [
           NamidaButton(
-            text: lang.DONE,
+            text: lang.done,
             onPressed: NamidaNavigator.inst.closeDialog,
           ),
         ],
@@ -563,7 +563,7 @@ class YTQueueChipHeaderRow extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              lang.QUEUE,
+                              lang.queue,
                               style: textTheme.displayMedium,
                             ),
                             Obx(
@@ -591,7 +591,7 @@ class YTQueueChipHeaderRow extends StatelessWidget {
                           const SizedBox(width: 6.0),
                           _ActionItem(
                             icon: Broken.music_playlist,
-                            tooltip: lang.ADD_TO_PLAYLIST,
+                            tooltip: lang.addToPlaylist,
                             onTap: () {
                               showAddToPlaylistSheet(
                                 ids: Player.inst.currentQueue.value.whereType<YoutubeID>().map((e) => e.id),
@@ -602,15 +602,15 @@ class YTQueueChipHeaderRow extends StatelessWidget {
                           const SizedBox(width: 6.0),
                           _ActionItem(
                             icon: Broken.import,
-                            tooltip: lang.DOWNLOAD,
+                            tooltip: lang.download,
                             onTap: () {
                               YTPlaylistDownloadPage(
                                 ids: Player.inst.currentQueue.value.whereType<YoutubeID>().toList(),
-                                playlistName: lang.QUEUE,
+                                playlistName: lang.queue,
                                 infoLookup: const {},
                                 playlistInfo: PlaylistBasicInfo(
                                   id: '',
-                                  title: lang.QUEUE,
+                                  title: lang.queue,
                                   videosCountText: Player.inst.currentQueue.value.length.toString(),
                                   videosCount: Player.inst.currentQueue.value.length,
                                   thumbnails: [],
@@ -621,7 +621,7 @@ class YTQueueChipHeaderRow extends StatelessWidget {
                           const SizedBox(width: 6.0),
                           _ActionItem(
                             icon: Broken.setting_3,
-                            tooltip: lang.CONFIGURE,
+                            tooltip: lang.configure,
                             onTap: () => _onConfigureTap(),
                           ),
                           const SizedBox(width: 4.0),

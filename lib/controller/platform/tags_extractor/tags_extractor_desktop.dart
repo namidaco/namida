@@ -156,7 +156,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
     }
 
     snackyy(
-      title: lang.WARNING,
+      title: lang.warning,
       message: 'FFMPEG was used. Some tags might not have been updated',
       isError: true,
     );

@@ -124,7 +124,7 @@ class YoutubeInfoController {
 
 class _YTReportingLog extends Logger {
   static void _showError(String msg, {Object? exception}) {
-    String title = lang.ERROR;
+    String title = lang.error;
     if (exception != null) title += ': $exception';
 
     snackyy(

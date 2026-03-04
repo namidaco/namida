@@ -127,7 +127,7 @@ class YTUtils {
         ),
       if (displayCacheIcons) ...[
         Tooltip(
-          message: lang.VIDEO_CACHE,
+          message: lang.videoCache,
           child: Icon(
             Broken.video,
             size: 15.0,
@@ -138,7 +138,7 @@ class YTUtils {
         ),
         const SizedBox(width: 4.0),
         Tooltip(
-          message: lang.AUDIO_CACHE,
+          message: lang.audioCache,
           child: Icon(
             Broken.audio_square,
             size: 15.0,
@@ -154,7 +154,7 @@ class YTUtils {
   static NamidaPopupItem _getPlayAllTile({required QueueSourceYoutubeID queueSource, required Iterable<YoutubeID> videos, required bool showPlayAllReverse}) {
     return NamidaPopupItem(
       icon: Broken.play_circle,
-      title: lang.PLAY_ALL,
+      title: lang.playAll,
       onTap: () => Player.inst.playOrPause(0, videos, queueSource),
       trailing: showPlayAllReverse
           ? IconButton(
@@ -162,7 +162,7 @@ class YTUtils {
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 visualDensity: VisualDensity.compact,
               ),
-              tooltip: "${lang.PLAY_ALL} (${lang.REVERSE_ORDER})",
+              tooltip: "${lang.playAll} (${lang.reverseOrder})",
               icon: StackedIcon(
                 baseIcon: Broken.play_cricle,
                 secondaryIcon: Broken.arrow_swap,
@@ -202,14 +202,14 @@ class YTUtils {
     return [
       NamidaPopupItem(
         icon: Broken.music_library_2,
-        title: lang.ADD_TO_PLAYLIST,
+        title: lang.addToPlaylist,
         onTap: () {
           showAddToPlaylistSheet(ids: videos.map((e) => e.id), idsNamesLookup: {});
         },
       ),
       NamidaPopupItem(
         icon: Broken.share,
-        title: lang.SHARE,
+        title: lang.share,
         onTap: videos.shareVideos,
       ),
       if (videos.length > 1)
@@ -217,24 +217,24 @@ class YTUtils {
       else
         NamidaPopupItem(
           icon: Broken.play,
-          title: lang.PLAY,
+          title: lang.play,
           onTap: () => Player.inst.playOrPause(0, videos, queueSource),
         ),
       if (videos.length > 1)
         NamidaPopupItem(
           icon: Broken.shuffle,
-          title: lang.SHUFFLE,
+          title: lang.shuffle,
           onTap: () => Player.inst.playOrPause(0, videos, queueSource, shuffle: true),
         ),
       NamidaPopupItem(
         icon: Broken.next,
-        title: lang.PLAY_NEXT,
+        title: lang.playNext,
         onTap: () => Player.inst.addToQueue(videos, insertNext: true),
       ),
       if (playAfterVid != null)
         NamidaPopupItem(
           icon: Broken.hierarchy_square,
-          title: '${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}',
+          title: '${lang.playAfter}: ${playAfterVid.diff.displayVideoKeyword}',
           subtitle: playAfterVid.name,
           oneLinedSub: true,
           onTap: () {
@@ -243,25 +243,25 @@ class YTUtils {
         ),
       NamidaPopupItem(
         icon: Broken.play_cricle,
-        title: lang.PLAY_LAST,
+        title: lang.playLast,
         onTap: () => Player.inst.addToQueue(videos, insertNext: false),
       ),
       if (playlistName != '')
         NamidaPopupItem(
           icon: Broken.trash,
-          title: lang.REMOVE_FROM_PLAYLIST,
+          title: lang.removeFromPlaylist,
           subtitle: playlistName.translatePlaylistName(),
           onTap: () => YTUtils.onRemoveVideosFromPlaylist(k_PLAYLIST_NAME_HISTORY, videos),
         ),
       if (playlistToRemove != null)
         NamidaPopupItem(
           icon: Broken.trash,
-          title: lang.DELETE_PLAYLIST,
+          title: lang.deletePlaylist,
           onTap: () => playlistToRemove.promptDelete(name: playlistToRemove.name),
         ),
       NamidaPopupItem(
         icon: Broken.bill,
-        title: lang.PRIORITY,
+        title: lang.priority,
         trailing: setPriorityChip,
         onTap: setPriorityChipController.showMenu,
       ),
@@ -300,7 +300,7 @@ class YTUtils {
         title: '',
         titleBuilder: (style) => Obx(
           (context) => Text(
-            lang.REPEAT_FOR_N_TIMES.replaceFirst('_NUM_', numberOfRepeats.valueR.toString()),
+            lang.repeatForNTimes(number: numberOfRepeats.valueR),
             style: style,
           ),
         ),
@@ -327,7 +327,7 @@ class YTUtils {
     }
     final clearItem = NamidaPopupItem(
       icon: Broken.broom,
-      title: lang.CLEAR,
+      title: lang.clear,
       trailing: SetVideosPriorityChip(
         smaller: true,
         totalCount: 1,
@@ -372,7 +372,7 @@ class YTUtils {
 
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: lang.COPY,
+        title: lang.copy,
         actions: const [
           DoneButton(),
         ],
@@ -380,33 +380,33 @@ class YTUtils {
           mainAxisSize: MainAxisSize.min,
           children: [
             CustomListTile(
-              title: lang.TITLE,
+              title: lang.title,
               subtitle: title,
               onTap: () => copy(title),
             ),
             CustomListTile(
-              title: lang.CHANNEL,
+              title: lang.channel,
               subtitle: channelTitle,
               onTap: () => copy(channelTitle),
             ),
             CustomListTile(
-              title: "${lang.CHANNEL} + ${lang.TITLE}",
+              title: "${lang.channel} + ${lang.title}",
               subtitle: '$channelTitle $title',
               onTap: () => copy('$channelTitle $title'),
             ),
             CustomListTile(
-              title: lang.LINK,
+              title: lang.link,
               subtitle: videoLink,
               onTap: () => copy(videoLink),
             ),
             if (videoLinkTimeStamp != null)
               CustomListTile(
-                title: "${lang.LINK} + ${lang.SECONDS}",
+                title: "${lang.link} + ${lang.seconds}",
                 subtitle: videoLinkTimeStamp,
                 onTap: () => copy(videoLinkTimeStamp!),
               ),
             CustomListTile(
-              title: lang.VIDEO,
+              title: lang.video,
               subtitle: videoId,
               onTap: () => copy(videoId),
             ),
@@ -419,7 +419,7 @@ class YTUtils {
   static NamidaPopupItem getVideoCopyItemsPopupItem(String videoId) {
     return NamidaPopupItem(
       icon: Broken.copy,
-      title: lang.COPY,
+      title: lang.copy,
       onTap: () {
         final videoLink = YTUrlUtils.buildVideoUrl(videoId);
         final text = videoLink;
@@ -434,7 +434,7 @@ class YTUtils {
         children: [
           Expanded(
             child: Text(
-              lang.COPY,
+              lang.copy,
               style: style,
             ),
           ),
@@ -503,7 +503,7 @@ class YTUtils {
       final isFavourite = YoutubePlaylistController.inst.favouritesPlaylist.isSubItemFavourite(videoId);
       favouriteItem = NamidaPopupItem(
         icon: isFavourite ? Broken.heart_filled : Broken.heart,
-        title: lang.FAVOURITES,
+        title: lang.favourites,
         onTap: () => YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId),
       );
     }
@@ -511,7 +511,7 @@ class YTUtils {
       if (showInfoTile)
         NamidaPopupItem(
           icon: Broken.info_circle,
-          title: lang.INFO,
+          title: lang.info,
           onTap: () {
             NamidaNavigator.inst.navigateDialog(
               dialog: VideoInfoDialog(
@@ -523,14 +523,14 @@ class YTUtils {
       ?favouriteItem,
       NamidaPopupItem(
         icon: Broken.music_library_2,
-        title: lang.ADD_TO_PLAYLIST,
+        title: lang.addToPlaylist,
         onTap: () {
           showAddToPlaylistSheet(ids: [videoId], idsNamesLookup: idsNamesLookup);
         },
       ),
       NamidaPopupItem(
         icon: Broken.import,
-        title: lang.DOWNLOAD,
+        title: lang.download,
         onTap: () {
           final plInfo = playlistInfo?.call();
           showDownloadVideoBottomSheet(
@@ -548,13 +548,13 @@ class YTUtils {
       if (copyUrl)
         NamidaPopupItem(
           icon: Broken.copy,
-          title: lang.COPY,
+          title: lang.copy,
           onTap: () => const YTUtils().copyCurrentVideoUrl(videoId, withTimestamp: false),
         ),
       if (channelID != null && channelID.isNotEmpty)
         NamidaPopupItem(
           icon: Broken.user,
-          title: lang.GO_TO_CHANNEL,
+          title: lang.goToChannel,
           onTap: () {
             if (isInFullScreen) NamidaNavigator.inst.exitFullScreen();
             YTChannelSubpage(channelID: channelID!).navigate();
@@ -564,7 +564,7 @@ class YTUtils {
       isCurrentlyPlaying
           ? NamidaPopupItem(
               icon: Broken.pause,
-              title: lang.STOP_AFTER_THIS_VIDEO,
+              title: lang.stopAfterThisVideo,
               enabled: Player.inst.sleepTimerConfig.value.sleepAfterItems != 1,
               onTap: () {
                 Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: 1);
@@ -572,14 +572,14 @@ class YTUtils {
             )
           : NamidaPopupItem(
               icon: Broken.play,
-              title: lang.PLAY,
+              title: lang.play,
               onTap: () {
                 Player.inst.playOrPause(0, [YoutubeID(id: videoId, playlistID: playlistID)], QueueSource.others);
               },
             ),
       NamidaPopupItem(
         icon: Broken.next,
-        title: lang.PLAY_NEXT,
+        title: lang.playNext,
         onTap: () {
           Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: true, showSnackBar: false);
         },
@@ -587,7 +587,7 @@ class YTUtils {
       if (playAfterVid != null)
         NamidaPopupItem(
           icon: Broken.hierarchy_square,
-          title: '${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}',
+          title: '${lang.playAfter}: ${playAfterVid.diff.displayVideoKeyword}',
           subtitle: playAfterVid.name,
           oneLinedSub: true,
           onTap: () {
@@ -596,7 +596,7 @@ class YTUtils {
         ),
       NamidaPopupItem(
         icon: Broken.play_cricle,
-        title: lang.PLAY_LAST,
+        title: lang.playLast,
         onTap: () {
           Player.inst.addToQueue([YoutubeID(id: videoId, playlistID: playlistID)], insertNext: false, showSnackBar: false);
         },
@@ -604,14 +604,14 @@ class YTUtils {
       if (playlistName != '' && videoYTID != null)
         NamidaPopupItem(
           icon: Broken.box_remove,
-          title: lang.REMOVE_FROM_PLAYLIST,
+          title: lang.removeFromPlaylist,
           subtitle: playlistName.translatePlaylistName(),
           onTap: () => YTUtils.onRemoveVideosFromPlaylist(playlistName, [videoYTID]),
         ),
       if (clearTile)
         NamidaPopupItem(
           icon: Broken.broom,
-          title: lang.CLEAR,
+          title: lang.clear,
           trailing: SetVideosPriorityChip(
             smaller: true,
             totalCount: 1,
@@ -797,10 +797,10 @@ class YTUtils {
   static Future<void> onRemoveVideosFromPlaylist(String name, List<YoutubeID> videosToDelete) async {
     void showSnacky({required void Function() whatDoYouWant}) {
       snackyy(
-        title: lang.UNDO_CHANGES,
-        message: lang.UNDO_CHANGES_DELETED_TRACK,
+        title: lang.undoChanges,
+        message: lang.undoChangesDeletedTrack,
         displayDuration: SnackDisplayDuration.long,
-        button: (lang.UNDO, whatDoYouWant),
+        button: (lang.undo, whatDoYouWant),
       );
     }
 
@@ -934,7 +934,7 @@ class YTUtils {
         theme: theme,
         normalTitleStyle: true,
         icon: Broken.broom,
-        title: lang.CLEAR,
+        title: lang.clear,
         trailingWidgets: [
           Obx(
             (context) => Checkbox.adaptive(
@@ -967,7 +967,7 @@ class YTUtils {
           Obx(
             (context) => NamidaButton(
               enabled: deleteTempAudio.valueR || deleteTempVideo.valueR || pathsToDelete.values.any((element) => element),
-              text: "${lang.DELETE} (${totalSizeToDelete.valueR.fileSizeFormatted})",
+              text: "${lang.delete} (${totalSizeToDelete.valueR.fileSizeFormatted})",
               onPressed: () async {
                 await Future.wait([
                   deleteItems(pathsToDelete.keys.where((element) => pathsToDelete[element] == true)),
@@ -984,7 +984,7 @@ class YTUtils {
         child: Column(
           children: [
             NamidaClearDialogExpansionTile(
-              title: lang.VIDEO_CACHE,
+              title: lang.videoCache,
               subtitle: videosSize.fileSizeFormatted,
               icon: Broken.video,
               items: videosCached,
@@ -1003,7 +1003,7 @@ class YTUtils {
               allSelected: allSelected,
             ),
             NamidaClearDialogExpansionTile(
-              title: lang.AUDIO_CACHE,
+              title: lang.audioCache,
               subtitle: audiosSize.fileSizeFormatted,
               icon: Broken.musicnote,
               items: audiosCached,
@@ -1014,7 +1014,7 @@ class YTUtils {
                 final bitrateText = a.bitrate == null ? null : "${a.bitrate! ~/ 1000}kb/s";
                 final langText = a.langaugeName == null ? '' : " • ${a.langaugeName}";
                 return (
-                  title: "${bitrateText ?? lang.AUDIO}$langText",
+                  title: "${bitrateText ?? lang.audio}$langText",
                   subtitle: a.file.fileSizeFormatted() ?? '',
                   path: a.file.path,
                 );
@@ -1032,14 +1032,14 @@ class YTUtils {
 
   static void showCreateLocalYTPlaylistSheet() async {
     final text = await showNamidaBottomSheetWithTextField(
-      title: lang.CONFIGURE,
+      title: lang.configure,
       textfieldConfig: BottomSheetTextFieldConfig(
         initalControllerText: '',
         hintText: '',
-        labelText: lang.NAME,
+        labelText: lang.name,
         validator: (value) => YoutubePlaylistController.inst.validatePlaylistName(value),
       ),
-      buttonText: lang.ADD,
+      buttonText: lang.add,
       onButtonTap: (text) => true,
     );
     if (text != null) YoutubePlaylistController.inst.addNewPlaylist(text);
@@ -1053,16 +1053,16 @@ class YTUtils {
     final controller = TextEditingController(text: settings.youtube.downloadFilenameBuilder.value);
     if (controller.text.isEmpty) controller.text = settings.youtube.defaultFilenameBuilder;
     await showNamidaBottomSheetWithTextField(
-      title: lang.OUTPUT,
+      title: lang.output,
       textfieldConfig: BottomSheetTextFieldConfigWC(
         controller: controller,
         hintText: '',
-        labelText: lang.FILE_NAME,
+        labelText: lang.fileName,
         validator: (value) {
-          if (value == null) return lang.PLEASE_ENTER_A_NAME;
+          if (value == null) return lang.pleaseEnterAName;
           final file = FileParts.join(AppDirs.YOUTUBE_DOWNLOADS, groupName, value);
           if (file.existsSync()) {
-            return "${lang.FILE_ALREADY_EXISTS}, ${lang.DOWNLOADING_WILL_OVERRIDE_IT} (${file.fileSizeFormatted() ?? 0})";
+            return "${lang.fileAlreadyExists}, ${lang.downloadingWillOverrideIt} (${file.fileSizeFormatted() ?? 0})";
           }
           if (!YoutubeController.filenameBuilder.isBuildingDefaultFilenameSafe(value)) {
             return YoutubeController.filenameBuilder.encodedParamsThatShouldExistInFilename.join(' - ');
@@ -1070,7 +1070,7 @@ class YTUtils {
           return null;
         },
       ),
-      buttonText: lang.SAVE,
+      buttonText: lang.save,
       onButtonTap: (text) {
         onChanged(text);
         settings.youtube.save(downloadFilenameBuilder: text);
@@ -1083,7 +1083,7 @@ class YTUtils {
                 padding: const EdgeInsets.only(bottom: 12.0),
                 child: CustomListTile(
                   icon: Broken.edit,
-                  title: lang.EDIT_TAGS,
+                  title: lang.editTags,
                   trailing: const Icon(
                     Broken.arrow_right_3,
                     size: 22.0,

@@ -81,7 +81,7 @@ Future<void> showVideoDownloadOptionsSheet({
                 const SizedBox(width: 8.0),
                 Expanded(
                   child: Text(
-                    lang.EDIT_TAGS,
+                    lang.editTags,
                     style: textTheme.displayLarge,
                   ),
                 ),
@@ -105,7 +105,7 @@ Future<void> showVideoDownloadOptionsSheet({
                               (context) => CustomSwitchListTile(
                                 icon: Broken.tick_circle,
                                 visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                                title: lang.KEEP_CACHED_VERSIONS,
+                                title: lang.keepCachedVersions,
                                 value: settings.downloadFilesKeepCachedVersions.valueR,
                                 onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
                               ),
@@ -114,7 +114,7 @@ Future<void> showVideoDownloadOptionsSheet({
                               (context) => CustomSwitchListTile(
                                 icon: Broken.document_code,
                                 visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                                title: lang.SET_FILE_LAST_MODIFIED_AS_VIDEO_UPLOAD_DATE,
+                                title: lang.setFileLastModifiedAsVideoUploadDate,
                                 value: settings.downloadFilesWriteUploadDate.valueR,
                                 onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
                               ),
@@ -123,7 +123,7 @@ Future<void> showVideoDownloadOptionsSheet({
                               (context) => CustomSwitchListTile(
                                 icon: Broken.music_library_2,
                                 visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
-                                title: lang.ADD_AUDIO_TO_LOCAL_LIBRARY,
+                                title: lang.addAudioToLocalLibrary,
                                 value: settings.downloadAddAudioToLocalLibrary.valueR,
                                 onChanged: (isTrue) => settings.save(downloadAddAudioToLocalLibrary: !isTrue),
                               ),
@@ -140,7 +140,7 @@ Future<void> showVideoDownloadOptionsSheet({
                                 ),
                                 const SizedBox(width: 8.0),
                                 Text(
-                                  lang.WEBM_NO_EDIT_TAGS_SUPPORT,
+                                  lang.webmNoEditTagsSupport,
                                   style: textTheme.displayLarge,
                                 ),
                                 const SizedBox(width: 12.0),
@@ -183,7 +183,7 @@ Future<void> showVideoDownloadOptionsSheet({
                                 ),
                                 const SizedBox(width: 6.0),
                                 NamidaIconButton(
-                                  tooltip: () => lang.OUTPUT,
+                                  tooltip: () => lang.output,
                                   icon: Broken.edit_2,
                                   iconSize: 20.0,
                                   onPressed: () {
@@ -217,7 +217,7 @@ Future<void> showVideoDownloadOptionsSheet({
                           getTextChip(FFMPEGTagField.lyrics),
                           NamidaExpansionTile(
                             icon: Broken.more_square,
-                            titleText: lang.SHOW_MORE,
+                            titleText: lang.showMore,
                             children:
                                 [
                                       ...[
@@ -262,7 +262,7 @@ Future<void> showVideoDownloadOptionsSheet({
                         controllersMap[FFMPEGTagField.album]?.text = tagMaps[FFMPEGTagField.album] ?? videoUploader ?? '';
                       },
                       child: Text(
-                        lang.AUTO_EXTRACT_TAGS_FROM_FILENAME,
+                        lang.autoExtractTagsFromFilename,
                         style: namida.textTheme.displaySmall?.copyWith(
                           decoration: TextDecoration.underline,
                           decorationStyle: TextDecorationStyle.dashed,
@@ -273,7 +273,7 @@ Future<void> showVideoDownloadOptionsSheet({
                 Expanded(
                   flex: 5,
                   child: NamidaButton(
-                    text: lang.DONE,
+                    text: lang.done,
                     onPressed: Navigator.of(context).pop,
                   ),
                 ),
@@ -383,12 +383,12 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
       dialog: Form(
         key: fk,
         child: CustomBlurryDialog(
-          title: lang.ADD_FOLDER,
+          title: lang.addFolder,
           actions: [
             const CancelButton(),
             const SizedBox(width: 6.0),
             NamidaButton(
-              text: lang.ADD,
+              text: lang.add,
               onPressed: () {
                 if (fk.currentState?.validate() == true) {
                   onFolderAdd(c.text);
@@ -400,13 +400,13 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
           child: CustomTagTextField(
             controller: c,
             hintText: '',
-            labelText: lang.FOLDER,
+            labelText: lang.folder,
             validatorMode: AutovalidateMode.always,
             validator: (value) {
-              if (value == null) return lang.PLEASE_ENTER_A_NAME;
-              if (value.isEmpty) return lang.EMPTY_VALUE;
+              if (value == null) return lang.pleaseEnterAName;
+              if (value.isEmpty) return lang.emptyValue;
               if (availableDirectoriesNames.keys.any((element) => element == value)) {
-                return lang.PLEASE_ENTER_A_DIFFERENT_NAME;
+                return lang.pleaseEnterADifferentName;
               }
               return null;
             },
@@ -440,7 +440,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    lang.FOLDER,
+                    lang.folder,
                     style: theme.textTheme.displayMedium,
                     maxLines: subtitle != null ? 4 : 5,
                     overflow: TextOverflow.ellipsis,
@@ -460,12 +460,12 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
               childrenDefault: () => [
                 NamidaPopupItem(
                   icon: Broken.add,
-                  title: lang.ADD,
+                  title: lang.add,
                   onTap: _onFolderAddTap,
                 ),
                 ...availableDirectoriesNames.keys.map(
                   (name) {
-                    final title = name == '' ? lang.DEFAULT : name;
+                    final title = name == '' ? lang.defaultLabel : name;
                     final icon = name == widget.playlistName
                         ? Broken.music_playlist
                         : name == ''
@@ -484,7 +484,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
               child: Obx(
                 (context) {
                   final groupName = this.groupName.valueR;
-                  final title = groupName == '' ? lang.DEFAULT : groupName;
+                  final title = groupName == '' ? lang.defaultLabel : groupName;
                   final count = availableDirectoriesNames[groupName];
                   final countText = count == null || count == 0 ? '' : " ($count)";
                   return Row(

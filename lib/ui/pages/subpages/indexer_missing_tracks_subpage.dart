@@ -222,7 +222,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
   }
 
   void _pickNewPathFor(String path) async {
-    final file = await NamidaFileBrowser.pickFile(note: lang.UPDATE);
+    final file = await NamidaFileBrowser.pickFile(note: lang.update);
     final newPath = file?.path;
     _missingTracksSuggestions[path] = newPath;
     if (newPath != null) _selectedTracksToUpdate[path] = true;
@@ -240,9 +240,9 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
         }
       }
       await EditDeleteController.inst.updateTrackPathInEveryPartOfNamidaBulk(newPaths);
-      snackyy(title: lang.NOTE, message: "${lang.DONE}: ${newPaths.length.displayTrackKeyword}", top: false);
+      snackyy(title: lang.note, message: "${lang.done}: ${newPaths.length.displayTrackKeyword}", top: false);
     } catch (e) {
-      snackyy(title: lang.ERROR, message: '$e', top: false, isError: true);
+      snackyy(title: lang.error, message: '$e', top: false, isError: true);
     }
 
     for (final k in _selectedTracksToUpdate.keys) {
@@ -493,7 +493,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                 _selectedTracksToUpdate.isNotEmpty && _missingTracksPaths.every((e) => _missingTracksSuggestions[e] == null || _selectedTracksToUpdate[e] == true);
                             return FloatingActionButton.small(
                               heroTag: 'indexer_missing_tracks_fab_hero_small',
-                              tooltip: lang.SELECT_ALL,
+                              tooltip: lang.selectAll,
                               backgroundColor: allSelected ? CurrentColor.inst.color.withOpacityExt(1.0) : theme.disabledColor.withOpacityExt(1.0),
                               child: Icon(
                                 allSelected ? Broken.tick_square : Broken.task_square,
@@ -532,7 +532,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                   dialog: CustomBlurryDialog(
                                     isWarning: true,
                                     normalTitleStyle: true,
-                                    bodyText: "${lang.UPDATE} ${_selectedTracksToUpdate.length.displayTrackKeyword}?",
+                                    bodyText: "${lang.update}: ${_selectedTracksToUpdate.length.displayTrackKeyword}?",
                                     actions: [
                                       const CancelButton(),
                                       const SizedBox(width: 8.0),
@@ -541,7 +541,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                         builder: (context, updating) => AnimatedEnabled(
                                           enabled: !updating,
                                           child: NamidaButton(
-                                            text: lang.UPDATE.toUpperCase(),
+                                            text: lang.update.toUpperCase(),
                                             onPressed: () async {
                                               isUpdating.value = true;
                                               await _onUpdating();
@@ -564,7 +564,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                   ),
                                   const SizedBox(width: 12.0),
                                   Text(
-                                    "${lang.UPDATE} ($totalLength)",
+                                    "${lang.update} ($totalLength)",
                                     style: textTheme.displayMedium?.copyWith(
                                       color: Colors.white.withOpacityExt(0.8),
                                     ),

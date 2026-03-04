@@ -155,7 +155,7 @@ class NamidaDrawer extends StatelessWidget {
         tracks.close();
       },
       dialog: CustomBlurryDialog(
-        title: lang.SLEEP_AFTER,
+        title: lang.sleepAfter,
         icon: Broken.timer_1,
         normalTitleStyle: true,
         actions: [
@@ -166,7 +166,7 @@ class NamidaDrawer extends StatelessWidget {
               return currentConfig.enableSleepAfterMins || currentConfig.enableSleepAfterItems
                   ? NamidaButton(
                       icon: Broken.timer_pause,
-                      text: lang.STOP,
+                      text: lang.stop,
                       onPressed: () {
                         Player.inst.resetSleepAfterTimer();
                         NamidaNavigator.inst.closeDialog();
@@ -174,7 +174,7 @@ class NamidaDrawer extends StatelessWidget {
                     )
                   : NamidaButton(
                       icon: Broken.timer_start,
-                      text: lang.START,
+                      text: lang.start,
                       onPressed: () {
                         if (minutes.value > 0 || tracks.value > 0) {
                           Player.inst.updateSleepTimerValues(
@@ -205,12 +205,12 @@ class NamidaDrawer extends StatelessWidget {
                     initValue: minutes.valueR,
                     onValueChanged: (val) => minutes.value = val,
                     text: "${minutes.valueR}m",
-                    topText: lang.MINUTES.capitalizeFirst(),
+                    topText: lang.minutes.capitalizeFirst(),
                     textPadding: 8.0,
                   ),
                 ),
                 Text(
-                  lang.OR,
+                  lang.or,
                   style: textTheme.displayMedium,
                 ),
                 // tracks
@@ -220,8 +220,8 @@ class NamidaDrawer extends StatelessWidget {
                     max: kMaximumSleepTimerTracks,
                     initValue: trs,
                     onValueChanged: (val) => tracks.value = val,
-                    text: "$trs ${lang.TRACK}",
-                    topText: lang.TRACKS,
+                    text: lang.countTracks(count: trs),
+                    topText: lang.tracks,
                     textPadding: 8.0,
                   ),
                 ),
@@ -265,7 +265,7 @@ class NamidaDrawer extends StatelessWidget {
                     ),
                 NamidaDrawerListTile(
                   enabled: false,
-                  title: lang.FAVOURITES,
+                  title: lang.favourites,
                   icon: Broken.heart,
                   onTap: () {
                     NamidaOnTaps.inst.onNormalPlaylistTap(k_PLAYLIST_NAME_FAV);
@@ -274,7 +274,7 @@ class NamidaDrawer extends StatelessWidget {
                 ),
                 NamidaDrawerListTile(
                   enabled: false,
-                  title: lang.QUEUES,
+                  title: lang.queues,
                   icon: Broken.driver,
                   onTap: () {
                     const QueuesPage().navigate();
@@ -300,7 +300,7 @@ class NamidaDrawer extends StatelessWidget {
           NamidaDrawerListTile(
             margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 12.0),
             enabled: false,
-            title: lang.SLEEP_TIMER,
+            title: lang.sleepTimer,
             icon: Broken.timer_1,
             onTap: () {
               toggleDrawer();
@@ -321,7 +321,7 @@ class NamidaDrawer extends StatelessWidget {
                   icon: Broken.brush_1,
                   onTap: () {
                     SettingsSubPage(
-                      title: lang.CUSTOMIZATIONS,
+                      title: () => lang.customizations,
                       child: const CustomizationSettings(),
                     ).navigate();
 
@@ -640,26 +640,26 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                                   // -- dont try to hide based on rail bar or widescreen, its not reactive here and would look a bit bad
                                   _DesktopShortcutIcon(
                                     type: _DesktopShortcutActionType.opensRoute,
-                                    tooltip: lang.HOME,
+                                    tooltip: lang.home,
                                     icon: Broken.home_1,
                                     onTap: () => ScrollSearchController.inst.animatePageController(LibraryTab.home),
                                   ),
                                   _DesktopShortcutIcon(
                                     type: _DesktopShortcutActionType.performsAction,
-                                    tooltip: lang.QUEUE,
+                                    tooltip: lang.queue,
                                     icon: Broken.row_vertical,
                                     size: _DesktopShortcutIcon.iconSize * 0.85,
                                     onTap: ShortcutsController.instance?.openPlayerQueue,
                                   ),
                                   _DesktopShortcutIcon(
                                     type: _DesktopShortcutActionType.opensRoute,
-                                    tooltip: lang.EQUALIZER,
+                                    tooltip: lang.equalizer,
                                     icon: Broken.sound,
                                     onTap: NamidaOnTaps.inst.openEqualizer,
                                   ),
                                   _DesktopShortcutIcon(
                                     type: _DesktopShortcutActionType.opensDialog,
-                                    tooltip: lang.REFRESH_LIBRARY,
+                                    tooltip: lang.refreshLibrary,
                                     icon: Broken.refresh_2,
                                     onTap: () => showRefreshPromptDialog(false),
                                     child: RefreshLibraryIcon(
@@ -670,7 +670,7 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                                   ),
                                   _DesktopShortcutIcon(
                                     type: _DesktopShortcutActionType.opensDialog,
-                                    tooltip: lang.SHORTCUTS,
+                                    tooltip: lang.shortcuts,
                                     icon: Broken.flash_1,
                                     onTap: () => AboutPage.showShortcutsDialog(context),
                                   ),

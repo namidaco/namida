@@ -184,8 +184,8 @@ class Player {
     _audioHandler.onVideoError = (e, _) {
       if (e is PlatformException) {
         final itemId = currentVideo?.id ?? currentTrack?.track.youtubeID;
-        final button = itemId != null ? (lang.CLEAR_VIDEO_CACHE, () => const YTUtils().showVideoClearDialog(itemId)) : null;
-        snackyy(message: e.details.toString().substring(0, 600), title: '${lang.ERROR}: ${e.message}', isError: true, top: false, button: button, maxLinesMessage: 8);
+        final button = itemId != null ? (lang.clearVideoCache, () => const YTUtils().showVideoClearDialog(itemId)) : null;
+        snackyy(message: e.details.toString().substring(0, 600), title: '${lang.error}: ${e.message}', isError: true, top: false, button: button, maxLinesMessage: 8);
       }
     };
 
@@ -416,7 +416,7 @@ class Player {
             final finalTracks = (insertionType?.shuffleOrSort(tracksCopy) ?? tracksCopy).withLimit(maxCount);
 
             if (showSnackBar && finalTracks.isEmpty) {
-              snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND, top: false);
+              snackyy(title: lang.note, message: emptyTracksMessage ?? lang.noTracksFound, top: false);
               return false;
             }
             await _audioHandler.addToQueue(
@@ -425,10 +425,10 @@ class Player {
               insertAfterLatest: insertAfterLatest,
             );
             if (showSnackBar) {
-              final addins = shouldInsertNext ? lang.INSERTED : lang.ADDED;
+              final addins = shouldInsertNext ? lang.inserted : lang.added;
               snackyy(
                 icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
-                message: '${addins.capitalizeFirst()} ${finalTracks.displayTrackKeyword}',
+                message: '${addins.capitalizeFirst()}: ${finalTracks.displayTrackKeyword}',
                 top: false,
                 displayDuration: SnackDisplayDuration.mediumLow,
                 animationDurationMS: 400,
@@ -441,7 +441,7 @@ class Player {
             final finalVideos = (insertionType?.shuffleOrSortYT(tracksCopy) ?? tracksCopy).withLimit(maxCount);
 
             if (showSnackBar && finalVideos.isEmpty) {
-              snackyy(title: lang.NOTE, message: emptyTracksMessage ?? lang.NO_TRACKS_FOUND, top: false);
+              snackyy(title: lang.note, message: emptyTracksMessage ?? lang.noTracksFound, top: false);
               return false;
             }
             await _audioHandler.addToQueue(
@@ -450,10 +450,10 @@ class Player {
               insertAfterLatest: insertAfterLatest,
             );
             if (showSnackBar) {
-              final addins = shouldInsertNext ? lang.INSERTED : lang.ADDED;
+              final addins = shouldInsertNext ? lang.inserted : lang.added;
               snackyy(
                 icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
-                message: '${addins.capitalizeFirst()} ${finalVideos.length.displayVideoKeyword}',
+                message: '${addins.capitalizeFirst()}: ${finalVideos.length.displayVideoKeyword}',
                 top: false,
                 displayDuration: SnackDisplayDuration.mediumLow,
                 animationDurationMS: 400,
@@ -476,11 +476,11 @@ class Player {
     this.removeFromQueue(index);
     _latestSnacky = snackyy(
       icon: Broken.rotate_left,
-      title: lang.UNDO_CHANGES,
-      message: lang.UNDO_CHANGES_DELETED_TRACK,
+      title: lang.undoChanges,
+      message: lang.undoChangesDeletedTrack,
       top: false,
       button: (
-        lang.UNDO,
+        lang.undo,
         () => this.insertInQueue([item], index),
       ),
     );

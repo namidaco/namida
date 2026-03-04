@@ -97,7 +97,7 @@ class StorageCacheManager {
   }
 
   String getDeleteSizeSubtitleText(int length, int totalSize) {
-    return lang.DELETE_FILE_CACHE_SUBTITLE.replaceFirst('_FILES_COUNT_', length.formatDecimal()).replaceFirst('_TOTAL_SIZE_', totalSize.fileSizeFormatted);
+    return lang.deleteFileCacheSubtitle(count: length, totalSizeText: totalSize.fileSizeFormatted);
   }
 
   void promptCacheDeleteDialog<T>({
@@ -116,7 +116,7 @@ class StorageCacheManager {
         actions: [
           /// Pressing Choose
           NamidaButton(
-            text: lang.CHOOSE,
+            text: lang.choose,
             onPressed: () {
               NamidaNavigator.inst.closeDialog();
               onChoosePrompt();
@@ -124,7 +124,7 @@ class StorageCacheManager {
           ),
           const CancelButton(),
           NamidaButton(
-            text: lang.DELETE.toUpperCase(),
+            text: lang.delete.toUpperCase(),
             onPressed: () async {
               NamidaNavigator.inst.closeDialog();
               await onDeleteEVERYTHING();
@@ -278,7 +278,7 @@ class StorageCacheManager {
         contentPadding: const EdgeInsets.symmetric(horizontal: 0.0),
         isWarning: true,
         normalTitleStyle: true,
-        title: lang.CHOOSE,
+        title: lang.choose,
         actions: [
           const CancelButton(),
 
@@ -286,12 +286,12 @@ class StorageCacheManager {
           Obx(
             (context) => NamidaButton(
               enabled: itemsToDeleteSize.valueR > 0 || itemsToDelete.valueR.isNotEmpty,
-              text: "${lang.DELETE.toUpperCase()} (${itemsToDeleteSize.valueR.fileSizeFormatted})",
+              text: "${lang.delete.toUpperCase()} (${itemsToDeleteSize.valueR.fileSizeFormatted})",
               onPressed: () async {
                 final hasTemp = deleteTempFiles.value && tempFilesSizeFinal.value > 0;
                 final finalItemsToDeleteOnlySize = itemsToDeleteSize.value - (hasTemp ? tempFilesSizeFinal.value : 0);
                 final firstLine = itemsToDelete.value.isNotEmpty || finalItemsToDeleteOnlySize > 0 ? confirmDialogText(itemsToDelete.value.length, finalItemsToDeleteOnlySize) : '';
-                final tempFilesLine = hasTemp ? "${lang.DELETE_TEMP_FILES} (${tempFilesSizeFinal.value.fileSizeFormatted})?" : '';
+                final tempFilesLine = hasTemp ? "${lang.deleteTempFiles} (${tempFilesSizeFinal.value.fileSizeFormatted})?" : '';
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     isWarning: true,
@@ -301,7 +301,7 @@ class StorageCacheManager {
 
                       /// final clear confirm
                       NamidaButton(
-                        text: lang.DELETE.toUpperCase(),
+                        text: lang.delete.toUpperCase(),
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog(2);
                           onDeleteFiles(itemsToDelete.value);
@@ -336,28 +336,28 @@ class StorageCacheManager {
                       const SizedBox(width: 24.0),
                       getChipButton(
                         sort: _CacheSorting.recommended,
-                        title: lang.AUTO,
+                        title: lang.auto,
                         icon: Broken.magic_star,
                         enabled: (sort) => sort == currentSort,
                       ),
                       const SizedBox(width: 12.0),
                       getChipButton(
                         sort: _CacheSorting.size,
-                        title: lang.SIZE,
+                        title: lang.size,
                         icon: Broken.size,
                         enabled: (sort) => sort == currentSort,
                       ),
                       const SizedBox(width: 12.0),
                       getChipButton(
                         sort: _CacheSorting.accessTime,
-                        title: lang.OLDEST_WATCH,
+                        title: lang.oldestWatch,
                         icon: Broken.sort,
                         enabled: (sort) => sort == currentSort,
                       ),
                       const SizedBox(width: 12.0),
                       getChipButton(
                         sort: _CacheSorting.listenCount,
-                        title: lang.TOTAL_LISTENS,
+                        title: lang.totalListens,
                         icon: Broken.math,
                         enabled: (sort) => sort == currentSort,
                       ),
@@ -509,7 +509,7 @@ class StorageCacheManager {
                                   ),
                                   const SizedBox(width: 8.0),
                                   Text(
-                                    '${lang.DELETE_TEMP_FILES} (${tempfs.fileSizeFormatted})',
+                                    '${lang.deleteTempFiles} (${tempfs.fileSizeFormatted})',
                                     style: namida.textTheme.displaySmall,
                                   ),
                                 ],
@@ -580,7 +580,7 @@ class StorageCacheManager {
                                   ),
                                   const SizedBox(width: 8.0),
                                   Text(
-                                    '${lang.SELECT_FILES_ALREADY_IN_LOCAL_LIBRARY} [${alrInLocalLib.$1.length}] (${alrInLocalLib.$2.fileSizeFormatted})',
+                                    '${lang.selectFilesAlreadyInLocalLibrary} [${alrInLocalLib.$1.length}] (${alrInLocalLib.$2.fileSizeFormatted})',
                                     style: namida.textTheme.displaySmall,
                                   ),
                                 ],

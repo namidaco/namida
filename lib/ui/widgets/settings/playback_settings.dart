@@ -67,31 +67,31 @@ class PlaybackSettings extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-    _PlaybackSettingsKeys.enableVideoPlayback: [lang.ENABLE_VIDEO_PLAYBACK],
-    _PlaybackSettingsKeys.videoSource: [lang.VIDEO_PLAYBACK_SOURCE],
-    _PlaybackSettingsKeys.videoQuality: [lang.VIDEO_QUALITY],
-    _PlaybackSettingsKeys.localVideoMatching: [lang.LOCAL_VIDEO_MATCHING],
-    _PlaybackSettingsKeys.keepScreenAwake: [lang.KEEP_SCREEN_AWAKE_WHEN],
-    _PlaybackSettingsKeys.displayFavButtonInNotif: [lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION],
-    _PlaybackSettingsKeys.displayStopButtonInNotif: [lang.DISPLAY_STOP_BUTTON_IN_NOTIFICATION],
-    _PlaybackSettingsKeys.displayArtworkOnLockscreen: [lang.DISPLAY_ARTWORK_ON_LOCKSCREEN],
-    _PlaybackSettingsKeys.killPlayerAfterDismissing: [lang.KILL_PLAYER_AFTER_DISMISSING_APP],
-    _PlaybackSettingsKeys.onNotificationTap: [lang.ON_NOTIFICATION_TAP],
-    _PlaybackSettingsKeys.dismissibleMiniplayer: [lang.DISMISSIBLE_MINIPLAYER],
-    _PlaybackSettingsKeys.replayGain: [lang.NORMALIZE_AUDIO, lang.NORMALIZE_AUDIO_SUBTITLE],
-    _PlaybackSettingsKeys.skipSilence: [lang.SKIP_SILENCE],
-    _PlaybackSettingsKeys.gaplessPlayback: [lang.GAPLESS_PLAYBACK],
-    _PlaybackSettingsKeys.crossfade: [lang.ENABLE_CROSSFADE_EFFECT, lang.CROSSFADE_DURATION, lang.CROSSFADE_TRIGGER_SECONDS],
-    _PlaybackSettingsKeys.fadeEffectOnPlayPause: [lang.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE, lang.PLAY_FADE_DURATION, lang.PAUSE_FADE_DURATION],
-    _PlaybackSettingsKeys.autoPlayOnNextPrev: [lang.PLAY_AFTER_NEXT_PREV],
-    _PlaybackSettingsKeys.infinityQueue: [lang.INFINITY_QUEUE_ON_NEXT_PREV, lang.INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE],
-    _PlaybackSettingsKeys.onVolume0: [lang.ON_VOLUME_ZERO],
-    _PlaybackSettingsKeys.onInterruption: [lang.ON_INTERRUPTION],
-    _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing: [lang.JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH],
-    _PlaybackSettingsKeys.previousButtonReplays: [lang.PREVIOUS_BUTTON_REPLAYS, lang.PREVIOUS_BUTTON_REPLAYS_SUBTITLE],
-    _PlaybackSettingsKeys.seekDuration: [lang.SEEK_DURATION, lang.SEEK_DURATION_INFO],
-    _PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition: [lang.MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION],
-    _PlaybackSettingsKeys.countListenAfter: [lang.MIN_VALUE_TO_COUNT_TRACK_LISTEN],
+    _PlaybackSettingsKeys.enableVideoPlayback: [lang.enableVideoPlayback],
+    _PlaybackSettingsKeys.videoSource: [lang.videoPlaybackSource],
+    _PlaybackSettingsKeys.videoQuality: [lang.videoQuality],
+    _PlaybackSettingsKeys.localVideoMatching: [lang.localVideoMatching],
+    _PlaybackSettingsKeys.keepScreenAwake: [lang.keepScreenAwakeWhen],
+    _PlaybackSettingsKeys.displayFavButtonInNotif: [lang.displayFavButtonInNotification],
+    _PlaybackSettingsKeys.displayStopButtonInNotif: [lang.displayStopButtonInNotification],
+    _PlaybackSettingsKeys.displayArtworkOnLockscreen: [lang.displayArtworkOnLockscreen],
+    _PlaybackSettingsKeys.killPlayerAfterDismissing: [lang.killPlayerAfterDismissingApp],
+    _PlaybackSettingsKeys.onNotificationTap: [lang.onNotificationTap],
+    _PlaybackSettingsKeys.dismissibleMiniplayer: [lang.dismissibleMiniplayer],
+    _PlaybackSettingsKeys.replayGain: [lang.normalizeAudio, lang.normalizeAudioSubtitle],
+    _PlaybackSettingsKeys.skipSilence: [lang.skipSilence],
+    _PlaybackSettingsKeys.gaplessPlayback: [lang.gaplessPlayback],
+    _PlaybackSettingsKeys.crossfade: [lang.enableCrossfadeEffect, lang.crossfadeDuration, lang.crossfadeTriggerSeconds(seconds: 0)],
+    _PlaybackSettingsKeys.fadeEffectOnPlayPause: [lang.enableFadeEffectOnPlayPause, lang.playFadeDuration, lang.pauseFadeDuration],
+    _PlaybackSettingsKeys.autoPlayOnNextPrev: [lang.playAfterNextPrev],
+    _PlaybackSettingsKeys.infinityQueue: [lang.infinityQueueOnNextPrev, lang.infinityQueueOnNextPrevSubtitle],
+    _PlaybackSettingsKeys.onVolume0: [lang.onVolumeZero],
+    _PlaybackSettingsKeys.onInterruption: [lang.onInterruption],
+    _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing: [lang.jumpToFirstTrackAfterQueueFinish],
+    _PlaybackSettingsKeys.previousButtonReplays: [lang.previousButtonReplays, lang.previousButtonReplaysSubtitle],
+    _PlaybackSettingsKeys.seekDuration: [lang.seekDuration, lang.seekDurationInfo],
+    _PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition: [lang.minTrackDurationToRestoreLastPosition],
+    _PlaybackSettingsKeys.countListenAfter: [lang.minValueToCountTrackListen],
   };
 
   Widget getNormalizeAudioWidget() {
@@ -103,8 +103,8 @@ class PlaybackSettings extends SettingSubpageProvider {
           baseIcon: Broken.airpods,
           secondaryIcon: Broken.voice_cricle,
         ),
-        title: lang.NORMALIZE_AUDIO,
-        subtitle: lang.NORMALIZE_AUDIO_SUBTITLE,
+        title: lang.normalizeAudio,
+        subtitle: lang.normalizeAudioSubtitle,
         trailing: NamidaPopupWrapper(
           children: () => [
             ...ReplayGainType.valuesForPlatform.map(
@@ -250,7 +250,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             baseIcon: Broken.play,
             secondaryIcon: Broken.record,
           ),
-          title: lang.PLAY_AFTER_NEXT_PREV,
+          title: lang.playAfterNextPrev,
           onChanged: (value) => settings.player.save(playOnNextPrev: !value),
           value: settings.player.playOnNextPrev.valueR,
         ),
@@ -265,8 +265,8 @@ class PlaybackSettings extends SettingSubpageProvider {
         (context) => CustomSwitchListTile(
           bgColor: getBgColor(_PlaybackSettingsKeys.infinityQueue),
           icon: Broken.repeat,
-          title: lang.INFINITY_QUEUE_ON_NEXT_PREV,
-          subtitle: lang.INFINITY_QUEUE_ON_NEXT_PREV_SUBTITLE,
+          title: lang.infinityQueueOnNextPrev,
+          subtitle: lang.infinityQueueOnNextPrevSubtitle,
           onChanged: (value) => settings.player.save(infiniyQueueOnNextPrevious: !value),
           value: settings.player.infiniyQueueOnNextPrevious.valueR,
         ),
@@ -281,7 +281,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         (context) => CustomSwitchListTile(
           bgColor: getBgColor(_PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing),
           icon: Broken.rotate_left,
-          title: lang.JUMP_TO_FIRST_TRACK_AFTER_QUEUE_FINISH,
+          title: lang.jumpToFirstTrackAfterQueueFinish,
           onChanged: (value) => settings.player.save(jumpToFirstTrackAfterFinishingQueue: !value),
           value: settings.player.jumpToFirstTrackAfterFinishingQueue.valueR,
         ),
@@ -300,8 +300,8 @@ class PlaybackSettings extends SettingSubpageProvider {
             secondaryIcon: Broken.rotate_left,
             secondaryIconSize: 12.0,
           ),
-          title: lang.PREVIOUS_BUTTON_REPLAYS,
-          subtitle: lang.PREVIOUS_BUTTON_REPLAYS_SUBTITLE,
+          title: lang.previousButtonReplays,
+          subtitle: lang.previousButtonReplaysSubtitle,
           onChanged: (value) => settings.save(previousButtonReplays: !value),
           value: settings.previousButtonReplays.valueR,
         ),
@@ -318,7 +318,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         child: Obx(
           (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.enableVideoPlayback),
-            title: lang.ENABLE_VIDEO_PLAYBACK,
+            title: lang.enableVideoPlayback,
             icon: Broken.video,
             value: settings.enableVideoPlayback.valueR,
             onChanged: (p0) async => await VideoController.inst.toggleVideoPlayback(),
@@ -331,14 +331,14 @@ class PlaybackSettings extends SettingSubpageProvider {
           (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.videoSource),
             enabled: settings.enableVideoPlayback.valueR,
-            title: lang.VIDEO_PLAYBACK_SOURCE,
+            title: lang.videoPlaybackSource,
             icon: Broken.scroll,
             trailingText: settings.videoPlaybackSource.valueR.toText(),
             onTap: () {
               void tileOnTap(VideoPlaybackSource val) => settings.save(videoPlaybackSource: val);
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
-                  title: lang.VIDEO_PLAYBACK_SOURCE,
+                  title: lang.videoPlaybackSource,
                   actions: [
                     IconButton(
                       onPressed: () => tileOnTap(VideoPlaybackSource.auto),
@@ -358,7 +358,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                             child: ListTileWithCheckMark(
                               active: videoPlaybackSource == e,
                               title: e.toText(),
-                              subtitle: e.toSubtitle() ?? '',
+                              subtitle: e.toSubtitle(),
                               onTap: () => tileOnTap(e),
                             ),
                           ),
@@ -378,7 +378,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.videoQuality),
             enabled: settings.enableVideoPlayback.valueR,
-            title: lang.VIDEO_QUALITY,
+            title: lang.videoQuality,
             icon: Broken.story,
             trailingText: settings.youtubeVideoQualities.valueR.first,
             onTap: () {
@@ -399,7 +399,7 @@ class PlaybackSettings extends SettingSubpageProvider {
 
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
-                  title: lang.VIDEO_QUALITY,
+                  title: lang.videoQuality,
                   actions: const [
                     // IconButton(
                     //   onPressed: () => tileOnTap(0),
@@ -411,11 +411,11 @@ class PlaybackSettings extends SettingSubpageProvider {
                     style: textTheme.displaySmall!,
                     child: Column(
                       children: [
-                        Text(lang.VIDEO_QUALITY_SUBTITLE),
+                        Text(lang.videoQualitySubtitle),
                         const SizedBox(
                           height: 12.0,
                         ),
-                        Text("${lang.NOTE}: ${lang.VIDEO_QUALITY_SUBTITLE_NOTE}"),
+                        Text("${lang.note}: ${lang.videoQualitySubtitleNote}"),
                         const SizedBox(height: 18.0),
                         SizedBox(
                           width: namida.width,
@@ -456,12 +456,12 @@ class PlaybackSettings extends SettingSubpageProvider {
             bgColor: getBgColor(_PlaybackSettingsKeys.localVideoMatching),
             enabled: settings.enableVideoPlayback.valueR,
             icon: Broken.video_tick,
-            title: lang.LOCAL_VIDEO_MATCHING,
+            title: lang.localVideoMatching,
             trailingText: settings.localVideoMatchingType.valueR.toText(),
             onTap: () {
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
-                  title: lang.LOCAL_VIDEO_MATCHING,
+                  title: lang.localVideoMatching,
                   actions: const [
                     DoneButton(),
                   ],
@@ -470,7 +470,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                       Obx(
                         (context) => CustomListTile(
                           icon: Broken.video_tick,
-                          title: lang.MATCHING_TYPE,
+                          title: lang.matchingType,
                           trailingText: settings.localVideoMatchingType.valueR.toText(),
                           onTap: () {
                             final e = settings.localVideoMatchingType.value.nextElement(LocalVideoMatchingType.values);
@@ -481,7 +481,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                       Obx(
                         (context) => CustomSwitchListTile(
                           icon: Broken.folder,
-                          title: lang.SAME_DIRECTORY_ONLY,
+                          title: lang.sameDirectoryOnly,
                           value: settings.localVideoMatchingCheckSameDir.valueR,
                           onChanged: (isTrue) => settings.save(localVideoMatchingCheckSameDir: !isTrue),
                         ),
@@ -499,7 +499,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         child: Obx(
           (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.keepScreenAwake),
-            title: '${lang.KEEP_SCREEN_AWAKE_WHEN}:',
+            title: '${lang.keepScreenAwakeWhen}:',
             subtitle: settings.wakelockMode.valueR.toText(),
             icon: Broken.external_drive,
             onTap: () {
@@ -514,14 +514,14 @@ class PlaybackSettings extends SettingSubpageProvider {
         child: Obx(
           (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.displayFavButtonInNotif),
-            title: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION,
+            title: lang.displayFavButtonInNotification,
             icon: Broken.heart_tick,
             value: settings.displayFavouriteButtonInNotification.valueR,
             onChanged: (val) {
               settings.save(displayFavouriteButtonInNotification: !val);
               Player.inst.refreshNotification();
               if (!val && NamidaFeaturesVisibility.displayFavButtonInNotifMightCauseIssue) {
-                snackyy(title: lang.NOTE, message: lang.DISPLAY_FAV_BUTTON_IN_NOTIFICATION_SUBTITLE);
+                snackyy(title: lang.note, message: lang.displayFavButtonInNotificationSubtitle);
               }
             },
           ),
@@ -532,7 +532,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         child: Obx(
           (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.displayStopButtonInNotif),
-            title: lang.DISPLAY_STOP_BUTTON_IN_NOTIFICATION,
+            title: lang.displayStopButtonInNotification,
             icon: Broken.close_circle,
             value: settings.displayStopButtonInNotification.valueR,
             onChanged: (val) {
@@ -547,7 +547,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         child: Obx(
           (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.displayArtworkOnLockscreen),
-            title: lang.DISPLAY_ARTWORK_ON_LOCKSCREEN,
+            title: lang.displayArtworkOnLockscreen,
             leading: const StackedIcon(
               baseIcon: Broken.gallery,
               secondaryIcon: Broken.lock_circle,
@@ -565,7 +565,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         child: Obx(
           (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.killPlayerAfterDismissing),
-            title: lang.KILL_PLAYER_AFTER_DISMISSING_APP,
+            title: lang.killPlayerAfterDismissingApp,
             icon: Broken.forbidden_2,
             onTap: () {
               final element = settings.player.killAfterDismissingApp.value.nextElement(KillAppMode.values);
@@ -580,7 +580,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         child: Obx(
           (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.onNotificationTap),
-            title: lang.ON_NOTIFICATION_TAP,
+            title: lang.onNotificationTap,
             trailingText: settings.onNotificationTapAction.valueR.toText(),
             icon: Broken.card,
             onTap: () {
@@ -598,7 +598,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             enabled: !Dimensions.inst.miniplayerIsWideScreen,
             bgColor: getBgColor(_PlaybackSettingsKeys.dismissibleMiniplayer),
             icon: Broken.sidebar_bottom,
-            title: lang.DISMISSIBLE_MINIPLAYER,
+            title: lang.dismissibleMiniplayer,
             onChanged: (value) => settings.save(dismissibleMiniplayer: !value),
             value: settings.dismissibleMiniplayer.valueR,
           ),
@@ -612,7 +612,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           builder: (context, skipSilenceEnabled) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.skipSilence),
             icon: Broken.forward,
-            title: lang.SKIP_SILENCE,
+            title: lang.skipSilence,
             onChanged: (value) async {
               final willBeTrue = !value;
               settings.player.save(skipSilenceEnabled: willBeTrue);
@@ -628,7 +628,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           (context) => CustomSwitchListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.gaplessPlayback),
             icon: Broken.blend_2,
-            title: "${lang.GAPLESS_PLAYBACK} (${lang.BETA})",
+            title: "${lang.gaplessPlayback} (${lang.beta})",
             onChanged: (value) {
               settings.player.save(enableGaplessPlayback: !value);
               Player.inst.resetGaplessPlaybackData();
@@ -653,7 +653,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
           childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           iconColor: context.defaultIconColor(),
-          titleText: lang.ENABLE_CROSSFADE_EFFECT,
+          titleText: lang.enableCrossfadeEffect,
           onExpansionChanged: (wasCollapsed) {
             if (wasCollapsed) {
               SussyBaka.monetize(onEnable: () => settings.player.save(enableCrossFade: true));
@@ -672,7 +672,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                 return CustomListTile(
                   enabled: enableCrossFade,
                   icon: Broken.blend_2,
-                  title: lang.CROSSFADE_DURATION,
+                  title: lang.crossfadeDuration,
                   trailing: NamidaWheelSlider(
                     min: 100,
                     max: 10000,
@@ -694,10 +694,8 @@ class PlaybackSettings extends SettingSubpageProvider {
                     child: CustomListTile(
                       enabled: settings.player.enableCrossFade.valueR,
                       icon: Broken.blend,
-                      title: crossFadeAutoTriggerSeconds == 0
-                          ? lang.CROSSFADE_TRIGGER_SECONDS_DISABLED
-                          : lang.CROSSFADE_TRIGGER_SECONDS.replaceFirst('_SECONDS_', "$crossFadeAutoTriggerSeconds"),
-                      subtitle: gaplessEnabled ? 'x ${lang.GAPLESS_PLAYBACK}' : null,
+                      title: crossFadeAutoTriggerSeconds == 0 ? lang.crossfadeTriggerSecondsDisabled : lang.crossfadeTriggerSeconds(seconds: crossFadeAutoTriggerSeconds),
+                      subtitle: gaplessEnabled ? 'x ${lang.gaplessPlayback}' : null,
                       trailing: NamidaWheelSlider(
                         max: 30,
                         initValue: crossFadeAutoTriggerSeconds,
@@ -727,7 +725,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
           childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           iconColor: context.defaultIconColor(),
-          titleText: lang.ENABLE_FADE_EFFECT_ON_PLAY_PAUSE,
+          titleText: lang.enableFadeEffectOnPlayPause,
           onExpansionChanged: (value) {
             settings.player.save(enableVolumeFadeOnPlayPause: value);
             Player.inst.setVolume(settings.player.volume.value);
@@ -738,7 +736,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 enabled: settings.player.enableVolumeFadeOnPlayPause.valueR,
                 icon: Broken.play,
-                title: lang.PLAY_FADE_DURATION,
+                title: lang.playFadeDuration,
                 trailing: NamidaWheelSlider(
                   min: 100,
                   max: 2000,
@@ -753,7 +751,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 enabled: settings.player.enableVolumeFadeOnPlayPause.valueR,
                 icon: Broken.pause,
-                title: lang.PAUSE_FADE_DURATION,
+                title: lang.pauseFadeDuration,
                 trailing: NamidaWheelSlider(
                   min: 100,
                   max: 2000,
@@ -777,13 +775,13 @@ class PlaybackSettings extends SettingSubpageProvider {
           childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           iconColor: context.defaultIconColor(),
           icon: Broken.volume_slash,
-          titleText: lang.ON_VOLUME_ZERO,
+          titleText: lang.onVolumeZero,
           initiallyExpanded: initialItem == _PlaybackSettingsKeys.onVolume0,
           children: [
             Obx(
               (context) => CustomSwitchListTile(
                 icon: Broken.pause_circle,
-                title: lang.PAUSE_PLAYBACK,
+                title: lang.pausePlayback,
                 onChanged: (value) => settings.player.save(pauseOnVolume0: !value),
                 value: settings.player.pauseOnVolume0.valueR,
               ),
@@ -796,10 +794,10 @@ class PlaybackSettings extends SettingSubpageProvider {
                 return CustomListTile(
                   icon: Broken.play_circle,
                   title: disabled
-                      ? lang.DONT_RESUME
+                      ? lang.dontResume
                       : valInSet == 0
-                      ? lang.RESUME_IF_WAS_PAUSED_BY_VOLUME
-                      : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.player.volume0ResumeThresholdMin.valueR}"),
+                      ? lang.resumeIfWasPausedByVolume
+                      : lang.resumeIfWasPausedForLessThanNMin(number: settings.player.volume0ResumeThresholdMin.valueR),
                   trailing: NamidaWheelSlider(
                     max: max,
                     initValue: valInSet,
@@ -811,9 +809,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                       }
                     },
                     text: disabled
-                        ? lang.NEVER
+                        ? lang.never
                         : valInSet == 0
-                        ? lang.ALWAYS
+                        ? lang.always
                         : "${valInSet}m",
                   ),
                 );
@@ -830,7 +828,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           iconColor: context.defaultIconColor(),
           icon: Broken.notification_bing,
-          titleText: lang.ON_INTERRUPTION,
+          titleText: lang.onInterruption,
           initiallyExpanded: initialItem == _PlaybackSettingsKeys.onInterruption,
           children: [
             ...InterruptionType.values.map(
@@ -885,10 +883,10 @@ class PlaybackSettings extends SettingSubpageProvider {
                 return CustomListTile(
                   icon: Broken.play_circle,
                   title: disabled
-                      ? lang.DONT_RESUME
+                      ? lang.dontResume
                       : valInSet == 0
-                      ? lang.RESUME_IF_WAS_INTERRUPTED
-                      : lang.RESUME_IF_WAS_PAUSED_FOR_LESS_THAN_N_MIN.replaceFirst('_NUM_', "${settings.player.interruptionResumeThresholdMin.valueR}"),
+                      ? lang.resumeIfWasInterrupted
+                      : lang.resumeIfWasPausedForLessThanNMin(number: settings.player.interruptionResumeThresholdMin.valueR),
                   trailing: NamidaWheelSlider(
                     max: max,
                     initValue: valInSet,
@@ -900,9 +898,9 @@ class PlaybackSettings extends SettingSubpageProvider {
                       }
                     },
                     text: disabled
-                        ? lang.NEVER
+                        ? lang.never
                         : valInSet == 0
-                        ? lang.ALWAYS
+                        ? lang.always
                         : "${valInSet}m",
                   ),
                 );
@@ -920,8 +918,8 @@ class PlaybackSettings extends SettingSubpageProvider {
           (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.seekDuration),
             icon: Broken.forward_5_seconds,
-            title: "${lang.SEEK_DURATION} (${settings.player.isSeekDurationPercentage.valueR ? lang.PERCENTAGE : lang.SECONDS})",
-            subtitle: lang.SEEK_DURATION_INFO,
+            title: "${lang.seekDuration} (${settings.player.isSeekDurationPercentage.valueR ? lang.percentage : lang.seconds})",
+            subtitle: lang.seekDurationInfo,
             onTap: () => settings.player.save(isSeekDurationPercentage: !settings.player.isSeekDurationPercentage.value),
             trailing: settings.player.isSeekDurationPercentage.valueR
                 ? NamidaWheelSlider(
@@ -947,16 +945,16 @@ class PlaybackSettings extends SettingSubpageProvider {
             return CustomListTile(
               bgColor: getBgColor(_PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition),
               icon: Broken.refresh_left_square,
-              title: lang.MIN_TRACK_DURATION_TO_RESTORE_LAST_POSITION,
+              title: lang.minTrackDurationToRestoreLastPosition,
               trailing: NamidaWheelSlider(
                 max: 120,
                 initValue: valInSet,
                 onValueChanged: (val) => settings.player.save(minTrackDurationToRestoreLastPosInMinutes: val),
                 extraValue: true,
                 text: valInSet == 0
-                    ? lang.ALWAYS_RESTORE
+                    ? lang.alwaysRestore
                     : valInSet <= -1
-                    ? lang.DONT_RESTORE_POSITION
+                    ? lang.dontRestorePosition
                     : "${valInSet}m",
               ),
             );
@@ -969,14 +967,14 @@ class PlaybackSettings extends SettingSubpageProvider {
           (context) => CustomListTile(
             bgColor: getBgColor(_PlaybackSettingsKeys.countListenAfter),
             icon: Broken.timer,
-            title: lang.MIN_VALUE_TO_COUNT_TRACK_LISTEN,
+            title: lang.minValueToCountTrackListen,
             onTap: () => NamidaNavigator.inst.navigateDialog(
               dialog: CustomBlurryDialog(
-                title: lang.CHOOSE,
+                title: lang.choose,
                 child: Column(
                   children: [
                     Text(
-                      lang.MIN_VALUE_TO_COUNT_TRACK_LISTEN,
+                      lang.minValueToCountTrackListen,
                       style: textTheme.displayLarge,
                     ),
                     const SizedBox(
@@ -992,11 +990,11 @@ class PlaybackSettings extends SettingSubpageProvider {
                             initValue: settings.isTrackPlayedSecondsCount.valueR,
                             onValueChanged: (val) => settings.save(isTrackPlayedSecondsCount: val),
                             text: "${settings.isTrackPlayedSecondsCount.valueR}s",
-                            topText: lang.SECONDS.capitalizeFirst(),
+                            topText: lang.seconds.capitalizeFirst(),
                             textPadding: 8.0,
                           ),
                           Text(
-                            lang.OR,
+                            lang.or,
                             style: textTheme.displayMedium,
                           ),
                           NamidaWheelSlider(
@@ -1005,7 +1003,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                             initValue: settings.isTrackPlayedPercentageCount.valueR,
                             onValueChanged: (val) => settings.save(isTrackPlayedPercentageCount: val),
                             text: "${settings.isTrackPlayedPercentageCount.valueR}%",
-                            topText: lang.PERCENTAGE,
+                            topText: lang.percentage,
                             textPadding: 8.0,
                           ),
                         ],
@@ -1021,8 +1019,8 @@ class PlaybackSettings extends SettingSubpageProvider {
       ),
     ];
     return SettingsCard(
-      title: lang.PLAYBACK_SETTING,
-      subtitle: isInDialog ? null : lang.PLAYBACK_SETTING_SUBTITLE,
+      title: lang.playbackSetting,
+      subtitle: isInDialog ? null : lang.playbackSettingSubtitle,
       icon: Broken.play_cricle,
       trailing: const SizedBox(
         height: 48.0,

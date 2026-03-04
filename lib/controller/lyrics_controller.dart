@@ -69,12 +69,12 @@ class Lyrics {
     if (settings.tutorial.lyricsLongPressFullScreen) {
       if (currentLyricsLRC.value != null || currentLyricsText.value.isNotEmpty) {
         snackyy(
-          message: lang.LONG_PRESS_THE_LYRICS_TO_ENTER_FULLSCREEN,
+          message: lang.longPressTheLyricsToEnterFullscreen,
           top: false,
           displayDuration: SnackDisplayDuration.tutorial,
           icon: Broken.book_saved,
           button: (
-            lang.DONE,
+            lang.done,
             () => settings.tutorial.save(lyricsLongPressFullScreen: false),
           ),
         );

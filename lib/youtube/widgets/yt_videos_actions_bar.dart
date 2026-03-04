@@ -139,44 +139,44 @@ class YTVideosActionBar extends StatelessWidget {
       if (menuOptions.addToPlaylist)
         NamidaPopupItem(
           icon: Broken.music_playlist,
-          title: lang.ADD_TO_PLAYLIST,
+          title: lang.addToPlaylist,
           onTap: _onAddToPlaylist,
         ),
       if (url != null && url != '')
         NamidaPopupItem(
           icon: Broken.share,
-          title: lang.SHARE,
+          title: lang.share,
           onTap: () => NamidaUtils.shareUri(url),
         ),
       if (menuOptions.download)
         NamidaPopupItem(
           icon: Broken.import,
-          title: lang.DOWNLOAD,
+          title: lang.download,
           onTap: _onDownloadTap,
         ),
       if (videosCount > 0) ...[
         if (menuOptions.shuffle)
           NamidaPopupItem(
             icon: Broken.shuffle,
-            title: "${lang.SHUFFLE} ($videosCount)",
+            title: "${lang.shuffle} ($videosCount)",
             onTap: _onShuffle,
           ),
         if (menuOptions.play)
           NamidaPopupItem(
             icon: Broken.play,
-            title: "${lang.PLAY} ($videosCount)",
+            title: "${lang.play} ($videosCount)",
             onTap: _onPlay,
           ),
         if (menuOptions.playNext)
           NamidaPopupItem(
             icon: Broken.next,
-            title: "${lang.PLAY_NEXT} ($videosCount)",
+            title: "${lang.playNext} ($videosCount)",
             onTap: _onPlayNext,
           ),
         if (playAfterVid != null)
           NamidaPopupItem(
             icon: Broken.hierarchy_square,
-            title: "${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}",
+            title: "${lang.playAfter}: ${playAfterVid.diff.displayVideoKeyword}",
             subtitle: playAfterVid.name,
             oneLinedSub: true,
             onTap: _onPlayAfter,
@@ -184,7 +184,7 @@ class YTVideosActionBar extends StatelessWidget {
         if (menuOptions.playLast)
           NamidaPopupItem(
             icon: Broken.play_cricle,
-            title: "${lang.PLAY_LAST} ($videosCount)",
+            title: "${lang.playLast} ($videosCount)",
             onTap: _onPlayLast,
           ),
       ],
@@ -199,43 +199,43 @@ class YTVideosActionBar extends StatelessWidget {
         if (barOptions.addToPlaylist)
           _ActionItem(
             icon: Broken.music_playlist,
-            tooltip: lang.ADD_TO_PLAYLIST,
+            tooltip: lang.addToPlaylist,
             onTap: _onAddToPlaylist,
           ),
         if (barOptions.download)
           _ActionItem(
             icon: Broken.import,
-            tooltip: lang.DOWNLOAD,
+            tooltip: lang.download,
             onTap: _onDownloadTap,
           ),
         if (barOptions.shuffle)
           _ActionItem(
             icon: Broken.shuffle,
-            tooltip: lang.SHUFFLE,
+            tooltip: lang.shuffle,
             onTap: _onShuffle,
           ),
         if (barOptions.play)
           _ActionItem(
             icon: Broken.play,
-            tooltip: lang.PLAY,
+            tooltip: lang.play,
             onTap: _onPlay,
           ),
         if (barOptions.playNext)
           _ActionItem(
             icon: Broken.next,
-            tooltip: lang.PLAY_NEXT,
+            tooltip: lang.playNext,
             onTap: _onPlayNext,
           ),
         // if (playAfterVid != null)
         //   _ActionItem(
         //     icon: Broken.hierarchy_square,
-        //     tooltip: "${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}",
+        //     tooltip: "${lang.playAfter}: ${playAfterVid.diff.displayVideoKeyword}",
         //     onTap: _onPlayAfter,
         //   ),
         if (barOptions.playLast)
           _ActionItem(
             icon: Broken.play_cricle,
-            tooltip: lang.PLAY_LAST,
+            tooltip: lang.playLast,
             onTap: _onPlayLast,
           ),
 

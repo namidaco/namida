@@ -57,12 +57,12 @@ class PermissionManager {
     if (!settings.canAskForBatteryOptimizations) return false;
 
     snackyy(
-      message: lang.IGNORE_BATTERY_OPTIMIZATIONS_SUBTITLE,
+      message: lang.ignoreBatteryOptimizationsSubtitle,
       displayDuration: SnackDisplayDuration.eternal,
       top: false,
       isError: true,
       button: (
-        lang.DONT_ASK_AGAIN,
+        lang.dontAskAgain,
         () => settings.save(canAskForBatteryOptimizations: false),
       ),
     );
@@ -88,7 +88,7 @@ class PermissionManager {
     }
 
     if (!await Permission.manageExternalStorage.isGranted || await Permission.manageExternalStorage.isDenied) {
-      if (showError) snackyy(title: lang.STORAGE_PERMISSION_DENIED, message: lang.STORAGE_PERMISSION_DENIED_SUBTITLE, isError: true);
+      if (showError) snackyy(title: lang.storagePermissionDenied, message: lang.storagePermissionDeniedSubtitle, isError: true);
       return false;
     }
     await createDir();

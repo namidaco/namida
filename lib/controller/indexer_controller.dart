@@ -280,7 +280,7 @@ class Indexer<T extends Track> {
     bool showFinishedSnackbar = true,
   }) async {
     if (isIndexing.value) {
-      snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+      snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
       return;
     }
 
@@ -312,10 +312,10 @@ class Indexer<T extends Track> {
     if (showFinishedSnackbar || isEmpty) {
       if (isEmpty) {
         snackyy(
-          title: lang.DONE,
-          message: lang.NO_TRACKS_FOUND,
+          title: lang.done,
+          message: lang.noTracksFound,
           button: (
-            lang.ADD_FOLDER,
+            lang.addFolder,
             () {
               SettingsSearchController.inst
                   .onResultTap(
@@ -328,7 +328,7 @@ class Indexer<T extends Track> {
           ),
         );
       } else {
-        snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
+        snackyy(title: lang.done, message: lang.finishedUpdatingLibrary);
       }
     }
   }

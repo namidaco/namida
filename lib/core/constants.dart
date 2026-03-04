@@ -19,7 +19,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import 'package:namida/class/file_parts.dart';
-import 'package:namida/class/lang.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
@@ -177,7 +176,7 @@ class NamidaUtils {
     Clipboard.setData(ClipboardData(text: content));
 
     snackyy(
-      title: title == null || title.isEmpty ? lang.COPIED_TO_CLIPBOARD : '${lang.COPIED_TO_CLIPBOARD}: $title',
+      title: title == null || title.isEmpty ? lang.copiedToClipboard : '${lang.copiedToClipboard}: $title',
       message: message ?? content,
       leftBarIndicatorColor: leftBarIndicatorColor ?? CurrentColor.inst.color,
       maxLinesMessage: maxLinesMessage,
@@ -898,12 +897,6 @@ class NamidaFileExtensionsWrapper {
 
   static const exe = NamidaFileExtensionsWrapper._({'exe'});
 }
-
-const kDefaultLang = NamidaLanguage(
-  code: "en_US",
-  name: "English",
-  country: "United States",
-);
 
 const kDummyTrack = Track.explicit('');
 const kDummyExtendedTrack = TrackExtended(

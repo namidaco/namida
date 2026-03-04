@@ -5,7 +5,6 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
@@ -81,12 +80,14 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
       maxLines: mininmalCard ? 1 : 2,
       overflow: TextOverflow.ellipsis,
     );
-    final subtitleTextWidget = Text(
-      subscribersCount == null ? '' : "${subscribersCount.formatDecimalShort()} ${subscribersCount < 2 ? lang.SUBSCRIBER : lang.SUBSCRIBERS}",
-      style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
-      maxLines: mininmalCard ? 1 : 2,
-      overflow: TextOverflow.ellipsis,
-    );
+    final subtitleTextWidget = subscribersCount == null
+        ? null
+        : Text(
+            subscribersCount.displaySubscribersKeywordShort,
+            style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
+            maxLines: mininmalCard ? 1 : 2,
+            overflow: TextOverflow.ellipsis,
+          );
     final dummyMaxWidth = (context.width * 0.3).withMaximum(224.0);
     final dummyMaxWidthSubtitle = dummyMaxWidth * 0.95;
     return NamidaInkWell(
@@ -109,7 +110,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
                   thumbnailWidget,
                   const SizedBox(height: 4.0),
                   titleTextWidget,
-                  subtitleTextWidget,
+                  ?subtitleTextWidget,
                 ],
               ),
             )

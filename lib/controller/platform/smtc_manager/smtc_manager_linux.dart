@@ -59,7 +59,7 @@ class _SMTCManagerLinux extends NamidaSMTCManager {
             snackyy(
               icon: Broken.flash_1,
               title: '',
-              message: "${lang.REPEAT_MODE}: ${e.buildText()}",
+              message: "${lang.repeatMode}: ${e.buildText()}",
               borderColor: Colors.green.withOpacityExt(0.6),
               top: false,
             );

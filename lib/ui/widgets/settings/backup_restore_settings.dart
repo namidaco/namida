@@ -43,18 +43,18 @@ class BackupAndRestore extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-    _BackupAndRestoreKeys.create: [lang.CREATE_BACKUP],
-    _BackupAndRestoreKeys.restore: [lang.RESTORE_BACKUP],
-    _BackupAndRestoreKeys.defaultLocation: [lang.DEFAULT_BACKUP_LOCATION],
-    _BackupAndRestoreKeys.autoBackupInterval: [lang.AUTO_BACKUP_INTERVAL],
-    _BackupAndRestoreKeys.crossPlatformSync: [lang.CROSS_PLATFORM_SYNC],
-    _BackupAndRestoreKeys.importYT: [lang.IMPORT_YOUTUBE_HISTORY],
-    _BackupAndRestoreKeys.importLastfm: [lang.IMPORT_LAST_FM_HISTORY],
+    _BackupAndRestoreKeys.create: [lang.createBackup],
+    _BackupAndRestoreKeys.restore: [lang.restoreBackup],
+    _BackupAndRestoreKeys.defaultLocation: [lang.defaultBackupLocation],
+    _BackupAndRestoreKeys.autoBackupInterval: [lang.autoBackupInterval],
+    _BackupAndRestoreKeys.crossPlatformSync: [lang.crossPlatformSync],
+    _BackupAndRestoreKeys.importYT: [lang.importYoutubeHistory],
+    _BackupAndRestoreKeys.importLastfm: [lang.importLastFmHistory],
   };
 
   bool _canDoImport({required bool isYT}) {
     if (JsonToHistoryParser.inst.isParsing.value || HistoryController.inst.isLoadingHistory || (isYT && YoutubeHistoryController.inst.isLoadingHistory)) {
-      snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+      snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
       return false;
     }
     return true;
@@ -62,7 +62,7 @@ class BackupAndRestore extends SettingSubpageProvider {
 
   bool _canCreateRestoreBackup() {
     if (JsonToHistoryParser.inst.isParsing.value || HistoryController.inst.isLoadingHistory || YoutubeHistoryController.inst.isLoadingHistory) {
-      snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+      snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
       return false;
     }
     return true;
@@ -72,8 +72,8 @@ class BackupAndRestore extends SettingSubpageProvider {
 
   Widget matchAllTracksListTile({required bool active, required void Function() onTap, required bool displayPerfWarning}) {
     return ListTileWithCheckMark(
-      title: lang.MATCH_ALL_TRACKS,
-      subtitle: displayPerfWarning ? '${lang.NOTE}: ${lang.MATCH_ALL_TRACKS_NOTE}' : '',
+      title: lang.matchAllTracks,
+      subtitle: displayPerfWarning ? '${lang.note}: ${lang.matchAllTracksNote}' : '',
       active: active,
       onTap: onTap,
     );
@@ -84,7 +84,7 @@ class BackupAndRestore extends SettingSubpageProvider {
       key: _BackupAndRestoreKeys.restore,
       child: CustomListTile(
         bgColor: getBgColor(_BackupAndRestoreKeys.restore),
-        title: lang.RESTORE_BACKUP,
+        title: lang.restoreBackup,
         icon: Broken.back_square,
         trailingRaw: ObxShow(
           showIf: BackupController.inst.isRestoringBackup,
@@ -96,13 +96,13 @@ class BackupAndRestore extends SettingSubpageProvider {
           NamidaNavigator.inst.navigateDialog(
             dialog: CustomBlurryDialog(
               normalTitleStyle: true,
-              title: lang.RESTORE_BACKUP,
+              title: lang.restoreBackup,
               child: SmoothSingleChildScrollView(
                 child: Column(
                   children: [
                     CustomListTile(
-                      title: lang.AUTOMATIC_BACKUP,
-                      subtitle: lang.AUTOMATIC_BACKUP_SUBTITLE,
+                      title: lang.automaticBackup,
+                      subtitle: lang.automaticBackupSubtitle,
                       icon: Broken.autobrightness,
                       maxSubtitleLines: 22,
                       onTap: () async {
@@ -113,8 +113,8 @@ class BackupAndRestore extends SettingSubpageProvider {
                       },
                     ),
                     CustomListTile(
-                      title: lang.MANUAL_BACKUP,
-                      subtitle: lang.MANUAL_BACKUP_SUBTITLE,
+                      title: lang.manualBackup,
+                      subtitle: lang.manualBackupSubtitle,
                       maxSubtitleLines: 22,
                       icon: Broken.hashtag,
                       onTap: () {
@@ -138,11 +138,11 @@ class BackupAndRestore extends SettingSubpageProvider {
       child: Obx(
         (context) => CustomListTile(
           bgColor: getBgColor(_BackupAndRestoreKeys.defaultLocation),
-          title: lang.DEFAULT_BACKUP_LOCATION,
+          title: lang.defaultBackupLocation,
           icon: Broken.direct_inbox,
           subtitle: settings.defaultBackupLocation.valueR ?? AppDirs.BACKUPS,
           onTap: () async {
-            final path = await NamidaFileBrowser.getDirectory(note: lang.DEFAULT_BACKUP_LOCATION);
+            final path = await NamidaFileBrowser.getDirectory(note: lang.defaultBackupLocation);
 
             if (path != null) {
               settings.save(defaultBackupLocation: path);
@@ -150,7 +150,7 @@ class BackupAndRestore extends SettingSubpageProvider {
           },
           trailingRaw: NamidaChannel.inst.canOpenFileInExplorer
               ? IconButton(
-                  tooltip: lang.OPEN_IN_FILE_EXPLORER,
+                  tooltip: lang.openInFileExplorer,
                   onPressed: () {
                     final path = settings.defaultBackupLocation.value ?? AppDirs.BACKUPS;
                     NamidaChannel.inst.openFileInExplorer(path, isDirectory: true);
@@ -180,7 +180,7 @@ class BackupAndRestore extends SettingSubpageProvider {
       } else if (Platform.isWindows) {
         File? exeFile = File(r'C:\Program Files\namida_sync\namida_sync.exe');
         if (!await exeFile.exists()) {
-          exeFile = await NamidaFileBrowser.pickFile(note: "${lang.PICK_FROM_STORAGE}: namida_sync.exe", allowedExtensions: NamidaFileExtensionsWrapper.exe);
+          exeFile = await NamidaFileBrowser.pickFile(note: "${lang.pickFromStorage}: namida_sync.exe", allowedExtensions: NamidaFileExtensionsWrapper.exe);
         }
         if (exeFile == null || !await exeFile.exists()) {
           requiresDownload = true;
@@ -204,7 +204,7 @@ class BackupAndRestore extends SettingSubpageProvider {
           }
         }
         exeFile ??= await NamidaFileBrowser.pickFile(
-          note: "${lang.PICK_FROM_STORAGE}: namida_sync",
+          note: "${lang.pickFromStorage}: namida_sync",
           allowedExtensions: null,
         );
 
@@ -258,8 +258,8 @@ class BackupAndRestore extends SettingSubpageProvider {
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
     return SettingsCard(
-      title: lang.BACKUP_AND_RESTORE,
-      subtitle: lang.BACKUP_AND_RESTORE_SUBTITLE,
+      title: lang.backupAndRestore,
+      subtitle: lang.backupAndRestoreSubtitle,
       icon: Broken.refresh_circle,
       child: Column(
         children: [
@@ -270,7 +270,7 @@ class BackupAndRestore extends SettingSubpageProvider {
             key: _BackupAndRestoreKeys.create,
             child: CustomListTile(
               bgColor: getBgColor(_BackupAndRestoreKeys.create),
-              title: lang.CREATE_BACKUP,
+              title: lang.createBackup,
               icon: Broken.box_add,
               trailingRaw: ObxShow(
                 showIf: BackupController.inst.isCreatingBackup,
@@ -396,7 +396,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                 duration: const Duration(milliseconds: 300),
                                 opacity: youtubeAvailable ? 1.0 : 0.1,
                                 child: NamidaIconButton(
-                                  tooltip: () => lang.YOUTUBE,
+                                  tooltip: () => lang.youtube,
                                   horizontalPadding: 0.0,
                                   icon: null,
                                   onPressed: () {
@@ -425,7 +425,7 @@ class BackupAndRestore extends SettingSubpageProvider {
 
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
-                    title: lang.CREATE_BACKUP,
+                    title: lang.createBackup,
                     actions: [
                       const CancelButton(),
                       ObxO(
@@ -435,7 +435,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                           return AnimatedEnabled(
                             enabled: backupItemslist.isNotEmpty,
                             child: NamidaButton(
-                              text: lang.CREATE_BACKUP,
+                              text: lang.createBackup,
                               onPressed: () {
                                 final items = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
                                 if (items.isNotEmpty) {
@@ -455,49 +455,49 @@ class BackupAndRestore extends SettingSubpageProvider {
                         child: Column(
                           children: [
                             getItemWidget(
-                              title: lang.DATABASE,
+                              title: lang.database,
                               icon: Broken.box_1,
                               items: AppPathsBackupEnumCategories.database,
                               youtubeAvailable: true,
                               youtubeItems: AppPathsBackupEnumCategories.database_yt,
                             ),
                             getItemWidget(
-                              title: lang.PLAYLISTS,
+                              title: lang.playlists,
                               icon: Broken.music_library_2,
                               items: AppPathsBackupEnumCategories.playlists,
                               youtubeAvailable: true,
                               youtubeItems: AppPathsBackupEnumCategories.playlists_yt,
                             ),
                             getItemWidget(
-                              title: lang.HISTORY,
+                              title: lang.history,
                               icon: Broken.refresh,
                               items: AppPathsBackupEnumCategories.history,
                               youtubeAvailable: true,
                               youtubeItems: AppPathsBackupEnumCategories.history_yt,
                             ),
                             getItemWidget(
-                              title: lang.SETTINGS,
+                              title: lang.settings,
                               icon: Broken.setting,
                               items: AppPathsBackupEnumCategories.settings,
                               youtubeAvailable: false,
                               youtubeItems: [],
                             ),
                             getItemWidget(
-                              title: lang.LYRICS,
+                              title: lang.lyrics,
                               icon: Broken.document,
                               items: AppPathsBackupEnumCategories.lyrics,
                               youtubeAvailable: false,
                               youtubeItems: [],
                             ),
                             getItemWidget(
-                              title: lang.QUEUES,
+                              title: lang.queues,
                               icon: Broken.driver,
                               items: AppPathsBackupEnumCategories.queues,
                               youtubeAvailable: false,
                               youtubeItems: [],
                             ),
                             getItemWidget(
-                              title: lang.COLOR_PALETTES,
+                              title: lang.colorPalettes,
                               icon: Broken.colorfilter,
                               items: AppPathsBackupEnumCategories.palette,
                               youtubeAvailable: true,
@@ -505,7 +505,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeItems: AppPathsBackupEnumCategories.palette_yt,
                             ),
                             getItemWidget(
-                              title: lang.VIDEO_CACHE,
+                              title: lang.videoCache,
                               icon: Broken.video,
                               items: AppPathsBackupEnumCategories.videos_cache,
                               youtubeAvailable: false,
@@ -513,7 +513,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeItems: [],
                             ),
                             getItemWidget(
-                              title: lang.AUDIO_CACHE,
+                              title: lang.audioCache,
                               icon: Broken.audio_square,
                               items: AppPathsBackupEnumCategories.audios_cache,
                               youtubeAvailable: false,
@@ -521,21 +521,21 @@ class BackupAndRestore extends SettingSubpageProvider {
                               youtubeItems: [],
                             ),
                             getItemWidget(
-                              title: lang.ARTWORKS,
+                              title: lang.artworks,
                               icon: Broken.image,
                               items: AppPathsBackupEnumCategories.artworks,
                               youtubeAvailable: false,
                               youtubeItems: [],
                             ),
                             getItemWidget(
-                              title: lang.THUMBNAILS,
+                              title: lang.thumbnails,
                               icon: Broken.image,
                               items: AppPathsBackupEnumCategories.thumbnails,
                               youtubeAvailable: true,
                               youtubeItems: AppPathsBackupEnumCategories.thumbnails_yt,
                             ),
                             getItemWidget(
-                              title: lang.METADATA_CACHE,
+                              title: lang.metadataCache,
                               icon: Broken.message_text,
                               items: AppPathsBackupEnumCategories.youtipie_cache,
                               youtubeAvailable: true,
@@ -563,7 +563,7 @@ class BackupAndRestore extends SettingSubpageProvider {
             key: _BackupAndRestoreKeys.autoBackupInterval,
             child: CustomListTile(
               bgColor: getBgColor(_BackupAndRestoreKeys.autoBackupInterval),
-              title: lang.AUTO_BACKUP_INTERVAL,
+              title: lang.autoBackupInterval,
               icon: Broken.timer,
               trailing: Obx(
                 (context) {
@@ -572,7 +572,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                     max: 14,
                     initValue: days,
                     onValueChanged: (val) => settings.save(autoBackupIntervalDays: val),
-                    text: days == 0 ? lang.NONE : "$days ${days == 1 ? lang.DAY : lang.DAYS}",
+                    text: days == 0 ? lang.none : "$days ${days == 1 ? lang.day : lang.days}",
                   );
                 },
               ),
@@ -583,7 +583,7 @@ class BackupAndRestore extends SettingSubpageProvider {
             key: _BackupAndRestoreKeys.crossPlatformSync,
             child: CustomListTile(
               bgColor: getBgColor(_BackupAndRestoreKeys.crossPlatformSync),
-              title: lang.CROSS_PLATFORM_SYNC,
+              title: lang.crossPlatformSync,
               icon: Broken.cloud_change,
               onTap: _openNamidaSync,
             ),
@@ -594,7 +594,7 @@ class BackupAndRestore extends SettingSubpageProvider {
             key: _BackupAndRestoreKeys.importYT,
             child: CustomListTile(
               bgColor: getBgColor(_BackupAndRestoreKeys.importYT),
-              title: lang.IMPORT_YOUTUBE_HISTORY,
+              title: lang.importYoutubeHistory,
               leading: StackedIcon(
                 baseIcon: Broken.import_2,
                 smallChild: BorderRadiusClip(
@@ -627,9 +627,9 @@ class BackupAndRestore extends SettingSubpageProvider {
                   var jsonfiles = <File>[];
                   Directory? mainDirectory;
                   if (pickDirectory) {
-                    mainDirectory = await NamidaFileBrowser.pickDirectory(note: lang.IMPORT_YOUTUBE_HISTORY);
+                    mainDirectory = await NamidaFileBrowser.pickDirectory(note: lang.importYoutubeHistory);
                   } else {
-                    jsonfiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT_YOUTUBE_HISTORY, allowedExtensions: NamidaFileExtensionsWrapper.jsonAndZip);
+                    jsonfiles = await NamidaFileBrowser.pickFiles(note: lang.importYoutubeHistory, allowedExtensions: NamidaFileExtensionsWrapper.jsonAndZip);
                   }
                   if (jsonfiles.isNotEmpty || mainDirectory != null) {
                     final isMatchingTypeLink = true.obs;
@@ -649,12 +649,12 @@ class BackupAndRestore extends SettingSubpageProvider {
                         oldestDate.close();
                       },
                       dialog: CustomBlurryDialog(
-                        title: lang.CONFIGURE,
+                        title: lang.configure,
                         actions: [
                           Obx(
                             (context) => NamidaButton(
                               enabled: isMatchingTypeLink.valueR || isMatchingTypeTitleAndArtist.valueR,
-                              textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
+                              textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.importTimeRange : lang.importAll)),
                               onPressed: () async {
                                 NamidaNavigator.inst.closeDialog();
                                 await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
@@ -676,29 +676,29 @@ class BackupAndRestore extends SettingSubpageProvider {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            getTitleText(lang.SOURCE),
+                            getTitleText(lang.source),
                             ListTileWithCheckMark(
                               activeRx: matchYT,
-                              title: lang.YOUTUBE,
+                              title: lang.youtube,
                               onTap: matchYT.toggle,
                             ),
                             const SizedBox(height: 8.0),
                             ListTileWithCheckMark(
                               activeRx: matchYTMusic,
-                              title: lang.YOUTUBE_MUSIC,
+                              title: lang.youtubeMusic,
                               onTap: matchYTMusic.toggle,
                             ),
                             getDivider(),
-                            getTitleText(lang.MATCHING_TYPE),
+                            getTitleText(lang.matchingType),
                             ListTileWithCheckMark(
                               activeRx: isMatchingTypeLink,
-                              title: lang.LINK,
+                              title: lang.link,
                               onTap: isMatchingTypeLink.toggle,
                             ),
                             const SizedBox(height: 8.0),
                             ListTileWithCheckMark(
                               activeRx: isMatchingTypeTitleAndArtist,
-                              title: [lang.TITLE, lang.ARTIST].join(' & '),
+                              title: [lang.title, lang.artist].join(' & '),
                               onTap: isMatchingTypeTitleAndArtist.toggle,
                             ),
                             getDivider(),
@@ -728,10 +728,10 @@ class BackupAndRestore extends SettingSubpageProvider {
 
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
-                    title: lang.GUIDE,
+                    title: lang.guide,
                     actions: [
                       NamidaButton(
-                        text: lang.FOLDER,
+                        text: lang.folder,
                         onPressed: () {
                           NamidaNavigator.inst.closeDialog();
                           onConfirm(true);
@@ -739,7 +739,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                       ),
                       SizedBox(width: 2.0),
                       NamidaButton(
-                        text: lang.CONFIRM,
+                        text: lang.confirm,
                         onPressed: () {
                           NamidaNavigator.inst.closeDialog();
                           onConfirm(false);
@@ -747,7 +747,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                       ),
                     ],
                     child: NamidaSelectableAutoLinkText(
-                      text: lang.IMPORT_YOUTUBE_HISTORY_GUIDE.replaceFirst('_TAKEOUT_LINK_', 'https://takeout.google.com/takeout/custom/youtube'),
+                      text: lang.importYoutubeHistoryGuide(takeoutLink: 'https://takeout.google.com/takeout/custom/youtube'),
                     ),
                   ),
                 );
@@ -760,7 +760,7 @@ class BackupAndRestore extends SettingSubpageProvider {
             key: _BackupAndRestoreKeys.importLastfm,
             child: CustomListTile(
               bgColor: getBgColor(_BackupAndRestoreKeys.importLastfm),
-              title: lang.IMPORT_LAST_FM_HISTORY,
+              title: lang.importLastFmHistory,
               leading: StackedIcon(
                 baseIcon: Broken.import_2,
                 smallChild: BorderRadiusClip(
@@ -788,9 +788,9 @@ class BackupAndRestore extends SettingSubpageProvider {
                   var csvFiles = <File>[];
                   Directory? mainDirectory;
                   if (pickDirectory) {
-                    mainDirectory = await NamidaFileBrowser.pickDirectory(note: lang.IMPORT_LAST_FM_HISTORY);
+                    mainDirectory = await NamidaFileBrowser.pickDirectory(note: lang.importLastFmHistory);
                   } else {
-                    csvFiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT_LAST_FM_HISTORY, allowedExtensions: NamidaFileExtensionsWrapper.csv);
+                    csvFiles = await NamidaFileBrowser.pickFiles(note: lang.importLastFmHistory, allowedExtensions: NamidaFileExtensionsWrapper.csv);
                   }
 
                   if (csvFiles.isNotEmpty || mainDirectory != null) {
@@ -805,11 +805,11 @@ class BackupAndRestore extends SettingSubpageProvider {
                       dialog: CustomBlurryDialog(
                         horizontalInset: 38.0,
                         verticalInset: 38.0,
-                        title: lang.CONFIGURE,
+                        title: lang.configure,
                         actions: [
                           const CancelButton(),
                           NamidaButton(
-                            textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.IMPORT_TIME_RANGE : lang.IMPORT_ALL)),
+                            textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.importTimeRange : lang.importAll)),
                             onPressed: () async {
                               NamidaNavigator.inst.closeDialog();
                               await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
@@ -852,10 +852,10 @@ class BackupAndRestore extends SettingSubpageProvider {
 
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
-                    title: lang.GUIDE,
+                    title: lang.guide,
                     actions: [
                       NamidaButton(
-                        text: lang.FOLDER,
+                        text: lang.folder,
                         onPressed: () {
                           NamidaNavigator.inst.closeDialog();
                           onConfirm(true);
@@ -863,7 +863,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                       ),
                       SizedBox(width: 2.0),
                       NamidaButton(
-                        text: lang.CONFIRM,
+                        text: lang.confirm,
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog();
                           onConfirm(false);
@@ -871,7 +871,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                       ),
                     ],
                     child: NamidaSelectableAutoLinkText(
-                      text: lang.IMPORT_LAST_FM_HISTORY_GUIDE.replaceFirst('_LASTFM_CSV_LINK_', 'https://benjaminbenben.com/lastfm-to-csv/'),
+                      text: lang.importLastFmHistoryGuide(lastfmCsvLink: 'https://benjaminbenben.com/lastfm-to-csv/'),
                     ),
                   ),
                 );

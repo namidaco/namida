@@ -76,7 +76,7 @@ class JsonToHistoryParser {
         normalTitleStyle: true,
         titleWidgetInPadding: Obx(
           (context) {
-            final title = '${isParsing.valueR ? lang.EXTRACTING_INFO : lang.DONE} ($_parsedProgressPercentageR)';
+            final title = '${isParsing.valueR ? lang.extractingInfo : lang.done} ($_parsedProgressPercentageR)';
             return Text(
               "$title ${isParsing.valueR ? '' : ' ✓'}",
               style: namida.textTheme.displayLarge,
@@ -85,7 +85,7 @@ class JsonToHistoryParser {
         ),
         actions: [
           TextButton(
-            child: NamidaButtonText(lang.CONFIRM),
+            child: NamidaButtonText(lang.confirm),
             onPressed: () {
               _hideParsingDialog();
               NamidaNavigator.inst.closeDialog();
@@ -103,14 +103,14 @@ class JsonToHistoryParser {
                   final count = loadingProgress.$1;
                   final total = loadingProgress.$2;
                   return getTextWidget(
-                    '${lang.LOADING_FILE}... $count/$total ${count >= total ? lang.DONE : ''}',
+                    '${lang.loadingFile}... $count/$total ${count >= total ? lang.done : ''}',
                   );
                 },
               ),
               const SizedBox(height: 10.0),
-              Obx((context) => getTextWidget('$_parsedProgressR ${lang.PARSED}')),
+              Obx((context) => getTextWidget('$_parsedProgressR ${lang.parsed}')),
               const SizedBox(height: 10.0),
-              Obx((context) => getTextWidget('$_addedHistoryJsonR ${lang.ADDED}')),
+              Obx((context) => getTextWidget('$_addedHistoryJsonR ${lang.added}')),
               const SizedBox(height: 4.0),
               if (dateText != '') ...[
                 getTextWidget(dateText, style: namida.textTheme.displaySmall),
@@ -120,7 +120,7 @@ class JsonToHistoryParser {
               Obx((context) {
                 final shouldShow = currentParsingSource.valueR == TrackSource.youtube || currentParsingSource.valueR == TrackSource.youtubeMusic;
                 return shouldShow
-                    ? getTextWidget('${lang.STATS}: ${_updatingYoutubeStatsDirectoryProgress.valueR}/${_updatingYoutubeStatsDirectoryTotal.valueR}')
+                    ? getTextWidget('${lang.stats}: ${_updatingYoutubeStatsDirectoryProgress.valueR}/${_updatingYoutubeStatsDirectoryTotal.valueR}')
                     : const SizedBox();
               }),
             ],
@@ -181,7 +181,7 @@ class JsonToHistoryParser {
         dialog: CustomBlurryDialog(
           normalTitleStyle: true,
           isWarning: true,
-          title: lang.CONFIRM,
+          title: lang.confirm,
           bodyText: confirmMessage,
           actions: [
             const CancelButton(),
@@ -191,7 +191,7 @@ class JsonToHistoryParser {
                 await onConfirm();
                 NamidaNavigator.inst.closeDialog();
               },
-              text: lang.CONFIRM,
+              text: lang.confirm,
             ),
           ],
         ),
@@ -206,7 +206,7 @@ class JsonToHistoryParser {
       },
       dialog: CustomBlurryDialog(
         normalTitleStyle: true,
-        title: lang.MISSING_ENTRIES,
+        title: lang.missingEntries,
         trailingWidgets: [
           const SizedBox(width: 4.0),
           Obx(
@@ -256,7 +256,7 @@ class JsonToHistoryParser {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  lang.HISTORY_IMPORT_MISSING_ENTRIES_NOTE,
+                  lang.historyImportMissingEntriesNote,
                   style: namida.textTheme.displaySmall,
                 ),
               ),

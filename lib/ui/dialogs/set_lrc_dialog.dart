@@ -120,12 +120,12 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     NamidaNavigator.inst.navigateDialog(
       colorScheme: colorScheme,
       dialogBuilder: (theme) => CustomBlurryDialog(
-        title: lang.CONFIRM,
+        title: lang.confirm,
         actions: [
           const CancelButton(),
           const SizedBox(width: 6.0),
           NamidaButton(
-            text: lang.DELETE.toUpperCase(),
+            text: lang.delete.toUpperCase(),
             onPressed: () async {
               if ((await l.file?.tryDeleting()) == true) {
                 availableLyrics.remove(l);
@@ -135,7 +135,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
             },
           ),
         ],
-        bodyText: '${lang.DELETE}: "${l.file?.path}"?',
+        bodyText: '${lang.delete}: "${l.file?.path}"?',
       ),
     );
   }
@@ -195,13 +195,13 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       },
       colorScheme: colorScheme,
       dialogBuilder: (theme) => CustomBlurryDialog(
-        title: lang.CONFIGURE,
+        title: lang.configure,
         normalTitleStyle: true,
         actions: [
           const CancelButton(),
           const SizedBox(width: 6.0),
           NamidaButton(
-            text: lang.SAVE.toUpperCase(),
+            text: lang.save.toUpperCase(),
             onPressed: () async {
               final ct = offsetController.text;
               final tfoffset = ct == '' ? null : int.tryParse(offsetController.text);
@@ -251,7 +251,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        lang.OFFSET,
+                        lang.offset,
                         style: namida.textTheme.displayMedium,
                       ),
                       Obx(
@@ -326,7 +326,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
 
   void onAddLRCFileTap() async {
     final picked = await NamidaFileBrowser.pickFile(
-      note: lang.ADD_LRC_FILE,
+      note: lang.addLrcFile,
       allowedExtensions: NamidaFileExtensionsWrapper.lrcOrTxt,
       initialDirectory: lrcUtils.pickFileInitialDirectory,
     );
@@ -385,20 +385,20 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       colorScheme: colorScheme,
       dialogBuilder: (theme) => CustomBlurryDialog(
         icon: Broken.additem,
-        title: lang.ADD,
+        title: lang.add,
         normalTitleStyle: true,
         actions: [
           const CancelButton(),
           const SizedBox(width: 6.0),
           NamidaButton(
-            text: lang.ADD.toUpperCase(),
+            text: lang.add.toUpperCase(),
             onPressed: savePastedLRC,
           ),
         ],
         trailingWidgets: [
           NamidaIconButton(
             icon: Broken.export_1,
-            tooltip: () => '${lang.SEARCH}: Google',
+            tooltip: () => '${lang.search}: Google',
             iconSize: 22.0,
             onPressed: onSearchExternallyTap,
           ),
@@ -414,7 +414,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   if (clipboardText.isNotEmpty) ...[
                     CustomListTile(
                       icon: Broken.clipboard_tick,
-                      title: lang.COPIED_TO_CLIPBOARD,
+                      title: lang.copiedToClipboard,
                       subtitle: clipboardText,
                       maxSubtitleLines: 6,
                       onTap: () {
@@ -426,7 +426,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   CustomTagTextField(
                     borderRadius: 12.0,
                     controller: pasteTextController,
-                    hintText: lang.LYRICS,
+                    hintText: lang.lyrics,
                     maxLines: 6,
                     labelText: '',
                     onFieldSubmitted: (value) {
@@ -470,13 +470,13 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       colorScheme: colorScheme,
       dialogBuilder: (theme) => CustomBlurryDialog(
         icon: Broken.edit_2,
-        title: lang.EDIT,
+        title: lang.edit,
         normalTitleStyle: true,
         actions: [
           const CancelButton(),
           const SizedBox(width: 6.0),
           NamidaButton(
-            text: lang.SAVE.toUpperCase(),
+            text: lang.save.toUpperCase(),
             onPressed: saveEditedLRC,
           ),
         ],
@@ -489,7 +489,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                 CustomTagTextField(
                   borderRadius: 12.0,
                   controller: editTextController,
-                  hintText: lang.LYRICS,
+                  hintText: lang.lyrics,
                   maxLines: 24,
                   labelText: '',
                   onFieldSubmitted: (value) {
@@ -517,7 +517,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     dialogBuilder: (theme) => CustomBlurryDialog(
       horizontalInset: 38.0,
       normalTitleStyle: true,
-      title: lang.LYRICS,
+      title: lang.lyrics,
       titleWidgetInPadding: Row(
         children: [
           ConstrainedBox(
@@ -542,26 +542,26 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
           const SizedBox(width: 12.0),
           Expanded(
             child: Text(
-              lang.LYRICS,
+              lang.lyrics,
               style: theme.textTheme.displayLarge,
             ),
           ),
           const SizedBox(width: 8.0),
           NamidaIconButton(
             icon: Broken.additem,
-            tooltip: () => lang.ADD,
+            tooltip: () => lang.add,
             onPressed: onAddLRCPasteTap,
           ),
           NamidaIconButton(
             icon: Broken.document_download,
-            tooltip: () => lang.ADD_LRC_FILE,
+            tooltip: () => lang.addLrcFile,
             onPressed: onAddLRCFileTap,
           ),
         ],
       ),
       actions: [
         NamidaButton(
-          text: lang.SEARCH,
+          text: lang.search,
           onPressed: onSearchTrigger,
         ),
         const CancelButton(),
@@ -571,7 +571,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
             final selected = selectedLyrics.valueR;
             final canAddToCache = selected != null && !selected.isInCache && !selected.isEmbedded /* && (selected.file != null || selected.fromInternet == true) */;
             return NamidaButton(
-              text: canAddToCache ? lang.SAVE : lang.DONE,
+              text: canAddToCache ? lang.save : lang.done,
               onPressed: () async {
                 if (canAddToCache) {
                   final selected = selectedLyrics.value;
@@ -630,12 +630,12 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   final fetchedLyricsValue = fetchedLyrics.valueR;
 
                   Widget listItemBuilder(BuildContext context, LyricsModel l, bool isTempFetched) {
-                    final syncedText = l.synced ? lang.SYNCED : lang.PLAIN;
+                    final syncedText = l.synced ? lang.synced : lang.plain;
                     final cacheText = l.file == null
                         ? ''
                         : l.isInCache
-                        ? lang.CACHE
-                        : lang.LOCAL;
+                        ? lang.cache
+                        : lang.local;
                     return Obx(
                       (context) => NamidaInkWell(
                         borderRadius: 12.0,
@@ -681,7 +681,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                           var label = diff.milliSecondsLabelWithCentiSeconds;
                                           if (diff >= 0) label = '+$label';
                                           return Text(
-                                            "${lang.DURATION}: $label",
+                                            "${lang.duration}: $label",
                                             style: theme.textTheme.displaySmall?.copyWith(fontSize: 11.0),
                                           );
                                         },
@@ -692,7 +692,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                 NamidaIconButton(
                                   verticalPadding: 3.0,
                                   horizontalPadding: 3.0,
-                                  tooltip: () => lang.COPY,
+                                  tooltip: () => lang.copy,
                                   icon: Broken.copy,
                                   iconSize: 20.0,
                                   onPressed: () {
@@ -708,7 +708,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                 NamidaIconButton(
                                   verticalPadding: 3.0,
                                   horizontalPadding: 3.0,
-                                  tooltip: () => lang.EDIT,
+                                  tooltip: () => lang.edit,
                                   icon: Broken.edit_2,
                                   iconSize: 20.0,
                                   onPressed: () => onEditLyricsTap(l),
@@ -831,7 +831,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        '${lang.SEARCH}: Google',
+                                        '${lang.search}: Google',
                                         style: context.textTheme.displayMedium,
                                       ),
                                       const SizedBox(width: 6.0),
@@ -866,7 +866,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                         child: CustomListTile(
                           visualDensity: VisualDensity.compact,
                           icon: Broken.additem,
-                          title: lang.ADD,
+                          title: lang.add,
                           onTap: onAddLRCPasteTap,
                         ),
                       ),
@@ -874,7 +874,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                         child: CustomListTile(
                           visualDensity: VisualDensity.compact,
                           icon: Broken.document_download,
-                          title: lang.ADD_LRC_FILE,
+                          title: lang.addLrcFile,
                           onTap: onAddLRCFileTap,
                         ),
                       ),

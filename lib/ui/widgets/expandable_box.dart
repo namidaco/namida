@@ -334,7 +334,7 @@ class ChangeGridCountWidget extends StatelessWidget {
             return [
               NamidaPopupItem(
                 icon: _resolveIcon(autoCountPerRow.rawValue),
-                title: lang.AUTO,
+                title: lang.auto,
                 onTap: () => _onTap(autoCountPerRow),
               ),
               ...CountPerRow.getAvailableOptions().map(

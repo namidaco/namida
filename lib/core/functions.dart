@@ -188,11 +188,11 @@ class NamidaOnTaps {
     final oldQueue = queue;
     QueueController.inst.removeQueue(oldQueue);
     snackyy(
-      title: lang.UNDO_CHANGES,
-      message: lang.UNDO_CHANGES_DELETED_QUEUE,
+      title: lang.undoChanges,
+      message: lang.undoChangesDeletedQueue,
       displayDuration: SnackDisplayDuration.long,
       button: (
-        lang.UNDO,
+        lang.undo,
         () async => await QueueController.inst.reAddQueue(oldQueue),
       ),
     );
@@ -201,11 +201,11 @@ class NamidaOnTaps {
   Future<void> onRemoveTracksFromPlaylist(String name, List<TrackWithDate> tracksWithDates) async {
     void showSnacky({required void Function() whatDoYouWant}) {
       snackyy(
-        title: lang.UNDO_CHANGES,
-        message: lang.UNDO_CHANGES_DELETED_TRACK,
+        title: lang.undoChanges,
+        message: lang.undoChangesDeletedTrack,
         displayDuration: SnackDisplayDuration.long,
         button: (
-          lang.UNDO,
+          lang.undo,
           whatDoYouWant,
         ),
       );
@@ -319,11 +319,11 @@ class NamidaOnTaps {
                 dialog: CustomBlurryDialog(
                   isWarning: true,
                   normalTitleStyle: true,
-                  bodyText: lang.YOUR_CUSTOM_ORDER_WILL_BE_LOST,
+                  bodyText: lang.yourCustomOrderWillBeLost,
                   actions: [
                     const CancelButton(),
                     NamidaButton(
-                      text: lang.CONFIRM,
+                      text: lang.confirm,
                       onPressed: () {
                         onFinalUpdatePropertySort(newSorts!, newSortReverse);
                         NamidaNavigator.inst.closeDialog();
@@ -379,11 +379,11 @@ class NamidaOnTaps {
       },
       onDismissing: resortMedia,
       dialog: CustomBlurryDialog(
-        title: "${lang.SORT_BY} (${lang.REORDERABLE})",
+        title: "${lang.sortBy} (${lang.reorderable})",
         actions: [
           IconButton(
             icon: const Icon(Broken.refresh),
-            tooltip: lang.RESTORE_DEFAULTS,
+            tooltip: lang.restoreDefaults,
             onPressed: () {
               sorters.value = defaultSorts;
               onSortChange(defaultSorts);
@@ -400,7 +400,7 @@ class NamidaOnTaps {
               ObxO(
                 rx: isReverse,
                 builder: (context, reverse) => ListTileWithCheckMark(
-                  title: lang.REVERSE_ORDER,
+                  title: lang.reverseOrder,
                   active: reverse,
                   onTap: () {
                     onSortReverseChange(!reverse);
@@ -550,7 +550,7 @@ class NamidaOnTaps {
         isRemoving.close();
       },
       dialog: CustomBlurryDialog(
-        title: lang.CLEAR,
+        title: lang.clear,
         actions: [
           const CancelButton(),
           const SizedBox(width: 8.0),
@@ -564,7 +564,7 @@ class NamidaOnTaps {
                     const LoadingIndicator(),
                     const SizedBox(width: 8.0),
                   ],
-                  Text("${lang.DELETE} (${totalToRemove.valueR})"),
+                  Text("${lang.delete} (${totalToRemove.valueR})"),
                 ],
               ),
               onPressed: () async {
@@ -572,12 +572,12 @@ class NamidaOnTaps {
                   dialog: CustomBlurryDialog(
                     isWarning: true,
                     normalTitleStyle: true,
-                    bodyText: "${lang.DELETE} ${totalToRemove.value}?",
+                    bodyText: "${lang.delete} ${totalToRemove.value}?",
                     actions: [
                       const CancelButton(),
                       const SizedBox(width: 8.0),
                       NamidaButton(
-                        text: lang.DELETE.toUpperCase(),
+                        text: lang.delete.toUpperCase(),
                         onPressed: () async {
                           NamidaNavigator.inst.closeDialog();
                           isRemoving.value = true;
@@ -617,7 +617,7 @@ class NamidaOnTaps {
                     child: ListTileWithCheckMark(
                       dense: true,
                       icon: Broken.heart_slash,
-                      title: '${lang.NON_FAVOURITES} (${nonFavouritesList.length})',
+                      title: '${lang.nonFavourites} (${nonFavouritesList.length})',
                       subtitle: getSubtitle(sizesLookup, nonFavouritesList),
                       active: nonFavourites.valueR,
                       onTap: () {
@@ -690,17 +690,17 @@ class NamidaOnTaps {
       },
       dialog: CustomBlurryDialog(
         normalTitleStyle: true,
-        title: lang.CONFIRM,
+        title: lang.confirm,
         actions: [
           TextButton(
             onPressed: NamidaNavigator.inst.closeDialog,
-            child: NamidaButtonText(lang.CANCEL),
+            child: NamidaButtonText(lang.cancel),
           ),
           ObxO(
             rx: actionRx,
             builder: (context, action) => NamidaButton(
               enabled: action != null,
-              text: lang.CONFIRM,
+              text: lang.confirm,
               onPressed: () {
                 actionToUse = actionRx.value;
                 NamidaNavigator.inst.closeDialog();
@@ -715,7 +715,7 @@ class NamidaOnTaps {
             children: [
               if (displayTitle)
                 Text(
-                  lang.DUPLICATED_ITEMS_ADDING,
+                  lang.duplicatedItemsAdding,
                   style: namida.textTheme.displayMedium,
                 ),
               if (displayTitle) const SizedBox(height: 12.0),
@@ -745,13 +745,13 @@ class NamidaOnTaps {
   }
 
   void showSavedImageInSnack(String? saveDirPath, Color? themeColor) {
-    String title = lang.COPIED_ARTWORK;
-    String subtitle = '${lang.SAVED_IN}: $saveDirPath';
+    String title = lang.copiedArtwork;
+    String subtitle = '${lang.savedIn}: $saveDirPath';
     Color snackColor = themeColor ?? CurrentColor.inst.color;
 
     if (saveDirPath == null) {
-      title = lang.ERROR;
-      subtitle = lang.COULDNT_SAVE_IMAGE;
+      title = lang.error;
+      subtitle = lang.couldntSaveImage;
       snackColor = Colors.red;
     }
     snackyy(
@@ -1251,32 +1251,32 @@ class TracksAddOnTap {
       tiles: (getAddTracksTile) {
         return [
           getAddTracksTile(
-            title: lang.NEW_TRACKS_RANDOM,
-            subtitle: lang.NEW_TRACKS_RANDOM_SUBTITLE,
+            title: lang.newTracksRandom,
+            subtitle: lang.newTracksRandomSubtitle,
             icon: Broken.format_circle,
             insertionType: QueueInsertionType.random,
             onTap: (insertionType) {
               final config = insertionType.toQueueInsertion();
               final count = config.numberOfTracks;
               final rt = NamidaGenerator.inst.getRandomTracks(exclude: currentTrack, min: count, max: count + 1);
-              Player.inst.addToQueue(rt, insertionType: insertionType, emptyTracksMessage: lang.NO_ENOUGH_TRACKS).closeDialog();
+              Player.inst.addToQueue(rt, insertionType: insertionType, emptyTracksMessage: lang.noEnoughTracks).closeDialog();
             },
           ),
           getAddTracksTile(
-            title: lang.GENERATE_FROM_DATES,
-            subtitle: lang.GENERATE_FROM_DATES_SUBTITLE,
+            title: lang.generateFromDates,
+            subtitle: lang.generateFromDatesSubtitle,
             icon: Broken.calendar,
             insertionType: QueueInsertionType.listenTimeRange,
             onTap: (insertionType) {
               NamidaNavigator.inst.closeDialog();
               final historyTracks = HistoryController.inst.historyTracks;
               if (historyTracks.isEmpty) {
-                snackyy(title: lang.NOTE, message: lang.NO_TRACKS_IN_HISTORY);
+                snackyy(title: lang.note, message: lang.noTracksInHistory);
                 return;
               }
               showCalendarDialog(
-                title: lang.GENERATE_FROM_DATES,
-                buttonText: lang.GENERATE,
+                title: lang.generateFromDates,
+                buttonText: lang.generate,
                 useHistoryDates: true,
                 onGenerate: (dates) {
                   final tracks = NamidaGenerator.inst.generateItemsFromHistoryDates(dates.firstOrNull, dates.lastOrNull);
@@ -1284,7 +1284,7 @@ class TracksAddOnTap {
                       .addToQueue(
                         tracks,
                         insertionType: insertionType,
-                        emptyTracksMessage: lang.NO_TRACKS_FOUND_BETWEEN_DATES,
+                        emptyTracksMessage: lang.noTracksFoundBetweenDates,
                       )
                       .closeDialog();
                 },
@@ -1292,8 +1292,8 @@ class TracksAddOnTap {
             },
           ),
           getAddTracksTile(
-            title: lang.NEW_TRACKS_MOODS,
-            subtitle: lang.NEW_TRACKS_MOODS_SUBTITLE,
+            title: lang.newTracksMoods,
+            subtitle: lang.newTracksMoodsSubtitle,
             icon: Broken.emoji_happy,
             insertionType: QueueInsertionType.mood,
             onTap: (insertionType) async {
@@ -1322,7 +1322,7 @@ class TracksAddOnTap {
               });
 
               if (allAvailableMoodsPlaylists.isEmpty && allAvailableMoodsTracks.isEmpty) {
-                snackyy(title: lang.ERROR, message: lang.NO_MOODS_AVAILABLE);
+                snackyy(title: lang.error, message: lang.noMoodsAvailable);
                 return;
               }
 
@@ -1391,11 +1391,11 @@ class TracksAddOnTap {
                 dialog: CustomBlurryDialog(
                   normalTitleStyle: true,
                   horizontalInset: 48.0,
-                  title: lang.MOODS,
+                  title: lang.moods,
                   actions: [
                     const CancelButton(),
                     NamidaButton(
-                      text: lang.GENERATE,
+                      text: lang.generate,
                       onPressed: () {
                         final finalTracks = <Track>[];
                         selectedmoodsPlaylists.loop((m) {
@@ -1419,14 +1419,14 @@ class TracksAddOnTap {
                       slivers: [
                         // -- Tracks moods (embedded & custom)
                         ...getListy(
-                          title: lang.TRACKS,
+                          title: lang.tracks,
                           moodsList: tracksAllMoods,
                           allAvailableMoods: allAvailableMoodsTracks,
                           selectedList: selectedmoodsTracks,
                         ),
                         // -- Playlist moods
                         ...getListy(
-                          title: lang.PLAYLISTS,
+                          title: lang.playlists,
                           moodsList: playlistsAllMoods,
                           allAvailableMoods: allAvailableMoodsPlaylists,
                           selectedList: selectedmoodsPlaylists,
@@ -1439,8 +1439,8 @@ class TracksAddOnTap {
             },
           ),
           getAddTracksTile(
-            title: lang.NEW_TRACKS_RATINGS,
-            subtitle: lang.NEW_TRACKS_RATINGS_SUBTITLE,
+            title: lang.newTracksRatings,
+            subtitle: lang.newTracksRatingsSubtitle,
             icon: Broken.happyemoji,
             insertionType: QueueInsertionType.rating,
             onTap: (insertionType) async {
@@ -1455,14 +1455,14 @@ class TracksAddOnTap {
                 },
                 dialog: CustomBlurryDialog(
                   normalTitleStyle: true,
-                  title: lang.NEW_TRACKS_RATINGS,
+                  title: lang.newTracksRatings,
                   actions: [
                     const CancelButton(),
                     NamidaButton(
-                      text: lang.GENERATE,
+                      text: lang.generate,
                       onPressed: () {
                         if (minRating.value > maxRating.value) {
-                          snackyy(title: lang.ERROR, message: lang.MIN_VALUE_CANT_BE_MORE_THAN_MAX);
+                          snackyy(title: lang.error, message: lang.minValueCantBeMoreThanMax);
                           return;
                         }
                         final tracks = NamidaGenerator.inst.generateTracksFromRatings(
@@ -1481,7 +1481,7 @@ class TracksAddOnTap {
                         children: [
                           Column(
                             children: [
-                              Text(lang.MINIMUM),
+                              Text(lang.minimum),
                               const SizedBox(height: 24.0),
                               NamidaWheelSlider(
                                 max: 100,
@@ -1499,7 +1499,7 @@ class TracksAddOnTap {
                           ),
                           Column(
                             children: [
-                              Text(lang.MAXIMUM),
+                              Text(lang.maximum),
                               const SizedBox(height: 24.0),
                               NamidaWheelSlider(
                                 max: 100,
@@ -1530,17 +1530,14 @@ class TracksAddOnTap {
               Expanded(
                 child: getAddTracksTile(
                   chip: true,
-                  title: lang.NEW_TRACKS_SIMILARR_RELEASE_DATE,
-                  subtitle: lang.NEW_TRACKS_SIMILARR_RELEASE_DATE_SUBTITLE.replaceFirst(
-                    '_CURRENT_TRACK_',
-                    currentTrack.title.addDQuotation(),
-                  ),
+                  title: lang.newTracksSimilarrReleaseDate,
+                  subtitle: lang.newTracksSimilarrReleaseDateSubtitle(currentTrack: currentTrack.title.addDQuotation()),
                   icon: Broken.calendar_1,
                   insertionType: QueueInsertionType.sameReleaseDate,
                   onTap: (insertionType) {
                     final year = currentTrack.year;
                     if (year == 0) {
-                      snackyy(title: lang.ERROR, message: lang.NEW_TRACKS_UNKNOWN_YEAR);
+                      snackyy(title: lang.error, message: lang.newTracksUnknownYear);
                       return;
                     }
                     final tracks = NamidaGenerator.inst.generateTracksFromSameEra(year, currentTrack: currentTrack);
@@ -1548,7 +1545,7 @@ class TracksAddOnTap {
                         .addToQueue(
                           tracks,
                           insertionType: insertionType,
-                          emptyTracksMessage: lang.NO_TRACKS_FOUND_BETWEEN_DATES,
+                          emptyTracksMessage: lang.noTracksFoundBetweenDates,
                         )
                         .closeDialog();
                   },
@@ -1558,9 +1555,8 @@ class TracksAddOnTap {
               // Expanded(
               //   child: getAddTracksTile(
               //     chip: true,
-              //     title: lang.SIMILAR_DISCOVER_DATE,
-              //     subtitle: lang.SIMILAR_DISCOVER_DATE_SUBTITLE.replaceFirst(
-              //       '_CURRENT_TRACK_',
+              //     title: lang.similarDiscoverDate,
+              //     subtitle: lang.similarDiscoverDateSubtitle(
               //       currentTrack.title.addDQuotation(),
               //     ),
               //     icon: Broken.calendar_search,
@@ -1573,7 +1569,7 @@ class TracksAddOnTap {
               //             gentracks,
               //             insertionType: insertionType,
               //             insertNext: true,
-              //             emptyTracksMessage: lang.NO_TRACKS_IN_HISTORY,
+              //             emptyTracksMessage: lang.noTracksInHistory,
               //           )
               //           .closeDialog();
               //     },
@@ -1583,11 +1579,8 @@ class TracksAddOnTap {
               Expanded(
                 child: getAddTracksTile(
                   chip: true,
-                  title: lang.SIMILAR_TIME_RANGE,
-                  subtitle: lang.SIMILAR_TIME_RANGE_SUBTITLE.replaceFirst(
-                    '_CURRENT_TRACK_',
-                    currentTrack.title.addDQuotation(),
-                  ),
+                  title: lang.similarTimeRange,
+                  subtitle: lang.similarTimeRangeSubtitle(currentTrack: currentTrack.title.addDQuotation()),
                   icon: Broken.calendar_tick,
                   insertionType: QueueInsertionType.algorithmTimeRange,
                   onTap: (insertionType) {
@@ -1598,7 +1591,7 @@ class TracksAddOnTap {
                           gentracks,
                           insertionType: insertionType,
                           insertNext: true,
-                          emptyTracksMessage: lang.NO_TRACKS_IN_HISTORY,
+                          emptyTracksMessage: lang.noTracksInHistory,
                         )
                         .closeDialog();
                   },
@@ -1607,11 +1600,8 @@ class TracksAddOnTap {
             ],
           ),
           getAddTracksTile(
-            title: lang.SIMILAR_DISCOVER_DATE,
-            subtitle: lang.SIMILAR_DISCOVER_DATE_SUBTITLE.replaceFirst(
-              '_CURRENT_TRACK_',
-              currentTrack.title.addDQuotation(),
-            ),
+            title: lang.similarDiscoverDate,
+            subtitle: lang.similarDiscoverDateSubtitle(currentTrack: currentTrack.title.addDQuotation()),
             icon: Broken.calendar_search,
             insertionType: QueueInsertionType.algorithmDiscoverDate,
             onTap: (insertionType) {
@@ -1622,17 +1612,14 @@ class TracksAddOnTap {
                     gentracks,
                     insertionType: insertionType,
                     insertNext: true,
-                    emptyTracksMessage: lang.NO_TRACKS_IN_HISTORY,
+                    emptyTracksMessage: lang.noTracksInHistory,
                   )
                   .closeDialog();
             },
           ),
           getAddTracksTile(
-            title: lang.NEW_TRACKS_RECOMMENDED,
-            subtitle: lang.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
-              '_CURRENT_TRACK_',
-              currentTrack.title.addDQuotation(),
-            ),
+            title: lang.newTracksRecommended,
+            subtitle: lang.newTracksRecommendedSubtitle(currentTrack: currentTrack.title.addDQuotation()),
             icon: Broken.bezier,
             insertionType: QueueInsertionType.algorithm,
             onTap: (insertionType) {
@@ -1643,7 +1630,7 @@ class TracksAddOnTap {
                     gentracks,
                     insertionType: insertionType,
                     insertNext: true,
-                    emptyTracksMessage: lang.NO_TRACKS_IN_HISTORY,
+                    emptyTracksMessage: lang.noTracksInHistory,
                   )
                   .closeDialog();
             },
@@ -1680,15 +1667,15 @@ class TracksAddOnTap {
               return AnimatedEnabled(
                 enabled: !isLoading,
                 child: getAddTracksTile(
-                  title: lang.NEW_TRACKS_RANDOM,
-                  subtitle: lang.NEW_TRACKS_RANDOM_SUBTITLE,
+                  title: lang.newTracksRandom,
+                  subtitle: lang.newTracksRandomSubtitle,
                   icon: Broken.format_circle,
                   insertionType: QueueInsertionType.random,
                   onTap: (insertionType) async {
                     final config = insertionType.toQueueInsertion();
                     final count = config.numberOfTracks;
                     final rt = await NamidaYTGenerator.inst.getRandomVideos(exclude: currentVideoId, min: count, max: count + 1);
-                    Player.inst.addToQueue(rt, insertionType: insertionType, emptyTracksMessage: lang.NO_ENOUGH_TRACKS).closeDialog();
+                    Player.inst.addToQueue(rt, insertionType: insertionType, emptyTracksMessage: lang.noEnoughTracks).closeDialog();
                   },
                   trailingRaw: isLoading ? const LoadingIndicator() : null,
                 ),
@@ -1696,20 +1683,20 @@ class TracksAddOnTap {
             },
           ),
           getAddTracksTile(
-            title: lang.GENERATE_FROM_DATES,
-            subtitle: lang.GENERATE_FROM_DATES_SUBTITLE,
+            title: lang.generateFromDates,
+            subtitle: lang.generateFromDatesSubtitle,
             icon: Broken.calendar,
             insertionType: QueueInsertionType.listenTimeRange,
             onTap: (insertionType) {
               NamidaNavigator.inst.closeDialog();
               final historyTracks = YoutubeHistoryController.inst.historyTracks;
               if (historyTracks.isEmpty) {
-                snackyy(title: lang.NOTE, message: lang.NO_TRACKS_IN_HISTORY);
+                snackyy(title: lang.note, message: lang.noTracksInHistory);
                 return;
               }
               showCalendarDialog(
-                title: lang.GENERATE_FROM_DATES,
-                buttonText: lang.GENERATE,
+                title: lang.generateFromDates,
+                buttonText: lang.generate,
                 useHistoryDates: true,
                 historyController: YoutubeHistoryController.inst,
                 onGenerate: (dates) {
@@ -1718,7 +1705,7 @@ class TracksAddOnTap {
                       .addToQueue(
                         videos,
                         insertionType: insertionType,
-                        emptyTracksMessage: lang.NO_TRACKS_FOUND_BETWEEN_DATES,
+                        emptyTracksMessage: lang.noTracksFoundBetweenDates,
                       )
                       .closeDialog();
                 },
@@ -1730,8 +1717,8 @@ class TracksAddOnTap {
             builder: (context, isLoading) => AnimatedEnabled(
               enabled: !isLoading,
               child: getAddTracksTile(
-                title: lang.MIX,
-                subtitle: lang.MIX_PLAYLIST_GENERATED_BY_YOUTUBE,
+                title: lang.mix,
+                subtitle: lang.mixPlaylistGeneratedByYoutube,
                 icon: Broken.radar_1,
                 insertionType: QueueInsertionType.mix,
                 onTap: (insertionType) async {
@@ -1758,7 +1745,7 @@ class TracksAddOnTap {
                           videos,
                           insertNext: true,
                           insertionType: insertionType,
-                          emptyTracksMessage: lang.FAILED,
+                          emptyTracksMessage: lang.failed,
                         )
                         .closeDialog();
                   }
@@ -1778,11 +1765,8 @@ class TracksAddOnTap {
                       enabled: !isLoading,
                       child: getAddTracksTile(
                         chip: true,
-                        title: lang.NEW_TRACKS_SIMILARR_RELEASE_DATE,
-                        subtitle: lang.NEW_TRACKS_SIMILARR_RELEASE_DATE_SUBTITLE.replaceFirst(
-                          '_CURRENT_TRACK_',
-                          currentVideoName.addDQuotation(),
-                        ),
+                        title: lang.newTracksSimilarrReleaseDate,
+                        subtitle: lang.newTracksSimilarrReleaseDateSubtitle(currentTrack: currentVideoName.addDQuotation()),
                         icon: Broken.calendar_1,
                         insertionType: QueueInsertionType.sameReleaseDate,
                         onTap: (insertionType) async {
@@ -1795,7 +1779,7 @@ class TracksAddOnTap {
                             isLoadingVideoDate.value = false;
                           }
                           if (date == null) {
-                            snackyy(message: 'failed to fetch video date', isError: true, title: lang.ERROR);
+                            snackyy(message: 'failed to fetch video date', isError: true, title: lang.error);
                             return;
                           }
                           final videos = await NamidaYTGenerator.inst.generateVideoFromSameEra(currentVideoId, date, videoToRemove: currentVideoId);
@@ -1803,7 +1787,7 @@ class TracksAddOnTap {
                               .addToQueue(
                                 videos,
                                 insertionType: insertionType,
-                                emptyTracksMessage: lang.NO_TRACKS_FOUND_BETWEEN_DATES,
+                                emptyTracksMessage: lang.noTracksFoundBetweenDates,
                               )
                               .closeDialog();
                         },
@@ -1817,9 +1801,8 @@ class TracksAddOnTap {
               // Expanded(
               //   child: getAddTracksTile(
               //     chip: true,
-              //     title: lang.SIMILAR_DISCOVER_DATE,
-              //     subtitle: lang.SIMILAR_DISCOVER_DATE_SUBTITLE.replaceFirst(
-              //       '_CURRENT_TRACK_',
+              //     title: lang.similarDiscoverDate,
+              //     subtitle: lang.similarDiscoverDateSubtitle(
               //       currentVideoName.addDQuotation(),
               //     ),
               //     icon: Broken.calendar_search,
@@ -1832,7 +1815,7 @@ class TracksAddOnTap {
               //             gentracks,
               //             insertionType: insertionType,
               //             insertNext: true,
-              //             emptyTracksMessage: lang.NO_TRACKS_IN_HISTORY,
+              //             emptyTracksMessage: lang.noTracksInHistory,
               //           )
               //           .closeDialog();
               //     },
@@ -1842,11 +1825,8 @@ class TracksAddOnTap {
               Expanded(
                 child: getAddTracksTile(
                   chip: true,
-                  title: lang.SIMILAR_TIME_RANGE,
-                  subtitle: lang.SIMILAR_TIME_RANGE_SUBTITLE.replaceFirst(
-                    '_CURRENT_TRACK_',
-                    currentVideoName.addDQuotation(),
-                  ),
+                  title: lang.similarTimeRange,
+                  subtitle: lang.similarTimeRangeSubtitle(currentTrack: currentVideoName.addDQuotation()),
                   icon: Broken.calendar_tick,
                   insertionType: QueueInsertionType.algorithmTimeRange,
                   onTap: (insertionType) {
@@ -1857,7 +1837,7 @@ class TracksAddOnTap {
                           gentracks,
                           insertionType: insertionType,
                           insertNext: true,
-                          emptyTracksMessage: lang.NO_TRACKS_IN_HISTORY,
+                          emptyTracksMessage: lang.noTracksInHistory,
                         )
                         .closeDialog();
                   },
@@ -1866,11 +1846,8 @@ class TracksAddOnTap {
             ],
           ),
           getAddTracksTile(
-            title: lang.SIMILAR_DISCOVER_DATE,
-            subtitle: lang.SIMILAR_DISCOVER_DATE_SUBTITLE.replaceFirst(
-              '_CURRENT_TRACK_',
-              currentVideoName.addDQuotation(),
-            ),
+            title: lang.similarDiscoverDate,
+            subtitle: lang.similarDiscoverDateSubtitle(currentTrack: currentVideoName.addDQuotation()),
             icon: Broken.calendar_search,
             insertionType: QueueInsertionType.algorithmDiscoverDate,
             onTap: (insertionType) {
@@ -1881,17 +1858,14 @@ class TracksAddOnTap {
                     gentracks,
                     insertionType: insertionType,
                     insertNext: true,
-                    emptyTracksMessage: lang.NO_TRACKS_IN_HISTORY,
+                    emptyTracksMessage: lang.noTracksInHistory,
                   )
                   .closeDialog();
             },
           ),
           getAddTracksTile(
-            title: lang.NEW_TRACKS_RECOMMENDED,
-            subtitle: lang.NEW_TRACKS_RECOMMENDED_SUBTITLE.replaceFirst(
-              '_CURRENT_TRACK_',
-              currentVideoName.addDQuotation(),
-            ),
+            title: lang.newTracksRecommended,
+            subtitle: lang.newTracksRecommendedSubtitle(currentTrack: currentVideoName.addDQuotation()),
             icon: Broken.bezier,
             insertionType: QueueInsertionType.algorithm,
             onTap: (insertionType) {
@@ -1902,7 +1876,7 @@ class TracksAddOnTap {
                     genvideos,
                     insertionType: insertionType,
                     insertNext: true,
-                    emptyTracksMessage: lang.NO_TRACKS_IN_HISTORY,
+                    emptyTracksMessage: lang.noTracksInHistory,
                   )
                   .closeDialog();
             },
@@ -1952,11 +1926,11 @@ class TracksAddOnTap {
           sortBy.close();
         },
         dialog: CustomBlurryDialog(
-          title: lang.CONFIGURE,
+          title: lang.configure,
           actions: [
             const CancelButton(),
             NamidaButton(
-              text: lang.SAVE,
+              text: lang.save,
               onPressed: () {
                 settings.updateQueueInsertion(
                   insertionType,
@@ -1983,21 +1957,21 @@ class TracksAddOnTap {
               const SizedBox(height: 24.0),
               CustomListTile(
                 icon: Broken.computing,
-                title: lang.NUMBER_OF_TRACKS,
-                subtitle: "${lang.UNLIMITED}-$maxTracksCount",
+                title: lang.numberOfTracks,
+                subtitle: "${lang.unlimited}-$maxTracksCount",
                 trailing: Obx(
                   (context) => NamidaWheelSlider(
                     max: maxTracksCount,
                     initValue: tracksNo.valueR,
                     onValueChanged: (val) => tracksNo.value = val,
-                    text: tracksNo.valueR == 0 ? lang.UNLIMITED : '${tracksNo.valueR}',
+                    text: tracksNo.valueR == 0 ? lang.unlimited : '${tracksNo.valueR}',
                   ),
                 ),
               ),
               Obx(
                 (context) => CustomSwitchListTile(
                   icon: Broken.next,
-                  title: lang.PLAY_NEXT,
+                  title: lang.playNext,
                   value: insertN.valueR,
                   onChanged: (isTrue) => insertN.value = !isTrue,
                 ),
@@ -2005,7 +1979,7 @@ class TracksAddOnTap {
               if (recommendedSampleCount != null)
                 CustomListTile(
                   icon: Broken.chart_square,
-                  title: '${lang.SAMPLE} (${insertionType == QueueInsertionType.algorithmDiscoverDate ? lang.FIRST_LISTEN : lang.TOTAL_LISTENS})',
+                  title: '${lang.sample} (${insertionType == QueueInsertionType.algorithmDiscoverDate ? lang.firstListen : lang.totalListens})',
                   trailing: Obx(
                     (context) => NamidaWheelSlider(
                       min: 1,
@@ -2019,7 +1993,7 @@ class TracksAddOnTap {
               if (recommendedSampleDaysCount != null)
                 CustomListTile(
                   icon: Broken.square,
-                  title: '${lang.SAMPLE} (${lang.DAYS})',
+                  title: '${lang.sample} (${lang.days})',
                   trailing: Obx(
                     (context) => NamidaWheelSlider(
                       min: 1,
@@ -2032,7 +2006,7 @@ class TracksAddOnTap {
                 ),
               CustomListTile(
                 icon: Broken.sort,
-                title: lang.SORT_BY,
+                title: lang.sortBy,
                 trailingRaw: ConstrainedBox(
                   constraints: BoxConstraints(minWidth: 0, maxWidth: context.width * 0.34),
                   child: FittedBox(
@@ -2149,11 +2123,11 @@ class TracksAddOnTap {
       },
       dialog: CustomBlurryDialog(
         normalTitleStyle: true,
-        title: lang.NEW_TRACKS_ADD,
+        title: lang.newTracksAdd,
         trailingWidgets: [
           NamidaIconButton(
             icon: Broken.setting_3,
-            tooltip: () => lang.CONFIGURE,
+            tooltip: () => lang.configure,
             onPressed: shouldShowConfigureIcon.toggle,
           ),
         ],
@@ -2192,9 +2166,9 @@ class SussyBaka {
                     title: '!!',
                     bodyText: "EH? YOU DON'T WANT TO SUPPORT?",
                     actions: [
-                      NamidaSupportButton(title: lang.YES),
+                      NamidaSupportButton(title: lang.yes),
                       NamidaButton(
-                        text: lang.NO,
+                        text: lang.no,
                         onPressed: () {
                           NamidaNavigator.inst.closeDialog();
                           NamidaNavigator.inst.navigateDialog(
@@ -2203,14 +2177,14 @@ class SussyBaka {
                               bodyText: 'hidoii ಥ_ಥ here use it as much as u can, dw im not upset or anything ^^, or am i?',
                               actions: [
                                 NamidaButton(
-                                  text: lang.UNLOCK.toUpperCase(),
+                                  text: lang.unlock.toUpperCase(),
                                   onPressed: () {
                                     NamidaNavigator.inst.closeDialog();
                                     onEnable();
                                   },
                                 ),
                                 NamidaButton(
-                                  text: lang.SUPPORT.toUpperCase(),
+                                  text: lang.support.toUpperCase(),
                                   onPressed: () {
                                     NamidaNavigator.inst.closeDialog();
                                     NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE);

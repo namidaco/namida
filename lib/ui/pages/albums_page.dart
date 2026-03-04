@@ -114,7 +114,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                       ),
                       textField: CustomTextFiled(
                         textFieldController: LibraryTab.albums.textSearchControllerUI,
-                        textFieldHintText: lang.FILTER_ALBUMS,
+                        textFieldHintText: lang.filterAlbums,
                         onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.album),
                       ),
                     );
@@ -248,8 +248,8 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
     }
 
     return [
-      buildTile(AlbumType.single, Broken.music_square, lang.SINGLES),
-      buildTile(AlbumType.normal, Broken.music_dashboard, lang.ALBUMS),
+      buildTile(AlbumType.single, Broken.music_square, lang.singles),
+      buildTile(AlbumType.normal, Broken.music_dashboard, lang.albums),
     ];
   }
 }

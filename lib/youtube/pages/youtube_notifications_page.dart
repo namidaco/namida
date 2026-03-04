@@ -29,7 +29,7 @@ class YoutubeNotificationsPage extends StatelessWidget {
       builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieNotificationResult, StreamInfoItemNotification>(
         operation: YoutiPieOperation.fetchNotifications,
         transparentShimmer: true,
-        title: lang.NOTIFICATIONS,
+        title: lang.notifications,
         cacheReader: YoutiPie.cacheBuilder.forNotificationItems(),
         networkFetcher: (details) => YoutiPie.feed.fetchNotifications(details: details),
         itemExtent: thumbnailItemExtent,

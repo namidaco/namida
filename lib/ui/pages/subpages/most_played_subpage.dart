@@ -125,7 +125,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                   const Icon(Broken.calendar, size: 18.0),
                   const SizedBox(width: 4.0),
                   Text(
-                    lang.CUSTOM,
+                    lang.custom,
                     style: textTheme.displayMedium,
                   ),
                   const SizedBox(width: 4.0),
@@ -134,8 +134,8 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
               ),
               onTap: () {
                 showCalendarDialog(
-                  title: lang.CHOOSE,
-                  buttonText: lang.CONFIRM,
+                  title: lang.choose,
+                  buttonText: lang.confirm,
                   useHistoryDates: true,
                   historyController: historyController,
                   onGenerate: (dates) => _onSelectingTimeRange(

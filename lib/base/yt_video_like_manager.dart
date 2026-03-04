@@ -39,7 +39,7 @@ class YtVideoLikeManager {
       dialog: CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        bodyText: lang.CONFIRM,
+        bodyText: lang.confirm,
         actions: [
           const CancelButton(),
           NamidaButton(
@@ -56,11 +56,11 @@ class YtVideoLikeManager {
   }
 
   Future<bool> _confirmRemoveLike() async {
-    return _confirmSomething(lang.REMOVE);
+    return _confirmSomething(lang.remove);
   }
 
   Future<bool> _confirmDislike() async {
-    return _confirmSomething(lang.DISLIKE);
+    return _confirmSomething(lang.dislike);
   }
 
   Future<bool> onLikeClicked(YTVideoLikeParamters parameters) async {

@@ -276,7 +276,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      lang.INFO,
+                      lang.info,
                       style: theme.textTheme.displayLarge,
                     ),
                     if (loading) ...[
@@ -393,7 +393,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                   likedIcon: Broken.heart_filled,
                   normalIcon: Broken.heart,
                   disabledColor: headerIconColor,
-                  removeConfirmationAction: lang.REMOVE_FROM_FAVOURITES,
+                  removeConfirmationAction: lang.removeFromFavourites,
                   isLiked: favouritesPlaylist.isSubItemFavourite(videoId),
                   onTap: (isLiked) async => YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId),
                 ),
@@ -499,7 +499,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                                       crossAxisAlignment: WrapCrossAlignment.center,
                                                       children: [
                                                         Text(
-                                                          '${lang.TOTAL_LISTENS}: ',
+                                                          '${lang.totalListens}: ',
                                                           style: theme.textTheme.displaySmall,
                                                         ),
                                                         Text(
@@ -521,7 +521,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                                   const SizedBox(width: 4.0),
                                                   Expanded(
                                                     child: Text(
-                                                      firstListenTrack?.dateAndClockFormattedOriginal ?? lang.MAKE_YOUR_FIRST_LISTEN,
+                                                      firstListenTrack?.dateAndClockFormattedOriginal ?? lang.makeYourFirstListen,
                                                       style: theme.textTheme.displaySmall,
                                                     ),
                                                   ),
@@ -553,7 +553,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Text(
-                                                  lang.THIS_VIDEO_IS_LIKELY_DELETED_OR_SET_TO_PRIVATE,
+                                                  lang.thisVideoIsLikelyDeletedOrSetToPrivate,
                                                   style: theme.textTheme.displaySmall,
                                                 ),
                                                 if (playabilityText.isNotEmpty && playabilityText != 'Video unavailable' && playabilityText != 'This video is unavailable')
@@ -565,7 +565,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                                   ),
                                                 if (sourcesText != null)
                                                   Text(
-                                                    "${lang.SOURCE}: ${sourcesText!}",
+                                                    "${lang.source}: ${sourcesText!}",
                                                     style: theme.textTheme.displaySmall?.copyWith(
                                                       fontSize: 11.0,
                                                     ),
@@ -577,23 +577,23 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                       ),
                                     ),
                                   TrackInfoListTile(
-                                    title: lang.TITLE,
+                                    title: lang.title,
                                     value: videoTitle ?? '',
                                     icon: Broken.text,
                                   ),
                                   TrackInfoListTile(
-                                    title: lang.CHANNEL,
+                                    title: lang.channel,
                                     value: channelTitle ?? '',
                                     icon: Broken.user,
                                   ),
                                   TrackInfoListTile(
-                                    title: lang.DATE,
+                                    title: lang.date,
                                     value: dateText ?? '',
                                     cards: [dateAgo],
                                     icon: Broken.calendar,
                                   ),
                                   TrackInfoListTile(
-                                    title: lang.DURATION,
+                                    title: lang.duration,
                                     value: durationSeconds?.secondsLabel ?? '',
                                     icon: Broken.clock,
                                   ),
@@ -603,32 +603,32 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                     icon: Broken.video_square,
                                   ),
                                   TrackInfoListTile(
-                                    title: lang.LINK,
+                                    title: lang.link,
                                     value: isDummyVideoId ? '' : YTUrlUtils.buildVideoUrl(videoId),
                                     hasLinks: true,
                                     icon: Broken.link_1,
                                   ),
                                   TrackInfoListTile(
-                                    title: "${lang.LINK} (${lang.CHANNEL})",
+                                    title: "${lang.link} (${lang.channel})",
                                     value: channelId != null && channelId!.isNotEmpty ? YTUrlUtils.buildChannelUrl(channelId!) : '?',
                                     hasLinks: true,
                                     icon: Broken.link_1,
                                   ),
                                   if (saveLocation != null)
                                     TrackInfoListTile(
-                                      title: lang.PATH,
+                                      title: lang.path,
                                       value: saveLocation,
                                       icon: Broken.location,
                                     ),
                                   TrackInfoListTile(
-                                    title: lang.DESCRIPTION,
+                                    title: lang.description,
                                     value: description ?? '',
                                     icon: Broken.message_text_1,
                                     child: descriptionWidget,
                                   ),
                                   if (tags != null)
                                     TrackInfoListTile(
-                                      title: lang.TAGS,
+                                      title: lang.tags,
                                       value: tags.entries.map((e) => e.value == null ? null : "- ${e.key}: ${e.value}").whereType<String>().join('\n'),
                                       icon: Broken.tag,
                                     ),

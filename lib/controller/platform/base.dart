@@ -30,7 +30,7 @@ class NamidaPlatformBuilder {
       windows: () {
         var processDir = p.dirname(Platform.resolvedExecutable);
         if (kDebugMode) {
-          var midway = r'../../../../../ffmpeg_build/windows';
+          var midway = r'../../../../../external/ffmpeg_build/windows';
           return p.normalize(p.join(processDir, midway));
         } else {
           return p.join(processDir, 'bin');
@@ -44,7 +44,7 @@ class NamidaPlatformBuilder {
         }
         var processDir = p.dirname(Platform.resolvedExecutable);
         if (kDebugMode) {
-          var midway = r'../../../../../ffmpeg_build/linux';
+          var midway = r'../../../../../external/ffmpeg_build/linux';
           return p.normalize(p.join(processDir, midway));
         } else {
           return p.join(processDir, 'bin');

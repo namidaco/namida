@@ -86,10 +86,10 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     if (addedVideosLength == null) return;
 
     snackyy(
-      message: "${lang.ADDED} ${addedVideosLength.displayVideoKeyword}",
+      message: "${lang.added}: ${addedVideosLength.displayVideoKeyword}",
       button: addedVideosLength > 0
           ? (
-              lang.UNDO,
+              lang.undo,
               () async => await updatePropertyInPlaylist(playlist.name, tracks: oldVideosList, modifiedDate: originalModifyDate),
             )
           : null,
@@ -177,16 +177,16 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   Future<void> prepareAllPlaylists() async => await super.prepareAllPlaylistsFile();
 
   @override
-  String get EMPTY_NAME => lang.PLEASE_ENTER_A_NAME;
+  String get EMPTY_NAME => lang.pleaseEnterAName;
 
   @override
-  String get NAME_CONTAINS_BAD_CHARACTER => lang.NAME_CONTAINS_BAD_CHARACTER;
+  String get NAME_CONTAINS_BAD_CHARACTER => lang.nameContainsBadCharacter;
 
   @override
-  String get SAME_NAME_EXISTS => lang.PLEASE_ENTER_A_DIFFERENT_NAME;
+  String get SAME_NAME_EXISTS => lang.pleaseEnterADifferentName;
 
   @override
-  String get NAME_IS_NOT_ALLOWED => lang.PLEASE_ENTER_A_DIFFERENT_NAME;
+  String get NAME_IS_NOT_ALLOWED => lang.pleaseEnterADifferentName;
 
   @override
   String get PLAYLIST_NAME_FAV => k_PLAYLIST_NAME_FAV;

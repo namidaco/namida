@@ -136,7 +136,7 @@ class __SkipSponsorButtonState extends State<SkipSponsorButton> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              segment.segmentStartMS == segment.segmentEndMS ? lang.JUMP : lang.SKIP,
+                              segment.segmentStartMS == segment.segmentEndMS ? lang.jump : lang.skip,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: textTheme.displayMedium?.copyWith(

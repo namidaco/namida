@@ -99,7 +99,7 @@ void showListensDialog({
           child: CustomBlurryDialog(
             theme: theme,
             normalTitleStyle: true,
-            title: lang.TOTAL_LISTENS,
+            title: lang.totalListens,
             titleWidgetInPadding: Row(
               children: [
                 ConstrainedBox(
@@ -126,7 +126,7 @@ void showListensDialog({
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        lang.TOTAL_LISTENS,
+                        lang.totalListens,
                         style: theme.textTheme.displayLarge,
                       ),
                       if (subtitle != null && subtitle.isNotEmpty)

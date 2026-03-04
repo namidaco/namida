@@ -275,18 +275,18 @@ enum DirectoryIndexType {
 
   String toText() {
     return switch (this) {
-      DirectoryIndexType.local => lang.LOCAL,
+      DirectoryIndexType.local => lang.local,
       DirectoryIndexType.subsonic => '(Open) Subsonic',
       DirectoryIndexType.jellyfin => 'Jellyfin',
       DirectoryIndexType.webdav => 'WebDAV',
       DirectoryIndexType.smb => 'Samba (SMB v2/v3)',
-      DirectoryIndexType.unknown => lang.NONE,
+      DirectoryIndexType.unknown => lang.none,
     };
   }
 
   String? toSubtitle() {
     return switch (this) {
-      DirectoryIndexType.local => lang.PICK_FROM_STORAGE,
+      DirectoryIndexType.local => lang.pickFromStorage,
       DirectoryIndexType.subsonic => 'Navidrome, Airsonic, Gonic, etc...',
       DirectoryIndexType.jellyfin => null,
       DirectoryIndexType.webdav => null,

@@ -140,8 +140,8 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   void _showNetworkError() {
     Timer(Duration.zero, () {
       snackyy(
-        title: lang.ERROR,
-        message: lang.NO_NETWORK_AVAILABLE_TO_FETCH_DATA,
+        title: lang.error,
+        message: lang.noNetworkAvailableToFetchData,
         isError: true,
         top: false,
       );
@@ -178,7 +178,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
       return false;
     }
 
-    void reportError(String msg) => snackyy(message: msg, isError: true, title: lang.ERROR);
+    void reportError(String msg) => snackyy(message: msg, isError: true, title: lang.error);
 
     final executeDetails = forceRequest ? ExecuteDetails.forceRequest() : null;
 
@@ -250,9 +250,9 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     if (fp != null) {
       final imported = await YoutubeImportController.inst.importSubscriptions(fp);
       if (imported > 0) {
-        snackyy(message: lang.IMPORTED_N_CHANNELS_SUCCESSFULLY.replaceFirst('_NUM_', '$imported'));
+        snackyy(message: lang.importedNChannelsSuccessfully(number: imported));
       } else {
-        snackyy(message: "${lang.CORRUPTED_FILE}\nPlease choose a valid subscriptions.csv file", isError: true);
+        snackyy(message: "${lang.corruptedFile}\nPlease choose a valid subscriptions.csv file", isError: true);
       }
     }
   }
@@ -287,8 +287,8 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                           icon: Broken.calendar,
                           onPressed: () {
                             showCalendarDialog(
-                              title: lang.DATE,
-                              buttonText: lang.CONFIRM,
+                              title: lang.date,
+                              buttonText: lang.confirm,
                               useHistoryDates: false,
                               calendarType: CalendarDatePicker2Type.single,
                               lastDate: DateTime.now(),
@@ -385,7 +385,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                   ),
                                   if (selectedChannel.subscribed ?? false)
                                     Text(
-                                      lang.SUBSCRIBED,
+                                      lang.subscribed,
                                       style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -403,7 +403,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                     Obx(
                       (context) => NamidaInkWellButton(
                         icon: Broken.import_2,
-                        text: lang.IMPORT,
+                        text: lang.import,
                         enabled: !YoutubeImportController.inst.isImportingSubscriptions.valueR,
                         onTap: _onSubscriptionFileImportTap,
                       ),
@@ -420,7 +420,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                         (context) => NamidaInkWellButton(
                           sizeMultiplier: 2.0,
                           icon: Broken.import_2,
-                          text: lang.IMPORT,
+                          text: lang.import,
                           enabled: !YoutubeImportController.inst.isImportingSubscriptions.valueR,
                           onTap: _onSubscriptionFileImportTap,
                         ),
@@ -665,7 +665,7 @@ class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> w
                                   ),
                                   if (currentChannelInfo.subscribed ?? false)
                                     Text(
-                                      lang.SUBSCRIBED,
+                                      lang.subscribed,
                                       style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -682,7 +682,7 @@ class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> w
                     const SizedBox(width: 4.0),
                     NamidaInkWellButton(
                       icon: Broken.category,
-                      text: lang.VIEW_ALL,
+                      text: lang.viewAll,
                       onTap: _onViewAllTap,
                     ),
                   ],
@@ -814,7 +814,7 @@ class __YoutubeChannelVideosPageState extends State<_YoutubeChannelVideosPage> {
           operation: YoutiPieOperation.fetchChannelTab,
           transparentShimmer: true,
           topPadding: 0.0,
-          title: lang.CHANNELS,
+          title: lang.channels,
           isSortable: true,
           cacheReader: YoutiPie.cacheBuilder.forUserChannelsAllVideos(),
           networkFetcher: (details) => YoutubeInfoController.userchannel.fetchUserChannelsAllVideos(details: details),
@@ -854,10 +854,10 @@ class __YoutubeChannelVideosPageState extends State<_YoutubeChannelVideosPage> {
                 fetchTimeMapKey: ValueKey(channelId),
                 transparentShimmer: true,
                 topPadding: 0.0,
-                title: lang.CHANNEL,
+                title: lang.channel,
                 headerTrailing: NamidaInkWellButton(
                   icon: Broken.category,
-                  text: lang.VIEW_ALL,
+                  text: lang.viewAll,
                   onTap: _onViewAllTap,
                 ),
                 headerBuilder: (_) => const SizedBox(),
@@ -964,7 +964,7 @@ class _ChannelsRowSlider<T> extends StatelessWidget {
                   ),
                   const SizedBox(height: 4.0),
                   Text(
-                    lang.ALL,
+                    lang.all,
                     style: textTheme.displaySmall,
                     overflow: TextOverflow.ellipsis,
                   ),

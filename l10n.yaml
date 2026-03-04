@@ -1,0 +1,6 @@
+arb-dir: external/language/translations
+template-arb-file: en.arb
+output-localization-file: app_localizations.dart
+output-dir: lib/core/translations/arb
+format: true
+use-named-parameters: true

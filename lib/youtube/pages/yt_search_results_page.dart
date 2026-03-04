@@ -185,7 +185,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                               const Icon(Broken.radar_2),
                               const SizedBox(width: 8.0),
                               Text(
-                                lang.OFFLINE_SEARCH,
+                                lang.offlineSearch,
                                 style: textTheme.displayLarge,
                               ),
                               const Spacer(),
@@ -320,7 +320,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
                                   padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
                                   child: Text.rich(
                                     TextSpan(
-                                      text: "${lang.DID_YOU_MEAN}: ",
+                                      text: "${lang.didYouMean}: ",
                                       style: textTheme.displaySmall?.copyWith(fontSize: 13.0),
                                       children: searchResult.correctedQuery
                                           .map(

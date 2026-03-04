@@ -102,7 +102,7 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
             : aboutResult == null
             ? Center(
                 child: Text(
-                  lang.ERROR,
+                  lang.error,
                   style: textTheme.displayLarge,
                 ),
               )

@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -9,7 +6,6 @@ import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -21,6 +17,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
+import 'package:namida/core/translations/arb/app_localizations.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -52,14 +49,14 @@ class ThemeSetting extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-    _ThemeSettingsKeys.themeMode: [lang.THEME_MODE],
-    _ThemeSettingsKeys.autoColoring: [lang.AUTO_COLORING, lang.AUTO_COLORING_SUBTITLE],
-    _ThemeSettingsKeys.wallpaperColors: [lang.PICK_COLORS_FROM_DEVICE_WALLPAPER],
-    _ThemeSettingsKeys.forceMiniplayerColors: [lang.FORCE_MINIPLAYER_FOLLOW_TRACK_COLORS],
-    _ThemeSettingsKeys.pitchBlack: [lang.USE_PITCH_BLACK, lang.USE_PITCH_BLACK_SUBTITLE],
-    _ThemeSettingsKeys.defaultColor: [lang.DEFAULT_COLOR, lang.DEFAULT_COLOR_SUBTITLE],
-    _ThemeSettingsKeys.defaultColorDark: ["${lang.DEFAULT_COLOR} (${lang.THEME_MODE_DARK})", lang.DEFAULT_COLOR_SUBTITLE],
-    _ThemeSettingsKeys.language: [lang.LANGUAGE],
+    _ThemeSettingsKeys.themeMode: [lang.themeMode],
+    _ThemeSettingsKeys.autoColoring: [lang.autoColoring, lang.autoColoringSubtitle],
+    _ThemeSettingsKeys.wallpaperColors: [lang.pickColorsFromDeviceWallpaper],
+    _ThemeSettingsKeys.forceMiniplayerColors: [lang.forceMiniplayerFollowTrackColors],
+    _ThemeSettingsKeys.pitchBlack: [lang.usePitchBlack, lang.usePitchBlackSubtitle],
+    _ThemeSettingsKeys.defaultColor: [lang.defaultColor, lang.defaultColorSubtitle],
+    _ThemeSettingsKeys.defaultColorDark: ["${lang.defaultColor} (${lang.themeModeDark})", lang.defaultColorSubtitle],
+    _ThemeSettingsKeys.language: [lang.language],
   };
 
   void _refreshColorCurrentPlayingItem() {
@@ -77,7 +74,7 @@ class ThemeSetting extends SettingSubpageProvider {
       child: CustomListTile(
         bgColor: getBgColor(_ThemeSettingsKeys.themeMode),
         icon: Broken.brush_4,
-        title: lang.THEME_MODE,
+        title: lang.themeMode,
         trailingRaw: ToggleThemeModeContainer(
           maxWidth: ((maxWidth ?? Dimensions.inst.availableAppContentWidth) * 0.4).withMaximum(248.0),
         ),
@@ -93,8 +90,8 @@ class ThemeSetting extends SettingSubpageProvider {
         builder: (context, autoColor) => CustomSwitchListTile(
           bgColor: getBgColor(_ThemeSettingsKeys.autoColoring),
           icon: Broken.colorfilter,
-          title: lang.AUTO_COLORING,
-          subtitle: "${lang.AUTO_COLORING_SUBTITLE}. ${lang.PERFORMANCE_NOTE}",
+          title: lang.autoColoring,
+          subtitle: "${lang.autoColoringSubtitle}. ${lang.performanceNote}",
           value: autoColor,
           onChanged: (isTrue) {
             settings.save(
@@ -119,47 +116,52 @@ class ThemeSetting extends SettingSubpageProvider {
     return getItemWrapper(
       key: _ThemeSettingsKeys.language,
       child: ObxO(
-        rx: lang.currentLanguage,
+        rx: Language.inst.currentLanguageRx,
         builder: (context, currentLanguage) => CustomListTile(
           bgColor: getBgColor(_ThemeSettingsKeys.language),
           icon: Broken.language_square,
-          title: lang.LANGUAGE,
-          subtitle: currentLanguage.name,
+          title: lang.language,
+          subtitle: currentLanguage!.name,
           onTap: () {
-            final Rx<NamidaLanguage> selectedLang = lang.currentLanguage.value.obs;
+            final allLocalesPre = AppLocalizations.supportedLocales;
+            final allLanguages = allLocalesPre.map(NamidaLanguage.fromLocale).toList();
+            allLanguages.sortBy((e) => e.name);
+
+            final selectedLangRx = Language.inst.getCurrentLanguageOrDevice().obs;
+
             NamidaNavigator.inst.navigateDialog(
               onDisposing: () {
-                selectedLang.close();
+                selectedLangRx.close();
               },
               dialog: CustomBlurryDialog(
-                title: lang.LANGUAGE,
+                title: lang.language,
                 normalTitleStyle: true,
                 actions: [
-                  NamidaButton(
-                    onPressed: () async {
-                      final files = await NamidaFileBrowser.pickFile(note: lang.ADD_LANGUAGE, allowedExtensions: NamidaFileExtensionsWrapper.json);
-                      final path = files?.path;
-                      if (path != null) {
-                        try {
-                          final st = await File(path).readAsString();
-                          final map = jsonDecode(st);
-                          final didUpdate = await Language.inst.loadLanguage(path.getFilenameWOExt, map);
-                          if (didUpdate) {
-                            NamidaNavigator.inst.closeDialog();
-                          } else {
-                            snackyy(title: lang.ERROR, message: 'Unknown Error', isError: true);
-                          }
-                        } catch (e) {
-                          snackyy(title: lang.ERROR, message: e.toString(), isError: true);
-                        }
-                      }
-                    },
-                    text: lang.LOCAL,
-                  ),
+                  // NamidaButton(
+                  //   onPressed: () async {
+                  //     final files = await NamidaFileBrowser.pickFile(note: lang.addLanguage, allowedExtensions: NamidaFileExtensionsWrapper.json);
+                  //     final path = files?.path;
+                  //     if (path != null) {
+                  //       try {
+                  //         final st = await File(path).readAsString();
+                  //         final map = jsonDecode(st);
+                  //         final didUpdate = await Language.inst.loadLanguage(path.getFilenameWOExt, map);
+                  //         if (didUpdate) {
+                  //           NamidaNavigator.inst.closeDialog();
+                  //         } else {
+                  //           snackyy(title: lang.error, message: 'Unknown Error', isError: true);
+                  //         }
+                  //       } catch (e) {
+                  //         snackyy(title: lang.error, message: e.toString(), isError: true);
+                  //       }
+                  //     }
+                  //   },
+                  //   text: lang.local,
+                  // ),
                   const CancelButton(),
                   NamidaButton(
-                    onPressed: () async => (await lang.update(lang: selectedLang.value)).closeDialog(),
-                    text: lang.CONFIRM,
+                    onPressed: () => Language.inst.update(language: selectedLangRx.value).closeDialog(),
+                    text: lang.confirm,
                   ),
                 ],
                 child: SizedBox(
@@ -168,12 +170,12 @@ class ThemeSetting extends SettingSubpageProvider {
                   child: SmoothSingleChildScrollView(
                     child: Column(
                       children: [
-                        ...Language.availableLanguages.map(
+                        ...allLanguages.map(
                           (e) => Padding(
-                            key: Key(e.code),
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
-                            child: Obx(
-                              (context) => ListTileWithCheckMark(
+                            child: ObxO(
+                              rx: selectedLangRx,
+                              builder: (context, selectedLang) => ListTileWithCheckMark(
                                 leading: Container(
                                   padding: const EdgeInsets.all(4.0),
                                   decoration: BoxDecoration(
@@ -192,16 +194,18 @@ class ThemeSetting extends SettingSubpageProvider {
                                   TextSpan(
                                     text: e.name,
                                     style: textTheme.displayMedium,
-                                    children: [
-                                      TextSpan(
-                                        text: " (${e.country})",
-                                        style: textTheme.displaySmall,
-                                      ),
-                                    ],
+                                    children: e.country.isEmpty
+                                        ? null
+                                        : [
+                                            TextSpan(
+                                              text: " (${e.country})",
+                                              style: textTheme.displaySmall,
+                                            ),
+                                          ],
                                   ),
                                 ),
-                                active: e == selectedLang.valueR,
-                                onTap: () => selectedLang.value = e,
+                                active: e == selectedLang,
+                                onTap: () => selectedLangRx.value = e,
                               ),
                             ),
                           ),
@@ -209,8 +213,8 @@ class ThemeSetting extends SettingSubpageProvider {
                         CustomListTile(
                           visualDensity: VisualDensity.compact,
                           icon: Broken.add_circle,
-                          title: lang.ADD_LANGUAGE,
-                          subtitle: lang.ADD_LANGUAGE_SUBTITLE,
+                          title: lang.addLanguage,
+                          subtitle: lang.addLanguageSubtitle,
                           onTap: () {
                             NamidaLinkUtils.openLink(AppSocial.TRANSLATION_REPO);
                           },
@@ -230,8 +234,8 @@ class ThemeSetting extends SettingSubpageProvider {
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: lang.THEME_SETTINGS,
-      subtitle: lang.THEME_SETTINGS_SUBTITLE,
+      title: lang.themeSettings,
+      subtitle: lang.themeSettingsSubtitle,
       icon: Broken.brush_2,
       child: SizedBox(
         width: context.width,
@@ -246,7 +250,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   bgColor: getBgColor(_ThemeSettingsKeys.wallpaperColors),
                   enabled: settings.autoColor.valueR,
                   icon: Broken.gallery_import,
-                  title: lang.PICK_COLORS_FROM_DEVICE_WALLPAPER,
+                  title: lang.pickColorsFromDeviceWallpaper,
                   value: settings.pickColorsFromDeviceWallpaper.valueR,
                   onChanged: (isTrue) {
                     settings.save(pickColorsFromDeviceWallpaper: !isTrue);
@@ -261,8 +265,8 @@ class ThemeSetting extends SettingSubpageProvider {
                 (context) => CustomSwitchListTile(
                   bgColor: getBgColor(_ThemeSettingsKeys.forceMiniplayerColors),
                   icon: Broken.slider_horizontal,
-                  title: lang.FORCE_MINIPLAYER_FOLLOW_TRACK_COLORS,
-                  subtitle: '${lang.IGNORES}: ${lang.AUTO_COLORING}, ${lang.PICK_COLORS_FROM_DEVICE_WALLPAPER} & ${lang.DEFAULT_COLOR}',
+                  title: lang.forceMiniplayerFollowTrackColors,
+                  subtitle: '${lang.ignores}: ${lang.autoColoring}, ${lang.pickColorsFromDeviceWallpaper} & ${lang.defaultColor}',
                   value: settings.forceMiniplayerTrackColor.valueR,
                   onChanged: (isTrue) {
                     settings.save(forceMiniplayerTrackColor: !isTrue);
@@ -278,8 +282,8 @@ class ThemeSetting extends SettingSubpageProvider {
                 builder: (context, pitchBlack) => CustomSwitchListTile(
                   bgColor: getBgColor(_ThemeSettingsKeys.pitchBlack),
                   icon: Broken.mirror,
-                  title: lang.USE_PITCH_BLACK,
-                  subtitle: lang.USE_PITCH_BLACK_SUBTITLE,
+                  title: lang.usePitchBlack,
+                  subtitle: lang.usePitchBlackSubtitle,
                   value: pitchBlack,
                   onChanged: (isTrue) {
                     settings.save(pitchBlack: !isTrue);
@@ -296,8 +300,8 @@ class ThemeSetting extends SettingSubpageProvider {
                   bgColor: getBgColor(_ThemeSettingsKeys.defaultColor),
                   enabled: !autoColor,
                   icon: Broken.bucket,
-                  title: lang.DEFAULT_COLOR,
-                  subtitle: lang.DEFAULT_COLOR_SUBTITLE,
+                  title: lang.defaultColor,
+                  subtitle: lang.defaultColorSubtitle,
                   trailingRaw: FittedBox(
                     child: Obx(
                       (context) => CircleAvatar(
@@ -313,7 +317,7 @@ class ThemeSetting extends SettingSubpageProvider {
                           data: AppThemes.inst.getAppTheme(playerStaticColorLight),
                           child: NamidaColorPickerDialog(
                             initialColor: playerStaticColorLight,
-                            doneText: lang.DONE,
+                            doneText: lang.done,
                             onColorChanged: (value) => _updateColorLight(value),
                             onDonePressed: NamidaNavigator.inst.closeDialog,
                             onRefreshButtonPressed: () {
@@ -340,8 +344,8 @@ class ThemeSetting extends SettingSubpageProvider {
                     baseIcon: Broken.bucket,
                     secondaryIcon: Broken.moon,
                   ),
-                  title: "${lang.DEFAULT_COLOR} (${lang.THEME_MODE_DARK})",
-                  subtitle: lang.DEFAULT_COLOR_SUBTITLE,
+                  title: "${lang.defaultColor} (${lang.themeModeDark})",
+                  subtitle: lang.defaultColorSubtitle,
                   trailingRaw: FittedBox(
                     child: Obx(
                       (context) => CircleAvatar(
@@ -357,7 +361,7 @@ class ThemeSetting extends SettingSubpageProvider {
                           data: AppThemes.inst.getAppTheme(playerStaticColorDark),
                           child: NamidaColorPickerDialog(
                             initialColor: playerStaticColorDark,
-                            doneText: lang.DONE,
+                            doneText: lang.done,
                             onColorChanged: (value) => _updateColorDark(value),
                             onDonePressed: NamidaNavigator.inst.closeDialog,
                             onRefreshButtonPressed: () {
@@ -506,7 +510,7 @@ class NamidaColorPickerDialog extends StatelessWidget {
         if (onRefreshButtonPressed != null)
           IconButton(
             icon: const Icon(Broken.refresh),
-            tooltip: lang.RESTORE_DEFAULTS,
+            tooltip: lang.restoreDefaults,
             onPressed: onRefreshButtonPressed,
           ),
         if (cancelButton) const CancelButton(),

@@ -145,8 +145,8 @@ Future<void> showDownloadVideoBottomSheet({
 
   void showWebmWarning() {
     snackyy(
-      title: lang.WARNING,
-      message: lang.WEBM_NO_EDIT_TAGS_SUPPORT,
+      title: lang.warning,
+      message: lang.webmNoEditTagsSupport,
       leftBarIndicatorColor: Colors.red,
       altDesign: true,
       top: false,
@@ -355,7 +355,7 @@ Future<void> showDownloadVideoBottomSheet({
             const Spacer(),
           if (hasWebm)
             NamidaIconButton(
-              tooltip: () => lang.SHOW_WEBM,
+              tooltip: () => lang.showWebm,
               verticalPadding: 6.0,
               horizontalPadding: 6.0,
               iconSize: 20.0,
@@ -587,7 +587,7 @@ Future<void> showDownloadVideoBottomSheet({
                                           final subtitle = e == null ? null : "${e.bitrateText()} • ${e.codecInfo.container} • ${e.sizeInBytes.fileSizeFormatted}";
                                           return getTextWidget(
                                             hasWebm: hasAudioWebm,
-                                            title: lang.AUDIO,
+                                            title: lang.audio,
                                             subtitle: subtitle,
                                             icon: Broken.audio_square,
                                             webmIconEnabled: webmIconEnabled,
@@ -650,7 +650,7 @@ Future<void> showDownloadVideoBottomSheet({
                                           final subtitle = vostream == null ? null : "${vostream.qualityLabel} • ${vostream.sizeInBytes.fileSizeFormatted}";
                                           return getTextWidget(
                                             hasWebm: hasVideoWebm,
-                                            title: lang.VIDEO,
+                                            title: lang.video,
                                             subtitle: subtitle,
                                             icon: Broken.video_square,
                                             webmIconEnabled: webmIconEnabled,
@@ -724,17 +724,17 @@ Future<void> showDownloadVideoBottomSheet({
                               mainAxisSize: MainAxisSize.max,
                               children: [
                                 Obx((context) {
-                                  final videoOnly = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR == null ? lang.VIDEO_ONLY : null;
-                                  final audioOnly = selectedVideoOnlyStream.valueR == null && selectedAudioOnlyStream.valueR != null ? lang.AUDIO_ONLY : null;
-                                  final audioAndVideo = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR != null ? "${lang.VIDEO} + ${lang.AUDIO}" : null;
+                                  final videoOnly = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR == null ? lang.videoOnly : null;
+                                  final audioOnly = selectedVideoOnlyStream.valueR == null && selectedAudioOnlyStream.valueR != null ? lang.audioOnly : null;
+                                  final audioAndVideo = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR != null ? "${lang.video} + ${lang.audio}" : null;
 
                                   return Text.rich(
                                     TextSpan(
-                                      text: "${lang.OUTPUT}: ",
+                                      text: "${lang.output}: ",
                                       style: textTheme.displaySmall,
                                       children: [
                                         TextSpan(
-                                          text: videoOnly ?? audioOnly ?? audioAndVideo ?? lang.NONE,
+                                          text: videoOnly ?? audioOnly ?? audioAndVideo ?? lang.none,
                                           style: textTheme.displayMedium?.copyWith(color: videoOnly != null ? Colors.red : null),
                                         ),
                                       ],
@@ -747,18 +747,18 @@ Future<void> showDownloadVideoBottomSheet({
                                   child: CustomTagTextField(
                                     controller: videoOutputFilenameController,
                                     hintText: videoOutputFilenameController.text,
-                                    labelText: lang.FILE_NAME,
+                                    labelText: lang.fileName,
                                     onChanged: (_) => videoOutputFilenameWasUserEdited = true,
                                     validatorMode: AutovalidateMode.always,
                                     validator: (value) {
-                                      if (value == null) return lang.PLEASE_ENTER_A_NAME;
+                                      if (value == null) return lang.pleaseEnterAName;
                                       final file = FileParts.join(AppDirs.YOUTUBE_DOWNLOADS, groupName, value);
                                       void updateVal(bool exist) => WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                                         filenameExists.value = exist;
                                       });
                                       if (file.existsSync()) {
                                         updateVal(true);
-                                        return "${lang.FILE_ALREADY_EXISTS}, ${lang.DOWNLOADING_WILL_OVERRIDE_IT} (${file.fileSizeFormatted() ?? 0})";
+                                        return "${lang.fileAlreadyExists}, ${lang.downloadingWillOverrideIt} (${file.fileSizeFormatted() ?? 0})";
                                       } else {
                                         updateVal(false);
                                       }
@@ -779,7 +779,7 @@ Future<void> showDownloadVideoBottomSheet({
                                     Expanded(
                                       flex: 1,
                                       child: TextButton(
-                                        child: NamidaButtonText(lang.CANCEL),
+                                        child: NamidaButtonText(lang.cancel),
                                         onPressed: () => Navigator.pop(context),
                                       ),
                                     ),
@@ -850,7 +850,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                 },
                                                 child: Center(
                                                   child: Text(
-                                                    '${confirmButtonText == '' ? lang.DOWNLOAD : confirmButtonText} $sizeText',
+                                                    '${confirmButtonText == '' ? lang.download : confirmButtonText} $sizeText',
                                                     style: textTheme.displayMedium?.copyWith(color: Colors.white.withOpacityExt(0.9)),
                                                   ),
                                                 ),

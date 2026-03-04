@@ -38,12 +38,12 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
   void _showMembershipChangeSnack(MembershipType? oldMS) {
     final newMS = YoutubeAccountController.membership.userMembershipTypeGlobal.value;
     if (newMS == null) {
-      if (oldMS != null) snackyy(message: lang.MEMBERSHIP_UNKNOWN, isError: true, top: false);
+      if (oldMS != null) snackyy(message: lang.membershipUnknown, isError: true, top: false);
     } else if (oldMS == newMS) {
       final name = YoutubeAccountController.membership.getUsernameGlobal;
       String trailing = '';
       if (name != null && name.isNotEmpty) trailing += '$name ';
-      snackyy(message: '${lang.MEMBERSHIP_DIDNT_CHANGE}, `${newMS.name}` $trailing', top: false);
+      snackyy(message: '${lang.membershipDidntChange}, `${newMS.name}` $trailing', top: false);
     } else {
       final name = YoutubeAccountController.membership.getUsernameGlobal;
       String trailing = '';
@@ -56,7 +56,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
         trailing = ':D';
       }
       snackyy(
-        message: '${lang.MEMBERSHIP_ENJOY_NEW}, `${newMS.name}` $trailing',
+        message: '${lang.membershipEnjoyNew}, `${newMS.name}` $trailing',
         borderColor: Colors.green.withOpacityExt(0.8),
         top: false,
       );
@@ -91,7 +91,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          lang.MEMBERSHIP_SIGN_IN_TO_PATREON_ACCOUNT,
+          lang.membershipSignInToPatreonAccount,
           style: textTheme.displayMedium,
         ),
       ],
@@ -214,9 +214,9 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                 children: [
                                   CustomListTile(
                                     icon: Broken.login_1,
-                                    title: lang.SIGN_IN,
+                                    title: lang.signIn,
                                     trailing: IconButton(
-                                      tooltip: lang.CLEAR,
+                                      tooltip: lang.clear,
                                       onPressed: _onPatreonSignOut,
                                       icon: const Icon(
                                         Broken.broom,
@@ -249,7 +249,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                                       YoutubeAccountController.membership.redirectUrlCompleter?.completeIfWasnt(value);
                                                     },
                                                     hintText: 'app://patreonauth.msob7y.namida?code=...',
-                                                    labelText: lang.VALUE,
+                                                    labelText: lang.value,
                                                   ),
                                                 ),
                                                 SizedBox(width: 6.0),
@@ -286,7 +286,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                 ),
                               ),
                               trailing: IconButton(
-                                tooltip: lang.SIGN_OUT,
+                                tooltip: lang.signOut,
                                 onPressed: _onPatreonSignOut,
                                 icon: const Icon(
                                   Broken.logout,
@@ -306,7 +306,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                       child: NamidaExpansionTile(
                         initiallyExpanded: true,
                         icon: Broken.ticket_star,
-                        titleText: lang.COUPON,
+                        titleText: lang.coupon,
                         trailingBuilder: (iconWidget) => ObxO(
                           rx: _isChecking,
                           builder: (context, isChecking) => ObxO(
@@ -362,22 +362,22 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                           const SizedBox(height: 12.0),
                           CustomTagTextField(
                             controller: _codeController,
-                            hintText: lang.MEMBERSHIP_CODE,
-                            labelText: lang.MEMBERSHIP_CODE_SENT_TO_EMAIL,
+                            hintText: lang.membershipCode,
+                            labelText: lang.membershipCodeSentToEmail,
                             validatorMode: AutovalidateMode.onUserInteraction,
                             validator: (value) {
-                              if (value == null || value.isEmpty == true) return lang.EMPTY_VALUE;
+                              if (value == null || value.isEmpty == true) return lang.emptyValue;
                               return null;
                             },
                           ),
                           const SizedBox(height: 12.0),
                           CustomTagTextField(
                             controller: _emailController,
-                            hintText: lang.EMAIL,
-                            labelText: lang.EMAIL,
+                            hintText: lang.email,
+                            labelText: lang.email,
                             validatorMode: AutovalidateMode.onUserInteraction,
                             validator: (value) {
-                              if (value == null || value.isEmpty == true) return lang.EMPTY_VALUE;
+                              if (value == null || value.isEmpty == true) return lang.emptyValue;
                               return null;
                             },
                           ),
@@ -400,7 +400,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                         await _onFreeCouponSubmit(YoutubeAccountController.membership.checkSupabase);
                                         _isChecking.value = false;
                                       },
-                                      text: lang.CHECK,
+                                      text: lang.check,
                                     ),
                                     const SizedBox(width: 8.0),
                                     NamidaButton(
@@ -411,7 +411,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                         await _onFreeCouponSubmit(YoutubeAccountController.membership.claimSupabase);
                                         _isClaiming.value = false;
                                       },
-                                      text: lang.CLAIM,
+                                      text: lang.claim,
                                     ),
                                     const SizedBox(width: 8.0),
                                   ],

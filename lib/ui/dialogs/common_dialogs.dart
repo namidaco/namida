@@ -189,11 +189,11 @@ class NamidaDialogs {
 
       await PlaylistController.inst.removePlaylist(playlist);
       snackyy(
-        title: lang.UNDO_CHANGES,
-        message: lang.UNDO_CHANGES_DELETED_PLAYLIST,
+        title: lang.undoChanges,
+        message: lang.undoChangesDeletedPlaylist,
         displayDuration: SnackDisplayDuration.long,
         button: (
-          lang.UNDO,
+          lang.undo,
           () async => await PlaylistController.inst.reAddPlaylist(playlist, playlist.modifiedDate, artworkBytes: artworkBytes),
         ),
       );
@@ -211,7 +211,7 @@ class NamidaDialogs {
             ObxO(
               rx: alsoDeleteM3uRx,
               builder: (context, deletem3u) => NamidaButton(
-                text: lang.DELETE.toUpperCase(),
+                text: lang.delete.toUpperCase(),
                 style: deletem3u
                     ? ButtonStyle(
                         foregroundColor: WidgetStatePropertyAll(Colors.red),
@@ -232,7 +232,7 @@ class NamidaDialogs {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '${lang.DELETE_PLAYLIST}: "${playlist.name}"?',
+                  '${lang.deletePlaylist}: "${playlist.name}"?',
                   style: theme.textTheme.displayMedium,
                 ),
                 SizedBox(height: 12.0),
@@ -241,7 +241,7 @@ class NamidaDialogs {
                   builder: (context, deletem3u) => ListTileWithCheckMark(
                     dense: true,
                     icon: Broken.broom,
-                    title: "${lang.DELETE}: ${lang.M3U_PLAYLIST}",
+                    title: "${lang.delete}: ${lang.m3uPlaylist}",
                     subtitle: m3uPath ?? '',
                     active: deletem3u,
                     onTap: alsoDeleteM3uRx.toggle,

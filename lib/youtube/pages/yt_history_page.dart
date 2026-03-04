@@ -68,7 +68,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                 playlistID: PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
                 playlistInfo: () => PlaylistBasicInfo(
                   id: '',
-                  title: lang.HISTORY,
+                  title: lang.history,
                   videosCountText: YoutubeHistoryController.inst.totalHistoryItemsCount.value.displayVideoKeyword,
                   videosCount: YoutubeHistoryController.inst.totalHistoryItemsCount.value,
                   thumbnails: [],

@@ -39,7 +39,7 @@ Future<void> showSettingDialogWithTextField({
   }) {
     snackyy(
       title: title ?? '',
-      message: "${lang.RESET_TO_DEFAULT}: $message",
+      message: "${lang.resetToDefault}: $message",
       animationDurationMS: 400,
       icon: icon,
     );
@@ -59,7 +59,7 @@ Future<void> showSettingDialogWithTextField({
         actions: [
           if (!addNewPlaylist)
             IconButton(
-              tooltip: lang.RESTORE_DEFAULTS,
+              tooltip: lang.restoreDefaults,
               onPressed: () {
                 if (trackThumbnailSizeinList) {
                   settings.save(trackThumbnailSizeinList: 70.0);
@@ -109,7 +109,7 @@ Future<void> showSettingDialogWithTextField({
             ),
           const CancelButton(),
           NamidaButton(
-            text: lang.SAVE,
+            text: lang.save,
             onPressed: () {
               if (formKey.currentState!.validate()) {
                 if (trackThumbnailSizeinList) {
@@ -187,7 +187,7 @@ Future<void> showSettingDialogWithTextField({
                     borderRadius: BorderRadius.circular(14.0.multipliedRadius),
                     borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
                   ),
-                  hintText: addNewPlaylist ? lang.NAME : lang.VALUE,
+                  hintText: addNewPlaylist ? lang.name : lang.value,
                   hintStyle: TextStyle(
                     fontSize: 14.5,
                   ),
@@ -199,7 +199,7 @@ Future<void> showSettingDialogWithTextField({
                 validator: (value) {
                   if (fontScaleFactor) {
                     if ((double.parse(value!) < 50 || double.parse(value) > 200)) {
-                      return lang.VALUE_BETWEEN_50_200;
+                      return lang.valueBetween50200;
                     }
                   }
                   if (borderRadiusMultiplier) {

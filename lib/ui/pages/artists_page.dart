@@ -70,17 +70,17 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
     return [
       NamidaPopupItem(
         icon: Broken.microphone,
-        title: lang.ARTIST,
+        title: lang.artist,
         onTap: () => onTap(MediaType.artist),
       ),
       NamidaPopupItem(
         icon: Broken.user,
-        title: lang.ALBUM_ARTIST,
+        title: lang.albumArtist,
         onTap: () => onTap(MediaType.albumArtist),
       ),
       NamidaPopupItem(
         icon: Broken.profile_2user,
-        title: lang.COMPOSER,
+        title: lang.composer,
         onTap: () => onTap(MediaType.composer),
       ),
     ];
@@ -104,16 +104,17 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
               (context) {
                 final artistTypeSettings = settings.activeArtistType.valueR;
                 final artistType = customType ?? artistTypeSettings;
-                final (String, String) artistTypeTextSinglePlural = switch (artistType) {
-                  MediaType.artist => (lang.ARTIST, lang.ARTISTS),
-                  MediaType.albumArtist => (lang.ALBUM_ARTIST, lang.ALBUM_ARTISTS),
-                  MediaType.composer => (lang.COMPOSER, lang.COMPOSER),
-                  _ => ('', ''),
+                final Function({required int count}) countToText = switch (artistType) {
+                  MediaType.artist => lang.countArtists,
+                  MediaType.albumArtist => lang.countAlbumArtists,
+                  MediaType.composer => lang.countComposers,
+                  _ => ({required int count}) => '',
                 };
-                String countToText(int count) => count.displayKeyword(artistTypeTextSinglePlural.$1, artistTypeTextSinglePlural.$2);
                 final finalArtistsLength = finalArtists.length;
                 final totalArtistsLength = Indexer.inst.getArtistMapFor(artistType).valueR.length;
-                String artistLeftText = finalArtistsLength != totalArtistsLength ? '$finalArtistsLength/${countToText(totalArtistsLength)}' : countToText(finalArtistsLength);
+                String artistLeftText = finalArtistsLength != totalArtistsLength
+                    ? '$finalArtistsLength/${countToText(count: totalArtistsLength)}'
+                    : countToText(count: finalArtistsLength);
 
                 final sort = settings.artistSort.valueR;
                 final sortReverse = settings.artistSortReversed.valueR;
@@ -169,7 +170,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                       ),
                       textField: CustomTextFiled(
                         textFieldController: LibraryTab.artists.textSearchControllerUI,
-                        textFieldHintText: lang.FILTER_ARTISTS,
+                        textFieldHintText: lang.filterArtists,
                         onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, settings.activeArtistType.value),
                       ),
                     ),

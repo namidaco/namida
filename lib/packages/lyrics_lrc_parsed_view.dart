@@ -387,7 +387,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           bottom: 0,
                           top: 0,
                           child: NamidaIconButton(
-                            tooltip: () => lang.EXIT,
+                            tooltip: () => lang.exit,
                             icon: Broken.arrow_left_2,
                             iconColor: context.theme.colorScheme.secondary.withOpacityExt(0.6),
                             iconSize: 22.0,
@@ -398,7 +398,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           padding: EdgeInsetsGeometry.symmetric(horizontal: 48.0),
                           child: textData == null
                               ? Text(
-                                  lang.LYRICS,
+                                  lang.lyrics,
                                   maxLines: 1,
                                   overflow: TextOverflow.fade,
                                   softWrap: false,
@@ -437,7 +437,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           bottom: 0,
                           top: 0,
                           child: NamidaIconButton(
-                            tooltip: () => lang.JUMP,
+                            tooltip: () => lang.jump,
                             icon: Broken.cd,
                             iconColor: context.theme.colorScheme.secondary.withOpacityExt(0.6),
                             iconSize: 20.0,

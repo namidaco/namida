@@ -89,61 +89,61 @@ class CustomizationSettings extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-    _CustomizationSettingsKeys.enableBlur: [lang.ENABLE_BLUR_EFFECT],
-    _CustomizationSettingsKeys.enableGlow: [lang.ENABLE_GLOW_EFFECT],
-    _CustomizationSettingsKeys.enableParallax: [lang.ENABLE_PARALLAX_EFFECT],
-    _CustomizationSettingsKeys.displayRemainingDur: [lang.DISPLAY_REMAINING_DURATION_INSTEAD_OF_TOTAL],
-    _CustomizationSettingsKeys.displayActualPosition: [lang.DISPLAY_ACTUAL_POSITION_INSTEAD_OF_DIFFERENCE_WHILE_SEEKING],
-    _CustomizationSettingsKeys.brMultiplier: [lang.BORDER_RADIUS_MULTIPLIER],
-    _CustomizationSettingsKeys.fontScale: [lang.FONT_SCALE],
-    _CustomizationSettingsKeys.hourFormat12: [lang.HOUR_FORMAT_12],
-    _CustomizationSettingsKeys.dateTimeFormat: [lang.DATE_TIME_FORMAT],
+    _CustomizationSettingsKeys.enableBlur: [lang.enableBlurEffect],
+    _CustomizationSettingsKeys.enableGlow: [lang.enableGlowEffect],
+    _CustomizationSettingsKeys.enableParallax: [lang.enableParallaxEffect],
+    _CustomizationSettingsKeys.displayRemainingDur: [lang.displayRemainingDurationInsteadOfTotal],
+    _CustomizationSettingsKeys.displayActualPosition: [lang.displayActualPositionInsteadOfDifferenceWhileSeeking],
+    _CustomizationSettingsKeys.brMultiplier: [lang.borderRadiusMultiplier],
+    _CustomizationSettingsKeys.fontScale: [lang.fontScale],
+    _CustomizationSettingsKeys.hourFormat12: [lang.hourFormat12],
+    _CustomizationSettingsKeys.dateTimeFormat: [lang.dateTimeFormat],
     // -----------
-    _CustomizationSettingsKeys.ALBUMTILECUSTOMIZATION: [lang.ALBUM_TILE_CUSTOMIZATION],
-    _CustomizationSettingsKeys.trackNumberInAlbumPage: [lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE, lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE_SUBTITLE],
-    _CustomizationSettingsKeys.albumCardTopRightDate: [lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE, lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE_SUBTITLE],
-    _CustomizationSettingsKeys.forceSquaredAlbumThumb: [lang.FORCE_SQUARED_ALBUM_THUMBNAIL],
-    _CustomizationSettingsKeys.staggeredAlbumGridview: [lang.STAGGERED_ALBUM_GRID_VIEW],
-    _CustomizationSettingsKeys.sizeOfAlbumThumb: [lang.ALBUM_THUMBNAIL_SIZE_IN_LIST],
-    _CustomizationSettingsKeys.heightOfAlbumTile: [lang.HEIGHT_OF_ALBUM_TILE],
+    _CustomizationSettingsKeys.ALBUMTILECUSTOMIZATION: [lang.albumTileCustomization],
+    _CustomizationSettingsKeys.trackNumberInAlbumPage: [lang.displayTrackNumberInAlbumPage, lang.displayTrackNumberInAlbumPageSubtitle],
+    _CustomizationSettingsKeys.albumCardTopRightDate: [lang.displayAlbumCardTopRightDate, lang.displayAlbumCardTopRightDateSubtitle],
+    _CustomizationSettingsKeys.forceSquaredAlbumThumb: [lang.forceSquaredAlbumThumbnail],
+    _CustomizationSettingsKeys.staggeredAlbumGridview: [lang.staggeredAlbumGridView],
+    _CustomizationSettingsKeys.sizeOfAlbumThumb: [lang.albumThumbnailSizeInList],
+    _CustomizationSettingsKeys.heightOfAlbumTile: [lang.heightOfAlbumTile],
     // -----------
-    _CustomizationSettingsKeys.TRACKTILECUSTOMIZATION: [lang.TRACK_TILE_CUSTOMIZATION],
-    _CustomizationSettingsKeys.forceSquaredTrackThumb: [lang.FORCE_SQUARED_TRACK_THUMBNAIL],
-    _CustomizationSettingsKeys.sizeOfTrackThumb: [lang.TRACK_THUMBNAIL_SIZE_IN_LIST],
-    _CustomizationSettingsKeys.heightOfTrackTile: [lang.HEIGHT_OF_TRACK_TILE],
-    _CustomizationSettingsKeys.SWIPEACTIONS: [lang.SWIPE_ACTIONS, lang.ON_SWIPING, lang.LEFT_ACTION, lang.RIGHT_ACTION],
-    _CustomizationSettingsKeys.swipeLeftAction: [lang.SWIPE_ACTIONS, lang.LEFT_ACTION],
-    _CustomizationSettingsKeys.swipeRightAction: [lang.SWIPE_ACTIONS, lang.RIGHT_ACTION],
-    _CustomizationSettingsKeys.displayThirdRow: [lang.DISPLAY_THIRD_ROW_IN_TRACK_TILE],
-    _CustomizationSettingsKeys.displayThirdItemInRow: [lang.DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE],
-    _CustomizationSettingsKeys.displayFavButtonInTrackTile: [lang.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE],
-    _CustomizationSettingsKeys.itemsSeparator: [lang.TRACK_TILE_ITEMS_SEPARATOR],
+    _CustomizationSettingsKeys.TRACKTILECUSTOMIZATION: [lang.trackTileCustomization],
+    _CustomizationSettingsKeys.forceSquaredTrackThumb: [lang.forceSquaredTrackThumbnail],
+    _CustomizationSettingsKeys.sizeOfTrackThumb: [lang.trackThumbnailSizeInList],
+    _CustomizationSettingsKeys.heightOfTrackTile: [lang.heightOfTrackTile],
+    _CustomizationSettingsKeys.SWIPEACTIONS: [lang.swipeActions, lang.onSwiping, lang.leftAction, lang.rightAction],
+    _CustomizationSettingsKeys.swipeLeftAction: [lang.swipeActions, lang.leftAction],
+    _CustomizationSettingsKeys.swipeRightAction: [lang.swipeActions, lang.rightAction],
+    _CustomizationSettingsKeys.displayThirdRow: [lang.displayThirdRowInTrackTile],
+    _CustomizationSettingsKeys.displayThirdItemInRow: [lang.displayThirdItemInRowInTrackTile],
+    _CustomizationSettingsKeys.displayFavButtonInTrackTile: [lang.displayFavouriteIconInTrackTile],
+    _CustomizationSettingsKeys.itemsSeparator: [lang.trackTileItemsSeparator],
     // -----------
-    _CustomizationSettingsKeys.MINIPLAYERCUSTOMIZATION: [lang.MINIPLAYER_CUSTOMIZATION],
-    _CustomizationSettingsKeys.partyMode: [lang.ENABLE_PARTY_MODE, lang.ENABLE_PARTY_MODE_SUBTITLE],
-    _CustomizationSettingsKeys.edgeColorsSwitching: [lang.EDGE_COLORS_SWITCHING],
-    _CustomizationSettingsKeys.movingParticles: [lang.ENABLE_MINIPLAYER_PARTICLES],
-    _CustomizationSettingsKeys.THUMBANIMATIONINTENSITY: [lang.ANIMATING_THUMBNAIL_INTENSITY],
-    _CustomizationSettingsKeys.thumbAnimationIntensityExpanded: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.EXPANDED_MINIPLAYER],
-    _CustomizationSettingsKeys.thumbAnimationIntensityLyrics: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.LYRICS],
-    _CustomizationSettingsKeys.thumbAnimationIntensityMinimized: [lang.ANIMATING_THUMBNAIL_INTENSITY, lang.MINIMIZED_MINIPLAYER],
-    _CustomizationSettingsKeys.thumbInverseAnimation: [lang.ANIMATING_THUMBNAIL_INVERSED, lang.ANIMATING_THUMBNAIL_INVERSED_SUBTITLE],
-    _CustomizationSettingsKeys.ARTWORKGESTURES: [lang.ARTWORK_GESTURES],
-    _CustomizationSettingsKeys.scaleMultiplier: [lang.SCALE_MULTIPLIER],
-    _CustomizationSettingsKeys.doubleTapLyrics: [lang.DOUBLE_TAP_TO_TOGGLE_LYRICS],
-    _CustomizationSettingsKeys.artworkTapAction: [lang.TAP_ACTION, lang.ARTWORK],
-    _CustomizationSettingsKeys.artworkLongPressAction: [lang.LONG_PRESS_ACTION, lang.ARTWORK],
-    _CustomizationSettingsKeys.waveformBarsCount: [lang.WAVEFORM_BARS_COUNT],
-    _CustomizationSettingsKeys.displayAudioInfo: [lang.DISPLAY_AUDIO_INFO_IN_MINIPLAYER],
-    _CustomizationSettingsKeys.displayArtistBeforeTitle: [lang.DISPLAY_ARTIST_BEFORE_TITLE],
-    _CustomizationSettingsKeys.appIcons: [lang.APP_ICON],
+    _CustomizationSettingsKeys.MINIPLAYERCUSTOMIZATION: [lang.miniplayerCustomization],
+    _CustomizationSettingsKeys.partyMode: [lang.enablePartyMode, lang.enablePartyModeSubtitle],
+    _CustomizationSettingsKeys.edgeColorsSwitching: [lang.edgeColorsSwitching],
+    _CustomizationSettingsKeys.movingParticles: [lang.enableMiniplayerParticles],
+    _CustomizationSettingsKeys.THUMBANIMATIONINTENSITY: [lang.animatingThumbnailIntensity],
+    _CustomizationSettingsKeys.thumbAnimationIntensityExpanded: [lang.animatingThumbnailIntensity, lang.expandedMiniplayer],
+    _CustomizationSettingsKeys.thumbAnimationIntensityLyrics: [lang.animatingThumbnailIntensity, lang.lyrics],
+    _CustomizationSettingsKeys.thumbAnimationIntensityMinimized: [lang.animatingThumbnailIntensity, lang.minimizedMiniplayer],
+    _CustomizationSettingsKeys.thumbInverseAnimation: [lang.animatingThumbnailInversed, lang.animatingThumbnailInversedSubtitle],
+    _CustomizationSettingsKeys.ARTWORKGESTURES: [lang.artworkGestures],
+    _CustomizationSettingsKeys.scaleMultiplier: [lang.scaleMultiplier],
+    _CustomizationSettingsKeys.doubleTapLyrics: [lang.doubleTapToToggleLyrics],
+    _CustomizationSettingsKeys.artworkTapAction: [lang.tapAction, lang.artwork],
+    _CustomizationSettingsKeys.artworkLongPressAction: [lang.longPressAction, lang.artwork],
+    _CustomizationSettingsKeys.waveformBarsCount: [lang.waveformBarsCount],
+    _CustomizationSettingsKeys.displayAudioInfo: [lang.displayAudioInfoInMiniplayer],
+    _CustomizationSettingsKeys.displayArtistBeforeTitle: [lang.displayArtistBeforeTitle],
+    _CustomizationSettingsKeys.appIcons: [lang.appIcon],
   };
 
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: lang.CUSTOMIZATIONS,
-      subtitle: lang.CUSTOMIZATIONS_SUBTITLE,
+      title: lang.customizations,
+      subtitle: lang.customizationsSubtitle,
       icon: Broken.brush_1,
       child: Column(
         children: [
@@ -154,8 +154,8 @@ class CustomizationSettings extends SettingSubpageProvider {
               builder: (context, enableBlurEffect) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.enableBlur),
                 icon: Broken.drop,
-                title: lang.ENABLE_BLUR_EFFECT,
-                subtitle: lang.PERFORMANCE_NOTE,
+                title: lang.enableBlurEffect,
+                subtitle: lang.performanceNote,
                 onChanged: (p0) {
                   settings.save(
                     enableBlurEffect: !p0,
@@ -173,8 +173,8 @@ class CustomizationSettings extends SettingSubpageProvider {
               builder: (context, enableGlowEffect) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.enableGlow),
                 icon: Broken.sun_1,
-                title: lang.ENABLE_GLOW_EFFECT,
-                subtitle: lang.PERFORMANCE_NOTE,
+                title: lang.enableGlowEffect,
+                subtitle: lang.performanceNote,
                 onChanged: (p0) {
                   settings.save(
                     enableGlowEffect: !p0,
@@ -192,8 +192,8 @@ class CustomizationSettings extends SettingSubpageProvider {
               builder: (context, enableMiniplayerParallaxEffect) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.enableParallax),
                 icon: Broken.maximize,
-                title: lang.ENABLE_PARALLAX_EFFECT,
-                subtitle: lang.PERFORMANCE_NOTE,
+                title: lang.enableParallaxEffect,
+                subtitle: lang.performanceNote,
                 onChanged: (isTrue) => settings.save(
                   enableMiniplayerParallaxEffect: !isTrue,
                   performanceMode: PerformanceMode.custom,
@@ -208,11 +208,11 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.brMultiplier),
                 icon: Broken.rotate_left_1,
-                title: lang.BORDER_RADIUS_MULTIPLIER,
+                title: lang.borderRadiusMultiplier,
                 trailingText: "${settings.borderRadiusMultiplier.valueR}",
                 onTap: () {
                   showSettingDialogWithTextField(
-                    title: lang.BORDER_RADIUS_MULTIPLIER,
+                    title: lang.borderRadiusMultiplier,
                     borderRadiusMultiplier: true,
                     icon: Broken.rotate_left_1,
                   );
@@ -226,11 +226,11 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.fontScale),
                 icon: Broken.text,
-                title: lang.FONT_SCALE,
+                title: lang.fontScale,
                 trailingText: "${(settings.fontScaleFactor.valueR * 100).toInt()}%",
                 onTap: () {
                   showSettingDialogWithTextField(
-                    title: lang.FONT_SCALE,
+                    title: lang.fontScale,
                     fontScaleFactor: true,
                     icon: Broken.text,
                   );
@@ -244,7 +244,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.hourFormat12),
                 icon: Broken.clock,
-                title: lang.HOUR_FORMAT_12,
+                title: lang.hourFormat12,
                 onChanged: (p0) {
                   settings.save(hourFormat12: !p0);
                   TrackTileManager.onTrackItemPropChange();
@@ -259,11 +259,11 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.dateTimeFormat),
                 icon: Broken.calendar_edit,
-                title: lang.DATE_TIME_FORMAT,
+                title: lang.dateTimeFormat,
                 trailingText: settings.dateTimeFormat.valueR,
                 onTap: () async {
                   await showSettingDialogWithTextField(
-                    title: lang.DATE_TIME_FORMAT,
+                    title: lang.dateTimeFormat,
                     icon: Broken.calendar_edit,
                     dateTimeFormat: true,
                     topWidget: SizedBox(
@@ -305,7 +305,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayRemainingDur),
                 icon: Broken.timer,
-                title: lang.DISPLAY_REMAINING_DURATION_INSTEAD_OF_TOTAL,
+                title: lang.displayRemainingDurationInsteadOfTotal,
                 onChanged: (isTrue) => settings.player.save(displayRemainingDurInsteadOfTotal: !isTrue),
                 value: settings.player.displayRemainingDurInsteadOfTotal.valueR,
               ),
@@ -317,7 +317,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayActualPosition),
                 icon: Broken.settings,
-                title: lang.DISPLAY_ACTUAL_POSITION_INSTEAD_OF_DIFFERENCE_WHILE_SEEKING,
+                title: lang.displayActualPositionInsteadOfDifferenceWhileSeeking,
                 onChanged: (isTrue) => settings.player.save(displayActualPositionWhenSeeking: !isTrue),
                 value: settings.player.displayActualPositionWhenSeeking.valueR,
               ),
@@ -447,7 +447,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           baseIcon: Broken.brush,
           secondaryIcon: Broken.music_dashboard,
         ),
-        titleText: lang.ALBUM_TILE_CUSTOMIZATION,
+        titleText: lang.albumTileCustomization,
         children: [
           /// Track Number in a small Box
           getItemWrapper(
@@ -456,8 +456,8 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.trackNumberInAlbumPage),
                 icon: Broken.card_remove,
-                title: lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE,
-                subtitle: lang.DISPLAY_TRACK_NUMBER_IN_ALBUM_PAGE_SUBTITLE,
+                title: lang.displayTrackNumberInAlbumPage,
+                subtitle: lang.displayTrackNumberInAlbumPageSubtitle,
                 value: settings.displayTrackNumberinAlbumPage.valueR,
                 onChanged: (p0) => settings.save(displayTrackNumberinAlbumPage: !p0),
               ),
@@ -471,8 +471,8 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.albumCardTopRightDate),
                 icon: Broken.notification_status,
-                title: lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE,
-                subtitle: lang.DISPLAY_ALBUM_CARD_TOP_RIGHT_DATE_SUBTITLE,
+                title: lang.displayAlbumCardTopRightDate,
+                subtitle: lang.displayAlbumCardTopRightDateSubtitle,
                 onChanged: (p0) => settings.save(albumCardTopRightDate: !p0),
                 value: settings.albumCardTopRightDate.valueR,
               ),
@@ -486,7 +486,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.forceSquaredAlbumThumb),
                 icon: Broken.crop,
-                title: lang.FORCE_SQUARED_ALBUM_THUMBNAIL,
+                title: lang.forceSquaredAlbumThumbnail,
                 value: settings.forceSquaredAlbumThumbnail.valueR,
                 onChanged: (p0) {
                   settings.save(forceSquaredAlbumThumbnail: !p0);
@@ -495,11 +495,11 @@ class CustomizationSettings extends SettingSubpageProvider {
                       dialog: CustomBlurryDialog(
                         normalTitleStyle: true,
                         isWarning: true,
-                        bodyText: lang.FORCE_SQUARED_THUMBNAIL_NOTE,
+                        bodyText: lang.forceSquaredThumbnailNote,
                         actions: [
                           const CancelButton(),
                           NamidaButton(
-                            text: lang.CONFIRM,
+                            text: lang.confirm,
                             onPressed: () {
                               settings.save(albumThumbnailSizeinList: settings.albumListTileHeight.value);
                               NamidaNavigator.inst.closeDialog();
@@ -521,7 +521,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.staggeredAlbumGridview),
                 icon: Broken.element_4,
-                title: lang.STAGGERED_ALBUM_GRID_VIEW,
+                title: lang.staggeredAlbumGridView,
                 value: settings.useAlbumStaggeredGridView.valueR,
                 onChanged: (p0) => settings.save(useAlbumStaggeredGridView: !p0),
               ),
@@ -535,11 +535,11 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.sizeOfAlbumThumb),
                 icon: Broken.maximize_3,
-                title: lang.ALBUM_THUMBNAIL_SIZE_IN_LIST,
+                title: lang.albumThumbnailSizeInList,
                 trailingText: "${settings.albumThumbnailSizeinList.valueR.toInt()}",
                 onTap: () {
                   showSettingDialogWithTextField(
-                    title: lang.ALBUM_THUMBNAIL_SIZE_IN_LIST,
+                    title: lang.albumThumbnailSizeInList,
                     albumThumbnailSizeinList: true,
                     icon: Broken.maximize_3,
                   );
@@ -555,11 +555,11 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.heightOfAlbumTile),
                 icon: Broken.pharagraphspacing,
-                title: lang.HEIGHT_OF_ALBUM_TILE,
+                title: lang.heightOfAlbumTile,
                 trailingText: "${settings.albumListTileHeight.valueR.toInt()}",
                 onTap: () {
                   showSettingDialogWithTextField(
-                    title: lang.HEIGHT_OF_ALBUM_TILE,
+                    title: lang.heightOfAlbumTile,
                     albumListTileHeight: true,
                     icon: Broken.pharagraphspacing,
                   );
@@ -577,7 +577,7 @@ class CustomizationSettings extends SettingSubpageProvider {
   void _showTrackItemsDialog(TrackTilePosition p) {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: lang.CHOOSE,
+        title: lang.choose,
         normalTitleStyle: true,
         horizontalInset: 64.0,
         verticalInset: 64.0,
@@ -619,7 +619,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           baseIcon: Broken.brush,
           secondaryIcon: Broken.music_circle,
         ),
-        titleText: lang.TRACK_TILE_CUSTOMIZATION,
+        titleText: lang.trackTileCustomization,
         children: [
           getItemWrapper(
             key: _CustomizationSettingsKeys.forceSquaredTrackThumb,
@@ -627,7 +627,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.forceSquaredTrackThumb),
                 icon: Broken.crop,
-                title: lang.FORCE_SQUARED_TRACK_THUMBNAIL,
+                title: lang.forceSquaredTrackThumbnail,
                 value: settings.forceSquaredTrackThumbnail.valueR,
                 onChanged: (value) {
                   settings.save(forceSquaredTrackThumbnail: !value);
@@ -638,11 +638,11 @@ class CustomizationSettings extends SettingSubpageProvider {
                       dialog: CustomBlurryDialog(
                         normalTitleStyle: true,
                         isWarning: true,
-                        bodyText: lang.FORCE_SQUARED_THUMBNAIL_NOTE,
+                        bodyText: lang.forceSquaredThumbnailNote,
                         actions: [
                           const CancelButton(),
                           NamidaButton(
-                            text: lang.CONFIRM,
+                            text: lang.confirm,
                             onPressed: () {
                               settings.save(trackThumbnailSizeinList: settings.trackListTileHeight.value);
                               NamidaNavigator.inst.closeDialog();
@@ -662,11 +662,11 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.sizeOfTrackThumb),
                 icon: Broken.maximize_3,
-                title: lang.TRACK_THUMBNAIL_SIZE_IN_LIST,
+                title: lang.trackThumbnailSizeInList,
                 trailingText: "${settings.trackThumbnailSizeinList.valueR.toInt()}",
                 onTap: () {
                   showSettingDialogWithTextField(
-                    title: lang.TRACK_THUMBNAIL_SIZE_IN_LIST,
+                    title: lang.trackThumbnailSizeInList,
                     trackThumbnailSizeinList: true,
                     icon: Broken.maximize_3,
                   );
@@ -680,11 +680,11 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.heightOfTrackTile),
                 icon: Broken.pharagraphspacing,
-                title: lang.HEIGHT_OF_TRACK_TILE,
+                title: lang.heightOfTrackTile,
                 trailingText: "${settings.trackListTileHeight.valueR.toInt()}",
                 onTap: () {
                   showSettingDialogWithTextField(
-                    title: lang.HEIGHT_OF_TRACK_TILE,
+                    title: lang.heightOfTrackTile,
                     trackListTileHeight: true,
                     icon: Broken.pharagraphspacing,
                   );
@@ -700,14 +700,14 @@ class CustomizationSettings extends SettingSubpageProvider {
               borderless: true,
               icon: Broken.arrow_swap_horizontal,
               iconColor: context.defaultIconColor(),
-              titleText: lang.SWIPE_ACTIONS,
+              titleText: lang.swipeActions,
               childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0),
               children: [
                 _getSwipeActionTileWidget(
                   context: context,
                   key: _CustomizationSettingsKeys.swipeLeftAction,
                   excludeDelete: false,
-                  title: lang.LEFT_ACTION,
+                  title: lang.leftAction,
                   icon: Broken.arrow_left_1,
                   rx: settings.onTrackSwipeLeft,
                   onSave: (newItem) => settings.save(onTrackSwipeLeft: newItem),
@@ -716,7 +716,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   context: context,
                   key: _CustomizationSettingsKeys.swipeRightAction,
                   excludeDelete: false,
-                  title: lang.RIGHT_ACTION,
+                  title: lang.rightAction,
                   icon: Broken.arrow_right,
                   rx: settings.onTrackSwipeRight,
                   onSave: (newItem) => settings.save(onTrackSwipeRight: newItem),
@@ -731,7 +731,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayThirdRow),
                 icon: Broken.chart_1,
                 rotateIcon: 1,
-                title: lang.DISPLAY_THIRD_ROW_IN_TRACK_TILE,
+                title: lang.displayThirdRowInTrackTile,
                 onChanged: (isTrue) {
                   settings.save(displayThirdRow: !isTrue);
                   _onSettingsChanged();
@@ -747,7 +747,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayThirdItemInRow),
                 icon: Broken.coin,
                 rotateIcon: 3,
-                title: lang.DISPLAY_THIRD_ITEM_IN_ROW_IN_TRACK_TILE,
+                title: lang.displayThirdItemInRowInTrackTile,
                 onChanged: (isTrue) {
                   settings.save(displayThirdItemInEachRow: !isTrue);
                   _onSettingsChanged();
@@ -762,7 +762,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayFavButtonInTrackTile),
                 icon: Broken.heart,
-                title: lang.DISPLAY_FAVOURITE_ICON_IN_TRACK_TILE,
+                title: lang.displayFavouriteIconInTrackTile,
                 onChanged: (isTrue) {
                   settings.save(displayFavouriteIconInListTile: !isTrue);
                   _onSettingsChanged();
@@ -777,10 +777,10 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.itemsSeparator),
                 icon: Broken.minus_square,
-                title: lang.TRACK_TILE_ITEMS_SEPARATOR,
+                title: lang.trackTileItemsSeparator,
                 trailingText: settings.trackTileSeparator.valueR,
                 onTap: () => showSettingDialogWithTextField(
-                  title: lang.TRACK_TILE_ITEMS_SEPARATOR,
+                  title: lang.trackTileItemsSeparator,
                   trackTileSeparator: true,
                   icon: Broken.minus_square,
                 ),
@@ -944,7 +944,7 @@ class CustomizationSettings extends SettingSubpageProvider {
           baseIcon: Broken.brush,
           secondaryIcon: Broken.external_drive,
         ),
-        titleText: lang.MINIPLAYER_CUSTOMIZATION,
+        titleText: lang.miniplayerCustomization,
         children: [
           getItemWrapper(
             key: _CustomizationSettingsKeys.partyMode,
@@ -952,8 +952,8 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.partyMode),
                 icon: Broken.slider_horizontal_1,
-                title: lang.ENABLE_PARTY_MODE,
-                subtitle: lang.ENABLE_PARTY_MODE_SUBTITLE,
+                title: lang.enablePartyMode,
+                subtitle: lang.enablePartyModeSubtitle,
                 onChanged: (value) {
                   if (value) return settings.save(enablePartyModeInMiniplayer: false);
                   SussyBaka.monetize(onEnable: () => settings.save(enablePartyModeInMiniplayer: true));
@@ -969,7 +969,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.edgeColorsSwitching),
                 enabled: settings.enablePartyModeInMiniplayer.valueR,
                 icon: Broken.colors_square,
-                title: lang.EDGE_COLORS_SWITCHING,
+                title: lang.edgeColorsSwitching,
                 onChanged: (value) {
                   settings.save(enablePartyModeColorSwap: !value);
                   CurrentColor.inst.switchColorPalettes(swapEnabled: !value);
@@ -984,7 +984,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.movingParticles),
                 icon: Broken.buy_crypto,
-                title: lang.ENABLE_MINIPLAYER_PARTICLES,
+                title: lang.enableMiniplayerParticles,
                 onChanged: (value) => settings.save(enableMiniplayerParticles: !value),
                 value: settings.enableMiniplayerParticles.valueR,
               ),
@@ -998,7 +998,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               borderless: true,
               icon: Broken.flash,
               iconColor: context.defaultIconColor(),
-              titleText: lang.ANIMATING_THUMBNAIL_INTENSITY,
+              titleText: lang.animatingThumbnailIntensity,
               childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0),
               children: [
                 getItemWrapper(
@@ -1008,7 +1008,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                       visualDensity: VisualDensity.compact,
                       bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityExpanded),
                       icon: Broken.flash,
-                      title: lang.EXPANDED_MINIPLAYER,
+                      title: lang.expandedMiniplayer,
                       trailing: NamidaWheelSlider(
                         max: 25,
                         initValue: settings.animatingThumbnailIntensity.valueR,
@@ -1029,7 +1029,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                         secondaryIcon: Broken.document,
                         secondaryIconSize: 10.0,
                       ),
-                      title: lang.LYRICS,
+                      title: lang.lyrics,
                       trailing: NamidaWheelSlider(
                         max: 25,
                         initValue: settings.animatingThumbnailIntensityLyrics.valueR,
@@ -1050,7 +1050,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                         secondaryIcon: Broken.arrow_square_down,
                         secondaryIconSize: 11.0,
                       ),
-                      title: lang.MINIMIZED_MINIPLAYER,
+                      title: lang.minimizedMiniplayer,
                       trailing: NamidaWheelSlider(
                         max: 25,
                         initValue: settings.animatingThumbnailIntensityMinimized.valueR,
@@ -1069,8 +1069,8 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.thumbInverseAnimation),
                 icon: Broken.arrange_circle_2,
-                title: lang.ANIMATING_THUMBNAIL_INVERSED,
-                subtitle: lang.ANIMATING_THUMBNAIL_INVERSED_SUBTITLE,
+                title: lang.animatingThumbnailInversed,
+                subtitle: lang.animatingThumbnailInversedSubtitle,
                 onChanged: (value) {
                   settings.save(animatingThumbnailInversed: !value);
                 },
@@ -1086,13 +1086,13 @@ class CustomizationSettings extends SettingSubpageProvider {
               iconColor: context.defaultIconColor(),
               initiallyExpanded: true /* || initialItem == _CustomizationSettingsKeys.ARTWORKGESTURES */,
               borderless: true,
-              titleText: lang.ARTWORK_GESTURES,
+              titleText: lang.artworkGestures,
               childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0),
               trailingBuilder: (iconWidget) => Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   NamidaIconButton(
-                    tooltip: () => lang.RESTORE_DEFAULTS,
+                    tooltip: () => lang.restoreDefaults,
                     icon: Broken.refresh,
                     iconSize: 20.0,
                     onPressed: () {
@@ -1120,7 +1120,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                         visualDensity: VisualDensity.compact,
                         bgColor: getBgColor(_CustomizationSettingsKeys.scaleMultiplier),
                         icon: Broken.maximize,
-                        title: lang.SCALE_MULTIPLIER,
+                        title: lang.scaleMultiplier,
                         trailing: NamidaWheelSlider(
                           min: 50,
                           max: 150,
@@ -1143,7 +1143,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                         secondaryIcon: Broken.blend_2,
                         secondaryIconSize: 12.0,
                       ),
-                      title: lang.DOUBLE_TAP_TO_TOGGLE_LYRICS,
+                      title: lang.doubleTapToToggleLyrics,
                       value: settings.artworkGestureDoubleTapLRC.valueR,
                       onChanged: (value) {
                         settings.save(artworkGestureDoubleTapLRC: !value);
@@ -1155,7 +1155,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   context: context,
                   key: _CustomizationSettingsKeys.artworkTapAction,
                   excludePlayerActions: true,
-                  title: lang.TAP_ACTION,
+                  title: lang.tapAction,
                   icon: Broken.cd,
                   rx: settings.artworkTapAction,
                   onSave: (newItem) => settings.save(artworkTapAction: newItem),
@@ -1164,7 +1164,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   context: context,
                   key: _CustomizationSettingsKeys.artworkLongPressAction,
                   excludePlayerActions: true,
-                  title: lang.LONG_PRESS_ACTION,
+                  title: lang.longPressAction,
                   icon: Broken.story,
                   rx: settings.artworkLongPressAction,
                   onSave: (newItem) => settings.save(artworkLongPressAction: newItem),
@@ -1180,7 +1180,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.waveformBarsCount),
                 icon: Broken.sound,
-                title: lang.WAVEFORM_BARS_COUNT,
+                title: lang.waveformBarsCount,
                 trailing: Column(
                   children: [
                     NamidaWheelSlider(
@@ -1205,7 +1205,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayAudioInfo),
                 icon: Broken.text_block,
-                title: lang.DISPLAY_AUDIO_INFO_IN_MINIPLAYER,
+                title: lang.displayAudioInfoInMiniplayer,
                 onChanged: (value) => settings.save(displayAudioInfoMiniplayer: !value),
                 value: settings.displayAudioInfoMiniplayer.valueR,
               ),
@@ -1217,7 +1217,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayArtistBeforeTitle),
                 icon: Broken.align_left,
-                title: lang.DISPLAY_ARTIST_BEFORE_TITLE,
+                title: lang.displayArtistBeforeTitle,
                 onChanged: (value) {
                   settings.save(displayArtistBeforeTitle: !value);
                   Player.inst.refreshRxVariables();
@@ -1349,7 +1349,7 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
                   ),
                   onTap: _onAddTap,
                   child: Text(
-                    lang.ADD,
+                    lang.add,
                     style: textTheme.displayMedium,
                   ),
                 ),
@@ -1383,7 +1383,7 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
-                      "${lang.APP_ICON}:",
+                      "${lang.appIcon}:",
                       style: theme.textTheme.displayMedium,
                     ),
                     if (enabledIcon != null) ...[

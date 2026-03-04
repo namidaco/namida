@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_displaymode/flutter_displaymode.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart' show FlutterVolumeController;
@@ -59,6 +60,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
+import 'package:namida/core/translations/fallback_delegates.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main_page_wrapper.dart';
@@ -205,6 +207,7 @@ Future<bool> _mainAppInitialization() async {
     }
 
     await settings.prepareAllSettings();
+    Language.initialize(); // should be done as early as possible
     ShortcutsController.instance?.initUserShortcutsFromSettings();
 
     if (settings.directoriesToScan.value.isEmpty) {
@@ -243,7 +246,6 @@ Future<bool> _mainAppInitialization() async {
 
     await [
       if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(startupBoost: true).whenComplete(Player.inst.refreshNotification),
-      Language.initialize(),
       Player.inst.initializePlayer().whenComplete(prepareLatestQueue),
       PlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
       YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
@@ -482,27 +484,25 @@ class _NamidaState extends State<Namida> {
     child: ScrollConfiguration(
       behavior: const ScrollBehaviorModified(),
       child: ObxO(
-        rx: settings.selectedLanguage,
-        builder: (context, selectedLanguage) {
-          return Obx(
-            key: ValueKey(selectedLanguage),
-            (context) {
-              final mode = settings.themeMode.valueR;
-              final isLight = mode.isLight(platformBrightness);
-              final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
-              final mainChild = WindowController.instance?.usingCustomWindowTitleBar == true
-                  ? WrapWithWindowGoodies(
-                      child: widget,
-                    )
-                  : widget;
+        rx: Language.inst.currentLanguageRx,
+        builder: (_, l) => Obx(
+          key: ValueKey(l),
+          (context) {
+            final mode = settings.themeMode.valueR;
+            final isLight = mode.isLight(platformBrightness);
+            final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
+            final mainChild = WindowController.instance?.usingCustomWindowTitleBar == true
+                ? WrapWithWindowGoodies(
+                    child: widget,
+                  )
+                : widget;
 
-              return Theme(
-                data: theme,
-                child: mainChild,
-              );
-            },
-          );
-        },
+            return Theme(
+              data: theme,
+              child: mainChild,
+            );
+          },
+        ),
       ),
     ),
   );
@@ -580,7 +580,17 @@ class _NamidaState extends State<Namida> {
                       navigatorKey: namida.rootNavigatorKey,
                       title: 'Namida',
                       // restorationScopeId: 'Namida',
-                      localeResolutionCallback: (locale, supportedLocales) => const Locale('en', 'US'),
+                      // -- we use custom logic to avoid context based translations
+                      // locale: currentLanguage?.locale,
+                      // supportedLocales: AppLocalizations.supportedLocales,
+                      localizationsDelegates: [
+                        GlobalMaterialLocalizations.delegate,
+                        GlobalCupertinoLocalizations.delegate,
+                        GlobalWidgetsLocalizations.delegate,
+                        const FallbackMaterialLocalizationsDelegate(),
+                        const FallbackCupertinoLocalizationsDelegate(),
+                        const FallbackWidgetsLocalizationsDelegate(),
+                      ],
                       builder: (context, widget) {
                         Brightness platformBrightness = MediaQuery.platformBrightnessOf(context);
                         // overlay entries get rebuilt on any insertion/removal, so we create app here.
@@ -784,7 +794,7 @@ class NamidaReceiveIntentManager {
   static void showErrorPlayingFileSnackbar({String? error}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final errorMessage = error != null ? '($error)' : '';
-      snackyy(title: lang.ERROR, message: '${lang.COULDNT_PLAY_FILE} $errorMessage');
+      snackyy(title: lang.error, message: '${lang.couldntPlayFile} $errorMessage');
     });
   }
 }

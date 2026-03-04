@@ -60,7 +60,7 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
             operation: YoutiPieOperation.fetchHistory,
             onListUpdated: onListUpdated,
             transparentShimmer: true,
-            title: lang.HISTORY,
+            title: lang.history,
             cacheReader: YoutiPie.cacheBuilder.forHistoryVideos(),
             networkFetcher: (details) => YoutubeInfoController.history.fetchHistory(details: details),
             itemExtent: thumbnailItemExtent,
@@ -197,7 +197,7 @@ class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
         transparentShimmer: true,
         topPadding: 12.0,
         bottomPadding: 32.0,
-        title: lang.HISTORY,
+        title: lang.history,
         onHeaderTap: YoutubeUserHistoryPage(
           onListUpdated: (result) {
             if (result == null) return;

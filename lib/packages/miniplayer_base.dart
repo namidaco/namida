@@ -518,7 +518,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       children: [
         if (widget.videoTileConfigs != null && settings.extra.ytStyleButtonSwitcher == true)
           _CustomIconButton(
-            tooltipCallback: () => lang.YOUTUBE_STYLE_MINIPLAYER,
+            tooltipCallback: () => lang.youtubeStyleMiniplayer,
             onPressed: () {
               MiniPlayerController.inst.snapToMini(haptic: false);
               NamidaYTMiniplayer.setInitialExpanded(true);
@@ -571,7 +571,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
           ),
         ),
         _CustomIconButton(
-          tooltipCallback: () => lang.QUEUE,
+          tooltipCallback: () => lang.queue,
           onPressed: MiniPlayerController.inst.snapToQueue,
           sizeRaw: 19.0,
           icon: Icon(
@@ -864,7 +864,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                     final value = rx.valueR;
                                     final isOff = value == DataSaverMode.off;
                                     return _MPQualityButton(
-                                      title: lang.DATA_SAVER,
+                                      title: lang.dataSaver,
                                       onTap: () => YoutubeSettings.openDataSaverConfigureDialog(),
                                       subtitle: isOff ? '' : value.toText(),
                                       icon: Broken.blur,
@@ -873,7 +873,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                 ),
                                 if (currentId == null || currentId.isEmpty)
                                   _MPQualityButton(
-                                    title: lang.SEARCH,
+                                    title: lang.search,
                                     icon: Broken.search_normal,
                                     bgColor: null,
                                     onTap: () {
@@ -882,7 +882,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                   )
                                 else if (focusedMenuOptions.loadQualities != null)
                                   _MPQualityButton(
-                                    title: lang.CHECK_FOR_MORE,
+                                    title: lang.checkForMore,
                                     icon: Broken.chart,
                                     bgColor: null,
                                     trailing: currentVideoConfig.isLoadingCurrentYTStreams.valueR ? const LoadingIndicator() : null,
@@ -890,7 +890,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                   ),
                                 ...availableVideos.map(
                                   (element) {
-                                    final localOrCache = element.ytID == null ? lang.LOCAL : lang.CACHE;
+                                    final localOrCache = element.ytID == null ? lang.local : lang.cache;
                                     return Obx(
                                       (context) {
                                         final isCurrent = element.path == (VideoController.inst.currentVideo.valueR?.path ?? Player.inst.currentCachedVideo.valueR?.path);
@@ -1008,7 +1008,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 
                                             NamidaNavigator.inst.navigateDialog(
                                               dialog: CustomBlurryDialog(
-                                                title: lang.CONFIGURE,
+                                                title: lang.configure,
                                                 contentPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
                                                 actions: [
                                                   NamidaIconButton(
@@ -1906,7 +1906,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                     normalIcon: textData.normalIcon,
                                     enabledColor: theme.colorScheme.primary.withOpacityExt(0.75),
                                     disabledColor: theme.colorScheme.secondary.withOpacityExt(0.75),
-                                    removeConfirmationAction: lang.REMOVE_FROM_FAVOURITES,
+                                    removeConfirmationAction: lang.removeFromFavourites,
                                     isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
                                     onTap: textData.onLikeTap,
                                   ),

@@ -70,7 +70,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
   Future<void> _importPlaylists({required bool keepSynced, required bool pickFolder}) async {
     Set<String> playlistsFilesPath;
     if (pickFolder) {
-      final dirs = await NamidaFileBrowser.pickDirectories(note: "${lang.IMPORT} (${lang.FOLDERS})");
+      final dirs = await NamidaFileBrowser.pickDirectories(note: "${lang.import} (${lang.folders})");
       playlistsFilesPath = {};
       for (final d in dirs) {
         final subfiles = await d.listAllIsolate(recursive: true);
@@ -86,7 +86,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
         );
       }
     } else {
-      final playlistsFiles = await NamidaFileBrowser.pickFiles(note: lang.IMPORT, allowedExtensions: NamidaFileExtensionsWrapper.m3u);
+      final playlistsFiles = await NamidaFileBrowser.pickFiles(note: lang.import, allowedExtensions: NamidaFileExtensionsWrapper.m3u);
       playlistsFilesPath = playlistsFiles.map((f) => f.path).toSet();
     }
     if (playlistsFilesPath.isNotEmpty) {
@@ -103,15 +103,12 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
           countText = importedCount.formatDecimal();
         }
         snackyy(
-          message: lang.IMPORTED_N_PLAYLISTS_SUCCESSFULLY.replaceFirst(
-            '_NUM_',
-            countText,
-          ),
+          message: lang.importedNPlaylistsSuccessfully(number: importedCount, numberText: countText),
           borderColor: (hadError ? Colors.orange : Colors.green).withOpacityExt(0.6),
         );
       } else {
         snackyy(
-          message: lang.ERROR,
+          message: lang.error,
           isError: true,
         );
       }
@@ -123,7 +120,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
       dialogBuilder: (theme) => CustomBlurryDialog(
         theme: theme,
         normalTitleStyle: true,
-        title: lang.CHOOSE,
+        title: lang.choose,
         actions: const [
           CancelButton(),
         ],
@@ -132,23 +129,23 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
             CustomListTile(
               visualDensity: VisualDensity.compact,
               icon: Broken.shuffle,
-              title: lang.RANDOM,
-              subtitle: lang.GENERATE_RANDOM_PLAYLIST,
+              title: lang.random,
+              subtitle: lang.generateRandomPlaylist,
               onTap: () {
                 _closeDialog();
                 final numbers = PlaylistController.inst.generateRandomPlaylist();
                 if (numbers == 0) {
-                  snackyy(title: lang.ERROR, message: lang.NO_ENOUGH_TRACKS);
+                  snackyy(title: lang.error, message: lang.noEnoughTracks);
                 }
               },
             ),
             CustomListTile(
               visualDensity: VisualDensity.compact,
               icon: Broken.import_1,
-              title: lang.IMPORT,
-              subtitle: lang.PLAYLISTS_IMPORT_M3U_NATIVE,
+              title: lang.import,
+              subtitle: lang.playlistsImportM3uNative,
               trailing: NamidaIconButton(
-                tooltip: () => lang.FOLDER,
+                tooltip: () => lang.folder,
                 icon: Broken.folder_2,
                 onPressed: () {
                   _closeDialog();
@@ -163,12 +160,12 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
             CustomListTile(
               visualDensity: VisualDensity.compact,
               icon: Broken.add_circle,
-              title: lang.CREATE,
-              subtitle: lang.CREATE_NEW_PLAYLIST,
+              title: lang.create,
+              subtitle: lang.createNewPlaylist,
               onTap: () {
                 _closeDialog();
                 showSettingDialogWithTextField(
-                  title: lang.CREATE_NEW_PLAYLIST,
+                  title: lang.createNewPlaylist,
                   addNewPlaylist: true,
                 );
               },
@@ -184,7 +181,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
       dialogBuilder: (theme) => CustomBlurryDialog(
         theme: theme,
         normalTitleStyle: true,
-        title: lang.CONFIGURE,
+        title: lang.configure,
         actions: const [
           CancelButton(),
         ],
@@ -199,8 +196,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                   secondaryIcon: Broken.refresh_square_2,
                   secondaryIconSize: 12.0,
                 ),
-                title: lang.PLAYLISTS_IMPORT_M3U_SYNCED_AUTO_IMPORT,
-                subtitle: lang.PLAYLISTS_IMPORT_M3U_SYNCED,
+                title: lang.playlistsImportM3uSyncedAutoImport,
+                subtitle: lang.playlistsImportM3uSynced,
                 onChanged: (isTrue) => settings.save(enableM3USyncStartup: !isTrue),
                 value: m3usyncstartup,
               ),
@@ -223,12 +220,12 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
         dialog: CustomBlurryDialog(
           isWarning: true,
           normalTitleStyle: true,
-          bodyText: "${lang.REMOVE_FROM_PLAYLIST} ${playlist.name.addDQuotation()}?",
+          bodyText: "${lang.removeFromPlaylist} ${playlist.name.addDQuotation()}?",
           actions: [
             const CancelButton(),
             const SizedBox(width: 6.0),
             NamidaButton(
-              text: lang.REMOVE.toUpperCase(),
+              text: lang.remove.toUpperCase(),
               onPressed: () {
                 NamidaNavigator.inst.closeDialog();
                 PlaylistController.inst.removeTracksFromPlaylist(playlist, indexes);
@@ -310,7 +307,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                       ),
                       textField: CustomTextFiled(
                         textFieldController: LibraryTab.playlists.textSearchControllerUI,
-                        textFieldHintText: lang.FILTER_PLAYLISTS,
+                        textFieldHintText: lang.filterPlaylists,
                         onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.playlist),
                       ),
                     );
@@ -348,18 +345,18 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                       // const SizedBox(width: 12.0),
                                       NamidaButton(
                                         icon: Broken.add,
-                                        text: lang.ADD,
+                                        text: lang.add,
                                         iconSize: 20.0,
                                         onPressed: _onAddPlaylistsTap,
                                       ),
                                       // const SizedBox(width: 8.0),
                                       // NamidaButton(
                                       //   icon: Broken.pen_add,
-                                      //   text: lang.CREATE,
+                                      //   text: lang.create,
                                       //   iconSize: 19.0,
                                       //   onPressed: () {
                                       //     showSettingDialogWithTextField(
-                                      //       title: lang.CREATE_NEW_PLAYLIST,
+                                      //       title: lang.createNewPlaylist,
                                       //       addNewPlaylist: true,
                                       //     );
                                       //   },
@@ -368,7 +365,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                       NamidaButton(
                                         icon: Broken.edit_2,
                                         iconSize: 20.0,
-                                        tooltip: () => _isReordering ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
+                                        tooltip: () => _isReordering ? lang.disableReordering : lang.enableReordering,
                                         onPressed: _toggleReordering,
                                         style: ButtonStyle(
                                           backgroundColor: WidgetStatePropertyAll(
@@ -411,7 +408,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                               builder: (context, count) => DefaultPlaylistCard(
                                                 colorScheme: Colors.grey,
                                                 icon: Broken.refresh,
-                                                title: lang.HISTORY,
+                                                title: lang.history,
                                                 displayLoadingIndicator: count == -1,
                                                 text: count.formatDecimal(),
                                                 onTap: NamidaOnTaps.inst.onHistoryPlaylistTap,
@@ -428,7 +425,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                               (context) => DefaultPlaylistCard(
                                                 colorScheme: Colors.green,
                                                 icon: Broken.award,
-                                                title: lang.MOST_PLAYED,
+                                                title: lang.mostPlayed,
                                                 displayLoadingIndicator: HistoryController.inst.isLoadingHistoryR,
                                                 text: HistoryController.inst.topTracksMapListens.valueR.length.formatDecimal(),
                                                 onTap: () => NamidaOnTaps.inst.onMostPlayedPlaylistTap(),
@@ -452,7 +449,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                               builder: (context, favouritesPlaylist) => DefaultPlaylistCard(
                                                 colorScheme: Colors.red,
                                                 icon: Broken.heart,
-                                                title: lang.FAVOURITES,
+                                                title: lang.favourites,
                                                 text: favouritesPlaylist.value.tracks.length.formatDecimal(),
                                                 onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(k_PLAYLIST_NAME_FAV),
                                               ),
@@ -468,7 +465,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                               (context) => DefaultPlaylistCard(
                                                 colorScheme: Colors.blue,
                                                 icon: Broken.driver,
-                                                title: lang.QUEUES,
+                                                title: lang.queues,
                                                 displayLoadingIndicator: QueueController.inst.isLoadingQueues,
                                                 text: QueueController.inst.queuesMap.valueR.length.formatDecimal(),
                                                 onTap: const QueuesPage().navigate,
@@ -654,7 +651,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                                 bottom: 8.0,
                                                                 right: 8.0,
                                                                 child: NamidaTooltip(
-                                                                  message: () => "${lang.M3U_PLAYLIST}\n${playlist.m3uPath?.formatPath()}",
+                                                                  message: () => "${lang.m3uPlaylist}\n${playlist.m3uPath?.formatPath()}",
                                                                   child: const Icon(Broken.music_filter, size: 18.0),
                                                                 ),
                                                               ),

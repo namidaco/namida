@@ -88,10 +88,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     if (addedTracksLength == null) return;
 
     snackyy(
-      message: "${lang.ADDED} ${addedTracksLength.displayTrackKeyword}",
+      message: "${lang.added}: ${addedTracksLength.displayTrackKeyword}",
       button: addedTracksLength > 0
           ? (
-              lang.UNDO,
+              lang.undo,
               () async => await updatePropertyInPlaylist(playlist.name, tracks: oldTracksList, modifiedDate: originalModifyDate),
             )
           : null,
@@ -568,7 +568,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
             rx: didRead,
             builder: (context, didRead) => NamidaButton(
               enabled: didRead,
-              text: lang.CONFIRM,
+              text: lang.confirm,
               onPressed: () {
                 settings.save(enableM3USync: true);
                 NamidaNavigator.inst.closeDialog();
@@ -576,18 +576,18 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
             ),
           ),
         ],
-        title: lang.NOTE,
+        title: lang.note,
         child: Column(
           children: [
             Text(
-              '${lang.ENABLE_M3U_SYNC}?\n\n${lang.ENABLE_M3U_SYNC_NOTE_1}\n\n${lang.ENABLE_M3U_SYNC_NOTE_2.replaceFirst('_PLAYLISTS_BACKUP_PATH_', AppDirs.M3UBackup)}\n\n${lang.WARNING.toUpperCase()}: ${lang.ENABLE_M3U_SYNC_SUBTITLE}',
+              '${lang.enableM3uSync}?\n\n${lang.enableM3uSyncNote1}\n\n${lang.enableM3uSyncNote2(playlistsBackupPath: AppDirs.M3UBackup)}\n\n${lang.warning.toUpperCase()}: ${lang.enableM3uSyncSubtitle}',
               style: namida.textTheme.displayMedium,
             ),
             const SizedBox(height: 12.0),
             ListTileWithCheckMark(
               activeRx: didRead,
               icon: Broken.info_circle,
-              title: lang.I_READ_AND_AGREE,
+              title: lang.iReadAndAgree,
               onTap: didRead.toggle,
             ),
           ],
@@ -654,16 +654,16 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   bool get addTracksAtBeginning => settings.playlistAddTracksAtBeginning.value;
 
   @override
-  String get EMPTY_NAME => lang.PLEASE_ENTER_A_NAME;
+  String get EMPTY_NAME => lang.pleaseEnterAName;
 
   @override
-  String get NAME_CONTAINS_BAD_CHARACTER => lang.NAME_CONTAINS_BAD_CHARACTER;
+  String get NAME_CONTAINS_BAD_CHARACTER => lang.nameContainsBadCharacter;
 
   @override
-  String get SAME_NAME_EXISTS => lang.PLEASE_ENTER_A_DIFFERENT_NAME;
+  String get SAME_NAME_EXISTS => lang.pleaseEnterADifferentName;
 
   @override
-  String get NAME_IS_NOT_ALLOWED => lang.PLEASE_ENTER_A_DIFFERENT_NAME;
+  String get NAME_IS_NOT_ALLOWED => lang.pleaseEnterADifferentName;
 
   @override
   String get PLAYLIST_NAME_FAV => k_PLAYLIST_NAME_FAV;

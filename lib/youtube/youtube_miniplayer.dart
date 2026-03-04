@@ -982,7 +982,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                       title: shimmerEnabled
                                           ? null
                                           : videoLikeCount < 1
-                                          ? lang.LIKE
+                                          ? lang.like
                                           : videoLikeCount.formatDecimalShort(isTitleExpanded),
                                       icon: Broken.like_1,
                                       smallIconWidget: NamidaLoadingSwitcher(
@@ -1024,7 +1024,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                     return ObxO(
                                       rx: _isTitleExpanded,
                                       builder: (context, isTitleExpanded) => SmallYTActionButton(
-                                        title: (videoDislikeCount ?? 0) < 1 ? lang.DISLIKE : videoDislikeCount?.formatDecimalShort(isTitleExpanded) ?? '?',
+                                        title: (videoDislikeCount ?? 0) < 1 ? lang.dislike : videoDislikeCount?.formatDecimalShort(isTitleExpanded) ?? '?',
                                         icon: Broken.dislike,
                                         smallIconWidget: NamidaLoadingSwitcher(
                                           size: 24.0,
@@ -1059,7 +1059,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                               flex: 4,
                               fit: FlexFit.tight,
                               child: SmallYTActionButton(
-                                title: lang.SHARE,
+                                title: lang.share,
                                 icon: Broken.share,
                                 onPressed: () {
                                   final url = videoInfo?.buildUrl() ?? YTUrlUtils.buildVideoUrl(currentId);
@@ -1072,7 +1072,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                               flex: 4,
                               fit: FlexFit.tight,
                               child: SmallYTActionButton(
-                                title: lang.REFRESH,
+                                title: lang.refresh,
                                 icon: Broken.refresh,
                                 onPressed: () async {
                                   await YoutubeInfoController.current.updateVideoPage(
@@ -1096,9 +1096,9 @@ class _YTPlayerInnerPage extends StatelessWidget {
                               child: Obx(
                                 (context) {
                                   final audioProgress = YoutubeController.inst.downloadsAudioProgressMap[currentIdTask]?.values.firstOrNull;
-                                  final audioPercText = audioProgress?.percentageText(prefix: lang.AUDIO);
+                                  final audioPercText = audioProgress?.percentageText(prefix: lang.audio);
                                   final videoProgress = YoutubeController.inst.downloadsVideoProgressMap[currentIdTask]?.values.firstOrNull;
-                                  final videoPercText = videoProgress?.percentageText(prefix: lang.VIDEO);
+                                  final videoPercText = videoProgress?.percentageText(prefix: lang.video);
 
                                   final isDownloading = YoutubeController.inst.isDownloading[currentIdTask]?.values.any((element) => element) == true;
 
@@ -1112,7 +1112,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                       : Broken.import;
                                   return SmallYTActionButton(
                                     titleWidget: videoPercText == null && audioPercText == null && isDownloading ? const LoadingIndicator() : null,
-                                    title: videoPercText ?? audioPercText ?? lang.DOWNLOAD,
+                                    title: videoPercText ?? audioPercText ?? lang.download,
                                     icon: icon,
                                     onLongPress: () async =>
                                         await showDownloadVideoBottomSheet(videoId: currentId, originalIndex: null, totalLength: null, playlistId: null, streamInfoItem: null),
@@ -1141,7 +1141,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                               flex: 4,
                               fit: FlexFit.tight,
                               child: SmallYTActionButton(
-                                title: lang.SAVE,
+                                title: lang.save,
                                 icon: Broken.music_playlist,
                                 onPressed: () => showAddToPlaylistSheet(
                                   ids: [currentId],
@@ -1257,7 +1257,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                               child: ObxO(
                                                 rx: _isTitleExpanded,
                                                 builder: (context, isTitleExpanded) => Text(
-                                                  channelSubs == null ? '? ${lang.SUBSCRIBERS}' : channelSubs.displaySubscribersKeywordShort,
+                                                  channelSubs == null ? '? ${lang.subscribers}' : channelSubs.displaySubscribersKeywordShort,
                                                   style: mainTextTheme.displaySmall?.copyWith(
                                                     fontSize: 12.0,
                                                   ),
@@ -1332,7 +1332,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                       Expanded(
                                         child: Text(
                                           [
-                                            lang.COMMENTS,
+                                            lang.comments,
                                             if (comments?.commentsCount != null) comments!.commentsCount!.formatDecimalShort(),
                                           ].join(' • '),
                                           style: mainTextTheme.displaySmall,
@@ -1345,7 +1345,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                           commFromCache ??= false;
                                           return NamidaIconButton(
                                             horizontalPadding: 0.0,
-                                            tooltip: commFromCache ? () => lang.CACHE : null,
+                                            tooltip: commFromCache ? () => lang.cache : null,
                                             icon: Broken.refresh,
                                             iconSize: 22.0,
                                             onPressed: () async => await YoutubeInfoController.current.updateCurrentComments(

@@ -113,7 +113,7 @@ install(FILES "packaging/com.msob7y.namida.metainfo.xml"
 )
 
 # bundle required binaries
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg_build/linux/"
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/linux/"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
   FILES_MATCHING PATTERN "*"
 )

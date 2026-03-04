@@ -241,10 +241,10 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   bool _isFetching = true;
 
   final _sortTypeToName = {
-    FileBrowserSortType.name: lang.NAME,
-    FileBrowserSortType.dateModified: lang.DATE,
-    FileBrowserSortType.type: lang.EXTENSION,
-    FileBrowserSortType.size: lang.SIZE,
+    FileBrowserSortType.name: lang.name,
+    FileBrowserSortType.dateModified: lang.date,
+    FileBrowserSortType.type: lang.extension,
+    FileBrowserSortType.size: lang.size,
   };
 
   void _sortItems(FileBrowserSortType? type, bool? reversed, {bool refreshState = true}) {
@@ -346,7 +346,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
 
       _stopMainIsolates();
     } catch (e) {
-      snackyy(title: lang.ERROR, message: "$e", isError: true);
+      snackyy(title: lang.error, message: "$e", isError: true);
     }
     if (dirPath == _currentFolderPath) {
       setState(() {
@@ -356,7 +356,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
         _sortItems(null, null, refreshState: false);
       });
       if (isolateRes.$3 != null) {
-        snackyy(title: lang.ERROR, message: isolateRes.$3!.toString(), isError: true);
+        snackyy(title: lang.error, message: isolateRes.$3!.toString(), isError: true);
       }
     }
   }
@@ -1004,7 +1004,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                             SizedBox(width: 8.0),
                             Expanded(
                               child: Text(
-                                lang.GRANT_STORAGE_PERMISSION,
+                                lang.grantStoragePermission,
                                 style: textTheme.displayMedium?.copyWith(
                                   fontSize: 16.0,
                                 ),
@@ -1015,7 +1015,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                               onTap: _refreshPermissionStatus,
                               borderRadius: 6.0,
                               icon: null,
-                              text: lang.MANAGE,
+                              text: lang.manage,
                             ),
                             SizedBox(width: 8.0),
                           ],
@@ -1057,11 +1057,11 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                             dirController.dispose();
                           },
                           dialogBuilder: (theme) => CustomBlurryDialog(
-                            title: lang.NEW_DIRECTORY,
+                            title: lang.newDirectory,
                             actions: [
                               const CancelButton(),
                               NamidaButton(
-                                text: lang.CHOOSE,
+                                text: lang.choose,
                                 onPressed: () {
                                   final text = dirController.text;
                                   if (text.length > 2) {
@@ -1077,16 +1077,16 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                 CustomTagTextField(
                                   controller: dirController,
                                   hintText: '',
-                                  labelText: lang.NEW_DIRECTORY,
+                                  labelText: lang.newDirectory,
                                   validatorMode: AutovalidateMode.always,
                                   validator: (value) {
                                     value ??= '';
                                     if (value.isEmpty) {
-                                      return lang.PLEASE_ENTER_A_NAME;
+                                      return lang.pleaseEnterAName;
                                     }
                                     try {
                                       if (!DirectoryIndexLocal(value).existsSync()) {
-                                        return lang.DIRECTORY_DOESNT_EXIST;
+                                        return lang.directoryDoesntExist;
                                       }
                                     } catch (e) {
                                       return e.toString();
@@ -1247,10 +1247,10 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                   onTap: () => _sortItems(null, !settings.fileBrowserSortReversed.value),
                                 ),
                               ),
-                              getTile(Broken.text, lang.FILE_NAME, FileBrowserSortType.name),
-                              getTile(Broken.calendar, lang.DATE, FileBrowserSortType.dateModified),
-                              getTile(Broken.document_code, lang.EXTENSION, FileBrowserSortType.type),
-                              getTile(Broken.math, lang.SIZE, FileBrowserSortType.size),
+                              getTile(Broken.text, lang.fileName, FileBrowserSortType.name),
+                              getTile(Broken.calendar, lang.date, FileBrowserSortType.dateModified),
+                              getTile(Broken.document_code, lang.extension, FileBrowserSortType.type),
+                              getTile(Broken.math, lang.size, FileBrowserSortType.size),
                             ];
                           },
                         ),
@@ -1294,7 +1294,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                   ),
                                   const SizedBox(height: 12.0),
                                   Text(
-                                    "0 ${lang.FILES}",
+                                    "0 ${lang.files}",
                                     style: textTheme.displayLarge,
                                   ),
                                 ],

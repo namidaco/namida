@@ -65,7 +65,7 @@ class _NamidaStorageAndroid extends NamidaStorage {
           if (fp.isNotEmpty && !allowedExtensions.any((wrapper) => wrapper.isPathValid(fp))) {
             if (!fp.contains(':')) {
               // : means its content provider type file
-              snackyy(title: lang.ERROR, message: '"$fp"\n${lang.EXTENSION}: ${extensionsList?.join(', ')}', isError: true);
+              snackyy(title: lang.error, message: '"$fp"\n${lang.extension}: ${extensionsList?.join(', ')}', isError: true);
               return [];
             }
           }
@@ -74,7 +74,7 @@ class _NamidaStorageAndroid extends NamidaStorage {
 
       return filesPaths;
     } catch (e) {
-      snackyy(title: lang.ERROR, message: e.toString(), isError: true);
+      snackyy(title: lang.error, message: e.toString(), isError: true);
       return [];
     }
   }
@@ -85,7 +85,7 @@ class _NamidaStorageAndroid extends NamidaStorage {
       final res = await _channel.invokeListMethod<String?>('pickDirectory', {'note': note});
       return res?.firstOrNull;
     } catch (e) {
-      snackyy(title: lang.ERROR, message: e.toString(), isError: true);
+      snackyy(title: lang.error, message: e.toString(), isError: true);
     }
     return null;
   }

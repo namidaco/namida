@@ -1,106 +1,63 @@
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: implementation_imports, non_constant_identifier_names
 
-import 'dart:convert';
+import 'dart:io';
 
-import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/number_symbols_data.dart' as intl_data;
+import 'package:intl/src/plural_rules.dart' as plural_rules;
 
 import 'package:namida/class/lang.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/core/translations/keys.dart';
+import 'package:namida/core/translations/arb/app_localizations.dart';
+import 'package:namida/core/translations/arb/app_localizations_en.dart';
 import 'package:namida/core/utils.dart';
 
-Language get lang => Language.inst;
+AppLocalizations get lang => _lang!;
 
-class Language extends LanguageKeys {
-  static Language get inst => _instance;
-  static final Language _instance = Language._internal();
+AppLocalizations? _lang;
+
+class Language {
+  static final Language inst = Language._internal();
   Language._internal();
 
-  static final Rx<NamidaLanguage> _currentLanguage = kDefaultLang.obs;
-
   /// Currently Selected & Set Language.
-  RxBaseCore<NamidaLanguage> get currentLanguage => _currentLanguage;
-
-  /// All Available Languages fetched from `'/assets/language/translations/'`
-  static var availableLanguages = <NamidaLanguage>[];
-
-  /// Used as a backup in case a key wasn't found in the desired language.
-  static late final Map<String, String> _defaultMap;
-
-  static late Map<String, String> _currentMap;
-
-  static Future<void> initialize() async {
-    final lang = settings.selectedLanguage.value;
-
-    Future<void> updateAllAvailable() async {
-      availableLanguages = await getAllLanguages();
-    }
-
-    // -- Assigning default map, used as a backup in case a key doesnt exist in [lang].
-    final path = inst._getAssetPath(kDefaultLang);
-    final map = jsonDecode(await rootBundle.loadString(path)) as Map<String, dynamic>;
-    _defaultMap = map.cast();
-    // ---------
-
-    await Future.wait([
-      inst.update(
-        lang: lang,
-        trMap: lang.code == kDefaultLang.code ? _defaultMap : null,
-      ),
-      updateAllAvailable(),
-    ]);
+  RxBaseCore<NamidaLanguage?> get currentLanguageRx => _currentLanguage;
+  NamidaLanguage? getCurrentLanguageOrDevice() => _currentLanguage.value ?? getDeviceLanguage();
+  static NamidaLanguage? getDeviceLanguage() {
+    try {
+      Intl.systemLocale = Intl.canonicalizedLocale(Platform.localeName);
+      return NamidaLanguage.fromCode(Intl.systemLocale);
+    } catch (_) {}
+    return null;
   }
 
-  final _backupLocalMaps = <NamidaLanguage, Map<String, dynamic>>{};
-  Future<bool> loadLanguage(String fullCode, Map<String, dynamic> trMap) async {
-    final splitted = fullCode.split('_');
-    final nl = NamidaLanguage(code: splitted.first, name: fullCode, country: 'local');
-    availableLanguages
-      ..remove(nl)
-      ..add(nl);
-    _backupLocalMaps[nl] = trMap;
-    return await update(lang: nl, trMap: trMap);
-  }
+  static final _currentLanguage = Rxn<NamidaLanguage>();
 
-  static Future<List<NamidaLanguage>> getAllLanguages() async {
-    const path = 'assets/language/langs.json';
-    final available = await rootBundle.loadString(path);
-    final availableLangs = jsonDecode(available) as List?;
-    return availableLangs?.mapped((e) => NamidaLanguage.fromJson(e)) ?? [];
+  static void initialize() {
+    final language = settings.language.value;
+    inst.update(language: language);
   }
-
-  String _getAssetPath(NamidaLanguage lang) => 'assets/language/translations/${lang.code}.json';
 
   /// Returns false if there was a problem setting the language, for ex: lang file doesnt exist.
-  Future<bool> update({required NamidaLanguage lang, Map<String, dynamic>? trMap}) async {
-    // -- loading file from asset
-    final path = _getAssetPath(lang);
+  bool update({required NamidaLanguage? language}) {
     try {
-      late Map<String, dynamic> map;
+      language ??= getDeviceLanguage() ?? NamidaLanguage.fromCode('en');
+
+      _ensureLocaleHasIntlSupport(language.code);
+
       try {
-        map = trMap ?? jsonDecode(await rootBundle.loadString(path)) as Map<String, dynamic>;
-      } catch (e) {
-        final backupLocal = _backupLocalMaps[lang];
-        if (backupLocal != null) {
-          map = backupLocal;
-        } else {
-          lang = kDefaultLang;
-          map = _defaultMap;
-        }
-      }
+        _lang = lookupAppLocalizations(language.locale);
+      } catch (_) {}
 
-      _currentMap = map.cast();
+      _lang ??= AppLocalizationsEn();
 
-      _currentLanguage.value = lang;
-      if (lang != settings.selectedLanguage.value) {
-        settings.save(selectedLanguage: lang);
+      _currentLanguage.value = language;
+
+      if (language != settings.language.value) {
+        settings.save(language: language);
       }
-      TimeAgoController.setLocale(lang.code);
-      lang.refreshConverterMaps();
 
       return true;
     } catch (e) {
@@ -109,9 +66,24 @@ class Language extends LanguageKeys {
     }
   }
 
-  @override
-  Map<String, String> get languageMap => _currentMap;
+  void _ensureLocaleHasIntlSupport(String code) {
+    String localeForInternal;
+    String? verifiedLocale;
+    try {
+      verifiedLocale = Intl.verifiedLocale(code, plural_rules.localeHasPluralRules)!;
+      verifiedLocale = Intl.verifiedLocale(code, NumberFormat.localeExists, onFailure: null)!;
+      localeForInternal = verifiedLocale;
+      Intl.defaultLocale = verifiedLocale;
+    } catch (_) {
+      // -- add `en` data as a fallback, otherwise intl plural logic & number format would throw.
+      localeForInternal = 'en';
+      Intl.defaultLocale = localeForInternal;
 
-  @override
-  Map<String, String> get languageMapDefault => _defaultMap;
+      final verifiedLocaleCode = verifiedLocale ?? code;
+      intl_data.numberFormatSymbols[verifiedLocaleCode] ??= intl_data.numberFormatSymbols[localeForInternal]!;
+      intl_data.compactNumberSymbols[verifiedLocaleCode] ??= intl_data.compactNumberSymbols[localeForInternal]!;
+    }
+
+    TimeAgoController.setLocale(localeForInternal);
+  }
 }

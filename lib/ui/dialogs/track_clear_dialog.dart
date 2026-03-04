@@ -97,12 +97,12 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
       extraTiles: (pathsToDelete, totalSizeToDelete, allSelected) {
         return [
           NamidaClearDialogExpansionTile<dynamic>(
-            title: lang.ARTWORKS,
+            title: lang.artworks,
             subtitle: imagesTotalSize.fileSizeFormatted,
             icon: Broken.image,
             items: imageDetails,
             itemBuilder: (details) =>
-                (path: details.$1, subtitle: (details.$2 as int).fileSizeFormatted, title: (details.$3 ? lang.THUMBNAILS : lang.ARTWORK) + (details.$4 ? ' (temp)' : '')),
+                (path: details.$1, subtitle: (details.$2 as int).fileSizeFormatted, title: (details.$3 ? lang.thumbnails : lang.artwork) + (details.$4 ? ' (temp)' : '')),
             itemSize: (details) => details.$2,
             tempFilesSize: null,
             tempFilesDelete: null,
@@ -111,11 +111,11 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
             allSelected: allSelected,
           ),
           NamidaClearDialogExpansionTile<dynamic>(
-            title: lang.LYRICS,
+            title: lang.lyrics,
             subtitle: lyricsTotalSize.fileSizeFormatted,
             icon: Broken.document,
             items: lyricsFiles,
-            itemBuilder: (details) => (path: details.$1, subtitle: (details.$2 as int).fileSizeFormatted, title: lang.LYRICS + (details.$3 ? ' (${lang.SYNCED})' : '')),
+            itemBuilder: (details) => (path: details.$1, subtitle: (details.$2 as int).fileSizeFormatted, title: lang.lyrics + (details.$3 ? ' (${lang.synced})' : '')),
             itemSize: (details) => details.$2,
             tempFilesSize: null,
             tempFilesDelete: null,
@@ -135,13 +135,13 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
       theme: theme,
       normalTitleStyle: true,
       icon: Broken.broom,
-      title: isSingle ? lang.CLEAR_TRACK_ITEM : lang.CLEAR_TRACK_ITEM_MULTIPLE.replaceFirst('_NUMBER_', tracks.length.formatDecimal()),
+      title: isSingle ? lang.clearTrackItem : lang.clearTrackItemMultiple(number: tracks.length),
       child: Column(
         children: [
           if (videosTotalSize > 0)
             CustomListTile(
               passedColor: colorScheme,
-              title: isSingle ? lang.VIDEO_CACHE_FILE : lang.VIDEO_CACHE_FILES,
+              title: isSingle ? lang.videoCacheFile : lang.videoCacheFiles,
               subtitle: videosTotalSize.fileSizeFormatted,
               icon: Broken.video_square,
               onTap: () async {
@@ -152,7 +152,7 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
           if (audiosTotalSize > 0)
             CustomListTile(
               passedColor: colorScheme,
-              title: lang.AUDIO_CACHE,
+              title: lang.audioCache,
               subtitle: audiosTotalSize.fileSizeFormatted,
               icon: Broken.audio_square,
               onTap: () async {
@@ -163,7 +163,7 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
           if (lyricsTotalSize > 0)
             CustomListTile(
               passedColor: colorScheme,
-              title: lang.LYRICS,
+              title: lang.lyrics,
               icon: Broken.document,
               onTap: () async {
                 await EditDeleteController.inst.deleteLRCLyrics(tracks);
@@ -174,7 +174,7 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
           if (imagesTotalSize > 0)
             CustomListTile(
               passedColor: colorScheme,
-              title: isSingle ? lang.ARTWORK : lang.ARTWORKS,
+              title: isSingle ? lang.artwork : lang.artworks,
               icon: Broken.image,
               onTap: () async {
                 await EditDeleteController.inst.deleteArtwork(tracks);

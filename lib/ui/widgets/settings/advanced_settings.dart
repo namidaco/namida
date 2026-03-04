@@ -57,18 +57,18 @@ class AdvancedSettings extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-    _AdvancedSettingKeys.performanceMode: [lang.PERFORMANCE_MODE],
-    _AdvancedSettingKeys.rescanVideos: [lang.RESCAN_VIDEOS],
-    _AdvancedSettingKeys.removeSourceHistory: [lang.REMOVE_SOURCE_FROM_HISTORY],
-    _AdvancedSettingKeys.updateDirPath: [lang.UPDATE_DIRECTORY_PATH],
-    _AdvancedSettingKeys.fixYTDLPBigThumbnail: [lang.FIX_YTDLP_BIG_THUMBNAIL_SIZE],
-    _AdvancedSettingKeys.compressImages: [lang.COMPRESS_IMAGES],
-    _AdvancedSettingKeys.maxImageCache: [lang.MAX_IMAGE_CACHE_SIZE],
-    _AdvancedSettingKeys.maxAudioCache: [lang.MAX_AUDIO_CACHE_SIZE],
-    _AdvancedSettingKeys.maxVideoCache: [lang.MAX_VIDEO_CACHE_SIZE],
-    _AdvancedSettingKeys.clearImageCache: [lang.CLEAR_IMAGE_CACHE],
-    _AdvancedSettingKeys.clearAudioCache: [lang.CLEAR_AUDIO_CACHE],
-    _AdvancedSettingKeys.clearVideoCache: [lang.CLEAR_VIDEO_CACHE],
+    _AdvancedSettingKeys.performanceMode: [lang.performanceMode],
+    _AdvancedSettingKeys.rescanVideos: [lang.rescanVideos],
+    _AdvancedSettingKeys.removeSourceHistory: [lang.removeSourceFromHistory],
+    _AdvancedSettingKeys.updateDirPath: [lang.updateDirectoryPath],
+    _AdvancedSettingKeys.fixYTDLPBigThumbnail: [lang.fixYtdlpBigThumbnailSize],
+    _AdvancedSettingKeys.compressImages: [lang.compressImages],
+    _AdvancedSettingKeys.maxImageCache: [lang.maxImageCacheSize],
+    _AdvancedSettingKeys.maxAudioCache: [lang.maxAudioCacheSize],
+    _AdvancedSettingKeys.maxVideoCache: [lang.maxVideoCacheSize],
+    _AdvancedSettingKeys.clearImageCache: [lang.clearImageCache],
+    _AdvancedSettingKeys.clearAudioCache: [lang.clearAudioCache],
+    _AdvancedSettingKeys.clearVideoCache: [lang.clearVideoCache],
   };
 
   void _onPerformanceTileTap(BuildContext context) {
@@ -78,7 +78,7 @@ class AdvancedSettings extends SettingSubpageProvider {
     bool changedArtworkCacheM = false; // to rebuild wheel slider
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: lang.CONFIGURE,
+        title: lang.configure,
         actions: const [
           DoneButton(),
         ],
@@ -90,7 +90,7 @@ class AdvancedSettings extends SettingSubpageProvider {
               const SizedBox(height: 12.0),
               CustomListTile(
                 icon: Broken.cpu_setting,
-                title: lang.PERFORMANCE_MODE,
+                title: lang.performanceMode,
                 trailing: NamidaPopupWrapper(
                   children: () => [
                     ...PerformanceMode.values.map(
@@ -145,8 +145,8 @@ class AdvancedSettings extends SettingSubpageProvider {
                 rx: settings.enableBlurEffect,
                 builder: (context, enableBlurEffect) => CustomSwitchListTile(
                   icon: Broken.drop,
-                  title: lang.ENABLE_BLUR_EFFECT,
-                  subtitle: lang.PERFORMANCE_NOTE,
+                  title: lang.enableBlurEffect,
+                  subtitle: lang.performanceNote,
                   onChanged: (p0) {
                     settings.save(
                       enableBlurEffect: !p0,
@@ -160,8 +160,8 @@ class AdvancedSettings extends SettingSubpageProvider {
                 rx: settings.enableGlowEffect,
                 builder: (context, enableGlowEffect) => CustomSwitchListTile(
                   icon: Broken.sun_1,
-                  title: lang.ENABLE_GLOW_EFFECT,
-                  subtitle: lang.PERFORMANCE_NOTE,
+                  title: lang.enableGlowEffect,
+                  subtitle: lang.performanceNote,
                   onChanged: (p0) {
                     settings.save(
                       enableGlowEffect: !p0,
@@ -175,8 +175,8 @@ class AdvancedSettings extends SettingSubpageProvider {
                 rx: settings.enableMiniplayerParallaxEffect,
                 builder: (context, enableMiniplayerParallaxEffect) => CustomSwitchListTile(
                   icon: Broken.maximize,
-                  title: lang.ENABLE_PARALLAX_EFFECT,
-                  subtitle: lang.PERFORMANCE_NOTE,
+                  title: lang.enableParallaxEffect,
+                  subtitle: lang.performanceNote,
                   onChanged: (isTrue) => settings.save(
                     enableMiniplayerParallaxEffect: !isTrue,
                     performanceMode: PerformanceMode.custom,
@@ -186,8 +186,8 @@ class AdvancedSettings extends SettingSubpageProvider {
               ),
               CustomListTile(
                 icon: Broken.card_pos,
-                title: lang.ARTWORK,
-                subtitle: lang.PERFORMANCE_NOTE,
+                title: lang.artwork,
+                subtitle: lang.performanceNote,
                 trailing: ObxO(
                   rx: settings.artworkCacheHeightMultiplier,
                   builder: (context, artworkCacheHeightMultiplier) => NamidaWheelSlider(
@@ -220,7 +220,7 @@ class AdvancedSettings extends SettingSubpageProvider {
       child: CustomListTile(
         bgColor: getBgColor(_AdvancedSettingKeys.performanceMode),
         icon: Broken.cpu_setting,
-        title: lang.PERFORMANCE_MODE,
+        title: lang.performanceMode,
         trailing: ObxO(
           rx: settings.performanceMode,
           builder: (context, performanceMode) => Text(
@@ -263,7 +263,7 @@ class AdvancedSettings extends SettingSubpageProvider {
               stepper: stepper,
               extraValue: true,
               initValue: valInSettings,
-              text: valInSettings < 0 ? lang.UNLIMITED : (valInSettings * 1024 * 1024).fileSizeFormatted,
+              text: valInSettings < 0 ? lang.unlimited : (valInSettings * 1024 * 1024).fileSizeFormatted,
               onValueChanged: onSave,
             );
           },
@@ -332,14 +332,14 @@ class AdvancedSettings extends SettingSubpageProvider {
         isRemovingRx.close();
       },
       dialog: CustomBlurryDialog(
-        title: lang.CHOOSE,
+        title: lang.choose,
         actions: [
           const CancelButton(),
           ObxO(
             rx: isRemovingRx,
             builder: (context, isRemoving) => NamidaButton(
               enabled: !isRemoving,
-              text: lang.REMOVE,
+              text: lang.remove,
               onPressed: () async {
                 isRemovingRx.value = true;
                 final removedNum = await manager.removeSourcesTracksFromHistory(
@@ -350,7 +350,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                 );
                 isRemovingRx.value = false;
                 NamidaNavigator.inst.closeDialog();
-                snackyy(title: lang.NOTE, message: "${lang.REMOVED} ${removedNum.displayTrackKeyword}");
+                snackyy(title: lang.note, message: "${lang.removed}: ${removedNum.displayTrackKeyword}");
               },
             ),
           ),
@@ -367,7 +367,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                   const SizedBox(width: 8.0),
                   Obx(
                     (context) => Text(
-                      '${lang.TOTAL_TRACKS}: ${totalTracksToBeRemoved.valueR}',
+                      '${lang.totalTracks}: ${totalTracksToBeRemoved.valueR}',
                       style: context.textTheme.displayMedium,
                     ),
                   ),
@@ -405,7 +405,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                 (context) => ListTileWithCheckMark(
                   icon: Broken.broom,
                   active: removeDuplicates.valueR,
-                  title: lang.REMOVE_DUPLICATES,
+                  title: lang.removeDuplicates,
                   onTap: () => removeDuplicates.value = !removeDuplicates.value,
                 ),
               ),
@@ -433,8 +433,8 @@ class AdvancedSettings extends SettingSubpageProvider {
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: lang.ADVANCED_SETTINGS,
-      subtitle: lang.ADVANCED_SETTINGS_SUBTITLE,
+      title: lang.advancedSettings,
+      subtitle: lang.advancedSettingsSubtitle,
       icon: Broken.hierarchy_3,
       // icon: Broken.danger,
       child: Column(
@@ -466,10 +466,10 @@ class AdvancedSettings extends SettingSubpageProvider {
                   );
                 },
               ),
-              title: lang.RESCAN_VIDEOS,
+              title: lang.rescanVideos,
               onTap: () async {
                 await VideoController.inst.rescanLocalVideosPaths();
-                snackyy(title: lang.DONE, message: lang.FINISHED_UPDATING_LIBRARY);
+                snackyy(title: lang.done, message: lang.finishedUpdatingLibrary);
               },
             ),
           ),
@@ -481,17 +481,17 @@ class AdvancedSettings extends SettingSubpageProvider {
                 baseIcon: Broken.trash,
                 secondaryIcon: Broken.refresh,
               ),
-              title: lang.REMOVE_SOURCE_FROM_HISTORY,
+              title: lang.removeSourceFromHistory,
               onTap: () {
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     normalTitleStyle: true,
-                    title: lang.CHOOSE,
+                    title: lang.choose,
                     child: SmoothSingleChildScrollView(
                       child: Column(
                         children: [
                           CustomListTile(
-                            title: lang.LOCAL,
+                            title: lang.local,
                             subtitle: '',
                             icon: Broken.music_library_2,
                             onTap: () {
@@ -500,7 +500,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                             },
                           ),
                           CustomListTile(
-                            title: lang.YOUTUBE,
+                            title: lang.youtube,
                             subtitle: '',
                             icon: Broken.video_square,
                             onTap: () {
@@ -541,7 +541,7 @@ class AdvancedSettings extends SettingSubpageProvider {
             maxGB: 4,
             key: _AdvancedSettingKeys.maxImageCache,
             icon: Broken.gallery,
-            title: lang.MAX_IMAGE_CACHE_SIZE,
+            title: lang.maxImageCacheSize,
             rx: settings.imagesMaxCacheInMB,
             onSave: (val) => settings.save(imagesMaxCacheInMB: val),
           ),
@@ -550,7 +550,7 @@ class AdvancedSettings extends SettingSubpageProvider {
             maxGB: 12,
             key: _AdvancedSettingKeys.maxAudioCache,
             icon: Broken.audio_square,
-            title: lang.MAX_AUDIO_CACHE_SIZE,
+            title: lang.maxAudioCacheSize,
             rx: settings.audiosMaxCacheInMB,
             onSave: (val) => settings.save(audiosMaxCacheInMB: val),
           ),
@@ -559,7 +559,7 @@ class AdvancedSettings extends SettingSubpageProvider {
             maxGB: 32,
             key: _AdvancedSettingKeys.maxVideoCache,
             icon: Broken.video,
-            title: lang.MAX_VIDEO_CACHE_SIZE,
+            title: lang.maxVideoCacheSize,
             rx: settings.videosMaxCacheInMB,
             onSave: (val) => settings.save(videosMaxCacheInMB: val),
           ),
@@ -632,7 +632,7 @@ class __ClearVideoCacheListTileState extends State<_ClearVideoCacheListTile> {
         baseIcon: Broken.video,
         secondaryIcon: Broken.close_circle,
       ),
-      title: lang.CLEAR_VIDEO_CACHE,
+      title: lang.clearVideoCache,
       trailingText: totalSize.fileSizeFormatted,
       onTap: () {
         final allvideos = VideoController.inst.getCurrentVideosInCache();
@@ -640,7 +640,7 @@ class __ClearVideoCacheListTileState extends State<_ClearVideoCacheListTile> {
         cacheManager.promptCacheDeleteDialog(
           allItems: allvideos,
           deleteStatsNote: (items) => cacheManager.getDeleteSizeSubtitleText(items.length, totalSize),
-          chooseNote: lang.CLEAR_VIDEO_CACHE_NOTE,
+          chooseNote: lang.clearVideoCacheNote,
           onChoosePrompt: () {
             cacheManager.showChooseToDeleteDialog(
               forVideos: true,
@@ -745,12 +745,12 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
           baseIcon: Broken.image,
           secondaryIcon: Broken.close_circle,
         ),
-        title: lang.CLEAR_IMAGE_CACHE,
+        title: lang.clearImageCache,
         trailingText: dirsMap.isEmpty ? '?' : totalBytes.fileSizeFormatted,
         onTap: () {
           NamidaNavigator.inst.navigateDialog(
             dialog: CustomBlurryDialog(
-              title: lang.CONFIGURE,
+              title: lang.configure,
               normalTitleStyle: true,
               actions: [
                 const CancelButton(),
@@ -758,7 +758,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
                   (context) {
                     final total = dirsChoosen.valueR.fold(0, (p, element) => p + (dirsMap[element] ?? 0));
                     return NamidaButton(
-                      text: "${lang.CLEAR.toUpperCase()} (${total.fileSizeFormatted})",
+                      text: "${lang.clear.toUpperCase()} (${total.fileSizeFormatted})",
                       onPressed: () async {
                         NamidaNavigator.inst.closeDialog();
 
@@ -782,7 +782,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
                   ...mainDirs.map(
                     (e) {
                       final bytes = dirsMap[e] ?? 0;
-                      final warningText = e == AppDirs.ARTWORKS || e == AppDirs.THUMBNAILS ? lang.CLEAR_IMAGE_CACHE_WARNING : '';
+                      final warningText = e == AppDirs.ARTWORKS || e == AppDirs.THUMBNAILS ? lang.clearImageCacheWarning : '';
                       final subtitle = warningText == '' ? bytes.fileSizeFormatted : "${bytes.fileSizeFormatted}\n$warningText";
                       return Padding(
                         padding: const EdgeInsets.all(6.0),
@@ -855,7 +855,7 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
         baseIcon: Broken.musicnote,
         secondaryIcon: Broken.close_circle,
       ),
-      title: lang.CLEAR_AUDIO_CACHE,
+      title: lang.clearAudioCache,
       trailingText: totalSize == -1 ? '?' : totalSize.fileSizeFormatted,
       onTap: () {
         final allaudios = <AudioCacheDetails>[];
@@ -867,7 +867,7 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
         cacheManager.promptCacheDeleteDialog(
           allItems: allaudios,
           deleteStatsNote: (items) => cacheManager.getDeleteSizeSubtitleText(items.length, totalSize),
-          chooseNote: lang.CLEAR_VIDEO_CACHE_NOTE,
+          chooseNote: lang.clearVideoCacheNote,
           onChoosePrompt: () {
             cacheManager.showChooseToDeleteDialog(
               forVideos: false,
@@ -934,7 +934,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
         secondaryIconColor: colorScheme,
         delightenColors: true,
       ),
-      title: lang.UPDATE_DIRECTORY_PATH,
+      title: lang.updateDirectoryPath,
       subtitle: oldPath,
       onTap: () {
         final oldDirController = TextEditingController(text: oldPath);
@@ -955,7 +955,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
           dialogBuilder: (theme) => Form(
             key: formKey,
             child: CustomBlurryDialog(
-              title: lang.UPDATE_DIRECTORY_PATH,
+              title: lang.updateDirectoryPath,
               actions: [
                 const CancelButton(),
                 ObxO(
@@ -963,7 +963,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                   builder: (context, updating) => AnimatedEnabled(
                     enabled: !updating,
                     child: NamidaButton(
-                      text: lang.UPDATE,
+                      text: lang.update,
                       onPressed: () async {
                         Future<void> okUpdate() async {
                           isUpdating.value = true;
@@ -988,14 +988,14 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                                 actions: [
                                   const CancelButton(),
                                   NamidaButton(
-                                    text: lang.CONFIRM,
+                                    text: lang.confirm,
                                     onPressed: () async {
                                       NamidaNavigator.inst.closeDialog();
                                       await okUpdate();
                                     },
                                   ),
                                 ],
-                                bodyText: lang.OLD_DIRECTORY_STILL_HAS_TRACKS,
+                                bodyText: lang.oldDirectoryStillHasTracks,
                               ),
                             );
                           } else {
@@ -1013,11 +1013,11 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                   CustomTagTextField(
                     controller: oldDirController,
                     hintText: '',
-                    labelText: lang.OLD_DIRECTORY,
+                    labelText: lang.oldDirectory,
                     validator: (value) {
                       value ??= '';
                       if (value.isEmpty) {
-                        return lang.PLEASE_ENTER_A_NAME;
+                        return lang.pleaseEnterAName;
                       }
 
                       return null;
@@ -1030,15 +1030,15 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                         child: CustomTagTextField(
                           controller: newDirController,
                           hintText: '',
-                          labelText: lang.NEW_DIRECTORY,
+                          labelText: lang.newDirectory,
                           validator: (value) {
                             value ??= '';
                             if (value.isEmpty) {
-                              return lang.PLEASE_ENTER_A_NAME;
+                              return lang.pleaseEnterAName;
                             }
                             try {
                               if (!DirectoryIndex.guess(value, null).existsSync()) {
-                                return lang.DIRECTORY_DOESNT_EXIST;
+                                return lang.directoryDoesntExist;
                               }
                             } catch (e) {
                               return e.toString();
@@ -1050,7 +1050,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                       const SizedBox(width: 12.0),
                       NamidaIconButton(
                         onPressed: () async {
-                          final dir = await NamidaFileBrowser.getDirectory(note: lang.NEW_DIRECTORY);
+                          final dir = await NamidaFileBrowser.getDirectory(note: lang.newDirectory);
                           if (dir != null) newDirController.text = dir;
                         },
                         icon: Broken.folder,
@@ -1061,7 +1061,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                   Obx(
                     (context) => CustomSwitchListTile(
                       passedColor: colorScheme,
-                      title: lang.UPDATE_MISSING_TRACKS_ONLY,
+                      title: lang.updateMissingTracksOnly,
                       value: updateMissingOnly.valueR,
                       onChanged: (isTrue) => updateMissingOnly.toggle(),
                     ),
@@ -1084,7 +1084,7 @@ class _FixYTDLPThumbnailSizeListTile extends StatelessWidget {
   Future<void> _onFixYTDLPPress() async {
     if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
 
-    final dirs = await NamidaFileBrowser.getDirectories(note: lang.FIX_YTDLP_BIG_THUMBNAIL_SIZE);
+    final dirs = await NamidaFileBrowser.getDirectories(note: lang.fixYtdlpBigThumbnailSize);
     if (dirs.isEmpty) return;
     await NamidaFFMPEG.inst.fixYTDLPBigThumbnailSize(directoriesPaths: dirs);
   }
@@ -1098,14 +1098,14 @@ class _FixYTDLPThumbnailSizeListTile extends StatelessWidget {
         final currentProgress = p?.progress ?? 0;
         final totalAudiosToFix = p?.totalFiles ?? 0;
         final totalFailed = p?.totalFailed ?? 0;
-        final failedSubtitle = totalFailed > 0 ? "${lang.FAILED}: $totalFailed" : null;
+        final failedSubtitle = totalFailed > 0 ? "${lang.failed}: $totalFailed" : null;
         return CustomListTile(
           bgColor: bgColor,
           leading: const StackedIcon(
             baseIcon: Broken.document_code_2,
             secondaryIcon: Broken.video_square,
           ),
-          title: lang.FIX_YTDLP_BIG_THUMBNAIL_SIZE,
+          title: lang.fixYtdlpBigThumbnailSize,
           subtitle: currentAudioPath?.getFilename ?? failedSubtitle,
           trailingText: totalAudiosToFix > 0 ? "$currentProgress/$totalAudiosToFix" : null,
           onTap: _onFixYTDLPPress,
@@ -1135,11 +1135,11 @@ class _CompressImagesListTile extends StatelessWidget {
         dirsToCompress.close();
       },
       dialog: CustomBlurryDialog(
-        title: lang.CONFIGURE,
+        title: lang.configure,
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: lang.COMPRESS,
+            text: lang.compress,
             onPressed: () {
               NamidaNavigator.inst.closeDialog();
               _startCompressing(dirsToCompress.value, compPerc.value, keepOriginalFileDates.value);
@@ -1175,7 +1175,7 @@ class _CompressImagesListTile extends StatelessWidget {
             ),
             const SizedBox(height: 12.0),
             CustomListTile(
-              title: lang.COMPRESSION_PERCENTAGE,
+              title: lang.compressionPercentage,
               trailing: Obx(
                 (context) => NamidaWheelSlider(
                   max: 100,
@@ -1187,9 +1187,9 @@ class _CompressImagesListTile extends StatelessWidget {
             ),
             CustomListTile(
               icon: Broken.folder_add,
-              title: lang.PICK_FROM_STORAGE,
+              title: lang.pickFromStorage,
               onTap: () async {
-                final dirsPath = await NamidaFileBrowser.getDirectories(note: lang.COMPRESS_IMAGES);
+                final dirsPath = await NamidaFileBrowser.getDirectories(note: lang.compressImages);
                 if (dirsPath.isEmpty) return;
                 initialDirectories.addAll(dirsPath);
                 dirsToCompress.addAll(dirsPath);
@@ -1198,7 +1198,7 @@ class _CompressImagesListTile extends StatelessWidget {
             Obx(
               (context) => CustomSwitchListTile(
                 icon: Broken.document_code_2,
-                title: lang.KEEP_FILE_DATES,
+                title: lang.keepFileDates,
                 value: keepOriginalFileDates.valueR,
                 onChanged: (isTrue) => keepOriginalFileDates.value = !isTrue,
               ),
@@ -1232,8 +1232,8 @@ class _CompressImagesListTile extends StatelessWidget {
             baseIcon: Broken.gallery,
             secondaryIcon: Broken.magicpen,
           ),
-          title: lang.COMPRESS_IMAGES,
-          subtitle: currentImagePath?.getFilename ?? (totalFailed > 0 ? "${lang.FAILED}: $totalFailed" : null),
+          title: lang.compressImages,
+          subtitle: currentImagePath?.getFilename ?? (totalFailed > 0 ? "${lang.failed}: $totalFailed" : null),
           trailingText: totalImagesToCompress > 0 ? "$currentProgress/$totalImagesToCompress" : null,
           onTap: _onCompressImagePress,
         );

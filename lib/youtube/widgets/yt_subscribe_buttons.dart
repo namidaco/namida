@@ -130,7 +130,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
         isSaving.close();
       },
       dialog: CustomBlurryDialog(
-        title: lang.CONFIGURE,
+        title: lang.configure,
         normalTitleStyle: true,
         actions: [
           const CancelButton(),
@@ -140,13 +140,13 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
               rx: isSaving,
               builder: (context, saving) => NamidaButton(
                 enabled: activeNoti != null && !saving,
-                text: lang.SAVE.toUpperCase(),
+                text: lang.save.toUpperCase(),
                 textWidget: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (saving) const LoadingIndicator(),
                     if (saving) const SizedBox(width: 4.0),
-                    NamidaButtonText(lang.SAVE.toUpperCase()),
+                    NamidaButtonText(lang.save.toUpperCase()),
                   ],
                 ),
                 onPressed: () async {
@@ -219,11 +219,11 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
       dialog: CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        bodyText: lang.CONFIRM,
+        bodyText: lang.confirm,
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: lang.REMOVE.toUpperCase(),
+            text: lang.remove.toUpperCase(),
             onPressed: () async {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
@@ -263,14 +263,14 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
       textfieldConfig: BottomSheetTextFieldConfig(
         initalControllerText: '',
         hintText: '',
-        labelText: lang.GROUP,
+        labelText: lang.group,
         validator: (value) {
-          if (value == null || value.isEmpty) return lang.EMPTY_VALUE;
-          if (doesNameExist(value)) return lang.PLEASE_ENTER_A_DIFFERENT_NAME;
+          if (value == null || value.isEmpty) return lang.emptyValue;
+          if (doesNameExist(value)) return lang.pleaseEnterADifferentName;
           return null;
         },
       ),
-      buttonText: lang.ADD,
+      buttonText: lang.add,
       onButtonTap: (text) => true,
     );
     if (text != null) onAdd(text);
@@ -318,7 +318,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Text(
-                      '${lang.CONFIGURE}: ${lang.CHANNEL}',
+                      '${lang.configure}: ${lang.channel}',
                       style: textTheme.displayLarge,
                     ),
                   ),
@@ -341,7 +341,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                           ),
                           const SizedBox(width: 8.0),
                           NamidaButtonText(
-                            favouriteChannel == true ? lang.REMOVE_FROM_FAVOURITES : lang.ADD_TO_FAVOURITES,
+                            favouriteChannel == true ? lang.removeFromFavourites : lang.addToFavourites,
                             style: const TextStyle(
                               fontSize: 18.0,
                             ),
@@ -363,13 +363,13 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                       children: [
                         Expanded(
                           child: Text(
-                            lang.GROUP,
+                            lang.group,
                             style: textTheme.displayLarge,
                           ),
                         ),
                         NamidaInkWellButton(
                           sizeMultiplier: 1.1,
-                          text: lang.ADD,
+                          text: lang.add,
                           icon: Broken.add_circle,
                           onTap: () => _onAddGroupTap(
                             doesNameExist: allChannelGroups.contains,
@@ -417,7 +417,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: NamidaButton(
-                    text: lang.DONE,
+                    text: lang.done,
                     onPressed: Navigator.of(context).pop,
                   ),
                 ),
@@ -452,7 +452,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                 foregroundColor: Color.alphaBlend(Colors.grey.withOpacityExt(subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
               ),
               child: NamidaButtonText(
-                subscribed ? lang.SUBSCRIBED : lang.SUBSCRIBE,
+                subscribed ? lang.subscribed : lang.subscribe,
               ),
               onPressed: () async {
                 final info = widget.mainChannelInfo.value;

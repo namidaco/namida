@@ -110,15 +110,15 @@ class YtUtilsPlaylist {
     }
 
     await showNamidaBottomSheetWithTextField(
-      title: lang.CONFIGURE,
+      title: lang.configure,
       isInitiallyLoading: isInitiallyLoading,
       textfieldConfig: BottomSheetTextFieldConfigWC(
         controller: titleController,
         hintText: initialTitle ?? '',
         maxLength: YoutubeInfoController.userplaylist.MAX_PLAYLIST_NAME,
-        labelText: lang.NAME,
+        labelText: lang.name,
         validator: (value) {
-          if (value == null || value.isEmpty) return lang.PLEASE_ENTER_A_NAME;
+          if (value == null || value.isEmpty) return lang.pleaseEnterAName;
           return YoutubeInfoController.userplaylist.validatePlaylistTitle(value);
         },
       ),
@@ -129,7 +129,7 @@ class YtUtilsPlaylist {
                 controller: descriptionController,
                 hintText: initialDescription ?? '',
                 maxLength: YoutubeInfoController.userplaylist.MAX_PLAYLIST_DESCRIPTION,
-                labelText: lang.DESCRIPTION,
+                labelText: lang.description,
                 validator: (value) => null,
               ),
             ],
@@ -177,7 +177,7 @@ class YtUtilsPlaylist {
           ),
         ],
       ),
-      buttonText: isEdit ? lang.SAVE : lang.ADD,
+      buttonText: isEdit ? lang.save : lang.add,
       onButtonTap: (title) async {
         if (title.isEmpty) return false;
         final description = descriptionController?.text;
@@ -206,11 +206,11 @@ extension YoutubePlaylistShare on YoutubePlaylist {
       dialogBuilder: (theme) => CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        bodyText: "${lang.DELETE}: $name?",
+        bodyText: "${lang.delete}: $name?",
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: lang.DELETE.toUpperCase(),
+            text: lang.delete.toUpperCase(),
             onPressed: () {
               deleted = true;
               NamidaNavigator.inst.closeDialog();
@@ -227,20 +227,20 @@ extension YoutubePlaylistShare on YoutubePlaylist {
     required String playlistName,
   }) async {
     return await showNamidaBottomSheetWithTextField(
-      title: lang.RENAME_PLAYLIST,
+      title: lang.renamePlaylist,
       textfieldConfig: BottomSheetTextFieldConfig(
         initalControllerText: playlistName,
         hintText: playlistName,
-        labelText: lang.NAME,
+        labelText: lang.name,
         validator: (value) => YoutubePlaylistController.inst.validatePlaylistName(value),
       ),
-      buttonText: lang.SAVE,
+      buttonText: lang.save,
       onButtonTap: (text) async {
         final didRename = await YoutubePlaylistController.inst.renamePlaylist(playlistName, text);
         if (didRename) {
           return true;
         } else {
-          snackyy(title: lang.ERROR, message: lang.COULDNT_RENAME_PLAYLIST);
+          snackyy(title: lang.error, message: lang.couldntRenamePlaylist);
           return false;
         }
       },
@@ -324,7 +324,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
                           ),
                           const SizedBox(height: 12.0),
                           Text(
-                            '${lang.FETCHING}...',
+                            '${lang.fetching}...',
                             style: textTheme.displayLarge,
                           ),
                           const SizedBox(height: 8.0),
@@ -380,7 +380,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       case YoutiPieFetchAllResType.success || YoutiPieFetchAllResType.alreadyDone:
         break;
       case YoutiPieFetchAllResType.fail || YoutiPieFetchAllResType.inProgress:
-        snackyy(title: lang.ERROR, message: 'error fetching playlist videos: $fetchRes');
+        snackyy(title: lang.error, message: '${lang.errorFetchingVideoList}: $fetchRes');
         break; // still show the page
       case YoutiPieFetchAllResType.alreadyCanceled:
         return [];
@@ -455,7 +455,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       if (playlistToFetch is YoutiPiePlaylistResult && isInYTOnlineLibrary != null)
         NamidaPopupItem(
           icon: Broken.archive,
-          title: isInYTOnlineLibrary ? lang.REMOVE_FROM_LIBRARY : lang.SAVE_TO_LIBRARY,
+          title: isInYTOnlineLibrary ? lang.removeFromLibrary : lang.saveToLibrary,
           trailing: const Icon(Broken.global, size: 14.0),
           onTap: () async {
             bool? didSuccess;
@@ -469,16 +469,16 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
               );
             }
             if (didSuccess == true) {
-              snackyy(title: lang.SUCCEEDED, message: (isInYTOnlineLibrary ? lang.REMOVED : lang.ADDED).capitalizeFirst(), borderColor: Colors.green.withOpacityExt(0.5));
+              snackyy(title: lang.succeeded, message: (isInYTOnlineLibrary ? lang.removed : lang.added).capitalizeFirst(), borderColor: Colors.green.withOpacityExt(0.5));
             } else {
-              snackyy(title: lang.ERROR, message: lang.FAILED, isError: true);
+              snackyy(title: lang.error, message: lang.failed, isError: true);
             }
           },
         ),
       if (playlistNameToAddAs != '')
         NamidaPopupItem(
           icon: Broken.add_square,
-          title: lang.ADD_AS_A_NEW_PLAYLIST,
+          title: lang.addAsANewPlaylist,
           subtitle: playlistNameToAddAs,
           onTap: () async {
             final fetchRes = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch);
@@ -486,7 +486,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
               case YoutiPieFetchAllResType.success || YoutiPieFetchAllResType.alreadyDone:
                 break;
               case YoutiPieFetchAllResType.fail || YoutiPieFetchAllResType.inProgress:
-                snackyy(title: lang.ERROR, message: 'error fetching playlist videos: $fetchRes');
+                snackyy(title: lang.error, message: '${lang.errorFetchingVideoList}: $fetchRes');
                 return;
               case YoutiPieFetchAllResType.alreadyCanceled:
                 return;
@@ -499,14 +499,14 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         ),
       NamidaPopupItem(
         icon: Broken.music_playlist,
-        title: lang.ADD_TO_PLAYLIST,
+        title: lang.addToPlaylist,
         onTap: () async {
           final fetchRes = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch);
           switch (fetchRes) {
             case YoutiPieFetchAllResType.success || YoutiPieFetchAllResType.alreadyDone:
               break;
             case YoutiPieFetchAllResType.fail || YoutiPieFetchAllResType.inProgress:
-              snackyy(title: lang.ERROR, message: 'error fetching playlist videos: $fetchRes');
+              snackyy(title: lang.error, message: '${lang.errorFetchingVideoList}: $fetchRes');
               return;
             case YoutiPieFetchAllResType.alreadyCanceled:
               return;
@@ -532,7 +532,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
           playlistToFetch.info.uploader?.id == YoutubeAccountController.current.activeAccountChannel.value?.id)
         NamidaPopupItem(
           icon: Broken.edit_2,
-          title: lang.EDIT,
+          title: lang.edit,
           onTap: () async {
             YtUtilsPlaylist().promptEditPlaylist(
               playlist: playlistToFetch,
@@ -553,7 +553,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         ),
       NamidaPopupItem(
         icon: Broken.share,
-        title: lang.SHARE,
+        title: lang.share,
         onTap: () {
           final url = this.buildUrl();
           NamidaUtils.shareUri(url);
@@ -562,7 +562,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       if (displayDownloadItem)
         NamidaPopupItem(
           icon: Broken.import,
-          title: lang.DOWNLOAD,
+          title: lang.download,
           onTap: () {
             if (isInFullScreen) NamidaNavigator.inst.exitFullScreen();
             showPlaylistDownloadSheet(
@@ -574,7 +574,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       if (displayOpenPlaylist)
         NamidaPopupItem(
           icon: Broken.export_2,
-          title: lang.OPEN,
+          title: lang.open,
           onTap: () {
             if (isInFullScreen) NamidaNavigator.inst.exitFullScreen();
             YTHostedPlaylistSubpage(
@@ -586,7 +586,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       if (displayPlay)
         NamidaPopupItem(
           icon: Broken.play,
-          title: "${lang.PLAY} ($countText)",
+          title: "${lang.play} ($countText)",
           onTap: () async {
             final videos = await fetchAllIDs();
             if (videos.isEmpty) return;
@@ -596,7 +596,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       if (displayShuffle)
         NamidaPopupItem(
           icon: Broken.shuffle,
-          title: "${lang.SHUFFLE} ($countText)",
+          title: "${lang.shuffle} ($countText)",
           onTap: () async {
             final videos = await fetchAllIDs();
             if (videos.isEmpty) return;
@@ -605,7 +605,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         ),
       NamidaPopupItem(
         icon: Broken.next,
-        title: "${lang.PLAY_NEXT} ($countText)",
+        title: "${lang.playNext} ($countText)",
         onTap: () async {
           final videos = await fetchAllIDs();
           if (videos.isEmpty) return;
@@ -615,7 +615,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       if (playAfterVid != null)
         NamidaPopupItem(
           icon: Broken.hierarchy_square,
-          title: '${lang.PLAY_AFTER}: ${playAfterVid.diff.displayVideoKeyword}',
+          title: '${lang.playAfter}: ${playAfterVid.diff.displayVideoKeyword}',
           subtitle: playAfterVid.name,
           oneLinedSub: true,
           onTap: () async {
@@ -626,7 +626,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         ),
       NamidaPopupItem(
         icon: Broken.play_cricle,
-        title: "${lang.PLAY_LAST} ($countText)",
+        title: "${lang.playLast} ($countText)",
         onTap: () async {
           final videos = await fetchAllIDs();
           if (videos.isEmpty) return;

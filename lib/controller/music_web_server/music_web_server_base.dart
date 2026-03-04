@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 // ignore: depend_on_referenced_packages
 import 'package:dio/dio.dart';
@@ -360,19 +361,16 @@ class _MusicWebServerAuthManager {
 
   void promptFillMissingAuthDialog() {
     final missingAuthDir = settings.directoriesToScan.value.whereType<DirectoryIndexServer>().where((d) => _authInfoRxMap.value[d] == null);
-    final missingAuthDirText = missingAuthDir.toBodyText();
-    final warningText = lang.SOME_WEB_SERVERS_REQUIRE_AUTHENTICATION;
-    final bodyText = '$warningText\n\n$missingAuthDirText';
+    final warningText = lang.someWebServersRequireAuthentication;
 
     NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
+      dialogBuilder: (theme) => CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        bodyText: bodyText,
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: lang.UPDATE.toUpperCase(),
+            text: lang.update.toUpperCase(),
             onPressed: () {
               NamidaNavigator.inst.closeDialog();
               SettingsSearchController.inst
@@ -385,6 +383,30 @@ class _MusicWebServerAuthManager {
             },
           ),
         ],
+        child: Column(
+          mainAxisSize: .min,
+          crossAxisAlignment: .start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0, left: 6.0, right: 6.0),
+              child: Text(
+                warningText,
+                style: theme.textTheme.displayMedium,
+              ),
+            ),
+            ...missingAuthDir
+                .map(
+                  (e) => e.toWidget(
+                    theme: theme,
+                    stillExistsCallback: (d) => true,
+                  ),
+                )
+                .addSeparators(
+                  separator: const SizedBox(height: 8.0),
+                  skipFirst: 1,
+                ),
+          ],
+        ),
       ),
     );
   }

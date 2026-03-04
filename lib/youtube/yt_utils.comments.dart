@@ -189,13 +189,13 @@ class _YTUtilsCommentActions {
       textfieldConfig: BottomSheetTextFieldConfig(
         hintText: initialComment ?? '',
         initalControllerText: initialComment,
-        labelText: isReply ? lang.REPLY : lang.COMMENT,
+        labelText: isReply ? lang.reply : lang.comment,
         validator: (value) {
-          if (value == null || value.isEmpty) return lang.EMPTY_VALUE;
+          if (value == null || value.isEmpty) return lang.emptyValue;
           return null;
         },
       ),
-      buttonText: isEdit ? lang.SAVE : lang.ADD,
+      buttonText: isEdit ? lang.save : lang.add,
       onButtonTap: (commentText) async {
         if (commentText.isEmpty) return false;
         return onButtonConfirm(commentText);
@@ -204,7 +204,7 @@ class _YTUtilsCommentActions {
   }
 
   void _showError() {
-    snackyy(message: lang.FAILED, isError: true);
+    snackyy(message: lang.failed, isError: true);
   }
 
   String? _getCurrentAutorIfActive() {
@@ -236,7 +236,7 @@ class _YTUtilsCommentActions {
       dialog: CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        title: lang.CONFIRM,
+        title: lang.confirm,
         actions: [
           const CancelButton(),
           ObxO(
@@ -244,13 +244,13 @@ class _YTUtilsCommentActions {
             builder: (context, doing) => AnimatedEnabled(
               enabled: !doing,
               child: NamidaButton(
-                text: lang.DELETE.toUpperCase(),
+                text: lang.delete.toUpperCase(),
                 textWidget: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (doing) const LoadingIndicator(),
                     if (doing) const SizedBox(width: 4.0),
-                    NamidaButtonText(lang.DELETE.toUpperCase()),
+                    NamidaButtonText(lang.delete.toUpperCase()),
                   ],
                 ),
                 onPressed: () async {

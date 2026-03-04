@@ -109,7 +109,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   ),
                   textField: CustomTextFiled(
                     textFieldController: LibraryTab.tracks.textSearchControllerUI,
-                    textFieldHintText: lang.FILTER_TRACKS,
+                    textFieldHintText: lang.filterTracks,
                     onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.track),
                   ),
                 );
@@ -129,7 +129,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  lang.NO_TRACKS_FOUND,
+                                  lang.noTracksFound,
                                   style: context.textTheme.displayLarge,
                                 ),
                                 const SizedBox(height: 8.0),
@@ -147,7 +147,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                                         .ignoreError();
                                   },
                                   child: Text(
-                                    lang.ADD_FOLDER,
+                                    lang.addFolder,
                                     style: context.textTheme.displayLarge,
                                   ),
                                 ),

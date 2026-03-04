@@ -126,8 +126,8 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   void _showNetworkError() {
     Timer(Duration.zero, () {
       snackyy(
-        title: lang.ERROR,
-        message: lang.NO_NETWORK_AVAILABLE_TO_FETCH_DATA,
+        title: lang.error,
+        message: lang.noNetworkAvailableToFetchData,
         isError: true,
         top: false,
       );
@@ -416,11 +416,11 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
               Widget? button;
               if (widget.operation.requiresAccount) {
                 if (activeAccountChannel == null) {
-                  errorMessage = lang.SIGN_IN_YOU_NEED_ACCOUNT_TO_VIEW_PAGE;
+                  errorMessage = lang.signInYouNeedAccountToViewPage;
                   button = NamidaInkWellButton(
                     sizeMultiplier: 1.1,
                     icon: Broken.user_edit,
-                    text: lang.MANAGE_YOUR_ACCOUNTS,
+                    text: lang.manageYourAccounts,
                     onTap: const YoutubeAccountManagePage().navigate,
                   );
                 } else if (YoutubeAccountController.operationBlockedByMembership(widget.operation, membership)) {
@@ -428,7 +428,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                   button = NamidaInkWellButton(
                     sizeMultiplier: 1.1,
                     icon: Broken.message_edit,
-                    text: lang.MEMBERSHIP_MANAGE,
+                    text: lang.membershipManage,
                     onTap: const YoutubeManageSubscriptionPage().navigate,
                   );
                 }

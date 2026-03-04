@@ -129,7 +129,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                   getChipButton(
                     context: context,
                     sort: YTLocalSearchSortType.mostPlayed,
-                    title: lang.MOST_PLAYED,
+                    title: lang.mostPlayed,
                     icon: Broken.medal,
                     enabled: (sort) => sort == YTLocalSearchController.inst.sortType,
                   ),
@@ -137,7 +137,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                   getChipButton(
                     context: context,
                     sort: YTLocalSearchSortType.latestPlayed,
-                    title: lang.RECENT_LISTENS,
+                    title: lang.recentListens,
                     icon: Broken.timer,
                     enabled: (sort) => sort == YTLocalSearchController.inst.sortType,
                   ),
@@ -145,7 +145,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                   getChipButton(
                     context: context,
                     sort: YTLocalSearchSortType.firstListen,
-                    title: lang.FIRST_LISTEN,
+                    title: lang.firstListen,
                     icon: Broken.calendar_search,
                     enabled: (sort) => sort == YTLocalSearchController.inst.sortType,
                   ),

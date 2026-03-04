@@ -235,7 +235,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
         final sameAsCurrent = widget.generator.generateRecommendedTrack(ct).take(maxCount);
         if (sameAsCurrent.isNotEmpty) {
           final supremacy = [ct, ...sameAsCurrent];
-          supremacyEntry = MapEntry('"${ct.title}" ${lang.SUPREMACY}', supremacy);
+          supremacyEntry = MapEntry('"${ct.title}" ${lang.supremacy}', supremacy);
         }
       }
       final favsSample = widget.playlistManager.favouritesPlaylist.value.tracks.getRandomSample(25).tracks.toList();
@@ -284,14 +284,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
       recommendedMixTracks.shuffle();
 
       _mixes.addAll([
-        MapEntry(lang.NEW_TRACKS_RECOMMENDED, recommendedMixTracks),
+        MapEntry(lang.newTracksRecommended, recommendedMixTracks),
         ?supremacyEntry,
-        MapEntry(lang.TOP_RECENTS, topRecentListenedKeys),
-        MapEntry(lang.UNDERRATED, underrated),
-        MapEntry(lang.LOST_PARTNERS, lostPartners),
-        MapEntry(lang.DISCOVER, discover),
-        MapEntry(lang.FAVOURITES, favsSample),
-        MapEntry(lang.RANDOM_PICKS, _randomTracks),
+        MapEntry(lang.topRecents, topRecentListenedKeys),
+        MapEntry(lang.underrated, underrated),
+        MapEntry(lang.lostPartners, lostPartners),
+        MapEntry(lang.discover, discover),
+        MapEntry(lang.favourites, favsSample),
+        MapEntry(lang.randomPicks, _randomTracks),
       ]);
 
       // -- if any one is empty, remove it and add it to the end
@@ -381,7 +381,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
         mainListController.dispose();
       },
       dialog: CustomBlurryDialog(
-        title: "${lang.CONFIGURE} (${lang.REORDERABLE})",
+        title: "${lang.configure} (${lang.reorderable})",
         actions: const [
           DoneButton(),
         ],
@@ -544,7 +544,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       child: _HorizontalList(
                                         homepageItem: element,
                                         isLoading: _isLoading,
-                                        title: lang.MIXES,
+                                        title: lang.mixes,
                                         icon: Broken.scanning,
                                         height: 186.0 + 12.0,
                                         itemCount: _isLoading ? _shimmerList.length : _mixes.length,
@@ -569,7 +569,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       listId: 'recentListens',
                                       homepageItem: element,
                                       isLoading: _isLoading,
-                                      title: lang.RECENT_LISTENS,
+                                      title: lang.recentListens,
                                       icon: Broken.command_square,
                                       listy: _recentListened,
                                       onTap: NamidaOnTaps.inst.onHistoryPlaylistTap,
@@ -584,7 +584,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       listId: 'topRecentListens',
                                       homepageItem: element,
                                       isLoading: _isLoading,
-                                      title: lang.TOP_RECENTS,
+                                      title: lang.topRecents,
                                       icon: Broken.crown_1,
                                       listy: const [],
                                       listWithListens: _topRecentListened,
@@ -601,10 +601,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       controller: _lostMemoriesScrollController,
                                       homepageItem: element,
                                       isLoading: _isLoading,
-                                      title: lang.LOST_MEMORIES,
+                                      title: lang.lostMemories,
                                       subtitle: () {
                                         final diff = DateTime.now().year - currentYearLostMemories;
-                                        return lang.LOST_MEMORIES_SUBTITLE.replaceFirst('_NUM_', '$diff');
+                                        return lang.lostMemoriesSubtitle(number: diff);
                                       }(),
                                       icon: Broken.link_21,
                                       listy: const [],
@@ -666,7 +666,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       queueSource: QueueSource.recentlyAdded,
                                       isLoading: _isLoading,
                                       homepageItem: element,
-                                      title: lang.RECENTLY_ADDED,
+                                      title: lang.recentlyAdded,
                                       icon: Broken.back_square,
                                       listy: _recentlyAdded,
                                       onTap: _navigateToRecentlyListened,
@@ -682,7 +682,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                     return _AlbumsList(
                                       isLoading: _isLoading,
                                       homepageItem: element,
-                                      title: lang.RECENT_ALBUMS,
+                                      title: lang.recentAlbums,
                                       mainIcon: Broken.undo,
                                       albums: _listOrShimmer(_recentAlbums),
                                       listens: null,
@@ -693,7 +693,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                     return _AlbumsList(
                                       isLoading: _isLoading,
                                       homepageItem: element,
-                                      title: lang.TOP_RECENT_ALBUMS,
+                                      title: lang.topRecentAlbums,
                                       mainIcon: Broken.crown_1,
                                       albums: _listOrShimmer(keys),
                                       listens: (album) => _topRecentAlbums[album] ?? 0,
@@ -703,7 +703,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                     return _ArtistsList(
                                       isLoading: _isLoading,
                                       homepageItem: element,
-                                      title: lang.RECENT_ARTISTS,
+                                      title: lang.recentArtists,
                                       mainIcon: Broken.undo,
                                       artists: _listOrShimmer(_recentArtists),
                                       listens: null,
@@ -714,7 +714,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                     return _ArtistsList(
                                       isLoading: _isLoading,
                                       homepageItem: element,
-                                      title: lang.TOP_RECENT_ARTISTS,
+                                      title: lang.topRecentArtists,
                                       mainIcon: Broken.crown_1,
                                       artists: _listOrShimmer(keys),
                                       listens: (artist) => _topRecentArtists[artist] ?? 0,
@@ -1055,11 +1055,11 @@ class _HorizontalList extends StatelessWidget {
                       child: Text(
                         switch (homepageItem) {
                           HomePageItems.mixes => '',
-                          HomePageItems.recentListens || HomePageItems.topRecentListens => lang.NO_TRACKS_IN_HISTORY,
-                          HomePageItems.lostMemories => lang.NO_TRACKS_FOUND_BETWEEN_DATES,
-                          HomePageItems.recentlyAdded => lang.NO_TRACKS_FOUND,
-                          HomePageItems.recentAlbums || HomePageItems.recentArtists => "${lang.NONE}: ${lang.NO_TRACKS_IN_HISTORY}",
-                          HomePageItems.topRecentAlbums || HomePageItems.topRecentArtists => "${lang.NONE}: ${lang.NO_TRACKS_IN_HISTORY}",
+                          HomePageItems.recentListens || HomePageItems.topRecentListens => lang.noTracksInHistory,
+                          HomePageItems.lostMemories => lang.noTracksFoundBetweenDates,
+                          HomePageItems.recentlyAdded => lang.noTracksFound,
+                          HomePageItems.recentAlbums || HomePageItems.recentArtists => "${lang.none}: ${lang.noTracksInHistory}",
+                          HomePageItems.topRecentAlbums || HomePageItems.topRecentArtists => "${lang.none}: ${lang.noTracksInHistory}",
                         },
                         style: textTheme.displayMedium,
                         softWrap: false,
@@ -1671,7 +1671,7 @@ class RecentlyAddedTracksPage extends StatelessWidget with NamidaRouteWidget {
               ),
               const SizedBox(width: 12.0),
               Text(
-                lang.RECENTLY_ADDED,
+                lang.recentlyAdded,
                 style: textTheme.displayLarge?.copyWith(fontSize: 18.0),
               ),
             ],

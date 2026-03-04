@@ -98,7 +98,7 @@ Future<void> showTrackInfoDialog(
               theme: theme,
               horizontalInset: 24.0,
               verticalInset: 24.0,
-              title: lang.PREVIEW,
+              title: lang.preview,
               normalTitleStyle: true,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -154,19 +154,19 @@ Future<void> showTrackInfoDialog(
   final trackPathDetailTilesSection = <TrackInfoListTile>[
     if (shouldShowTheField(track.filenameWOExt == ''))
       TrackInfoListTile(
-        title: lang.FILE_NAME,
+        title: lang.fileName,
         value: track.filenameWOExt,
         icon: Broken.quote_up_circle,
       ),
     if (shouldShowTheField(track.folderName == ''))
       TrackInfoListTile(
-        title: lang.FOLDER,
+        title: lang.folder,
         value: track.folderName,
         icon: Broken.folder,
       ),
     if (shouldShowTheField(track.path == ''))
       TrackInfoListTile(
-        title: lang.PATH,
+        title: lang.path,
         value: track.path,
         icon: Broken.location,
       ),
@@ -187,12 +187,12 @@ Future<void> showTrackInfoDialog(
             horizontalInset: 32.0,
             verticalInset: 86.0,
             normalTitleStyle: true,
-            title: lang.TRACK_INFO,
+            title: lang.trackInfo,
             trailingWidgets: [
               ObxO(
                 rx: settings.showUnknownFieldsInTrackInfoDialog,
                 builder: (context, showUnknownFieldsInTrackInfoDialog) => NamidaIconButton(
-                  tooltip: () => lang.SHOW_HIDE_UNKNOWN_FIELDS,
+                  tooltip: () => lang.showHideUnknownFields,
                   icon: showUnknownFieldsInTrackInfoDialog ? Broken.eye : Broken.eye_slash,
                   iconColor: theme.colorScheme.primary,
                   onPressed: () => settings.save(showUnknownFieldsInTrackInfoDialog: !settings.showUnknownFieldsInTrackInfoDialog.value),
@@ -204,7 +204,7 @@ Future<void> showTrackInfoDialog(
                 color: theme.colorScheme.primary,
               ),
               NamidaIconButton(
-                tooltip: () => lang.PREVIEW,
+                tooltip: () => lang.preview,
                 icon: Broken.play,
                 iconColor: theme.colorScheme.primary,
                 onPressed: showPreviewTrackDialog,
@@ -272,7 +272,7 @@ Future<void> showTrackInfoDialog(
                                                 crossAxisAlignment: WrapCrossAlignment.center,
                                                 children: [
                                                   Text(
-                                                    '${lang.TOTAL_LISTENS}: ',
+                                                    '${lang.totalListens}: ',
                                                     style: theme.textTheme.displaySmall,
                                                   ),
                                                   Text(
@@ -294,7 +294,7 @@ Future<void> showTrackInfoDialog(
                                             const SizedBox(width: 4.0),
                                             Expanded(
                                               child: Text(
-                                                firstListenTrack?.dateAndClockFormattedOriginal ?? lang.MAKE_YOUR_FIRST_LISTEN,
+                                                firstListenTrack?.dateAndClockFormattedOriginal ?? lang.makeYourFirstListen,
                                                 style: theme.textTheme.displaySmall,
                                               ),
                                             ),
@@ -313,7 +313,7 @@ Future<void> showTrackInfoDialog(
                             else ...<Widget>[
                               if (shouldShowTheField(trackExt.hasUnknownTitle))
                                 TrackInfoListTile(
-                                  title: lang.TITLE,
+                                  title: lang.title,
                                   value: trackExt.title,
                                   icon: Broken.text,
                                 ),
@@ -327,57 +327,57 @@ Future<void> showTrackInfoDialog(
                                             config: ArtistsSplitConfig.settings(addFeatArtist: false),
                                           ).length ==
                                           1
-                                      ? lang.ARTIST
-                                      : lang.ARTISTS,
+                                      ? lang.artist
+                                      : lang.artists,
                                   value: trackExt.hasUnknownArtist ? UnknownTags.ARTIST : trackExt.originalArtist,
                                   icon: Broken.microphone,
                                 ),
 
                               if (shouldShowTheField(trackExt.hasUnknownAlbum))
                                 TrackInfoListTile(
-                                  title: lang.ALBUM,
+                                  title: lang.album,
                                   value: trackExt.hasUnknownAlbum ? UnknownTags.ALBUM : trackExt.album,
                                   icon: Broken.music_dashboard,
                                 ),
 
                               if (shouldShowTheField(trackExt.hasUnknownAlbumArtist))
                                 TrackInfoListTile(
-                                  title: lang.ALBUM_ARTIST,
+                                  title: lang.albumArtist,
                                   value: trackExt.hasUnknownAlbumArtist ? UnknownTags.ALBUMARTIST : trackExt.albumArtist,
                                   icon: Broken.user,
                                 ),
 
                               if (shouldShowTheField(trackExt.hasUnknownGenre))
                                 TrackInfoListTile(
-                                  title: trackExt.genresList.length == 1 ? lang.GENRE : lang.GENRES,
+                                  title: trackExt.genresList.length == 1 ? lang.genre : lang.genres,
                                   value: trackExt.hasUnknownGenre ? UnknownTags.GENRE : trackExt.genresList.join(', '),
                                   icon: trackExt.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
                                 ),
 
                               if (shouldShowTheField(trackExt.hasUnknownMood))
                                 TrackInfoListTile(
-                                  title: trackExt.moodList.length == 1 ? lang.MOOD : lang.MOODS,
+                                  title: trackExt.moodList.length == 1 ? lang.mood : lang.moods,
                                   value: trackExt.hasUnknownMood ? UnknownTags.MOOD : trackExt.moodList.join(', '),
                                   icon: Broken.happyemoji,
                                 ),
 
                               if (shouldShowTheField(trackExt.hasUnknownComposer))
                                 TrackInfoListTile(
-                                  title: lang.COMPOSER,
+                                  title: lang.composer,
                                   value: trackExt.hasUnknownComposer ? UnknownTags.COMPOSER : trackExt.composer,
                                   icon: Broken.profile_2user,
                                 ),
 
                               if (shouldShowTheField(trackExt.durationMS == 0))
                                 TrackInfoListTile(
-                                  title: lang.DURATION,
+                                  title: lang.duration,
                                   value: trackExt.durationMS.milliSecondsLabel,
                                   icon: Broken.clock,
                                 ),
 
                               if (shouldShowTheField(trackExt.year == 0))
                                 TrackInfoListTile(
-                                  title: lang.YEAR,
+                                  title: lang.year,
                                   value: trackExt.year == 0 ? '?' : '${trackExt.year}',
                                   cards: [
                                     trackExt.year.yearFormatted,
@@ -388,7 +388,7 @@ Future<void> showTrackInfoDialog(
 
                               if (shouldShowTheField(trackExt.dateModified == 0))
                                 TrackInfoListTile(
-                                  title: lang.DATE_MODIFIED,
+                                  title: lang.dateModified,
                                   value: trackExt.dateModified.dateAndClockFormattedOriginal,
                                   icon: Broken.calendar_1,
                                 ),
@@ -396,14 +396,14 @@ Future<void> showTrackInfoDialog(
                               ///
                               if (shouldShowTheField(trackExt.discNo == 0))
                                 TrackInfoListTile(
-                                  title: lang.DISC_NUMBER,
+                                  title: lang.discNumber,
                                   value: trackExt.discNo.toString(),
                                   icon: Broken.hashtag,
                                 ),
 
                               if (shouldShowTheField(trackExt.trackNo == 0))
                                 TrackInfoListTile(
-                                  title: lang.TRACK_NUMBER,
+                                  title: lang.trackNumber,
                                   value: trackExt.trackNo.toString(),
                                   icon: Broken.hashtag,
                                 ),
@@ -411,7 +411,7 @@ Future<void> showTrackInfoDialog(
                               ...trackPathDetailTilesSection,
 
                               TrackInfoListTile(
-                                title: lang.FORMAT,
+                                title: lang.format,
                                 value: [
                                   track.audioInfoFormattedCompact,
                                   [
@@ -425,28 +425,28 @@ Future<void> showTrackInfoDialog(
 
                               if (shouldShowTheField(trackExt.lyrics == ''))
                                 TrackInfoListTile(
-                                  title: lang.LYRICS,
+                                  title: lang.lyrics,
                                   value: trackExt.lyrics,
                                   icon: trackExt.lyrics.isEmpty ? Broken.note_remove : Broken.message_text,
                                 ),
 
                               if (shouldShowTheField(trackExt.comment == ''))
                                 TrackInfoListTile(
-                                  title: lang.COMMENT,
+                                  title: lang.comment,
                                   value: trackExt.comment,
                                   icon: Broken.message_text_1,
                                   hasLinks: true,
                                 ),
                               if (shouldShowTheField(trackExt.description == ''))
                                 TrackInfoListTile(
-                                  title: lang.DESCRIPTION,
+                                  title: lang.description,
                                   value: trackExt.description,
                                   icon: Broken.note_text,
                                   hasLinks: true,
                                 ),
                               if (shouldShowTheField(trackExt.synopsis == ''))
                                 TrackInfoListTile(
-                                  title: lang.SYNOPSIS,
+                                  title: lang.synopsis,
                                   value: trackExt.synopsis,
                                   icon: Broken.text,
                                   hasLinks: true,

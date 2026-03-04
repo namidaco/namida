@@ -45,7 +45,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                 operation: YoutiPieOperation.fetchFeed,
                 showRefreshInsteadOfRefreshing: true,
                 transparentShimmer: false,
-                title: lang.HOME,
+                title: lang.home,
                 cacheReader: YoutiPie.cacheBuilder.forFeedItems(),
                 networkFetcher: (details) => YoutiPie.feed.fetchFeed(details: details),
                 itemExtent: thumbnailItemExtent,

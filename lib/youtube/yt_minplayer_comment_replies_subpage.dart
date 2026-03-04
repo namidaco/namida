@@ -88,8 +88,8 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
   void _showNetworkError() {
     Timer(Duration.zero, () {
       snackyy(
-        title: lang.ERROR,
-        message: lang.NO_NETWORK_AVAILABLE_TO_FETCH_DATA,
+        title: lang.error,
+        message: lang.noNetworkAvailableToFetchData,
         isError: true,
         top: false,
       );
@@ -178,7 +178,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                         Expanded(
                           child: Text(
                             [
-                              lang.REPLIES,
+                              lang.replies,
                               if (repliesCount != null) repliesCount.formatDecimalShort(),
                             ].join(' • '),
                             style: textTheme.displayMedium,

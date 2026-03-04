@@ -212,7 +212,7 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
           const SizedBox(width: 10.0),
         ],
         sortByMenuWidget: SortByMenu(
-          title: sort?.toText() ?? lang.CUSTOM,
+          title: sort?.toText() ?? lang.custom,
           popupMenuChild: null,
           onSortTap: onSortTap,
           isCurrentlyReversed: sortReverse,
@@ -223,7 +223,7 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
         textField: CustomTextFiled(
           focusNode: state.focusNode,
           textFieldController: null,
-          textFieldHintText: lang.SEARCH,
+          textFieldHintText: lang.search,
           onTextFieldValueChanged: state.searchTracks,
         ),
       ),

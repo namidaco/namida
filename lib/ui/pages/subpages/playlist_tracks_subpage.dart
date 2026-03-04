@@ -411,7 +411,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
                   child: NamidaButton(
                     icon: Broken.trash,
                     onPressed: () => NamidaDialogs.inst.showDeletePlaylistDialog(widget.playlist),
-                    text: lang.DELETE_PLAYLIST,
+                    text: lang.deletePlaylist,
                   ),
                 ),
               ),
@@ -421,7 +421,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
             sliver: SliverToBoxAdapter(
               child: NamidaExpansionTile(
                 initiallyExpanded: isExpanded,
-                titleText: lang.ADD,
+                titleText: lang.add,
                 icon: Broken.add_circle,
                 onExpansionChanged: (value) => setState(() => isExpanded = value),
                 children: [
@@ -471,7 +471,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
                     return NamidaButton(
                       enabled: trl > 0,
                       icon: Broken.add,
-                      text: '${lang.ADD} ${trl.displayTrackKeyword}',
+                      text: '${lang.add}: ${trl.displayTrackKeyword}',
                       onPressed: () => PlaylistController.inst.addTracksToPlaylist(widget.playlist, tracksToAddMap.keys.toList()),
                     );
                   },

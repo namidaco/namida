@@ -122,8 +122,8 @@ class _YTCommentCardState extends State<YTCommentCard> {
         // -- is comment
         editCommentOrReply = NamidaPopupItem(
           icon: Broken.sms_edit,
-          title: lang.EDIT,
-          subtitle: lang.COMMENT,
+          title: lang.edit,
+          subtitle: lang.comment,
           onTap: () {
             YTUtils.comments.editComment(
               videoId: widget.videoId ?? '',
@@ -136,8 +136,8 @@ class _YTCommentCardState extends State<YTCommentCard> {
         );
         deleteCommentOrReply = NamidaPopupItem(
           icon: Broken.pen_remove,
-          title: lang.DELETE,
-          subtitle: lang.COMMENT,
+          title: lang.delete,
+          subtitle: lang.comment,
           onTap: () {
             YTUtils.comments.deleteComment(
               videoId: widget.videoId ?? '',
@@ -152,8 +152,8 @@ class _YTCommentCardState extends State<YTCommentCard> {
         // -- is reply
         editCommentOrReply = NamidaPopupItem(
           icon: Broken.message_edit,
-          title: lang.EDIT,
-          subtitle: lang.REPLY,
+          title: lang.edit,
+          subtitle: lang.reply,
           onTap: () {
             if (widget.mainCommentForReplies != null) {
               YTUtils.comments.editReply(
@@ -167,8 +167,8 @@ class _YTCommentCardState extends State<YTCommentCard> {
         );
         deleteCommentOrReply = NamidaPopupItem(
           icon: Broken.message_minus,
-          title: lang.DELETE,
-          subtitle: lang.REPLY,
+          title: lang.delete,
+          subtitle: lang.reply,
           onTap: () {
             YTUtils.comments.deleteReply(
               videoId: widget.videoId ?? '',
@@ -183,7 +183,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
     return [
       NamidaPopupItem(
         icon: Broken.copy,
-        title: lang.COPY,
+        title: lang.copy,
         onTap: () {
           final rawText = comment?.content.rawText;
           if (rawText != null) {
@@ -196,14 +196,14 @@ class _YTCommentCardState extends State<YTCommentCard> {
       ),
       NamidaPopupItem(
         icon: Broken.user,
-        title: lang.GO_TO_CHANNEL,
+        title: lang.goToChannel,
         onTap: _openChannelPage,
       ),
       ?editCommentOrReply,
       ?deleteCommentOrReply,
       NamidaPopupItem(
         icon: Broken.message_add_1,
-        title: lang.REPLY,
+        title: lang.reply,
         onTap: () {
           if (comment == null) return;
           YTUtils.comments.createReply(
@@ -301,7 +301,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                     ),
                                     const SizedBox(width: 4.0),
                                     Text(
-                                      lang.PINNED,
+                                      lang.pinned,
                                       style: textTheme.displaySmall?.copyWith(
                                         fontSize: 11.5,
                                       ),
@@ -407,7 +407,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                                           mainAxisAlignment: MainAxisAlignment.end,
                                                           children: [
                                                             Text(
-                                                              isExpanded ? '' : lang.SHOW_MORE,
+                                                              isExpanded ? '' : lang.showMore,
                                                               style: textTheme.displaySmall?.copyWith(color: readmoreColor),
                                                             ),
                                                             const SizedBox(width: 8),
@@ -498,7 +498,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                             bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.2),
                                             icon: Broken.document,
                                             text: [
-                                              lang.REPLIES,
+                                              lang.replies,
                                               if (comment.repliesCount != null) comment.repliesCount!,
                                             ].join(' • '),
                                           ),
@@ -712,7 +712,7 @@ class YTCommentCardCompact extends StatelessWidget {
                           ),
                           Text(
                             [
-                              lang.REPLIES,
+                              lang.replies,
                               repliesCount,
                             ].join(' • '),
                             style: textTheme.displaySmall?.copyWith(

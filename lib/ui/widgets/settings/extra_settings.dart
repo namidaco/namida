@@ -67,27 +67,27 @@ class ExtrasSettings extends SettingSubpageProvider {
 
   @override
   Map<SettingKeysBase, List<String>> get lookupMap => {
-    _ExtraSettingsKeys.collapsedTiles: [lang.USE_COLLAPSED_SETTING_TILES],
-    _ExtraSettingsKeys.bottomNavBar: [lang.ENABLE_BOTTOM_NAV_BAR, lang.ENABLE_BOTTOM_NAV_BAR_SUBTITLE],
-    _ExtraSettingsKeys.pip: [lang.ENABLE_PICTURE_IN_PICTURE],
-    _ExtraSettingsKeys.defaultLibraryTab: [lang.DEFAULT_LIBRARY_TAB],
-    _ExtraSettingsKeys.fabType: [lang.FLOATING_ACTION_BUTTON],
-    _ExtraSettingsKeys.libraryTabs: [lang.LIBRARY_TABS],
-    _ExtraSettingsKeys.filterTracksBy: [lang.FILTER_TRACKS_BY],
-    _ExtraSettingsKeys.ignoreCommonPrefixesFor: [lang.IGNORE_COMMON_PREFIXES_WHILE_SORTING],
-    _ExtraSettingsKeys.searchCleanup: [lang.ENABLE_SEARCH_CLEANUP, lang.ENABLE_SEARCH_CLEANUP_SUBTITLE],
-    _ExtraSettingsKeys.prioritizeEmbeddedLyrics: [lang.PRIORITIZE_EMBEDDED_LYRICS],
-    _ExtraSettingsKeys.lyricsSource: [lang.LYRICS_SOURCE],
-    _ExtraSettingsKeys.stretchLyricsDuration: [lang.STRETCH_LYRICS_DURATION],
-    _ExtraSettingsKeys.imageSource: [lang.IMAGE_SOURCE, lang.ALBUM, lang.ALBUMS],
-    _ExtraSettingsKeys.imageSourceAlbum: [lang.IMAGE_SOURCE, lang.ALBUM, lang.ALBUMS],
-    _ExtraSettingsKeys.imageSourceArtist: [lang.IMAGE_SOURCE, lang.ARTIST, lang.ARTISTS],
-    _ExtraSettingsKeys.immersiveMode: [lang.IMMERSIVE_MODE, lang.IMMERSIVE_MODE_SUBTITLE],
-    _ExtraSettingsKeys.swipeToOpenDrawer: [lang.SWIPE_TO_OPEN_DRAWER],
-    _ExtraSettingsKeys.alwaysExpandedSearchbar: [lang.ALWAYS_EXPANDED_SEARCHBAR],
-    _ExtraSettingsKeys.enableClipboardMonitoring: [lang.ENABLE_CLIPBOARD_MONITORING, lang.ENABLE_CLIPBOARD_MONITORING_SUBTITLE],
-    _ExtraSettingsKeys.vibrationType: [lang.VIBRATION_TYPE, lang.VIBRATION, lang.HAPTIC_FEEDBACK],
-    _ExtraSettingsKeys.extractAllPalettes: [lang.EXTRACT_ALL_COLOR_PALETTES],
+    _ExtraSettingsKeys.collapsedTiles: [lang.useCollapsedSettingTiles],
+    _ExtraSettingsKeys.bottomNavBar: [lang.enableBottomNavBar, lang.enableBottomNavBarSubtitle],
+    _ExtraSettingsKeys.pip: [lang.enablePictureInPicture],
+    _ExtraSettingsKeys.defaultLibraryTab: [lang.defaultLibraryTab],
+    _ExtraSettingsKeys.fabType: [lang.floatingActionButton],
+    _ExtraSettingsKeys.libraryTabs: [lang.libraryTabs],
+    _ExtraSettingsKeys.filterTracksBy: [lang.filterTracksBy],
+    _ExtraSettingsKeys.ignoreCommonPrefixesFor: [lang.ignoreCommonPrefixesWhileSorting],
+    _ExtraSettingsKeys.searchCleanup: [lang.enableSearchCleanup, lang.enableSearchCleanupSubtitle],
+    _ExtraSettingsKeys.prioritizeEmbeddedLyrics: [lang.prioritizeEmbeddedLyrics],
+    _ExtraSettingsKeys.lyricsSource: [lang.lyricsSource],
+    _ExtraSettingsKeys.stretchLyricsDuration: [lang.stretchLyricsDuration],
+    _ExtraSettingsKeys.imageSource: [lang.imageSource, lang.album, lang.albums],
+    _ExtraSettingsKeys.imageSourceAlbum: [lang.imageSource, lang.album, lang.albums],
+    _ExtraSettingsKeys.imageSourceArtist: [lang.imageSource, lang.artist, lang.artists],
+    _ExtraSettingsKeys.immersiveMode: [lang.immersiveMode, lang.immersiveModeSubtitle],
+    _ExtraSettingsKeys.swipeToOpenDrawer: [lang.swipeToOpenDrawer],
+    _ExtraSettingsKeys.alwaysExpandedSearchbar: [lang.alwaysExpandedSearchbar],
+    _ExtraSettingsKeys.enableClipboardMonitoring: [lang.enableClipboardMonitoring, lang.enableClipboardMonitoringSubtitle],
+    _ExtraSettingsKeys.vibrationType: [lang.vibrationType, lang.vibration, lang.hapticFeedback],
+    _ExtraSettingsKeys.extractAllPalettes: [lang.extractAllColorPalettes],
   };
 
   Widget _getImageSourceTile({
@@ -169,11 +169,11 @@ class ExtrasSettings extends SettingSubpageProvider {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         icon: Broken.flag,
-        title: lang.CONFIGURE,
+        title: lang.configure,
         normalTitleStyle: true,
         actions: [
           NamidaButton(
-            text: lang.DONE,
+            text: lang.done,
             onPressed: NamidaNavigator.inst.closeDialog,
           ),
         ],
@@ -187,12 +187,12 @@ class ExtrasSettings extends SettingSubpageProvider {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     return SettingsCard(
-      title: lang.EXTRAS,
-      subtitle: lang.EXTRAS_SUBTITLE,
+      title: lang.extras,
+      subtitle: lang.extrasSubtitle,
       icon: Broken.command_square,
       trailing: NamidaIconButton(
         icon: Broken.flag,
-        tooltip: () => lang.REFRESH_LIBRARY,
+        tooltip: () => lang.refreshLibrary,
         onPressed: _showExtrasFlagsDialog,
       ),
       child: Column(
@@ -210,8 +210,8 @@ class ExtrasSettings extends SettingSubpageProvider {
                 enabled: !Dimensions.inst.showNavigationAtSide,
                 bgColor: getBgColor(_ExtraSettingsKeys.bottomNavBar),
                 icon: Broken.direct,
-                title: lang.ENABLE_BOTTOM_NAV_BAR,
-                subtitle: lang.ENABLE_BOTTOM_NAV_BAR_SUBTITLE,
+                title: lang.enableBottomNavBar,
+                subtitle: lang.enableBottomNavBarSubtitle,
                 value: settings.enableBottomNavBar.valueR,
                 onChanged: (p0) {
                   settings.save(enableBottomNavBar: !p0);
@@ -226,7 +226,7 @@ class ExtrasSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.pip),
                 icon: Broken.screenmirroring,
-                title: lang.ENABLE_PICTURE_IN_PICTURE,
+                title: lang.enablePictureInPicture,
                 value: settings.enablePip.valueR,
                 onChanged: (isTrue) {
                   settings.save(enablePip: !isTrue);
@@ -241,12 +241,12 @@ class ExtrasSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.fabType),
                 icon: Broken.safe_home,
-                title: lang.FLOATING_ACTION_BUTTON,
+                title: lang.floatingActionButton,
                 trailingText: settings.floatingActionButton.valueR.toText(),
                 onTap: () {
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
-                      title: lang.FLOATING_ACTION_BUTTON,
+                      title: lang.floatingActionButton,
                       actions: const [
                         DoneButton(),
                       ],
@@ -283,11 +283,11 @@ class ExtrasSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.defaultLibraryTab),
                 icon: Broken.receipt_1,
-                title: lang.DEFAULT_LIBRARY_TAB,
-                trailingText: settings.extra.autoLibraryTab.valueR ? lang.AUTO : settings.extra.staticLibraryTab.valueR.toText(),
+                title: lang.defaultLibraryTab,
+                trailingText: settings.extra.autoLibraryTab.valueR ? lang.auto : settings.extra.staticLibraryTab.valueR.toText(),
                 onTap: () => NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
-                    title: lang.DEFAULT_LIBRARY_TAB,
+                    title: lang.defaultLibraryTab,
                     actions: const [
                       DoneButton(),
                     ],
@@ -299,7 +299,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                             margin: const EdgeInsets.all(4.0),
                             child: Obx(
                               (context) => ListTileWithCheckMark(
-                                title: lang.AUTO,
+                                title: lang.auto,
                                 icon: Broken.recovery_convert,
                                 onTap: () => settings.extra.save(
                                   autoLibraryTab: !settings.extra.autoLibraryTab.value,
@@ -343,7 +343,7 @@ class ExtrasSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.filterTracksBy),
                 icon: Broken.filter_search,
-                title: lang.FILTER_TRACKS_BY,
+                title: lang.filterTracksBy,
                 trailingText: "${settings.trackSearchFilter.length}",
                 onTap: () {
                   final original = List<TrackSearchFilter>.from(settings.trackSearchFilter.value);
@@ -358,11 +358,11 @@ class ExtrasSettings extends SettingSubpageProvider {
                   NamidaNavigator.inst.navigateDialog(
                     onDismissing: refreshNecessary,
                     dialog: CustomBlurryDialog(
-                      title: lang.FILTER_TRACKS_BY,
+                      title: lang.filterTracksBy,
                       actions: [
                         IconButton(
                           icon: const Icon(Broken.refresh),
-                          tooltip: lang.RESTORE_DEFAULTS,
+                          tooltip: lang.restoreDefaults,
                           onPressed: () {
                             settings.removeFromList(trackSearchFilterAll: TrackSearchFilter.values);
 
@@ -412,7 +412,7 @@ class ExtrasSettings extends SettingSubpageProvider {
               (context) => CustomListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.ignoreCommonPrefixesFor),
                 icon: Broken.message_remove,
-                title: lang.IGNORE_COMMON_PREFIXES_WHILE_SORTING,
+                title: lang.ignoreCommonPrefixesWhileSorting,
                 subtitle: settings.commonPrefixes.valueR.map((e) => e.addDQuotation()).join(', '),
                 trailingText: "${settings.ignoreCommonPrefixForTypes.length}",
                 onTap: () {
@@ -434,11 +434,11 @@ class ExtrasSettings extends SettingSubpageProvider {
                   NamidaNavigator.inst.navigateDialog(
                     onDismissing: resortIfNecessary,
                     dialog: CustomBlurryDialog(
-                      title: lang.IGNORE_COMMON_PREFIXES_WHILE_SORTING,
+                      title: lang.ignoreCommonPrefixesWhileSorting,
                       actions: [
                         IconButton(
                           icon: const Icon(Broken.refresh),
-                          tooltip: lang.RESTORE_DEFAULTS,
+                          tooltip: lang.restoreDefaults,
                           onPressed: () {
                             settings.removeFromList(ignoreCommonPrefixForTypesAll: TrackSearchFilter.values);
 
@@ -512,10 +512,10 @@ class ExtrasSettings extends SettingSubpageProvider {
                                             controller.dispose();
                                           },
                                           dialog: CustomBlurryDialog(
-                                            title: lang.ADD,
+                                            title: lang.add,
                                             actions: [
                                               IconButton(
-                                                tooltip: lang.RESTORE_DEFAULTS,
+                                                tooltip: lang.restoreDefaults,
                                                 onPressed: () {
                                                   settings.commonPrefixes.clear();
                                                   settings.save(commonPrefixes: ['the ', 'a ', 'an ']);
@@ -525,7 +525,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                               ),
                                               const CancelButton(),
                                               NamidaButton(
-                                                text: lang.SAVE,
+                                                text: lang.save,
                                                 onPressed: () => onAdd(controller.text),
                                               ),
                                             ],
@@ -535,7 +535,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                                 controller: controller,
                                                 onFieldSubmitted: onAdd,
                                                 hintText: '',
-                                                labelText: lang.VALUE,
+                                                labelText: lang.value,
                                               ),
                                             ),
                                           ),
@@ -544,7 +544,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text(lang.ADD),
+                                          Text(lang.add),
                                           const SizedBox(width: 6.0),
                                           const Icon(
                                             Broken.add_circle,
@@ -586,8 +586,8 @@ class ExtrasSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.searchCleanup),
                 icon: Broken.document_filter,
-                title: lang.ENABLE_SEARCH_CLEANUP,
-                subtitle: lang.ENABLE_SEARCH_CLEANUP_SUBTITLE,
+                title: lang.enableSearchCleanup,
+                subtitle: lang.enableSearchCleanupSubtitle,
                 value: settings.enableSearchCleanup.valueR,
                 onChanged: (p0) => settings.save(enableSearchCleanup: !p0),
               ),
@@ -599,7 +599,7 @@ class ExtrasSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.prioritizeEmbeddedLyrics),
                 icon: Broken.mobile_programming,
-                title: lang.PRIORITIZE_EMBEDDED_LYRICS,
+                title: lang.prioritizeEmbeddedLyrics,
                 value: settings.prioritizeEmbeddedLyrics.valueR,
                 onChanged: (p0) => settings.save(prioritizeEmbeddedLyrics: !p0),
               ),
@@ -610,7 +610,7 @@ class ExtrasSettings extends SettingSubpageProvider {
             child: Obx(
               (context) => CustomListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.lyricsSource),
-                title: lang.LYRICS_SOURCE,
+                title: lang.lyricsSource,
                 leading: const StackedIcon(
                   baseIcon: Broken.mobile_programming,
                   secondaryIcon: Broken.cpu_setting,
@@ -620,7 +620,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                   void tileOnTap(LyricsSource val) => settings.save(lyricsSource: val);
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
-                      title: lang.LYRICS_SOURCE,
+                      title: lang.lyricsSource,
                       actions: [
                         IconButton(
                           onPressed: () => tileOnTap(LyricsSource.auto),
@@ -638,7 +638,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                               rx: settings.enableLyrics,
                               builder: (context, enableLyrics) => CustomSwitchListTile(
                                 icon: Broken.document,
-                                title: lang.LYRICS,
+                                title: lang.lyrics,
                                 value: enableLyrics,
                                 onChanged: (isTrue) {
                                   settings.save(enableLyrics: !isTrue);
@@ -678,7 +678,7 @@ class ExtrasSettings extends SettingSubpageProvider {
               builder: (context, stretch) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.stretchLyricsDuration),
                 icon: Broken.arrange_square,
-                title: lang.STRETCH_LYRICS_DURATION,
+                title: lang.stretchLyricsDuration,
                 subtitle: 'spedup/slowed/nightcore',
                 value: stretch,
                 onChanged: (val) => settings.save(stretchLyricsDuration: !val),
@@ -700,12 +700,12 @@ class ExtrasSettings extends SettingSubpageProvider {
               ),
               childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
               iconColor: context.defaultIconColor(),
-              titleText: lang.IMAGE_SOURCE,
+              titleText: lang.imageSource,
               children: [
                 _getImageSourceTile(
                   key: _ExtraSettingsKeys.imageSourceAlbum,
                   settingsKey: settings.imageSourceAlbum,
-                  title: lang.ALBUMS,
+                  title: lang.albums,
                   icon: LibraryTab.albums.toIcon(),
                   onAdd: (s) => settings.insertInList(0, imageSourceAlbum1: s),
                   onRemove: (s) => settings.removeFromList(imageSourceAlbum1: s),
@@ -713,7 +713,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 _getImageSourceTile(
                   key: _ExtraSettingsKeys.imageSourceArtist,
                   settingsKey: settings.imageSourceArtist,
-                  title: lang.ARTISTS,
+                  title: lang.artists,
                   icon: LibraryTab.artists.toIcon(),
                   onAdd: (s) => settings.insertInList(0, imageSourceArtist1: s),
                   onRemove: (s) => settings.removeFromList(imageSourceArtist1: s),
@@ -728,8 +728,8 @@ class ExtrasSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.immersiveMode),
                 icon: Broken.external_drive,
-                title: lang.IMMERSIVE_MODE,
-                subtitle: lang.IMMERSIVE_MODE_SUBTITLE,
+                title: lang.immersiveMode,
+                subtitle: lang.immersiveModeSubtitle,
                 value: settings.hideStatusBarInExpandedMiniplayer.valueR,
                 onChanged: (isTrue) {
                   final newValue = !isTrue;
@@ -745,7 +745,7 @@ class ExtrasSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.swipeToOpenDrawer),
                 icon: Broken.sidebar_right,
-                title: lang.SWIPE_TO_OPEN_DRAWER,
+                title: lang.swipeToOpenDrawer,
                 value: settings.swipeableDrawer.valueR,
                 onChanged: (isTrue) {
                   settings.save(swipeableDrawer: !isTrue);
@@ -765,7 +765,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                   secondaryIcon: Broken.search_normal,
                   secondaryIconSize: 12.0,
                 ),
-                title: lang.ALWAYS_EXPANDED_SEARCHBAR,
+                title: lang.alwaysExpandedSearchbar,
                 value: settings.alwaysExpandedSearchbar.valueR,
                 onChanged: (isTrue) {
                   settings.save(alwaysExpandedSearchbar: !isTrue);
@@ -780,8 +780,8 @@ class ExtrasSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 bgColor: getBgColor(_ExtraSettingsKeys.enableClipboardMonitoring),
                 icon: Broken.clipboard_export,
-                title: lang.ENABLE_CLIPBOARD_MONITORING,
-                subtitle: lang.ENABLE_CLIPBOARD_MONITORING_SUBTITLE,
+                title: lang.enableClipboardMonitoring,
+                subtitle: lang.enableClipboardMonitoringSubtitle,
                 value: settings.enableClipboardMonitoring.valueR,
                 onChanged: (isTrue) {
                   settings.save(enableClipboardMonitoring: !isTrue);
@@ -798,7 +798,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 secondaryIcon: Broken.wind_2,
                 secondaryIconSize: 13.0,
               ),
-              title: lang.VIBRATION_TYPE,
+              title: lang.vibrationType,
               trailing: NamidaPopupWrapper(
                 children: () => [
                   ...VibrationType.values.map(
@@ -856,7 +856,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 return CustomListTile(
                   bgColor: getBgColor(_ExtraSettingsKeys.extractAllPalettes),
                   icon: Broken.colorfilter,
-                  title: lang.EXTRACT_ALL_COLOR_PALETTES,
+                  title: lang.extractAllColorPalettes,
                   trailing: isGenerating
                       ? Column(
                           children: [
@@ -869,12 +869,12 @@ class ExtrasSettings extends SettingSubpageProvider {
                     if (CurrentColor.inst.allColorPalettesGeneratingTotal.value > 0) {
                       NamidaNavigator.inst.navigateDialog(
                         dialog: CustomBlurryDialog(
-                          title: lang.NOTE,
-                          bodyText: lang.FORCE_STOP_COLOR_PALETTE_GENERATION,
+                          title: lang.note,
+                          bodyText: lang.forceStopColorPaletteGeneration,
                           actions: [
                             const CancelButton(),
                             NamidaButton(
-                              text: lang.STOP,
+                              text: lang.stop,
                               onPressed: () {
                                 CurrentColor.inst.stopGeneratingColorPalettes();
                                 NamidaNavigator.inst.closeDialog();
@@ -887,15 +887,12 @@ class ExtrasSettings extends SettingSubpageProvider {
                       final remainingCount = CurrentColor.inst.getRemainingColorsToExtractCount(allTracksInLibrary);
                       NamidaNavigator.inst.navigateDialog(
                         dialog: CustomBlurryDialog(
-                          title: lang.NOTE,
-                          bodyText: lang.EXTRACT_ALL_COLOR_PALETTES_SUBTITLE.replaceFirst(
-                            '_REMAINING_COLOR_PALETTES_',
-                            '$remainingCount',
-                          ),
+                          title: lang.note,
+                          bodyText: lang.extractAllColorPalettesSubtitle(number: remainingCount),
                           actions: [
                             const CancelButton(),
                             NamidaButton(
-                              text: lang.EXTRACT,
+                              text: lang.extract,
                               onPressed: () {
                                 CurrentColor.inst.generateAllColorPalettes();
                                 NamidaNavigator.inst.closeDialog();
@@ -923,7 +920,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         (context) => CustomListTile(
           bgColor: getBgColor(_ExtraSettingsKeys.libraryTabs),
           icon: Broken.color_swatch,
-          title: lang.LIBRARY_TABS,
+          title: lang.libraryTabs,
           trailingText: "${settings.libraryTabs.length}",
           onTap: () {
             final subList = <LibraryTab>[].obs;
@@ -940,7 +937,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 subList.close();
               },
               dialog: CustomBlurryDialog(
-                title: lang.LIBRARY_TABS,
+                title: lang.libraryTabs,
                 actions: const [
                   DoneButton(),
                 ],
@@ -951,7 +948,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                     (context) => Column(
                       children: [
                         Text(
-                          lang.LIBRARY_TABS_REORDER,
+                          lang.libraryTabsReorder,
                           style: textTheme.displayMedium,
                         ),
                         const SizedBox(height: 12.0),
@@ -1145,12 +1142,12 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
           final buttonsType = e.toThemeType();
           final row = buttonsType == null
               ? Text(
-                  lang.NONE,
+                  lang.none,
                   textAlign: TextAlign.center,
                 )
               : buttonsType == mtb.ThemeType.auto
               ? Text(
-                  lang.AUTO,
+                  lang.auto,
                   textAlign: TextAlign.center,
                 )
               : Row(
@@ -1257,7 +1254,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   value: settings.extra.floatingArtworkEffect ?? false,
                   onChanged: (isTrue) => setState(() => settings.extra.save(floatingArtworkEffect: !isTrue)),
                   title: 'floating_artwork_effect'.toUpperCase(),
-                  subtitle: "${lang.PERFORMANCE_NOTE}.\nMight affect battery usage.",
+                  subtitle: "${lang.performanceNote}.\nMight affect battery usage.",
                 ),
               if (NamidaFeaturesVisibility.tiltingCardsEffect)
                 CustomSwitchListTile(
@@ -1265,7 +1262,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   value: settings.extra.tiltingCardsEffect ?? false,
                   onChanged: (isTrue) => setState(() => settings.extra.save(tiltingCardsEffect: !isTrue)),
                   title: 'tilting_cards_effect'.toUpperCase(),
-                  subtitle: "${lang.PERFORMANCE_NOTE}.\nMight affect battery usage.",
+                  subtitle: "${lang.performanceNote}.\nMight affect battery usage.",
                 ),
               if (NamidaFeaturesVisibility.mediaWaveHaptic)
                 CustomSwitchListTile(

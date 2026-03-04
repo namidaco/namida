@@ -12,19 +12,19 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       action: HotkeyAction.play_pause,
       key: LogicalKeyboardKey.space,
       callback: Player.inst.togglePlayPause,
-      title: "${lang.PLAY}/${lang.PAUSE}",
+      title: () => "${lang.play}/${lang.pause}",
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.seek_backwards,
       key: LogicalKeyboardKey.arrowLeft,
       callback: Player.inst.seekSecondsBackward,
-      title: "<- ${lang.SEEKBAR}",
+      title: () => "<- ${lang.seekbar}",
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.seek_forwards,
       key: LogicalKeyboardKey.arrowRight,
       callback: Player.inst.seekSecondsForward,
-      title: "${lang.SEEKBAR} ->",
+      title: () => "${lang.seekbar} ->",
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.volume_up,
@@ -33,9 +33,9 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       includeRepeats: true,
       callback: () {
         final newVol = Player.inst.volumeUp();
-        _showSnack(message: "${lang.VOLUME} ↑: ${newVol.roundDecimals(2)}");
+        _showSnack(message: "${lang.volume} ↑: ${newVol.roundDecimals(2)}");
       },
-      title: "${lang.VOLUME} ↑",
+      title: () => "${lang.volume} ↑",
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.volume_down,
@@ -44,23 +44,23 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       includeRepeats: true,
       callback: () {
         final newVol = Player.inst.volumeDown();
-        _showSnack(message: "${lang.VOLUME} ↓: ${newVol.roundDecimals(2)}");
+        _showSnack(message: "${lang.volume} ↓: ${newVol.roundDecimals(2)}");
       },
-      title: "${lang.VOLUME} ↓",
+      title: () => "${lang.volume} ↓",
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.previous,
       key: LogicalKeyboardKey.arrowLeft,
       control: true,
       callback: Player.inst.previous,
-      title: lang.PREVIOUS,
+      title: () => lang.previous,
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.next,
       key: LogicalKeyboardKey.arrowRight,
       control: true,
       callback: Player.inst.next,
-      title: lang.NEXT,
+      title: () => lang.next,
     ),
 
     // -------------------
@@ -77,13 +77,13 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
           );
         }
       },
-      title: lang.SEARCH,
+      title: () => lang.search,
     ),
     ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyR,
       control: true,
       callback: Indexer.inst.refreshLibraryAndCheckForDiff,
-      title: lang.REFRESH_LIBRARY,
+      title: () => lang.refreshLibrary,
     ),
     ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyE,
@@ -107,13 +107,13 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
           },
         );
       },
-      title: lang.OPEN_MINIPLAYER,
+      title: () => lang.openMiniplayer,
     ),
     ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyQ,
       control: true,
       callback: openPlayerQueue,
-      title: lang.OPEN_QUEUE,
+      title: () => lang.openQueue,
     ),
     ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyL,
@@ -125,7 +125,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
           Lyrics.inst.updateLyrics(currentItem);
         }
       },
-      title: lang.LYRICS,
+      title: () => lang.lyrics,
     ),
     ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyL,
@@ -139,7 +139,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
           Lyrics.inst.lrcViewKey.currentState?.enterFullScreen();
         }
       },
-      title: "${lang.LYRICS} (${lang.FULLSCREEN})",
+      title: () => "${lang.lyrics} (${lang.fullscreen})",
     ),
     ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyP,
@@ -155,7 +155,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
           () => NamidaSettingSearchBar.globalKey.currentState?.open(),
         );
       },
-      title: lang.SETTINGS,
+      title: () => lang.settings,
     ),
     ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyS,
@@ -165,10 +165,10 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         final shuffleAll = settings.player.shuffleAllTracks.value;
         Player.inst.shuffleTracks(shuffleAll);
         _showSnack(
-          message: "${shuffleAll ? lang.SHUFFLE_ALL : lang.SHUFFLE_NEXT}: ${lang.DONE}",
+          message: "${shuffleAll ? lang.shuffleAll : lang.shuffleNext}: ${lang.done}",
         );
       },
-      title: lang.SHUFFLE,
+      title: () => lang.shuffle,
     ),
     ShortcutKeyActivator(
       key: LogicalKeyboardKey.tab,
@@ -177,10 +177,10 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         final e = settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values);
         settings.player.save(repeatMode: e);
         _showSnack(
-          message: "${lang.REPEAT_MODE}: ${e.buildText()}",
+          message: "${lang.repeatMode}: ${e.buildText()}",
         );
       },
-      title: lang.REPEAT_MODE,
+      title: () => lang.repeatMode,
     ),
     // -----------------
     for (int i = 1; i <= 9; i++)
@@ -195,7 +195,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
             // -- index larger than tabs length
           }
         },
-        title: lang.LIBRARY_TABS,
+        title: () => lang.libraryTabs,
       ),
 
     // ================
@@ -205,12 +205,12 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         final isFullscreen = await windowManager.isFullScreen();
         windowManager.setFullScreen(!isFullscreen);
       },
-      title: lang.FULLSCREEN,
+      title: () => lang.fullscreen,
     ),
     ShortcutKeyActivator(
       key: LogicalKeyboardKey.escape,
       callback: NamidaNavigator.inst.back,
-      title: lang.EXIT,
+      title: () => lang.exit,
     ),
   ];
 
@@ -306,7 +306,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
   void _showSnack({required String message}) {
     snackyy(
       icon: Broken.flash_1,
-      title: lang.SHORTCUTS,
+      title: lang.shortcuts,
       message: message,
       borderColor: Colors.green.withOpacityExt(0.6),
       top: false,

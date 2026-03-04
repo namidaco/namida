@@ -60,8 +60,8 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
                     icon: Broken.airpods,
                     min: isSemitones ? -12.0 : 0.0,
                     max: isSemitones ? 12.0 : 2.0,
-                    title: lang.PITCH,
-                    subtitle: isSemitones ? '(${lang.SEMITONES})' : '(${lang.PERCENTAGE})',
+                    title: lang.pitch,
+                    subtitle: isSemitones ? '(${lang.semitones})' : '(${lang.percentage})',
                     onTap: () {
                       settings.player.save(useSemitones: !settings.player.useSemitones.value);
                     },
@@ -152,7 +152,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
         Obx(
           (context) => _SliderTextWidget(
             icon: Broken.forward,
-            title: lang.SPEED,
+            title: lang.speed,
             value: settings.player.speed.valueR,
             onManualChange: (value) {
               speedKey.currentState?.updateValNoRoundExternal(value);
@@ -204,7 +204,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
                       durationMS: 300,
                     ),
                     Text(
-                      lang.PITCH,
+                      lang.pitch,
                       style: textTheme.displaySmall,
                     ),
                   ],
@@ -235,7 +235,7 @@ class EqualizerMainSlidersColumn extends StatelessWidget {
             final replayGainText = replayGainLinear == 1.0 ? '' : ' (N: ${_SliderTextWidget.toPercentage(normalVolume * replayGainLinear)})';
             return _SliderTextWidget(
               icon: normalVolume > 0 ? Broken.volume_up : Broken.volume_slash,
-              title: lang.VOLUME,
+              title: lang.volume,
               value: normalVolume,
               max: 1.0,
               valToText: (val) => '${_SliderTextWidget.toPercentage(val)}$replayGainText',
@@ -377,14 +377,14 @@ class EqualizerPageState extends State<EqualizerPage> {
                         const SizedBox(width: 12.0),
                         Expanded(
                           child: Text(
-                            "${lang.CONFIGURE} (${lang.BETA})",
+                            "${lang.configure} (${lang.beta})",
                             style: textTheme.displayMedium,
                           ),
                         ),
                         if (NamidaFeaturesVisibility.equalizerAvailable) ...[
                           NamidaIconButton(
                             horizontalPadding: 8.0,
-                            tooltip: () => lang.TAP_TO_SEEK,
+                            tooltip: () => lang.tapToSeek,
                             icon: null,
                             iconSize: 24.0,
                             onPressed: () => settings.equalizer.save(uiTapToUpdate: !settings.equalizer.uiTapToUpdate.value),
@@ -418,7 +418,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                             padding: const EdgeInsets.symmetric(vertical: 12.0),
                             child: _SliderTextWidget(
                               icon: Broken.chart_3,
-                              title: lang.EQUALIZER,
+                              title: lang.equalizer,
                               value: 0,
                               displayValue: false,
                               trailing: Row(
@@ -426,7 +426,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                   if (NamidaFeaturesVisibility.methodOpenSystemEqualizer)
                                     NamidaIconButton(
                                       horizontalPadding: 4.0,
-                                      tooltip: () => lang.OPEN_APP,
+                                      tooltip: () => lang.openApp,
                                       icon: Broken.export_2,
                                       iconColor: context.defaultIconColor(),
                                       iconSize: 20.0,
@@ -467,7 +467,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                       : theme.colorScheme.secondary.withOpacityExt(0.15),
                                   onTap: _resetPreset,
                                   child: Text(
-                                    lang.CUSTOM,
+                                    lang.custom,
                                     style: textTheme.displaySmall?.copyWith(
                                       fontWeight: FontWeight.w700,
                                       fontSize: 13.5,
@@ -491,7 +491,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                       _activePresetCustom.value = false;
                                       settings.equalizer.save(preset: e.key);
                                       final newPreset = await _equalizer.setPreset(e.key);
-                                      if (newPreset != e.key) snackyy(message: lang.ERROR, top: false, isError: true);
+                                      if (newPreset != e.key) snackyy(message: lang.error, top: false, isError: true);
                                     },
                                     child: Text(
                                       e.value,
@@ -539,7 +539,7 @@ class EqualizerPageState extends State<EqualizerPage> {
                                       padding: const EdgeInsets.symmetric(vertical: 6.0),
                                       child: _SliderTextWidget(
                                         icon: targetGainUser > 0 ? Broken.volume_high : Broken.volume_low_1,
-                                        title: '${lang.LOUDNESS_ENHANCER} (PreAmp)',
+                                        title: '${lang.loudnessEnhancer} (PreAmp)',
                                         value: targetGainUser,
                                         min: AndroidLoudnessEnhancerExtended.kMinGain,
                                         max: AndroidLoudnessEnhancerExtended.kMaxGain,
@@ -652,15 +652,15 @@ class _SliderTextWidget extends StatelessWidget {
         initalControllerText: initial.toString(),
         validator: (text) {
           if (text == null || text.isEmpty) {
-            return lang.EMPTY_VALUE;
+            return lang.emptyValue;
           }
           final doubleval = double.tryParse(text);
-          if (doubleval == null) return lang.NAME_CONTAINS_BAD_CHARACTER;
+          if (doubleval == null) return lang.nameContainsBadCharacter;
           if (doubleval < min || (useMaxToLimitPreciseValue && doubleval > max)) return '$min | +$max';
           return null;
         },
       ),
-      buttonText: lang.SAVE,
+      buttonText: lang.save,
       onButtonTap: (text) {
         final doubleval = double.tryParse(text);
         if (doubleval == null) return false;
@@ -740,7 +740,7 @@ class _SliderTextWidget extends StatelessWidget {
           if (restoreDefault != null)
             NamidaIconButton(
               horizontalPadding: 8.0,
-              tooltip: () => lang.RESTORE_DEFAULTS,
+              tooltip: () => lang.restoreDefaults,
               icon: Broken.refresh,
               iconSize: 20.0,
               onPressed: restoreDefault,

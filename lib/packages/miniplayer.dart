@@ -295,7 +295,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
 
               return Text.rich(
                 TextSpan(
-                  text: lang.AUDIO,
+                  text: lang.audio,
                   style: textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: theme.colorScheme.onSecondaryContainer),
                   children: [
                     if (settings.displayAudioInfoMiniplayer.valueR)
@@ -408,7 +408,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
 
             return Text.rich(
               TextSpan(
-                text: lang.VIDEO,
+                text: lang.video,
                 style: textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: theme.colorScheme.onSecondaryContainer),
                 children: [
                   if (videoBlockedByIcon != null) ...[
@@ -660,7 +660,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
               }
               return Text.rich(
                 TextSpan(
-                  text: lang.AUDIO,
+                  text: lang.audio,
                   style: textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: theme.colorScheme.onSecondaryContainer),
                   children: textChildren,
                 ),
@@ -678,7 +678,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
               final qualityText = stream?.qualityLabel ?? (cached == null ? null : "${cached.resolution}p${cached.framerateText()}");
               return Text.rich(
                 TextSpan(
-                  text: lang.VIDEO,
+                  text: lang.video,
                   style: textTheme.labelLarge?.copyWith(fontSize: fontSizeMultiplier(15.0), color: theme.colorScheme.onSecondaryContainer),
                   children: [
                     if (stream == null && cached == null && !ConnectivityController.inst.hasConnectionR) ...[

@@ -457,7 +457,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               ),
               const SizedBox(height: 8.0),
               Text(
-                '$ss ${lang.SECONDS}',
+                '$ss ${lang.seconds}',
                 style: textTheme.displayMedium?.copyWith(
                   color: color,
                   shadows: outlineShadow,
@@ -671,7 +671,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     final newValueEnabled = !settings.enableGlowBehindVideo.value;
     settings.save(enableGlowBehindVideo: newValueEnabled);
     if (newValueEnabled) {
-      snackyy(title: lang.WARNING, message: lang.PERFORMANCE_NOTE, icon: Broken.danger);
+      snackyy(title: lang.warning, message: lang.performanceNote, icon: Broken.danger);
     }
   }
 
@@ -1177,7 +1177,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       child: brigthnessDim < 1.0
                                           ? NamidaIconButton(
                                               key: const Key('brightnesseto_ok'),
-                                              tooltip: () => lang.RESET_BRIGHTNESS,
+                                              tooltip: () => lang.resetBrightness,
                                               icon: Broken.sun_1,
                                               iconColor: itemsColor.withOpacityExt(0.8),
                                               verticalPadding: 4.0,
@@ -1250,7 +1250,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             const Icon(Broken.add_circle, size: 20.0),
                                             const SizedBox(width: 12.0),
                                             Text(
-                                              lang.ADD,
+                                              lang.add,
                                               style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
                                             ),
                                           ],
@@ -1425,7 +1425,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             final value = rx.valueR;
                                             final isOff = value == DataSaverMode.off;
                                             return _getQualityChip(
-                                              title: lang.DATA_SAVER,
+                                              title: lang.dataSaver,
                                               onPlay: (isSelected) => YoutubeSettings.openDataSaverConfigureDialog(),
                                               selected: false,
                                               isCached: false,
@@ -1436,7 +1436,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         ),
                                         Obx(
                                           (context) => _getQualityChip(
-                                            title: lang.AUDIO_ONLY,
+                                            title: lang.audioOnly,
                                             onPlay: (isSelected) {
                                               Player.inst.setAudioOnlyPlayback(true);
                                               VideoController.inst.currentVideo.value = null;
@@ -1450,7 +1450,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         if (currentSelectable != null)
                                           if (currentLocalVideoId == null || currentLocalVideoId.isEmpty)
                                             _getQualityChip(
-                                              title: lang.SEARCH,
+                                              title: lang.search,
                                               icon: Broken.search_normal,
                                               selected: false,
                                               isCached: false,
@@ -1468,7 +1468,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             ObxO(
                                               rx: VideoController.inst.currentVideoConfig.isLoadingCurrentYTStreams,
                                               builder: (context, isLoadingMore) => _getQualityChip(
-                                                title: lang.CHECK_FOR_MORE,
+                                                title: lang.checkForMore,
                                                 icon: Broken.chart,
                                                 trailing: isLoadingMore ? const LoadingIndicator() : null,
                                                 selected: false,
@@ -1671,7 +1671,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         NamidaPopupItem(
                                           icon: Broken.sun_1,
                                           secondaryIcon: Broken.drop,
-                                          title: lang.ENABLE_GLOW_EFFECT,
+                                          title: lang.enableGlowEffect,
                                           onTap: toggleGlowBehindVideo,
                                           trailing: ObxO(
                                             rx: settings.enableGlowBehindVideo,
@@ -1685,7 +1685,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         if (!widget.isLocal)
                                           NamidaPopupItem(
                                             icon: Broken.card_tick,
-                                            title: lang.SHOW_VIDEO_ENDCARDS,
+                                            title: lang.showVideoEndcards,
                                             onTap: () => settings.youtube.save(showVideoEndcards: !settings.youtube.showVideoEndcards.value),
                                             trailing: ObxO(
                                               rx: settings.youtube.showVideoEndcards,
@@ -1700,7 +1700,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           NamidaPopupItem(
                                             icon: Broken.profile_circle,
                                             secondaryIcon: Broken.drop,
-                                            title: lang.SHOW_CHANNEL_WATERMARK_IN_FULLSCREEN,
+                                            title: lang.showChannelWatermarkInFullscreen,
                                             onTap: () => settings.youtube.save(showChannelWatermarkFullscreen: !settings.youtube.showChannelWatermarkFullscreen.value),
                                             trailing: ObxO(
                                               rx: settings.youtube.showChannelWatermarkFullscreen,
@@ -1721,7 +1721,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                           ),
                                           child: NamidaTooltip(
-                                            message: () => lang.CONFIGURE,
+                                            message: () => lang.configure,
                                             child: Padding(
                                               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
                                               child: Icon(
@@ -2191,7 +2191,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             ),
                                             const SizedBox(width: 6.0),
                                             Text(
-                                              "${lang.SPEED} ${defaultLongPressSpeed}x",
+                                              "${lang.speed} ${defaultLongPressSpeed}x",
                                               style: context.textTheme.displayMedium?.copyWith(
                                                 color: itemsColor,
                                               ),
@@ -2270,14 +2270,14 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
     return Form(
       key: formKey,
       child: CustomBlurryDialog(
-        title: lang.CONFIGURE,
+        title: lang.configure,
         actions: [
           TextButton(
             onPressed: NamidaNavigator.inst.closeDialog,
-            child: NamidaButtonText(lang.DONE),
+            child: NamidaButtonText(lang.done),
           ),
           NamidaButton(
-            text: lang.ADD,
+            text: lang.add,
             onPressed: () {
               formKey.currentState?.validate();
             },
@@ -2303,7 +2303,7 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
                           child: InkWell(
                             onTap: () {
                               if (e == 1.0) {
-                                snackyy(message: lang.ERROR); // we already ignore tap but uh
+                                snackyy(message: lang.error); // we already ignore tap but uh
                                 return;
                               }
                               if (settings.player.speeds.length <= 4) return showMinimumItemsSnack(4);
@@ -2336,14 +2336,14 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
               padding: const EdgeInsets.only(top: 14.0),
               child: CustomTagTextField(
                 controller: speedsController,
-                hintText: lang.VALUE,
-                labelText: lang.SPEED,
+                hintText: lang.value,
+                labelText: lang.speed,
                 isNumeric: true,
                 validator: (value) {
                   value ??= '';
-                  if (value.isEmpty) return lang.EMPTY_VALUE;
+                  if (value.isEmpty) return lang.emptyValue;
                   final sp = double.parse(speedsController.text);
-                  if (settings.player.speeds.contains(sp)) return lang.ERROR;
+                  if (settings.player.speeds.contains(sp)) return lang.error;
                   settings.player.speeds
                     ..add(sp)
                     ..sort();
@@ -2582,7 +2582,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
           if (channelId != null && channelId.isNotEmpty)
             NamidaPopupItem(
               icon: Broken.user,
-              title: lang.GO_TO_CHANNEL,
+              title: lang.goToChannel,
               subtitle: channelTitle ?? '',
               onTap: () {
                 _exitFullScreenIfNeeded();
@@ -2614,7 +2614,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
           return [
             NamidaPopupItem(
               icon: Broken.export_2,
-              title: lang.OPEN,
+              title: lang.open,
               onTap: () {
                 _exitFullScreenIfNeeded();
                 YTHostedPlaylistSubpage.fromId(

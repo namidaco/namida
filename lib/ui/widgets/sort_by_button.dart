@@ -35,7 +35,7 @@ class SortByMenuTracks with SortByMenuBase {
           children: [
             Expanded(
               child: Text(
-                lang.ADVANCED,
+                lang.advanced,
                 style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
                 softWrap: false,
                 overflow: TextOverflow.fade,
@@ -122,7 +122,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
                   child: ListTileWithCheckMark(
                     borderRadius: 10.0,
                     icon: Broken.arrow_swap_horizontal,
-                    title: lang.AUTO,
+                    title: lang.auto,
                     activeRx: settings.tracksSortSearchIsAuto,
                     onTap: () {
                       settings.save(tracksSortSearchIsAuto: !settings.tracksSortSearchIsAuto.value);

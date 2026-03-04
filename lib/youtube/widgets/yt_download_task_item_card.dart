@@ -216,13 +216,13 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     final itemLocalInfoWidgets = await _getItemLocalInfoWidgets(context: context);
     await NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: lang.WARNING,
+        title: lang.warning,
         normalTitleStyle: true,
         isWarning: true,
         actions: [
           if (deleteButton) ...[
             NamidaButton(
-              text: lang.DELETE.toUpperCase(),
+              text: lang.delete.toUpperCase(),
               style: ButtonStyle(
                 foregroundColor: WidgetStatePropertyAll(Colors.red),
               ),
@@ -282,7 +282,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
       showSpecificFileOptionsInEditTagDialog: false,
       videoId: config.id.videoId,
       initialItemConfig: config,
-      confirmButtonText: lang.RESTART,
+      confirmButtonText: lang.restart,
       onConfirmButtonTap: (groupName, newConfig) {
         _onCancelDeleteDownloadTap([config], keepInList: true, delete: true);
         _onResumeDownloadTap([newConfig], context);
@@ -297,27 +297,27 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     required DownloadTaskGroupName groupName,
   }) async {
     await showNamidaBottomSheetWithTextField(
-      title: lang.RENAME,
+      title: lang.rename,
       textfieldConfig: BottomSheetTextFieldConfig(
         initalControllerText: config.filename.filename,
         hintText: config.filename.filename,
-        labelText: lang.FILE_NAME,
+        labelText: lang.fileName,
         validator: (value) {
-          if (value == null || value.isEmpty) return lang.EMPTY_VALUE;
+          if (value == null || value.isEmpty) return lang.emptyValue;
 
-          if (value.startsWith('.')) return "${lang.FILENAME_SHOULDNT_START_WITH} .";
+          if (value.startsWith('.')) return "${lang.filenameShouldntStartWith} .";
 
           final filenameClean = DownloadTaskFilename.cleanupFilename(value);
           if (value != filenameClean) {
             final baddiesAll = DownloadTaskFilename.cleanupFilenameRegex.pattern;
             final baddies = baddiesAll.split('').where((element) => value.contains(element)).join();
-            return "${lang.NAME_CONTAINS_BAD_CHARACTER} $baddies";
+            return "${lang.nameContainsBadCharacter} $baddies";
           }
 
           return null;
         },
       ),
-      buttonText: lang.SAVE,
+      buttonText: lang.save,
       onButtonTap: (text) async {
         final wasDownloading = YoutubeController.inst.isDownloading[config.id]?[config.filename] ?? false;
         if (wasDownloading) _onPauseDownloadTap([config]);
@@ -495,9 +495,9 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                           canDisplayPercentage
                               ? Text(
                                   audioPerc != null
-                                      ? lang.AUDIO
+                                      ? lang.audio
                                       : videoPerc != null
-                                      ? lang.VIDEO
+                                      ? lang.video
                                       : '',
                                   style: textTheme.displaySmall,
                                 )
@@ -563,10 +563,10 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                     return fileExists
                                         ? _getChip(
                                             context: context,
-                                            title: lang.RESTART,
+                                            title: lang.restart,
                                             icon: Broken.refresh,
                                             onTap: () async {
-                                              final confirmation = await _confirmOperation(operationTitle: lang.RESTART);
+                                              final confirmation = await _confirmOperation(operationTitle: lang.restart);
                                               if (confirmation.confirmed) {
                                                 _onCancelDeleteDownloadTap([item], keepInList: true, delete: true);
                                                 _onResumeDownloadTap([item], context);
@@ -576,7 +576,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                         : willBeDownloaded || isDownloading || isFetching
                                         ? _getChip(
                                             context: context,
-                                            title: lang.PAUSE,
+                                            title: lang.pause,
                                             icon: Broken.pause,
                                             iconColor: context.defaultIconColor(),
                                             iconWidget: isDownloading
@@ -591,7 +591,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                           )
                                         : _getChip(
                                             context: context,
-                                            title: lang.RESUME,
+                                            title: lang.resume,
                                             icon: Broken.play,
                                             onTap: () => _onResumeDownloadTap([item], context),
                                           );
@@ -600,12 +600,12 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                 fileExists
                                     ? _getChip(
                                         context: context,
-                                        title: lang.DELETE,
+                                        title: lang.delete,
                                         icon: Broken.trash,
                                         betweenBrackets: downloadedFile.fileSizeFormatted() ?? '',
                                         onTap: () async {
                                           final confirmation = await _confirmOperation(
-                                            operationTitle: lang.REMOVE,
+                                            operationTitle: lang.remove,
                                             deleteButton: true,
                                           );
                                           if (confirmation.confirmed) _onCancelDeleteDownloadTap([item], delete: confirmation.delete);
@@ -613,12 +613,12 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                       )
                                     : _getChip(
                                         context: context,
-                                        title: lang.CANCEL,
+                                        title: lang.cancel,
                                         icon: Broken.close_circle,
                                         onTap: () async {
                                           final confirmation = await _confirmOperation(
-                                            operationTitle: lang.CANCEL,
-                                            confirmMessage: lang.REMOVE,
+                                            operationTitle: lang.cancel,
+                                            confirmMessage: lang.remove,
                                           );
                                           if (confirmation.confirmed) {
                                             _onCancelDeleteDownloadTap(
@@ -630,7 +630,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                       ),
                                 _getChip(
                                   context: context,
-                                  title: lang.RENAME,
+                                  title: lang.rename,
                                   icon: Broken.text,
                                   onTap: () => _onRenameIconTap(
                                     config: item,
@@ -639,13 +639,13 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                 ),
                                 _getChip(
                                   context: context,
-                                  title: lang.EDIT,
+                                  title: lang.edit,
                                   icon: Broken.edit_2,
                                   onTap: () => _onEditIconTap(config: item),
                                 ),
                                 _getChip(
                                   context: context,
-                                  title: lang.INFO,
+                                  title: lang.info,
                                   icon: Broken.info_circle,
                                   onTap: () => _showInfoDialog(context, item, infoFinal, widget.groupName),
                                 ),

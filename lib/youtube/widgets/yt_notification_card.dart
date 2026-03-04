@@ -119,7 +119,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
           : [
               NamidaPopupItem(
                 icon: Broken.notification_status,
-                title: lang.MARK_AS_READ,
+                title: lang.markAsRead,
                 onTap: () => _markAsRead(mainList),
               ),
             ],

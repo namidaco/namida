@@ -686,7 +686,7 @@ class YoutubeController {
       } catch (e) {
         if (e is! _UserCanceledException) {
           printy(e, isError: true);
-          snackyy(title: lang.ERROR, message: e.toString(), isError: true);
+          snackyy(title: lang.error, message: e.toString(), isError: true);
         }
         // -- force break
         isFetchingData.value[videoID]?[config.filename] = false;

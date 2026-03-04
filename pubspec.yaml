@@ -84,6 +84,8 @@ dependencies:
     git:
       url: https://github.com/namidaco/namico_db_wrapper
   flutter_native_splash: ^2.4.7
+
+  # ---- Web Servers ----
   opensubsonic_api:
     git:
       url: https://github.com/MSOB7YY/opensubsonic_api.dart
@@ -216,11 +218,10 @@ flutter_native_splash:
     color_dark: "#121212"
 
 flutter:
+  generate: true
   uses-material-design: true
 
   assets:
-    - assets/language/langs.json
-    - assets/language/translations/
     - assets/fonts/
     - assets/icons/
     - assets/icons/media_ico/

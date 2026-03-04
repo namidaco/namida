@@ -98,12 +98,12 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
         dialog: CustomBlurryDialog(
           isWarning: true,
           normalTitleStyle: true,
-          bodyText: "${lang.REMOVE_FROM_PLAYLIST} ${playlist.name.addDQuotation()}?",
+          bodyText: "${lang.removeFromPlaylist} ${playlist.name.addDQuotation()}?",
           actions: [
             const CancelButton(),
             const SizedBox(width: 6.0),
             NamidaButton(
-              text: lang.REMOVE.toUpperCase(),
+              text: lang.remove.toUpperCase(),
               onPressed: () {
                 NamidaNavigator.inst.closeDialog();
                 YoutubePlaylistController.inst.removeTracksFromPlaylist(playlist, indexes);
@@ -153,7 +153,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                 final lengthDummy = length == -1;
                 return _HorizontalSliverList(
                   queueSource: QueueSourceYoutubeID.historyFiltered,
-                  title: lang.HISTORY,
+                  title: lang.history,
                   icon: Broken.refresh,
                   onPageOpen: YTUtils.onYoutubeHistoryPlaylistTap,
                   onPlusTap: (lastItem) => YTUtils.onYoutubeHistoryPlaylistTap(initialListen: lastItem.dateAddedMS),
@@ -165,7 +165,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                   displayShimmer: lengthDummy,
                   playlistInfo: () => PlaylistBasicInfo(
                     id: '',
-                    title: lang.HISTORY,
+                    title: lang.history,
                     videosCountText: length.displayVideoKeyword,
                     videosCount: length,
                     thumbnails: [],
@@ -191,7 +191,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                         .toList();
                     return _HorizontalSliverList(
                       queueSource: QueueSourceYoutubeID.mostPlayed,
-                      title: lang.MOST_PLAYED,
+                      title: lang.mostPlayed,
                       icon: Broken.crown_1,
                       onPageOpen: YTUtils.onYoutubeMostPlayedPlaylistTap,
                       padding: const EdgeInsets.only(top: 8.0),
@@ -204,7 +204,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                       listensMap: listensMap,
                       playlistInfo: () => PlaylistBasicInfo(
                         id: '',
-                        title: lang.MOST_PLAYED,
+                        title: lang.mostPlayed,
                         videosCountText: videos.length.displayVideoKeyword,
                         videosCount: videos.length,
                         thumbnails: [],
@@ -222,7 +222,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                   rx: YoutubeHistoryController.inst.topTracksMapListens, // refresh cards after listens initialized
                   builder: (context, _) => _HorizontalSliverList(
                     queueSource: QueueSourceYoutubeID.favourites,
-                    title: lang.FAVOURITES,
+                    title: lang.favourites,
                     icon: Broken.heart_circle,
                     onPageOpen: YTUtils.onYoutubeLikedPlaylistTap,
                     videos: getFavouriteVideos(favs.value),
@@ -232,7 +232,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                     totalVideosCountInMainList: favs.value.tracks.length,
                     playlistInfo: () => PlaylistBasicInfo(
                       id: '',
-                      title: lang.FAVOURITES,
+                      title: lang.favourites,
                       videosCountText: favs.value.tracks.length.displayVideoKeyword,
                       videosCount: favs.value.tracks.length,
                       thumbnails: [],
@@ -252,7 +252,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                   Expanded(
                     child: Obx(
                       (context) => SearchPageTitleRow(
-                        title: "${lang.PLAYLISTS} - ${YoutubePlaylistController.inst.playlistsMap.length}",
+                        title: "${lang.playlists} - ${YoutubePlaylistController.inst.playlistsMap.length}",
                         icon: Broken.music_library_2,
                         trailing: const SizedBox(),
                         subtitleWidget: widget.disableSorting
@@ -321,13 +321,13 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                   const SizedBox(width: 4.0),
                   NamidaInkWellButton(
                     icon: Broken.add_circle,
-                    text: lang.CREATE,
+                    text: lang.create,
                     borderRadius: 8.0,
                     onTap: YTUtils.showCreateLocalYTPlaylistSheet,
                   ),
                   SizedBox(width: 6.0),
                   NamidaTooltip(
-                    message: () => _isReordering ? lang.DISABLE_REORDERING : lang.ENABLE_REORDERING,
+                    message: () => _isReordering ? lang.disableReordering : lang.enableReordering,
                     child: NamidaInkWellButton(
                       icon: Broken.edit_2,
                       text: '',
@@ -346,7 +346,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                   ObxO(
                     rx: YoutubeImportController.inst.isImportingPlaylists,
                     builder: (context, isImportingPlaylists) => Tooltip(
-                      message: lang.IMPORT,
+                      message: lang.import,
                       child: NamidaInkWellButton(
                         icon: Broken.import_2,
                         text: '',
@@ -355,7 +355,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                         onTap: () {
                           NamidaNavigator.inst.navigateDialog(
                             dialog: CustomBlurryDialog(
-                              title: lang.NOTE,
+                              title: lang.note,
                               normalTitleStyle: true,
                               bodyText:
                                   'Importing takeout playlists works by picking a single playlists directory, or a main directory that contains multiple takeouts, in that case playlists will be merged and video-sorted by date added',
@@ -384,7 +384,10 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                       return;
                                     }
 
-                                    final importedSucessText = lang.IMPORTED_N_PLAYLISTS_SUCCESSFULLY.replaceFirst('_NUM_', '${details.countAfterMerging}');
+                                    final importedSucessText = lang.importedNPlaylistsSuccessfully(
+                                      number: details.countAfterMerging,
+                                      numberText: details.countAfterMerging.formatDecimal(),
+                                    );
                                     final detailsText = 'Total Count: ${details.totalCount} | Merged Count: ${details.mergedCount} | Final Count: ${details.countAfterMerging}';
                                     snackyy(
                                       icon: Broken.copy_success,
@@ -392,7 +395,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                       borderColor: Colors.green.withOpacityExt(0.8),
                                     );
                                   },
-                                  text: lang.PICK_FROM_STORAGE,
+                                  text: lang.pickFromStorage,
                                 ),
                               ],
                             ),

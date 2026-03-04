@@ -300,7 +300,7 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
     );
     return Builder(
       builder: (context) => NamidaTooltip(
-        message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.CLEAR : settings.floatingActionButton.value.toText(),
+        message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.clear : settings.floatingActionButton.value.toText(),
         child: FloatingActionButton(
           heroTag: 'main_page_fab_hero',
           backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacityExt(0.6), theme.cardColor),
@@ -407,7 +407,7 @@ class NamidaSearchBar extends StatelessWidget {
       enableKeyboardFocus: true,
       isOriginalAnimation: false,
       textEditingController: ScrollSearchController.inst.searchTextEditingController,
-      hintText: /*  ScrollSearchController.inst.currentSearchType.value == SearchType.youtube ? lang.SEARCH_YOUTUBE : */ lang.SEARCH,
+      hintText: /*  ScrollSearchController.inst.currentSearchType.value == SearchType.youtube ? lang.searchYoutube : */ lang.search,
       searchBoxWidth: context.width / 1.2,
       buttonColour: Colors.transparent,
       enableBoxShadow: false,
@@ -834,7 +834,7 @@ class __CustomRailBarState extends State<_CustomRailBar> {
                                 width: itemWidth - 4.0,
                               ),
                               NamidaTooltip(
-                                message: () => lang.SLEEP_TIMER,
+                                message: () => lang.sleepTimer,
                                 child: NamidaDrawerListTile(
                                   margin: EdgeInsets.zero,
                                   padding: EdgeInsets.all(iconPaddingBottomAction),
@@ -852,7 +852,7 @@ class __CustomRailBarState extends State<_CustomRailBar> {
                               SizedBox(height: 6.0),
                               if (showCustomizationIcon) ...[
                                 NamidaTooltip(
-                                  message: () => lang.CUSTOMIZATIONS,
+                                  message: () => lang.customizations,
                                   child: NamidaDrawerListTile(
                                     margin: EdgeInsets.zero,
                                     padding: EdgeInsets.all(iconPaddingBottomAction),
@@ -864,7 +864,7 @@ class __CustomRailBarState extends State<_CustomRailBar> {
                                     icon: Broken.brush_1,
                                     onTap: () {
                                       SettingsSubPage(
-                                        title: lang.CUSTOMIZATIONS,
+                                        title: () => lang.customizations,
                                         child: const CustomizationSettings(),
                                       ).navigate();
                                     },
@@ -873,7 +873,7 @@ class __CustomRailBarState extends State<_CustomRailBar> {
                                 SizedBox(height: 6.0),
                               ],
                               NamidaTooltip(
-                                message: () => lang.SETTINGS,
+                                message: () => lang.settings,
                                 child: NamidaDrawerListTile(
                                   margin: EdgeInsets.zero,
                                   padding: EdgeInsets.all(iconPaddingBottomAction),

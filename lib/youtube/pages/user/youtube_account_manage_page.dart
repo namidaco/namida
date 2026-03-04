@@ -42,7 +42,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          lang.SIGN_IN_TO_YOUR_ACCOUNT,
+          lang.signInToYourAccount,
           style: textTheme.displayMedium,
         ),
         ObxO(
@@ -80,11 +80,11 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
       },
       dialog: CustomBlurryDialog(
         normalTitleStyle: true,
-        title: lang.CONFIGURE,
+        title: lang.configure,
         actions: [
           CancelButton(),
           NamidaButton(
-            text: lang.SAVE,
+            text: lang.save,
             onPressed: () {
               YoutubeInfoController.potoken.updateInfo(
                 visitorData: controllerVisitorData.text,
@@ -126,10 +126,10 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
     String bodyText;
     void Function() singOutFn;
     if (active) {
-      bodyText = '${lang.SIGN_OUT_FROM_NAME.replaceFirst('_NAME_', channel.title?.addDQuotation() ?? '')}?';
+      bodyText = '${lang.signOutFromName(name: channel.title?.addDQuotation() ?? '')}?';
       singOutFn = YoutubeAccountController.setAccountAnonymous;
     } else {
-      bodyText = '${lang.REMOVE}: "${channel.title}"?';
+      bodyText = '${lang.remove}: "${channel.title}"?';
       singOutFn = () => YoutubeAccountController.signOut(userChannel: channel);
     }
     NamidaNavigator.inst.navigateDialog(
@@ -144,7 +144,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
               singOutFn();
               NamidaNavigator.inst.closeDialog();
             },
-            text: (active ? lang.SIGN_OUT : lang.REMOVE).toUpperCase(),
+            text: (active ? lang.signOut : lang.remove).toUpperCase(),
           ),
         ],
       ),
@@ -184,7 +184,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                             borderR: 12.0,
                             onTap: const YoutubeManageSubscriptionPage().navigate,
                             verticalPadding: 4.0,
-                            title: hasMembership ? lang.MEMBERSHIP_MANAGE : "${lang.SIGNING_IN_ALLOWS_BASIC_USAGE}.\n${lang.SIGNING_IN_ALLOWS_BASIC_USAGE_SUBTITLE}",
+                            title: hasMembership ? lang.membershipManage : "${lang.signingInAllowsBasicUsage}.\n${lang.signingInAllowsBasicUsageSubtitle}",
                             icon: Broken.money_3,
                             bgColor: Color.alphaBlend(
                               theme.cardTheme.color?.withOpacityExt(0.3) ?? Colors.transparent,
@@ -253,7 +253,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                                         const SizedBox(width: 4.0),
                                       ],
                                       IconButton(
-                                        tooltip: active ? lang.SIGN_OUT : lang.REMOVE,
+                                        tooltip: active ? lang.signOut : lang.remove,
                                         onPressed: () => _onRemoveChannel(acc, active),
                                         icon: active ? const Icon(Broken.logout) : const Icon(Broken.trash),
                                       ),
@@ -269,7 +269,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                         Padding(
                           padding: const EdgeInsets.all(12.0),
                           child: Text(
-                            lang.SIGN_IN_YOU_DONT_HAVE_ACCOUNT,
+                            lang.signInYouDontHaveAccount,
                             style: textTheme.displayLarge,
                           ),
                         ),
@@ -303,7 +303,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                                     : [
                                         NamidaInkWellButton(
                                           onTap: () => _onSignInTap(context, forceSignIn: true),
-                                          text: lang.ADD_ACCOUNT,
+                                          text: lang.addAccount,
                                           icon: Broken.user_add,
                                           sizeMultiplier: 1.2,
                                         ),

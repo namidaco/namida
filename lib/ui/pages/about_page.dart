@@ -44,7 +44,7 @@ class AboutPage extends StatefulWidget with NamidaRouteWidget {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         icon: Broken.flash_1,
-        title: lang.SHORTCUTS,
+        title: lang.shortcuts,
         normalTitleStyle: true,
         actions: [
           const DoneButton(),
@@ -149,7 +149,7 @@ class _AboutPageState extends State<AboutPage> {
                               errorBuilder: (context, error, stackTrace) => fallbackAvatar,
                             ),
                           ),
-                          title: lang.DEVELOPER,
+                          title: lang.developer,
                           subtitle: 'MSOB7YY',
                           link: 'https://github.com/MSOB7YY',
                         ),
@@ -219,8 +219,8 @@ class _AboutPageState extends State<AboutPage> {
             ),
             SettingsCard(
               icon: Broken.link_circle,
-              title: lang.SOCIALS,
-              subtitle: lang.SOCIALS_SUBTITLE,
+              title: lang.socials,
+              subtitle: lang.socialsSubtitle,
               child: Column(
                 children: [
                   const NamidaAboutListTile(
@@ -243,29 +243,29 @@ class _AboutPageState extends State<AboutPage> {
             const StatsSection(),
             SettingsCard(
               icon: Broken.hierarchy,
-              title: lang.DEVELOPMENT,
+              title: lang.development,
               subtitle: null,
               child: Column(
                 children: [
                   NamidaAboutListTile(
                     icon: Broken.message_programming,
                     title: 'GitHub',
-                    subtitle: lang.SEE_PROJECT_CODE_ON_SITE.replaceFirst('_SITE_', 'Github'),
+                    subtitle: lang.seeProjectCodeOnSite(site: 'Github'),
                     link: AppSocial.GITHUB,
                   ),
                   NamidaAboutListTile(
                     // icon: Broken.bezier,
                     icon: Broken.command_square,
-                    title: '${lang.ISSUES}/${lang.FEATURES}',
-                    subtitle: lang.SUGGESTION_SUBTITLE.replaceFirst('_SITE_', 'Github'),
+                    title: '${lang.issues}/${lang.features}',
+                    subtitle: lang.suggestionSubtitle(site: 'Github'),
                     link: AppSocial.GITHUB_ISSUES,
                   ),
                   ObxO(
                     rx: _loadingChangelog,
                     builder: (context, isLoading) => NamidaAboutListTile(
                       icon: Broken.activity,
-                      title: lang.CHANGELOG,
-                      subtitle: lang.CHANGELOG_SUBTITLE,
+                      title: lang.changelog,
+                      subtitle: lang.changelogSubtitle,
                       trailing: isLoading ? const LoadingIndicator() : null,
                       onTap: () async {
                         _loadingChangelog.value = true;
@@ -298,8 +298,8 @@ class _AboutPageState extends State<AboutPage> {
                   ),
                   NamidaAboutListTile(
                     icon: Broken.language_circle,
-                    title: lang.ADD_LANGUAGE,
-                    subtitle: lang.ADD_LANGUAGE_SUBTITLE,
+                    title: lang.addLanguage,
+                    subtitle: lang.addLanguageSubtitle,
                     link: AppSocial.TRANSLATION_REPO,
                   ),
                 ],
@@ -307,8 +307,8 @@ class _AboutPageState extends State<AboutPage> {
             ),
             SettingsCard(
               icon: Broken.heart_circle,
-              title: lang.DONATE,
-              subtitle: lang.DONATE_SUBTITLE,
+              title: lang.donate,
+              subtitle: lang.donateSubtitle,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
@@ -348,7 +348,7 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
             SettingsCard(
-              title: lang.OTHERS,
+              title: lang.others,
               icon: Broken.record_circle,
               subtitle: null,
               child: Column(
@@ -356,13 +356,13 @@ class _AboutPageState extends State<AboutPage> {
                   if (ShortcutsController.instance != null)
                     NamidaAboutListTile(
                       icon: Broken.flash_1,
-                      title: lang.SHORTCUTS,
+                      title: lang.shortcuts,
                       onTap: () => AboutPage.showShortcutsDialog(context),
                     ),
                   NamidaAboutListTile(
                     icon: Broken.archive_book,
-                    title: lang.LICENSE,
-                    subtitle: lang.LICENSE_SUBTITLE,
+                    title: lang.license,
+                    subtitle: lang.licenseSubtitle,
                     onTap: () {
                       showLicensePage(
                         context: context,
@@ -373,7 +373,7 @@ class _AboutPageState extends State<AboutPage> {
                   ),
                   NamidaAboutListTile(
                     icon: Broken.cpu,
-                    title: lang.APP_VERSION,
+                    title: lang.appVersion,
                     subtitle: currentVersionText,
                     link: isBeta ? AppSocial.GITHUB_RELEASES_BETA : AppSocial.GITHUB_RELEASES,
                     trailing: NamidaInkWell(
@@ -412,7 +412,7 @@ class _AboutPageState extends State<AboutPage> {
                   ),
                   NamidaAboutListTile(
                     icon: Broken.clipboard_text,
-                    title: lang.SHARE_LOGS,
+                    title: lang.shareLogs,
                     trailing: NamidaIconButton(
                       iconColor: context.defaultIconColor(),
                       icon: Broken.direct_send,

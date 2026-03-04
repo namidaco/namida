@@ -76,7 +76,7 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
         playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
         playlistInfo: () => PlaylistBasicInfo(
           id: '',
-          title: lang.MOST_PLAYED,
+          title: lang.mostPlayed,
           videosCountText: YoutubeHistoryController.inst.currentTopTracksMapListens.length.displayVideoKeyword,
           videosCount: YoutubeHistoryController.inst.currentTopTracksMapListens.length,
           thumbnails: [],
@@ -281,13 +281,13 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                       NamidaIconButton(
                                         iconColor: context.defaultIconColor(bgColor),
                                         icon: Broken.shuffle,
-                                        tooltip: () => lang.SHUFFLE,
+                                        tooltip: () => lang.shuffle,
                                         onPressed: () => Player.inst.playOrPause(0, playlist.tracks, widget.queueSource, shuffle: true),
                                       ),
                                       NamidaIconButton(
                                         iconColor: context.defaultIconColor(bgColor),
                                         icon: Broken.play_cricle,
-                                        tooltip: () => lang.PLAY_LAST,
+                                        tooltip: () => lang.playLast,
                                         onPressed: () => Player.inst.addToQueue(playlist.tracks, insertNext: false),
                                       ),
                                       NamidaIconButton(
@@ -307,13 +307,13 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                         childrenDefault: () => [
                                           NamidaPopupItem(
                                             icon: Broken.share,
-                                            title: lang.SHARE,
+                                            title: lang.share,
                                             onTap: playlist.shareVideos,
                                           ),
                                           if (widget.isEditable) ...[
                                             NamidaPopupItem(
                                               icon: Broken.edit_2,
-                                              title: lang.RENAME_PLAYLIST,
+                                              title: lang.renamePlaylist,
                                               onTap: () async {
                                                 final newName = await playlist.showRenamePlaylistSheet(playlistName: playlistCurrentName);
                                                 if (newName == null) return;
@@ -322,7 +322,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                             ),
                                             NamidaPopupItem(
                                               icon: Broken.trash,
-                                              title: lang.DELETE_PLAYLIST,
+                                              title: lang.deletePlaylist,
                                               onTap: () async {
                                                 final didDelete = await playlist.promptDelete(name: playlistCurrentName, colorScheme: bgColor);
                                                 if (didDelete) NamidaNavigator.inst.popPage();
@@ -714,7 +714,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                       NamidaIconButton(
                                         iconColor: context.defaultIconColor(bgColor),
                                         icon: Broken.shuffle,
-                                        tooltip: () => lang.SHUFFLE,
+                                        tooltip: () => lang.shuffle,
                                         onPressed: () async {
                                           final videos = await _getAllPlaylistVideos();
                                           if (videos.isEmpty) return;
@@ -724,7 +724,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                       NamidaIconButton(
                                         iconColor: context.defaultIconColor(bgColor),
                                         icon: Broken.play_cricle,
-                                        tooltip: () => lang.PLAY_LAST,
+                                        tooltip: () => lang.playLast,
                                         onPressed: () async {
                                           final videos = await _getAllPlaylistVideos();
                                           if (videos.isEmpty) return;
@@ -797,7 +797,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                     sizeMultiplier: 0.95,
                                     borderRadius: 8.0,
                                     icon: Broken.task_square,
-                                    text: lang.LOAD_ALL,
+                                    text: lang.loadAll,
                                     enabled: !isLoadingMoreItems && hasMoreStreamsLeft, // this for lazylist
                                     disableWhenLoading: false,
                                     showLoadingWhenDisabled: hasMoreStreamsLeft,

@@ -77,7 +77,7 @@ install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"
 
 
 # bundle required binaries
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg_build/windows/"
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/windows/"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
   FILES_MATCHING PATTERN "*"
 )

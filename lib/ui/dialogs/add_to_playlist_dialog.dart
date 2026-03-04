@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -31,7 +30,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
               width: 12.0,
             ),
             Text(
-              lang.ADD_TO_PLAYLIST,
+              lang.addToPlaylist,
               style: namida.theme.textTheme.displayMedium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -41,7 +40,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
       ),
       leftAction: Obx(
         (context) => Text(
-          "${PlaylistController.inst.playlistsMap.length.formatDecimal()} ${lang.PLAYLISTS}",
+          lang.playlists.length.displayPlaylistKeyword,
           style: namida.theme.textTheme.displayMedium,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -65,7 +64,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
                 builder: (context, atBeginning) => CustomSwitchListTile(
                   visualDensity: VisualDensity.compact,
                   icon: Broken.arrow_square_up,
-                  title: lang.ADD_TRACKS_AT_THE_BEGINNING,
+                  title: lang.addTracksAtTheBeginning,
                   value: atBeginning,
                   onChanged: (val) => settings.save(playlistAddTracksAtBeginning: !val),
                 ),

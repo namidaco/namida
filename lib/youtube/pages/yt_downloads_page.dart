@@ -84,15 +84,15 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
     bool confirmed = false;
     bool delete = false;
 
-    final groupTitleText = groupTitle == '' ? lang.DEFAULT : groupTitle;
+    final groupTitleText = groupTitle == '' ? lang.defaultLabel : groupTitle;
     await NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: lang.WARNING,
+        title: lang.warning,
         normalTitleStyle: true,
         isWarning: true,
         actions: [
           NamidaButton(
-            text: lang.DELETE.toUpperCase(),
+            text: lang.delete.toUpperCase(),
             style: ButtonStyle(
               foregroundColor: WidgetStatePropertyAll(Colors.red),
             ),
@@ -106,7 +106,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
           const CancelButton(),
           const SizedBox(width: 4.0),
           NamidaButton(
-            text: (confirmMessage != '' ? confirmMessage : lang.CONFIRM).toUpperCase(),
+            text: (confirmMessage != '' ? confirmMessage : lang.confirm).toUpperCase(),
             onPressed: () {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
@@ -147,13 +147,13 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
         tempCount.close();
       },
       dialog: CustomBlurryDialog(
-        title: lang.CONFIGURE,
+        title: lang.configure,
         normalTitleStyle: true,
         actions: [
           const CancelButton(),
           const SizedBox(width: 4.0),
           NamidaButton(
-            text: lang.CONFIRM,
+            text: lang.confirm,
             onPressed: () {
               YoutubeParallelDownloadsHandler.inst.setMaxParalellDownloads(tempCount.value);
               NamidaNavigator.inst.closeDialog();
@@ -166,7 +166,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
             const SizedBox(height: 12.0),
             CustomListTile(
               icon: Broken.flash,
-              title: lang.PARALLEL_DOWNLOADS,
+              title: lang.parallelDownloads,
               trailing: Obx(
                 (context) {
                   final temp = tempCount.valueR;
@@ -216,7 +216,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                             children: [
                               _getFilterChip(
                                 context: context,
-                                title: lang.ALL,
+                                title: lang.all,
                                 icon: Broken.task,
                                 onTap: () {
                                   _updateTempList(null);
@@ -226,7 +226,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                               ),
                               _getFilterChip(
                                 context: context,
-                                title: lang.ONGOING,
+                                title: lang.ongoing,
                                 icon: Broken.import,
                                 onTap: () {
                                   _updateTempList(true);
@@ -236,7 +236,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                               ),
                               _getFilterChip(
                                 context: context,
-                                title: lang.FINISHED,
+                                title: lang.finished,
                                 icon: Broken.tick_circle,
                                 onTap: () {
                                   _updateTempList(false);
@@ -250,7 +250,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                         // -- still some issues.
                         // NamidaIconButton(
                         //   icon: null,
-                        //   tooltip: lang.PARALLEL_DOWNLOADS,
+                        //   tooltip: lang.parallelDownloads,
                         //   onPressed: _showParallelDownloadsDialog,
                         //   child: Obx(
                         //     (context) => StackedIcon(
@@ -302,8 +302,8 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                     onPressed: () async {
                                       final confirmation = await _confirmCancelDialog(
                                         context: context,
-                                        operationTitle: lang.CANCEL,
-                                        groupTitle: lang.ONGOING,
+                                        operationTitle: lang.cancel,
+                                        groupTitle: lang.ongoing,
                                         itemsLength: _downloadTasksTempList.length,
                                       );
                                       if (confirmation.confirmed) {
@@ -373,7 +373,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Text(
-                                                    groupName.groupName == '' ? lang.DEFAULT : groupName.groupName,
+                                                    groupName.groupName == '' ? lang.defaultLabel : groupName.groupName,
                                                     style: textTheme.displayMedium,
                                                   ),
                                                   if (lastEditedAgo != null)
@@ -416,8 +416,8 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                               onPressed: () async {
                                                 final confirmation = await _confirmCancelDialog(
                                                   context: context,
-                                                  operationTitle: lang.CANCEL,
-                                                  confirmMessage: lang.REMOVE,
+                                                  operationTitle: lang.cancel,
+                                                  confirmMessage: lang.remove,
                                                   groupTitle: groupName.groupName,
                                                   itemsLength: list.length,
                                                 );

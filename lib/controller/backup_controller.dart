@@ -44,8 +44,8 @@ class BackupController {
     }
     if (dir == null || !await dir.exists()) {
       snackyy(
-        title: "${lang.ERROR}: ${operationName ?? lang.BACKUP_AND_RESTORE}",
-        message: '${error ?? lang.DIRECTORY_DOESNT_EXIST}: "$path"',
+        title: "${lang.error}: ${operationName ?? lang.backupAndRestore}",
+        message: '${error ?? lang.directoryDoesntExist}: "$path"',
         isError: true,
       );
       return null;
@@ -64,11 +64,11 @@ class BackupController {
       permissionCompleter = Completer<bool>();
       Completer<void>? reqCompleter;
       final sc = snackyy(
-        title: "${lang.ERROR}: ${lang.BACKUP_AND_RESTORE} - ${lang.AUTOMATIC_BACKUP}",
-        message: lang.STORAGE_PERMISSION_DENIED,
+        title: "${lang.error}: ${lang.backupAndRestore} - ${lang.automaticBackup}",
+        message: lang.storagePermissionDenied,
         isError: true,
         button: (
-          lang.MANAGE,
+          lang.manage,
           () async {
             reqCompleter = Completer<void>();
             final granted = await requestManageStoragePermission();
@@ -89,7 +89,7 @@ class BackupController {
       return;
     }
 
-    final backupDirectoryPath = await _getBackupDirectoryPathEnsured(lang.AUTOMATIC_BACKUP);
+    final backupDirectoryPath = await _getBackupDirectoryPathEnsured(lang.automaticBackup);
     if (backupDirectoryPath == null) return;
 
     final latestBackupDate = await _getLatestBackupFileDateSync.thready(backupDirectoryPath);
@@ -140,7 +140,7 @@ class BackupController {
 
   Future<void> createBackupFile(List<String> backupItemsPaths, {String fileSuffix = ''}) async {
     if (isCreatingBackup.value) {
-      snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+      snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
       return;
     }
 
@@ -152,7 +152,7 @@ class BackupController {
     final format = DateFormat('yyyy-MM-dd HH.mm.ss');
     final date = format.format(DateTime.now().toLocal());
 
-    final backupDirPath = await _getBackupDirectoryPathEnsured(lang.CREATE_BACKUP);
+    final backupDirPath = await _getBackupDirectoryPathEnsured(lang.createBackup);
     if (backupDirPath == null) return;
 
     // creates directories and file
@@ -216,10 +216,10 @@ class BackupController {
       ];
       await _zipManager.createZip(sourceDir: sourceDir, files: allFiles, zipFile: backupFile);
 
-      snackyy(title: lang.CREATED_BACKUP_SUCCESSFULLY, message: lang.CREATED_BACKUP_SUCCESSFULLY_SUB);
+      snackyy(title: lang.createdBackupSuccessfully, message: lang.createdBackupSuccessfullySub);
     } catch (e) {
       printy(e, isError: true);
-      snackyy(title: lang.ERROR, message: e.toString());
+      snackyy(title: lang.error, message: e.toString());
     }
 
     // Cleaning up
@@ -351,20 +351,20 @@ class BackupController {
 
   Future<void> restoreBackupOnTap(bool auto) async {
     if (isRestoringBackup.value) {
-      snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+      snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
       return;
     }
 
     try {
       File? backupzip;
       if (auto) {
-        final backupDirectoryPath = await _getBackupDirectoryPathEnsured(lang.RESTORE_BACKUP);
+        final backupDirectoryPath = await _getBackupDirectoryPathEnsured(lang.restoreBackup);
         if (backupDirectoryPath != null) {
           final sortedFiles = await _getBackupFilesSortedSync.thready(backupDirectoryPath);
           backupzip = sortedFiles.firstOrNull;
         }
       } else {
-        final filePicked = await NamidaFileBrowser.pickFile(note: lang.RESTORE_BACKUP, allowedExtensions: NamidaFileExtensionsWrapper.zip);
+        final filePicked = await NamidaFileBrowser.pickFile(note: lang.restoreBackup, allowedExtensions: NamidaFileExtensionsWrapper.zip);
         final path = filePicked?.path;
         if (path != null) {
           backupzip = File(path);
@@ -420,9 +420,9 @@ class BackupController {
       Indexer.inst.calculateAllImageSizesInStorage();
       // Indexer.inst.updateColorPalettesSizeInStorage();
       await _readNewFiles();
-      snackyy(title: lang.RESTORED_BACKUP_SUCCESSFULLY, message: lang.RESTORED_BACKUP_SUCCESSFULLY_SUB);
+      snackyy(title: lang.restoredBackupSuccessfully, message: lang.restoredBackupSuccessfullySub);
     } catch (e) {
-      snackyy(title: "${lang.ERROR}: ${lang.RESTORE_BACKUP}", message: e.toString());
+      snackyy(title: "${lang.error}: ${lang.restoreBackup}", message: e.toString());
     } finally {
       isRestoringBackup.value = false;
     }

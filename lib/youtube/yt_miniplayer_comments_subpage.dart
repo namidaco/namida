@@ -234,7 +234,7 @@ class YoutubeCommentsHeader extends StatelessWidget {
                     final count = comments?.commentsCount;
                     return Text(
                       [
-                        lang.COMMENTS,
+                        lang.comments,
                         if (count != null) count.formatDecimalShort(),
                       ].join(' • '),
                       style: textTheme.displayMedium,

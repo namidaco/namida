@@ -74,7 +74,7 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
           enableKeyboardFocus: true,
           isOriginalAnimation: false,
           textEditingController: controller,
-          hintText: "${lang.SEARCH}: ${lang.SETTINGS}",
+          hintText: "${lang.search}: ${lang.settings}",
           searchBoxWidth: context.width / 1.2,
           buttonColour: Colors.transparent,
           enableBoxShadow: false,

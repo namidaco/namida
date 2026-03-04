@@ -999,7 +999,7 @@ class PhysicalMedia extends Track {
 }
 
 void _showErrorForNetworkTracks([int? count, int? totalCount]) {
-  var msg = lang.NOT_SUPPORTED_FOR_NETWORK_FILES;
+  var msg = lang.notSupportedForNetworkFiles;
   if (count != null && count > 1) {
     final totalCountText = totalCount == null ? '' : '/$totalCount';
     msg = '$msg: $count$totalCountText';

@@ -59,7 +59,7 @@ void showAddToPlaylistSheet({
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Text(
-                lang.ADD_TO_PLAYLIST,
+                lang.addToPlaylist,
                 style: textTheme.displayLarge,
               ),
             ),
@@ -91,7 +91,7 @@ void showAddToPlaylistSheet({
                 onIndexChanged: (index) {
                   settings.extra.save(ytAddToPlaylistsTabIndex: index);
                 },
-                tabs: [lang.LOCAL, lang.YOUTUBE],
+                tabs: [lang.local, lang.youtube],
                 children: [
                   Column(
                     mainAxisSize: MainAxisSize.max,
@@ -102,7 +102,7 @@ void showAddToPlaylistSheet({
                         builder: (context, atBeginning) => CustomSwitchListTile(
                           visualDensity: VisualDensity.compact,
                           icon: Broken.arrow_square_up,
-                          title: lang.ADD_TRACKS_AT_THE_BEGINNING,
+                          title: lang.addTracksAtTheBeginning,
                           value: atBeginning,
                           onChanged: (val) => settings.save(playlistAddTracksAtBeginningYT: !val),
                         ),
@@ -131,7 +131,7 @@ void showAddToPlaylistSheet({
                                   const Icon(Broken.add),
                                   const SizedBox(width: 8.0),
                                   Text(
-                                    lang.CREATE,
+                                    lang.create,
                                     style: textTheme.displayMedium,
                                   ),
                                 ],
@@ -224,11 +224,11 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
       dialog: CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        bodyText: lang.CONFIRM,
+        bodyText: lang.confirm,
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: lang.REMOVE.toUpperCase(),
+            text: lang.remove.toUpperCase(),
             onPressed: () async {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
@@ -514,7 +514,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                     const Icon(Broken.add),
                     const SizedBox(width: 8.0),
                     Text(
-                      lang.CREATE,
+                      lang.create,
                       style: textTheme.displayMedium,
                     ),
                   ],

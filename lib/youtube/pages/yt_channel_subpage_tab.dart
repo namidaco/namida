@@ -202,7 +202,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                         ? SliverToBoxAdapter(
                             // child: Center(
                             //   child: Text(
-                            //     lang.ERROR,
+                            //     lang.error,
                             //     style: textTheme.displayLarge,
                             //   ),
                             // ),

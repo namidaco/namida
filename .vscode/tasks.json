@@ -141,15 +141,15 @@
       "detail": ""
     },
     {
-      "type": "shell",
+      "type": "process",
       "command": "powershell",
       "args": [
         "-NoProfile",
         "-ExecutionPolicy",
         "Bypass",
         "-Command",
-        "$apk = Get-ChildItem -Path '${workspaceFolder}\\build\\app\\outputs\\apk\\release\\*arm64*.apk' | Select-Object -First 1; if ($apk) { adb -s 5c12eba1 push $apk.FullName /sdcard/ } else { Write-Error 'No matching APK found' }"
-      ],
+        "$apk = Get-ChildItem -Path '${workspaceFolder}\\build\\app\\outputs\\apk\\release\\*arm64*.apk' | Select-Object -First 1; $connected = (adb devices | Select-Object -Skip 1 | Where-Object { $_ -match 'device' } | ForEach-Object { $_.Trim().Split()[0] }); Write-Host \"Connected: $connected\"; @('55t445caskvcai5x','5c12eba1') | Where-Object { $connected -contains $_ } | ForEach-Object { Write-Host \"Pushing to $_\"; adb -s $_ push $apk.FullName /sdcard/ }"
+       ],
       "group": {
         "kind": "build",
         "isDefault": false

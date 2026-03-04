@@ -32,15 +32,15 @@ class SponsorBlockSettingsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
-      title: lang.SPONSORBLOCK,
-      subtitle: lang.SKIP_SPONSOR_SEGMENTS_IN_VIDEOS,
+      title: lang.sponsorblock,
+      subtitle: lang.skipSponsorSegmentsInVideos,
       icon: Broken.shield_slash,
       child: Column(
         children: [
           Obx(
             (context) => CustomSwitchListTile(
               icon: Broken.shield_slash,
-              title: lang.ENABLE_SPONSORBLOCK,
+              title: lang.enableSponsorblock,
               value: _currentConfig.valueR.enabled,
               onChanged: (isTrue) {
                 final newConfigs = _currentConfigValue.copyWith(enabled: !isTrue);
@@ -63,7 +63,7 @@ class SponsorBlockSettingsPage extends StatelessWidget with NamidaRouteWidget {
               secondaryIcon: Broken.close_circle,
               secondaryIconSize: 12.0,
             ),
-            title: lang.HIDE_SKIP_BUTTON_AFTER,
+            title: lang.hideSkipButtonAfter,
             trailing: Obx(
               (context) {
                 final hideMS = _currentConfig.valueR.hideSkipButtonAfterMS;
@@ -84,7 +84,7 @@ class SponsorBlockSettingsPage extends StatelessWidget with NamidaRouteWidget {
           ),
           CustomListTile(
             icon: Broken.weight_1,
-            title: lang.MINIMUM_SEGMENT_DURATION,
+            title: lang.minimumSegmentDuration,
             trailing: Obx(
               (context) {
                 final minDur = _currentConfig.valueR.minimumSegmentDurationMS;
@@ -129,8 +129,8 @@ class SponsorBlockSettingsPage extends StatelessWidget with NamidaRouteWidget {
           Obx(
             (context) => CustomSwitchListTile(
               icon: Broken.status_up,
-              title: lang.SKIP_COUNT_TRACKING,
-              subtitle: '⤷ ${lang.SPONSORBLOCK_LEADERBOARD}',
+              title: lang.skipCountTracking,
+              subtitle: '⤷ ${lang.sponsorblockLeaderboard}',
               value: _currentConfig.valueR.trackSkipCount,
               onChanged: (isTrue) {
                 final newConfigs = _currentConfigValue.copyWith(trackSkipCount: !isTrue);
@@ -141,18 +141,18 @@ class SponsorBlockSettingsPage extends StatelessWidget with NamidaRouteWidget {
           Obx(
             (context) => CustomListTile(
               icon: Broken.global,
-              title: lang.SERVER_ADDRESS,
+              title: lang.serverAddress,
               subtitle: _currentConfig.valueR.serverAddress ?? _currentConfig.valueR.defaultServerAddress,
               onTap: () {
                 final controller = TextEditingController(text: _currentConfigValue.serverAddress);
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
-                    title: lang.SERVER_ADDRESS,
+                    title: lang.serverAddress,
                     normalTitleStyle: true,
                     actions: [
                       const CancelButton(),
                       NamidaButton(
-                        text: lang.SAVE,
+                        text: lang.save,
                         onPressed: () {
                           final newConfigs = _currentConfigValue.copyWith(serverAddress: controller.text);
                           settings.youtube.save(sponsorBlockSettings: newConfigs);
@@ -165,7 +165,7 @@ class SponsorBlockSettingsPage extends StatelessWidget with NamidaRouteWidget {
                       child: CustomTagTextField(
                         controller: controller,
                         hintText: _currentConfigValue.defaultServerAddress,
-                        labelText: lang.SERVER_ADDRESS,
+                        labelText: lang.serverAddress,
                       ),
                     ),
                   ),
@@ -175,9 +175,8 @@ class SponsorBlockSettingsPage extends StatelessWidget with NamidaRouteWidget {
           ),
           CustomListTile(
             icon: Broken.info_circle,
-            title: lang.ABOUT,
-            subtitle:
-                "${lang.DATA_IS_PROVIDED_BY_NAME.replaceFirst('_NAME_', _currentConfigValue.defaultServerAddress.replaceFirst('https://', '').addDQuotation())}. ${lang.LEARN_MORE}",
+            title: lang.about,
+            subtitle: "${lang.dataIsProvidedByName(name: _currentConfigValue.defaultServerAddress.replaceFirst('https://', '').addDQuotation())}. ${lang.learnMore}",
             trailing: Icon(
               Broken.export_1,
               size: 18.0,
@@ -260,11 +259,11 @@ class _SponsorBlockCategoryTile extends StatelessWidget {
 
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
-        title: lang.DEFAULT_COLOR,
+        title: lang.defaultColor,
         normalTitleStyle: true,
         actions: [
           NamidaIconButton(
-            tooltip: () => lang.RESTORE_DEFAULTS,
+            tooltip: () => lang.restoreDefaults,
             onPressed: () {
               onChanged(config.copyWith(color: category.defaultConfig.color));
               NamidaNavigator.inst.closeDialog();

@@ -426,7 +426,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
         ),
         showSubpageInfoAtSide ? const SizedBox(height: 8.0) : const SizedBox(height: 4.0),
         Text(
-          subsCountText ?? (subsCount == null ? '? ${lang.SUBSCRIBERS}' : subsCount.displaySubscribersKeywordShort),
+          subsCountText ?? (subsCount == null ? '? ${lang.subscribers}' : subsCount.displaySubscribersKeywordShort),
           style: textTheme.displayMedium?.copyWith(
             fontSize: 12.0,
           ),
@@ -498,8 +498,8 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
                   isScrollable: true,
                   compact: true,
                   tabs: [
-                    if (channelInfo != null) ...channelInfo.tabs.map((e) => e.title) else lang.VIDEOS,
-                    lang.ABOUT,
+                    if (channelInfo != null) ...channelInfo.tabs.map((e) => e.title) else lang.videos,
+                    lang.about,
                   ],
                   initialIndex: _tabIndex,
                   onIndexChanged: (index) {

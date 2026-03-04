@@ -35,7 +35,7 @@ class YoutubeUserChannelsPage extends StatelessWidget with NamidaRouteWidget {
       // onDispose: (wrapper) {
       //   YtUtilsChannel.activeUserChannelsList = null;
       // },
-      title: lang.CHANNELS,
+      title: lang.channels,
       isSortable: true,
       cacheReader: YoutiPie.cacheBuilder.forUserChannels(),
       networkFetcher: (details) => YoutubeInfoController.userchannel.fetchUserChannels(details: details),

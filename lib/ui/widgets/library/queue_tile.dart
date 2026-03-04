@@ -51,11 +51,11 @@ class QueueTile extends StatelessWidget {
               final oldQueue = queue;
               QueueController.inst.removeQueue(oldQueue);
               snackyy(
-                title: lang.UNDO_CHANGES,
-                message: lang.UNDO_CHANGES_DELETED_QUEUE,
+                title: lang.undoChanges,
+                message: lang.undoChangesDeletedQueue,
                 displayDuration: SnackDisplayDuration.long,
                 button: (
-                  lang.UNDO,
+                  lang.undo,
                   () async => await QueueController.inst.reAddQueue(oldQueue),
                 ),
               );

@@ -74,8 +74,8 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
   void _navigateToNamida() async {
     if (!didGrantStoragePermission) {
       snackyy(
-        title: lang.STORAGE_PERMISSION_DENIED,
-        message: lang.STORAGE_PERMISSION_DENIED_SUBTITLE,
+        title: lang.storagePermissionDenied,
+        message: lang.storagePermissionDeniedSubtitle,
         top: false,
         isError: true,
       );
@@ -97,7 +97,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
       dialog: CustomBlurryDialog(
         icon: Broken.refresh_circle,
         normalTitleStyle: true,
-        title: lang.BACKUP_AND_RESTORE,
+        title: lang.backupAndRestore,
         actions: const [
           DoneButton(),
         ],
@@ -145,12 +145,12 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
               padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.getSettingsHorizontalMargin(context)),
               child: SettingsCard(
                 icon: Broken.candle,
-                title: lang.CONFIGURE,
-                subtitle: lang.SETUP_FIRST_STARTUP,
+                title: lang.configure,
+                subtitle: lang.setupFirstStartup,
                 trailing: Column(
                   children: [
                     NamidaIconButton(
-                      tooltip: () => lang.RESTORE_BACKUP,
+                      tooltip: () => lang.restoreBackup,
                       icon: Broken.back_square,
                       onPressed: _onRestoreBackupIconTap,
                     ),
@@ -237,7 +237,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            lang.GRANT_STORAGE_PERMISSION,
+                                            lang.grantStoragePermission,
                                             style: textTheme.displayMedium,
                                           ),
                                         ),
@@ -261,7 +261,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                     onTap: () async {
                                       await _requestPermission();
                                       if (BackupController.inst.isRestoringBackup.value) {
-                                        snackyy(title: lang.NOTE, message: lang.ANOTHER_PROCESS_IS_RUNNING);
+                                        snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
                                         return;
                                       }
                                       _navigateToNamida();
