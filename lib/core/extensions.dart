@@ -207,7 +207,28 @@ extension TracksUtils on List<Track> {
   }
 
   String get album => _firstNonEmpty((e) => e.album);
-  String get albumArtist => _firstNonEmpty((e) => e.albumArtist);
+  String get albumArtist {
+    if (isEmpty) return '';
+
+    String? cumulativeArtist = this[0].artistsList[0];
+    for (var i = 0; i < this.length; i++) {
+      final e = this[i];
+      final aa = e.albumArtist;
+      if (aa.isNotEmpty) return aa;
+
+      if (cumulativeArtist != null) {
+        final currentArtist = this[i].artistsList[0];
+        if (currentArtist != cumulativeArtist) {
+          // set to null to mark as invalid
+          cumulativeArtist = null;
+        }
+      }
+    }
+
+    // -- return artist as an album artist if all tracks has the same one.
+    return cumulativeArtist ?? '';
+  }
+
   String get composer => _firstNonEmpty((e) => e.composer);
   String get recordLabel => _firstNonEmpty((e) => e.label);
 }
