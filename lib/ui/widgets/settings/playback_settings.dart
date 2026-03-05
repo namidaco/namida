@@ -971,6 +971,9 @@ class PlaybackSettings extends SettingSubpageProvider {
             onTap: () => NamidaNavigator.inst.navigateDialog(
               dialog: CustomBlurryDialog(
                 title: lang.choose,
+                actions: const [
+                  DoneButton(),
+                ],
                 child: Column(
                   children: [
                     Text(

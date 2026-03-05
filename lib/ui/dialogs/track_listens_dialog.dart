@@ -20,7 +20,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Color? colorScheme}) {
-  final ogYearDate = DateTime.tryParse(track.year.toString())?.millisecondsSinceEpoch.dateFormattedOriginal;
+  final ogYearDate = track.yearAsDateTime()?.millisecondsSinceEpoch.dateFormattedOriginal;
   final subtitle = ogYearDate ?? track.year.yearFormatted;
   showListensDialog(
     datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : HistoryController.inst.topTracksMapListens.value[track] ?? [],

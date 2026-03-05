@@ -430,7 +430,7 @@ class TrackExtended {
   static String buildAudioInfoFormattedCompact(String format, String channels, int bitrate, int sampleRate) {
     return [
       format.toUpperCase(),
-      if (channels.isNotEmpty && channels != '2' && !channels.contains('stereo')) "$channels ch",
+      if (channels.isNotEmpty && channels != '2' && !channels.contains('stereo') && !channels.contains('unknown')) "$channels ch",
       "$bitrate kbps",
       if (sampleRate > 0) "${sampleRate / 1000} kHz",
     ].joinText(separator: ' • ');
@@ -627,12 +627,18 @@ extension TrackExtUtils on TrackExtended {
   TrackStats? get stats => Indexer.inst.trackStatsMap.value[asTrack()];
 
   String get yearPreferyyyyMMdd {
-    final tostr = year.toString();
-    final parsed = DateTime.tryParse(tostr);
+    final yearString = year.toString();
+    final parsed = yearAsDateTime(yearString: yearString);
     if (parsed != null) {
       return DateFormat('yyyyMMdd').format(parsed);
     }
-    return tostr;
+    return yearString;
+  }
+
+  DateTime? yearAsDateTime({String? yearString}) {
+    yearString ??= year.toString();
+    final parsed = yearString.length == 4 ? DateTime(year) : DateTime.tryParse(yearString);
+    return parsed;
   }
 
   String get audioInfoFormatted {
@@ -879,6 +885,7 @@ extension TrackUtils on Track {
   int get trackNo => toTrackExt().trackNo;
   int get durationMS => toTrackExt().durationMS;
   int get year => toTrackExt().year;
+  DateTime? yearAsDateTime({String? yearString}) => toTrackExt().yearAsDateTime(yearString: yearString);
   int get size => toTrackExt().size;
   int get dateAdded => toTrackExt().dateAdded;
   int get dateModified => toTrackExt().dateModified;

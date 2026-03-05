@@ -146,9 +146,12 @@ Future<void> showTrackInfoDialog(
   }
 
   String releasedFromNow = '';
-  final parsed = trackExt == null ? null : DateTime.tryParse(trackExt.year.toString());
-  if (parsed != null) {
-    releasedFromNow = TimeAgoController.dateFromNow(parsed);
+  final yearString = trackExt?.year.toString();
+  if (yearString != null) {
+    final parsed = trackExt?.yearAsDateTime(yearString: yearString);
+    if (parsed != null) {
+      releasedFromNow = TimeAgoController.dateFromNow(parsed);
+    }
   }
 
   final trackPathDetailTilesSection = <TrackInfoListTile>[
@@ -171,6 +174,9 @@ Future<void> showTrackInfoDialog(
         icon: Broken.location,
       ),
   ];
+
+  final yearFormatted = trackExt?.year.yearFormatted;
+
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       color.close();
@@ -380,7 +386,7 @@ Future<void> showTrackInfoDialog(
                                   title: lang.year,
                                   value: trackExt.year == 0 ? '?' : '${trackExt.year}',
                                   cards: [
-                                    trackExt.year.yearFormatted,
+                                    if (yearFormatted != null && yearFormatted != yearString) yearFormatted,
                                     releasedFromNow,
                                   ],
                                   icon: Broken.calendar,

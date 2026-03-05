@@ -804,7 +804,7 @@ class TrackTileManager {
       final firstListenDateMS = HistoryController.inst.topTracksMapListens.value[track.asTrack()]?.firstOrNull;
       if (firstListenDateMS == null) return '';
       if (isKuru) {
-        final releaseDate = DateTime.tryParse(track.year.toString());
+        final releaseDate = track.yearAsDateTime();
         if (releaseDate != null) {
           final firstListenDate = DateTime.fromMillisecondsSinceEpoch(firstListenDateMS);
           if (firstListenDate.day != releaseDate.day) {
