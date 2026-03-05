@@ -1026,7 +1026,7 @@ class IndexerSettings extends SettingSubpageProvider {
           NamidaIconButton(
             icon: Broken.refresh_2,
             tooltip: () => lang.refreshLibrary,
-            onPressed: () => showRefreshPromptDialog(false),
+            onPressed: () => showRefreshPromptDialog(false, allowBypassing: true),
             child: const RefreshLibraryIcon(widgetKey: refreshIconKey2),
           ),
           const SizedBox(
@@ -1379,7 +1379,7 @@ class IndexerSettings extends SettingSubpageProvider {
               leading: const RefreshLibraryIcon(widgetKey: refreshIconKey1),
               title: lang.refreshLibrary,
               subtitle: lang.refreshLibrarySubtitle,
-              onTap: () => showRefreshPromptDialog(false),
+              onTap: () => showRefreshPromptDialog(false, allowBypassing: true),
             ),
           ),
           getFoldersToScanWidget(context: context),
@@ -1556,12 +1556,33 @@ class IndexerSettings extends SettingSubpageProvider {
   }
 }
 
-Future<void> showRefreshPromptDialog(bool didModifyFolder) async {
+Future<void> showRefreshPromptDialog(bool didModifyFolder, {bool allowBypassing = false}) async {
   // [didModifyFolder] was mainly used to force recheck libraries, now it will always recheck.
   RefreshLibraryIconController.repeat();
   final currentFiles = await Indexer.inst.getAudioFiles();
+  await RefreshLibraryIconController.fling().whenComplete(RefreshLibraryIconController.stop);
+
+  Widget? bypassWidget;
+  if (allowBypassing) {
+    if (settings.bypassRefreshPrompt.value) {
+      VideoController.inst.rescanLocalVideosPaths();
+      await Indexer.inst.refreshLibraryAndCheckForDiff(
+        currentFiles: currentFiles,
+      );
+      return;
+    }
+
+    bypassWidget = ListTileWithCheckMark(
+      icon: Broken.message_question,
+      title: lang.dontAskAgain,
+      activeRx: settings.bypassRefreshPrompt,
+      onTap: () => settings.save(bypassRefreshPrompt: !settings.bypassRefreshPrompt.value),
+    );
+  }
+
   final newPaths = Indexer.inst.getNewFoundPaths(currentFiles);
   final deletedPath = Indexer.inst.getDeletedPaths(currentFiles);
+
   final settingsServers = settings.directoriesToScan.value.allServers();
   final hasServer = settingsServers.isNotEmpty || allTracksInLibrary.any((element) => element.isNetwork);
   final noLocalChanges = newPaths.isEmpty && deletedPath.isEmpty;
@@ -1652,6 +1673,16 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder) async {
       }
     }
 
+    if (bypassWidget != null) {
+      bodyWidgets.add(
+        const NamidaContainerDivider(
+          margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+        ),
+      );
+      bodyWidgets.add(bypassWidget);
+      bodyWidgets.add(const SizedBox(height: 8.0));
+    }
+
     bodyWidgets.removeLast(); // remove extra bottom padding
 
     NamidaNavigator.inst.navigateDialog(
@@ -1681,9 +1712,6 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder) async {
       },
     );
   }
-
-  await RefreshLibraryIconController.fling();
-  RefreshLibraryIconController.stop();
 }
 
 class RefreshLibraryIconController {
@@ -1885,6 +1913,7 @@ class _LocalFilesSmallChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final itemsColor = Colors.white.withOpacityExt(0.75);
     return NamidaInkWell(
       borderRadius: 6.0,
       bgColor: Color.alphaBlend(colorScheme.withOpacityExt(0.25), CurrentColor.inst.color.withOpacityExt(0.4)),
@@ -1896,12 +1925,13 @@ class _LocalFilesSmallChip extends StatelessWidget {
           Icon(
             icon,
             size: 9.0,
+            color: itemsColor,
           ),
           const SizedBox(width: 2.0),
           Flexible(
             child: Text(
               '$label: ${paths.length.displayFilesKeyword}',
-              style: context.theme.textTheme.displaySmall?.copyWith(fontSize: 12.0),
+              style: context.theme.textTheme.displaySmall?.copyWith(fontSize: 12.0, color: itemsColor),
             ),
           ),
         ],

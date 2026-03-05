@@ -63,7 +63,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
           onPointerMove(scrollController, event);
         },
         onPointerUp: (event) {
-          onRefresh(() async => await showRefreshPromptDialog(false));
+          onRefresh(() async => await showRefreshPromptDialog(false, allowBypassing: true));
         },
         onPointerCancel: (event) => onVerticalDragFinish(),
         child: Column(

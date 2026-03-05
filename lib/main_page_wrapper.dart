@@ -661,7 +661,7 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                                     type: _DesktopShortcutActionType.opensDialog,
                                     tooltip: lang.refreshLibrary,
                                     icon: Broken.refresh_2,
-                                    onTap: () => showRefreshPromptDialog(false),
+                                    onTap: () => showRefreshPromptDialog(false, allowBypassing: true),
                                     child: RefreshLibraryIcon(
                                       widgetKey: 'desktop_appbar',
                                       color: _DesktopShortcutIcon.getColor(context),

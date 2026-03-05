@@ -287,6 +287,8 @@ class Indexer<T extends Track> {
     isIndexing.value = true;
     useMediaStore ??= _defaultUseMediaStore;
 
+    (Set<String>, Set<String>)? differenceStats;
+
     if (forceReIndex || tracksInfoList.isEmpty) {
       await _fetchAllSongsAndWriteToFile(
         audioFiles: {},
@@ -296,9 +298,13 @@ class Indexer<T extends Track> {
       );
     } else {
       currentFiles ??= await getAudioFiles();
+      final newFiles = getNewFoundPaths(currentFiles);
+      final deletedPaths = allowDeletion ? getDeletedPaths(currentFiles) : <String>{};
+      differenceStats = (newFiles, deletedPaths);
+
       await _fetchAllSongsAndWriteToFile(
-        audioFiles: getNewFoundPaths(currentFiles),
-        deletedPaths: allowDeletion ? getDeletedPaths(currentFiles) : {},
+        audioFiles: newFiles,
+        deletedPaths: deletedPaths,
         forceReIndex: false,
         useMediaStore: useMediaStore,
       );
@@ -328,7 +334,41 @@ class Indexer<T extends Track> {
           ),
         );
       } else {
-        snackyy(title: lang.done, message: lang.finishedUpdatingLibrary);
+        final msgParts = [lang.finishedUpdatingLibrary];
+        if (differenceStats != null) {
+          int newFilesLength = 0;
+          int deletedFilesLength = 0;
+          // -- only show actual stats since filtering can apply to new paths
+          // -- eg: there could be 10 new files, but were filtered so it's false to say 10 new files were added
+
+          for (final n in differenceStats.$1) {
+            if (allTracksMappedByPath.containsKey(n)) {
+              newFilesLength++;
+            }
+          }
+          for (final n in differenceStats.$2) {
+            if (!allTracksMappedByPath.containsKey(n)) {
+              deletedFilesLength++;
+            }
+          }
+
+          if (newFilesLength == 0 && deletedFilesLength == 0) {
+            msgParts.add(lang.noChangesFound);
+          } else {
+            msgParts.add('${lang.newLabel}: ${newFilesLength.displayFilesKeyword}');
+            msgParts.add('${lang.deleted}/${lang.filtered}: ${deletedFilesLength.displayFilesKeyword}');
+          }
+          void addIfNonZero(String text, int value) {
+            if (value > 0) {
+              msgParts.add('$text: $value');
+            }
+          }
+
+          addIfNonZero(lang.duplicatedTracks, this.duplicatedTracksLength.value);
+          addIfNonZero(lang.tracksExcludedByNomedia, this.tracksExcludedByNoMedia.value);
+          addIfNonZero(lang.filteredBySizeAndDuration, this.filteredForSizeDurationTracks.value);
+        }
+        snackyy(title: lang.done, message: msgParts.join('\n'));
       }
     }
   }
