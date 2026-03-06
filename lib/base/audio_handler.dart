@@ -98,6 +98,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       _refreshPlatformStatusDependersIsPlaying(ye);
     });
 
+    settings.player.repeatMode.addListener(resetGaplessPlaybackData);
+
     final smtc = SMTCController.instance;
     if (smtc != null) {
       void listener() {
@@ -627,7 +629,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         return _itemToPrepareConfigSelectable(item, finalItem, index, null);
       },
       youtubeID: (finalItem) async {
-        // TOOD: gapless for yt ?
+        // TODO: gapless for yt ?
         return null;
       },
     );
