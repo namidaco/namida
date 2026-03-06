@@ -357,7 +357,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           imageFileToCopy = File(artUrl);
         } else {
           final fileParentDirectory = File(m3uPath).parent.path;
-          final pathNormalized = p.relative(p.join(fileParentDirectory, p.normalize(artUrl)));
+          final pathNormalized = p.normalize(p.join(fileParentDirectory, artUrl));
           if (await File(pathNormalized).exists()) {
             imageFileToCopy = File(pathNormalized);
           }
@@ -438,7 +438,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           if (pathExists(fullPath)) fileExists = true;
 
           if (!fileExists) {
-            fullPath = p.relative(p.join(fileParentDirectory, p.normalize(fullPath))); // maybe was relative
+            fullPath = p.normalize(p.join(fileParentDirectory, fullPath));
             if (pathExists(fullPath)) fileExists = true;
           }
 
