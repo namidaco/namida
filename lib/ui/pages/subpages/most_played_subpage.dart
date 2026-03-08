@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/controller/current_color.dart';
@@ -65,6 +66,11 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
         builder: (context, activeChip) {
           final isActive = activeChip == mptr;
           final textColor = isActive ? const Color.fromARGB(200, 255, 255, 255) : null;
+          final chipTextStyle = textTheme.displaySmall?.copyWith(
+            color: textColor,
+            fontSize: dateText == null ? null : 12.0,
+            fontWeight: FontWeight.w600,
+          );
           return TapDetector(
             onTap: () => _onSelectingTimeRange(
               dateCustom: dateCustom,
@@ -79,16 +85,71 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Text(
-                    dateText ?? mptr.toText(),
-                    style: textTheme.displaySmall?.copyWith(
-                      color: textColor,
-                      fontSize: dateText == null ? null : 12.0,
-                      fontWeight: FontWeight.w600,
+                  if (dateCustom == null || dateCustom == DateRange.dummy())
+                    Text(
+                      mptr.toText(),
+                      style: chipTextStyle,
+                    )
+                  else ...[
+                    NamidaInkWell(
+                      borderRadius: 4.0,
+                      bgColor: theme.cardColor.withOpacityExt(0.2),
+                      padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0, vertical: 2.0),
+                      onTap: () {
+                        showCalendarDialog(
+                          title: lang.choose,
+                          buttonText: lang.confirm,
+                          useHistoryDates: true,
+                          historyController: historyController,
+                          calendarType: CalendarDatePicker2Type.single,
+                          lastDate: dateCustom.newest,
+                          onGenerate: (dates) {
+                            final newDate = dates.first;
+                            _onSelectingTimeRange(
+                              dateCustom: DateRange(oldest: newDate, newest: dateCustom.newest),
+                              mptr: MostPlayedTimeRange.custom,
+                            );
+                          },
+                        );
+                      },
+                      child: Text(
+                        dateCustom.oldest.millisecondsSinceEpoch.dateFormattedOriginalNoYears(dateCustom.newest),
+                        style: chipTextStyle,
+                      ),
                     ),
-                  ),
+                    Text(
+                      ' → ',
+                      style: chipTextStyle,
+                    ),
+                    NamidaInkWell(
+                      borderRadius: 4.0,
+                      bgColor: theme.cardColor.withOpacityExt(0.2),
+                      padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0, vertical: 2.0),
+                      onTap: () {
+                        showCalendarDialog(
+                          title: lang.choose,
+                          buttonText: lang.confirm,
+                          useHistoryDates: true,
+                          historyController: historyController,
+                          calendarType: CalendarDatePicker2Type.single,
+                          firstDate: dateCustom.oldest,
+                          onGenerate: (dates) {
+                            final newDate = dates.first;
+                            _onSelectingTimeRange(
+                              dateCustom: DateRange(oldest: dateCustom.oldest, newest: newDate),
+                              mptr: MostPlayedTimeRange.custom,
+                            );
+                          },
+                        );
+                      },
+                      child: Text(
+                        dateCustom.newest.millisecondsSinceEpoch.dateFormattedOriginalNoYears(dateCustom.oldest),
+                        style: chipTextStyle,
+                      ),
+                    ),
+                  ],
                   if (trailing != null) ...[
-                    const SizedBox(width: 2.0),
+                    const SizedBox(width: 6.0),
                     trailing(textColor)!,
                   ],
                 ],

@@ -432,11 +432,8 @@ extension YearDateFormatted on int {
     final valInSettingMain = settings.dateTimeFormat.value;
     String valInSettingNew = valInSettingMain.contains('d') ? valInSettingMain : 'dd MMM yyyy';
 
-    bool lessThan1Year(Duration d) => d.inDays.abs() < 364;
     final thisDate = DateTime.fromMillisecondsSinceEpoch(this);
-    final diffFromNow = thisDate.difference(DateTime.now());
-    final diffDur = thisDate.difference(diffDate);
-    if (lessThan1Year(diffDur) && lessThan1Year(diffFromNow)) {
+    if (thisDate.year == diffDate.year && thisDate.year == DateTime.now().year) {
       valInSettingNew = valInSettingNew.replaceAll('y', '').replaceAll('Y', '');
     }
     return getDateFormatted(format: valInSettingNew);
