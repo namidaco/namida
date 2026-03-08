@@ -2,8 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-// ignore: depend_on_referenced_packages
-import 'package:collection/collection.dart';
 import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
 import 'package:namida/base/setting_subpage_provider.dart';
@@ -349,7 +347,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                   final original = List<TrackSearchFilter>.from(settings.trackSearchFilter.value);
 
                   void refreshNecessary() {
-                    final didChange = !DeepCollectionEquality.unordered().equals(original, settings.trackSearchFilter.value);
+                    final didChange = settings.trackSearchFilter.value.didChangeFrom(original);
                     if (didChange) {
                       SearchSortController.inst.disposeMediaResources(MediaType.track);
                     }
@@ -424,7 +422,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                   list.remove(TrackSearchFilter.lyrics);
 
                   void resortIfNecessary() {
-                    final didChange = !DeepCollectionEquality.unordered().equals(original, settings.ignoreCommonPrefixForTypes.value);
+                    final didChange = settings.ignoreCommonPrefixForTypes.value.didChangeFrom(original);
                     if (didChange) {
                       Indexer.inst.resortAllAfterIgnoreCommonPrefixChange();
                       SearchSortController.inst.disposeMediaResources(MediaType.track);

@@ -1079,6 +1079,7 @@ class DirsFileFilter {
   final List<DirectoryIndex>? directoriesToExclude;
   final NamidaFileExtensionsWrapper extensions;
   final NamidaFileExtensionsWrapper? imageExtensions;
+  final List<String>? blacklistExtensions;
   final bool strictNoMedia;
 
   final List<DirectoryIndex> _directoriesToScan;
@@ -1088,6 +1089,7 @@ class DirsFileFilter {
     required this.directoriesToExclude,
     required this.extensions,
     this.imageExtensions,
+    this.blacklistExtensions,
     this.strictNoMedia = true,
   }) : _directoriesToScan = settings.directoriesToScan.value,
        _respectNoMedia = settings.respectNoMedia.value;
@@ -1106,7 +1108,7 @@ class DirsFileFilter {
     );
 
     final directoriesToExclude = parameters.directoriesToExclude;
-    final extensions = parameters.extensions;
+    final extensions = parameters.extensions.without(parameters.blacklistExtensions);
     final imageExtensions = parameters.imageExtensions;
     final respectNoMedia = parameters._respectNoMedia;
 

@@ -1491,6 +1491,7 @@ class Indexer<T extends Track> {
       directoriesToExclude: settings.directoriesToExclude.value,
       extensions: extensions,
       imageExtensions: NamidaFileExtensionsWrapper.image,
+      blacklistExtensions: settings.extensionsBlacklist.value,
       strictNoMedia: strictNoMedia,
     );
     final result = await dirsFilterer.filter();

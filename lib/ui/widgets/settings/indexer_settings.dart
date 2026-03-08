@@ -48,6 +48,7 @@ enum _IndexerSettingsKeys with SettingKeysBase {
   albumIdentifiers,
   artistSeparators,
   genreSeparators,
+  extensionsBlacklist,
   minimumFileSize,
   minimumTrackDur,
   useMediaStore(NamidaFeaturesAvailablity.android),
@@ -87,6 +88,7 @@ class IndexerSettings extends SettingSubpageProvider {
     _IndexerSettingsKeys.albumIdentifiers: [lang.albumIdentifiers],
     _IndexerSettingsKeys.artistSeparators: [lang.trackArtistsSeparator],
     _IndexerSettingsKeys.genreSeparators: [lang.trackGenresSeparator],
+    _IndexerSettingsKeys.extensionsBlacklist: ['${lang.extension} (${lang.blacklist})'],
     _IndexerSettingsKeys.minimumFileSize: [lang.minFileSize],
     _IndexerSettingsKeys.minimumTrackDur: [lang.minFileDuration],
     _IndexerSettingsKeys.useMediaStore: [lang.useMediaStore, lang.useMediaStoreSubtitle],
@@ -1236,6 +1238,24 @@ class IndexerSettings extends SettingSubpageProvider {
             ),
           ),
           getItemWrapper(
+            key: _IndexerSettingsKeys.extensionsBlacklist,
+            child: Obx(
+              (context) => CustomListTile(
+                bgColor: getBgColor(_IndexerSettingsKeys.extensionsBlacklist),
+                icon: Broken.location_slash,
+                title: '${lang.extension} (${lang.blacklist})',
+                subtitle: lang.indexRefreshRequired,
+                trailingText: "${settings.extensionsBlacklist.valueR?.length ?? ''}",
+                onTap: () {
+                  _showExtensionsBlacklistDialog(
+                    '${lang.extension} (${lang.blacklist})',
+                    settings.extensionsBlacklist,
+                  );
+                },
+              ),
+            ),
+          ),
+          getItemWrapper(
             key: _IndexerSettingsKeys.minimumFileSize,
             child: ObxO(
               rx: settings.indexMinFileSizeInB,
@@ -1404,6 +1424,8 @@ class IndexerSettings extends SettingSubpageProvider {
 
     final updatingLibrary = false.obs;
 
+    final original = List<String>.from(itemsList.value);
+
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
         updatingLibrary.close();
@@ -1412,145 +1434,267 @@ class IndexerSettings extends SettingSubpageProvider {
       onDismissing: isBlackListDialog
           ? null
           : () async {
-              updatingLibrary.value = true;
-              Indexer.inst.rebuildTracksAfterSplitConfigChanges();
+              final didChange = itemsList.value.didChangeFrom(original);
+              if (didChange) {
+                updatingLibrary.value = true;
+                Indexer.inst.rebuildTracksAfterSplitConfigChanges();
+              }
             },
       durationInMs: 200,
-      dialog: CustomBlurryDialog(
+      dialog: _ChipsEditorDialog(
         title: title,
-        actions: [
-          if (!isBlackListDialog)
-            NamidaButton(
-              textWidget: Obx((context) {
-                final blLength = trackArtistsSeparators ? settings.trackArtistsSeparatorsBlacklist.length : settings.trackGenresSeparatorsBlacklist.length;
-                final t = blLength == 0 ? '' : ' ($blLength)';
-                return Text('${lang.blacklist}$t');
-              }),
-              onPressed: () {
-                if (trackArtistsSeparators) {
-                  _showSeparatorSymbolsDialog(
-                    lang.blacklist,
-                    settings.trackArtistsSeparatorsBlacklist,
-                    trackArtistsSeparatorsBlacklist: true,
-                  );
-                }
-                if (trackGenresSeparators) {
-                  _showSeparatorSymbolsDialog(
-                    lang.blacklist,
-                    settings.trackGenresSeparatorsBlacklist,
-                    trackGenresSeparatorsBlacklist: true,
-                  );
-                }
-              },
+        controller: separatorsController,
+        displayDone: isBlackListDialog,
+        itemsList: itemsList,
+        itemsListNull: null,
+        instructions: isBlackListDialog ? lang.separatorsBlacklistSubtitle : lang.separatorsMessage,
+        isLoadingRx: updatingLibrary,
+        onAdd: (value) {
+          if (value.isNotEmpty) {
+            if (trackArtistsSeparators) {
+              settings.save(trackArtistsSeparators: [value]);
+            }
+            if (trackGenresSeparators) {
+              settings.save(trackGenresSeparators: [value]);
+            }
+            if (trackArtistsSeparatorsBlacklist) {
+              settings.save(trackArtistsSeparatorsBlacklist: [value]);
+            }
+            if (trackGenresSeparatorsBlacklist) {
+              settings.save(trackGenresSeparatorsBlacklist: [value]);
+            }
+            separatorsController.clear();
+          } else {
+            snackyy(title: lang.emptyValue, message: lang.enterSymbol);
+          }
+        },
+        onRemove: (e) {
+          if (trackArtistsSeparators) {
+            settings.removeFromList(trackArtistsSeparator: e);
+          }
+          if (trackGenresSeparators) {
+            settings.removeFromList(trackGenresSeparator: e);
+          }
+          if (trackArtistsSeparatorsBlacklist) {
+            settings.removeFromList(trackArtistsSeparatorsBlacklist1: e);
+          }
+          if (trackGenresSeparatorsBlacklist) {
+            settings.removeFromList(trackGenresSeparatorsBlacklist1: e);
+          }
+        },
+        leftAction: isBlackListDialog
+            ? null
+            : NamidaButton(
+                textWidget: Obx((context) {
+                  final blLength = trackArtistsSeparators ? settings.trackArtistsSeparatorsBlacklist.length : settings.trackGenresSeparatorsBlacklist.length;
+                  final t = blLength == 0 ? '' : ' ($blLength)';
+                  return Text('${lang.blacklist}$t');
+                }),
+                onPressed: () {
+                  if (trackArtistsSeparators) {
+                    _showSeparatorSymbolsDialog(
+                      lang.blacklist,
+                      settings.trackArtistsSeparatorsBlacklist,
+                      trackArtistsSeparatorsBlacklist: true,
+                    );
+                  }
+                  if (trackGenresSeparators) {
+                    _showSeparatorSymbolsDialog(
+                      lang.blacklist,
+                      settings.trackGenresSeparatorsBlacklist,
+                      trackGenresSeparatorsBlacklist: true,
+                    );
+                  }
+                },
+              ),
+      ),
+    );
+  }
+
+  Future<void> _showExtensionsBlacklistDialog(String title, Rxn<List<String>> blacklistItems) async {
+    final blacklistController = TextEditingController();
+
+    final original = blacklistItems.value == null ? null : List<String>.from(blacklistItems.value!);
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        blacklistController.dispose();
+      },
+      onDismissing: () {
+        final didChange = blacklistItems.value.didChangeFrom(original);
+        if (didChange) {
+          showRefreshPromptDialog(false);
+        }
+      },
+      durationInMs: 200,
+      dialogBuilder: (theme) => _ChipsEditorDialog(
+        title: title,
+        controller: blacklistController,
+        displayDone: true,
+        itemsList: null,
+        itemsListNull: blacklistItems,
+        instructions: null,
+        isLoadingRx: null,
+        onAdd: (value) {
+          if (blacklistController.text.isNotEmpty) {
+            String extensionToBlacklist = blacklistController.text;
+            if (extensionToBlacklist.startsWith('.')) extensionToBlacklist = extensionToBlacklist.substring(1);
+
+            if (extensionToBlacklist.isNotEmpty) {
+              settings.save(extensionsBlacklist: [extensionToBlacklist]);
+            }
+
+            blacklistController.clear();
+          } else {
+            snackyy(title: lang.emptyValue, message: lang.pleaseEnterAName);
+          }
+        },
+        onRemove: (e) {
+          settings.removeFromList(extensionsBlacklist1: e);
+        },
+        bottomWidget: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: SmoothSingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ObxO(
+              rx: blacklistItems,
+              builder: (context, blacklistItems) => Row(
+                children: NamidaFileExtensionsWrapper.audioAndVideo.extensions.map(
+                  (e) {
+                    if (blacklistItems != null && blacklistItems.contains(e)) return const SizedBox();
+                    return NamidaInkWell(
+                      borderRadius: 12.0,
+                      bgColor: theme.cardColor,
+                      margin: const EdgeInsets.symmetric(horizontal: 2.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                      onTap: () {
+                        settings.save(extensionsBlacklist: [e]);
+                      },
+                      child: Text(
+                        e,
+                        style: theme.textTheme.displaySmall,
+                      ),
+                    );
+                  },
+                ).toList(),
+              ),
             ),
-          if (isBlackListDialog) const CancelButton(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChipsEditorDialog extends StatelessWidget {
+  final String title;
+  final String? instructions;
+  final Widget? leftAction;
+  final Widget? bottomWidget;
+  final bool displayDone;
+  final TextEditingController controller;
+  final RxList<String>? itemsList;
+  final Rxn<List<String>>? itemsListNull;
+  final Rx<bool>? isLoadingRx;
+  final void Function(String value) onAdd;
+  final void Function(String value) onRemove;
+
+  const _ChipsEditorDialog({
+    required this.title,
+    required this.instructions,
+    this.leftAction,
+    this.bottomWidget,
+    this.displayDone = false,
+    required this.controller,
+    required this.itemsList,
+    required this.itemsListNull,
+    required this.isLoadingRx,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomBlurryDialog(
+      title: title,
+      actions: [
+        ?leftAction,
+        if (displayDone)
+          TextButton(
+            onPressed: NamidaNavigator.inst.closeDialog,
+            child: NamidaButtonText(lang.done),
+          ),
+        if (isLoadingRx != null)
           Obx(
-            (context) => updatingLibrary.valueR
+            (context) => isLoadingRx!.valueR
                 ? const LoadingIndicator()
                 : NamidaButton(
                     text: lang.add,
-                    onPressed: () {
-                      if (separatorsController.text.isNotEmpty) {
-                        if (trackArtistsSeparators) {
-                          settings.save(trackArtistsSeparators: [separatorsController.text]);
-                        }
-                        if (trackGenresSeparators) {
-                          settings.save(trackGenresSeparators: [separatorsController.text]);
-                        }
-                        if (trackArtistsSeparatorsBlacklist) {
-                          settings.save(trackArtistsSeparatorsBlacklist: [separatorsController.text]);
-                        }
-                        if (trackGenresSeparatorsBlacklist) {
-                          settings.save(trackGenresSeparatorsBlacklist: [separatorsController.text]);
-                        }
-                        separatorsController.clear();
-                      } else {
-                        snackyy(title: lang.emptyValue, message: lang.enterSymbol);
-                      }
-                    },
+                    onPressed: () => onAdd(controller.text),
                   ),
+          )
+        else
+          NamidaButton(
+            text: lang.add,
+            onPressed: () => onAdd(controller.text),
           ),
-        ],
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (instructions != null && instructions!.isNotEmpty) ...[
             Text(
-              isBlackListDialog ? lang.separatorsBlacklistSubtitle : lang.separatorsMessage,
+              instructions!,
               style: namida.textTheme.displaySmall,
             ),
             const SizedBox(
               height: 12.0,
             ),
-            Obx(
-              (context) => Wrap(
-                children: [
-                  ...itemsList.valueR.map(
-                    (e) => Container(
-                      margin: const EdgeInsets.all(4.0),
-                      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
-                      decoration: BoxDecoration(
-                        color: namida.theme.cardTheme.color,
-                        borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-                      ),
-                      child: InkWell(
-                        onTap: () {
-                          if (trackArtistsSeparators) {
-                            settings.removeFromList(trackArtistsSeparator: e);
-                          }
-                          if (trackGenresSeparators) {
-                            settings.removeFromList(trackGenresSeparator: e);
-                          }
-                          if (trackArtistsSeparatorsBlacklist) {
-                            settings.removeFromList(trackArtistsSeparatorsBlacklist1: e);
-                          }
-                          if (trackGenresSeparatorsBlacklist) {
-                            settings.removeFromList(trackGenresSeparatorsBlacklist1: e);
-                          }
-                        },
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(e),
-                            const SizedBox(
-                              width: 6.0,
-                            ),
-                            const Icon(
-                              Broken.close_circle,
-                              size: 18.0,
-                            ),
-                          ],
-                        ),
+          ],
+          Obx(
+            (context) => Wrap(
+              children: [
+                ...?(itemsList?.valueR ?? itemsListNull?.valueR)?.map(
+                  (e) => Container(
+                    margin: const EdgeInsets.all(4.0),
+                    padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
+                    decoration: BoxDecoration(
+                      color: namida.theme.cardTheme.color,
+                      borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+                    ),
+                    child: InkWell(
+                      onTap: () => onRemove(e),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(e),
+                          const SizedBox(
+                            width: 6.0,
+                          ),
+                          const Icon(
+                            Broken.close_circle,
+                            size: 18.0,
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(
-              height: 24.0,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 14.0),
-              child: TextField(
-                style: namida.textTheme.displaySmall?.copyWith(fontSize: 16.0, fontWeight: FontWeight.w500),
-                decoration: InputDecoration(
-                  errorMaxLines: 3,
-                  isDense: true,
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.0.multipliedRadius),
-                    borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(100), width: 2.0),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-                    borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(100), width: 1.0),
-                  ),
-                  hintText: lang.value,
                 ),
-                controller: separatorsController,
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(
+            height: 12.0,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 14.0),
+            child: CustomTagTextField(
+              controller: controller,
+              hintText: lang.value,
+              labelText: '',
+            ),
+          ),
+          ?bottomWidget,
+        ],
       ),
     );
   }

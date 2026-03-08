@@ -856,6 +856,15 @@ class NamidaFileExtensionsWrapper {
   final Set<String> extensions;
   const NamidaFileExtensionsWrapper._(this.extensions);
 
+  NamidaFileExtensionsWrapper without(List<String>? blacklist) {
+    if (blacklist == null || blacklist.isEmpty) return this;
+    final copy = Set<String>.from(extensions);
+    for (final b in blacklist) {
+      copy.remove(b);
+    }
+    return NamidaFileExtensionsWrapper._(copy);
+  }
+
   bool isPathValid(String path) {
     return isExtensionValid(path.splitLast('.'));
   }

@@ -321,6 +321,14 @@ extension ListieListieUtils<T> on List<T> {
   }
 }
 
+extension ListieEqualityUtils<T1> on List<T1>? {
+  bool didChangeFrom<T2>(List<T2>? other, {bool ordered = false}) {
+    final equality = ordered ? DeepCollectionEquality() : DeepCollectionEquality.unordered();
+    final didChange = !equality.equals(this, other);
+    return didChange;
+  }
+}
+
 extension ListieFutureUtils<T> on List<T> {
   Stream<T> whereAsync(FutureOr<bool> Function(T element) test) async* {
     for (var i = 0; i < length; i++) {

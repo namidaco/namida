@@ -3,8 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-// ignore: depend_on_referenced_packages
-import 'package:collection/collection.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:youtipie/core/http.dart';
 
@@ -113,6 +111,7 @@ class _SettingsController with SettingsFileWriter {
   final RxList<String> trackGenresSeparators = <String>['&', ',', ';', '//', ' x '].obs;
   final RxList<String> trackArtistsSeparatorsBlacklist = <String>[].obs;
   final RxList<String> trackGenresSeparatorsBlacklist = <String>[].obs;
+  final extensionsBlacklist = Rxn<List<String>>();
   final fileBrowserSort = FileBrowserSortType.name.obs;
   final fileBrowserSortReversed = false.obs;
   final tracksSortSearch = SortType.title.obs;
@@ -531,6 +530,7 @@ class _SettingsController with SettingsFileWriter {
       if (json['trackGenresSeparators'] is List) trackGenresSeparators.value = (json['trackGenresSeparators'] as List).cast<String>();
       if (json['trackArtistsSeparatorsBlacklist'] is List) trackArtistsSeparatorsBlacklist.value = (json['trackArtistsSeparatorsBlacklist'] as List).cast<String>();
       if (json['trackGenresSeparatorsBlacklist'] is List) trackGenresSeparatorsBlacklist.value = (json['trackGenresSeparatorsBlacklist'] as List).cast<String>();
+      if (json['extensionsBlacklist'] is List) extensionsBlacklist.value = (json['extensionsBlacklist'] as List).cast<String>();
       fileBrowserSort.value = FileBrowserSortType.values.getEnum(json['fileBrowserSort']) ?? fileBrowserSort.value;
       fileBrowserSortReversed.value = json['fileBrowserSortReversed'] ?? fileBrowserSortReversed.value;
       tracksSortSearch.value = SortType.values.getEnum(json['tracksSortSearch']) ?? tracksSortSearch.value;
@@ -793,6 +793,7 @@ class _SettingsController with SettingsFileWriter {
     'trackGenresSeparators': trackGenresSeparators.value,
     'trackArtistsSeparatorsBlacklist': trackArtistsSeparatorsBlacklist.value,
     'trackGenresSeparatorsBlacklist': trackGenresSeparatorsBlacklist.value,
+    'extensionsBlacklist': extensionsBlacklist.value,
     'fileBrowserSort': fileBrowserSort.value.name,
     'fileBrowserSortReversed': fileBrowserSortReversed.value,
     'tracksSortSearch': tracksSortSearch.value.name,
@@ -975,6 +976,7 @@ class _SettingsController with SettingsFileWriter {
     List<String>? trackGenresSeparators,
     List<String>? trackArtistsSeparatorsBlacklist,
     List<String>? trackGenresSeparatorsBlacklist,
+    List<String>? extensionsBlacklist,
     FileBrowserSortType? fileBrowserSort,
     bool? fileBrowserSortReversed,
     SortType? tracksSortSearch,
@@ -1167,6 +1169,12 @@ class _SettingsController with SettingsFileWriter {
     }
     if (trackGenresSeparatorsBlacklist != null && !this.trackGenresSeparatorsBlacklist.contains(trackGenresSeparatorsBlacklist[0])) {
       this.trackGenresSeparatorsBlacklist.addAll(trackGenresSeparatorsBlacklist);
+    }
+    final thisExtensionsBlacklist = this.extensionsBlacklist.value;
+    if (extensionsBlacklist != null && (thisExtensionsBlacklist == null || !thisExtensionsBlacklist.contains(extensionsBlacklist[0]))) {
+      this.extensionsBlacklist.value ??= [];
+      this.extensionsBlacklist.value!.addAll(extensionsBlacklist);
+      this.extensionsBlacklist.refresh();
     }
     if (fileBrowserSort != null) this.fileBrowserSort.value = fileBrowserSort;
     if (fileBrowserSortReversed != null) this.fileBrowserSortReversed.value = fileBrowserSortReversed;
@@ -1379,6 +1387,7 @@ class _SettingsController with SettingsFileWriter {
     String? trackGenresSeparator,
     String? trackArtistsSeparatorsBlacklist1,
     String? trackGenresSeparatorsBlacklist1,
+    String? extensionsBlacklist1,
     TrackSearchFilter? trackSearchFilter1,
     List<TrackSearchFilter>? trackSearchFilterAll,
     TrackSearchFilter? ignoreCommonPrefixForTypes1,
@@ -1409,6 +1418,10 @@ class _SettingsController with SettingsFileWriter {
     if (trackGenresSeparator != null) trackGenresSeparators.remove(trackGenresSeparator);
     if (trackArtistsSeparatorsBlacklist1 != null) trackArtistsSeparatorsBlacklist.remove(trackArtistsSeparatorsBlacklist1);
     if (trackGenresSeparatorsBlacklist1 != null) trackGenresSeparatorsBlacklist.remove(trackGenresSeparatorsBlacklist1);
+    if (extensionsBlacklist1 != null) {
+      extensionsBlacklist.value?.remove(extensionsBlacklist1);
+      extensionsBlacklist.refresh();
+    }
     if (trackSearchFilter1 != null) trackSearchFilter.remove(trackSearchFilter1);
     if (trackSearchFilterAll != null) trackSearchFilterAll.loop((f) => trackSearchFilter.remove(f));
     if (ignoreCommonPrefixForTypes1 != null) ignoreCommonPrefixForTypes.remove(ignoreCommonPrefixForTypes1);
@@ -1459,8 +1472,8 @@ class _SettingsController with SettingsFileWriter {
 
   void updateMediaItemsTrackSortingAll(MediaType media, List<SortType>? allsorts, bool? isReverse) {
     if (allsorts == null && isReverse == null) return;
-    final didChangeSorts = !DeepCollectionEquality().equals(allsorts, mediaItemsTrackSorting[media]);
-    final didChangeReverse = !DeepCollectionEquality().equals(isReverse, mediaItemsTrackSortingReverse[media]);
+    final didChangeSorts = allsorts.didChangeFrom(mediaItemsTrackSorting[media], ordered: true);
+    final didChangeReverse = isReverse != mediaItemsTrackSortingReverse[media];
 
     if (allsorts != null) mediaItemsTrackSorting[media] = allsorts;
     if (isReverse != null) mediaItemsTrackSortingReverse[media] = isReverse;

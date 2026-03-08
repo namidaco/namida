@@ -828,6 +828,7 @@ class VideoController {
     final dirsFilterer = DirsFileFilter(
       directoriesToExclude: settings.directoriesToExclude.value,
       extensions: NamidaFileExtensionsWrapper.video,
+      blacklistExtensions: settings.extensionsBlacklist.value,
       strictNoMedia: strictNoMedia,
     );
     final result = await dirsFilterer.filter();
