@@ -581,6 +581,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                     PlaylistController.inst,
                     SortType.values,
                     (sort) => sort.toText(),
+                    (sort) => sort.toIcon(),
                   ),
                   onReverseIconTap: (newSortReserve) {
                     PlaylistController.inst.updatePropertyInPlaylist(playlist.name, itemsSortReverse: newSortReserve);

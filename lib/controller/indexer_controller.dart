@@ -662,6 +662,7 @@ class Indexer<T extends Track> {
         originalTags: null,
         tagsList: [],
         gainData: null,
+        sortInfo: null,
         albumIdentifierWrapper: null,
         isVideo: trackPath.isVideo(),
         hashKey: TrackExtended.generateHashKeyIfEnabled(null, trackPath, null),
@@ -747,6 +748,7 @@ class Indexer<T extends Track> {
             year: yearText ?? '',
           ),
           gainData: tags.gainData,
+          sortInfo: tags.sortInfo,
           generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
         );
 
@@ -1604,6 +1606,7 @@ class Indexer<T extends Track> {
         originalTags: tag,
         tagsList: tags,
         gainData: null,
+        sortInfo: null,
         albumIdentifierWrapper: AlbumIdentifierWrapper.normalize(
           album: album ?? '',
           albumArtist: albumArtist ?? '',

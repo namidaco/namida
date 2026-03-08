@@ -141,7 +141,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
   }) async {
     final ffmpegTagsMap = commentToInsert != null && commentToInsert.isNotEmpty
         ? <String, String?>{
-            FFMPEGTagField.comment: oldComment == null || oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
+            FFMPEGTagField.comment.tagKey: oldComment == null || oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
           }
         : FFMPEGTagField.createTagsMapfromFTag(newTags);
 

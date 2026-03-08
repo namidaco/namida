@@ -1,3 +1,4 @@
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -41,7 +42,7 @@ class MediaInfo {
   }
 
   Map<dynamic, dynamic> toMap() => {
-    "streams": streams?.map((e) => e.toMap()),
+    "streams": streams?.map((e) => e.toMap()).toList(),
     "format": format?.toMap(),
   };
 }
@@ -129,6 +130,7 @@ class MIFormatTags {
   final String? compatibleBrands;
   final String? mood;
   final ReplayGainData? gainData;
+  final FTagsSortInfo? sortInfo;
 
   const MIFormatTags({
     this.date,
@@ -157,6 +159,7 @@ class MIFormatTags {
     this.compatibleBrands,
     this.mood,
     this.gainData,
+    this.sortInfo,
   });
 
   factory MIFormatTags.fromMap(Map<dynamic, dynamic> map) => MIFormatTags(
@@ -186,6 +189,7 @@ class MIFormatTags {
     compatibleBrands: map.getOrUpperCase("compatible_brands"),
     mood: map.getOrUpperCase("mood"),
     gainData: ReplayGainData.fromAndroidMap(map),
+    sortInfo: FTagsSortInfo.fromFFmpegMap(map),
   );
 
   Map<dynamic, dynamic> toMap() => {
@@ -215,6 +219,7 @@ class MIFormatTags {
     "compatible_brands": compatibleBrands,
     "mood": mood,
     "gainData": gainData?.toMap(),
+    "sortInfo": sortInfo?.toMap(),
   };
 }
 

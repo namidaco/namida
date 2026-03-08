@@ -85,7 +85,7 @@ Future<void> showDownloadVideoBottomSheet({
   }
 
   final defaultInitialTags = YTUtils.getDefaultTagsFieldsBuilders(settings.youtube.autoExtractVideoTagsFromInfo.value);
-  updateTagsMap(defaultInitialTags);
+  updateTagsMap(defaultInitialTags.map((key, value) => MapEntry(key.tagKey, value)));
   updateTagsMap(settings.youtube.initialDefaultMetadataTags);
 
   bool videoOutputFilenameWasUserEdited = false;

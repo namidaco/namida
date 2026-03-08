@@ -512,87 +512,87 @@ class NamidaFFMPEG {
   // }
 }
 
-class FFMPEGTagField {
-  static const String title = 'title';
-  static const String artist = 'artist';
-  static const String album = 'album';
-  static const String albumArtist = 'album_artist';
-  static const String composer = 'composer';
-  static const String synopsis = 'synopsis';
-  static const String description = 'description';
-  static const String genre = 'genre';
-  static const String year = 'date';
-  static const String trackNumber = 'track';
-  static const String discNumber = 'disc';
-  static const String trackTotal = 'TRACKTOTAL';
-  static const String discTotal = 'DISCTOTAL';
-  static const String comment = 'comment';
-  static const String lyrics = 'lyrics';
-  static const String remixer = 'REMIXER';
-  static const String lyricist = 'LYRICIST';
-  static const String language = 'LANGUAGE';
-  static const String recordLabel = 'LABEL';
-  static const String country = 'Country';
+enum FFMPEGTagField {
+  title('title'),
+  artist('artist'),
+  album('album'),
+  albumArtist('album_artist'),
+  composer('composer'),
+  synopsis('synopsis'),
+  description('description'),
+  genre('genre'),
+  year('date'),
+  trackNumber('track'),
+  discNumber('disc'),
+  trackTotal('TRACKTOTAL'),
+  discTotal('DISCTOTAL'),
+  comment('comment'),
+  lyrics('lyrics'),
+  remixer('REMIXER'),
+  lyricist('LYRICIST'),
+  language('LANGUAGE'),
+  recordLabel('LABEL'),
+  country('Country'),
 
   // -- NOT WORKING
-  static const String mood = 'mood';
-  static const String rating = 'rating';
-  static const String tags = 'tags';
+  mood('mood'),
+  rating('rating'),
+  tags('tags'),
+  // ---------
 
-  static const List<String> values = <String>[
-    title,
-    artist,
-    album,
-    albumArtist,
-    composer,
-    synopsis,
-    description,
-    genre,
-    mood,
-    year,
-    trackNumber,
-    discNumber,
-    trackTotal,
-    discTotal,
-    comment,
-    lyrics,
-    remixer,
-    lyricist,
-    language,
-    recordLabel,
-    country,
-    rating,
-    tags,
-  ];
+  titleSort('titlesort'),
+  artistSort('artistsort'),
+  albumSort('albumsort'),
+  albumArtistSort('albumartistsort'),
+  composerSort('composersort'),
+  ;
 
-  static Map<String, String?> createTagsMapfromFTag(FTags newTags) {
-    return <String, String?>{
-      FFMPEGTagField.title: newTags.title,
-      FFMPEGTagField.artist: newTags.artist,
-      FFMPEGTagField.album: newTags.album,
-      FFMPEGTagField.albumArtist: newTags.albumArtist,
-      FFMPEGTagField.composer: newTags.composer,
-      FFMPEGTagField.genre: newTags.genre,
-      FFMPEGTagField.year: newTags.year,
-      FFMPEGTagField.trackNumber: newTags.trackNumber,
-      FFMPEGTagField.discNumber: newTags.discNumber,
-      FFMPEGTagField.trackTotal: newTags.trackTotal,
-      FFMPEGTagField.discTotal: newTags.discTotal,
-      FFMPEGTagField.comment: newTags.comment,
-      FFMPEGTagField.description: newTags.description,
-      FFMPEGTagField.synopsis: newTags.synopsis,
-      FFMPEGTagField.lyrics: newTags.lyrics,
-      FFMPEGTagField.remixer: newTags.remixer,
-      FFMPEGTagField.lyricist: newTags.lyricist,
-      FFMPEGTagField.language: newTags.language,
-      FFMPEGTagField.recordLabel: newTags.recordLabel,
-      FFMPEGTagField.country: newTags.country,
+  final String tagKey;
+  const FFMPEGTagField(this.tagKey);
+
+  @override
+  String toString() {
+    return tagKey;
+  }
+
+  static String? _fieldToValue(FFMPEGTagField f, FTags newTags) {
+    return switch (f) {
+      FFMPEGTagField.title => newTags.title,
+      FFMPEGTagField.artist => newTags.artist,
+      FFMPEGTagField.album => newTags.album,
+      FFMPEGTagField.albumArtist => newTags.albumArtist,
+      FFMPEGTagField.composer => newTags.composer,
+      FFMPEGTagField.genre => newTags.genre,
+      FFMPEGTagField.year => newTags.year,
+      FFMPEGTagField.trackNumber => newTags.trackNumber,
+      FFMPEGTagField.discNumber => newTags.discNumber,
+      FFMPEGTagField.trackTotal => newTags.trackTotal,
+      FFMPEGTagField.discTotal => newTags.discTotal,
+      FFMPEGTagField.comment => newTags.comment,
+      FFMPEGTagField.description => newTags.description,
+      FFMPEGTagField.synopsis => newTags.synopsis,
+      FFMPEGTagField.lyrics => newTags.lyrics,
+      FFMPEGTagField.remixer => newTags.remixer,
+      FFMPEGTagField.lyricist => newTags.lyricist,
+      FFMPEGTagField.language => newTags.language,
+      FFMPEGTagField.recordLabel => newTags.recordLabel,
+      FFMPEGTagField.country => newTags.country,
 
       // -- TESTED NOT WORKING. disabling to prevent unwanted fields corruption etc.
-      // FFMPEGTagField.mood: editedTags[TagField.mood],
-      // FFMPEGTagField.tags: editedTags[TagField.tags],
-      // FFMPEGTagField.rating: editedTags[TagField.rating],
+      FFMPEGTagField.mood => null,
+      FFMPEGTagField.tags => null,
+      FFMPEGTagField.rating => null,
+      // ----------
+      FFMPEGTagField.titleSort => newTags.sortInfo?.title,
+      FFMPEGTagField.artistSort => newTags.sortInfo?.artist,
+      FFMPEGTagField.albumSort => newTags.sortInfo?.album,
+      FFMPEGTagField.albumArtistSort => newTags.sortInfo?.albumArtist,
+      FFMPEGTagField.composerSort => newTags.sortInfo?.composer,
     };
+  }
+
+  static Map<String, String?> createTagsMapfromFTag(FTags newTags) {
+    return {for (final f in FFMPEGTagField.values) f.tagKey: ?_fieldToValue(f, newTags)};
   }
 }
 

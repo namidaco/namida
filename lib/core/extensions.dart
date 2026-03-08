@@ -231,6 +231,11 @@ extension TracksUtils on List<Track> {
 
   String get composer => _firstNonEmpty((e) => e.composer);
   String get recordLabel => _firstNonEmpty((e) => e.label);
+
+  String get albumSort => _firstNonEmpty((e) => e.sortInfo?.album ?? '');
+  String get albumArtistSort => _firstNonEmpty((e) => e.sortInfo?.albumArtist ?? '');
+  String get artistSort => _firstNonEmpty((e) => e.sortInfo?.artist ?? '');
+  String get composerSort => _firstNonEmpty((e) => e.sortInfo?.composer ?? '');
 }
 
 extension StringListJoiner on Iterable<String?> {
@@ -466,11 +471,14 @@ extension TrackItemSubstring on TrackTileItem {
 extension Channels on String {
   String get channelToLabel {
     final ch = int.tryParse(this);
-    if (ch == null) return '';
-    if (ch == 0) return '';
-    if (ch == 1) return 'mono';
-    if (ch == 2) return 'stereo';
-    return this;
+    final resolved = switch (ch) {
+      null => '',
+      0 => '',
+      1 => 'mono',
+      2 => 'stereo',
+      _ => null,
+    };
+    return resolved ?? this;
   }
 }
 

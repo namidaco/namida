@@ -321,6 +321,15 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
           metadata["albumArtist"] = albumArtist
           metadata["album"] = album
           metadata["title"] = tag.getAll(FieldKey.TITLE)
+          metadata["sortInfo"] = mapOf(
+            "album" to tag.getFirst(FieldKey.ALBUM_SORT),
+            "albumArtist" to tag.getFirst(FieldKey.ALBUM_ARTIST_SORT),
+            "albumArtists" to tag.getFirst(FieldKey.ALBUM_ARTISTS_SORT),
+            "artist" to tag.getFirst(FieldKey.ARTIST_SORT),
+            "artists" to tag.getFirst(FieldKey.ARTISTS_SORT),
+            "composer" to tag.getFirst(FieldKey.COMPOSER_SORT),
+            "title" to tag.getFirst(FieldKey.TITLE_SORT),
+          )
 
           try {
             // -- filling missing id3v2 fields `TXXX`
@@ -458,6 +467,15 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
       setFieldIfExist(newTag, FieldKey.LANGUAGE, map, "language")
       setFieldIfExist(newTag, FieldKey.COUNTRY, map, "country")
       setFieldIfExist(newTag, FieldKey.RECORD_LABEL, map, "recordLabel")
+      
+      val sortInfoMap = map["sortInfo"] as? Map<*, *>
+      if (sortInfoMap != null && sortInfoMap.isNotEmpty()) {
+        setFieldIfExist(newTag, FieldKey.ALBUM_SORT, sortInfoMap, "album")
+        setFieldIfExist(newTag, FieldKey.ALBUM_ARTIST_SORT, sortInfoMap, "albumArtist")
+        setFieldIfExist(newTag, FieldKey.ARTIST_SORT, sortInfoMap, "artist")
+        setFieldIfExist(newTag, FieldKey.COMPOSER_SORT, sortInfoMap, "composer")
+        setFieldIfExist(newTag, FieldKey.TITLE_SORT, sortInfoMap, "title")
+      }
 
       val artwork = map["artwork"]
       // If field is null, it is ignored
@@ -525,7 +543,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
     }
   }
 
-  fun setFieldIfExist(tag: Tag, field: FieldKey?, map: Map<String?, Any?>, key: String?) {
+  fun setFieldIfExist(tag: Tag, field: FieldKey?, map: Map<*, *>, key: String?) {
     val value = map[key]
     // If field is null, it is ignored
     if (value is String) {

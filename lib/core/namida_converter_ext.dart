@@ -287,6 +287,7 @@ extension FAudioModelExtensions on FAudioModel {
         recordLabel: original.tags.recordLabel ?? this.tags.recordLabel,
         ratingPercentage: original.tags.ratingPercentage ?? this.tags.ratingPercentage,
         gainData: original.tags.gainData ?? this.tags.gainData,
+        sortInfo: original.tags.sortInfo ?? this.tags.sortInfo,
       ),
       durationMS: original.durationMS ?? this.durationMS,
       bitRate: original.bitRate ?? this.bitRate,
@@ -341,17 +342,18 @@ extension MediaInfoToFAudioModel on MediaInfo {
         country: info?.country,
         recordLabel: info?.label,
         gainData: info?.gainData,
+        sortInfo: info?.sortInfo,
       ),
       durationMS: infoFull.format?.duration?.inMilliseconds,
       bitRate: bitrateThousands?.round(),
       channels: audioStream?.channels == null
           ? null
-          : {
-                  0: null,
-                  1: 'mono',
-                  2: 'stereo',
-                }[audioStream?.channels] ??
-                'unknown',
+          : switch (audioStream?.channels) {
+              0 => null,
+              1 => 'mono',
+              2 => 'stereo',
+              _ => null,
+            },
       format: format,
       sampleRate: parsy(audioStream?.sampleRate),
       bits: audioStream?.bitsPerSample,
@@ -425,7 +427,7 @@ extension PlaylistToQueueSource on LocalPlaylist {
   }
 }
 
-extension FFMPEGTagFieldUtilsC on String {
+extension FFMPEGTagFieldUtilsC on FFMPEGTagField {
   String ffmpegTagToText() => switch (this) {
     FFMPEGTagField.title => lang.title,
     FFMPEGTagField.album => lang.album,
@@ -450,7 +452,11 @@ extension FFMPEGTagFieldUtilsC on String {
     FFMPEGTagField.country => lang.country,
     FFMPEGTagField.rating => lang.rating,
     FFMPEGTagField.tags => lang.tags,
-    _ => '',
+    FFMPEGTagField.titleSort => '${lang.title} (${lang.sortBy})',
+    FFMPEGTagField.albumSort => '${lang.album} (${lang.sortBy})',
+    FFMPEGTagField.albumArtistSort => '${lang.albumArtist} (${lang.sortBy})',
+    FFMPEGTagField.artistSort => '${lang.artist} (${lang.sortBy})',
+    FFMPEGTagField.composerSort => '${lang.composer} (${lang.sortBy})',
   };
 
   IconData ffmpegTagToIcon() => switch (this) {
@@ -477,7 +483,11 @@ extension FFMPEGTagFieldUtilsC on String {
     FFMPEGTagField.country => Broken.house,
     FFMPEGTagField.rating => Broken.grammerly,
     FFMPEGTagField.tags => Broken.ticket_discount,
-    _ => Broken.cd,
+    FFMPEGTagField.titleSort => Broken.music,
+    FFMPEGTagField.albumSort => Broken.music_dashboard,
+    FFMPEGTagField.albumArtistSort => Broken.user,
+    FFMPEGTagField.artistSort => Broken.microphone,
+    FFMPEGTagField.composerSort => Broken.profile_2user,
   };
 }
 
@@ -1355,6 +1365,7 @@ extension RouteUtils on NamidaRoute {
               ytplc.YoutubePlaylistController.inst,
               YTSortType.values,
               (sort) => sort.toText(),
+              (sort) => sort.toIcon(),
             );
           },
         ),
@@ -1603,6 +1614,32 @@ extension SortTypeL10n on SortType {
     SortType.mostPlayed => lang.mostPlayed,
     SortType.latestPlayed => lang.recentListens,
     SortType.firstListen => lang.firstListen,
+    SortType.titleSort => '${lang.title} (${lang.sortBy})',
+  };
+
+  IconData toIcon() => switch (this) {
+    SortType.title => Broken.music,
+    SortType.album => Broken.music_dashboard,
+    SortType.artistsList => Broken.microphone,
+    SortType.albumArtist => Broken.user,
+    SortType.genresList => Broken.smileys,
+    SortType.composer => Broken.profile_2user,
+    SortType.trackNo => Broken.hashtag,
+    SortType.discNo => Broken.hashtag,
+    SortType.year => Broken.calendar,
+    SortType.duration => Broken.timer_1,
+    SortType.dateAdded => Broken.calendar_add,
+    SortType.dateModified => Broken.calendar_edit,
+    SortType.rating => Broken.grammerly,
+    SortType.bitrate => Broken.voice_cricle,
+    SortType.filename => Broken.quote_up_circle,
+    SortType.sampleRate => Broken.voice_cricle,
+    SortType.size => Broken.size,
+    SortType.shuffle => Broken.shuffle,
+    SortType.mostPlayed => Broken.award,
+    SortType.latestPlayed => Broken.clock,
+    SortType.firstListen => Broken.calendar_search,
+    SortType.titleSort => Broken.music,
   };
 }
 
@@ -1617,6 +1654,18 @@ extension YTSortTypeL10n on YTSortType {
     YTSortType.mostPlayed => lang.mostPlayed,
     YTSortType.latestPlayed => lang.recentListens,
     YTSortType.firstListen => lang.firstListen,
+  };
+
+  IconData toIcon() => switch (this) {
+    YTSortType.title => Broken.music,
+    YTSortType.channelTitle => Broken.user,
+    YTSortType.duration => Broken.timer_1,
+    YTSortType.date => Broken.calendar,
+    YTSortType.dateAdded => Broken.calendar_add,
+    YTSortType.shuffle => Broken.shuffle,
+    YTSortType.mostPlayed => Broken.award,
+    YTSortType.latestPlayed => Broken.clock,
+    YTSortType.firstListen => Broken.calendar_search,
   };
 }
 
@@ -1649,8 +1698,38 @@ extension GroupSortTypeL10n on GroupSortType {
     GroupSortType.year => lang.year,
     GroupSortType.creationDate => lang.dateCreated,
     GroupSortType.modifiedDate => lang.dateModified,
+    GroupSortType.albumSort => '${lang.album} (${lang.sortBy})',
+    GroupSortType.albumArtistSort => '${lang.albumArtist} (${lang.sortBy})',
+    GroupSortType.artistSort => '${lang.artist} (${lang.sortBy})',
+    GroupSortType.composerSort => '${lang.composer} (${lang.sortBy})',
     GroupSortType.shuffle => lang.shuffle,
     GroupSortType.custom => lang.custom,
+  };
+
+  IconData toIcon() => switch (this) {
+    GroupSortType.title => Broken.music,
+    GroupSortType.album => Broken.music_dashboard,
+    GroupSortType.artistsList => Broken.microphone,
+    GroupSortType.albumArtist => Broken.user,
+    GroupSortType.genresList => Broken.smileys,
+    GroupSortType.composer => Broken.profile_2user,
+    GroupSortType.numberOfTracks => Broken.hashtag,
+    GroupSortType.year => Broken.calendar,
+    GroupSortType.duration => Broken.timer_1,
+    GroupSortType.creationDate => Broken.calendar_add,
+    GroupSortType.dateModified => Broken.calendar_edit,
+    GroupSortType.modifiedDate => Broken.calendar_edit,
+    GroupSortType.label => Broken.ticket,
+    GroupSortType.albumsCount => Broken.cards,
+    GroupSortType.custom => Broken.format_circle,
+    GroupSortType.shuffle => Broken.shuffle,
+    GroupSortType.playCount => Broken.award,
+    GroupSortType.latestPlayed => Broken.clock,
+    GroupSortType.firstListen => Broken.calendar_search,
+    GroupSortType.albumSort => Broken.music_dashboard,
+    GroupSortType.albumArtistSort => Broken.user,
+    GroupSortType.artistSort => Broken.microphone,
+    GroupSortType.composerSort => Broken.profile_2user,
   };
 }
 
@@ -1767,6 +1846,11 @@ extension TagFieldL10n on TagField {
     TagField.country => lang.country,
     TagField.rating => lang.rating,
     TagField.tags => lang.tags,
+    TagField.titleSort => '${lang.title} (${lang.sortBy})',
+    TagField.albumSort => '${lang.album} (${lang.sortBy})',
+    TagField.albumArtistSort => '${lang.albumArtist} (${lang.sortBy})',
+    TagField.artistSort => '${lang.artist} (${lang.sortBy})',
+    TagField.composerSort => '${lang.composer} (${lang.sortBy})',
   };
 
   IconData toIcon() => switch (this) {
@@ -1793,6 +1877,11 @@ extension TagFieldL10n on TagField {
     TagField.country => Broken.house,
     TagField.rating => Broken.grammerly,
     TagField.tags => Broken.ticket_discount,
+    TagField.titleSort => Broken.music,
+    TagField.albumSort => Broken.music_dashboard,
+    TagField.albumArtistSort => Broken.user,
+    TagField.artistSort => Broken.microphone,
+    TagField.composerSort => Broken.profile_2user,
   };
 }
 

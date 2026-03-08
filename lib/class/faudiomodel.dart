@@ -83,6 +83,7 @@ class FTags {
 
   final double? ratingPercentage;
   final ReplayGainData? gainData;
+  final FTagsSortInfo? sortInfo;
 
   const FTags({
     required this.path,
@@ -115,6 +116,7 @@ class FTags {
     this.recordLabel,
     this.ratingPercentage,
     this.gainData,
+    this.sortInfo,
   });
 
   static String? _listToString(dynamic list) {
@@ -178,6 +180,7 @@ class FTags {
       recordLabel: _listToString(map["recordLabel"]) ?? map["RECORDLABEL"] ?? map["label"] ?? map["LABEL"],
       ratingPercentage: ratingUnsignedIntToPercentage(ratingString),
       gainData: ReplayGainData.fromAndroidMap(map),
+      sortInfo: FTagsSortInfo.fromAndroidMap(map),
     );
   }
 
@@ -212,6 +215,97 @@ class FTags {
       "recordLabel": recordLabel,
       "language": language,
       "gainData": gainData?.toMap(),
+      "sortInfo": sortInfo?.toMap(),
+    };
+  }
+}
+
+class FTagsSortInfo {
+  final String? title, album, albumArtist, artist, composer;
+
+  const FTagsSortInfo._({
+    required this.title,
+    required this.album,
+    required this.albumArtist,
+    required this.artist,
+    required this.composer,
+  });
+
+  static FTagsSortInfo? orNull({
+    String? title,
+    String? album,
+    String? albumArtist,
+    String? artist,
+    String? composer,
+  }) {
+    if (title == null && album == null && albumArtist == null && artist == null && composer == null) {
+      return null;
+    }
+    return FTagsSortInfo._(
+      title: title,
+      album: album,
+      albumArtist: albumArtist,
+      artist: artist,
+      composer: composer,
+    );
+  }
+
+  static String? _sortKeyJoinerValue(Map tags, String part1, String part2, [String? part3]) {
+    final keys = [
+      '$part1$part2${part3 ?? ''}',
+      '$part1-$part2${part3 == null ? '' : '-$part3'}',
+      '${part1.toUpperCase()}${part2.toUpperCase()}${part3?.toUpperCase() ?? ''}',
+      '${part1}_$part2${part3 == null ? '' : '_$part3'}',
+    ];
+    for (final key in keys) {
+      final val = tags[key];
+      if (val != null) return val;
+    }
+    return null;
+  }
+
+  static FTagsSortInfo? fromFFmpegMap(Map? map) {
+    final tags = map?["tags"] as Map? ?? map;
+    if (tags == null) return null;
+
+    return FTagsSortInfo.orNull(
+      title: _sortKeyJoinerValue(tags, 'title', 'sort'),
+      album: _sortKeyJoinerValue(tags, 'album', 'sort'),
+      albumArtist: _sortKeyJoinerValue(tags, 'album', 'artist', 'sort') ?? _sortKeyJoinerValue(tags, 'album', 'artists', 'sort'),
+      artist: _sortKeyJoinerValue(tags, 'artist', 'sort') ?? _sortKeyJoinerValue(tags, 'artists', 'sort'),
+      composer: _sortKeyJoinerValue(tags, 'composer', 'sort'),
+    );
+  }
+
+  static FTagsSortInfo? fromAndroidMap(Map? map) {
+    final sort = map?["sortInfo"] as Map?;
+    if (sort == null) return null;
+    return FTagsSortInfo.orNull(
+      title: sort["title"],
+      album: sort["album"],
+      albumArtist: sort["albumArtist"],
+      artist: sort["artist"],
+      composer: sort["composer"],
+    );
+  }
+
+  static FTagsSortInfo? fromMap(Map map) {
+    return FTagsSortInfo.orNull(
+      title: map["title"],
+      album: map["album"],
+      albumArtist: map["albumArtist"],
+      artist: map["artist"],
+      composer: map["composer"],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'title': ?title,
+      'album': ?album,
+      'albumArtist': ?albumArtist,
+      'artist': ?artist,
+      'composer': ?composer,
     };
   }
 }

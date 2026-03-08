@@ -302,6 +302,7 @@ class TrackExtended {
   final String? originalTags;
   final List<String> tagsList;
   final ReplayGainData? gainData;
+  final FTagsSortInfo? sortInfo;
   final String? hashKey;
 
   final AlbumIdentifierWrapper? albumIdentifierWrapper;
@@ -344,6 +345,7 @@ class TrackExtended {
     required this.originalTags,
     required this.tagsList,
     required this.gainData,
+    required this.sortInfo,
     required this.hashKey,
     required this.albumIdentifierWrapper,
     required this.isVideo,
@@ -505,6 +507,7 @@ class TrackExtended {
         config: generalSplitConfig,
       ),
       gainData: json['gainData'] == null ? null : ReplayGainData.fromMap(json['gainData']),
+      sortInfo: json['sortInfo'] == null ? null : FTagsSortInfo.fromMap(json['sortInfo']),
       hashKey: json['hashKey'],
       albumIdentifierWrapper: json['albumIdentifierWrapper'] == null ? null : AlbumIdentifierWrapper.fromMap(json['albumIdentifierWrapper']),
       isVideo: json['v'] ?? false,
@@ -543,7 +546,8 @@ class TrackExtended {
       if (label.isNotEmpty) 'label': label,
       if (rating > 0) 'rating': rating,
       if (originalTags?.isNotEmpty == true) 'originalTags': originalTags,
-      if (gainData != null) 'gainData': gainData?.toMap(),
+      if (gainData != null) 'gainData': ?gainData?.toMap(),
+      if (sortInfo != null) 'sortInfo': ?sortInfo?.toMap(),
       if (hashKey != null) 'hashKey': hashKey,
       if (albumIdentifierWrapper != null) 'albumIdentifierWrapper': albumIdentifierWrapper?.toMap(),
       if (isVideo) 'v': isVideo,
@@ -745,6 +749,7 @@ extension TrackExtUtils on TrackExtended {
       originalTags: tag.tags ?? originalTags,
       tagsList: finaltagsEmbedded,
       gainData: tag.gainData ?? gainData,
+      sortInfo: tag.sortInfo ?? sortInfo,
 
       // -- uneditable fields
       bitrate: bitrate,
@@ -805,6 +810,7 @@ extension TrackExtUtils on TrackExtended {
     String? originalTags,
     List<String>? tagsList,
     ReplayGainData? gainData,
+    FTagsSortInfo? sortInfo,
     AlbumIdentifierWrapper? albumIdentifierWrapper,
     bool? isVideo,
     required bool generatePathHash,
@@ -848,6 +854,7 @@ extension TrackExtUtils on TrackExtended {
       originalTags: originalTags ?? this.originalTags,
       tagsList: tagsList ?? this.tagsList,
       gainData: gainData ?? this.gainData,
+      sortInfo: sortInfo ?? this.sortInfo,
       hashKey: newHashKey,
       albumIdentifierWrapper: albumIdentifierWrapper ?? this.albumIdentifierWrapper,
       isVideo: isVideo ?? this.isVideo,
@@ -950,6 +957,7 @@ extension TrackUtils on Track {
   String getAlbumIdentifier(List<AlbumIdentifier> identifiers) => toTrackExt().getAlbumIdentifier(identifiers);
 
   ReplayGainData? get gainData => toTrackExt().gainData;
+  FTagsSortInfo? get sortInfo => toTrackExt().sortInfo;
 }
 
 extension TrackListUtils on List<Track> {

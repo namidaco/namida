@@ -880,7 +880,7 @@ class SmallListTile extends StatelessWidget {
     this.subtitle,
     this.color,
     this.iconSize,
-    this.padding = const EdgeInsets.only(left: 16.0, right: 12.0),
+    this.padding,
     this.titleGap,
     this.borderRadius = 0.0,
     this.leading,
@@ -892,6 +892,7 @@ class SmallListTile extends StatelessWidget {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     final iconColor = color != null ? context.defaultIconColor(color, textTheme.displayMedium?.color) : null;
+    final padding = this.padding ?? (icon != null ? const EdgeInsets.only(left: 16.0, right: 12.0) : const EdgeInsets.only(left: 12.0, right: 12.0));
     return ListTile(
       contentPadding: padding,
       horizontalTitleGap: titleGap,
@@ -903,15 +904,30 @@ class SmallListTile extends StatelessWidget {
           SizedBox(
             height: double.infinity,
             child: icon != null
-                ? Icon(icon, color: iconColor, size: iconSize)
-                : active
-                ? const Icon(
-                    Broken.arrow_circle_right,
-                    size: 20.0,
+                ? Icon(
+                    icon,
+                    color: iconColor,
+                    size: iconSize,
                   )
-                : const Icon(
-                    Broken.arrow_right_3,
-                    size: 18.0,
+                : Stack(
+                    children: [
+                      AnimatedShow(
+                        show: active,
+                        isHorizontal: true,
+                        child: const Icon(
+                          Broken.arrow_circle_right,
+                          size: 20.0,
+                        ),
+                      ),
+                      AnimatedShow(
+                        show: !active,
+                        isHorizontal: true,
+                        child: const Icon(
+                          Broken.arrow_right_3,
+                          size: 18.0,
+                        ),
+                      ),
+                    ],
                   ),
           ),
       visualDensity: visualDensity ?? (compact ? const VisualDensity(horizontal: -2.2, vertical: -2.2) : const VisualDensity(horizontal: -1.2, vertical: -1.2)),
@@ -940,20 +956,18 @@ class SmallListTile extends StatelessWidget {
             )
           : null,
       trailing: displayAnimatedCheck
-          ? SizedBox(
-              height: 18.0,
-              width: 18.0,
-              child: CheckMark(
-                // curve: Curves.easeInOutExpo,
-                strokeWidth: 2,
-                activeColor: color ?? theme.listTileTheme.iconColor!,
-                inactiveColor: color ?? theme.listTileTheme.iconColor!,
-                duration: const Duration(milliseconds: 400),
-                active: settings.artistSortReversed.value,
-              ),
+          ? NamidaCheckMark(
+              size: 18.0,
+              activeColor: color,
+              inactiveColor: color,
+              active: settings.artistSortReversed.value,
             )
           : trailingIcon != null
-          ? Icon(trailingIcon, color: color)
+          ? Icon(
+              trailingIcon,
+              color: color,
+              size: 18.0,
+            )
           : trailing,
       onTap: onTap,
       onLongPress: onLongPress,
@@ -1084,10 +1098,11 @@ class NamidaCheckMark extends StatelessWidget {
       width: size,
       height: size,
       child: CheckMark(
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.fastLinearToSlowEaseIn,
         strokeWidth: 2,
-        activeColor: activeColor ?? theme.listTileTheme.iconColor!,
-        inactiveColor: inactiveColor ?? theme.listTileTheme.iconColor!,
-        duration: const Duration(milliseconds: 400),
+        activeColor: activeColor ?? theme.colorScheme.secondary,
+        inactiveColor: inactiveColor ?? theme.colorScheme.secondary,
         active: active,
       ),
     );

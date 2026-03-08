@@ -646,7 +646,7 @@ class YTUtils {
     return null;
   }
 
-  static Map<String, String> getDefaultTagsFieldsBuilders(bool autoExtract) {
+  static Map<FFMPEGTagField, String> getDefaultTagsFieldsBuilders(bool autoExtract) {
     return {
       if (autoExtract)
         FFMPEGTagField.title: YoutubeController.filenameBuilder.buildParamForFilename('title')
@@ -738,7 +738,7 @@ class YTUtils {
     final defaultInfo = getDefaultTagsFieldsBuilders(autoExtract);
     for (final di in defaultInfo.entries) {
       final defaultText = di.value;
-      infoMap[di.key] ??=
+      infoMap[di.key.tagKey] ??=
           YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
             defaultText,
             id,

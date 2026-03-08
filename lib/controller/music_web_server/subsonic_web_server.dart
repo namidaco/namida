@@ -244,6 +244,7 @@ class _SubsonicWebServer extends MusicWebServer {
       originalTags: null,
       tagsList: [],
       gainData: null,
+      sortInfo: null,
       hashKey: media.id, // TrackExtended.generateHashKeyIfEnabled(null, path, null)
       isVideo: media.isVideo ?? false,
       server: server,

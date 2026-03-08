@@ -64,35 +64,14 @@ class SortByMenuTracks with SortByMenuBase {
           ),
         ),
       ),
-      ...[
-        SortType.title,
-        SortType.album,
-        SortType.artistsList,
-        SortType.albumArtist,
-        SortType.composer,
-        SortType.genresList,
-        SortType.year,
-        SortType.dateAdded,
-        SortType.dateModified,
-        SortType.bitrate,
-        SortType.trackNo,
-        SortType.discNo,
-        SortType.filename,
-        SortType.duration,
-        SortType.sampleRate,
-        SortType.size,
-        SortType.rating,
-        SortType.latestPlayed,
-        SortType.mostPlayed,
-        SortType.firstListen,
-        SortType.shuffle,
-      ].map(
+      ...SortType.forTracks().map(
         (e) => ObxO(
           rx: settings.mediaItemsTrackSorting,
           builder: (context, mediaItemsTrackSorting) => SmallListTile(
             borderRadius: 12.0,
             visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
             title: e.toText(),
+            trailingIcon: e.toIcon(),
             active: mediaItemsTrackSorting[MediaType.track]?.firstOrNull == e,
             onTap: () => SearchSortController.inst.sortMedia(MediaType.track, sortBy: e, forceSingleSorting: true),
           ),
@@ -151,33 +130,12 @@ class SortByMenuTracksSearch extends StatelessWidget {
                                 },
                               ),
                             ),
-                            ...[
-                              SortType.title,
-                              SortType.album,
-                              SortType.artistsList,
-                              SortType.albumArtist,
-                              SortType.composer,
-                              SortType.genresList,
-                              SortType.year,
-                              SortType.dateAdded,
-                              SortType.dateModified,
-                              SortType.bitrate,
-                              SortType.trackNo,
-                              SortType.discNo,
-                              SortType.filename,
-                              SortType.duration,
-                              SortType.sampleRate,
-                              SortType.size,
-                              SortType.rating,
-                              SortType.latestPlayed,
-                              SortType.mostPlayed,
-                              SortType.firstListen,
-                              SortType.shuffle,
-                            ].map(
+                            ...SortType.forTracks().map(
                               (e) => SmallListTile(
                                 borderRadius: 12.0,
                                 visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
                                 title: e.toText(),
+                                trailingIcon: e.toIcon(),
                                 active: (isAuto ? settings.mediaItemsTrackSorting[MediaType.track]?.firstOrNull : tracksSortSearch) == e,
                                 onTap: () {
                                   SearchSortController.inst.sortTracksSearch(sortBy: e);
@@ -212,27 +170,14 @@ class SortByMenuAlbums with SortByMenuBase {
         onTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
       ),
     ),
-    ...[
-      GroupSortType.album,
-      GroupSortType.albumArtist,
-      GroupSortType.year,
-      GroupSortType.duration,
-      GroupSortType.numberOfTracks,
-      GroupSortType.playCount,
-      GroupSortType.firstListen,
-      GroupSortType.latestPlayed,
-      GroupSortType.dateModified,
-      GroupSortType.artistsList,
-      GroupSortType.composer,
-      GroupSortType.label,
-      GroupSortType.shuffle,
-    ].map(
+    ...GroupSortType.forAlbums().map(
       (e) => ObxO(
         rx: settings.albumSort,
         builder: (context, albumsort) => SmallListTile(
           borderRadius: 12.0,
           visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
           title: e.toText(),
+          trailingIcon: e.toIcon(),
           active: albumsort == e,
           onTap: () => SearchSortController.inst.sortMedia(MediaType.album, groupSortBy: e),
         ),
@@ -256,30 +201,14 @@ class SortByMenuArtists with SortByMenuBase {
           onTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !settings.artistSortReversed.value),
         ),
       ),
-      ...[
-        artistType == MediaType.albumArtist
-            ? GroupSortType.albumArtist
-            : artistType == MediaType.composer
-            ? GroupSortType.composer
-            : GroupSortType.artistsList,
-        GroupSortType.numberOfTracks,
-        GroupSortType.playCount,
-        GroupSortType.firstListen,
-        GroupSortType.latestPlayed,
-        GroupSortType.albumsCount,
-        GroupSortType.duration,
-        GroupSortType.genresList,
-        GroupSortType.album,
-        GroupSortType.year,
-        GroupSortType.dateModified,
-        GroupSortType.shuffle,
-      ].map(
+      ...GroupSortType.forArtists(artistType).map(
         (e) => ObxO(
           rx: settings.artistSort,
           builder: (context, artistSort) => SmallListTile(
             borderRadius: 12.0,
             visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
             title: e.toText(),
+            trailingIcon: e.toIcon(),
             active: artistSort == e,
             onTap: () => SearchSortController.inst.sortMedia(MediaType.artist, groupSortBy: e),
           ),
@@ -302,27 +231,14 @@ class SortByMenuGenres with SortByMenuBase {
         onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
       ),
     ),
-    ...[
-      GroupSortType.genresList,
-      GroupSortType.duration,
-      GroupSortType.numberOfTracks,
-      GroupSortType.playCount,
-      GroupSortType.firstListen,
-      GroupSortType.latestPlayed,
-      GroupSortType.year,
-      GroupSortType.artistsList,
-      GroupSortType.album,
-      GroupSortType.albumArtist,
-      GroupSortType.dateModified,
-      GroupSortType.composer,
-      GroupSortType.shuffle,
-    ].map(
+    ...GroupSortType.forGenres().map(
       (e) => ObxO(
         rx: settings.genreSort,
         builder: (context, genreSort) => SmallListTile(
           borderRadius: 12.0,
           visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
           title: e.toText(),
+          trailingIcon: e.toIcon(),
           active: genreSort == e,
           onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, groupSortBy: e),
         ),
@@ -344,24 +260,14 @@ class SortByMenuPlaylist with SortByMenuBase {
         onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
       ),
     ),
-    ...[
-      GroupSortType.title,
-      GroupSortType.creationDate,
-      GroupSortType.modifiedDate,
-      GroupSortType.duration,
-      GroupSortType.numberOfTracks,
-      GroupSortType.playCount,
-      GroupSortType.firstListen,
-      GroupSortType.latestPlayed,
-      GroupSortType.shuffle,
-      GroupSortType.custom,
-    ].map(
+    ...GroupSortType.forPlaylists().map(
       (e) => ObxO(
         rx: settings.playlistSort,
         builder: (context, playlistSort) => SmallListTile(
           borderRadius: 12.0,
           visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
           title: e.toText(),
+          trailingIcon: e.toIcon(),
           active: playlistSort == e,
           onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, groupSortBy: e),
         ),

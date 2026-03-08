@@ -154,6 +154,13 @@ class NamidaTaggerController {
               }
               return null;
             }(),
+            sortInfo: FTagsSortInfo.orNull(
+              title: editedTags[TagField.titleSort],
+              album: editedTags[TagField.albumSort],
+              albumArtist: editedTags[TagField.albumArtistSort],
+              artist: editedTags[TagField.artistSort],
+              composer: editedTags[TagField.composerSort],
+            ),
           );
 
     const kStatsFields = {TagField.mood, TagField.tags, TagField.rating};

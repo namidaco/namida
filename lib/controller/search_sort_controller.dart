@@ -158,6 +158,15 @@ class SearchSortController extends SearchPortsProvider {
       GroupSortType.playCount => (e) => -e.value.getTotalListenCount(),
       GroupSortType.firstListen => (e) => e.value.getFirstListen() ?? DateTime(99999).millisecondsSinceEpoch,
       GroupSortType.latestPlayed => (e) => -(e.value.getLatestListen() ?? 0),
+      GroupSortType.albumSort =>
+        (e) => e.value.albumSort.toLowerCase().nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => e.value.album.toLowerCase())(e),
+      GroupSortType.albumArtistSort =>
+        (e) => e.value.albumArtistSort.toLowerCase().nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.value.albumArtist.toLowerCase())(e),
+      GroupSortType.artistSort =>
+        (e) =>
+            e.value.artistSort.toLowerCase().nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.value.first.artistsList.join().toLowerCase())(e),
+      GroupSortType.composerSort =>
+        (e) => e.value.composerSort.toLowerCase().nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.value.composer.toLowerCase())(e),
       _ => null,
     };
   }
@@ -193,6 +202,7 @@ class SearchSortController extends SearchPortsProvider {
       SortType.mostPlayed => (e) => -(HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0),
       SortType.latestPlayed => (e) => -(HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0),
       SortType.firstListen => (e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? DateTime(99999).millisecondsSinceEpoch,
+      SortType.titleSort => (e) => e.sortInfo?.title?.nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => e.title.toLowerCase())(e),
       SortType.shuffle => (e) => math.Random().nextInt(3) - 1,
     };
   }
@@ -222,6 +232,10 @@ class SearchSortController extends SearchPortsProvider {
     GroupSortType.playCount => (tracks) => tracks.getTotalListenCount().toString(),
     GroupSortType.firstListen => (tracks) => tracks.getFirstListen()?.dateFormattedOriginal ?? '',
     GroupSortType.latestPlayed => (tracks) => tracks.getLatestListen()?.dateFormattedOriginal ?? '',
+    GroupSortType.albumSort => (tracks) => tracks.albumSort,
+    GroupSortType.albumArtistSort => (tracks) => tracks.albumArtistSort,
+    GroupSortType.artistSort => (tracks) => tracks.artistSort,
+    GroupSortType.composerSort => (tracks) => tracks.composerSort,
 
     // -- playlists
     GroupSortType.title => (tracks) => playlist?.name ?? '',
@@ -253,6 +267,10 @@ class SearchSortController extends SearchPortsProvider {
     GroupSortType.creationDate => (playlist) => playlist.creationDate.dateFormatted,
     GroupSortType.modifiedDate => (playlist) => playlist.modifiedDate.dateFormatted,
     // ----
+    GroupSortType.albumSort => null,
+    GroupSortType.albumArtistSort => null,
+    GroupSortType.artistSort => null,
+    GroupSortType.composerSort => null,
     GroupSortType.shuffle => null,
     GroupSortType.custom => null,
   };
@@ -837,6 +855,12 @@ class SearchSortController extends SearchPortsProvider {
         break;
       case SortType.firstListen:
         sortThis((e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? 0);
+        break;
+      case SortType.titleSort:
+        sortThisAlts([
+          (e) => e.sortInfo?.title ?? '',
+          encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => e.title.toLowerCase()),
+        ]);
         break;
 
       case null:

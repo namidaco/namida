@@ -55,7 +55,7 @@ class AlbumCard extends StatelessWidget {
     } else if (settings.albumCardTopRightDate.value) {
       secondLine = albumArtist != extraInfo
           ? [
-              if (extraInfo != null) extraInfo,
+              if (extraInfo?.isNotEmpty == true) extraInfo,
               if (albumArtist.isNotEmpty) albumArtist,
             ].join(' • ')
           : extraInfo;

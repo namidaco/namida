@@ -261,6 +261,7 @@ class NamidaOnTaps {
       minimumItems: 1,
       allSortsList: List<SortType>.from(SortType.values),
       sortToText: (sort) => sort.toText(),
+      sortToIcon: (sort) => sort.toIcon(),
       defaultSorts: defaultSorts[media] ?? [SortType.year],
       currentSorts: settings.mediaItemsTrackSorting.value[media] ?? [],
       currentReverse: settings.mediaItemsTrackSortingReverse.value[media] ?? false,
@@ -282,6 +283,7 @@ class NamidaOnTaps {
     PlaylistManager<T, E, S> playlistManager,
     List<S> allSorts,
     String Function(S sort) sortToText,
+    IconData Function(S sort) sortToIcon,
   ) {
     final initialpl = playlistManager.getPlaylist(playlistName);
     List<S>? newSorts;
@@ -297,6 +299,7 @@ class NamidaOnTaps {
       defaultSorts: [],
       allSortsList: List<S>.from(allSorts),
       sortToText: sortToText,
+      sortToIcon: sortToIcon,
       currentSorts: initialpl?.sortsType ?? [],
       currentReverse: initialpl?.sortReverse ?? false,
       allowCustom: false,
@@ -349,6 +352,7 @@ class NamidaOnTaps {
     required List<S> defaultSorts,
     required int minimumItems,
     required String Function(S sort) sortToText,
+    required IconData Function(S sort) sortToIcon,
     required bool allowCustom,
     required void Function(List<S> activeSorters) onSortChange,
     required void Function(bool reverse) onSortReverseChange,
@@ -433,6 +437,7 @@ class NamidaOnTaps {
                           (context) {
                             final isActive = sorters.contains(sorting);
                             return ListTileWithCheckMark(
+                              icon: sortToIcon(sorting),
                               title: "${i + 1}. ${sortToText(sorting)}",
                               active: isActive,
                               onTap: () {

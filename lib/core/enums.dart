@@ -29,10 +29,36 @@ enum SortType {
   shuffle,
   mostPlayed,
   latestPlayed,
-  firstListen
+  firstListen,
+  titleSort,
   ;
 
   bool get requiresHistory => this == SortType.mostPlayed || this == SortType.latestPlayed || this == SortType.firstListen;
+
+  static List<SortType> forTracks() => [
+    SortType.title,
+    SortType.album,
+    SortType.artistsList,
+    SortType.albumArtist,
+    SortType.composer,
+    SortType.genresList,
+    SortType.year,
+    SortType.dateAdded,
+    SortType.dateModified,
+    SortType.bitrate,
+    SortType.trackNo,
+    SortType.discNo,
+    SortType.filename,
+    SortType.duration,
+    SortType.sampleRate,
+    SortType.size,
+    SortType.rating,
+    SortType.latestPlayed,
+    SortType.mostPlayed,
+    SortType.firstListen,
+    SortType.titleSort,
+    SortType.shuffle,
+  ];
 }
 
 enum GroupSortType {
@@ -53,11 +79,97 @@ enum GroupSortType {
   albumsCount,
   creationDate,
   modifiedDate,
+  albumSort,
+  albumArtistSort,
+  artistSort,
+  composerSort,
   shuffle,
   custom,
   ;
 
   bool get requiresHistory => this == GroupSortType.playCount || this == GroupSortType.latestPlayed || this == GroupSortType.firstListen;
+
+  static List<GroupSortType> forAlbums() => [
+    GroupSortType.album,
+    GroupSortType.albumSort,
+    GroupSortType.albumArtist,
+    GroupSortType.year,
+    GroupSortType.duration,
+    GroupSortType.numberOfTracks,
+    GroupSortType.playCount,
+    GroupSortType.firstListen,
+    GroupSortType.latestPlayed,
+    GroupSortType.dateModified,
+    GroupSortType.artistsList,
+    GroupSortType.composer,
+    GroupSortType.label,
+    GroupSortType.shuffle,
+  ];
+
+  static List<GroupSortType> forArtists(MediaType artistType) => [
+    artistType == MediaType.albumArtist
+        ? GroupSortType.albumArtist
+        : artistType == MediaType.composer
+        ? GroupSortType.composer
+        : GroupSortType.artistsList,
+    artistType == MediaType.albumArtist
+        ? GroupSortType.albumArtistSort
+        : artistType == MediaType.composer
+        ? GroupSortType.composerSort
+        : GroupSortType.artistSort,
+    GroupSortType.duration,
+    GroupSortType.numberOfTracks,
+    GroupSortType.albumsCount,
+    GroupSortType.playCount,
+    GroupSortType.firstListen,
+    GroupSortType.latestPlayed,
+    GroupSortType.genresList,
+    GroupSortType.album,
+    GroupSortType.year,
+    GroupSortType.dateModified,
+    GroupSortType.shuffle,
+  ];
+
+  static List<GroupSortType> forGenres() => [
+    GroupSortType.genresList,
+    GroupSortType.duration,
+    GroupSortType.numberOfTracks,
+    GroupSortType.playCount,
+    GroupSortType.firstListen,
+    GroupSortType.latestPlayed,
+    GroupSortType.year,
+    GroupSortType.artistsList,
+    GroupSortType.album,
+    GroupSortType.albumArtist,
+    GroupSortType.dateModified,
+    GroupSortType.composer,
+    GroupSortType.shuffle,
+  ];
+
+  static List<GroupSortType> forPlaylists() => [
+    GroupSortType.title,
+    GroupSortType.creationDate,
+    GroupSortType.modifiedDate,
+    GroupSortType.duration,
+    GroupSortType.numberOfTracks,
+    GroupSortType.playCount,
+    GroupSortType.firstListen,
+    GroupSortType.latestPlayed,
+    GroupSortType.shuffle,
+    GroupSortType.custom,
+  ];
+
+  static Iterable<GroupSortType> forYTPlaylists() => [
+    GroupSortType.title,
+    GroupSortType.creationDate,
+    GroupSortType.modifiedDate,
+    GroupSortType.numberOfTracks,
+    GroupSortType.playCount,
+    GroupSortType.firstListen,
+    GroupSortType.latestPlayed,
+    GroupSortType.shuffle,
+    GroupSortType.custom,
+  ];
 }
 
 enum TrackTilePosition {
@@ -229,6 +341,12 @@ enum TagField {
   country,
   rating,
   tags,
+
+  titleSort,
+  albumSort,
+  albumArtistSort,
+  artistSort,
+  composerSort,
 }
 
 enum WakelockMode {

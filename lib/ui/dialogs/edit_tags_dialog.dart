@@ -294,36 +294,46 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
   final didAutoExtractFromFilename = false.obs;
   final currentImagePath = ''.obs;
 
+  TextEditingController? fieldToController(FTags tags, TagField f) {
+    return switch (f) {
+      TagField.title => TextEditingController(text: tags.title ?? ''),
+      TagField.album => TextEditingController(text: tags.album ?? ''),
+      TagField.artist => TextEditingController(text: tags.artist ?? ''),
+      TagField.albumArtist => TextEditingController(text: tags.albumArtist ?? ''),
+      TagField.genre => TextEditingController(text: tags.genre ?? ''),
+      TagField.composer => TextEditingController(text: tags.composer ?? ''),
+      TagField.comment => TextEditingController(text: tags.comment ?? ''),
+      TagField.description => TextEditingController(text: tags.description ?? ''),
+      TagField.synopsis => TextEditingController(text: tags.synopsis ?? ''),
+      TagField.lyrics => TextEditingController(text: tags.lyrics ?? ''),
+      TagField.trackNumber => TextEditingController(text: tags.trackNumber.toIf('', '0')),
+      TagField.discNumber => TextEditingController(text: tags.discNumber.toIf('', '0')),
+      TagField.year => TextEditingController(text: tags.year.toIf('', '0')),
+      TagField.remixer => TextEditingController(text: tags.remixer),
+      TagField.trackTotal => TextEditingController(text: tags.trackTotal.toIf('', '0')),
+      TagField.discTotal => TextEditingController(text: tags.discTotal ?? ''),
+      TagField.lyricist => TextEditingController(text: tags.lyricist ?? ''),
+      TagField.language => TextEditingController(text: tags.language ?? ''),
+      TagField.recordLabel => TextEditingController(text: tags.recordLabel ?? ''),
+      TagField.country => TextEditingController(text: tags.country ?? ''),
+
+      // -- in tag editor we aint knowing local db shi
+      TagField.mood => TextEditingController(text: tags.mood ?? ''),
+      TagField.tags => TextEditingController(text: tags.tags ?? ''),
+      TagField.rating => TextEditingController(text: tags.ratingPercentage == null ? null : (tags.ratingPercentage! * 100).round().toString()),
+
+      TagField.titleSort => TextEditingController(text: tags.sortInfo?.title ?? ''),
+      TagField.albumSort => TextEditingController(text: tags.sortInfo?.album ?? ''),
+      TagField.artistSort => TextEditingController(text: tags.sortInfo?.artist ?? ''),
+      TagField.albumArtistSort => TextEditingController(text: tags.sortInfo?.albumArtist ?? ''),
+      TagField.composerSort => TextEditingController(text: tags.sortInfo?.composer ?? ''),
+    };
+  }
+
+  // -- filling fields
+  final tagsControllers = <TagField, TextEditingController?>{for (final f in TagField.values) f: fieldToController(tags, f)};
+
   final editedTags = <TagField, String>{};
-
-  // filling fields
-  final tagsControllers = <TagField, TextEditingController>{
-    TagField.title: TextEditingController(text: tags.title ?? ''),
-    TagField.album: TextEditingController(text: tags.album ?? ''),
-    TagField.artist: TextEditingController(text: tags.artist ?? ''),
-    TagField.albumArtist: TextEditingController(text: tags.albumArtist ?? ''),
-    TagField.genre: TextEditingController(text: tags.genre ?? ''),
-    TagField.composer: TextEditingController(text: tags.composer ?? ''),
-    TagField.comment: TextEditingController(text: tags.comment ?? ''),
-    TagField.description: TextEditingController(text: tags.description ?? ''),
-    TagField.synopsis: TextEditingController(text: tags.synopsis ?? ''),
-    TagField.lyrics: TextEditingController(text: tags.lyrics ?? ''),
-    TagField.trackNumber: TextEditingController(text: tags.trackNumber.toIf('', '0')),
-    TagField.discNumber: TextEditingController(text: tags.discNumber.toIf('', '0')),
-    TagField.year: TextEditingController(text: tags.year.toIf('', '0')),
-    TagField.remixer: TextEditingController(text: tags.remixer),
-    TagField.trackTotal: TextEditingController(text: tags.trackTotal.toIf('', '0')),
-    TagField.discTotal: TextEditingController(text: tags.discTotal ?? ''),
-    TagField.lyricist: TextEditingController(text: tags.lyricist ?? ''),
-    TagField.language: TextEditingController(text: tags.language ?? ''),
-    TagField.recordLabel: TextEditingController(text: tags.recordLabel ?? ''),
-    TagField.country: TextEditingController(text: tags.country ?? ''),
-
-    // -- in tag editor we aint knowing local db shi
-    TagField.mood: TextEditingController(text: tags.mood ?? ''),
-    TagField.tags: TextEditingController(text: tags.tags ?? ''),
-    TagField.rating: TextEditingController(text: tags.ratingPercentage == null ? null : (tags.ratingPercentage! * 100).round().toString()),
-  };
 
   Widget getTagTextField(TagField tag, {FormFieldValidator? validator}) {
     return CustomTagTextField(
@@ -367,7 +377,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
       didAutoExtractFromFilename.close();
       currentImagePath.close();
       for (final c in tagsControllers.values) {
-        c.dispose();
+        c?.dispose();
       }
     },
     scale: 0.94,

@@ -268,17 +268,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                             activeRx: settings.ytPlaylistSortReversed,
                                             onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(reverse: !settings.ytPlaylistSortReversed.value),
                                           ),
-                                          ...[
-                                            GroupSortType.title,
-                                            GroupSortType.creationDate,
-                                            GroupSortType.modifiedDate,
-                                            GroupSortType.numberOfTracks,
-                                            GroupSortType.playCount,
-                                            GroupSortType.firstListen,
-                                            GroupSortType.latestPlayed,
-                                            GroupSortType.shuffle,
-                                            GroupSortType.custom,
-                                          ].map(
+                                          ...GroupSortType.forYTPlaylists().map(
                                             (e) => ObxO(
                                               rx: settings.ytPlaylistSort,
                                               builder: (context, ytPlaylistSort) => SmallListTile(

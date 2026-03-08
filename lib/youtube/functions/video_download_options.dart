@@ -19,7 +19,7 @@ Future<void> showVideoDownloadOptionsSheet({
   required String? videoTitle,
   required String? videoUploader,
   required Map<String, String?> tagMaps,
-  Map<String, String?>? tagMapsForFillingInfoOnly,
+  Map<FFMPEGTagField, String?>? tagMapsForFillingInfoOnly,
   required bool supportTagging,
   required void Function(String newGroupName) onDownloadGroupNameChanged,
   required void Function(String filename) onDownloadFilenameChanged,
@@ -27,10 +27,11 @@ Future<void> showVideoDownloadOptionsSheet({
   Widget Function(TextEditingController? Function() currentControllerFn, Function(String text) onChanged)? preWidget,
   required String? initialGroupName,
 }) async {
-  final controllersMap = {for (final t in FFMPEGTagField.values) t: TextEditingController(text: tagMaps[t] ?? tagMapsForFillingInfoOnly?[t])};
+  final controllersMap = {for (final t in FFMPEGTagField.values) t.tagKey: TextEditingController(text: tagMaps[t.tagKey] ?? tagMapsForFillingInfoOnly?[t])};
   String? currentActiveField;
 
-  Widget getTextChip(String field) {
+  Widget getTextChip(FFMPEGTagField fieldKey) {
+    final field = fieldKey.tagKey;
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 400),
       opacity: supportTagging ? 1.0 : 0.5,
@@ -39,8 +40,8 @@ Future<void> showVideoDownloadOptionsSheet({
         child: CustomTagTextField(
           controller: controllersMap[field]!,
           hintText: tagMaps[field] ?? '',
-          labelText: field.ffmpegTagToText(),
-          icon: field.ffmpegTagToIcon(),
+          labelText: fieldKey.ffmpegTagToText(),
+          icon: fieldKey.ffmpegTagToIcon(),
           onTap: () => currentActiveField = field,
           onChanged: (value) {
             currentActiveField = field;
@@ -51,7 +52,7 @@ Future<void> showVideoDownloadOptionsSheet({
     );
   }
 
-  Widget getRow(List<String> fields) {
+  Widget getRow(List<FFMPEGTagField> fields) {
     return Row(
       children: [
         ...fields.map(
@@ -252,14 +253,14 @@ Future<void> showVideoDownloadOptionsSheet({
                       onTap: () {
                         (String?, String?) artistAndTitle = (null, null);
                         if (tagMaps.isNotEmpty) {
-                          artistAndTitle = (tagMaps[FFMPEGTagField.artist], tagMaps[FFMPEGTagField.title]);
+                          artistAndTitle = (tagMaps[FFMPEGTagField.artist.tagKey], tagMaps[FFMPEGTagField.title.tagKey]);
                         }
                         if (artistAndTitle.$1 == null && artistAndTitle.$2 == null) {
                           artistAndTitle = videoTitle.splitArtistAndTitle();
                         }
-                        if (artistAndTitle.$1 != null) controllersMap[FFMPEGTagField.artist]?.text = artistAndTitle.$1!;
-                        if (artistAndTitle.$2 != null) controllersMap[FFMPEGTagField.title]?.text = artistAndTitle.$2!;
-                        controllersMap[FFMPEGTagField.album]?.text = tagMaps[FFMPEGTagField.album] ?? videoUploader ?? '';
+                        if (artistAndTitle.$1 != null) controllersMap[FFMPEGTagField.artist.tagKey]?.text = artistAndTitle.$1!;
+                        if (artistAndTitle.$2 != null) controllersMap[FFMPEGTagField.title.tagKey]?.text = artistAndTitle.$2!;
+                        controllersMap[FFMPEGTagField.album.tagKey]?.text = tagMaps[FFMPEGTagField.album.tagKey] ?? videoUploader ?? '';
                       },
                       child: Text(
                         lang.autoExtractTagsFromFilename,

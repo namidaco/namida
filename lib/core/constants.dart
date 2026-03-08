@@ -945,6 +945,7 @@ const kDummyExtendedTrack = TrackExtended(
   tagsList: [],
   hashKey: null,
   gainData: null,
+  sortInfo: null,
   albumIdentifierWrapper: null,
   isVideo: false,
   server: null,
