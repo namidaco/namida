@@ -61,7 +61,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   final _recentlyAdded = <Track>[];
   final _randomTracks = <Track>[];
   final _recentListened = <TrackWithDate>[];
-  final _topRecentListened = <MapEntry<Track, List<int>>>[];
+  var _topRecentListened = <MapEntry<Track, List<int>>>[];
   var _sameTimeYearAgo = <MapEntry<Track, List<int>>>[];
 
   final _recentAlbums = <String>[];
@@ -72,19 +72,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   final _mixes = <MapEntry<String, List<Track>>>[];
 
   var _lostMemoriesYears = <int>[];
+  final _topRecentsDaysList = List<int>.generate(21, (index) => index == 0 ? 1 : index * 3);
 
   int currentYearLostMemories = 0;
   DateRange? currentYearLostMemoriesDateRange;
+  int currentTopRecentsDaysAgo = 0;
   late final ScrollController _scrollController;
   late final ScrollController _lostMemoriesScrollController;
-
-  final MostPlayedTimeRange _topRecentsTimeRange = MostPlayedTimeRange.day3;
+  late final ScrollController _topRecentsScrollController;
 
   @override
   void initState() {
     super.initState();
     _scrollController = NamidaScrollController.create();
     _lostMemoriesScrollController = NamidaScrollController.create();
+    _topRecentsScrollController = NamidaScrollController.create();
     _fillLists();
   }
 
@@ -93,6 +95,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     _emptyAll();
     _scrollController.dispose();
     _lostMemoriesScrollController.dispose();
+    _topRecentsScrollController.dispose();
     super.dispose();
   }
 
@@ -136,12 +139,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
     // -- Top Recents --
     if (_topRecentListened.isEmpty) {
-      final sortedMap = historyManager.getMostListensInTimeRange(
-        mptr: _topRecentsTimeRange,
-        isStartOfDay: false,
-        mainItemToSubItem: historyManager.mainItemToSubItem,
-      );
-      _topRecentListened.addAll(sortedMap.entriesSortedByValue);
+      _updateTopRecents(3);
     }
 
     // -- Lost Memories --
@@ -157,14 +155,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
     // -- Recent Artists --
     if (_recentArtists.isEmpty) _recentArtists.addAll(_recentListened.mappedUniquedList((e) => e.track.artistsList).take(25));
-
-    _topRecentListened.loop((e) {
-      // -- Top Recent Albums --
-      _topRecentAlbums.update(e.key.albumIdentifier, (value) => value + 1, ifAbsent: () => 1);
-
-      // -- Top Recent Artists --
-      e.key.artistsList.loop((e) => _topRecentArtists.update(e, (value) => value + 1, ifAbsent: () => 1));
-    });
 
     _topRecentAlbums.sortByReverse((e) => e.value);
     _topRecentArtists.sortByReverse((e) => e.value);
@@ -333,6 +323,31 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     );
     _sameTimeYearAgo = sortedMap.entriesSortedByValue.toList();
     if (_lostMemoriesScrollController.hasClients) _lostMemoriesScrollController.jumpTo(0);
+  }
+
+  DateRange _getDateRangeFromNow(int days) {
+    final end = DateTime.now();
+    final start = end.subtract(Duration(days: days));
+    return DateRange(oldest: start, newest: end);
+  }
+
+  void _updateTopRecents(int days) {
+    final sortedMap = widget.historyManager.getMostListensInTimeRange(
+      mptr: MostPlayedTimeRange.custom,
+      customDate: _getDateRangeFromNow(days),
+      isStartOfDay: false,
+      mainItemToSubItem: widget.historyManager.mainItemToSubItem,
+    );
+    currentTopRecentsDaysAgo = days;
+    _topRecentListened = sortedMap.entriesSortedByValue.toList();
+    _topRecentListened.loop((e) {
+      // -- Top Recent Albums --
+      _topRecentAlbums.update(e.key.albumIdentifier, (value) => value + 1, ifAbsent: () => 1);
+
+      // -- Top Recent Artists --
+      e.key.artistsList.loop((e) => _topRecentArtists.update(e, (value) => value + 1, ifAbsent: () => 1));
+    });
+    if (_topRecentsScrollController.hasClients) _topRecentsScrollController.jumpTo(0);
   }
 
   void _onGoingToMostPlayedPage({
@@ -582,6 +597,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                   case HomePageItems.topRecentListens:
                                     return _TracksList(
                                       listId: 'topRecentListens',
+                                      controller: _topRecentsScrollController,
                                       homepageItem: element,
                                       isLoading: _isLoading,
                                       title: lang.topRecents,
@@ -590,9 +606,53 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       listWithListens: _topRecentListened,
                                       onTap: () {
                                         _onGoingToMostPlayedPage(
-                                          mptr: _topRecentsTimeRange,
+                                          mptr: MostPlayedTimeRange.custom,
+                                          dateCustom: _getDateRangeFromNow(currentTopRecentsDaysAgo),
                                         );
                                       },
+                                      thirdWidget: SizedBox(
+                                        height: 32.0,
+                                        width: context.width,
+                                        child: SmoothSingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(top: 4.0),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: _topRecentsDaysList
+                                                  .map(
+                                                    (daysAgo) => Padding(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                                                      child: TapDetector(
+                                                        onTap: () {
+                                                          _updateTopRecents(daysAgo);
+                                                          if (mounted) setState(() {});
+                                                        },
+                                                        child: AnimatedDecoration(
+                                                          duration: const Duration(milliseconds: 250),
+                                                          decoration: BoxDecoration(
+                                                            color: currentTopRecentsDaysAgo == daysAgo ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
+                                                            borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                                                          ),
+                                                          child: Padding(
+                                                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                                            child: Text(
+                                                              lang.countDays(count: daysAgo),
+                                                              style: textTheme.displaySmall?.copyWith(
+                                                                color: currentTopRecentsDaysAgo == daysAgo ? Colors.white.withAlpha(240) : null,
+                                                                fontWeight: FontWeight.w600,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  )
+                                                  .toList(),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     );
 
                                   case HomePageItems.lostMemories:
