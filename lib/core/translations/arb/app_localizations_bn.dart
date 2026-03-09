@@ -355,7 +355,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get confirm => 'নিশ্চিত করুন';
 
   @override
-  String get confirmRefresh => 'Confirm Refresh?';
+  String get confirmRefresh => 'রিফ্রেশ করবেন?';
 
   @override
   String get copiedArtwork => 'আর্টওয়ার্ক সংরক্ষণ করা হয়েছে';
@@ -747,7 +747,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get deleteTempFiles => 'অস্থায়ী ফাইল ডিলিট করুন';
 
   @override
-  String get deleted => 'Deleted';
+  String get deleted => 'ডিলিট করা হয়েছে';
 
   @override
   String get description => 'বর্ণনা';
@@ -1146,10 +1146,10 @@ class AppLocalizationsBn extends AppLocalizations {
   String get filterTracksBy => 'অনুসন্ধান তালিকায় ট্র্যাক ফিল্টার করুন';
 
   @override
-  String get filtered => 'Filtered';
+  String get filtered => 'ফিল্টার করা হয়েছে';
 
   @override
-  String get filteredBySizeAndDuration => 'আকার এবং সময়কাল দ্বারা ফিল্টার করা ট্র্যাক';
+  String get filteredBySizeAndDuration => 'সাইজ এবং সময়কাল দ্বারা ফিল্টার করা ট্র্যাক';
 
   @override
   String get finished => 'সম্পন্ন হয়েছে';
@@ -1737,43 +1737,43 @@ class AppLocalizationsBn extends AppLocalizations {
   String get newDirectory => 'নতুন ডিরেক্টরি';
 
   @override
-  String get newLabel => 'New';
+  String get newLabel => 'নতুন';
 
   @override
   String get newTracksAdd => 'ট্র্যাক যোগ করুন';
 
   @override
-  String get newTracksMoods => 'মুড';
+  String get newTracksMoods => 'মুড অনুযায়ী';
 
   @override
-  String get newTracksMoodsSubtitle => 'উপলব্ধ মুডের উপর ভিত্তি করে ট্র্যাক উৎপন্ন করুন';
+  String get newTracksMoodsSubtitle => 'নির্দিষ্ট মুডের ট্র্যাক যোগ করুন';
 
   @override
-  String get newTracksRandom => 'র‍্যান্ডম';
+  String get newTracksRandom => 'এলোমেলো';
 
   @override
-  String get newTracksRandomSubtitle => 'আপনার লাইব্রেরি থেকে এলোমেলোভাবে ট্র্যাক বাছাই করুন';
+  String get newTracksRandomSubtitle => 'লাইব্রেরি থেকে এলোমেলোভাবে ট্র্যাক যোগ করুন';
 
   @override
-  String get newTracksRatings => 'রেটিংসমূহ';
+  String get newTracksRatings => 'রেটিং অনুযায়ী';
 
   @override
-  String get newTracksRatingsSubtitle => 'নির্দিষ্ট রেটিং আছে এমন ট্র্যাক উৎপন্ন করুন';
+  String get newTracksRatingsSubtitle => 'নির্দিষ্ট রেটিংয়ের ট্র্যাক যোগ করুন';
 
   @override
   String get newTracksRecommended => 'সুপারিশকৃত';
 
   @override
   String newTracksRecommendedSubtitle({required String currentTrack}) {
-    return 'আপনি সাধারণত $currentTrack এর সাথে শোনা ট্র্যাকগুলো উৎপন্ন করুন';
+    return '$currentTrack এর সাথে সম্পর্কিত ট্র্যাকগুলো যোগ করুন';
   }
 
   @override
-  String get newTracksSimilarrReleaseDate => 'একই মুক্তির তারিখ';
+  String get newTracksSimilarrReleaseDate => 'সমসাময়িক';
 
   @override
   String newTracksSimilarrReleaseDateSubtitle({required String currentTrack}) {
-    return '$currentTrack এর প্রায় একই সময়ে মুক্তিপ্রাপ্ত ট্র্যাকগুলো উৎপন্ন করুন';
+    return '$currentTrack এর কাছাকাছি সময়ে মুক্তিপ্রাপ্ত ট্র্যাকগুলো যোগ করুন';
   }
 
   @override
@@ -1801,10 +1801,10 @@ class AppLocalizationsBn extends AppLocalizations {
   String get noFolderChosen => 'আপনি কোনো ফোল্ডার নির্বাচন করেননি';
 
   @override
-  String get noMoodsAvailable => 'কোনো মুড উপলব্ধ নেই';
+  String get noMoodsAvailable => 'কোনো মুড উপলভ্য নেই';
 
   @override
-  String get noNetworkAvailableToFetchData => 'কোন নেটওয়ার্ক কানেকশন উপলব্ধ নেই';
+  String get noNetworkAvailableToFetchData => 'কোন নেটওয়ার্ক কানেকশন উপলভ্য নেই';
 
   @override
   String get noTracksFound => 'কোনো ট্র্যাক পাওয়া যায়নি';
@@ -1834,7 +1834,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get normalizeAudioSubtitle => 'রিপ্লে গেইন ট্যাগ (Replay Gain) বা ইউটিউবের তথ্য অনুযায়ী ভলিউম স্বাভাবিক করে';
 
   @override
-  String get notAvailableForYourDevice => 'আপনার ডিভাইসের জন্য উপলব্ধ নয়';
+  String get notAvailableForYourDevice => 'আপনার ডিভাইসের জন্য উপলভ্য নয়';
 
   @override
   String get notSupportedForNetworkFiles => 'নেটওয়ার্ক ফাইলের জন্য সমর্থিত নয়';
@@ -2478,32 +2478,32 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
-  String get signingInAllowsBasicUsage => 'সাইন ইন করলে মৌলিক ব্যবহারের অনুমতি দেয়';
+  String get signingInAllowsBasicUsage => 'সাইন ইন করলে মৌলিক সুবিধাগুলো পাবেন';
 
   @override
   String get signingInAllowsBasicUsageSubtitle => 'প্যাট্রিয়ন বা কুপন ব্যবহার করে প্রাথমিক অ্যাক্সেস পান';
 
   @override
-  String get similarDiscoverDate => 'একই আবিষ্কারের তারিখ';
+  String get similarDiscoverDate => 'আবিষ্কারের সময়কাল';
 
   @override
   String similarDiscoverDateSubtitle({required String currentTrack}) {
-    return '$currentTrack এর প্রায় একই সময়ে আবিষ্কৃত ট্র্যাকগুলো উৎপন্ন করুন';
+    return '$currentTrack এর কাছাকাছি সময়ে আবিষ্কৃত ট্র্যাকগুলো যোগ করুন';
   }
 
   @override
-  String get similarTimeRange => 'একই/কাছাকাছি সময় পরিসীমা';
+  String get similarTimeRange => 'একই সময়সীমা';
 
   @override
   String similarTimeRangeSubtitle({required String currentTrack}) {
-    return '$currentTrack এর প্রায় একই সময়ে আপনি যে ট্র্যাক শুনেছেন সেগুলো উৎপন্ন করুন';
+    return '$currentTrack এর কাছাকাছি সময়ে শোনা ট্র্যাকগুলো যোগ করুন';
   }
 
   @override
   String get singles => 'সিঙ্গলস';
 
   @override
-  String get size => 'আকার';
+  String get size => 'সাইজ';
 
   @override
   String get skip => 'স্কিপ';
@@ -2637,7 +2637,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get tapToSeek => 'সিক করতে ট্যাপ করুন';
 
   @override
-  String get theFollowingChangesWereDetected => 'The following changes were detected';
+  String get theFollowingChangesWereDetected => 'পরিবর্তনগুলো শনাক্ত করা হয়েছে';
 
   @override
   String get themeMode => 'থিম মোড';
@@ -2874,7 +2874,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get videoQuality => 'ভিডিও কোয়ালিটি';
 
   @override
-  String get videoQualitySubtitle => 'সর্বোচ্চ উপলব্ধ কোয়ালিটি নির্বাচন করা হবে।';
+  String get videoQualitySubtitle => 'সর্বোচ্চ উপলভ্য কোয়ালিটি নির্বাচন করা হবে।';
 
   @override
   String get videoQualitySubtitleNote => 'একটি কোয়ালিটি না পাওয়া গেলে বিকল্পের জন্য একাধিক কোয়ালিটি রাখা ভালো, অন্যথায় এটি সর্বনিম্ন কোয়ালিটিতে ফিরে যাবে';

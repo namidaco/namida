@@ -303,10 +303,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: 'Очистити у $numberString треків',
-      one: 'Очистити у $numberString треку',
+      other: '$numberString треках',
+      few: '$numberString треках',
+      one: '$numberString треку',
     );
-    return '$_temp0';
+    return 'Очистити у $_temp0';
   }
 
   @override
@@ -392,10 +393,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString виконавців альбому',
-      one: '$countString виконавець альбому',
+      other: '$countString виконавців',
+      few: '$countString виконавці',
+      one: '$countString виконавець',
     );
-    return '$_temp0';
+    return '$_temp0 альбому';
   }
 
   @override
@@ -407,6 +409,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString альбомів',
+      few: '$countString альбоми',
       one: '$countString альбом',
     );
     return '$_temp0';
@@ -421,6 +424,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString виконавців',
+      few: '$countString виконавці',
       one: '$countString виконавець',
     );
     return '$_temp0';
@@ -435,6 +439,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString композиторів',
+      few: '$countString композитори',
       one: '$countString композитор',
     );
     return '$_temp0';
@@ -449,6 +454,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString днів',
+      few: '$countString дні',
       one: '$countString день',
     );
     return '$_temp0';
@@ -463,6 +469,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString файлів',
+      few: '$countString файли',
       one: '$countString файл',
     );
     return '$_temp0';
@@ -477,6 +484,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString тек',
+      few: '$countString теки',
       one: '$countString тека',
     );
     return '$_temp0';
@@ -491,6 +499,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString жанрів',
+      few: '$countString жанри',
       one: '$countString жанр',
     );
     return '$_temp0';
@@ -505,6 +514,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString місяців',
+      few: '$countString місяці',
       one: '$countString місяць',
     );
     return '$_temp0';
@@ -519,6 +529,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString плейлистів',
+      few: '$countString плейлисти',
       one: '$countString плейлист',
     );
     return '$_temp0';
@@ -533,6 +544,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString підписників',
+      few: '$countString підписники',
       one: '$countString підписник',
     );
     return '$_temp0';
@@ -549,6 +561,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString підписників',
+      few: '$countString підписники',
       one: '$countString підписник',
     );
     return '$_temp0';
@@ -563,6 +576,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString треків',
+      few: '$countString треки',
       one: '$countString трек',
     );
     return '$_temp0';
@@ -577,6 +591,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString відео',
+      few: '$countString відео',
       one: '$countString відео',
     );
     return '$_temp0';
@@ -591,6 +606,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString переглядів',
+      few: '$countString перегляди',
       one: '$countString перегляд',
     );
     return '$_temp0';
@@ -607,6 +623,7 @@ class AppLocalizationsUk extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString переглядів',
+      few: '$countString перегляди',
       one: '$countString перегляд',
     );
     return '$_temp0';
@@ -647,10 +664,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       seconds,
       locale: localeName,
-      other: 'Автоматично вмикати згасаючий перехід в останні $secondsString секунд',
-      one: 'Автоматично вмикати згасаючий перехід в останню $secondsString секунду',
+      other: '$secondsString останні секунд',
+      few: '$secondsString останні секунди',
+      one: '$secondsString останню секунду',
     );
-    return '$_temp0';
+    return 'Автоматично вмикати згасаючий перехід за $_temp0';
   }
 
   @override
@@ -729,10 +747,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'Видалити $countString файлів, які займають $totalSizeText?',
-      one: 'Видалити $countString файл, який займає $totalSizeText?',
+      other: '$countString файлів, які займають',
+      few: '$countString файли, які займають',
+      one: '$countString файл, який займає',
     );
-    return '$_temp0';
+    return 'Видалити $_temp0 $totalSizeText?';
   }
 
   @override
@@ -772,10 +791,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       seconds,
       locale: localeName,
-      other: 'Затемнення мініплеєра через $secondsString секунд бездіяльності',
-      one: 'Затемнення мініплеєра через $secondsString секунду бездіяльності',
+      other: '$secondsString секунд',
+      few: '$secondsString секунди',
+      one: '$secondsString секунду',
     );
-    return '$_temp0';
+    return 'Затемняти мініплеєр через $_temp0 бездіяльності';
   }
 
   @override
@@ -1061,9 +1081,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: 'Витягти решту $numberString?',
+      other: '$numberString палітр',
+      few: '$numberString палітри',
+      one: '$numberString палітру',
     );
-    return '$_temp0';
+    return 'Витягти решту $_temp0?';
   }
 
   @override
@@ -1282,10 +1304,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       listensCount,
       locale: localeName,
-      other: '$listensCountString прослуховувань $oldTrackInfo буде змінено на $newTrackInfo. Підтвердити?',
-      one: '$listensCountString прослуховування $oldTrackInfo буде змінено на $newTrackInfo. Підтвердити?',
+      other: '$listensCountString прослуховувань $oldTrackInfo',
+      few: '$listensCountString прослуховування $oldTrackInfo',
+      one: '$listensCountString прослуховування $oldTrackInfo',
     );
-    return '$_temp0';
+    return '$_temp0 буде змінено на $newTrackInfo. Продовжити?';
   }
 
   @override
@@ -1360,10 +1383,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '$numberString каналів імпортовано успішно',
-      one: '$numberString канал імпортовано успішно',
+      other: '$numberString каналів',
+      few: '$numberString канали',
+      one: '$numberString канал',
     );
-    return '$_temp0';
+    return '$_temp0 імпортовано успішно';
   }
 
   @override
@@ -1371,10 +1395,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '$numberText плейлистів імпортовано успішно',
-      one: '$numberText плейлист імпортовано успішно',
+      other: '$numberText плейлистів',
+      few: '$numberText плейлисти',
+      one: '$numberText плейлист',
     );
-    return '$_temp0';
+    return '$_temp0 імпортовано успішно';
   }
 
   @override
@@ -1520,10 +1545,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: 'приблизно в цей час, $numberString років тому',
-      one: 'приблизно в цей час, $numberString рік тому',
+      other: '$numberString років',
+      few: '$numberString роки',
+      one: '$numberString рік',
     );
-    return '$_temp0';
+    return 'Приблизно в цей час, $_temp0 тому';
   }
 
   @override
@@ -1668,10 +1694,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: 'Повинно залишатися не менше $numberString елементів',
-      one: 'Повинно залишатися не менше $numberString елемента',
+      other: '$numberString елементів',
+      few: '$numberString елементів',
+      one: '$numberString елемента',
     );
-    return '$_temp0';
+    return 'Повинно залишатися не менше $_temp0';
   }
 
   @override
@@ -1865,7 +1892,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get oldDirectory => 'Старий каталог';
 
   @override
-  String get oldDirectoryStillHasTracks => 'У старому каталозі все ще є треки. Підтвердити?';
+  String get oldDirectoryStillHasTracks => 'У старому каталозі все ще є треки. Продовжити?';
 
   @override
   String get oldestWatch => 'Переглянуті найдавніше';
@@ -2195,10 +2222,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: 'Повторити ще $number разів',
-      one: 'Повторити ще $number раз',
+      other: '$number разів',
+      few: '$number рази',
+      one: '$number раз',
     );
-    return '$_temp0';
+    return 'Повторити ще $_temp0';
   }
 
   @override
@@ -2272,10 +2300,11 @@ class AppLocalizationsUk extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: 'Продовжити відтворення, якщо був на паузі менше, ніж $numberString хвилин',
-      one: 'Продовжити відтворення, якщо був на паузі менше, ніж $numberString хвилину',
+      other: '$numberString хвилин',
+      few: '$numberString хвилин',
+      one: '$numberString хвилини',
     );
-    return '$_temp0';
+    return 'Продовжити відтворення, якщо пауза тривала менше $_temp0';
   }
 
   @override

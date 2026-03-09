@@ -356,7 +356,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get confirm => 'Confirmer';
 
   @override
-  String get confirmRefresh => 'Confirm Refresh?';
+  String get confirmRefresh => 'Confirmer l\'actualisation ?';
 
   @override
   String get copiedArtwork => 'Illustration copiée';
@@ -746,7 +746,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get deleteTempFiles => 'Supprimer les fichiers temporaires';
 
   @override
-  String get deleted => 'Deleted';
+  String get deleted => 'Supprimé';
 
   @override
   String get description => 'Description';
@@ -1019,7 +1019,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get error => 'Erreur';
 
   @override
-  String get errorFetchingVideoList => 'Error fetching video list';
+  String get errorFetchingVideoList => 'Erreur lors de la récupération de la liste des vidéos';
 
   @override
   String get errorPlayingTrack => 'Erreur lors de la lecture du titre';
@@ -1144,7 +1144,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get filterTracksBy => 'Filtrer les titres dans les listes de recherche par';
 
   @override
-  String get filtered => 'Filtered';
+  String get filtered => 'Filtré';
 
   @override
   String get filteredBySizeAndDuration => 'Titres filtrés par taille et durée';
@@ -1732,7 +1732,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get newDirectory => 'Nouveau répertoire';
 
   @override
-  String get newLabel => 'New';
+  String get newLabel => 'Nouveau';
 
   @override
   String get newTracksAdd => 'Ajouter des pistes';
@@ -1805,7 +1805,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noTracksFound => 'Aucune trace n\'a été trouvée';
 
   @override
-  String get noTracksFoundBetweenDates => 'Cette gamme de temps n\'a pas de pistes.';
+  String get noTracksFoundBetweenDates => 'Cette plage horaire ne contient aucun titre.';
 
   @override
   String get noTracksFoundInDirectory => 'Aucune piste n\'a été trouvée dans ce répertoire';
@@ -2633,7 +2633,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tapToSeek => 'Tapez pour chercher';
 
   @override
-  String get theFollowingChangesWereDetected => 'The following changes were detected';
+  String get theFollowingChangesWereDetected => 'Les modifications suivantes ont été détectées';
 
   @override
   String get themeMode => 'Thème';
