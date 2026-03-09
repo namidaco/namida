@@ -203,7 +203,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     if (!force && _latestUpdatedLineInfo.value?.$1 == lrcDur?.timestamp) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final newLineDuration = lrcDur?.timestamp;
-      int? newIndex = newLineDuration == null ? null : highlightTimestampsMap[newLineDuration];
+      int? newIndex = newLineDuration == null ? null : highlightTimestampsMap[newLineDuration]?.firstOrNull;
       _latestUpdatedLineInfo.value = (lrcDur?.timestamp, newIndex);
       if (newIndex == null) return;
       if (newIndex + 1 == lyrics.length) {
@@ -275,7 +275,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   final _latestUpdatedLineInfo = Rxn<(Duration?, int?)>();
 
   var lyrics = <LrcLine>[];
-  var highlightTimestampsMap = <Duration, int>{}; // timestamp: index
+  var highlightTimestampsMap = <Duration, List<int>>{}; // timestamp: [index]
 
   late double _previousFontMultiplier = widget.isFullScreenView ? settings.fontScaleLRCFull : settings.fontScaleLRC;
   late double _fontMultiplier = widget.isFullScreenView ? settings.fontScaleLRCFull : settings.fontScaleLRC;
@@ -323,8 +323,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
+    final textDirection = Directionality.of(context);
     final fullscreen = widget.isFullScreenView;
-    final initialFontSize = fullscreen ? 25.0 : 15.0;
+    final alignAtStart = fullscreen;
+    final initialFontSize = fullscreen ? 26.0 : 15.0;
     final normalTextStyle = textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize);
     final plainLyricsTextStyle = normalTextStyle.copyWith(height: 1.8);
     final fullscreenIconButton = fullscreen && widget.canShowToggleFullscreenButton
@@ -649,7 +651,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                 Text(
                                   text,
                                   style: plainLyricsTextStyle,
-                                  textAlign: TextAlign.center,
+                                  textAlign: alignAtStart ? TextAlign.start : TextAlign.center,
                                 ),
                                 SizedBox(height: _paddingVertical),
                               ],
@@ -682,23 +684,40 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
                             final selected = distanceDiffFromSelected == 0 || isBGLyrics || selectedLineTimestamp == lrc.timestamp;
                             final selectedAndEmpty = selected && _checkIfTextEmpty(text);
-                            final bgColor = selected && !isBGLyrics
-                                ? Color.alphaBlend(color.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(selectedAndEmpty ? 0.1 : 0.5)
+                            var bgColor = selected && !isBGLyrics
+                                ? Color.alphaBlend(color.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(
+                                    selectedAndEmpty
+                                        ? 0.1
+                                        : fullscreen
+                                        ? 0.4
+                                        : 0.5,
+                                  )
                                 : null;
-                            final vMargin = (selected ? 2.0 : 0.0) + (fullscreen ? 2.0 : 0.0);
+
+                            EdgeInsetsGeometry lineMargin = EdgeInsets.symmetric(
+                              vertical: /* (selected ? 2.0 : 0.0) + */ (fullscreen ? 8.0 : 2.0),
+                              horizontal: fullscreen ? 10.0 : 8.0,
+                            );
 
                             EdgeInsetsGeometry padding = selectedAndEmpty
                                 ? const EdgeInsets.symmetric(
                                     vertical: 3.0,
                                     horizontal: 24.0,
                                   )
+                                : fullscreen
+                                ? const EdgeInsets.symmetric(
+                                    vertical: 8.0,
+                                    horizontal: 8.0,
+                                  )
                                 : const EdgeInsets.symmetric(
                                     vertical: 8.0,
                                     horizontal: 8.0,
                                   );
 
-                            TextAlign textAlign = TextAlign.center;
-                            AlignmentDirectional alignment = AlignmentDirectional.center;
+                            BorderRadius borderRadius = selectedAndEmpty ? BorderRadius.circular(5.0.multipliedRadius) : BorderRadius.circular(8.0.multipliedRadius);
+
+                            TextAlign textAlign = alignAtStart ? TextAlign.start : TextAlign.center;
+                            AlignmentDirectional alignment = alignAtStart ? AlignmentDirectional.centerStart : AlignmentDirectional.center;
                             double normalLineColorOpacity = 0.5;
                             (double, FontWeight)? fontModifier;
                             TextStyle textStyle;
@@ -767,6 +786,50 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                               );
                             }
 
+                            final indicesForTimestamp = highlightTimestampsMap[lrc.timestamp];
+                            if (indicesForTimestamp != null && indicesForTimestamp.length > 1) {
+                              final isSecondaryLanguageLine = index != indicesForTimestamp.firstOrNull;
+                              if (isSecondaryLanguageLine) {
+                                final multiplier = fullscreen ? 0.75 : 0.85;
+                                textStyle = textStyle.copyWith(
+                                  fontSize: textStyle.fontSize! * multiplier,
+                                );
+                                if (bgColor != null) {
+                                  bgColor = bgColor.withOpacityExt(bgColor.a * 0.75);
+                                }
+
+                                lineMargin = lineMargin.subtract(
+                                  EdgeInsetsDirectional.only(
+                                    top: lineMargin.resolve(textDirection).top,
+                                  ),
+                                );
+                                padding = padding.subtract(
+                                  EdgeInsetsDirectional.only(
+                                    top: padding.resolve(textDirection).top * 0.4,
+                                  ),
+                                );
+                                borderRadius = borderRadius.copyWith(
+                                  topRight: Radius.zero,
+                                  topLeft: Radius.zero,
+                                );
+                              } else {
+                                lineMargin = lineMargin.subtract(
+                                  EdgeInsetsDirectional.only(
+                                    bottom: lineMargin.resolve(textDirection).bottom,
+                                  ),
+                                );
+                                padding = padding.subtract(
+                                  EdgeInsetsDirectional.only(
+                                    bottom: padding.resolve(textDirection).bottom * 0.4,
+                                  ),
+                                );
+                                borderRadius = borderRadius.copyWith(
+                                  bottomRight: Radius.zero,
+                                  bottomLeft: Radius.zero,
+                                );
+                              }
+                            }
+
                             final parts = lrc.parts;
                             final textWidget = selected && parts != null && parts.isNotEmpty
                                 ? _TextWithFadingProgress(
@@ -801,15 +864,18 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                     tag: 'LYRICS_LINE_${lrc.timestamp}',
                                     enabled: false,
                                     child: AnimatedScale(
+                                      alignment: alignment.resolve(textDirection),
                                       duration: const Duration(milliseconds: 400),
                                       curve: Curves.easeInOutCubicEmphasized,
                                       scale: selected ? 1.0 : 0.95,
                                       child: NamidaInkWell(
                                         alignment: alignment,
                                         bgColor: bgColor,
-                                        borderRadius: selectedAndEmpty ? 5.0 : 8.0,
+                                        decoration: BoxDecoration(
+                                          borderRadius: borderRadius,
+                                        ),
                                         animationDurationMS: 300,
-                                        margin: EdgeInsets.symmetric(vertical: vMargin, horizontal: 4.0),
+                                        margin: lineMargin,
                                         padding: padding,
                                         child: textWidget,
                                       ),
