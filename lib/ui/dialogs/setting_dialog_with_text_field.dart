@@ -5,10 +5,9 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
@@ -157,45 +156,15 @@ Future<void> showSettingDialogWithTextField({
         ],
         child: Stack(
           alignment: Alignment.bottomCenter,
-          // mainAxisSize: MainAxisSize.min,
           children: [
             ?topWidget,
             Padding(
               padding: const EdgeInsets.only(top: 14.0),
-              child: TextFormField(
-                style: namida.textTheme.displaySmall?.copyWith(fontSize: 16.0, fontWeight: FontWeight.w600),
-                autofocus: true,
+              child: CustomTagTextField(
                 keyboardType: dateTimeFormat || trackTileSeparator || addNewPlaylist ? TextInputType.text : TextInputType.number,
                 controller: controller,
-                textAlign: TextAlign.left,
-                decoration: InputDecoration(
-                  isDense: true,
-                  errorMaxLines: 3,
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                    borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(50), width: 2.0),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.0.multipliedRadius),
-                    borderSide: BorderSide(color: namida.theme.colorScheme.onSurface.withAlpha(50), width: 1.0),
-                  ),
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.0.multipliedRadius),
-                    borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14.0.multipliedRadius),
-                    borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
-                  ),
-                  hintText: addNewPlaylist ? lang.name : lang.value,
-                  hintStyle: TextStyle(
-                    fontSize: 14.5,
-                  ),
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: 16.0,
-                    horizontal: 12.0,
-                  ),
-                ),
+                hintText: addNewPlaylist ? lang.name : lang.value,
+                labelText: '',
                 validator: (value) {
                   if (fontScaleFactor) {
                     if ((double.parse(value!) < 50 || double.parse(value) > 200)) {

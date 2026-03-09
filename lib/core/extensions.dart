@@ -895,7 +895,28 @@ extension ScrollerPerf on ScrollController {
     final double jumpitator = 800.0,
   }) async {
     try {
-      final diff = offset - this.positions.last.pixels;
+      await this.positions.last.animateToEff(
+        offset,
+        duration: duration,
+        curve: curve,
+        jumpitator: jumpitator,
+      );
+    } catch (_) {}
+  }
+}
+
+extension ScrollPositionPerf on ScrollPosition {
+  /// Animates a scrollview to a certain [offset] after jumping closer for faster performance
+  ///
+  /// The final distance to animate is defined by [jumpitator]
+  Future<void> animateToEff(
+    double offset, {
+    required Duration duration,
+    required Curve curve,
+    final double jumpitator = 800.0,
+  }) async {
+    try {
+      final diff = offset - this.pixels;
 
       if (diff > jumpitator) {
         // -- is now above the target, so we jump offset-jumpitator

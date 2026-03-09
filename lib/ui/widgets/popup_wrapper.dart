@@ -127,7 +127,12 @@ class NamidaPopupWrapper extends StatelessWidget {
               popMenu();
               e.onTap();
             },
-            onLongPress: e.onLongPress,
+            onLongPress: e.onLongPress != null
+                ? () {
+                    popMenu();
+                    e.onLongPress!();
+                  }
+                : null,
             child: popupItem,
           );
         } else {

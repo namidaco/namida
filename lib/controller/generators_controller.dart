@@ -118,7 +118,7 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
 
       allTracksInLibrary.loop((e) {
         if (e.year != 0) {
-          final dt = DateTime.tryParse(e.year.toString());
+          final dt = e.yearAsDateTime();
           if (dt != null && (dt.difference(dateParsed).inDays).abs() <= daysRange) {
             tracksAvailable.add(e);
           }

@@ -305,7 +305,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                         isCurrentlyReversed: settings.playlistSortReversed.valueR,
                         onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
                       ),
-                      textField: CustomTextFiled(
+                      textField: CustomTextField(
                         textFieldController: LibraryTab.playlists.textSearchControllerUI,
                         textFieldHintText: lang.filterPlaylists,
                         onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.playlist),

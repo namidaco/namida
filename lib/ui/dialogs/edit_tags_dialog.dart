@@ -3,8 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:checkmark/checkmark.dart';
-
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -501,16 +499,9 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Obx(
-                      (context) => SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CheckMark(
-                          strokeWidth: 2,
-                          activeColor: theme.listTileTheme.iconColor!,
-                          inactiveColor: theme.listTileTheme.iconColor!,
-                          duration: const Duration(milliseconds: 400),
-                          active: trimWhiteSpaces.valueR,
-                        ),
+                      (context) => NamidaCheckMark(
+                        size: 18.0,
+                        active: trimWhiteSpaces.valueR,
                       ),
                     ),
                     const SizedBox(
@@ -1057,16 +1048,9 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
             mainAxisSize: MainAxisSize.min,
             children: [
               Obx(
-                (context) => SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CheckMark(
-                    strokeWidth: 2,
-                    activeColor: namida.theme.listTileTheme.iconColor!,
-                    inactiveColor: namida.theme.listTileTheme.iconColor!,
-                    duration: const Duration(milliseconds: 400),
-                    active: trimWhiteSpaces.valueR,
-                  ),
+                (context) => NamidaCheckMark(
+                  size: 18.0,
+                  active: trimWhiteSpaces.valueR,
                 ),
               ),
               const SizedBox(

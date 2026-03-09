@@ -1,11 +1,11 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 5.7.8-beta+260225164
+version: 5.8.2-beta+260309019
 
 environment:
   sdk: ">=3.11.0 <4.0.0"
-  flutter: 3.41.1
+  flutter: 3.41.4
 
 dependency_overrides:
   intl: ^0.20.2
@@ -50,14 +50,14 @@ dependencies:
   selectable_autolink_text: ^2.6.0
   share_plus: <=10.1.4 # v12.0.1 doesnt work on windows
   calendar_date_picker2: ^2.0.0
-  wakelock_plus: ^1.2.10
+  wakelock_plus: ^1.4.0
   screen_brightness:
     git:
       url: https://github.com/MSOB7YY/screen_brightness
       path: screen_brightness/
   native_device_orientation: ^2.0.5
   home_widget: ^0.9.0
-  flutter_local_notifications: ^20.1.0
+  flutter_local_notifications: ^21.0.0
   flutter_sharing_intent:
     git:
       url: https://github.com/MSOB7YY/flutter_sharing_intent
@@ -79,7 +79,7 @@ dependencies:
       url: https://github.com/MSOB7YY/dart_lrc
   vibration: ^3.1.6
   flutter_displaymode: ^0.7.0
-  flutter_udid: ^4.0.0
+  flutter_udid: ^4.1.2
   namico_db_wrapper:
     git:
       url: https://github.com/namidaco/namico_db_wrapper

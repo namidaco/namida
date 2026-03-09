@@ -107,7 +107,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                       SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse[MediaType.track] == true));
                     },
                   ),
-                  textField: CustomTextFiled(
+                  textField: CustomTextField(
                     textFieldController: LibraryTab.tracks.textSearchControllerUI,
                     textFieldHintText: lang.filterTracks,
                     onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.track),

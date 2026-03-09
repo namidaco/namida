@@ -1416,7 +1416,7 @@ class CancelButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextButton(
-      onPressed: onPressed ?? () => NamidaNavigator.inst.closeDialog(),
+      onPressed: onPressed ?? NamidaNavigator.inst.closeDialog,
       child: NamidaButtonText(lang.cancel),
     );
   }

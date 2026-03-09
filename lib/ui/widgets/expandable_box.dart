@@ -20,7 +20,7 @@ class ExpandableBox extends StatefulWidget {
   final String leftText;
   final void Function() onCloseButtonPressed;
   final SortByMenu sortByMenuWidget;
-  final CustomTextFiled textField;
+  final CustomTextField textField;
   final bool disableSorting;
   final double? textFieldHeight;
   final ChangeGridCountWidget? gridWidget;
@@ -197,12 +197,12 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
   }
 }
 
-class CustomTextFiled extends StatelessWidget {
+class CustomTextField extends StatelessWidget {
   final TextEditingController? textFieldController;
   final String textFieldHintText;
   final void Function(String value)? onTextFieldValueChanged;
   final FocusNode? focusNode;
-  const CustomTextFiled({
+  const CustomTextField({
     super.key,
     required this.textFieldController,
     required this.textFieldHintText,

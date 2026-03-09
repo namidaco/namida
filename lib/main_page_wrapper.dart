@@ -121,7 +121,7 @@ class _MainScreenStackState extends State<MainScreenStack> with TickerProviderSt
         ),
         RepaintBoundary(
           child: Padding(
-            padding: !miniplayerIsWideScreen ? EdgeInsets.zero : EdgeInsets.only(left: Dimensions.inst.availableAppContentWidth),
+            padding: !miniplayerIsWideScreen ? EdgeInsets.zero : EdgeInsets.only(left: Dimensions.inst.availableAppContentWidthContext(context)),
             child: MediaQuery.removePadding(
               context: context,
               removeLeft: miniplayerIsWideScreen,

@@ -112,7 +112,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                         isCurrentlyReversed: sortReverse,
                         onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
                       ),
-                      textField: CustomTextFiled(
+                      textField: CustomTextField(
                         textFieldController: LibraryTab.albums.textSearchControllerUI,
                         textFieldHintText: lang.filterAlbums,
                         onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.album),

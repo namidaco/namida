@@ -220,7 +220,7 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
             onReverseIconTap(!sortReverse);
           },
         ),
-        textField: CustomTextFiled(
+        textField: CustomTextField(
           focusNode: state.focusNode,
           textFieldController: null,
           textFieldHintText: lang.search,

@@ -230,13 +230,13 @@ class NamidaNavigator {
     if (_isInFullScreen == false) return;
     _isInFullScreen = false;
 
-    await popRoot();
+    popRoot();
 
-    await setDeviceOrientations(false);
     setDefaultSystemUIOverlayStyle();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) async => await MiniPlayerController.inst.setImmersiveMode(null), // let mp decides
-    );
+    await Future.wait([
+      if (isInLanscape) setDeviceOrientations(false),
+      MiniPlayerController.inst.setImmersiveMode(null), // let mp decides
+    ]);
 
     WakelockController.inst.updateFullscreenStatus(false);
   }

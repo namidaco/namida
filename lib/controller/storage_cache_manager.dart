@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:checkmark/checkmark.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
 import 'package:namida/class/file_parts.dart';
@@ -456,16 +455,9 @@ class StorageCacheManager {
                                     const SizedBox(width: 8.0),
                                   ],
                                   IgnorePointer(
-                                    child: SizedBox(
-                                      height: 16.0,
-                                      width: 16.0,
-                                      child: CheckMark(
-                                        strokeWidth: 2,
-                                        activeColor: theme.listTileTheme.iconColor!,
-                                        inactiveColor: theme.listTileTheme.iconColor!,
-                                        duration: const Duration(milliseconds: 400),
-                                        active: isSelected,
-                                      ),
+                                    child: NamidaCheckMark(
+                                      size: 16.0,
+                                      active: isSelected,
                                     ),
                                   ),
                                 ],

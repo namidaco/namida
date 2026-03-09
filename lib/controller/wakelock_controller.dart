@@ -48,6 +48,10 @@ class WakelockController {
     _reEvaluate();
   }
 
+  void onSettingChanged() {
+    _reEvaluate();
+  }
+
   void _reEvaluate() {
     if (_isFullScreen) {
       // -- user pref is ignored in fullscreen.

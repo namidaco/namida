@@ -10,6 +10,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/video_controller.dart';
+import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -505,6 +506,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             onTap: () {
               final e = settings.wakelockMode.value.nextElement(WakelockMode.values);
               settings.save(wakelockMode: e);
+              WakelockController.inst.onSettingChanged();
             },
           ),
         ),

@@ -766,7 +766,7 @@ void showLibraryTracksChooseDialog({
               child: Row(
                 children: [
                   Expanded(
-                    child: CustomTextFiled(
+                    child: CustomTextField(
                       focusNode: focusNode,
                       textFieldController: searchController,
                       textFieldHintText: lang.search,

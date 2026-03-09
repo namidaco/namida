@@ -168,7 +168,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                         isCurrentlyReversed: sortReverse,
                         onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !settings.artistSortReversed.value),
                       ),
-                      textField: CustomTextFiled(
+                      textField: CustomTextField(
                         textFieldController: LibraryTab.artists.textSearchControllerUI,
                         textFieldHintText: lang.filterArtists,
                         onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, settings.activeArtistType.value),
