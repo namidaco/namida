@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -92,7 +94,7 @@ class FoldersController<T extends Folder, E extends Track> {
     return !stepOut();
   }
 
-  void stepIn(T? folder, {E? trackToScrollTo, double jumpTo = 0, bool isFromStepOut = false}) {
+  void stepIn(T? folder, {E? trackToScrollTo, bool restorePosition = false, bool isFromStepOut = false}) {
     if (folder == null || folder.path == '') {
       isHome.value = true;
       _pathsTreeMapCurrent = null;
@@ -131,7 +133,7 @@ class FoldersController<T extends Folder, E extends Track> {
       }
     }
 
-    _saveScrollOffset(currentFolder.value);
+    if (!isFromStepOut) _saveScrollOffset(currentFolder.value);
 
     currentFolderslist.value = upcomingFolders;
     currentFolder.value = folder;
@@ -144,7 +146,13 @@ class FoldersController<T extends Folder, E extends Track> {
       _trackToScrollTo = null;
     }
 
-    _scrollJump(jumpTo);
+    if (restorePosition) {
+      if (isHome.value) folder = null;
+      final pos = _latestScrollOffset[folder] ?? 0;
+      _scrollJump(pos);
+    } else {
+      _scrollJump(0);
+    }
   }
 
   bool stepOut() {
@@ -170,7 +178,7 @@ class FoldersController<T extends Folder, E extends Track> {
     }
 
     indexToScrollTo.value = null;
-    stepIn(folderToStepIn, jumpTo: _latestScrollOffset[folderToStepIn] ?? 0, isFromStepOut: true);
+    stepIn(folderToStepIn, restorePosition: true, isFromStepOut: true);
 
     return true;
   }
@@ -189,20 +197,26 @@ class FoldersController<T extends Folder, E extends Track> {
   }
 
   void _saveScrollOffset(T? folder) {
-    if (folder == null) return;
+    if (isHome.value) {
+      folder = null;
+    }
     try {
-      _latestScrollOffset[folder] = _tab.scrollController.offset;
+      _latestScrollOffset[folder] = _tab.scrollController.positions.lastOrNull?.pixels ?? 0;
     } catch (_) {
       _latestScrollOffset[folder] = 0;
     }
   }
 
-  void _scrollJump(double to) {
-    if (_tab.scrollController.hasClients) {
-      try {
-        _tab.scrollController.jumpTo(to);
-      } catch (_) {}
-    }
+  void _scrollJump(double to) async {
+    try {
+      // -- must be animated cuz items may not be layed out yet, causing [to] to get clamped
+      // -- with max offset which can be smaller than [to] at the time.
+      await _tab.scrollController.animateToEff(
+        to,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.fastLinearToSlowEaseIn,
+      );
+    } catch (_) {}
   }
 
   /// Generates missing folders in between
