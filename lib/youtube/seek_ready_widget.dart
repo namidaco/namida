@@ -71,6 +71,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
       : widget.isFullscreen
       ? 0.01
       : 0.05;
+  late final _defaultSeekLeftMagnetUiThreshold = 0.25;
   final _seekPercentage = 0.0.obs;
 
   late AnimationController _animation;
@@ -673,6 +674,38 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                   child: circleWidget,
                 );
               },
+            ),
+
+            Positioned(
+              left: 0,
+              bottom: progressBarBottomPosition,
+              child: AnimatedBuilder(
+                animation: _animation,
+                builder: (context, child) => ObxO(
+                  rx: _seekPercentage,
+                  builder: (context, seekP) {
+                    if (_animation.value == 0) return const SizedBox();
+                    final p = _animation.value * ((_defaultSeekLeftMagnetUiThreshold - seekP) / _defaultSeekLeftMagnetUiThreshold).clampDouble(0.0, 1.0);
+                    if (p == 0) return const SizedBox();
+                    return SizedBox(
+                      width: _defaultSeekLeftMagnet * maxWidth,
+                      height: p * progressBarHeight * 2.0,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12.0),
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: p * 12.0,
+                              spreadRadius: p * 6.0,
+                              color: progressColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         );
