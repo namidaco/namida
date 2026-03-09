@@ -104,7 +104,6 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
   late final _scrollAnimation = AnimationController(vsync: this, value: 1.0);
 
   late final _itemsScrollController = NamidaScrollController.create();
-  late final _scrollControllersOffsets = <int, double>{};
   int _tabIndex = 0;
 
   GlobalKey<_YTChannelSubpageTabState> _createPageKey<T>(ChannelTab tab) {
@@ -133,7 +132,6 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
     return initiallySelected ?? videoTabIndex;
   }
 
-  bool _animatedFully = false;
   final _scrollThreshold = 100;
   double _latestAnimation = 1.0;
   void _scrollAnimationListener() {
@@ -143,23 +141,24 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
     if (scroll != null) {
       final isDownwards = scroll.userScrollDirection == ScrollDirection.reverse;
       double position = scroll.pixels;
-      position += _scrollControllersOffsets[_tabIndex] ?? 0; // this also important to prevent jumping
 
       final p = (position - _scrollThreshold) / 100;
       final pc = (1 - p).clampDouble(0.0, 1.0);
       if (isDownwards && pc > 0 && pc > _latestAnimation) return; // prevent jumping from hidden to visible (after switching to new tab)
-
-      if (!_animatedFully) {
-        _latestAnimation = pc;
-        _scrollAnimation.animateTo(pc, duration: Duration.zero);
-      }
-
-      if (pc == 0.0 || pc == 1.0) {
-        _animatedFully = true;
-      } else {
-        _animatedFully = false;
-      }
+      _scrollAnimationFinalizer(p: pc);
     }
+  }
+
+  void _scrollAnimationFinalizer({double? p}) {
+    p ??= _scrollAnimation.value;
+    final newValue = p > 0.5 ? 1.0 : 0.0;
+    if (_latestAnimation == newValue) return;
+    _latestAnimation = newValue;
+    _scrollAnimation.animateTo(
+      newValue,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.fastLinearToSlowEaseIn,
+    );
   }
 
   bool _isAboutTab() {
@@ -335,7 +334,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
     final showSubpageInfoAtSide = Dimensions.inst.showSubpageInfoAtSideContext(context);
-    final maxWidth = Dimensions.inst.availableAppContentWidth;
+    final maxWidth = Dimensions.inst.availableAppContentWidthContext(context);
 
     final channelInfo = _channelInfo;
     final channelID = channelInfo?.id ?? ch.channelID;
@@ -384,7 +383,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
           borderRadius: 0,
           disableBlurBgSizeShrink: true,
           displayFallbackIcon: false,
-          fit: BoxFit.cover, // sadly BoxFit.contain won't look so good when shrinked (either by max height or dynamic height)
+          fit: BoxFit.fitWidth, // sadly BoxFit.contain won't look so good when shrinked (either by max height or dynamic height)
           alignment: Alignment.centerLeft,
         ),
       ),
@@ -441,7 +440,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
       mainChannelInfo: _channelInfoSubButton,
     );
 
-    final header = AnimatedBuilder(
+    late final header = AnimatedBuilder(
       animation: _scrollAnimation,
       builder: (context, _) {
         final p = _scrollAnimation.value;
@@ -504,7 +503,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
                   initialIndex: _tabIndex,
                   onIndexChanged: (index) {
                     try {
-                      _scrollControllersOffsets[_tabIndex] ??= _itemsScrollController.offset;
+                      _scrollAnimationFinalizer();
                     } catch (_) {}
 
                     _tabIndex = index;
@@ -575,7 +574,17 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
     if (showSubpageInfoAtSide) {
       finalChild = Column(
         children: [
-          bannerWidget,
+          if (bannerUrl != null)
+            AnimatedBuilder(
+              animation: _scrollAnimation,
+              builder: (context, _) {
+                final p = _scrollAnimation.value;
+                return SizedBox(
+                  height: p * bannerHeight,
+                  child: bannerWidget,
+                );
+              },
+            ),
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,19 +594,27 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
                   width: pfpImageWidth * 1.4,
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Transform.translate(
-                          offset: banners.isEmpty ? const Offset(0, 0) : Offset(0, -bannerHeight * 0.35),
-                          child: pfpImageWidget,
-                        ),
-                        txtInfoWidget,
-                        const SizedBox(height: 12.0),
-                        subscribeButtonWidget,
-                        const SizedBox(height: 6.0),
-                      ],
+                    child: AnimatedBuilder(
+                      animation: _scrollAnimation,
+                      builder: (context, _) {
+                        final p = _scrollAnimation.value;
+                        final topOffset = (1.0 - p) * 12.0;
+                        return Transform.translate(
+                          offset: banners.isEmpty ? Offset(0, topOffset) : Offset(0, (p * -bannerHeight * 0.35) + topOffset),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              pfpImageWidget,
+                              const SizedBox(height: 8.0),
+                              txtInfoWidget,
+                              const SizedBox(height: 12.0),
+                              subscribeButtonWidget,
+                              const SizedBox(height: 6.0),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
