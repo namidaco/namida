@@ -94,11 +94,11 @@ class _WindowManagerDesktop extends NamidaWindowManager {
     final windowHeight = bounds.height;
 
     // -- clamp position while keeping size
-    final newLeft = bounds.left.clamp(
+    final newLeft = bounds.left.clampDouble(
       desktopRect.left,
       desktopRect.right - windowWidth,
     );
-    final newTop = bounds.top.clamp(
+    final newTop = bounds.top.clampDouble(
       desktopRect.top,
       desktopRect.bottom - windowHeight,
     );

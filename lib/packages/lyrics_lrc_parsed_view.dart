@@ -1016,7 +1016,7 @@ class _TextWithFadingProgress extends StatelessWidget {
                 // final nextStart = e.endTimestamp.inMilliseconds;
                 // final total = nextStart - eStart;
                 // double progress = (currentPosition - eStart) / total;
-                // progress = progress.clamp(0.0, 1.0);
+                // progress = progress.clampDouble(0.0, 1.0);
 
                 final animationDuration = Duration(milliseconds: !playWhenReady ? 0 : e.endTimestamp.inMilliseconds - e.startTimestamp.inMilliseconds);
                 return WidgetSpan(

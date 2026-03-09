@@ -412,7 +412,7 @@ class _PopupRoute extends PopupRoute<void> {
     final minPosition = leftSafeZone;
     final maxPosition = childRect.width - rightSafeZone - arrowRect.width;
 
-    _arrowHorizontal = center.clamp(minPosition, maxPosition);
+    _arrowHorizontal = center.clampDouble(minPosition, maxPosition);
 
     _scaleAlignDx = (_arrowHorizontal + arrowRect.center.dx) / childRect.width;
   }
