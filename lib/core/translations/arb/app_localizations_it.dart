@@ -149,7 +149,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get appIcon => 'Icona App';
 
   @override
-  String get appVersion => 'App Version';
+  String get appVersion => 'Versione dell\'app';
 
   @override
   String get artist => 'Artista';
@@ -254,7 +254,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get changelog => 'Registro modifiche';
 
   @override
-  String get changelogSubtitle => 'See what\'s newly added/fixed inside Namida';
+  String get changelogSubtitle => 'Guarda cosa è stato aggiunto/fixato dentro Namida';
 
   @override
   String get channel => 'Canale';
@@ -354,7 +354,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get confirm => 'Conferma';
 
   @override
-  String get confirmRefresh => 'Confirm Refresh?';
+  String get confirmRefresh => 'Confermi il ricaricamento?';
 
   @override
   String get copiedArtwork => 'Copertina copiata';
@@ -405,7 +405,7 @@ class AppLocalizationsIt extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Albums',
+      other: '$countString Album',
       one: '$countString Album',
     );
     return '$_temp0';
@@ -615,7 +615,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get country => 'Paese';
 
   @override
-  String get coupon => 'Coupon';
+  String get coupon => 'Buono';
 
   @override
   String get create => 'Crea';
@@ -993,7 +993,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get enableReordering => 'Abilita riordinamento';
 
   @override
-  String get enableReturnYoutubeDislike => 'Enable Return Youtube Dislike';
+  String get enableReturnYoutubeDislike => 'Riabilita i Dislike di Youtube';
 
   @override
   String get enableSearchCleanup => 'Abilita pulizia ricerca';
@@ -1002,7 +1002,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get enableSearchCleanupSubtitle => 'Tutti i simboli e gli spazi verranno ignorati';
 
   @override
-  String get enableSponsorblock => 'Enable SponsorBlock';
+  String get enableSponsorblock => 'Abilita SponsorBlock';
 
   @override
   String get enableVideoPlayback => 'Abilita riproduzione video';
@@ -1017,7 +1017,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get error => 'Errore';
 
   @override
-  String get errorFetchingVideoList => 'Error fetching video list';
+  String get errorFetchingVideoList => 'Errore nel recuperare la lista video';
 
   @override
   String get errorPlayingTrack => 'Errore nella riproduzione della traccia';
@@ -1078,7 +1078,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get extrasSubtitle => 'Impostazioni extra per migliorare l\'esperienza';
 
   @override
-  String get extreme => 'Extreme';
+  String get extreme => 'Estremo';
 
   @override
   String get failed => 'Fallito';
@@ -1090,7 +1090,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get favourites => 'Preferiti';
 
   @override
-  String get features => 'Features';
+  String get features => 'Funzionalità';
 
   @override
   String get fetching => 'Caricamento';
@@ -1105,7 +1105,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get fileAlreadyExists => 'Il file esiste già';
 
   @override
-  String get fileBasedServerWarning => 'Files will be temporarily downloaded for indexing, Make sure your connection is stable.\nWi-Fi is recommended to avoid high data usage.';
+  String get fileBasedServerWarning =>
+      'I file verranno temporaneamente scaricati per l\'indicizzazione. Assicurati che la connessione sia stabile.\nLa Wi-Fi è raccomandata per evitare un alto consumo di dati.';
 
   @override
   String get fileName => 'Nome file';
@@ -1141,7 +1142,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get filterTracksBy => 'Filtra tracce nelle liste di ricerca per';
 
   @override
-  String get filtered => 'Filtered';
+  String get filtered => 'Filtrato';
 
   @override
   String get filteredBySizeAndDuration => 'Tracce filtrate per dimensione e durata';
@@ -1196,7 +1197,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get fullscreen => 'Schermo Intero';
 
   @override
-  String get gaplessPlayback => 'Gapless Playback';
+  String get gaplessPlayback => 'Riproduzione senza interruzioni';
 
   @override
   String get generate => 'Genera';
@@ -1262,7 +1263,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get highPerformance => 'Prestazioni elevate';
 
   @override
-  String get highlight => 'Highlight';
+  String get highlight => 'Evidenziona';
 
   @override
   String get history => 'Cronologia';
@@ -1287,7 +1288,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get home => 'Home';
 
   @override
-  String get hook => 'Hook';
+  String get hook => 'Aggancia';
 
   @override
   String get host => 'Host';
@@ -1308,7 +1309,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get ignoreBatteryOptimizationsSubtitle => 'I download possono essere limitati quando l\'app è in risparmio batteria';
 
   @override
-  String get ignoreCommonPrefixesWhileSorting => 'Ignore common prefixes while sorting';
+  String get ignoreCommonPrefixesWhileSorting => 'Ignora prefissi comuni mentre ordini';
 
   @override
   String get ignores => 'Ignora';
@@ -1401,16 +1402,16 @@ class AppLocalizationsIt extends AppLocalizations {
   String get instantlyApplies => 'Applica istantaneamente';
 
   @override
-  String get interactionReminder => 'Interaction Reminder';
+  String get interactionReminder => 'Promemoria di interazione';
 
   @override
-  String get intro => 'Intro';
+  String get intro => 'Introduzione';
 
   @override
   String get invertSelection => 'Inverti Selezione';
 
   @override
-  String get issues => 'Issues';
+  String get issues => 'Problemi';
 
   @override
   String get item => 'Elemento';
@@ -1449,13 +1450,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get language => 'Lingua';
 
   @override
-  String get learnMore => 'Learn more';
+  String get learnMore => 'Scopri di più';
 
   @override
-  String get leftAction => 'Left Action';
+  String get leftAction => 'Azione sinistra';
 
   @override
-  String get legacyAuthentication => 'Legacy Authentication';
+  String get legacyAuthentication => 'Autenticazione Legacy';
 
   @override
   String get libraryTabs => 'Schede libreria';
@@ -1464,10 +1465,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get libraryTabsReorder => 'Puoi riordinare le schede attivate.';
 
   @override
-  String get license => 'License';
+  String get license => 'Licenza';
 
   @override
-  String get licenseSubtitle => 'Licenses & Agreements Used by Namida';
+  String get licenseSubtitle => 'Licenze ed Accordi usati da Namida';
 
   @override
   String get like => 'Mi piace';
@@ -1494,7 +1495,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get localVideoMatching => 'Corrispondenza video locale';
 
   @override
-  String get login => 'Login';
+  String get login => 'Accesso';
 
   @override
   String get longPressAction => 'Long-Press Action';
@@ -1519,7 +1520,7 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get lostPartners => 'Lost Partners';
+  String get lostPartners => 'Partner persi';
 
   @override
   String get loudnessEnhancer => 'Amplificatore Volume';
@@ -1579,7 +1580,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mediaStoreIsEnabledThisWillHaveNoEffect => 'Media store attivato, questo non avrà effetto';
 
   @override
-  String get medium => 'Medium';
+  String get medium => 'Medio';
 
   @override
   String get membershipCode => 'Codice';
@@ -1666,7 +1667,7 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get minimumSegmentDuration => 'Minimum Segment Duration';
+  String get minimumSegmentDuration => 'Durata minima del segmento';
 
   @override
   String get miniplayerCustomization => 'Personalizzazione miniplayer';
@@ -1690,7 +1691,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get mixes => 'Mix';
 
   @override
-  String get mobile => 'Mobile';
+  String get mobile => 'Cellulare';
 
   @override
   String get month => 'Mese';
@@ -1714,7 +1715,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get multipleTracksTagsEditNote => 'Stai per modificare queste tracce,\nI campi non modificati rimarranno invariati.';
 
   @override
-  String get musicOfftopic => 'Music Offtopic';
+  String get musicOfftopic => 'Musica fuori tema';
 
   @override
   String get name => 'Nome';
@@ -1729,7 +1730,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get newDirectory => 'Nuova cartella';
 
   @override
-  String get newLabel => 'New';
+  String get newLabel => 'Nuovo/Nuova';
 
   @override
   String get newTracksAdd => 'Aggiungi tracce';
@@ -1826,10 +1827,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get normalizeAudioSubtitle => 'Normalizza il volume dai replay gain tag o dai info fornito da youtube';
 
   @override
-  String get notAvailableForYourDevice => 'Not Available for your Device';
+  String get notAvailableForYourDevice => 'Non disponibile per il tuo dispositivo';
 
   @override
-  String get notSupportedForNetworkFiles => 'Not Supported for Network Files';
+  String get notSupportedForNetworkFiles => 'Non supportato per file di Rete';
 
   @override
   String get note => 'Nota';
@@ -1886,7 +1887,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get openApp => 'Apri app';
 
   @override
-  String get openInFileExplorer => 'Open in File Explorer';
+  String get openInFileExplorer => 'Apri l\'esplora risorse';
 
   @override
   String get openInYoutubeView => 'Apri in vista Youtube';
@@ -2047,7 +2048,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get pleaseEnterAName => 'Inserisci un nome';
 
   @override
-  String get port => 'Port';
+  String get port => 'Porta';
 
   @override
   String get preventDuplicatedTracks => 'Impedisci tracce duplicate';
@@ -2269,13 +2270,13 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
-  String get returnYoutubeDislike => 'Return Youtube Dislike';
+  String get returnYoutubeDislike => 'Riabilita i Dislike di Youtube';
 
   @override
   String get reverseOrder => 'Inverti ordine';
 
   @override
-  String get rightAction => 'Right Action';
+  String get rightAction => 'Azione destra';
 
   @override
   String get ringtone => 'Suoneria';
@@ -2284,7 +2285,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sameDirectoryOnly => 'Solo stessa cartella';
 
   @override
-  String get sample => 'Sample';
+  String get sample => 'Esempio';
 
   @override
   String get sampleRate => 'Frequenza di campionamento';
@@ -2337,7 +2338,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get selfPromotion => 'Self Promotion';
 
   @override
-  String get semitones => 'Semitones';
+  String get semitones => 'Semitoni';
 
   @override
   String get separatorsBlacklistSubtitle => 'Queste parole non verranno divise';
@@ -2346,7 +2347,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get separatorsMessage => 'Non servono spazi, a meno che non si vuole usare una lettera/simbolo che può trovarsi in una parola intera (come x e ft.)';
 
   @override
-  String get serverAddress => 'Server Address';
+  String get serverAddress => 'Indirizzo del Server';
 
   @override
   String get setAs => 'Imposta come';
@@ -2382,7 +2383,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get share => 'Condividi';
 
   @override
-  String get shareLogs => 'Share Logs';
+  String get shareLogs => 'Condividi Logs';
 
   @override
   String get shortcuts => 'Scorciatoie';
@@ -2412,7 +2413,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get showHideUnknownFields => 'Mostra/nascondi campi sconosciuti';
 
   @override
-  String get showInSeekbar => 'Show in Seekbar';
+  String get showInSeekbar => 'Mostra nella barra di progresso';
 
   @override
   String get showMixPlaylistsIn => 'Mostra Mix nei';
@@ -2424,7 +2425,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get showShortVideosIn => 'Mostra Shorts in';
 
   @override
-  String get showSkipButton => 'Show Skip Button';
+  String get showSkipButton => 'Mostra bottone di skip';
 
   @override
   String get showVideoEndcards => 'Mostra i video endcards';
@@ -2505,7 +2506,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get skipSilence => 'Salta silenzio';
 
   @override
-  String get skipSponsorSegmentsInVideos => 'Skip Sponsor Segments in Videos';
+  String get skipSponsorSegmentsInVideos => 'Salta i segmenti di pubblicità nei video';
 
   @override
   String get sleepAfter => 'Sospendi dopo';
@@ -2514,13 +2515,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sleepTimer => 'Timer sospensione';
 
   @override
-  String get socials => 'Socials';
+  String get socials => 'Social';
 
   @override
-  String get socialsSubtitle => 'Join us on our platforms for Updates, Tips, Discussion & Ideas';
+  String get socialsSubtitle => 'Unisciti a noi sulle nostre piattaforme per Aggiornamenti, Consigli, Discussioni ed Idee';
 
   @override
-  String get someWebServersRequireAuthentication => 'Some web servers require authentication. Please update credentials to maintain access to your library.';
+  String get someWebServersRequireAuthentication => 'Alcuni Server Web richiedono l\'atenticazione. Aggiorna le credenziali per mantenere l\'accesso alla tua libreria.';
 
   @override
   String get sortBy => 'Ordina per';
@@ -2532,13 +2533,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get speed => 'Velocità';
 
   @override
-  String get sponsor => 'Sponsor';
+  String get sponsor => 'Pubblicità';
 
   @override
-  String get sponsorblock => 'SponsorBlock';
+  String get sponsorblock => 'SponsorBlock (if referred to the service)';
 
   @override
-  String get sponsorblockLeaderboard => 'SponsorBlock Leaderboard';
+  String get sponsorblockLeaderboard => 'Classifica SponsorBlock';
 
   @override
   String get staggeredAlbumGridView => 'Vista griglia album sfalsata';
@@ -2571,7 +2572,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get stretchLyricsDuration => 'Allunga durata del testo';
 
   @override
-  String get subdirectory => 'Subdirectory';
+  String get subdirectory => 'Sottocartella';
 
   @override
   String get subscribe => 'Iscriviti';
@@ -2603,7 +2604,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sussyBaka => 'O\'Frà, nisciuna traccia';
 
   @override
-  String get swipeActions => 'Swipe Actions';
+  String get swipeActions => 'Azioni di scorrimento';
 
   @override
   String get swipeToOpenDrawer => 'Scorri per aprire il cassetto';
@@ -2621,13 +2622,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get tags => 'Tag';
 
   @override
-  String get tapAction => 'Tap Action';
+  String get tapAction => 'Azioni di tocco';
 
   @override
   String get tapToSeek => 'Premi per scorrere';
 
   @override
-  String get theFollowingChangesWereDetected => 'The following changes were detected';
+  String get theFollowingChangesWereDetected => 'Le seguenti modifiche sono state rilevate';
 
   @override
   String get themeMode => 'Tema';
@@ -2752,7 +2753,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get tracksInfo => 'Info tracce';
 
   @override
-  String get underrated => 'Underrated';
+  String get underrated => 'Sottovalutato';
 
   @override
   String get undo => 'Annulla';

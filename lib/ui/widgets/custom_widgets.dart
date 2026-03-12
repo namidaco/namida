@@ -4758,7 +4758,7 @@ class QueueUtilsRow extends StatelessWidget {
             snackyy(
               top: false,
               icon: Broken.filter_remove,
-              message: "${lang.removed} ${itemsKeyword(removed)}",
+              message: "${lang.removed}: ${itemsKeyword(removed)}",
             );
           },
         ),

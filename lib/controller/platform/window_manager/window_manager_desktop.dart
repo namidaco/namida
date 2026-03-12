@@ -48,7 +48,7 @@ class _WindowManagerDesktop extends NamidaWindowManager {
   Future<void> ensurePositionRestored() async {
     // -- sometimes waitUntilReadyToShow is not enough for linux
 
-    final bounds = settings.windowBounds;
+    final bounds = settings.extra.windowBounds;
     if (bounds != null) {
       // -- making sure window is in bounds with the current screen/s max size
       // -- for example: after disconnecting a second screen
@@ -145,8 +145,8 @@ class _NamidaWindowListenerEnhanced extends _NamidaWindowListener {
 class _NamidaWindowListener with WindowListener {
   Future<void> _saveBounds() async {
     final currentBounds = await windowManager.getBounds();
-    if (currentBounds != settings.windowBounds) {
-      settings.save(windowBounds: currentBounds);
+    if (currentBounds != settings.extra.windowBounds) {
+      settings.extra.save(windowBounds: currentBounds);
     }
   }
 

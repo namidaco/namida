@@ -42,21 +42,7 @@ class YoutubeSearchResultsPage extends StatefulWidget {
   State<YoutubeSearchResultsPage> createState() => YoutubeSearchResultsPageState();
 }
 
-class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with AutomaticKeepAliveClientMixin<YoutubeSearchResultsPage> {
-  Timer? _keepAliveTimer;
-
-  @override
-  bool get wantKeepAlive => _wantKeepAlive;
-
-  bool _wantKeepAlive = true;
-
-  void _keepDead() {
-    _keepAliveTimer?.cancel();
-    if (mounted) return; // return if mounted again
-    _wantKeepAlive = false;
-    updateKeepAlive();
-  }
-
+class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
   String? get currentSearchText => widget.searchTextCallback?.call() ?? _latestSearched;
   static String? _latestSearched;
 
@@ -70,18 +56,15 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
   @override
   void initState() {
     super.initState();
-    _keepAliveTimer?.cancel();
+    YTLocalSearchController.inst.initialize();
+    // -- must be asap and before [fetchSearch], will execute once internal initialization ends
+    YTLocalSearchController.inst.search(currentSearchText ?? '');
     fetchSearch();
-    YTLocalSearchController.inst.initialize().then((_) {
-      YTLocalSearchController.inst.search(currentSearchText ?? '');
-    });
   }
 
   @override
   void dispose() {
     _isFetchingMoreResults.close();
-    _keepAliveTimer?.cancel();
-    _keepAliveTimer = Timer(const Duration(seconds: 20), _keepDead);
     super.dispose();
   }
 
@@ -141,7 +124,6 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> with
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final theme = context.theme;
     final textTheme = theme.textTheme;
     const thumbnailHeight = Dimensions.youtubeThumbnailHeight;

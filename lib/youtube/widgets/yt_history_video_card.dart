@@ -654,7 +654,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
                 if (i == Player.inst.currentIndex.value) {
                   Player.inst.togglePlayPause();
                 } else {
-                  Player.inst.skipToQueueItem(this.widget.index);
+                  Player.inst.skipToQueueItem(i);
                 }
               } else {
                 final finalList = widget.reversedList ? widget.mainList.reversed : widget.mainList;

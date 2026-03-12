@@ -820,7 +820,12 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
           searchController.latestSubmittedYTSearch.value = text;
           SearchSortController.inst.lastSearchText = text;
           searchController.showSearchMenu();
-          searchController.tabViewKey.currentState?.jumpToTab(SearchType.youtube.index);
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) {
+              // post frame, since preferred tab can be localTracks so let the widget does what it wants and then jump
+              searchController.tabViewKey.currentState?.jumpToTab(SearchType.youtube.index);
+            },
+          );
           searchController.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
           searchController.ytSearchKey.currentState?.fetchSearch(customText: text);
         }
@@ -1615,6 +1620,10 @@ extension SortTypeL10n on SortType {
     SortType.latestPlayed => lang.recentListens,
     SortType.firstListen => lang.firstListen,
     SortType.titleSort => '${lang.title} (${lang.sortBy})',
+    SortType.albumSort => '${lang.album} (${lang.sortBy})',
+    SortType.albumArtistSort => '${lang.albumArtist} (${lang.sortBy})',
+    SortType.artistSort => '${lang.artist} (${lang.sortBy})',
+    SortType.composerSort => '${lang.composer} (${lang.sortBy})',
   };
 
   IconData toIcon() => switch (this) {
@@ -1640,6 +1649,10 @@ extension SortTypeL10n on SortType {
     SortType.latestPlayed => Broken.clock,
     SortType.firstListen => Broken.calendar_search,
     SortType.titleSort => Broken.music,
+    SortType.albumSort => Broken.music_dashboard,
+    SortType.albumArtistSort => Broken.user,
+    SortType.artistSort => Broken.microphone,
+    SortType.composerSort => Broken.profile_2user,
   };
 }
 

@@ -10,7 +10,16 @@ on:
 
 jobs:
   build_android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    continue-on-error: ${{ matrix.is_clone }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - is_clone: false
+            apk_suffix: ""
+          - is_clone: true
+            apk_suffix: "-clone"
 
     steps:
       - uses: actions/checkout@v4
@@ -101,29 +110,24 @@ jobs:
       - name: Creating original apks
         run: |
           mkdir -p build_final
-          flutter build apk --target-platform android-arm64 --split-per-abi --release
+          flutter build apk --target-platform android-arm64 --release
           mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version_name }}-arm64-v8a.apk
-          flutter build apk --target-platform android-arm --split-per-abi --release
+          flutter build apk --target-platform android-arm --release
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version_name }}-armeabi-v7a.apk
 
-      - name: Creating clone repo & apks
-        continue-on-error: true
+      - name: Patch package ID for clone
+        if: matrix.is_clone
+        run: find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
+
+      - name: Build APKs
         run: |
-          # without new clone, cache gets messed up
-          git clone --recurse-submodules https://github.com/namidaco/namida/ namida-clone
-          cd namida-clone
-          flutter clean
-          flutter pub upgrade
-          git submodule update --init --remote --recursive
-          find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
-          echo ${{ secrets.ANDROID_SIGNING_KEYSTORE }} | base64 --decode > android/app/keystore.jks
-          echo ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }} | base64 --decode > android/key.properties
-          mkdir -p ../build_final
-          flutter build apk --target-platform android-arm64 --split-per-abi --release
-          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ../build_final/namida-v${{ steps.extract_version.outputs.version_name }}-clone-arm64-v8a.apk
-          flutter build apk --target-platform android-arm --split-per-abi --release
-          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ../build_final/namida-v${{ steps.extract_version.outputs.version_name }}-clone-armeabi-v7a.apk
-          cd ../
+          mkdir -p build_final
+          flutter build apk --target-platform android-arm64 --release
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+            build_final/namida-v${{ steps.extract_version.outputs.version_name }}${{ matrix.apk_suffix }}-arm64-v8a.apk
+          flutter build apk --target-platform android-arm --release
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
+            build_final/namida-v${{ steps.extract_version.outputs.version_name }}${{ matrix.apk_suffix }}-armeabi-v7a.apk
 
       - name: Get the previous release date
         continue-on-error: true
@@ -136,7 +140,7 @@ jobs:
         continue-on-error: true
         run: |
           bash scripts/gen_beta_changelog.sh
-          cat ./scripts/beta_changelog.md
+          cat ./beta_changelog.md
 
       - name: Creating Snapshot Release at namida-snapshots
         uses: softprops/action-gh-release@v2
@@ -144,11 +148,9 @@ jobs:
           repository: namidaco/namida-snapshots
           make_latest: true
           draft: false
-          tag_name: ${{ steps.extract_version.outputs.version}}
+          tag_name: ${{ steps.extract_version.outputs.version }}
           body_path: ./beta_changelog.md
-          files: |
-            build_final/*
-            ./beta_changelog.md
+          files: build_final/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
 
   build_windows:

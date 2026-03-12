@@ -210,7 +210,7 @@ extension TracksUtils on List<Track> {
   String get albumArtist {
     if (isEmpty) return '';
 
-    String? cumulativeArtist = this[0].artistsList[0];
+    String? cumulativeArtist = this[0].artistsList.firstOrNull ?? ''; //  `?? ''` cuz null is used to mark invalid
     for (var i = 0; i < this.length; i++) {
       final e = this[i];
       final aa = e.albumArtist;

@@ -128,7 +128,9 @@ class Player {
   RxBaseCore<bool> get isFetchingInfo => _audioHandler.isFetchingInfo;
   bool get shouldShowLoadingIndicatorR {
     if (isBufferingR || isLoadingR) return true;
-    if (isFetchingInfo.valueR && _audioHandler.currentState.valueR != ProcessingState.ready) return true;
+    final state = _audioHandler.currentState.valueR;
+    if (state == ProcessingState.idle) return false;
+    if (isFetchingInfo.valueR && state != ProcessingState.ready) return true;
     return false;
   }
 
@@ -704,11 +706,18 @@ class Player {
       await next();
       return;
     }
+
+    void togglePlayPauseExclusive() {
+      // -- since `_audioHandler.assignNewQueue` calls setPlayWhenReady(true) by default
+      _audioHandler.setPlayWhenReady(isPlaying.value);
+      _audioHandler.togglePlayPause();
+    }
+
     await _audioHandler.assignNewQueue(
       playAtIndex: index,
       queue: queue,
       maximumItems: maximumItems,
-      onIndexAndQueueSame: _audioHandler.togglePlayPause,
+      onIndexAndQueueSame: togglePlayPauseExclusive,
       onQueueDifferent: (finalizedQueue) {
         if (updateQueue) {
           if (queue.firstOrNull is Selectable) {
@@ -722,7 +731,7 @@ class Player {
           QueueController.inst.updateLatestQueue(finalizedQueue);
         }
       },
-      onQueueEmpty: _audioHandler.togglePlayPause,
+      onQueueEmpty: togglePlayPauseExclusive,
       startPlaying: startPlaying,
       shuffle: shuffle,
       onAssigningCurrentItem: onAssigningCurrentItem,

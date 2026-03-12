@@ -98,7 +98,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
         dialog: CustomBlurryDialog(
           isWarning: true,
           normalTitleStyle: true,
-          bodyText: "${lang.removeFromPlaylist} ${playlist.name.addDQuotation()}?",
+          bodyText: "${lang.removeFromPlaylist} ${playlist.name.translatePlaylistName().addDQuotation()}?",
           actions: [
             const CancelButton(),
             const SizedBox(width: 6.0),

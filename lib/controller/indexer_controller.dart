@@ -1860,6 +1860,15 @@ class _IndexerIsolateExecuter {
         tracksJsonFile.deleteSync();
       }
     } catch (_) {}
+
+    if (tracksInfoList.isEmpty && allTracksMappedByPath.isEmpty) {
+      // -- in case db disk image was malformed for example,
+      // -- clear the db so that it be ready by the next time.
+      try {
+        tracksDBManager?.deleteEverything();
+      } catch (_) {}
+    }
+
     tracksDBManager?.close();
 
     tracksInitPort.send(

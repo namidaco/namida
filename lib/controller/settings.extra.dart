@@ -31,6 +31,8 @@ class _ExtraSettings with SettingsFileWriter {
   int? ytPlaylistsPageIndex;
   int? ytChannelsPageIndex;
 
+  Rect? windowBounds;
+
   void save({
     LibraryTab? selectedLibraryTab,
     LibraryTab? staticLibraryTab,
@@ -50,6 +52,7 @@ class _ExtraSettings with SettingsFileWriter {
     int? ytAddToPlaylistsTabIndex,
     int? ytPlaylistsPageIndex,
     int? ytChannelsPageIndex,
+    Rect? windowBounds,
   }) {
     if (selectedLibraryTab != null) this.selectedLibraryTab.value = selectedLibraryTab;
     if (staticLibraryTab != null) this.staticLibraryTab.value = staticLibraryTab;
@@ -69,6 +72,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (ytAddToPlaylistsTabIndex != null) this.ytAddToPlaylistsTabIndex = ytAddToPlaylistsTabIndex;
     if (ytPlaylistsPageIndex != null) this.ytPlaylistsPageIndex = ytPlaylistsPageIndex;
     if (ytChannelsPageIndex != null) this.ytChannelsPageIndex = ytChannelsPageIndex;
+    if (windowBounds != null) this.windowBounds = windowBounds;
     _writeToStorage();
   }
 
@@ -105,6 +109,16 @@ class _ExtraSettings with SettingsFileWriter {
       ytAddToPlaylistsTabIndex = json['ytAddToPlaylistsTabIndex'] ?? ytAddToPlaylistsTabIndex;
       ytPlaylistsPageIndex = json['ytPlaylistsPageIndex'] ?? ytPlaylistsPageIndex;
       ytChannelsPageIndex = json['ytChannelsPageIndex'] ?? ytChannelsPageIndex;
+
+      final windowBoundsJson = json['windowBounds'];
+      if (windowBoundsJson is Map) {
+        this.windowBounds = Rect.fromLTRB(
+          windowBoundsJson['l'],
+          windowBoundsJson['t'],
+          windowBoundsJson['r'],
+          windowBoundsJson['b'],
+        );
+      }
     } catch (e, st) {
       printy(e, isError: true);
       logger.report(e, st);
@@ -131,6 +145,13 @@ class _ExtraSettings with SettingsFileWriter {
     'ytAddToPlaylistsTabIndex': ytAddToPlaylistsTabIndex,
     'ytPlaylistsPageIndex': ytPlaylistsPageIndex,
     'ytChannelsPageIndex': ytChannelsPageIndex,
+    if (windowBounds != null)
+      'windowBounds': {
+        'l': windowBounds!.left,
+        't': windowBounds!.top,
+        'r': windowBounds!.right,
+        'b': windowBounds!.bottom,
+      },
   };
 
   Future<void> _writeToStorage() async => await writeToStorage();

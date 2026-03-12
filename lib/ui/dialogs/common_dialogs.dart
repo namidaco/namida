@@ -232,7 +232,7 @@ class NamidaDialogs {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '${lang.deletePlaylist}: "${playlist.name}"?',
+                  '${lang.deletePlaylist}: "${playlist.name.translatePlaylistName()}"?',
                   style: theme.textTheme.displayMedium,
                 ),
                 SizedBox(height: 12.0),

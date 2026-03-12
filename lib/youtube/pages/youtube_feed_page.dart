@@ -89,7 +89,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                             itemCount: shortSection.length,
                             itemBuilder: (context, index) {
                               final shortIndex = shortSection[index];
-                              final short = feed.items[shortIndex] as StreamInfoItemShort;
+                              final short = shortsData.getAsShort(feed.items[shortIndex]);
                               return Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: hPadding),
                                 child: YoutubeShortVideoTallCard(

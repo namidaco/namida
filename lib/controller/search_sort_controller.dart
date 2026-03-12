@@ -203,6 +203,11 @@ class SearchSortController extends SearchPortsProvider {
       SortType.latestPlayed => (e) => -(HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0),
       SortType.firstListen => (e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? DateTime(99999).millisecondsSinceEpoch,
       SortType.titleSort => (e) => e.sortInfo?.title?.nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => e.title.toLowerCase())(e),
+      SortType.albumSort => (e) => e.sortInfo?.album?.nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => e.album.toLowerCase())(e),
+      SortType.albumArtistSort =>
+        (e) => e.sortInfo?.albumArtist?.nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.albumArtist.toLowerCase())(e),
+      SortType.artistSort => (e) => e.sortInfo?.artist?.nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.artistsList.join().toLowerCase())(e),
+      SortType.composerSort => (e) => e.sortInfo?.composer?.nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.composer.toLowerCase())(e),
       SortType.shuffle => (e) => math.Random().nextInt(3) - 1,
     };
   }
@@ -860,6 +865,30 @@ class SearchSortController extends SearchPortsProvider {
         sortThisAlts([
           (e) => e.sortInfo?.title ?? '',
           encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => e.title.toLowerCase()),
+        ]);
+        break;
+      case SortType.albumSort:
+        sortThisAlts([
+          (e) => e.sortInfo?.album ?? '',
+          encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => e.album.toLowerCase()),
+        ]);
+        break;
+      case SortType.albumArtistSort:
+        sortThisAlts([
+          (e) => e.sortInfo?.albumArtist ?? '',
+          encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.albumArtist.toLowerCase()),
+        ]);
+        break;
+      case SortType.artistSort:
+        sortThisAlts([
+          (e) => e.sortInfo?.artist ?? '',
+          encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.artistsList.join().toLowerCase()),
+        ]);
+        break;
+      case SortType.composerSort:
+        sortThisAlts([
+          (e) => e.sortInfo?.composer ?? '',
+          encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.composer.toLowerCase()),
         ]);
         break;
 

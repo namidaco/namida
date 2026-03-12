@@ -344,8 +344,6 @@ class _SettingsController with SettingsFileWriter {
   double fontScaleLRC = 1.0;
   double fontScaleLRCFull = 1.0;
 
-  Rect? windowBounds;
-
   bool canAskForBatteryOptimizations = true;
   bool didSupportNamida = false;
 
@@ -733,9 +731,10 @@ class _SettingsController with SettingsFileWriter {
       fontScaleLRC = json['fontScaleLRC'] ?? fontScaleLRC;
       fontScaleLRCFull = json['fontScaleLRCFull'] ?? fontScaleLRC; // fallback to normal
 
+      // -- backward compatability
       final windowBoundsJson = json['windowBounds'];
       if (windowBoundsJson is Map) {
-        this.windowBounds = Rect.fromLTRB(
+        settings.extra.windowBounds = Rect.fromLTRB(
           windowBoundsJson['l'],
           windowBoundsJson['t'],
           windowBoundsJson['r'],
@@ -922,13 +921,6 @@ class _SettingsController with SettingsFileWriter {
 
     'fontScaleLRC': fontScaleLRC,
     'fontScaleLRCFull': fontScaleLRCFull,
-    if (windowBounds != null)
-      'windowBounds': {
-        'l': windowBounds!.left,
-        't': windowBounds!.top,
-        'r': windowBounds!.right,
-        'b': windowBounds!.bottom,
-      },
 
     'canAskForBatteryOptimizations': canAskForBatteryOptimizations,
   };
@@ -1095,7 +1087,6 @@ class _SettingsController with SettingsFileWriter {
     bool? ytMostPlayedCustomisStartOfDay,
     double? fontScaleLRC,
     double? fontScaleLRCFull,
-    Rect? windowBounds,
     bool? didSupportNamida,
     bool? canAskForBatteryOptimizations,
   }) {
@@ -1356,7 +1347,6 @@ class _SettingsController with SettingsFileWriter {
 
     if (fontScaleLRC != null) this.fontScaleLRC = fontScaleLRC;
     if (fontScaleLRCFull != null) this.fontScaleLRCFull = fontScaleLRCFull;
-    if (windowBounds != null) this.windowBounds = windowBounds;
 
     if (didSupportNamida != null) this.didSupportNamida = didSupportNamida;
     if (canAskForBatteryOptimizations != null) this.canAskForBatteryOptimizations = canAskForBatteryOptimizations;

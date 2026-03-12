@@ -131,9 +131,6 @@ class MiniPlayerController {
         (_) {
           if (isInQueue) {
             this.snapToQueue();
-          } else if (isMinimized) {
-            this.snapToMini();
-            this.ytMiniplayerKey.currentState?.animateToState(false, dur: Duration.zero, bypassEnforceExpanded: true);
           } else {
             this.snapToExpanded();
             this.ytMiniplayerKey.currentState?.animateToState(true, dur: Duration.zero);
@@ -146,9 +143,20 @@ class MiniPlayerController {
     }
 
     Dimensions.inst.miniplayerMaxWidth = maxWidth;
-    Dimensions.inst.sideInfoMaxWidth = (mediaSize.width * 0.2).withMaximum(324.0);
     Dimensions.inst.availableAppContentWidth = mediaSize.width - (isWidescreen ? maxWidth : 0);
     Dimensions.inst.miniplayerIsWideScreen = isWidescreen;
+
+    Dimensions.inst.sideInfoMaxWidth = (mediaSize.width * 0.2).withMaximum(324.0);
+    Dimensions.inst.showSubpageInfoAtSide = Dimensions.inst.availableAppContentWidth > 524.0;
+    if (Dimensions.inst.sideInfoMaxWidth < 164.0) {
+      if (Dimensions.inst.showSubpageInfoAtSide) {
+        Dimensions.inst.sideInfoMaxWidth = 164.0;
+        Dimensions.inst.showSubpageInfoAtSide = true;
+      } else {
+        Dimensions.inst.sideInfoMaxWidth = 0;
+        Dimensions.inst.showSubpageInfoAtSide = false;
+      }
+    }
   }
 
   void updateBottomNavBarRelatedDimensions(bool isEnabled) {

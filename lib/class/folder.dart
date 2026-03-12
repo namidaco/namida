@@ -88,8 +88,7 @@ class Folder {
   }
 
   String formattedPath() {
-    // -- aint no formatting hehe
-    return path;
+    return path.formatPath();
   }
 
   @override

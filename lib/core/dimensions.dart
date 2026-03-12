@@ -20,7 +20,6 @@ class Dimensions {
   Dimensions._internal();
 
   bool get showNavigationAtSide => miniplayerIsWideScreen;
-  bool get showSubpageInfoAtSide => availableAppContentWidth > 524.0;
   bool showSubpageInfoAtSideContext(BuildContext context) {
     context.width; // vip to rebuild
     return showSubpageInfoAtSide;
@@ -33,6 +32,7 @@ class Dimensions {
 
   double miniplayerMaxWidth = 0.0;
   double sideInfoMaxWidth = 0.0;
+  bool showSubpageInfoAtSide = false;
   double availableAppContentWidth = 0.0;
   bool miniplayerIsWideScreen = false;
 

@@ -304,6 +304,7 @@ class AppLocalizationsZh extends AppLocalizations {
       number,
       locale: localeName,
       other: '清除 $numberString 首曲目',
+      one: '清除曲目',
     );
     return '$_temp0';
   }
@@ -354,7 +355,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get confirm => '确认';
 
   @override
-  String get confirmRefresh => 'Confirm Refresh?';
+  String get confirmRefresh => '确认刷新？';
 
   @override
   String get copiedArtwork => '已复制专辑封面';
@@ -391,8 +392,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Album Artists',
-      one: '$countString Album Artist',
+      other: '$countString 位专辑音乐人',
+      one: '$countString 位专辑音乐人',
     );
     return '$_temp0';
   }
@@ -405,8 +406,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Albums',
-      one: '$countString Album',
+      other: '$countString 张专辑',
+      one: '$countString 张专辑',
     );
     return '$_temp0';
   }
@@ -419,8 +420,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Artists',
-      one: '$countString Artist',
+      other: '$countString 位音乐人',
+      one: '$countString 位音乐人',
     );
     return '$_temp0';
   }
@@ -433,8 +434,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Composers',
-      one: '$countString Composer',
+      other: '$countString 位作曲者',
+      one: '$countString 位作曲者',
     );
     return '$_temp0';
   }
@@ -447,8 +448,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Days',
-      one: '$countString Day',
+      other: '$countString 天',
+      one: '$countString 天',
     );
     return '$_temp0';
   }
@@ -461,8 +462,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Files',
-      one: '$countString File',
+      other: '$countString 个文件',
+      one: '$countString 个文件',
     );
     return '$_temp0';
   }
@@ -475,8 +476,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Folders',
-      one: '$countString Folder',
+      other: '$countString 个文件夹',
+      one: '$countString 个文件夹',
     );
     return '$_temp0';
   }
@@ -489,8 +490,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Genres',
-      one: '$countString Genre',
+      other: '$countString 个流派',
+      one: '$countString 个流派',
     );
     return '$_temp0';
   }
@@ -503,8 +504,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Months',
-      one: '$countString Month',
+      other: '$countString 个月',
+      one: '$countString 个月',
     );
     return '$_temp0';
   }
@@ -517,8 +518,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Playlists',
-      one: '$countString Playlist',
+      other: '$countString 个播放列表',
+      one: '$countString 个播放列表',
     );
     return '$_temp0';
   }
@@ -531,8 +532,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Subscribers',
-      one: '$countString Subscriber',
+      other: '$countString 位订阅者',
+      one: '$countString 位订阅者',
     );
     return '$_temp0';
   }
@@ -547,8 +548,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Subscribers',
-      one: '$countString Subscriber',
+      other: '$countString 位订阅者',
+      one: '$countString 位订阅者',
     );
     return '$_temp0';
   }
@@ -561,8 +562,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Tracks',
-      one: '$countString Track',
+      other: '$countString 首曲目',
+      one: '$countString 首曲目',
     );
     return '$_temp0';
   }
@@ -575,8 +576,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Videos',
-      one: '$countString Video',
+      other: '$countString 个视频‌',
+      one: '$countString 个视频‌',
     );
     return '$_temp0';
   }
@@ -589,8 +590,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Views',
-      one: '$countString View',
+      other: '$countString 次观看',
+      one: '$countString 次观看',
     );
     return '$_temp0';
   }
@@ -605,8 +606,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString Views',
-      one: '$countString View',
+      other: '$countString 次观看',
+      one: '$countString 次观看',
     );
     return '$_temp0';
   }
@@ -646,7 +647,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       seconds,
       locale: localeName,
-      other: '在最后 $secondsString 秒内自动触发淡入淡出',
+      other: '在最后 $secondsString 秒自动触发淡入淡出',
+      one: '在最后 $secondsString 秒自动触发淡入淡出',
     );
     return '$_temp0';
   }
@@ -728,6 +730,7 @@ class AppLocalizationsZh extends AppLocalizations {
       count,
       locale: localeName,
       other: '是否删除 $countString 个文件（占用 $totalSizeText）？',
+      one: '是否删除 $countString 个文件（占用 $totalSizeText）？',
     );
     return '$_temp0';
   }
@@ -744,7 +747,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deleteTempFiles => '删除临时文件';
 
   @override
-  String get deleted => 'Deleted';
+  String get deleted => '已删除';
 
   @override
   String get description => '描述';
@@ -769,7 +772,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       seconds,
       locale: localeName,
-      other: '迷你播放器在不活动 $secondsString 秒后变暗',
+      other: '不活动 $secondsString 秒后迷你播放器变暗',
+      one: '不活动 $secondsString 秒后迷你播放器变暗',
     );
     return '$_temp0';
   }
@@ -1017,7 +1021,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get error => '错误';
 
   @override
-  String get errorFetchingVideoList => 'Error fetching video list';
+  String get errorFetchingVideoList => '获取视频列表时出错';
 
   @override
   String get errorPlayingTrack => '播放曲目时出错';
@@ -1057,7 +1061,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '提取剩余的$numberString ？',
+      other: '提取剩余的 $numberString？',
+      one: '提取剩余的 $numberString？',
     );
     return '$_temp0';
   }
@@ -1141,7 +1146,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filterTracksBy => '筛选搜索列表中的曲目';
 
   @override
-  String get filtered => 'Filtered';
+  String get filtered => '已筛选';
 
   @override
   String get filteredBySizeAndDuration => '按大小和时长筛选的曲目';
@@ -1210,7 +1215,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get generateRandomPlaylist => '生成随机播放列表';
 
   @override
-  String get genre => '类型';
+  String get genre => '流派';
 
   @override
   String get genres => '流派';
@@ -1277,7 +1282,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       listensCount,
       locale: localeName,
-      other: '$listensCountString 监听的 $oldTrackInfo 将替换为 $newTrackInfo，确认吗?',
+      other: '$listensCountString 次听过的 $oldTrackInfo 将被 $newTrackInfo 替换，确认吗？',
+      one: '$listensCountString 次听过的 $oldTrackInfo 将被 $newTrackInfo 替换，确认吗？',
     );
     return '$_temp0';
   }
@@ -1354,7 +1360,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '成功导入 $numberString 个频道',
+      other: '已成功导入 $numberString 个频道',
+      one: '已成功导入 $numberString 个频道',
     );
     return '$_temp0';
   }
@@ -1364,7 +1371,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '成功导入 $numberText 个播放列表',
+      other: '已成功导入 $numberText 个播放列表',
+      one: '已成功导入 $numberText 个播放列表',
     );
     return '$_temp0';
   }
@@ -1512,7 +1520,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '大约在 $numberString 年前的这个时候',
+      other: '约 $numberString 年前此时',
+      one: '约 $numberString 年前此时',
     );
     return '$_temp0';
   }
@@ -1660,6 +1669,7 @@ class AppLocalizationsZh extends AppLocalizations {
       number,
       locale: localeName,
       other: '至少应保留 $numberString 个项目',
+      one: '至少应保留 $numberString 个项目',
     );
     return '$_temp0';
   }
@@ -1728,7 +1738,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get newDirectory => '新目录';
 
   @override
-  String get newLabel => 'New';
+  String get newLabel => '新建';
 
   @override
   String get newTracksAdd => '添加曲目';
@@ -1801,7 +1811,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noTracksFound => '未找到任何曲目';
 
   @override
-  String get noTracksFoundBetweenDates => '该时间范围没有任何曲目。';
+  String get noTracksFoundBetweenDates => '此时间范围内没有任何曲目。';
 
   @override
   String get noTracksFoundInDirectory => '在此目录中找不到曲目';
@@ -2184,7 +2194,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '再重复 $number 次',
+      other: '再重复 $number 次‌',
+      one: '再重复 $number 次‌',
     );
     return '$_temp0';
   }
@@ -2260,7 +2271,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '若被暂停时长小于 $numberString 分钟，则恢复播放',
+      other: '如果暂停时长少于 $numberString 分钟，则恢复播放',
+      one: '如果暂停时长少于 $numberString 分钟，则恢复播放',
     );
     return '$_temp0';
   }
@@ -2457,11 +2469,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get signInYouNeedAccountToViewPage => '您需要一个账号才能查看此页面';
 
   @override
-  String get signOut => '登出';
+  String get signOut => '退出登录';
 
   @override
   String signOutFromName({required String name}) {
-    return '从 $name 登出';
+    return '从 $name 退出登录';
   }
 
   @override
@@ -2624,7 +2636,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tapToSeek => '点击步进';
 
   @override
-  String get theFollowingChangesWereDetected => 'The following changes were detected';
+  String get theFollowingChangesWereDetected => '检测到以下更改';
 
   @override
   String get themeMode => '主题模式';
@@ -2728,7 +2740,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trackPlayModeTrackArtist => '曲目的主音乐人';
 
   @override
-  String get trackPlayModeTrackGenre => '曲目类型';
+  String get trackPlayModeTrackGenre => '曲目的流派';
 
   @override
   String get trackThumbnailSizeInList => '曲目缩略图的大小';

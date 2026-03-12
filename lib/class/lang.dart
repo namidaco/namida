@@ -93,13 +93,17 @@ class NamidaLanguage {
 
   factory NamidaLanguage.fromJson(Map<String, dynamic> json) {
     final code = json["code"] as String;
+    final name = json["name"];
+    if (name is! String || name.isEmpty) {
+      return NamidaLanguage.fromCode(code);
+    }
     final langSplits = _splitCode(code);
     final codeOnly = langSplits.$1;
     final countryCodeOnly = langSplits.$2;
 
     return NamidaLanguage._(
       code: json["code"],
-      name: json["name"],
+      name: name,
       country: json["country"],
       codeOnly: codeOnly,
       countryCodeOnly: countryCodeOnly,

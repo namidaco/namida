@@ -24,7 +24,6 @@
         "apk",
         "--target-platform",
         "android-arm64",
-        "--split-per-abi",
         "--release",
         "--dart-define=IS_KURU_BUILD=true"
       ],

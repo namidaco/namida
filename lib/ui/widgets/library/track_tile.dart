@@ -773,7 +773,7 @@ class TrackTileManager {
     TrackTileItem.comment: (track) => track.comment.overflow,
     TrackTileItem.composer: (track) => track.composer.overflow,
     TrackTileItem.dateAdded: (track) => track.dateAdded.dateFormatted,
-    TrackTileItem.format: (track) => track.format,
+    TrackTileItem.format: (track) => track.format.toUpperCase(),
     TrackTileItem.sampleRate: (track) => '${track.sampleRate}Hz',
     TrackTileItem.size: (track) => track.size.fileSizeFormatted,
     TrackTileItem.bitrate: (track) => "${(track.bitrate)} kbps",

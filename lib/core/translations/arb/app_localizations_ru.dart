@@ -278,7 +278,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chooseWhatToClear => 'Выбери, что очистить';
 
   @override
-  String get claim => 'Заявка';
+  String get claim => 'Запросить';
 
   @override
   String get clear => 'Очистить';
@@ -1613,7 +1613,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get membershipCode => 'Код';
 
   @override
-  String get membershipCodeSentToEmail => 'Код отправлен на твою почту';
+  String get membershipCodeSentToEmail => 'Код, отправленный на твою почту';
 
   @override
   String get membershipDidntChange => 'Членство не изменилось';

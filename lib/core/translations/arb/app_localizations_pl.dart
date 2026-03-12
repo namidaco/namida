@@ -672,7 +672,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get dataSaver => 'Data Saver';
 
   @override
-  String get dataSaverMode => 'Data Saver Mode';
+  String get dataSaverMode => 'Tryb oszczędzania danych';
 
   @override
   String get database => 'Baza danych';

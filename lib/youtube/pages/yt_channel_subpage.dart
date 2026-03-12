@@ -389,7 +389,10 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
       ),
     );
 
-    final pfpImageWidth = (maxWidth * 0.18).withMaximum(context.height * 0.3).withMaximum(Dimensions.inst.sideInfoMaxWidth * 0.8);
+    var pfpImageWidth = (maxWidth * 0.18).withMaximum(context.height * 0.3);
+    if (showSubpageInfoAtSide) {
+      pfpImageWidth = pfpImageWidth.withMaximum(Dimensions.inst.sideInfoMaxWidth * 0.8);
+    }
     final pfpImageWidget = TapDetector(
       onTap: () => _onImageTap(
         context: context,

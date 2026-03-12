@@ -278,13 +278,19 @@ class PlaybackSettings extends SettingSubpageProvider {
   Widget getJumpToFirstTrackAfterFinishingWidget() {
     return getItemWrapper(
       key: _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing,
-      child: Obx(
-        (context) => CustomSwitchListTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing),
-          icon: Broken.rotate_left,
-          title: lang.jumpToFirstTrackAfterQueueFinish,
-          onChanged: (value) => settings.player.save(jumpToFirstTrackAfterFinishingQueue: !value),
-          value: settings.player.jumpToFirstTrackAfterFinishingQueue.valueR,
+      child: ObxO(
+        rx: settings.player.enableGaplessPlayback,
+        builder: (context, gaplessEnabled) => AnimatedEnabled(
+          enabled: !gaplessEnabled,
+          child: Obx(
+            (context) => CustomSwitchListTile(
+              bgColor: getBgColor(_PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing),
+              icon: Broken.rotate_left,
+              title: lang.jumpToFirstTrackAfterQueueFinish + (gaplessEnabled ? '\n✓ ${lang.gaplessPlayback}' : ''),
+              onChanged: (value) => settings.player.save(jumpToFirstTrackAfterFinishingQueue: !value),
+              value: settings.player.jumpToFirstTrackAfterFinishingQueue.valueR || gaplessEnabled,
+            ),
+          ),
         ),
       ),
     );

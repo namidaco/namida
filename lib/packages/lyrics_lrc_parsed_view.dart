@@ -564,14 +564,28 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     final videoOrImageChild = fullscreen
         ? Positioned.fill(
             child: Obx(
-              (context) => ColoredBox(
-                color: Color.alphaBlend(
-                  // -- careful with making the result non-opaque, it will cause the foreground to dim as well (no idea how :/)
-                  CurrentColor.inst.miniplayerColor.withOpacityExt(0.2),
-                  context.isDarkMode ? Colors.black.withOpacityExt(0.9) : Colors.white.withOpacityExt(0.9),
-                ).withOpacityExt(1.0),
-                child: widget.videoOrImage,
-              ),
+              (context) {
+                final miniplayerColor = CurrentColor.inst.miniplayerColor;
+                return DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      // -- careful with making colors non-opaque, it will cause the foreground to dim as well (no idea how :/)
+                      colors: context.isDarkMode
+                          ? [
+                              Color.alphaBlend(miniplayerColor.withOpacityExt(0.21), Colors.black).withOpacityExt(1.0),
+                              Color.alphaBlend(miniplayerColor.withOpacityExt(0.15), Colors.black).withOpacityExt(1.0),
+                            ]
+                          : [
+                              Color.alphaBlend(miniplayerColor.withOpacityExt(0.3), Colors.white.withOpacityExt(0.7)).withOpacityExt(1.0),
+                              Color.alphaBlend(miniplayerColor.withOpacityExt(0.6), Colors.white.withOpacityExt(0.8)).withOpacityExt(1.0),
+                            ],
+                    ),
+                  ),
+                  child: widget.videoOrImage,
+                );
+              },
             ),
           )
         : AnimatedSwitcher(
@@ -662,7 +676,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                       return const SizedBox();
                     }
 
-                    final color = CurrentColor.inst.miniplayerColor;
+                    final miniplayerColor = CurrentColor.inst.miniplayerColor;
                     final personCount = currentLRC?.personCount ?? 1;
                     return ObxO(
                       rx: _latestUpdatedLineInfo,
@@ -679,13 +693,15 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                             final distanceDiffFromSelectedAbs = distanceDiffFromSelected?.abs();
                             final lrc = lyrics[index];
                             String text = lrc.readableText;
+                            final parts = lrc.parts;
                             final person = lrc.person;
                             final isBGLyrics = lrc.isBGLyrics;
+                            final indicesForTimestamp = highlightTimestampsMap[lrc.timestamp];
 
                             final selected = distanceDiffFromSelected == 0 || isBGLyrics || selectedLineTimestamp == lrc.timestamp;
                             final selectedAndEmpty = selected && _checkIfTextEmpty(text);
                             var bgColor = selected && !isBGLyrics
-                                ? Color.alphaBlend(color.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(
+                                ? Color.alphaBlend(miniplayerColor.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(
                                     selectedAndEmpty
                                         ? 0.1
                                         : fullscreen
@@ -786,9 +802,11 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                               );
                             }
 
-                            final indicesForTimestamp = highlightTimestampsMap[lrc.timestamp];
                             if (indicesForTimestamp != null && indicesForTimestamp.length > 1) {
-                              final isSecondaryLanguageLine = index != indicesForTimestamp.firstOrNull;
+                              final isFirst = index == indicesForTimestamp.first;
+                              final isLast = index == indicesForTimestamp.last;
+                              final isSecondaryLanguageLine = !isFirst;
+
                               if (isSecondaryLanguageLine) {
                                 final multiplier = fullscreen ? 0.75 : 0.85;
                                 textStyle = textStyle.copyWith(
@@ -797,7 +815,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                 if (bgColor != null) {
                                   bgColor = bgColor.withOpacityExt(bgColor.a * 0.75);
                                 }
+                              }
 
+                              if (!isFirst) {
                                 lineMargin = lineMargin.subtract(
                                   EdgeInsetsDirectional.only(
                                     top: lineMargin.resolve(textDirection).top,
@@ -812,7 +832,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                   topRight: Radius.zero,
                                   topLeft: Radius.zero,
                                 );
-                              } else {
+                              }
+
+                              if (!isLast) {
                                 lineMargin = lineMargin.subtract(
                                   EdgeInsetsDirectional.only(
                                     bottom: lineMargin.resolve(textDirection).bottom,
@@ -830,7 +852,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                               }
                             }
 
-                            final parts = lrc.parts;
                             final textWidget = selected && parts != null && parts.isNotEmpty
                                 ? _TextWithFadingProgress(
                                     parts: parts,
@@ -904,42 +925,37 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
           topInfoWidget,
         ],
         Expanded(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: widget.maxHeight != null ? widget.maxHeight! * 0.95 : double.infinity,
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned.fill(
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: _lrcOpacityDurationMS),
-                    opacity: _isCurrentLineEmpty ? 0.0 : 1.0,
-                    child: FadeIgnoreTransition(
-                      opacity: mpAnimation,
-                      child: fullscreen || !widget.allowOverflow
-                          ? Padding(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Positioned.fill(
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: _lrcOpacityDurationMS),
+                  opacity: _isCurrentLineEmpty ? 0.0 : 1.0,
+                  child: FadeIgnoreTransition(
+                    opacity: mpAnimation,
+                    child: fullscreen || !widget.allowOverflow
+                        ? Padding(
+                            padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
+                            child: middleLyricsStackWidget,
+                          )
+                        : OverflowBox(
+                            maxWidth: Dimensions.inst.miniplayerMaxWidth - pagePaddingHorizontal * 2, // keep the text steady while animating mp
+                            child: Padding(
                               padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
                               child: middleLyricsStackWidget,
-                            )
-                          : OverflowBox(
-                              maxWidth: Dimensions.inst.miniplayerMaxWidth - pagePaddingHorizontal * 2, // keep the text steady while animating mp
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
-                                child: middleLyricsStackWidget,
-                              ),
                             ),
-                    ),
+                          ),
                   ),
                 ),
-                if (fullscreenIconButton != null)
-                  Positioned(
-                    bottom: 8.0,
-                    right: 0.0,
-                    child: fullscreenIconButton,
-                  ),
-              ],
-            ),
+              ),
+              if (fullscreenIconButton != null)
+                Positioned(
+                  bottom: 8.0,
+                  right: 0.0,
+                  child: fullscreenIconButton,
+                ),
+            ],
           ),
         ),
         ...?bottomControlsChildren,
@@ -956,7 +972,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
       alignment: Alignment.center,
       children: [
         videoOrImageChild,
-        mainLyricsWidget,
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: widget.maxHeight != null ? widget.maxHeight! * 0.75 : double.infinity,
+          ),
+          child: mainLyricsWidget,
+        ),
         Positioned.fill(
           child: ScaleDetector(
             onScaleStart: (details) => _previousFontMultiplier = _fontMultiplier,

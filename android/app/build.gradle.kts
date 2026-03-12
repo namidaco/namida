@@ -34,6 +34,15 @@ android {
     namespace = "com.msob7y.namida"
     compileSdkVersion(36)
     ndkVersion = flutter.ndkVersion
+    
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            isUniversalApk = true
+        }
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -65,7 +74,7 @@ android {
         kotlinCompilerExtensionVersion = "1.5.15"
     }
 
-   applicationVariants.all {
+    applicationVariants.all {
         outputs.all {
             val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
             val abiText = output.filters.find { it.filterType == "ABI" }?.identifier?.let { "-$it" } ?: ""

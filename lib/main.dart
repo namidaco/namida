@@ -82,6 +82,14 @@ void main(List<String> args) {
     () async {
       final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
       FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+      final singleInstance = AppSingleInstanceBase.instance;
+      if (singleInstance != null) {
+        await singleInstance.acquireSingleInstanceOrExit(args);
+      }
+
+      await SMTCController.instance?.init();
+
       runApp(const Namida());
     },
     (error, stack) => logger.error(error.runtimeType, e: error, st: stack),
@@ -120,15 +128,8 @@ Future<bool> _mainAppInitialization() async {
 
     await [
       WindowController.instance?.init(),
-      SMTCController.instance?.init(),
       HomeWidgetController.instance?.init(),
     ].executeAllAndSilentReportErrors();
-
-    final singleInstance = AppSingleInstanceBase.instance;
-    if (singleInstance != null) {
-      args = Zone.current['args'] as List<String>? ?? [];
-      await singleInstance.acquireSingleInstanceOrExit(args);
-    }
 
     ShortcutsController.instance?.init();
 
@@ -226,6 +227,8 @@ Future<bool> _mainAppInitialization() async {
   try {
     WindowController.instance?.restorePosition(); // -- requires settings
 
+    args = Zone.current['args'] as List<String>? ?? [];
+
     final ytInfoInitSyncItemsCompleter = Completer<void>();
 
     /// even tho we don't really need to wait for queue, it's better as to
@@ -263,6 +266,10 @@ Future<bool> _mainAppInitialization() async {
       NamidaFFMPEG.configure(),
       ytInfoInitSyncItemsCompleter.future,
     ].executeAllAndSilentReportErrors();
+
+    if (SMTCController.instance != null) {
+      Player.inst.refreshNotification();
+    }
 
     NamidaNavigator.setDefaultSystemUIOverlayStyle.ignoreError();
     ScrollSearchController.inst.initialize();

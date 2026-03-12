@@ -590,8 +590,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString বার দেখা হয়েছে',
-      one: '$countString বার দেখা হয়েছে',
+      other: '$countString ভিউ',
+      one: '$countString টি ভিউ',
     );
     return '$_temp0';
   }
@@ -606,8 +606,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString বার দেখা হয়েছে',
-      one: '$countString বার দেখা হয়েছে',
+      other: '$countString ভিউ',
+      one: '$countString টি ভিউ',
     );
     return '$_temp0';
   }
@@ -979,7 +979,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get enableM3uSyncSubtitle => 'যদি অস্বীকার করা হয়, এই প্লেলিস্টে করা সমস্ত পরিবর্তন পুনরায় চালু করার সময় হারিয়ে যাবে';
 
   @override
-  String get enableMiniplayerParticles => 'উড়ন্ত কণাগুলো সক্রিয় করুন';
+  String get enableMiniplayerParticles => 'উড়ন্ত কণা সক্রিয় করুন';
 
   @override
   String get enableParallaxEffect => 'প্যারালাক্স ইফেক্ট সক্রিয় করুন';
@@ -1161,7 +1161,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get firstListen => 'প্রথম শ্রবণ';
 
   @override
-  String get fixYtdlpBigThumbnailSize => 'yt-dlp বড় থাম্বনেইলের আকার ঠিক করুন';
+  String get fixYtdlpBigThumbnailSize => 'yt-dlp বড় থাম্বনেইল সাইজ ঠিক করুন';
 
   @override
   String get floatingActionButton => 'ভাসমান অ্যাকশন বোতাম';
@@ -1209,7 +1209,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get generateFromDates => 'সময় পরিসীমা';
 
   @override
-  String get generateFromDatesSubtitle => 'আপনার একটি সময় পরিসীমায় শোনা ট্র্যাকগুলো তৈরি করুন';
+  String get generateFromDatesSubtitle => 'আপনার একটি সময় পরিসীমায় শোনা ট্র্যাকগুলো যোগ করুন';
 
   @override
   String get generateRandomPlaylist => 'এলোমেলো প্লেলিস্ট তৈরি করুন';
@@ -1401,7 +1401,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get info => 'তথ্য';
 
   @override
-  String get inserted => 'সন্নিবেশ করা হয়েছে';
+  String get inserted => 'যোগ করা হয়েছে';
 
   @override
   String get instantlyApplies => 'তাত্ক্ষণিকভাবে প্রযোজ্য';
@@ -2500,7 +2500,7 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
-  String get singles => 'সিঙ্গলস';
+  String get singles => 'একক গান';
 
   @override
   String get size => 'সাইজ';
@@ -2518,7 +2518,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get skipSponsorSegmentsInVideos => 'ভিডিওর স্পন্সর অংশগুলো বাদ দিন';
 
   @override
-  String get sleepAfter => 'সময় বা ট্র্যাক নির্ধারণ করুন';
+  String get sleepAfter => 'সময় বা ট্র্যাক সেট করুন';
 
   @override
   String get sleepTimer => 'স্লিপ টাইমার';

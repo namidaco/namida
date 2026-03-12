@@ -31,6 +31,10 @@ enum SortType {
   latestPlayed,
   firstListen,
   titleSort,
+  albumSort,
+  albumArtistSort,
+  artistSort,
+  composerSort,
   ;
 
   bool get requiresHistory => this == SortType.mostPlayed || this == SortType.latestPlayed || this == SortType.firstListen;
@@ -57,6 +61,10 @@ enum SortType {
     SortType.mostPlayed,
     SortType.firstListen,
     SortType.titleSort,
+    SortType.albumSort,
+    SortType.albumArtistSort,
+    SortType.artistSort,
+    SortType.composerSort,
     SortType.shuffle,
   ];
 }

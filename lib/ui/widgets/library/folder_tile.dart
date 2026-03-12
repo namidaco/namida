@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/file_parts.dart';
@@ -117,6 +119,12 @@ class _FolderTileState extends State<FolderTile> {
                   assetImagePath,
                   height: 18.0,
                 );
+        } else {
+          if (Platform.isAndroid) {
+            if (folderTitle == 'emulated') {
+              folderTitle = 'Internal Storage';
+            }
+          }
         }
       } catch (_) {}
     }

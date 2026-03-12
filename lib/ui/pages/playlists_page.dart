@@ -220,7 +220,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
         dialog: CustomBlurryDialog(
           isWarning: true,
           normalTitleStyle: true,
-          bodyText: "${lang.removeFromPlaylist} ${playlist.name.addDQuotation()}?",
+          bodyText: "${lang.removeFromPlaylist} ${playlist.name.translatePlaylistName().addDQuotation()}?",
           actions: [
             const CancelButton(),
             const SizedBox(width: 6.0),

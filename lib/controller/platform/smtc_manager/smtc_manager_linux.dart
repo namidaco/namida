@@ -5,6 +5,11 @@ class _SMTCManagerLinux extends NamidaSMTCManager {
 
   @override
   Future<void> init() async {
+    // -- for some reason it broke after flutter v.3.41, with the delay it works 90% of the time
+    await Future.delayed(Duration(milliseconds: 100), _initInstant);
+  }
+
+  Future<void> _initInstant() async {
     try {
       final instance = await MPRIS.create(
         busName: 'org.mpris.MediaPlayer2.namida',
@@ -19,6 +24,20 @@ class _SMTCManagerLinux extends NamidaSMTCManager {
           // 'https',
         },
       );
+      instance.canControl = true;
+      instance.canPlay = true;
+      instance.canPause = true;
+      instance.canGoNext = true;
+      instance.canGoPrevious = true;
+      instance.canSeek = true;
+      instance.canQuit = true;
+      instance.canRaise = true;
+      instance.canSetFullscreen = true;
+
+      if (instance.playbackStatus == MPRISPlaybackStatus.stopped) {
+        instance.playbackStatus = MPRISPlaybackStatus.paused;
+      }
+
       mpris = instance;
       instance.setEventHandler(
         MPRISEventHandler(
@@ -105,7 +124,7 @@ class _SMTCManagerLinux extends NamidaSMTCManager {
     final metadata = MPRISMetadata(
       Uri.file(mediaItem.id), // only local files
       title: mediaItem.title,
-      artist: [if (mediaItem.artist != null) mediaItem.artist!],
+      artist: [?mediaItem.artist],
       album: mediaItem.album,
       albumArtist: null,
       length: mediaItem.duration,

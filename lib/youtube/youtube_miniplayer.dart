@@ -1453,7 +1453,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                             itemCount: shortSection.length,
                                             itemBuilder: (context, index) {
                                               final shortIndex = shortSection[index];
-                                              final short = currentRelatedVideos.items[shortIndex] as StreamInfoItemShort;
+                                              final short = shortsData.getAsShort(currentRelatedVideos.items[shortIndex]);
                                               return Padding(
                                                 padding: const EdgeInsets.symmetric(horizontal: hPadding),
                                                 child: YoutubeShortVideoTallCard(
