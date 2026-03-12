@@ -233,9 +233,9 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
         ),
         NamidaPopupWrapper(
           childrenDefault: getMenuItems,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 2.0),
-            child: MoreIcon(iconSize: 16.0),
+          child: const MoreIcon(
+            iconSize: 16.0,
+            padding: 2.0,
           ),
         ),
       ],

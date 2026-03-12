@@ -104,8 +104,8 @@ class ArtistTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 4.0),
                 MoreIcon(
-                  onPressed: () => NamidaDialogs.inst.showArtistDialog(name, type),
                   padding: 6.0,
+                  onPressed: () => NamidaDialogs.inst.showArtistDialog(name, type),
                 ),
               ],
             ),

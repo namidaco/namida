@@ -522,9 +522,8 @@ class _YTCommentCardState extends State<YTCommentCard> {
               right: 0,
               child: NamidaPopupWrapper(
                 childrenDefault: _getCommentPopupItems,
-                child: const Padding(
-                  padding: EdgeInsets.all(12.0 + 4.0),
-                  child: MoreIcon(),
+                child: const MoreIcon(
+                  padding: 12.0 + 4.0,
                 ),
               ),
             ),

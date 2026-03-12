@@ -242,9 +242,9 @@ class YoutubeCard extends StatelessWidget {
               right: 0.0,
               child: NamidaPopupWrapper(
                 childrenDefault: menuChildrenDefault,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                  child: MoreIcon(iconSize: 16.0),
+                child: const MoreIcon(
+                  iconSize: 16.0,
+                  padding: 8.0,
                 ),
               ),
             ),
@@ -411,9 +411,9 @@ class YoutubeCardMinimal extends StatelessWidget {
               right: 0.0,
               child: NamidaPopupWrapper(
                 childrenDefault: menuChildrenDefault,
-                child: const Padding(
-                  padding: EdgeInsets.all(6.0),
-                  child: MoreIcon(iconSize: 14.0),
+                child: const MoreIcon(
+                  iconSize: 14.0,
+                  padding: 6.0,
                 ),
               ),
             ),

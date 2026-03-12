@@ -723,12 +723,10 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
                     playlistName: configs.playlistName,
                     videoYTID: itemToYTIDPlay(item),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: MoreIcon(
-                      iconSize: 16.0,
-                      iconColor: itemsColor6,
-                    ),
+                  child: MoreIcon(
+                    iconSize: 16.0,
+                    padding: 8.0,
+                    iconColor: itemsColor6,
                   ),
                 ),
               ),
