@@ -305,15 +305,15 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 curl -fsSL https://raw.githubusercontent.com/namidaco/namida/main/scripts/install_linux_tar.sh | sudo bash
 
 # Package managers
-yay namida                # AUR (Arch Linux)
-sudo pacman -S namida-bin # AUR (Arch Linux)
-sudo dpkg -i namida.deb   # Debian/Ubuntu (download .deb from beta releases)
-sudo rpm -i namida.rpm    # Fedora/RHEL (download .rpm from beta releases)
+yay namida-bin                  # AUR (Arch Linux)
+sudo pacman -S namida-bin       # AUR (Arch Linux)
+sudo apt install ./namida.deb   # Debian/Ubuntu (download .deb from beta releases)
+sudo dnf install ./namida.rpm   # Fedora/RHEL (download .rpm from beta releases)
 
 # make sure mpv is installed
-sudo apt install mpv      # Debian/Ubuntu/Mint
-sudo dnf install mpv      # Fedora/RHEL
-sudo pacman -S mpv        # Arch/Manjaro
+sudo apt install mpv   # Debian/Ubuntu/Mint
+sudo dnf install mpv   # Fedora/RHEL
+sudo pacman -S mpv     # Arch/Manjaro
 ```
 
 ### Permission Note:
