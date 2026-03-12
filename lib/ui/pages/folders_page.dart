@@ -171,50 +171,56 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                               child: ObxO(
                                 rx: foldersController.isHome,
                                 builder: (context, isHome) => ObxO(
-                                  rx: foldersController.currentFolder,
-                                  builder: (context, currentFolder) {
-                                    final folderTracks = foldersController.folderToTracks(currentFolder) ?? [];
-                                    return SmoothCustomScrollView(
-                                      controller: scrollController,
-                                      slivers: [
-                                        ObxO(
-                                          rx: foldersController.currentFolderslist,
-                                          builder: (context, currentFolderslist) => SuperSliverList.builder(
-                                            itemCount: currentFolderslist.length,
+                                  rx: foldersController.lastVisitedFolderMap,
+                                  builder: (context, lastVisitedFolderMap) => ObxO(
+                                    rx: foldersController.currentFolder,
+                                    builder: (context, currentFolder) {
+                                      final folderTracks = foldersController.folderToTracks(currentFolder) ?? [];
+                                      final highlightedFolder = lastVisitedFolderMap[currentFolder];
+                                      return SmoothCustomScrollView(
+                                        controller: scrollController,
+                                        slivers: [
+                                          ObxO(
+                                            rx: foldersController.currentFolderslist,
+                                            builder: (context, currentFolderslist) => SuperSliverList.builder(
+                                              itemCount: currentFolderslist.length,
+                                              itemBuilder: (context, i) {
+                                                final folder = currentFolderslist[i];
+                                                const isTracksRecursive = true;
+                                                final tracks = foldersController.getNodeTracks(folder, recursive: isTracksRecursive);
+                                                final dirInsideCount = foldersController.currentNodeFoldersCount(folder, preferRecursiveForRootFolders: true) ?? 0;
+                                                return FolderTile(
+                                                  folder: folder,
+                                                  highlightedFolder: highlightedFolder,
+                                                  controller: foldersController,
+                                                  tracks: tracks,
+                                                  isTracksRecursive: isTracksRecursive,
+                                                  dirInsideCount: dirInsideCount,
+                                                  isHome: isHome,
+                                                );
+                                              },
+                                            ),
+                                          ),
+
+                                          SliverFixedExtentList.builder(
+                                            itemCount: folderTracks.length,
+                                            itemExtent: Dimensions.inst.trackTileItemExtent,
                                             itemBuilder: (context, i) {
-                                              final folder = currentFolderslist[i];
-                                              const isTracksRecursive = true;
-                                              final tracks = foldersController.getNodeTracks(folder, recursive: isTracksRecursive);
-                                              final dirInsideCount = foldersController.currentNodeFoldersCount(folder, preferRecursiveForRootFolders: true) ?? 0;
-                                              return FolderTile(
-                                                folder: folder,
-                                                controller: foldersController,
-                                                tracks: tracks,
-                                                isTracksRecursive: isTracksRecursive,
-                                                dirInsideCount: dirInsideCount,
-                                                isHome: isHome,
+                                              return TrackTile(
+                                                properties: properties,
+                                                index: i,
+                                                trackOrTwd: folderTracks[i],
+                                                tracks: folderTracks,
+                                                bgColor: i == indexToScrollTo ? highlighedColor : null,
                                               );
                                             },
                                           ),
-                                        ),
-                                        SliverFixedExtentList.builder(
-                                          itemCount: folderTracks.length,
-                                          itemExtent: Dimensions.inst.trackTileItemExtent,
-                                          itemBuilder: (context, i) {
-                                            return TrackTile(
-                                              properties: properties,
-                                              index: i,
-                                              trackOrTwd: folderTracks[i],
-                                              tracks: folderTracks,
-                                              bgColor: i == indexToScrollTo ? highlighedColor : null,
-                                            );
-                                          },
-                                        ),
-                                        kBottomPaddingWidgetSliver,
-                                        scrollToiconBottomPaddingSliver,
-                                      ],
-                                    );
-                                  },
+                                          kBottomPaddingWidgetSliver,
+                                          scrollToiconBottomPaddingSliver,
+                                        ],
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
                             ),
@@ -259,57 +265,62 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                 child: ObxO(
                                   rx: foldersController.isInside,
                                   builder: (context, isInside) => ObxO(
-                                    rx: foldersController.currentFolder,
-                                    builder: (context, currentFolder) {
-                                      final folderTracks = foldersController.folderToTracks(currentFolder) ?? [];
-                                      return SmoothCustomScrollView(
-                                        controller: scrollController,
-                                        slivers: [
-                                          if (!isInside)
-                                            ObxO(
-                                              rx: foldersController.foldersMap,
-                                              builder: (context, mainMap) {
-                                                final mainMapFoldersKeys = mainMap.keys.toList();
-                                                return SuperSliverList.builder(
-                                                  itemCount: mainMapFoldersKeys.length,
-                                                  itemBuilder: (context, i) {
-                                                    final folder = mainMapFoldersKeys[i];
-                                                    const isTracksRecursive = false;
-                                                    final tracks = foldersController.getNodeTracks(folder, recursive: isTracksRecursive);
-                                                    if (tracks.isEmpty) return const SizedBox();
-                                                    final dirInsideCount = foldersController.currentNodeFoldersCount(folder) ?? 0;
-                                                    return FolderTile(
-                                                      folder: folder,
-                                                      controller: foldersController,
-                                                      subtitle: folder.hasSimilarFolderNames ? folder.parent.formattedPath() : null,
-                                                      tracks: tracks,
-                                                      isTracksRecursive: isTracksRecursive,
-                                                      dirInsideCount: dirInsideCount,
-                                                      isHome: true,
-                                                    );
-                                                  },
+                                    rx: foldersController.lastVisitedFolderMap,
+                                    builder: (context, lastVisitedFolderMap) => ObxO(
+                                      rx: foldersController.currentFolder,
+                                      builder: (context, currentFolder) {
+                                        final folderTracks = foldersController.folderToTracks(currentFolder) ?? [];
+                                        final highlightedFolder = lastVisitedFolderMap[currentFolder];
+                                        return SmoothCustomScrollView(
+                                          controller: scrollController,
+                                          slivers: [
+                                            if (!isInside)
+                                              ObxO(
+                                                rx: foldersController.foldersMap,
+                                                builder: (context, mainMap) {
+                                                  final mainMapFoldersKeys = mainMap.keys.toList();
+                                                  return SuperSliverList.builder(
+                                                    itemCount: mainMapFoldersKeys.length,
+                                                    itemBuilder: (context, i) {
+                                                      final folder = mainMapFoldersKeys[i];
+                                                      const isTracksRecursive = false;
+                                                      final tracks = foldersController.getNodeTracks(folder, recursive: isTracksRecursive);
+                                                      if (tracks.isEmpty) return const SizedBox();
+                                                      final dirInsideCount = foldersController.currentNodeFoldersCount(folder) ?? 0;
+                                                      return FolderTile(
+                                                        folder: folder,
+                                                        highlightedFolder: highlightedFolder,
+                                                        controller: foldersController,
+                                                        subtitle: folder.hasSimilarFolderNames ? folder.parent.formattedPath() : null,
+                                                        tracks: tracks,
+                                                        isTracksRecursive: isTracksRecursive,
+                                                        dirInsideCount: dirInsideCount,
+                                                        isHome: true,
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            SliverFixedExtentList.builder(
+                                              itemCount: folderTracks.length,
+                                              itemExtent: Dimensions.inst.trackTileItemExtent,
+                                              itemBuilder: (context, i) {
+                                                final tr = folderTracks[i];
+                                                return TrackTile(
+                                                  properties: properties,
+                                                  index: i,
+                                                  trackOrTwd: tr,
+                                                  tracks: folderTracks,
+                                                  bgColor: i == indexToScrollTo ? highlighedColor : null,
                                                 );
                                               },
                                             ),
-                                          SliverFixedExtentList.builder(
-                                            itemCount: folderTracks.length,
-                                            itemExtent: Dimensions.inst.trackTileItemExtent,
-                                            itemBuilder: (context, i) {
-                                              final tr = folderTracks[i];
-                                              return TrackTile(
-                                                properties: properties,
-                                                index: i,
-                                                trackOrTwd: tr,
-                                                tracks: folderTracks,
-                                                bgColor: i == indexToScrollTo ? highlighedColor : null,
-                                              );
-                                            },
-                                          ),
-                                          kBottomPaddingWidgetSliver,
-                                          scrollToiconBottomPaddingSliver,
-                                        ],
-                                      );
-                                    },
+                                            kBottomPaddingWidgetSliver,
+                                            scrollToiconBottomPaddingSliver,
+                                          ],
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),

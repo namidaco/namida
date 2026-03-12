@@ -19,6 +19,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class FolderTile extends StatefulWidget {
   final Folder folder;
+  final Folder? highlightedFolder;
   final FoldersController controller;
   final List<Track> tracks;
   final bool isTracksRecursive;
@@ -29,6 +30,7 @@ class FolderTile extends StatefulWidget {
   const FolderTile({
     super.key,
     required this.folder,
+    required this.highlightedFolder,
     required this.controller,
     required this.tracks,
     required this.isTracksRecursive,
@@ -177,10 +179,24 @@ class _FolderTileState extends State<FolderTile> {
 
     final thumbnailCoverPath = Indexer.inst.getFallbackFolderArtworkPath(folder: widget.folder);
 
+    final shouldHighlight = widget.folder == widget.highlightedFolder;
+    final bgColor = shouldHighlight ? Color.alphaBlend(theme.focusColor.withOpacityExt(0.25), theme.cardColor) : theme.cardColor;
+    final border = shouldHighlight
+        ? Border(
+            left: BorderSide(
+              color: theme.colorScheme.secondary.withOpacityExt(0.5),
+              width: 2.0,
+            ),
+          )
+        : null;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin, right: Dimensions.tileBottomMargin, left: Dimensions.tileBottomMargin),
       child: NamidaInkWell(
-        bgColor: theme.cardColor,
+        decoration: BoxDecoration(
+          color: bgColor,
+          border: border,
+        ),
         borderRadius: 10.0,
         onTap: () => widget.controller.stepIn(widget.folder),
         onLongPress: _showFolderDialog,

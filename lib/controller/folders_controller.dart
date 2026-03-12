@@ -31,6 +31,7 @@ class FoldersController<T extends Folder, E extends Track> {
   RxBaseCore<Map<T, List<E>>> get foldersMap => _foldersMap;
   LibraryTab get libraryTab => _tab;
   QueueSource get queueSource => _config.queueSource;
+  RxBaseCore<Map<T?, T?>> get lastVisitedFolderMap => _lastVisitedFolderMap;
 
   String getCurrentFolderToBookmark() {
     if (isHome.value) return '';
@@ -79,6 +80,7 @@ class FoldersController<T extends Folder, E extends Track> {
   E? _trackToScrollTo;
 
   final _latestScrollOffset = <T?, double>{};
+  final _lastVisitedFolderMap = <T?, T?>{}.obs;
 
   void refreshAfterSorting() {
     currentFolderslist.refresh(); // refreshes folders
@@ -133,7 +135,10 @@ class FoldersController<T extends Folder, E extends Track> {
       }
     }
 
-    if (!isFromStepOut) _saveScrollOffset(currentFolder.value);
+    if (!isFromStepOut) {
+      _saveScrollOffset(currentFolder.value);
+      _markLastVisitedFolder(currentFolder.value, folder);
+    }
 
     currentFolderslist.value = upcomingFolders;
     currentFolder.value = folder;
@@ -205,6 +210,10 @@ class FoldersController<T extends Folder, E extends Track> {
     } catch (_) {
       _latestScrollOffset[folder] = 0;
     }
+  }
+
+  void _markLastVisitedFolder(T? currentFolder, T? folderToMark) {
+    _lastVisitedFolderMap[currentFolder] = folderToMark;
   }
 
   void _scrollJump(double to) async {
