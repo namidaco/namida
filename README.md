@@ -310,6 +310,9 @@ sudo pacman -S namida-bin       # AUR (Arch Linux)
 sudo apt install ./namida.deb   # Debian/Ubuntu (download .deb from beta releases)
 sudo dnf install ./namida.rpm   # Fedora/RHEL (download .rpm from beta releases)
 
+# Nix (Home Manager) Installation
+# Available at: https://codeberg.org/iWisp360/namida-nix
+
 # make sure mpv is installed
 sudo apt install mpv   # Debian/Ubuntu/Mint
 sudo dnf install mpv   # Fedora/RHEL
