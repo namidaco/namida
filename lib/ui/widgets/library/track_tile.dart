@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -218,6 +219,7 @@ class TrackTile extends StatelessWidget {
   final Selectable trackOrTwd;
   final List<Playable> tracks;
   final TrackTileProperties properties;
+  final HomePageItems? homePageItem;
   final VoidCallback? onTap;
   final VoidCallback? onPlaying;
 
@@ -232,6 +234,7 @@ class TrackTile extends StatelessWidget {
   const TrackTile({
     super.key,
     required this.properties,
+    this.homePageItem,
     required this.trackOrTwd,
     required this.tracks,
     this.onTap,
@@ -412,29 +415,51 @@ class TrackTile extends StatelessWidget {
               onTap:
                   onTap ??
                   () async {
-                    if (SelectedTracksController.inst.selectedTracks.value.isNotEmpty && !isInSelectedTracksPreview) {
-                      _selectTrack(ranged: false);
-                    } else {
-                      if (onPlaying != null) {
-                        onPlaying!();
+                    if (!isInSelectedTracksPreview) {
+                      bool shouldSelect = false;
+                      bool shouldSelectRanged = false;
+                      if (isDesktop) {
+                        if (HardwareKeyboard.instance.isShiftPressed) {
+                          shouldSelect = true;
+                          shouldSelectRanged = true;
+                        } else if (HardwareKeyboard.instance.isControlPressed) {
+                          shouldSelect = true;
+                        } else if (SelectedTracksController.inst.selectedTracks.value.isNotEmpty) {
+                          shouldSelect = true;
+                        }
+                      } else {
+                        if (SelectedTracksController.inst.selectedTracks.value.isNotEmpty) {
+                          shouldSelect = true;
+                        }
+                      }
+
+                      if (shouldSelect) {
+                        _selectTrack(ranged: shouldSelectRanged);
                         return;
                       }
-                      if (queueSource == QueueSource.search) {
-                        ScrollSearchController.inst.unfocusKeyboard();
-                        await Player.inst.playOrPause(
-                          settings.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
-                          settings.trackPlayMode.value.generateQueue(track),
-                          queueSource,
-                          maximumItems: null,
-                        );
-                      } else {
-                        await Player.inst.playOrPause(
-                          index,
-                          tracks,
-                          queueSource,
-                          maximumItems: null,
-                        );
-                      }
+                    }
+
+                    if (onPlaying != null) {
+                      onPlaying!();
+                      return;
+                    }
+                    if (queueSource == QueueSource.search) {
+                      ScrollSearchController.inst.unfocusKeyboard();
+                      await Player.inst.playOrPause(
+                        settings.trackPlayMode.value.shouldBeIndex0 ? 0 : index,
+                        settings.trackPlayMode.value.generateQueue(track),
+                        queueSource,
+                        homePageItem: homePageItem,
+                        maximumItems: null,
+                      );
+                    } else {
+                      await Player.inst.playOrPause(
+                        index,
+                        tracks,
+                        queueSource,
+                        homePageItem: homePageItem,
+                        maximumItems: null,
+                      );
                     }
                   },
               onLongPress: onTap != null

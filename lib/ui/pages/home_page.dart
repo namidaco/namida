@@ -1296,14 +1296,7 @@ class _MixesCardState extends State<_MixesCard> {
                               ),
                               child: TrackTile(
                                 properties: properties,
-                                onTap: () {
-                                  Player.inst.playOrPause(
-                                    index,
-                                    widget.tracks,
-                                    QueueSource.homePageItem,
-                                    homePageItem: HomePageItems.mixes,
-                                  );
-                                },
+                                homePageItem: HomePageItems.mixes,
                                 trackOrTwd: tr,
                                 index: index,
                                 tracks: widget.tracks,
