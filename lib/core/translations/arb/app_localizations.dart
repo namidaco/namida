@@ -5033,6 +5033,12 @@ abstract class AppLocalizations {
   /// **'Unlock'**
   String get unlock;
 
+  /// No description provided for @unsubscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsubscribe'**
+  String get unsubscribe;
+
   /// No description provided for @update.
   ///
   /// In en, this message translates to:

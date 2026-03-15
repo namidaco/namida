@@ -2780,6 +2780,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get unlock => 'باز کردن';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'بروزرسانی';
 
   @override

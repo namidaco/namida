@@ -2780,6 +2780,9 @@ class AppLocalizationsAf extends AppLocalizations {
   String get unlock => 'Ontsluit';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Dateer op';
 
   @override

@@ -2781,6 +2781,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get unlock => 'Avata';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Päivittää';
 
   @override

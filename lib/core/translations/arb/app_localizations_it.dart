@@ -2783,6 +2783,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get unlock => 'Sblocca';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Aggiorna';
 
   @override

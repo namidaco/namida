@@ -2814,6 +2814,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get unlock => 'Разблокировать';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Обновить';
 
   @override

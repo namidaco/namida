@@ -55,7 +55,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String addMoreFromToQueue({required String media}) {
-    return '$media থেকে আরও গান কিউতে যোগ করুন';
+    return '$media থেকে কিউতে আরও ট্র্যাক যোগ করুন';
   }
 
   @override
@@ -355,7 +355,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get confirm => 'নিশ্চিত করুন';
 
   @override
-  String get confirmRefresh => 'রিফ্রেশ করবেন?';
+  String get confirmRefresh => 'আপনি কি রিফ্রেশ করতে চান?';
 
   @override
   String get copiedArtwork => 'আর্টওয়ার্ক সংরক্ষণ করা হয়েছে';
@@ -532,8 +532,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString জন সাবস্ক্রাইবার',
-      one: '$countString জন সাবস্ক্রাইবার',
+      other: '$countString সাবস্ক্রাইবার',
+      one: '$countString সাবস্ক্রাইবার',
     );
     return '$_temp0';
   }
@@ -548,8 +548,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString জন সাবস্ক্রাইবার',
-      one: '$countString জন সাবস্ক্রাইবার',
+      other: '$countString সাবস্ক্রাইবার',
+      one: '$countString সাবস্ক্রাইবার',
     );
     return '$_temp0';
   }
@@ -1206,7 +1206,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get generate => 'তৈরি করুন';
 
   @override
-  String get generateFromDates => 'সময় পরিসীমা';
+  String get generateFromDates => 'সময় অনুযায়ী';
 
   @override
   String get generateFromDatesSubtitle => 'আপনার একটি সময় পরিসীমায় শোনা ট্র্যাকগুলো যোগ করুন';
@@ -1292,7 +1292,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get home => 'হোম';
 
   @override
-  String get hook => 'হুক';
+  String get hook => 'আকর্ষণ';
 
   @override
   String get host => 'হোস্ট';
@@ -1342,7 +1342,7 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
-  String get importTimeRange => 'ইম্পোর্ট সময় পরিসীমা';
+  String get importTimeRange => 'সময়সীমা ইমপোর্ট করুন';
 
   @override
   String get importYoutubeHistory => 'ইউটিউব ইতিহাস ইম্পোর্ট করুন';
@@ -1410,7 +1410,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get interactionReminder => 'ইন্টারঅ্যাকশন রিমাইন্ডার';
 
   @override
-  String get intro => 'ইন্ট্রো';
+  String get intro => 'সূচনা';
 
   @override
   String get invertSelection => 'নির্বাচন বিপরীত করুন';
@@ -1728,7 +1728,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get name => 'নাম';
 
   @override
-  String get nameContainsBadCharacter => 'নামে খারাপ অক্ষর রয়েছে';
+  String get nameContainsBadCharacter => 'নামে অগ্রহণযোগ্য অক্ষর রয়েছে';
 
   @override
   String get never => 'কখনো না';
@@ -1928,7 +1928,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get output => 'আউটপুট';
 
   @override
-  String get outro => 'আউট্রো';
+  String get outro => 'সমাপ্তি';
 
   @override
   String get overrideOldFilesInTheSameFolder => 'একই ফোল্ডারে পুরনো ফাইলগুলিকে ওভাররাইড করুন';
@@ -2474,7 +2474,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String signOutFromName({required String name}) {
-    return '$name থেকে সাইন আউট করুন';
+    return '$name থেকে সাইন আউট করবেন';
   }
 
   @override
@@ -2542,7 +2542,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get speed => 'গতি';
 
   @override
-  String get sponsor => 'স্পন্সর';
+  String get sponsor => 'বিজ্ঞাপন';
 
   @override
   String get sponsorblock => 'স্পন্সরব্লক';
@@ -2790,6 +2790,9 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get unlock => 'আনলক';
+
+  @override
+  String get unsubscribe => 'Unsubscribe';
 
   @override
   String get update => 'আপডেট';

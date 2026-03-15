@@ -2783,6 +2783,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get unlock => 'अनलॉक करें';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'अपडेट करें';
 
   @override

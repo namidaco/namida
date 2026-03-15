@@ -2780,6 +2780,9 @@ class AppLocalizationsBs extends AppLocalizations {
   String get unlock => 'Otključaj';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Ažuriraj';
 
   @override

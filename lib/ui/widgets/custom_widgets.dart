@@ -1822,17 +1822,17 @@ class NamidaRawLikeButton extends StatelessWidget {
     this.enableGradient = false,
   });
 
-  Future<bool> _confirmSomething(String action) async {
+  Future<bool> _confirmRemoval(String action) async {
     bool confirmed = false;
     await NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        bodyText: lang.confirm,
+        bodyText: '$action?',
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: action.toUpperCase(),
+            text: lang.remove.toUpperCase(),
             onPressed: () async {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
@@ -1865,7 +1865,7 @@ class NamidaRawLikeButton extends StatelessWidget {
         isLiked: isLiked,
         onTap: (isLiked) async {
           if (isLiked && removeConfirmationAction != null) {
-            final confirmed = await _confirmSomething(removeConfirmationAction!);
+            final confirmed = await _confirmRemoval(removeConfirmationAction!);
             if (!confirmed) return isLiked;
           }
           return await onTap?.call(isLiked);

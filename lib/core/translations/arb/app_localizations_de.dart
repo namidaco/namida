@@ -2784,6 +2784,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get unlock => 'Freischalten';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Update';
 
   @override

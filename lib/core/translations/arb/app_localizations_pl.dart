@@ -2781,6 +2781,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get unlock => 'Odblokuj';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Aktualizuj';
 
   @override

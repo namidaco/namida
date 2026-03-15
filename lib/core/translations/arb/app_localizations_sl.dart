@@ -2780,6 +2780,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get unlock => 'Odkleni';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Posodobi';
 
   @override

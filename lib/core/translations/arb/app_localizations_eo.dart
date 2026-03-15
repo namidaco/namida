@@ -2780,6 +2780,9 @@ class AppLocalizationsEo extends AppLocalizations {
   String get unlock => 'Malŝlosi';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Ĝisdatigi';
 
   @override

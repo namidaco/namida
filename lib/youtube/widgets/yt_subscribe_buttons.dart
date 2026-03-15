@@ -219,11 +219,11 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
       dialog: CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        bodyText: lang.confirm,
+        bodyText: "${lang.confirm}: ${lang.unsubscribe}?",
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: lang.remove.toUpperCase(),
+            text: lang.unsubscribe.toUpperCase(),
             onPressed: () async {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();

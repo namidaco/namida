@@ -70,6 +70,7 @@ class _YTUtilsCommentActions {
     required void Function()? onDeleted,
   }) async {
     return await _confirmRemoveCommentOrReply(
+          lang.comment,
           comment.content.rawText ?? '',
           () async {
             final didDelete = await YoutubeInfoController.commentAction.deleteComment(
@@ -154,6 +155,7 @@ class _YTUtilsCommentActions {
     required RxBaseCore<YoutiPieCommentReplyResult?>? mainList,
   }) async {
     return await _confirmRemoveCommentOrReply(
+          lang.reply,
           reply.content.rawText ?? '',
           () async {
             final didDelete = await YoutubeInfoController.commentAction.deleteReply(
@@ -219,7 +221,7 @@ class _YTUtilsCommentActions {
     return author;
   }
 
-  Future<T?> _confirmRemoveCommentOrReply<T>(String content, Future<T> Function()? onConfirm) async {
+  Future<T?> _confirmRemoveCommentOrReply<T>(String title, String content, Future<T> Function()? onConfirm) async {
     String? author = _getCurrentAutorIfActive();
     if (author == null) return null;
 
@@ -236,7 +238,7 @@ class _YTUtilsCommentActions {
       dialog: CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        title: lang.confirm,
+        title: "${lang.delete}: $title?",
         actions: [
           const CancelButton(),
           ObxO(

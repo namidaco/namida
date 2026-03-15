@@ -2782,6 +2782,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get unlock => 'Kilidi Aç';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Güncelle';
 
   @override

@@ -2782,6 +2782,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get unlock => 'Mở khóa';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Cập nhật';
 
   @override

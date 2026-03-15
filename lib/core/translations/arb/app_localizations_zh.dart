@@ -2791,6 +2791,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unlock => '解锁';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => '更新';
 
   @override

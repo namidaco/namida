@@ -2779,6 +2779,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get unlock => 'アンロック';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'アップデート';
 
   @override

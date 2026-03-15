@@ -2783,6 +2783,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get unlock => 'Ontgrendelen';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Bijwerken';
 
   @override

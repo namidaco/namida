@@ -2780,6 +2780,9 @@ class AppLocalizationsRo extends AppLocalizations {
   String get unlock => 'Deblochează';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Actualizează';
 
   @override

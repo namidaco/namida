@@ -2822,6 +2822,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get unlock => 'Розблокувати';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Оновити';
 
   @override

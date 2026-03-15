@@ -2781,6 +2781,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get unlock => 'Membuka kunci';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Memperbarui';
 
   @override

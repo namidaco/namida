@@ -2788,6 +2788,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get unlock => 'Déverrouiller';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Mise à jour';
 
   @override

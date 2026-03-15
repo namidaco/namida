@@ -2785,6 +2785,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get unlock => 'திறக்கவும்';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'மேம்படுத்தல்';
 
   @override

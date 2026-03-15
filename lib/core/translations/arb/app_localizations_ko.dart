@@ -2779,6 +2779,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get unlock => '잠금 해제';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => '업데이트';
 
   @override

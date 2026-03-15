@@ -39,7 +39,7 @@ class YtVideoLikeManager {
       dialog: CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        bodyText: lang.confirm,
+        bodyText: "${lang.confirm}: $action?",
         actions: [
           const CancelButton(),
           NamidaButton(

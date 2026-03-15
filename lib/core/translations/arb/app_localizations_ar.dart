@@ -9,13 +9,13 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get about => 'عن';
+  String get about => 'حول';
 
   @override
   String get active => 'نشط';
 
   @override
-  String get add => 'اضافة';
+  String get add => 'إضافة';
 
   @override
   String get addAccount => 'إضافة حساب';
@@ -24,7 +24,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addAll => 'أضف الكل';
 
   @override
-  String get addAllAndRemoveOldOnes => 'أضف الكل وأحذف القديم';
+  String get addAllAndRemoveOldOnes => 'أضف الكل واحذف القديم';
 
   @override
   String get addAsANewPlaylist => 'أضف كقائمة تشغيل جديدة';
@@ -39,19 +39,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addLanguage => 'إضافة لغة';
 
   @override
-  String get addLanguageSubtitle => 'ساعد في ترجمة ناميدا إلى لغتك';
+  String get addLanguageSubtitle => 'ساعدنا في ترجمة Namida إلى لغتك';
 
   @override
-  String get addLrcFile => 'إضافة ملف LRC';
+  String get addLrcFile => 'أضف ملف LRC';
 
   @override
-  String get addMoreFromThisAlbum => 'أضف المزيد من هذا الألبوم إلى قائمة الانتظار';
+  String get addMoreFromThisAlbum => 'إضافة المزيد من هذا الألبوم إلى قائمة الانتظار';
 
   @override
-  String get addMoreFromThisArtist => 'أضف المزيد من هذا الفنان إلى قائمة الانتظار';
+  String get addMoreFromThisArtist => 'إضافة المزيد من هذا الفنان إلى قائمة الانتظار';
 
   @override
-  String get addMoreFromThisFolder => 'أضف المزيد من هذا المجلد إلى قائمة الانتظار';
+  String get addMoreFromThisFolder => 'إضافة المزيد من هذا المجلد إلى قائمة الانتظار';
 
   @override
   String addMoreFromToQueue({required String media}) {
@@ -59,40 +59,40 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get addOnlyMissing => 'أضف المفقودة فقط';
+  String get addOnlyMissing => 'إضافة المفقودة فقط';
 
   @override
-  String get addToFavourites => 'أضف إلى المفضلة';
+  String get addToFavourites => 'إضافة إلى المفضلة';
 
   @override
-  String get addToPlaylist => 'أضف إلى قائمة التشغيل';
+  String get addToPlaylist => 'إضافة إلى قائمة التشغيل';
 
   @override
-  String get addTracksAtTheBeginning => 'إضافة مسارات في البداية';
+  String get addTracksAtTheBeginning => 'إضافة المسارات في البداية';
 
   @override
-  String get added => 'مضاف';
+  String get added => 'تمت الإضافة';
 
   @override
   String get advanced => 'متقدم';
 
   @override
-  String get advancedSettings => 'متقدمة';
+  String get advancedSettings => 'خيارات متقدمة';
 
   @override
-  String get advancedSettingsSubtitle => 'الإعدادات المتقدمة، لا تلمس';
+  String get advancedSettingsSubtitle => 'إعدادات متقدمة، لا تلمسها';
 
   @override
-  String get alarm => 'منبه';
+  String get alarm => 'المنبه';
 
   @override
-  String get album => 'الألبوم';
+  String get album => 'ألبوم';
 
   @override
-  String get albumArtist => 'ألبوم الفنان';
+  String get albumArtist => 'فنان الألبوم';
 
   @override
-  String get albumArtists => 'ألبوم الفنانين';
+  String get albumArtists => 'فنانو الألبوم';
 
   @override
   String get albumIdentifiers => 'معرفات الألبوم';
@@ -101,7 +101,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get albumThumbnailSizeInList => 'حجم الصورة المصغرة للألبوم';
 
   @override
-  String get albumTileCustomization => 'تخصيص بلاط الألبوم';
+  String get albumTileCustomization => 'تخصيص لوحة الألبوم';
 
   @override
   String get albums => 'الألبومات';
@@ -119,34 +119,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get alreadyExists => 'موجود بالفعل';
 
   @override
-  String get always => 'دائمًا';
+  String get always => 'دائماً';
 
   @override
-  String get alwaysAsk => 'اسأل دائمًا';
+  String get alwaysAsk => 'السؤال دائماً';
 
   @override
-  String get alwaysDim => 'خافت دائما';
+  String get alwaysDim => 'تعتيم دائم';
 
   @override
-  String get alwaysExpandedSearchbar => 'توسيع شريط البحث دائما';
+  String get alwaysExpandedSearchbar => 'شريط بحث موسّع دائماً';
 
   @override
-  String get alwaysRestore => 'استعادة دائما';
+  String get alwaysRestore => 'استعادة دائماً';
 
   @override
-  String get animatingThumbnailIntensity => 'قوة حركة الصورة المصغرة';
+  String get animatingThumbnailIntensity => 'كثافة حركة الصورة المصغرة';
 
   @override
-  String get animatingThumbnailInversed => 'عكس التأثيرات الحركية';
+  String get animatingThumbnailInversed => 'عكس الرسوم المتحركة';
 
   @override
-  String get animatingThumbnailInversedSubtitle => 'ستؤدي القمم العالية إلى تصغير حجم الصورة المصغرة';
+  String get animatingThumbnailInversedSubtitle => 'ستؤدي القمم العالية إلى تصغير الصورة المصغرة';
 
   @override
-  String get anotherProcessIsRunning => 'هناك عملية أخرى قيد التشغيل بالفعل.';
+  String get anotherProcessIsRunning => 'هناك عملية أخرى قيد التشغيل حالياً.';
 
   @override
-  String get appIcon => 'ايقونة التطبيق';
+  String get appIcon => 'أيقونة التطبيق';
 
   @override
   String get appVersion => 'إصدار التطبيق';
@@ -194,7 +194,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get autoExtractTitleAndArtistFromVideoTitle => 'استخراج العنوان والفنان تلقائيًا من عنوان الفيديو';
 
   @override
-  String get autoGenerated => 'إنشاء تلقائي';
+  String get autoGenerated => 'منشأ تلقائيا';
 
   @override
   String get autoSkip => 'تخطي تلقائي';
@@ -663,7 +663,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get customizations => 'تخصيصات';
 
   @override
-  String get customizationsSubtitle => 'قم بتخصيص الشكل الذي يبدو عليه المشغل، اجعله خاصًا بك';
+  String get customizationsSubtitle => 'خصص مظهر المشغل ليلائم ذوقك الخاص';
 
   @override
   String dataIsProvidedByName({required String name}) {
@@ -811,7 +811,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get displayActualPositionInsteadOfDifferenceWhileSeeking => 'عرض الزمن الحالي بدلا من عرض الفرق الزمني';
 
   @override
-  String get displayAlbumCardTopRightDate => 'التاريخ الأيمن أعلى بطاقة الألبوم';
+  String get displayAlbumCardTopRightDate => 'تاريخ أعلى يمين بطاقة الألبوم';
 
   @override
   String get displayAlbumCardTopRightDateSubtitle => 'عرض تاريخ الألبوم في أعلى يمين بطاقة الألبوم';
@@ -2789,6 +2789,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unlock => 'فتح القفل';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'تَحدِيث';
 
   @override
@@ -2804,7 +2807,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get useCollapsedSettingTiles => 'استخدم مربعات الإعداد المطوية';
 
   @override
-  String get useMediaStore => 'استخدم سجل الوسائط';
+  String get useMediaStore => 'استخدام مخزن الوسائط';
 
   @override
   String get useMediaStoreSubtitle =>
@@ -2814,10 +2817,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get usePitchBlack => 'استخدم الأسود الداكن';
 
   @override
-  String get usePitchBlackSubtitle => 'مفيد لشاشات اموليد.. وذو مظهر رائع';
+  String get usePitchBlackSubtitle => 'مفيد لشاشات AMOLED.. ويبدو أكثر أناقة';
 
   @override
-  String get used => 'مستخدم';
+  String get used => 'مُستخدَم';
 
   @override
   String get value => 'القيمة';
@@ -2835,13 +2838,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get video => 'فيديو';
 
   @override
-  String get videoCache => 'ذاكرة التخزين المؤقت للفيديو';
+  String get videoCache => 'التخزين المؤقت للفيديو';
 
   @override
-  String get videoCacheFile => 'ملف الفيديو المخزن مؤقتا';
+  String get videoCacheFile => 'ملف الفيديو المؤقت';
 
   @override
-  String get videoCacheFiles => 'ملفات التخزين المؤقت للفيديو';
+  String get videoCacheFiles => 'ملفات الفيديو المؤقتة';
 
   @override
   String get videoOnly => 'الفيديوهات فقط';
@@ -2898,7 +2901,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get waveformBarsCount => 'عدد أشرطة الشكل الموجي';
 
   @override
-  String get webmNoEditTagsSupport => 'لا يدعم تنسيق WEBM تحرير العلامات';
+  String get webmNoEditTagsSupport => 'صيغة WEBM لا تدعم تعديل الوسوم';
 
   @override
   String get week => 'اسبوع';
@@ -2915,19 +2918,19 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get yourCustomOrderWillBeLost => 'سيتم فقدان طلبك المخصص، هل أنت متأكد؟';
+  String get yourCustomOrderWillBeLost => 'سيتم فقدان ترتيبك المخصص، هل أنت متأكد؟';
 
   @override
   String get youtube => 'يوتيوب';
 
   @override
-  String get youtubeMusic => 'موسيقى اليوتيوب';
+  String get youtubeMusic => 'يوتيوب ميوزك';
 
   @override
   String get youtubeSettingsSubtitle => 'تخصيص تجربة يوتيوب';
 
   @override
-  String get youtubeStyleMiniplayer => 'المشغل الصغير على طريقة اليوتيوب';
+  String get youtubeStyleMiniplayer => 'المشغل المصغر بنمط يوتيوب';
 
   @override
   String get ytPreferNewComments => 'تفضيل التعليقات الجديدة عندما يكون ذلك ممكنا';

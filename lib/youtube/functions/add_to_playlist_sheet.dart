@@ -224,7 +224,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
       dialog: CustomBlurryDialog(
         isWarning: true,
         normalTitleStyle: true,
-        bodyText: lang.confirm,
+        bodyText: "${lang.removeFromPlaylist}?",
         actions: [
           const CancelButton(),
           NamidaButton(

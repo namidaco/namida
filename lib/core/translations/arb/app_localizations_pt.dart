@@ -2780,6 +2780,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get unlock => 'Desbloquear';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Atualizar';
 
   @override

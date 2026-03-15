@@ -2780,6 +2780,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get unlock => 'Desbloquear';
 
   @override
+  String get unsubscribe => 'Unsubscribe';
+
+  @override
   String get update => 'Actualizar';
 
   @override
