@@ -733,52 +733,48 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           );
         }
         // -- fallback images
-        return ConstrainedBox(
-          constraints: videoBoxMaxConstraints,
-          child: LayoutWidthProvider(
-            builder: (context, providerMaxWidth) {
-              // -- in landscape, the size is calculated based on height, to fit in correctly.
-              final fallbackHeight = inLandscape ? maxHeight : maxWidth * 9 / 16;
-              final fallbackWidth = (inLandscape ? maxHeight * 16 / 9 : maxWidth).withMaximum(providerMaxWidth);
-              return ObxO(
-                rx: Player.inst.currentItem,
-                builder: (context, item) {
-                  if (item is YoutubeID) {
-                    final vidId = item.id;
-                    return YoutubeThumbnail(
-                      type: ThumbnailType.video,
-                      key: Key(vidId),
-                      isImportantInCache: true,
-                      width: fallbackWidth,
-                      height: fallbackHeight,
-                      borderRadius: 0,
-                      blur: 0,
-                      disableBlurBgSizeShrink: true,
-                      videoId: vidId,
-                      displayFallbackIcon: false,
-                      compressed: false,
-                      preferLowerRes: false,
-                      fit: BoxFit.cover, // never change this lil bro
-                    );
-                  }
-                  final track = item is Selectable ? item.track : null;
-                  return ArtworkWidget(
-                    key: ValueKey(track?.path),
-                    track: track,
-                    path: track?.pathToImage,
-                    thumbnailSize: fallbackWidth,
+        return LayoutWidthProvider(
+          builder: (context, providerMaxWidth) {
+            // -- in landscape, the size is calculated based on height, to fit in correctly.
+            final fallbackWidth = (inLandscape ? maxHeight * 16 / 9 : maxWidth).withMaximum(providerMaxWidth);
+            final fallbackHeight = double.infinity;
+            return ObxO(
+              rx: Player.inst.currentItem,
+              builder: (context, item) {
+                if (item is YoutubeID) {
+                  final vidId = item.id;
+                  return YoutubeThumbnail(
+                    type: ThumbnailType.video,
+                    key: Key(vidId),
+                    isImportantInCache: true,
                     width: fallbackWidth,
                     height: fallbackHeight,
                     borderRadius: 0,
                     blur: 0,
                     disableBlurBgSizeShrink: true,
+                    videoId: vidId,
+                    displayFallbackIcon: false,
                     compressed: false,
-                    fit: BoxFit.cover, // never change this my friend
+                    preferLowerRes: false,
+                    fit: BoxFit.contain, // never change this lil bro
                   );
-                },
-              );
-            },
-          ),
+                }
+                final track = item is Selectable ? item.track : null;
+                return ArtworkWidget(
+                  key: ValueKey(track?.path),
+                  track: track,
+                  path: track?.pathToImage,
+                  thumbnailSize: fallbackWidth,
+                  width: fallbackWidth,
+                  borderRadius: 0,
+                  blur: 0,
+                  disableBlurBgSizeShrink: true,
+                  compressed: false,
+                  fit: BoxFit.contain, // never change this my friend
+                );
+              },
+            );
+          },
         );
       },
     );

@@ -20,6 +20,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/packages/image_advanced.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -342,68 +343,73 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                     alignment: Alignment.center,
                     children: [
                       if (canDisplayImage)
-                        SizedBox(
-                          width: boxWidth,
-                          child: Image(
-                            image: ResizeImage.resizeIfNeeded(
-                              null,
-                              finalCache,
-                              (goodImagePath ? FileImage(File(_imagePath!)) : MemoryImage(bytes!)) as ImageProvider,
-                            ),
-                            gaplessPlayback: true,
-                            fit: widget.fit,
-                            alignment: widget.alignment,
-                            filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
-                            width: realWidthAndHeight,
-                            height: realWidthAndHeight,
-                            frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
-                              if (wasSynchronouslyLoaded || frame == null) return child;
-                              if (ArtworkWidget.isResizingAppWindow || ArtworkWidget.isMovingDrawer) return child;
-                              if (widget.fadeMilliSeconds == 0) return child;
-                              if (goodImagePath && bytes != null && bytes.isNotEmpty) return child;
+                        ImageAdvanced(
+                          image: ResizeImage.resizeIfNeeded(
+                            null,
+                            finalCache,
+                            (goodImagePath ? FileImage(File(_imagePath!)) : MemoryImage(bytes!)) as ImageProvider,
+                          ),
+                          gaplessPlayback: true,
+                          fit: widget.fit,
+                          alignment: widget.alignment,
+                          filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
+                          width: (info) {
+                            final aspectRatio = info == null ? null : info.image.width / info.image.height;
+                            final fittedWidth = widget.forceSquared
+                                ? null
+                                : aspectRatio == null
+                                ? null
+                                : (boxHeight * aspectRatio).clampDouble(0.0, boxWidth);
+                            return fittedWidth ?? realWidthAndHeight;
+                          },
+                          height: (_) => realWidthAndHeight,
+                          frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
+                            if (wasSynchronouslyLoaded || frame == null) return child;
+                            if (ArtworkWidget.isResizingAppWindow || ArtworkWidget.isMovingDrawer) return child;
+                            if (widget.fadeMilliSeconds == 0) return child;
+                            if (goodImagePath && bytes != null && bytes.isNotEmpty) return child;
 
-                              return TweenAnimationBuilder(
-                                tween: Tween<double>(begin: 1.0, end: 0.0),
-                                duration: Duration(milliseconds: widget.fadeMilliSeconds),
-                                child: child,
-                                builder: (context, value, child) {
-                                  return Stack(
-                                    textDirection: TextDirection.ltr,
-                                    children: [
-                                      child!,
-                                      Positioned.fill(
-                                        child: IgnorePointer(
-                                          child: ColoredBox(color: theme.cardColor.withOpacityExt(value)),
-                                        ),
+                            return TweenAnimationBuilder(
+                              tween: Tween<double>(begin: 1.0, end: 0.0),
+                              duration: Duration(milliseconds: widget.fadeMilliSeconds),
+                              child: child,
+                              builder: (context, value, child) {
+                                return Stack(
+                                  textDirection: TextDirection.ltr,
+                                  children: [
+                                    child!,
+                                    Positioned.fill(
+                                      child: IgnorePointer(
+                                        child: ColoredBox(color: theme.cardColor.withOpacityExt(value)),
                                       ),
-                                    ],
-                                  );
-                                },
-                              );
-                            }),
-                            errorBuilder: (context, error, stackTrace) {
-                              if (!_triedDeleting) {
-                                _triedDeleting = true;
-                                if (error.toString().contains('Invalid image data')) {
-                                  final fp = widget.path;
-                                  if (fp != null && widget.fallbackToFolderCover && (fp.startsWith(AppDirs.APP_CACHE) || fp.startsWith(AppDirs.USER_DATA))) {
-                                    // -- fallbackToFolderCover should be always true for app cached images.
-                                    // -- we are allowed to delete only if specified image is app-generated.
-                                    File(fp).tryDeleting();
-                                    FileImage(File(fp)).evict();
-                                  }
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          }),
+                          errorBuilder: (context, error, stackTrace) {
+                            if (!_triedDeleting) {
+                              _triedDeleting = true;
+                              if (error.toString().contains('Invalid image data')) {
+                                final fp = widget.path;
+                                if (fp != null && widget.fallbackToFolderCover && (fp.startsWith(AppDirs.APP_CACHE) || fp.startsWith(AppDirs.USER_DATA))) {
+                                  // -- fallbackToFolderCover should be always true for app cached images.
+                                  // -- we are allowed to delete only if specified image is app-generated.
+                                  File(fp).tryDeleting();
+                                  FileImage(File(fp)).evict();
                                 }
                               }
-                              return _getStockWidget(
-                                key: key,
-                                boxWidth: boxWidth,
-                                boxHeight: boxHeight,
-                                borderRadius: borderR,
-                                shape: shape,
-                                stackWithOnTopWidgets: false,
-                              );
-                            },
-                          ),
+                            }
+                            return _getStockWidget(
+                              key: key,
+                              boxWidth: boxWidth,
+                              boxHeight: boxHeight,
+                              borderRadius: borderR,
+                              shape: shape,
+                              stackWithOnTopWidgets: false,
+                            );
+                          },
                         ),
                       ...?widget.onTopWidgets,
                     ],
