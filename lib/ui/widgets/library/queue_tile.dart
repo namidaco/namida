@@ -54,9 +54,9 @@ class QueueTile extends StatelessWidget {
                 title: lang.undoChanges,
                 message: lang.undoChangesDeletedQueue,
                 displayDuration: SnackDisplayDuration.long,
-                button: (
-                  lang.undo,
-                  () async => await QueueController.inst.reAddQueue(oldQueue),
+                button: SnackbarButton(
+                  text: lang.undo,
+                  function: () async => await QueueController.inst.reAddQueue(oldQueue),
                 ),
               );
             },

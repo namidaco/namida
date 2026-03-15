@@ -6487,8 +6487,8 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
         imgProvider: imgProvider,
         heroTag: heroTag,
         save: () async {
-          final saveDirPath = await onSave(imgFile, imgBytes);
-          NamidaOnTaps.inst.showSavedImageInSnack(saveDirPath, themeColor?.call());
+          final savePath = await onSave(imgFile, imgBytes);
+          NamidaOnTaps.inst.showSavedImageInSnack(savePath, themeColor?.call());
         },
         close: NamidaNavigator.inst.closeDialog,
       ),

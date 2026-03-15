@@ -632,7 +632,7 @@ SnackbarController snackyy({
   double borderRadius = 12.0,
   Color? leftBarIndicatorColor,
   Color? borderColor,
-  (String text, FutureOr<void> Function() function)? button,
+  SnackbarButton? button,
   bool? isError,
   int? maxLinesMessage,
 }) {
@@ -716,26 +716,35 @@ SnackbarController snackyy({
               ),
             ),
             if (button != null)
-              TextButton(
-                style: ButtonStyle(
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  maximumSize: snackWidth == null
-                      ? null
-                      : material.WidgetStatePropertyAll(
-                          Size(snackWidth * 0.5, double.infinity),
-                        ),
-                ),
-                onPressed: () {
-                  if (alreadyTappedButton) return;
-                  alreadyTappedButton = true;
-                  button.$2();
-                  snackbarController.close();
-                },
-                child: NamidaButtonText(
-                  button.$1,
-                  style: getTextStyle(FontWeight.bold, 14.0, action: true),
-                ),
-              ),
+              button.icon != null
+                  ? IconButton(
+                      tooltip: button.text,
+                      onPressed: button.function,
+                      icon: Icon(
+                        button.icon!,
+                        size: 20.0,
+                      ),
+                    )
+                  : TextButton(
+                      style: ButtonStyle(
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        maximumSize: snackWidth == null
+                            ? null
+                            : material.WidgetStatePropertyAll(
+                                Size(snackWidth * 0.5, double.infinity),
+                              ),
+                      ),
+                      onPressed: () {
+                        if (alreadyTappedButton) return;
+                        alreadyTappedButton = true;
+                        button.function();
+                        snackbarController.close();
+                      },
+                      child: NamidaButtonText(
+                        button.text,
+                        style: getTextStyle(FontWeight.bold, 14.0, action: true),
+                      ),
+                    ),
           ],
         ),
       ),
@@ -791,6 +800,18 @@ SnackbarController snackyy({
   snackbarController = SnackbarController(snackbar);
   snackbarController.show();
   return snackbarController;
+}
+
+class SnackbarButton {
+  final String text;
+  final IconData? icon;
+  final FutureOr<void> Function() function;
+
+  const SnackbarButton({
+    required this.text,
+    this.icon,
+    required this.function,
+  });
 }
 
 class _OpenedNumbersManager {

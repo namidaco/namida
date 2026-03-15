@@ -262,14 +262,14 @@ class YoutubeAccountController {
       isError: true,
       displayDuration: SnackDisplayDuration.long,
       button: manageSubscriptionButton
-          ? (
-              lang.manage,
-              const YoutubeManageSubscriptionPage().navigate,
+          ? SnackbarButton(
+              text: lang.manage,
+              function: const YoutubeManageSubscriptionPage().navigate,
             )
           : manageAccountButton
-          ? (
-              lang.signIn,
-              const YoutubeAccountManagePage().navigate,
+          ? SnackbarButton(
+              text: lang.signIn,
+              function: const YoutubeAccountManagePage().navigate,
             )
           : null,
     );

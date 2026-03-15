@@ -90,9 +90,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     snackyy(
       message: "${lang.added}: ${addedTracksLength.displayTrackKeyword}",
       button: addedTracksLength > 0
-          ? (
-              lang.undo,
-              () async => await updatePropertyInPlaylist(playlist.name, tracks: oldTracksList, modifiedDate: originalModifyDate),
+          ? SnackbarButton(
+              text: lang.undo,
+              function: () async => await updatePropertyInPlaylist(playlist.name, tracks: oldTracksList, modifiedDate: originalModifyDate),
             )
           : null,
     );

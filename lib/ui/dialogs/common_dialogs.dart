@@ -192,9 +192,9 @@ class NamidaDialogs {
         title: lang.undoChanges,
         message: lang.undoChangesDeletedPlaylist,
         displayDuration: SnackDisplayDuration.long,
-        button: (
-          lang.undo,
-          () async => await PlaylistController.inst.reAddPlaylist(playlist, playlist.modifiedDate, artworkBytes: artworkBytes),
+        button: SnackbarButton(
+          text: lang.undo,
+          function: () async => await PlaylistController.inst.reAddPlaylist(playlist, playlist.modifiedDate, artworkBytes: artworkBytes),
         ),
       );
     } else {

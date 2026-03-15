@@ -61,9 +61,9 @@ class PermissionManager {
       displayDuration: SnackDisplayDuration.eternal,
       top: false,
       isError: true,
-      button: (
-        lang.dontAskAgain,
-        () => settings.save(canAskForBatteryOptimizations: false),
+      button: SnackbarButton(
+        text: lang.dontAskAgain,
+        function: () => settings.save(canAskForBatteryOptimizations: false),
       ),
     );
     await Future.delayed(const Duration(seconds: 1));

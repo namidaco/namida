@@ -101,7 +101,7 @@ class EditDeleteController {
     return (deletedCount: deleted, sizeOfDeleted: size);
   }
 
-  /// returns save directory path if saved successfully
+  /// returns save file if saved successfully
   Future<String?> saveTrackArtworkToStorage(Track track) async {
     if (!await requestManageStoragePermission()) {
       return null;
@@ -124,19 +124,19 @@ class EditDeleteController {
       final newImgFilePath = FileParts.joinPath(saveDirPath, filename);
       if (fileToCopy != null) {
         await fileToCopy.copy(newImgFilePath);
-        return saveDirPath;
+        return newImgFilePath;
       } else if (bytesToCopy != null) {
         final f = File(newImgFilePath);
         await f.create(recursive: true);
         await f.writeAsBytes(bytesToCopy);
-        return saveDirPath;
+        return newImgFilePath;
       }
     }
 
     return null;
   }
 
-  /// returns save directory path if saved successfully
+  /// returns save path if saved successfully
   Future<String?> saveImageToStorage(File imageFile) async {
     if (!await requestManageStoragePermission()) {
       return null;
@@ -146,7 +146,7 @@ class EditDeleteController {
     final newPath = FileParts.joinPath(saveDirPath, "${imageFile.path.getFilenameWOExt}.png");
     try {
       await imageFile.copy(newPath);
-      return saveDirPath;
+      return newPath;
     } catch (e) {
       printy(e, isError: true);
       return null;

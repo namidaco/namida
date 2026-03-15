@@ -657,12 +657,12 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       case TrackExecuteActions.saveArtwork:
         item.execute(
           selectable: (finalItem) async {
-            final saveDirPath = await EditDeleteController.inst.saveTrackArtworkToStorage(finalItem.track);
-            NamidaOnTaps.inst.showSavedImageInSnack(saveDirPath, null);
+            final savePath = await EditDeleteController.inst.saveTrackArtworkToStorage(finalItem.track);
+            NamidaOnTaps.inst.showSavedImageInSnack(savePath, null);
           },
           youtubeID: (finalItem) async {
-            final saveDirPath = await YTUtils.copyThumbnailToStorage(finalItem.id);
-            NamidaOnTaps.inst.showSavedImageInSnack(saveDirPath, null);
+            final savePath = await YTUtils.copyThumbnailToStorage(finalItem.id);
+            NamidaOnTaps.inst.showSavedImageInSnack(savePath, null);
           },
         );
       case TrackExecuteActions.editTags:

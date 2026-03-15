@@ -73,9 +73,9 @@ class Lyrics {
           top: false,
           displayDuration: SnackDisplayDuration.tutorial,
           icon: Broken.book_saved,
-          button: (
-            lang.done,
-            () => settings.tutorial.save(lyricsLongPressFullScreen: false),
+          button: SnackbarButton(
+            text: lang.done,
+            function: () => settings.tutorial.save(lyricsLongPressFullScreen: false),
           ),
         );
       }

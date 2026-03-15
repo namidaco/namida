@@ -27,6 +27,7 @@ import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -191,9 +192,9 @@ class NamidaOnTaps {
       title: lang.undoChanges,
       message: lang.undoChangesDeletedQueue,
       displayDuration: SnackDisplayDuration.long,
-      button: (
-        lang.undo,
-        () async => await QueueController.inst.reAddQueue(oldQueue),
+      button: SnackbarButton(
+        text: lang.undo,
+        function: () async => await QueueController.inst.reAddQueue(oldQueue),
       ),
     );
   }
@@ -204,9 +205,9 @@ class NamidaOnTaps {
         title: lang.undoChanges,
         message: lang.undoChangesDeletedTrack,
         displayDuration: SnackDisplayDuration.long,
-        button: (
-          lang.undo,
-          whatDoYouWant,
+        button: SnackbarButton(
+          text: lang.undo,
+          function: whatDoYouWant,
         ),
       );
     }
@@ -749,15 +750,28 @@ class NamidaOnTaps {
     return actionToUse;
   }
 
-  void showSavedImageInSnack(String? saveDirPath, Color? themeColor) {
-    String title = lang.copiedArtwork;
-    String subtitle = '${lang.savedIn}: $saveDirPath';
-    Color snackColor = themeColor ?? CurrentColor.inst.color;
+  void showSavedImageInSnack(String? path, Color? themeColor) {
+    String title;
+    String subtitle;
+    Color snackColor;
+    SnackbarButton? button;
 
-    if (saveDirPath == null) {
+    if (path == null) {
       title = lang.error;
       subtitle = lang.couldntSaveImage;
       snackColor = Colors.red;
+    } else {
+      final parentPath = File(path).parent.path;
+      title = lang.copiedArtwork;
+      subtitle = '${lang.savedIn}: $parentPath';
+      snackColor = themeColor ?? CurrentColor.inst.color;
+      if (NamidaChannel.inst.canOpenFileInExplorer) {
+        button = SnackbarButton(
+          text: lang.openInFileExplorer,
+          icon: Broken.export_1,
+          function: () => NamidaChannel.inst.openFileInExplorer(path),
+        );
+      }
     }
     snackyy(
       title: title,
@@ -765,6 +779,7 @@ class NamidaOnTaps {
       leftBarIndicatorColor: snackColor,
       altDesign: true,
       top: false,
+      button: button,
     );
   }
 }

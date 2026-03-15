@@ -67,9 +67,9 @@ class BackupController {
         title: "${lang.error}: ${lang.backupAndRestore} - ${lang.automaticBackup}",
         message: lang.storagePermissionDenied,
         isError: true,
-        button: (
-          lang.manage,
-          () async {
+        button: SnackbarButton(
+          text: lang.manage,
+          function: () async {
             reqCompleter = Completer<void>();
             final granted = await requestManageStoragePermission();
             permissionCompleter?.completeIfWasnt(granted);

@@ -88,9 +88,9 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     snackyy(
       message: "${lang.added}: ${addedVideosLength.displayVideoKeyword}",
       button: addedVideosLength > 0
-          ? (
-              lang.undo,
-              () async => await updatePropertyInPlaylist(playlist.name, tracks: oldVideosList, modifiedDate: originalModifyDate),
+          ? SnackbarButton(
+              text: lang.undo,
+              function: () async => await updatePropertyInPlaylist(playlist.name, tracks: oldVideosList, modifiedDate: originalModifyDate),
             )
           : null,
     );

@@ -296,9 +296,9 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
         onLongPress: () async {
           final file = files[fileIndex].$2;
           if (file == null) return;
-          final saveDirPath = await EditDeleteController.inst.saveImageToStorage(file);
+          final savePath = await EditDeleteController.inst.saveImageToStorage(file);
           // ignore: use_build_context_synchronously
-          NamidaOnTaps.inst.showSavedImageInSnack(saveDirPath, context.theme.colorScheme.surface);
+          NamidaOnTaps.inst.showSavedImageInSnack(savePath, context.theme.colorScheme.surface);
         },
         child: PhotoViewGallery.builder(
           pageController: pageController,

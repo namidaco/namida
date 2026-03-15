@@ -806,7 +806,7 @@ class YTUtils {
         title: lang.undoChanges,
         message: lang.undoChangesDeletedTrack,
         displayDuration: SnackDisplayDuration.long,
-        button: (lang.undo, whatDoYouWant),
+        button: SnackbarButton(text: lang.undo, function: whatDoYouWant),
       );
     }
 

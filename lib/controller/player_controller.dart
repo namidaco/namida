@@ -187,7 +187,7 @@ class Player {
     _audioHandler.onVideoError = (e, _) {
       if (e is PlatformException) {
         final itemId = currentVideo?.id ?? currentTrack?.track.youtubeID;
-        final button = itemId != null ? (lang.clearVideoCache, () => const YTUtils().showVideoClearDialog(itemId)) : null;
+        final button = itemId != null ? SnackbarButton(text: lang.clearVideoCache, function: () => const YTUtils().showVideoClearDialog(itemId)) : null;
         snackyy(message: e.details.toString().substring(0, 600), title: '${lang.error}: ${e.message}', isError: true, top: false, button: button, maxLinesMessage: 8);
       }
     };
@@ -500,9 +500,9 @@ class Player {
       title: lang.undoChanges,
       message: lang.undoChangesDeletedTrack,
       top: false,
-      button: (
-        lang.undo,
-        () => this.insertInQueue([item], index),
+      button: SnackbarButton(
+        text: lang.undo,
+        function: () => this.insertInQueue([item], index),
       ),
     );
   }

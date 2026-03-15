@@ -320,9 +320,9 @@ class Indexer<T extends Track> {
         snackyy(
           title: lang.done,
           message: lang.noTracksFound,
-          button: (
-            lang.addFolder,
-            () {
+          button: SnackbarButton(
+            text: lang.addFolder,
+            function: () {
               SettingsSearchController.inst
                   .onResultTap(
                     settingPage: SettingSubpageEnum.indexer,
