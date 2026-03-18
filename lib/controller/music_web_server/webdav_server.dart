@@ -5,6 +5,12 @@ class _WebDAVServer extends MusicWebServer {
   _ClientApiWrapper? _api;
   late Uri _serverUri;
   late WebDAVAuth _authInfo;
+  Uri _buildServerUri(String serverPath) {
+    return _serverUri.replace(
+      userInfo: '${_authInfo.username}:${_authInfo.password}',
+      path: serverPath,
+    );
+  }
 
   // -- it's safe to assume that webdav(http) is supported for all platforms, however it's kept
   // -- in case the system one was picked and didn't support it.
@@ -34,21 +40,10 @@ class _WebDAVServer extends MusicWebServer {
     if (api == null) return null;
 
     final serverPath = Uri.decodeQueryComponent(id);
-    final tempFile = FileParts.joinAll([
-      AppDirs.APP_CACHE,
-      authDetails.dir.type.name,
-      authDetails.auth.username,
-      ...serverPath.split('/'),
-    ]);
-
-    await api.read2File(serverPath, tempFile.path);
-
-    onFetchedIfLocal?.call(tempFile);
-
-    final newUri = Uri.file(tempFile.path);
+    final uri = _buildServerUri(serverPath);
 
     return WebStreamUriDetails.fromUri(
-      newUri,
+      uri,
       allowStreamCaching: false, // already cached
     );
   }
@@ -60,16 +55,19 @@ class _WebDAVServer extends MusicWebServer {
 
     final serverPath = Uri.decodeQueryComponent(id);
 
-    final res = await _fetchFileAndExtractArtwork(
-      serverPath,
-      null,
-      api,
+    final uri = _buildServerUri(serverPath);
+    final uriString = uri.toString();
+    final name = serverPath.getFilename;
+    final isVideo = name.isVideo();
+    final File? tempFile = await TagsExtractor.extractThumbnailCustom(
+      trackPath: uriString,
+      filename: null,
+      artworkDirectory: null,
+      isVideo: isVideo,
     );
-    if (res == null) return null;
 
-    final bytes = res.$1?.bytes;
-
-    res.$3.tryDeleting();
+    final bytes = await tempFile?.readAsBytes();
+    tempFile?.tryDeleting();
 
     return bytes;
   }
@@ -150,6 +148,7 @@ class _WebDAVServer extends MusicWebServer {
           if (path != null && NamidaFileExtensionsWrapper.audioAndVideo.isPathValid(path)) {
             subfiles.add(file);
           }
+          // TODO: fetch folder.jpg
         }
       }
 
@@ -228,15 +227,13 @@ class _WebDAVServer extends MusicWebServer {
   Future<(FAudioModel, String, File?)?> _fetchFileAndExtractInfo(String serverPath, String? name, _ClientApiWrapper api, Set<AlbumIdentifier> identifiersSet) async {
     final extractArtwork = Indexer.inst.isNetworkArtworkCachingEnabled;
     if (await _ffmpegSupportsWebDAV) {
-      final uri = _serverUri.replace(
-        userInfo: '${_authInfo.username}:${_authInfo.password}',
-        path: serverPath,
-      );
+      final uri = _buildServerUri(serverPath);
       final uriString = uri.toString();
       final ffmpegInfo = await NamidaFFMPEG.inst.ffmpegExtractMetadata(uriString);
       File? artworkFile;
       if (extractArtwork) {
-        final isVideo = name?.isVideo() == true;
+        name ??= serverPath.getFilename;
+        final isVideo = name.isVideo();
         final filename = TagsExtractor.buildImageFilename(
           path: serverPath,
           identifiers: identifiersSet,
@@ -284,23 +281,23 @@ class _WebDAVServer extends MusicWebServer {
     );
   }
 
-  Future<(FArtwork?, String, File)?> _fetchFileAndExtractArtwork(
-    String serverPath,
-    String? name,
-    _ClientApiWrapper api,
-  ) async {
-    return _fetchFileAnd(
-      serverPath,
-      name,
-      api,
-      builder: (tempFile, isVideo, networkId) {
-        return NamidaTaggerController.inst.extractArtwork(
-          trackPath: tempFile.path,
-          isVideo: isVideo,
-        );
-      },
-    );
-  }
+  // Future<(FArtwork?, String, File)?> _fetchFileAndExtractArtwork(
+  //   String serverPath,
+  //   String? name,
+  //   _ClientApiWrapper api,
+  // ) async {
+  //   return _fetchFileAnd(
+  //     serverPath,
+  //     name,
+  //     api,
+  //     builder: (tempFile, isVideo, networkId) {
+  //       return NamidaTaggerController.inst.extractArtwork(
+  //         trackPath: tempFile.path,
+  //         isVideo: isVideo,
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<(T, String, File)?> _fetchFileAnd<T>(
     String serverPath,
