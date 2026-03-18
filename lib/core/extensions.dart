@@ -57,7 +57,7 @@ extension TracksSelectableUtils on Iterable<Selectable> {
   }
 }
 
-extension TracksWithDatesUtils on List<TrackWithDate> {
+extension TracksWithDatesUtils on List<Selectable> {
   int get totalDurationInMS => fold(0, (previousValue, element) => previousValue + element.track.durationMS);
   String get totalDurationFormatted {
     return (totalDurationInMS ~/ 1000).secondsFormatted;
@@ -102,63 +102,46 @@ extension TracksWithDatesUtils on List<TrackWithDate> {
     }
     return generalLastListen;
   }
+
+  int? getDateAddedEffective() {
+    if (isEmpty) return null;
+    int best = first.track.dateAdded;
+
+    for (final e in this) {
+      final track = e.track;
+      final dateAdded = track.dateAdded;
+      return dateAdded < best && dateAdded > _minimumFileDateMilli ? dateAdded : best;
+    }
+
+    return best;
+  }
+
+  int? getDateModifiedEffective() {
+    if (isEmpty) return null;
+    int best = first.track.dateModified;
+
+    for (final e in this) {
+      final track = e.track;
+      final dateModified = track.dateModified;
+      best = dateModified > best ? dateModified : best;
+    }
+
+    return best;
+  }
+
+  String get totalSizeFormatted {
+    int size = 0;
+    loop((s) => size += s.track.size);
+    return size.fileSizeFormatted;
+  }
 }
 
 extension TracksUtils on List<Track> {
-  int getTotalListenCount() {
-    int total = 0;
-    final int length = this.length;
-    for (int i = 0; i < length; i++) {
-      final e = this[i];
-      final c = HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0;
-      total += c;
-    }
-    return total;
-  }
-
-  int? getFirstListen() {
-    int? generalFirstListen;
-    final int length = this.length;
-    for (int i = 0; i < length; i++) {
-      final e = this[i];
-      final firstListen = HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull;
-      if (firstListen != null && (generalFirstListen == null || firstListen < generalFirstListen)) {
-        generalFirstListen = firstListen;
-      }
-    }
-    return generalFirstListen;
-  }
-
-  int? getLatestListen() {
-    int? generalLastListen;
-    final int length = this.length;
-    for (int i = 0; i < length; i++) {
-      final e = this[i];
-      final lastListen = HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull;
-      if (lastListen != null && (generalLastListen == null || lastListen > generalLastListen)) {
-        generalLastListen = lastListen;
-      }
-    }
-    return generalLastListen;
-  }
-
   Set<String> toUniqueAlbums() {
     final tracks = this;
     final albums = <String>{};
     tracks.loop((t) => albums.add(t.albumIdentifier));
     return albums;
-  }
-
-  String get totalSizeFormatted {
-    int size = 0;
-    loop((t) => size += t.size);
-    return size.fileSizeFormatted;
-  }
-
-  int get totalDurationInMS => fold(0, (previousValue, element) => previousValue + element.durationMS);
-
-  String get totalDurationFormatted {
-    return (totalDurationInMS ~/ 1000).secondsFormatted;
   }
 
   int get year {
@@ -857,13 +840,14 @@ extension FileUtils on File {
   }
 }
 
-final _minimumDateMicro = DateTime(1980).microsecondsSinceEpoch + 1;
+final _minimumFileDateMicro = DateTime(1980).microsecondsSinceEpoch + 1;
+final _minimumFileDateMilli = DateTime(1980).microsecondsSinceEpoch + 1;
 
 extension FileStatsUtils on FileStat {
   DateTime get creationDate {
     int? finalDateMicro;
     void tryAssign(int micros) {
-      if (micros > _minimumDateMicro && (finalDateMicro == null || micros < finalDateMicro!)) finalDateMicro = micros;
+      if (micros > _minimumFileDateMicro && (finalDateMicro == null || micros < finalDateMicro!)) finalDateMicro = micros;
     }
 
     tryAssign(modified.microsecondsSinceEpoch);

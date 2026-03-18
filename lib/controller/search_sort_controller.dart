@@ -152,7 +152,8 @@ class SearchSortController extends SearchPortsProvider {
       GroupSortType.genresList => encapsulateSortCanIgnorePrefix(TrackSearchFilter.genre, (e) => e.value.first.genresList.join().toLowerCase()),
       GroupSortType.composer => encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.value.composer.toLowerCase()),
       GroupSortType.label => (e) => e.value.recordLabel.toLowerCase(),
-      GroupSortType.dateModified => (e) => e.value.first.dateModified,
+      GroupSortType.dateAdded => (e) => e.value.getDateAddedEffective() ?? 0,
+      GroupSortType.dateModified => (e) => e.value.getDateModifiedEffective() ?? 0,
       GroupSortType.duration => (e) => e.value.totalDurationInMS,
       GroupSortType.numberOfTracks => (e) => -e.value.length,
       GroupSortType.playCount => (e) => -e.value.getTotalListenCount(),
@@ -195,6 +196,7 @@ class SearchSortController extends SearchPortsProvider {
       SortType.trackNo => (e) => e.trackNo,
       SortType.discNo => (e) => e.discNo,
       SortType.filename => encapsulateSortCanIgnorePrefix(TrackSearchFilter.filename, (e) => e.filename.toLowerCase()),
+      SortType.path => (e) => e.path,
       SortType.duration => (e) => e.durationMS,
       SortType.sampleRate => (e) => e.sampleRate,
       SortType.size => (e) => e.size,
@@ -233,7 +235,8 @@ class SearchSortController extends SearchPortsProvider {
     GroupSortType.duration => (tracks) => tracks.totalDurationFormatted,
     GroupSortType.albumsCount => (tracks) => tracks.toUniqueAlbums().length.toString(),
     GroupSortType.year => (tracks) => tracks.year.yearFormatted,
-    GroupSortType.dateModified => (tracks) => tracks.firstOrNull?.dateModified.dateFormatted,
+    GroupSortType.dateAdded => (tracks) => tracks.getDateAddedEffective()?.dateFormatted,
+    GroupSortType.dateModified => (tracks) => tracks.getDateModifiedEffective()?.dateFormatted,
     GroupSortType.playCount => (tracks) => tracks.getTotalListenCount().toString(),
     GroupSortType.firstListen => (tracks) => tracks.getFirstListen()?.dateFormattedOriginal ?? '',
     GroupSortType.latestPlayed => (tracks) => tracks.getLatestListen()?.dateFormattedOriginal ?? '',
@@ -262,7 +265,8 @@ class SearchSortController extends SearchPortsProvider {
     GroupSortType.duration => (p) => p.tracks.totalDurationFormatted,
     GroupSortType.albumsCount => (p) => p.tracks.toTracks().toUniqueAlbums().length.toString(),
     GroupSortType.year => (p) => p.tracks.firstOrNull?.track.year.yearFormatted,
-    GroupSortType.dateModified => (p) => p.tracks.firstOrNull?.track.dateModified.dateFormatted,
+    GroupSortType.dateAdded => (p) => p.tracks.getDateAddedEffective()?.dateFormatted,
+    GroupSortType.dateModified => (p) => p.tracks.getDateModifiedEffective()?.dateFormatted,
     GroupSortType.playCount => (p) => p.tracks.getTotalListenCount().toString(),
     GroupSortType.firstListen => (p) => p.tracks.getFirstListen()?.dateFormattedOriginal,
     GroupSortType.latestPlayed => (p) => p.tracks.getLatestListen()?.dateFormattedOriginal,
@@ -836,6 +840,9 @@ class SearchSortController extends SearchPortsProvider {
         break;
       case SortType.filename:
         sortThis((e) => e.filename.toLowerCase());
+        break;
+      case SortType.path:
+        sortThis((e) => e.path);
         break;
       case SortType.duration:
         sortThis((e) => e.durationMS);
