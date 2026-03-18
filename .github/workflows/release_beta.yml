@@ -249,7 +249,7 @@ jobs:
           pacman -S --noconfirm \
             base-devel git curl wget jq openssh unzip xz \
             clang cmake ninja pkgconf gcc gtk3 libstdc++ \
-            mpv alsa-lib libx11 libxrender libxext mesa libgl \
+            mpv alsa-lib libx11 libxrender libxext mesa libgl wpewebkit \
             libepoxy libdrm wayland libxkbcommon glibc binutils dpkg rpm-tools
           pacman -Scc --noconfirm
 

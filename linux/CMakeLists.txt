@@ -9,7 +9,7 @@ include(GNUInstallDirs)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "namida")
+set(BINARY_NAME "namida_bin")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
 set(APPLICATION_ID "com.msob7y.namida")
@@ -19,7 +19,8 @@ set(APPLICATION_ID "com.msob7y.namida")
 cmake_policy(SET CMP0063 NEW)
 
 # Load bundled libraries from the lib/ directory relative to the binary.
-set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
+set(CMAKE_INSTALL_RPATH "$ORIGIN/lib:/usr/lib")
+
 
 # Root filesystem for cross-building.
 if(FLUTTER_TARGET_PLATFORM_SYSROOT)
@@ -151,3 +152,22 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
   install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endif()
+
+
+# === Remove WPE libraries from bundle (loaded from system at runtime) ===
+install(CODE "
+  file(GLOB WPE_LIBS
+    \"${INSTALL_BUNDLE_LIB_DIR}/libWPEWebKit*\"
+    \"${INSTALL_BUNDLE_LIB_DIR}/libwpe*\"
+    \"${INSTALL_BUNDLE_LIB_DIR}/libWPEBackend*\"
+  )
+  foreach(WPE_LIB \${WPE_LIBS})
+    file(REMOVE \"\${WPE_LIB}\")
+    message(STATUS \"Removed: \${WPE_LIB}\")
+  endforeach()
+  " COMPONENT Runtime)
+
+install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/namida.sh"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}"
+  RENAME "namida"
+)

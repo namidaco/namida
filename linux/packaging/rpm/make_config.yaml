@@ -15,6 +15,7 @@ requires:
   - mpv # (has mpv-devel as sub)
   - libepoxy
   - bzip2-libs
+  - wpewebkit2
 
 keywords:
   - API

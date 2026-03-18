@@ -306,17 +306,17 @@ curl -fsSL https://raw.githubusercontent.com/namidaco/namida/main/scripts/instal
 
 # Package managers
 yay namida-bin                  # AUR (Arch Linux)
-sudo pacman -S namida-bin       # AUR (Arch Linux)
+paru namida-bin                 # AUR (Arch Linux)
 sudo apt install ./namida.deb   # Debian/Ubuntu (download .deb from beta releases)
 sudo dnf install ./namida.rpm   # Fedora/RHEL (download .rpm from beta releases)
 
 # Nix (Home Manager) Installation
 # Available at: https://codeberg.org/iWisp360/namida-nix
 
-# make sure mpv is installed
-sudo apt install mpv   # Debian/Ubuntu/Mint
-sudo dnf install mpv   # Fedora/RHEL
-sudo pacman -S mpv     # Arch/Manjaro
+# make sure mpv (for playback) & wpe (for login) are installed
+sudo pacman -S mpv wpewebkit              # Arch/Manjaro
+sudo apt install mpv libwpewebkit-2.0-3   # Debian/Ubuntu/Mint
+sudo dnf install mpv wpewebkit2           # Fedora/RHEL
 ```
 
 ### Permission Note:
