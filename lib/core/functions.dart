@@ -1330,10 +1330,13 @@ class TracksAddOnTap {
               }
               // -- moods from tracks.
               final allAvailableMoodsTracks = <String, List<Track>>{};
-              for (final tr in Indexer.inst.trackStatsMap.value.entries) {
-                tr.value.moods?.loop((mood) {
-                  allAvailableMoodsTracks.addNoDuplicatesForce(mood, tr.key);
-                });
+              for (final e in Indexer.inst.trackStatsMap.value.entries) {
+                final tr = e.key;
+                if (tr.hasInfoInLibrary()) {
+                  e.value.moods?.loop((mood) {
+                    allAvailableMoodsTracks.addNoDuplicatesForce(mood, tr);
+                  });
+                }
               }
 
               // -- moods from track embedded tag
@@ -1365,37 +1368,84 @@ class TracksAddOnTap {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
-                      child: Text("$title (${moodsList.length})", style: textTheme.displayMedium),
+                      child: Row(
+                        children: [
+                          Text(
+                            title,
+                            style: textTheme.displayMedium,
+                          ),
+                          const SizedBox(width: 8.0),
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                              color: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.25),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 1.0),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(minWidth: 12.0),
+                                child: Text(
+                                  '${moodsList.length}',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   SliverToBoxAdapter(
                     child: Wrap(
+                      runSpacing: 4.0,
                       children: [
                         ...moodsList.map(
                           (m) {
                             final tracksCount = allAvailableMoods[m]?.length ?? 0;
-                            return NamidaInkWell(
-                              borderRadius: 6.0,
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-                              margin: const EdgeInsets.all(2.0),
-                              bgColor: context.theme.cardColor,
-                              onTap: () => selectedList.addOrRemove(m),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    "$m ($tracksCount)",
-                                    style: textTheme.displayMedium,
-                                  ),
-                                  const SizedBox(width: 8.0),
-                                  Obx(
-                                    (context) => NamidaCheckMark(
-                                      size: 12.0,
-                                      active: selectedList.valueR.contains(m),
+                            return Obx(
+                              (context) {
+                                final isSelected = selectedList.valueR.contains(m);
+                                final extraOpacity = isSelected ? 0.25 : 0.0;
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                                  child: NamidaInkWellButton(
+                                    borderRadius: 99.0,
+                                    paddingMultiplier: 0.8,
+                                    icon: null,
+                                    text: m,
+                                    bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.2 + extraOpacity),
+                                    onTap: () => selectedList.addOrRemove(m),
+                                    leading: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(99.0),
+                                        color: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.3 + extraOpacity),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
+                                        child: ConstrainedBox(
+                                          constraints: const BoxConstraints(minWidth: 8.0),
+                                          child: Text(
+                                            '$tracksCount',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ),
                                     ),
+                                    trailing:
+                                        Padding(
+                                          padding: EdgeInsetsGeometry.only(left: 2.0),
+                                          child: NamidaCheckMark(
+                                            size: 12.0,
+                                            active: true,
+                                          ),
+                                        ).animateEntrance(
+                                          showWhen: isSelected,
+                                          allCurves: Curves.fastLinearToSlowEaseIn,
+                                          durationMS: 200,
+                                        ),
                                   ),
-                                ],
-                              ),
+                                );
+                              },
                             );
                           },
                         ),
@@ -1446,6 +1496,13 @@ class TracksAddOnTap {
                           allAvailableMoods: allAvailableMoodsTracks,
                           selectedList: selectedmoodsTracks,
                         ),
+
+                        const SliverToBoxAdapter(
+                          child: NamidaContainerDivider(
+                            margin: EdgeInsets.symmetric(vertical: 8.0),
+                          ),
+                        ),
+
                         // -- Playlist moods
                         ...getListy(
                           title: lang.playlists,
