@@ -3,15 +3,20 @@ part of 'music_web_server_base.dart';
 
 class _WebDAVServer extends MusicWebServer {
   _ClientApiWrapper? _api;
-  Uri? _serverUri;
+  late Uri _serverUri;
+  late WebDAVAuth _authInfo;
+
+  // -- it's safe to assume that webdav(http) is supported for all platforms, however it's kept
+  // -- in case the system one was picked and didn't support it.
+  late final Future<bool> _ffmpegSupportsWebDAV = NamidaFFMPEG.inst.supportsWebDAV();
 
   _WebDAVServer.init(super.authDetails) {
-    final authInfo = authDetails.auth.toWebDAVAuthModel();
+    _authInfo = authDetails.auth.toWebDAVAuthModel();
     _api = _ClientApiWrapper(
       webdav.newClient(
         authDetails.dir.sourceRaw,
-        user: authInfo.username,
-        password: authInfo.password,
+        user: _authInfo.username,
+        password: _authInfo.password,
       ),
     );
 
@@ -50,8 +55,6 @@ class _WebDAVServer extends MusicWebServer {
 
   @override
   Future<Uint8List?> getImage(String id) async {
-    final baseUri = _serverUri;
-    if (baseUri == null) return null;
     final api = _api;
     if (api == null) return null;
 
@@ -91,6 +94,7 @@ class _WebDAVServer extends MusicWebServer {
     final server = authDetails.dir.toDbKey();
     final serverUriParsed = Uri.parse(server);
     final splittersConfigs = SplitArtistGenreConfigsWrapper.settings();
+    final identifiersSet = TagsExtractor.getAlbumIdentifiersSet();
     final minDur = settings.indexMinDurationInSec.value;
     final minSize = settings.indexMinFileSizeInB.value;
 
@@ -103,6 +107,7 @@ class _WebDAVServer extends MusicWebServer {
         serverUriParsed: serverUriParsed,
         files: networkFiles,
         splittersConfigs: splittersConfigs,
+        identifiersSet: identifiersSet,
         minDur: minDur,
         minSize: minSize,
       );
@@ -127,6 +132,7 @@ class _WebDAVServer extends MusicWebServer {
     required Uri serverUriParsed,
     required List<webdav.File> files,
     required SplitArtistGenreConfigsWrapper splittersConfigs,
+    required Set<AlbumIdentifier> identifiersSet,
     required int minDur,
     required int minSize,
   }) async* {
@@ -151,11 +157,16 @@ class _WebDAVServer extends MusicWebServer {
         final futures = subfiles.map((file) async {
           final serverPath = file.path;
           if (serverPath == null) return null;
-          final res = await _fetchFileAndExtractInfo(serverPath, file.name, api);
+          final res = await _fetchFileAndExtractInfo(serverPath, file.name, api, identifiersSet);
           if (res == null) return null;
-          final trExt = await Indexer.convertTagToTrack(
-            trackPath: res.$1.tags.path,
+          final trExt = await Indexer.convertServerTagToTrack(
+            path: serverPath,
             trackInfo: res.$1,
+            stats: FileStatsAdv(
+              creationDate: file.cTime,
+              modified: file.mTime,
+              size: file.size,
+            ),
             minDur: minDur,
             minSize: minSize,
             tryExtractingFromFilename: true,
@@ -171,7 +182,7 @@ class _WebDAVServer extends MusicWebServer {
             splittersConfigs: splittersConfigs,
           );
 
-          res.$3.tryDeleting();
+          res.$3?.tryDeleting();
 
           if (trExt != null) {
             final newUri = serverUriParsed.replace(
@@ -205,6 +216,7 @@ class _WebDAVServer extends MusicWebServer {
             serverUriParsed: serverUriParsed,
             files: subfiles,
             splittersConfigs: splittersConfigs,
+            identifiersSet: identifiersSet,
             minDur: minDur,
             minSize: minSize,
           );
@@ -213,13 +225,48 @@ class _WebDAVServer extends MusicWebServer {
     }
   }
 
-  Future<(FAudioModel, String, File)?> _fetchFileAndExtractInfo(
-    String serverPath,
-    String? name,
-    _ClientApiWrapper api, {
-    bool? extractArtwork,
-    bool? saveArtworkToCache,
-  }) async {
+  Future<(FAudioModel, String, File?)?> _fetchFileAndExtractInfo(String serverPath, String? name, _ClientApiWrapper api, Set<AlbumIdentifier> identifiersSet) async {
+    final extractArtwork = Indexer.inst.isNetworkArtworkCachingEnabled;
+    if (await _ffmpegSupportsWebDAV) {
+      final uri = _serverUri.replace(
+        userInfo: '${_authInfo.username}:${_authInfo.password}',
+        path: serverPath,
+      );
+      final uriString = uri.toString();
+      final ffmpegInfo = await NamidaFFMPEG.inst.ffmpegExtractMetadata(uriString);
+      File? artworkFile;
+      if (extractArtwork) {
+        final isVideo = name?.isVideo() == true;
+        final filename = TagsExtractor.buildImageFilename(
+          path: serverPath,
+          identifiers: identifiersSet,
+          isNetwork: true,
+          networkId: serverPath,
+          infoCallback: () => (
+            albumName: ffmpegInfo?.format?.tags?.album,
+            albumArtist: ffmpegInfo?.format?.tags?.albumArtist,
+            year: ffmpegInfo?.format?.tags?.date,
+            title: ffmpegInfo?.format?.tags?.title,
+            artist: ffmpegInfo?.format?.tags?.artist,
+          ),
+          hashKeyCallback: () => serverPath.toFastHashKey(),
+        );
+        artworkFile = await TagsExtractor.extractThumbnailCustom(
+          trackPath: uriString,
+          filename: filename,
+          artworkDirectory: isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS,
+          isVideo: isVideo,
+        );
+      }
+
+      final model = ffmpegInfo?.toFAudioModel(
+        artwork: FArtwork(file: artworkFile),
+      );
+      if (model != null) {
+        return (model, serverPath, null);
+      }
+    }
+
     return _fetchFileAnd(
       serverPath,
       name,
@@ -228,8 +275,8 @@ class _WebDAVServer extends MusicWebServer {
         return NamidaTaggerController.inst.extractMetadata(
           trackPath: tempFile.path,
           isVideo: isVideo,
-          extractArtwork: extractArtwork ?? Indexer.inst.isNetworkArtworkCachingEnabled,
-          saveArtworkToCache: saveArtworkToCache ?? Indexer.inst.isNetworkArtworkCachingEnabled,
+          extractArtwork: extractArtwork,
+          saveArtworkToCache: true,
           isNetwork: true,
           networkId: networkId,
         );

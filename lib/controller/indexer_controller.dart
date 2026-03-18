@@ -600,8 +600,35 @@ class Indexer<T extends Track> {
     if (addedItemsLists[MediaType.folderVideo]?.newKeys.isNotEmpty == true) FoldersController.videos.onMapChanged(mainMapFoldersVideos);
   }
 
+  static Future<TrackExtended?> convertServerTagToTrack({
+    required String path,
+    required FileStatsAdv stats,
+    required FAudioModel trackInfo,
+    required bool tryExtractingFromFilename,
+    int minDur = 0,
+    int minSize = 0,
+    required TrackExtended? Function() onMinDurTrigger,
+    required TrackExtended? Function() onMinSizeTrigger,
+    required TrackExtended? Function(String err) onError,
+    SplitArtistGenreConfigsWrapper? splittersConfigs,
+  }) {
+    return Indexer.convertTagToTrack(
+      trackPath: path,
+      stats: stats,
+      trackInfo: trackInfo,
+      tryExtractingFromFilename: tryExtractingFromFilename,
+      minDur: minDur,
+      minSize: minSize,
+      onMinDurTrigger: onMinDurTrigger,
+      onMinSizeTrigger: onMinSizeTrigger,
+      onError: onError,
+      splittersConfigs: splittersConfigs,
+    );
+  }
+
   static Future<TrackExtended?> convertTagToTrack({
     required String trackPath,
+    FileStatsAdv? stats,
     required FAudioModel trackInfo,
     required bool tryExtractingFromFilename,
     int minDur = 0,
@@ -614,10 +641,10 @@ class Indexer<T extends Track> {
     // -- most methods dont throw, except for timeout
     try {
       // -- returns null early depending on size [byte] or duration [seconds]
-      FileStat? fileStat;
+      FileStatsAdv? fileStat;
       try {
-        fileStat = await File(trackPath).stat();
-        if (minSize > 0 && fileStat.size < minSize) {
+        fileStat = stats ?? FileStatsAdv.fromFileStat(await File(trackPath).stat());
+        if (minSize > 0 && (fileStat.size ?? 0) < minSize) {
           return onMinSizeTrigger();
         }
       } catch (_) {}
@@ -642,8 +669,8 @@ class Indexer<T extends Track> {
         year: 0,
         yearText: '',
         size: fileStat?.size ?? 0,
-        dateAdded: fileStat?.creationDate.millisecondsSinceEpoch ?? 0,
-        dateModified: fileStat?.modified.millisecondsSinceEpoch ?? 0,
+        dateAdded: fileStat?.creationDate?.millisecondsSinceEpoch ?? 0,
+        dateModified: fileStat?.modified?.millisecondsSinceEpoch ?? 0,
         path: trackPath,
         comment: '',
         description: '',
@@ -1917,4 +1944,24 @@ class _TracksLoadResult {
     required this.allTracksMappedByPath,
     required this.allTracksMappedByYTID,
   });
+}
+
+class FileStatsAdv {
+  final DateTime? creationDate;
+  final DateTime? modified;
+  final int? size;
+
+  const FileStatsAdv({
+    required this.creationDate,
+    required this.modified,
+    required this.size,
+  });
+
+  factory FileStatsAdv.fromFileStat(FileStat stat) {
+    return FileStatsAdv(
+      creationDate: stat.creationDate,
+      modified: stat.modified,
+      size: stat.size,
+    );
+  }
 }

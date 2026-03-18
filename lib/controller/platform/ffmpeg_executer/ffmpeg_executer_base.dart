@@ -14,6 +14,9 @@ abstract class FFMPEGExecuter {
   Future<bool> ffmpegExecute(List<String> args);
   Future<String?> ffprobeExecute(List<String> args);
   Future<Map<dynamic, dynamic>?> getMediaInformation(String path);
+  Future<bool> supportsWebDAV();
+  Future<bool> supportsSMB();
+
   static bool testWebDAVProtocol(String output) {
     return output.contains('http') || output.contains('webdav');
   }

@@ -35,6 +35,9 @@ class NamidaFFMPEG {
 
   final _executer = FFMPEGExecuter.platform()..init();
 
+  Future<bool> supportsWebDAV() => _executer.supportsWebDAV();
+  Future<bool> supportsSMB() => _executer.supportsSMB();
+
   final currentOperations = <OperationType, Rx<OperationProgress>>{
     OperationType.imageCompress: OperationProgress().obs,
     OperationType.ytdlpThumbnailFix: OperationProgress().obs,

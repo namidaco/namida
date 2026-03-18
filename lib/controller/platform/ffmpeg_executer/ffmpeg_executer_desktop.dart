@@ -43,6 +43,24 @@ class _FFMPEGExecuterDesktop extends FFMPEGExecuter {
     );
     return FFMPEGExecuter.parseFFprobeOutput(output);
   }
+
+  @override
+  Future<bool> supportsWebDAV() async {
+    final output = await ffprobeExecute([
+      "-protocols",
+    ]);
+    if (output != null && FFMPEGExecuter.testWebDAVProtocol(output)) return true;
+    return false;
+  }
+
+  @override
+  Future<bool> supportsSMB() async {
+    final output = await ffprobeExecute([
+      "-protocols",
+    ]);
+    if (output != null && FFMPEGExecuter.testSMBProtocol(output)) return true;
+    return false;
+  }
 }
 
 class _FFmpegDesktopIsolateManager with PortsProvider<SendPort> {

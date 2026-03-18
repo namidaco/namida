@@ -68,6 +68,32 @@ class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
       },
     );
   }
+
+  @override
+  Future<bool> supportsWebDAV() async {
+    final session = await FFprobeKit.executeWithArguments([
+      "-protocols",
+    ]);
+    final logs = await session.getLogs();
+    for (final log in logs) {
+      final output = log.getMessage();
+      if (FFMPEGExecuter.testWebDAVProtocol(output)) return true;
+    }
+    return false;
+  }
+
+  @override
+  Future<bool> supportsSMB() async {
+    final session = await FFprobeKit.executeWithArguments([
+      "-protocols",
+    ]);
+    final logs = await session.getLogs();
+    for (final log in logs) {
+      final output = log.getMessage();
+      if (FFMPEGExecuter.testSMBProtocol(output)) return true;
+    }
+    return false;
+  }
 }
 
 // == USE ONCE Background isolates support setMessageHandler()
