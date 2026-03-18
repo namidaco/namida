@@ -75,8 +75,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   RxBaseCore<Duration?> get currentItemDuration => _currentItemDuration;
   final _currentItemDuration = Rxn<Duration>();
 
-  Timer? _resourcesDisposeTimer;
-
   @override
   AudioLoadConfiguration? get defaultAndroidLoadConfig {
     return AudioLoadConfiguration(
@@ -589,6 +587,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
+  String? itemToTotalListenTimeKey(Q? item) {
+    return item?.execute(
+      selectable: (_) => LibraryCategory.localTracks,
+      youtubeID: (_) => LibraryCategory.youtube,
+    );
+  }
+
+  @override
   FutureOr<void> onItemMarkedListened(Q item, int listenedSeconds, double listenedPercentage) async {
     await item.execute(
       selectable: (finalItem) async {
@@ -856,7 +862,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (playWhenReady.value) onPlayRaw(attemptFixVolume: false);
 
     startCounterToAListen(pi);
-    increaseListenTime(LibraryCategory.localTracks);
     Lyrics.inst.updateLyrics(tr);
   }
 
@@ -1320,7 +1325,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
       if (!wasPlayingFromCache) {
         startCounterToAListen(pi);
-        increaseListenTime(LibraryCategory.youtube);
         Lyrics.inst.updateLyrics(item);
         if (settings.youtube.sponsorBlockSettings.value.enabled) {
           SponsorBlockController.inst.updateSegments(item.id);
@@ -1845,32 +1849,17 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  void onPlayingStateChange(bool isPlaying) {
-    if (isPlaying) {
-      _resourcesDisposeTimer?.cancel();
-      _resourcesDisposeTimer = null;
-    } else {
-      _resourcesDisposeTimer ??= Timer(const Duration(minutes: 5), () {
-        if (!this.isPlaying.value) stop();
-      });
-    }
-  }
-
-  @override
   void onRepeatModeChange(PlayerRepeatMode repeatMode) {
     settings.player.save(repeatMode: repeatMode);
   }
 
   @override
-  void onTotalListenTimeIncrease(Map<String, int> totalTimeInSeconds, String key) async {
+  void onTotalListenTimeIncrease(Map<String, int> totalTimeInSeconds, String key) {
     final newSeconds = totalTimeInSeconds[key] ?? 0;
 
     // saves the file each 20 seconds.
     if (newSeconds % 20 == 0) {
-      final ci = currentItem.value;
-      if (ci is Selectable) {
-        await File(AppPaths.TOTAL_LISTEN_TIME).writeAsJson(totalTimeInSeconds);
-      }
+      File(AppPaths.TOTAL_LISTEN_TIME).writeAsJson(totalTimeInSeconds);
     }
   }
 

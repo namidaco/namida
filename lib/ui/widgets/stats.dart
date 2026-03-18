@@ -76,10 +76,11 @@ class StatsSection extends StatelessWidget {
                   (context) {
                     final map = Player.inst.totalListenedTimeInSec;
                     final trSec = map?[LibraryCategory.localTracks] ?? 0;
+                    final vidSec = map?[LibraryCategory.localVideos] ?? 0;
                     return StatsContainer(
                       icon: Broken.timer_1,
                       title: '${lang.totalListenTime} :',
-                      value: trSec.secondsFormatted,
+                      value: (trSec + vidSec).secondsFormatted,
                     );
                   },
                 ),
