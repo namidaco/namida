@@ -14,6 +14,13 @@ abstract class FFMPEGExecuter {
   Future<bool> ffmpegExecute(List<String> args);
   Future<String?> ffprobeExecute(List<String> args);
   Future<Map<dynamic, dynamic>?> getMediaInformation(String path);
+  static bool testWebDAVProtocol(String output) {
+    return output.contains('http') || output.contains('webdav');
+  }
+
+  static bool testSMBProtocol(String output) {
+    return output.contains('smb');
+  }
 
   static Map? parseFFprobeOutput(String? output) {
     if (output == null) return null;
