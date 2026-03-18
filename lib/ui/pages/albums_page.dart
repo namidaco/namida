@@ -174,6 +174,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                   final albumId = finalAlbums[i];
                                   final tracks = albumId.getAlbumTracks();
                                   return AnimatingGrid(
+                                    isInOpenSpace: true,
                                     columnCount: finalAlbums.length,
                                     position: i,
                                     shouldAnimate: _shouldAnimate,

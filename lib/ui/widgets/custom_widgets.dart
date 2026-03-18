@@ -118,11 +118,14 @@ class CustomSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final finalColor = passedColor ?? CurrentColor.inst.color;
     final theme = context.theme;
+    final duration = Duration(milliseconds: durationInMillisecond);
+    final curve = Curves.fastEaseInToSlowEaseOut;
     return SizedBox(
       width: width,
       height: height,
       child: AnimatedDecoration(
-        duration: Duration(milliseconds: durationInMillisecond),
+        duration: duration,
+        curve: curve,
         decoration: BoxDecoration(
           color: (active
               ? bgColor ?? Color.alphaBlend(finalColor.withAlpha(180), theme.colorScheme.surface).withAlpha(140)
@@ -141,7 +144,8 @@ class CustomSwitch extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: width / 10),
           child: AnimatedAlign(
-            duration: Duration(milliseconds: durationInMillisecond),
+            duration: duration,
+            curve: curve,
             alignment: active ? Alignment.centerRight : Alignment.centerLeft,
             child: SizedBox(
               width: width / 3,
@@ -2375,6 +2379,7 @@ class AnimatingTile extends StatelessWidget {
     if (NamidaFeaturesVisibility.tiltingCardsEffect) {
       if (allowTilting && settings.extra.tiltingCardsEffect == true) {
         child = _EncapsulateWithTilt(
+          isInOpenSpace: false,
           child: child,
         );
       }
@@ -2389,6 +2394,7 @@ class AnimatingGrid extends StatelessWidget {
   final int columnCount;
   final Widget child;
   final bool shouldAnimate;
+  final bool isInOpenSpace;
 
   const AnimatingGrid({
     super.key,
@@ -2396,6 +2402,7 @@ class AnimatingGrid extends StatelessWidget {
     required this.columnCount,
     required this.child,
     this.shouldAnimate = true,
+    this.isInOpenSpace = false,
   });
 
   @override
@@ -2419,6 +2426,7 @@ class AnimatingGrid extends StatelessWidget {
     if (NamidaFeaturesVisibility.tiltingCardsEffect) {
       if (settings.extra.tiltingCardsEffect == true) {
         child = _EncapsulateWithTilt(
+          isInOpenSpace: isInOpenSpace,
           child: child,
         );
       }
@@ -2430,7 +2438,14 @@ class AnimatingGrid extends StatelessWidget {
 
 class _EncapsulateWithTilt extends StatelessWidget {
   final Widget child;
-  const _EncapsulateWithTilt({required this.child});
+
+  /// when parent doesn't have limited size, cuz we force expand child by default.
+  final bool isInOpenSpace;
+
+  const _EncapsulateWithTilt({
+    required this.child,
+    required this.isInOpenSpace,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2468,7 +2483,8 @@ class _EncapsulateWithTilt extends StatelessWidget {
       childLayout: ChildLayout(
         inner: [
           Stack(
-            fit: StackFit.expand, // otherwise inner stacks collapse
+            clipBehavior: Clip.none,
+            fit: isInOpenSpace ? StackFit.loose : StackFit.expand, // otherwise inner stacks collapse
             children: [
               child,
             ],
@@ -6442,7 +6458,7 @@ class _HotKeyRecorderDialogState extends State<_HotKeyRecorderDialog> {
 
 class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
   final Widget artwork;
-  final String? heroTag;
+  final Object? heroTag;
   final FutureOr<File?> Function() imageFile;
   final FutureOr<FArtwork?> Function() fetchImage;
   final FutureOr<String?> Function(File? imgFile, Uint8List? bytes) onSave;
@@ -6508,7 +6524,7 @@ class NamidaArtworkFullscreen extends StatefulWidget {
   final String title;
   final Widget artwork;
   final ImageProvider<Object>? imgProvider;
-  final String? heroTag;
+  final Object? heroTag;
   final void Function() save;
   final void Function() close;
 

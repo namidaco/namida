@@ -303,6 +303,7 @@ class IndexerSettings extends SettingSubpageProvider {
     }
 
     Future<void> authenticate() async {
+      possibleErrorRx.value = null;
       isAuthenticatingRx.value = true;
       await authenticateRaw().ignoreError();
       isAuthenticatingRx.value = false;
@@ -1704,7 +1705,7 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder, {bool allowBypassing 
   // [didModifyFolder] was mainly used to force recheck libraries, now it will always recheck.
   RefreshLibraryIconController.repeat();
   final currentFiles = await Indexer.inst.getAudioFiles();
-  await RefreshLibraryIconController.fling().whenComplete(RefreshLibraryIconController.stop);
+  RefreshLibraryIconController.fling().ignoreError().whenComplete(RefreshLibraryIconController.stop);
 
   Widget? bypassWidget;
   if (allowBypassing) {
@@ -1895,7 +1896,11 @@ class RefreshLibraryIconController {
   }
 
   static void stop() {
-    _loopControllers((c) => c?.stop());
+    _loopControllers((c) {
+      try {
+        c?.stop();
+      } catch (_) {}
+    });
   }
 
   static void _loopControllers(void Function(AnimationController? c) execute) {

@@ -57,6 +57,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
     final tracks = widget.tracks;
     final name = tracks.album;
     final displayTrackNumberinAlbumPage = settings.displayTrackNumberinAlbumPage.value;
+    final heroTag = 'album_${widget.albumIdentifier}';
 
     return BackgroundWrapper(
       child: AnimationLimiter(
@@ -123,7 +124,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                               );
                               final artwork = NamidaArtworkExpandableToFullscreen(
                                 artwork: artworkPre,
-                                heroTag: 'album_${widget.albumIdentifier}',
+                                heroTag: heroTag,
                                 imageFile: () => info.toArtworkIfExistsAndValidAndEnabled() ?? File(tracksPathToImage),
                                 fetchImage: () => null,
                                 onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
@@ -132,14 +133,14 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                               return squared
                                   ? MultiArtworkContainer(
                                       size: size,
-                                      heroTag: 'album_${widget.albumIdentifier}',
+                                      heroTag: heroTag,
                                       child: artwork,
                                     )
                                   : Container(
                                       margin: const EdgeInsets.symmetric(horizontal: 12.0),
                                       padding: const EdgeInsets.all(3.0),
                                       child: NamidaHero(
-                                        tag: 'album_${widget.albumIdentifier}',
+                                        tag: heroTag,
                                         child: artwork,
                                       ),
                                     );

@@ -20,6 +20,7 @@ class MultiArtworkContainer extends StatelessWidget {
   final bool enableHero;
   final File? artworkFile;
   final int fadeMilliSeconds;
+  final bool wrapArtworkFileInFullscreenOpener;
 
   const MultiArtworkContainer({
     super.key,
@@ -34,6 +35,7 @@ class MultiArtworkContainer extends StatelessWidget {
     this.enableHero = true,
     this.artworkFile,
     this.fadeMilliSeconds = ArtworkWidget.kDefaultFadeMilliSeconds,
+    this.wrapArtworkFileInFullscreenOpener = false,
   });
 
   @override
@@ -80,6 +82,7 @@ class MultiArtworkContainer extends StatelessWidget {
                       reduceQuality: reduceQuality,
                       artworkFile: artworkFile,
                       fadeMilliSeconds: fadeMilliSeconds,
+                      wrapArtworkFileInFullscreenOpener: wrapArtworkFileInFullscreenOpener,
                     ),
                   ?child,
                   ?onTopWidget,

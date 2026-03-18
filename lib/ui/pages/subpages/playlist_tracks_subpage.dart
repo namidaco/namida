@@ -536,6 +536,8 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
           final sort = playlist.sortsType?.firstOrNull;
           final sortReverse = playlist.sortReverse;
 
+          final heroTag = 'playlist_${playlist.name}';
+
           return ObxO(
             rx: PlaylistController.inst.canReorderItems,
             builder: (context, reorderable) => TrackTilePropertiesProvider(
@@ -556,12 +558,13 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                   title: playlist.name.translatePlaylistName(),
                   subtitle: playlist.creationDate.dateFormatted,
                   thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
-                  heroTag: 'playlist_${playlist.name}',
+                  heroTag: heroTag,
                   imageBuilder: (size) => MultiArtworkContainer(
-                    heroTag: 'playlist_${playlist.name}',
+                    heroTag: heroTag,
                     size: size,
                     tracks: tracksWithDate.toImageTracks(),
                     artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
+                    wrapArtworkFileInFullscreenOpener: true,
                   ),
                   tracksFn: () => tracksWithDate,
                 ),

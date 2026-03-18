@@ -12,6 +12,7 @@ import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
@@ -354,13 +355,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                           alignment: widget.alignment,
                           filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
                           width: (info) {
-                            final aspectRatio = info == null ? null : info.image.width / info.image.height;
-                            final fittedWidth = widget.forceSquared
-                                ? null
-                                : aspectRatio == null
-                                ? null
-                                : (boxHeight * aspectRatio).clampDouble(0.0, boxWidth);
-                            return fittedWidth ?? realWidthAndHeight;
+                            if (widget.forceSquared || widget.staggered || info == null) return realWidthAndHeight;
+                            final aspectRatio = info.image.width / info.image.height;
+                            final fittedWidth = (boxHeight * aspectRatio).clampDouble(0.0, boxWidth);
+                            return fittedWidth;
                           },
                           height: (_) => realWidthAndHeight,
                           frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
@@ -529,6 +527,7 @@ class MultiArtworks extends StatelessWidget {
   final bool reduceQuality;
   final File? artworkFile;
   final int fadeMilliSeconds;
+  final bool wrapArtworkFileInFullscreenOpener;
 
   const MultiArtworks({
     super.key,
@@ -543,11 +542,28 @@ class MultiArtworks extends StatelessWidget {
     this.reduceQuality = false,
     required this.artworkFile,
     this.fadeMilliSeconds = ArtworkWidget.kDefaultFadeMilliSeconds,
+    this.wrapArtworkFileInFullscreenOpener = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final artworkFile = this.artworkFile;
+    final customArtworkWidget = artworkFile != null && artworkFile.existsSync()
+        ? ArtworkWidget(
+            key: ValueKey(artworkFile.path),
+            fadeMilliSeconds: fadeMilliSeconds,
+            thumbnailSize: thumbnailSize,
+            path: artworkFile.path,
+            forceSquared: true,
+            iconSize: iconSize,
+            blur: 0,
+            borderRadius: 0,
+            compressed: false,
+            width: thumbnailSize,
+            height: thumbnailSize,
+            fallbackToFolderCover: fallbackToFolderCover,
+          )
+        : null;
     return NamidaHero(
       tag: heroTag,
       enabled: !disableHero,
@@ -558,21 +574,17 @@ class MultiArtworks extends StatelessWidget {
         child: SizedBox(
           height: thumbnailSize,
           width: thumbnailSize,
-          child: artworkFile != null && artworkFile.existsSync()
-              ? ArtworkWidget(
-                  key: ValueKey(artworkFile.path),
-                  fadeMilliSeconds: fadeMilliSeconds,
-                  thumbnailSize: thumbnailSize,
-                  path: artworkFile.path,
-                  forceSquared: true,
-                  iconSize: iconSize,
-                  blur: 0,
-                  borderRadius: 0,
-                  compressed: false,
-                  width: thumbnailSize,
-                  height: thumbnailSize,
-                  fallbackToFolderCover: fallbackToFolderCover,
-                )
+          child: customArtworkWidget != null
+              ? wrapArtworkFileInFullscreenOpener
+                    ? NamidaArtworkExpandableToFullscreen(
+                        heroTag: heroTag,
+                        imageFile: () => artworkFile,
+                        fetchImage: () => null,
+                        onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
+                        themeColor: null,
+                        artwork: customArtworkWidget,
+                      )
+                    : customArtworkWidget
               : tracks.isEmpty
               ? ArtworkWidget(
                   key: const Key(''),

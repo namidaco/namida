@@ -1781,6 +1781,41 @@ extension TrackTileItemL10n on TrackTileItem {
     TrackTileItem.latestListenDate => lang.recentListens,
     TrackTileItem.firstListenDate => lang.firstListen,
   };
+
+  IconData toIcon() => switch (this) {
+    TrackTileItem.none => Broken.minus_cirlce,
+    TrackTileItem.title => Broken.music,
+    TrackTileItem.artists => Broken.microphone,
+    TrackTileItem.album => Broken.music_dashboard,
+    TrackTileItem.albumArtist => Broken.user,
+    TrackTileItem.genres => Broken.smileys,
+    TrackTileItem.composer => Broken.profile_2user,
+    TrackTileItem.year => Broken.calendar,
+    TrackTileItem.bitrate => Broken.voice_cricle,
+    TrackTileItem.channels => Broken.voice_cricle,
+    TrackTileItem.comment => Broken.message_text,
+    TrackTileItem.dateAdded => Broken.calendar_add,
+    TrackTileItem.dateModified => Broken.calendar_edit,
+    TrackTileItem.dateModifiedClock => Broken.clock,
+    TrackTileItem.dateModifiedDate => Broken.calendar_edit,
+    TrackTileItem.discNumber => Broken.hashtag,
+    TrackTileItem.trackNumber => Broken.hashtag,
+    TrackTileItem.duration => Broken.timer_1,
+    TrackTileItem.fileName => Broken.quote_up_circle,
+    TrackTileItem.fileNameWOExt => Broken.quote_up_circle,
+    TrackTileItem.extension => Broken.document,
+    TrackTileItem.folder => Broken.folder,
+    TrackTileItem.format => Broken.format_circle,
+    TrackTileItem.path => Broken.location,
+    TrackTileItem.sampleRate => Broken.voice_cricle,
+    TrackTileItem.size => Broken.size,
+    TrackTileItem.rating => Broken.grammerly,
+    TrackTileItem.moods => Broken.smileys,
+    TrackTileItem.tags => Broken.tag,
+    TrackTileItem.listenCount => Broken.award,
+    TrackTileItem.latestListenDate => Broken.clock,
+    TrackTileItem.firstListenDate => Broken.calendar_search,
+  };
 }
 
 extension QueueSourceL10n on QueueSource {

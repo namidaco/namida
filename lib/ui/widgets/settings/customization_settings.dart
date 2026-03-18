@@ -591,6 +591,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               return SmallListTile(
                 key: ValueKey(i),
                 title: trItem.toText(),
+                trailingIcon: trItem.toIcon(),
                 onTap: () {
                   settings.updateTrackItemList(p, trItem);
                   _onSettingsChanged();

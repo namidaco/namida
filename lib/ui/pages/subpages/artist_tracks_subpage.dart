@@ -77,6 +77,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
     final albumsInitiallyExpanded = settings.extra.artistAlbumsExpanded ?? true;
     final singlesInitiallyExpanded = settings.extra.artistSinglesExpanded ?? false; // cuz no space
     final extrasInitiallyExpanded = widget.albumIdentifiers.isEmpty && widget.singlesIdentifiers.isEmpty;
+    final heroTag = 'artist_${widget.name}';
     return AnimationLimiter(
       child: BackgroundWrapper(
         child: TrackTilePropertiesProvider(
@@ -136,7 +137,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                   title: widget.name,
                   source: queueSource,
                   subtitle: tracks.year.yearFormatted,
-                  heroTag: 'artist_${widget.name}',
+                  heroTag: heroTag,
                   imageBuilder: (size) {
                     final info = NetworkArtworkInfo.artist(widget.name);
                     final tracksPathToImage = tracks.pathToImage;
@@ -154,14 +155,14 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                     );
                     final artwork = NamidaArtworkExpandableToFullscreen(
                       artwork: artworkPre,
-                      heroTag: 'artist_${widget.name}',
+                      heroTag: heroTag,
                       imageFile: () => info.toArtworkIfExistsAndValidAndEnabled() ?? File(tracksPathToImage),
                       fetchImage: () => null,
                       onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
                       themeColor: null,
                     );
                     return NamidaHero(
-                      tag: 'artist_${widget.name}',
+                      tag: heroTag,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 2.0),
                         child: ContainerWithBorder(

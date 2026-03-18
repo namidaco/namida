@@ -74,7 +74,7 @@ class AlbumCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: theme.cardColor,
+          color: theme.cardColor.withOpacityExt(0.9),
           borderRadius: BorderRadius.circular(12.0.multipliedRadius),
           boxShadow: [
             BoxShadow(
