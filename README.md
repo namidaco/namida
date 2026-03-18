@@ -257,21 +257,18 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 # Installation
 
-- Namida is available for
-  - **Android** (stable/beta)
-  - **Windows** (beta)
-  - **Linux** (beta) <sub>`new`</sub>
-
 <div align="center">
 
 <table>
 
 <tr>
+  <th><div align="center">Platform</div></th>
   <th><div align="center">Stable</div></th>
   <th><div align="center">Beta</div></th>
 </tr>
 
 <tr>
+<td align="center"><b>Android</b></td>
 <td align="center" width="200">
   <div style="display:flex; flex-direction:column; align-items:center;">
     <a href="https://github.com/namidaco/namida/releases/latest">
@@ -282,7 +279,6 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
     </a>
   </div>
 </td>
-
 <td align="center" width="200">
   <div style="display:flex; flex-direction:column; align-items:center;">
     <a href="https://github.com/namidaco/namida-snapshots/releases/latest">
@@ -294,11 +290,46 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
   </div>
 </td>
 </tr>
+
+<tr>
+<td align="center"><b>Windows</b></td>
+<td align="center"><i>Soon</i></td>
+<td align="center" width="200">
+  <div style="display:flex; flex-direction:column; align-items:center;">
+    <a href="https://github.com/namidaco/namida-snapshots/releases/latest">
+      <img src="./some stuff/badge_github.png" height="50">
+    </a>
+  </div>
+</td>
+</tr>
+
+<tr>
+<td align="center"><b>Linux</b> <sub><code>new</code></sub></td>
+<td align="center"><i>Soon</i></td>
+<td align="center" width="200">
+  <div style="display:flex; flex-direction:column; align-items:center;">
+    <a href="https://github.com/namidaco/namida-snapshots/releases/latest">
+      <img src="./some stuff/badge_github.png" height="50">
+    </a>
+    <a href="#linux-installation"><sub>Installation steps ↓</sub></a>
+  </div>
+</td>
+</tr>
+
 </table>
 
 </div>
 
 ### Linux Installation
+
+> [!IMPORTANT]
+> Install dependencies first: **mpv** (for playback) and **wpe** (for login)
+>
+> ```bash
+> sudo pacman -S mpv wpewebkit              # Arch/Manjaro
+> sudo apt install mpv libwpewebkit-2.0-3   # Debian/Ubuntu/Mint
+> sudo dnf install mpv wpewebkit2gtk        # Fedora/RHEL
+> ```
 
 ```bash
 # Quick Install
@@ -312,11 +343,6 @@ sudo dnf install ./namida.rpm   # Fedora/RHEL (download .rpm from beta releases)
 
 # Nix (Home Manager) Installation
 # Available at: https://codeberg.org/iWisp360/namida-nix
-
-# make sure mpv (for playback) & wpe (for login) are installed
-sudo pacman -S mpv wpewebkit              # Arch/Manjaro
-sudo apt install mpv libwpewebkit-2.0-3   # Debian/Ubuntu/Mint
-sudo dnf install mpv wpewebkit2           # Fedora/RHEL
 ```
 
 ### Permission Note:
