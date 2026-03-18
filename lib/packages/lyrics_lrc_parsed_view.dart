@@ -19,8 +19,10 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class LyricsLRCParsedView extends StatefulWidget {
   final Widget videoOrImage;
@@ -29,6 +31,7 @@ class LyricsLRCParsedView extends StatefulWidget {
   final void Function()? onCloseFullscreenButtonTap;
   final bool allowOverflow;
   final bool useSafeArea;
+  final double blurColorMaskOpacity;
   final double? maxHeight;
   final double? verticalPadding;
   final Widget? bottomPadding;
@@ -41,6 +44,7 @@ class LyricsLRCParsedView extends StatefulWidget {
     this.onCloseFullscreenButtonTap,
     this.allowOverflow = true,
     this.useSafeArea = true,
+    this.blurColorMaskOpacity = 0.6,
     this.maxHeight,
     this.verticalPadding,
     this.bottomPadding,
@@ -63,7 +67,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     NamidaNavigator.inst.navigateToRoot(
       LyricsLRCParsedView(
         key: Lyrics.inst.lrcViewKeyFullscreen,
-        videoOrImage: const SizedBox(),
+        videoOrImage: widget.videoOrImage,
         isFullScreenView: true,
       ),
       transition: Transition.native,
@@ -138,6 +142,9 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   }
 
   void fillLists(Lrc? lrc, String? txt) {
+    try {
+      _scrollController.jumpTo(0);
+    } catch (_) {}
     currentLRC = lrc;
     if (lrc == null) {
       highlightTimestampsMap.clear();
@@ -563,29 +570,98 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
     final videoOrImageChild = fullscreen
         ? Positioned.fill(
-            child: Obx(
-              (context) {
-                final miniplayerColor = CurrentColor.inst.miniplayerColor;
-                return DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      // -- careful with making colors non-opaque, it will cause the foreground to dim as well (no idea how :/)
-                      colors: context.isDarkMode
-                          ? [
-                              Color.alphaBlend(miniplayerColor.withOpacityExt(0.21), Colors.black).withOpacityExt(1.0),
-                              Color.alphaBlend(miniplayerColor.withOpacityExt(0.15), Colors.black).withOpacityExt(1.0),
-                            ]
-                          : [
-                              Color.alphaBlend(miniplayerColor.withOpacityExt(0.3), Colors.white.withOpacityExt(0.7)).withOpacityExt(1.0),
-                              Color.alphaBlend(miniplayerColor.withOpacityExt(0.6), Colors.white.withOpacityExt(0.8)).withOpacityExt(1.0),
-                            ],
+            child: Stack(
+              fit: StackFit.expand,
+              alignment: Alignment.center,
+              children: [
+                ClipRect(
+                  child: NamidaBlur(
+                    fixArtifacts: true,
+                    blur: 60.0,
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      child: ObxO(
+                        rx: Player.inst.currentItem,
+                        builder: (context, item) {
+                          Widget child;
+                          if (item is YoutubeID) {
+                            final vidId = item.id;
+                            child = YoutubeThumbnail(
+                              type: ThumbnailType.video,
+                              key: Key(vidId),
+                              isImportantInCache: true,
+                              width: context.width,
+                              borderRadius: 0,
+                              blur: 0,
+                              disableBlurBgSizeShrink: true,
+                              videoId: vidId,
+                              displayFallbackIcon: false,
+                              compressed: true,
+                              preferLowerRes: true,
+                              forceSquared: true,
+                              fit: BoxFit.cover,
+                            );
+                          } else {
+                            final track = item is Selectable ? item.track : null;
+                            child = ArtworkWidget(
+                              key: ValueKey(track?.path),
+                              track: track,
+                              path: track?.pathToImage,
+                              thumbnailSize: context.width,
+                              width: context.width,
+                              borderRadius: 0,
+                              blur: 0,
+                              disableBlurBgSizeShrink: true,
+                              compressed: true,
+                              forceSquared: true,
+                              fit: BoxFit.cover,
+                            );
+                          }
+
+                          return AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 1200),
+                            switchInCurve: Curves.easeInOutQuart,
+                            switchOutCurve: Curves.easeInOutQuart,
+                            child: child,
+                          );
+                        },
+                      ),
                     ),
                   ),
-                  child: widget.videoOrImage,
-                );
-              },
+                ),
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: context.theme.scaffoldBackgroundColor.withOpacityExt(widget.blurColorMaskOpacity),
+                  ),
+                ),
+                // -- old design, simple color/gradient
+                // Positioned.fill(
+                //   child: Obx(
+                //     (context) {
+                //       final miniplayerColor = CurrentColor.inst.miniplayerColor;
+                //       return DecoratedBox(
+                //         decoration: BoxDecoration(
+                //           gradient: LinearGradient(
+                //             begin: Alignment.topLeft,
+                //             end: Alignment.bottomRight,
+                //             // -- careful with making colors non-opaque, it will cause the foreground to dim as well (no idea how :/)
+                //             colors: context.isDarkMode
+                //                 ? [
+                //                     Color.alphaBlend(miniplayerColor.withOpacityExt(0.21), Colors.black).withOpacityExt(0.5),
+                //                     Color.alphaBlend(miniplayerColor.withOpacityExt(0.15), Colors.black).withOpacityExt(0.5),
+                //                   ]
+                //                 : [
+                //                     Color.alphaBlend(miniplayerColor.withOpacityExt(0.3), Colors.white.withOpacityExt(0.7)).withOpacityExt(0.5),
+                //                     Color.alphaBlend(miniplayerColor.withOpacityExt(0.6), Colors.white.withOpacityExt(0.8)).withOpacityExt(0.5),
+                //                   ],
+                //           ),
+                //         ),
+                //         // child: widget.videoOrImage,
+                //       );
+                //     },
+                //   ),
+                // ),
+              ],
             ),
           )
         : AnimatedSwitcher(
@@ -673,7 +749,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           ),
                         );
                       }
-                      return const SizedBox();
                     }
 
                     final miniplayerColor = CurrentColor.inst.miniplayerColor;
@@ -683,229 +758,239 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                       builder: (context, selectedInfo) {
                         final selectedIndex = selectedInfo?.$2;
                         final selectedLineTimestamp = selectedInfo?.$1;
-                        return SuperSmoothListView.builder(
-                          padding: EdgeInsets.symmetric(vertical: _paddingVertical),
-                          controller: _scrollController,
-                          listController: _listController,
-                          itemCount: lyrics.length,
-                          itemBuilder: (context, index) {
-                            final distanceDiffFromSelected = selectedIndex == null ? null : index - selectedIndex; // -- does not account for empty lines
-                            final distanceDiffFromSelectedAbs = distanceDiffFromSelected?.abs();
-                            final lrc = lyrics[index];
-                            String text = lrc.readableText;
-                            final parts = lrc.parts;
-                            final person = lrc.person;
-                            final isBGLyrics = lrc.isBGLyrics;
-                            final indicesForTimestamp = highlightTimestampsMap[lrc.timestamp];
+                        return AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 600),
+                          switchInCurve: Curves.easeInOutQuart,
+                          switchOutCurve: Curves.easeInOutQuart,
+                          child: lyrics.isEmpty
+                              ? const SizedBox(
+                                  key: ValueKey('empty_lrc'),
+                                )
+                              : SuperSmoothListView.builder(
+                                  key: ValueKey('valid_lrc'),
+                                  padding: EdgeInsets.symmetric(vertical: _paddingVertical),
+                                  controller: _scrollController,
+                                  listController: _listController,
+                                  itemCount: lyrics.length,
+                                  itemBuilder: (context, index) {
+                                    final distanceDiffFromSelected = selectedIndex == null ? null : index - selectedIndex; // -- does not account for empty lines
+                                    final distanceDiffFromSelectedAbs = distanceDiffFromSelected?.abs();
+                                    final lrc = lyrics[index];
+                                    String text = lrc.readableText;
+                                    final parts = lrc.parts;
+                                    final person = lrc.person;
+                                    final isBGLyrics = lrc.isBGLyrics;
+                                    final indicesForTimestamp = highlightTimestampsMap[lrc.timestamp];
 
-                            final selected = distanceDiffFromSelected == 0 || isBGLyrics || selectedLineTimestamp == lrc.timestamp;
-                            final selectedAndEmpty = selected && _checkIfTextEmpty(text);
-                            var bgColor = selected && !isBGLyrics
-                                ? Color.alphaBlend(miniplayerColor.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(
-                                    selectedAndEmpty
-                                        ? 0.1
+                                    final selected = distanceDiffFromSelected == 0 || isBGLyrics || selectedLineTimestamp == lrc.timestamp;
+                                    final selectedAndEmpty = selected && _checkIfTextEmpty(text);
+                                    var bgColor = selected && !isBGLyrics
+                                        ? Color.alphaBlend(miniplayerColor.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(
+                                            selectedAndEmpty
+                                                ? 0.1
+                                                : fullscreen
+                                                ? 0.4
+                                                : 0.5,
+                                          )
+                                        : null;
+
+                                    EdgeInsetsGeometry lineMargin = EdgeInsets.symmetric(
+                                      vertical: /* (selected ? 2.0 : 0.0) + */ (fullscreen ? 8.0 : 2.0),
+                                      horizontal: fullscreen ? 10.0 : 8.0,
+                                    );
+
+                                    EdgeInsetsGeometry padding = selectedAndEmpty
+                                        ? const EdgeInsets.symmetric(
+                                            vertical: 3.0,
+                                            horizontal: 24.0,
+                                          )
                                         : fullscreen
-                                        ? 0.4
-                                        : 0.5,
-                                  )
-                                : null;
+                                        ? const EdgeInsets.symmetric(
+                                            vertical: 8.0,
+                                            horizontal: 8.0,
+                                          )
+                                        : const EdgeInsets.symmetric(
+                                            vertical: 8.0,
+                                            horizontal: 8.0,
+                                          );
 
-                            EdgeInsetsGeometry lineMargin = EdgeInsets.symmetric(
-                              vertical: /* (selected ? 2.0 : 0.0) + */ (fullscreen ? 8.0 : 2.0),
-                              horizontal: fullscreen ? 10.0 : 8.0,
-                            );
+                                    BorderRadius borderRadius = selectedAndEmpty ? BorderRadius.circular(5.0.multipliedRadius) : BorderRadius.circular(8.0.multipliedRadius);
 
-                            EdgeInsetsGeometry padding = selectedAndEmpty
-                                ? const EdgeInsets.symmetric(
-                                    vertical: 3.0,
-                                    horizontal: 24.0,
-                                  )
-                                : fullscreen
-                                ? const EdgeInsets.symmetric(
-                                    vertical: 8.0,
-                                    horizontal: 8.0,
-                                  )
-                                : const EdgeInsets.symmetric(
-                                    vertical: 8.0,
-                                    horizontal: 8.0,
-                                  );
+                                    TextAlign textAlign = alignAtStart ? TextAlign.start : TextAlign.center;
+                                    AlignmentDirectional alignment = alignAtStart ? AlignmentDirectional.centerStart : AlignmentDirectional.center;
+                                    double normalLineColorOpacity = 0.5;
+                                    (double, FontWeight)? fontModifier;
+                                    TextStyle textStyle;
 
-                            BorderRadius borderRadius = selectedAndEmpty ? BorderRadius.circular(5.0.multipliedRadius) : BorderRadius.circular(8.0.multipliedRadius);
+                                    if (person != null && personCount > 0) {
+                                      if (personCount == 1) {
+                                        // -- keep defaults
+                                      } else if (person == 0) {
+                                        // -- bg
+                                        fontModifier = (0.75, FontWeight.w400);
+                                      } else if (person == 1) {
+                                        // -- v1
+                                        textAlign = TextAlign.start;
+                                        alignment = AlignmentDirectional.centerStart;
+                                        padding = padding.add(EdgeInsetsDirectional.only(start: 12.0, end: 64.0));
+                                      } else if (person == 2) {
+                                        // -- v2
+                                        textAlign = TextAlign.end;
+                                        alignment = AlignmentDirectional.centerEnd;
+                                        padding = padding.add(EdgeInsetsDirectional.only(start: 64.0, end: 12.0));
+                                      } else if (person == 3) {
+                                        // -- v3
+                                        textAlign = TextAlign.center;
+                                        alignment = AlignmentDirectional.center;
+                                      }
+                                      if (selected) {
+                                        textStyle = normalTextStyle.copyWith(
+                                          color: Colors.white.withOpacityExt(0.75),
+                                        );
+                                      } else if (distanceDiffFromSelected != null && distanceDiffFromSelected <= 0) {
+                                        // -- lines before current in word synced lyrics
+                                        textStyle = normalTextStyle.copyWith(
+                                          color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
+                                        );
+                                      } else {
+                                        // -- lines after current in word synced lyrics
+                                        normalLineColorOpacity = 0.2;
+                                        textStyle = normalTextStyle.copyWith(
+                                          color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
+                                        );
+                                      }
+                                    } else {
+                                      // -- lines in normal synced lyrics
+                                      if (distanceDiffFromSelected != null) {
+                                        normalLineColorOpacity = distanceDiffFromSelectedAbs == 1
+                                            ? 0.5
+                                            : distanceDiffFromSelectedAbs == 2
+                                            ? 0.4
+                                            : 0.25;
+                                      }
 
-                            TextAlign textAlign = alignAtStart ? TextAlign.start : TextAlign.center;
-                            AlignmentDirectional alignment = alignAtStart ? AlignmentDirectional.centerStart : AlignmentDirectional.center;
-                            double normalLineColorOpacity = 0.5;
-                            (double, FontWeight)? fontModifier;
-                            TextStyle textStyle;
+                                      if (selected) {
+                                        textStyle = normalTextStyle;
+                                      } else {
+                                        textStyle = normalTextStyle.copyWith(
+                                          color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
+                                        );
+                                      }
+                                    }
+                                    if (fontModifier != null) {
+                                      final size = fontModifier.$1;
+                                      final weigth = fontModifier.$2;
+                                      textStyle = textStyle.copyWith(
+                                        fontSize: size == 1.0 ? null : textStyle.fontSize! * size,
+                                        fontWeight: weigth,
+                                      );
+                                    }
 
-                            if (person != null && personCount > 0) {
-                              if (personCount == 1) {
-                                // -- keep defaults
-                              } else if (person == 0) {
-                                // -- bg
-                                fontModifier = (0.75, FontWeight.w400);
-                              } else if (person == 1) {
-                                // -- v1
-                                textAlign = TextAlign.start;
-                                alignment = AlignmentDirectional.centerStart;
-                                padding = padding.add(EdgeInsetsDirectional.only(start: 12.0, end: 64.0));
-                              } else if (person == 2) {
-                                // -- v2
-                                textAlign = TextAlign.end;
-                                alignment = AlignmentDirectional.centerEnd;
-                                padding = padding.add(EdgeInsetsDirectional.only(start: 64.0, end: 12.0));
-                              } else if (person == 3) {
-                                // -- v3
-                                textAlign = TextAlign.center;
-                                alignment = AlignmentDirectional.center;
-                              }
-                              if (selected) {
-                                textStyle = normalTextStyle.copyWith(
-                                  color: Colors.white.withOpacityExt(0.75),
-                                );
-                              } else if (distanceDiffFromSelected != null && distanceDiffFromSelected <= 0) {
-                                // -- lines before current in word synced lyrics
-                                textStyle = normalTextStyle.copyWith(
-                                  color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
-                                );
-                              } else {
-                                // -- lines after current in word synced lyrics
-                                normalLineColorOpacity = 0.2;
-                                textStyle = normalTextStyle.copyWith(
-                                  color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
-                                );
-                              }
-                            } else {
-                              // -- lines in normal synced lyrics
-                              if (distanceDiffFromSelected != null) {
-                                normalLineColorOpacity = distanceDiffFromSelectedAbs == 1
-                                    ? 0.5
-                                    : distanceDiffFromSelectedAbs == 2
-                                    ? 0.4
-                                    : 0.25;
-                              }
+                                    if (indicesForTimestamp != null && indicesForTimestamp.length > 1) {
+                                      final isFirst = index == indicesForTimestamp.first;
+                                      final isLast = index == indicesForTimestamp.last;
+                                      final isSecondaryLanguageLine = !isFirst;
 
-                              if (selected) {
-                                textStyle = normalTextStyle;
-                              } else {
-                                textStyle = normalTextStyle.copyWith(
-                                  color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
-                                );
-                              }
-                            }
-                            if (fontModifier != null) {
-                              final size = fontModifier.$1;
-                              final weigth = fontModifier.$2;
-                              textStyle = textStyle.copyWith(
-                                fontSize: size == 1.0 ? null : textStyle.fontSize! * size,
-                                fontWeight: weigth,
-                              );
-                            }
+                                      if (isSecondaryLanguageLine) {
+                                        final multiplier = fullscreen ? 0.75 : 0.85;
+                                        textStyle = textStyle.copyWith(
+                                          fontSize: textStyle.fontSize! * multiplier,
+                                        );
+                                        if (bgColor != null) {
+                                          bgColor = bgColor.withOpacityExt(bgColor.a * 0.75);
+                                        }
+                                      }
 
-                            if (indicesForTimestamp != null && indicesForTimestamp.length > 1) {
-                              final isFirst = index == indicesForTimestamp.first;
-                              final isLast = index == indicesForTimestamp.last;
-                              final isSecondaryLanguageLine = !isFirst;
+                                      if (!isFirst) {
+                                        lineMargin = lineMargin.subtract(
+                                          EdgeInsetsDirectional.only(
+                                            top: lineMargin.resolve(textDirection).top,
+                                          ),
+                                        );
+                                        padding = padding.subtract(
+                                          EdgeInsetsDirectional.only(
+                                            top: padding.resolve(textDirection).top * 0.4,
+                                          ),
+                                        );
+                                        borderRadius = borderRadius.copyWith(
+                                          topRight: Radius.zero,
+                                          topLeft: Radius.zero,
+                                        );
+                                      }
 
-                              if (isSecondaryLanguageLine) {
-                                final multiplier = fullscreen ? 0.75 : 0.85;
-                                textStyle = textStyle.copyWith(
-                                  fontSize: textStyle.fontSize! * multiplier,
-                                );
-                                if (bgColor != null) {
-                                  bgColor = bgColor.withOpacityExt(bgColor.a * 0.75);
-                                }
-                              }
+                                      if (!isLast) {
+                                        lineMargin = lineMargin.subtract(
+                                          EdgeInsetsDirectional.only(
+                                            bottom: lineMargin.resolve(textDirection).bottom,
+                                          ),
+                                        );
+                                        padding = padding.subtract(
+                                          EdgeInsetsDirectional.only(
+                                            bottom: padding.resolve(textDirection).bottom * 0.4,
+                                          ),
+                                        );
+                                        borderRadius = borderRadius.copyWith(
+                                          bottomRight: Radius.zero,
+                                          bottomLeft: Radius.zero,
+                                        );
+                                      }
+                                    }
 
-                              if (!isFirst) {
-                                lineMargin = lineMargin.subtract(
-                                  EdgeInsetsDirectional.only(
-                                    top: lineMargin.resolve(textDirection).top,
-                                  ),
-                                );
-                                padding = padding.subtract(
-                                  EdgeInsetsDirectional.only(
-                                    top: padding.resolve(textDirection).top * 0.4,
-                                  ),
-                                );
-                                borderRadius = borderRadius.copyWith(
-                                  topRight: Radius.zero,
-                                  topLeft: Radius.zero,
-                                );
-                              }
+                                    final textWidget = selected && parts != null && parts.isNotEmpty
+                                        ? _TextWithFadingProgress(
+                                            parts: parts,
+                                            textStyle: textStyle,
+                                            textAlign: textAlign,
+                                          )
+                                        : Text(
+                                            text,
+                                            style: textStyle,
+                                            textAlign: textAlign,
+                                            // softWrap: false, // keep the text steady while animating mp
+                                          );
 
-                              if (!isLast) {
-                                lineMargin = lineMargin.subtract(
-                                  EdgeInsetsDirectional.only(
-                                    bottom: lineMargin.resolve(textDirection).bottom,
-                                  ),
-                                );
-                                padding = padding.subtract(
-                                  EdgeInsetsDirectional.only(
-                                    bottom: padding.resolve(textDirection).bottom * 0.4,
-                                  ),
-                                );
-                                borderRadius = borderRadius.copyWith(
-                                  bottomRight: Radius.zero,
-                                  bottomLeft: Radius.zero,
-                                );
-                              }
-                            }
-
-                            final textWidget = selected && parts != null && parts.isNotEmpty
-                                ? _TextWithFadingProgress(
-                                    parts: parts,
-                                    textStyle: textStyle,
-                                    textAlign: textAlign,
-                                  )
-                                : Text(
-                                    text,
-                                    style: textStyle,
-                                    textAlign: textAlign,
-                                    // softWrap: false, // keep the text steady while animating mp
-                                  );
-
-                            return Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Positioned.fill(
-                                  child: Material(
-                                    type: MaterialType.transparency,
-                                    child: InkWell(
-                                      splashFactory: InkSparkle.splashFactory,
-                                      onTap: () {
-                                        _canAnimateScroll = true;
-                                        Player.inst.seek(lrc.timestamp); //  should auto scroll bcz position changes
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                IgnorePointer(
-                                  child: NamidaHero(
-                                    tag: 'LYRICS_LINE_${lrc.timestamp}',
-                                    enabled: false,
-                                    child: AnimatedScale(
-                                      alignment: alignment.resolve(textDirection),
-                                      duration: const Duration(milliseconds: 400),
-                                      curve: Curves.easeInOutCubicEmphasized,
-                                      scale: selected ? 1.0 : 0.95,
-                                      child: NamidaInkWell(
-                                        alignment: alignment,
-                                        bgColor: bgColor,
-                                        decoration: BoxDecoration(
-                                          borderRadius: borderRadius,
+                                    return Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Positioned.fill(
+                                          child: Material(
+                                            type: MaterialType.transparency,
+                                            child: InkWell(
+                                              splashFactory: InkSparkle.splashFactory,
+                                              onTap: () {
+                                                _canAnimateScroll = true;
+                                                Player.inst.seek(lrc.timestamp); //  should auto scroll bcz position changes
+                                              },
+                                            ),
+                                          ),
                                         ),
-                                        animationDurationMS: 300,
-                                        margin: lineMargin,
-                                        padding: padding,
-                                        child: textWidget,
-                                      ),
-                                    ),
-                                  ),
+                                        IgnorePointer(
+                                          child: NamidaHero(
+                                            tag: 'LYRICS_LINE_${lrc.timestamp}',
+                                            enabled: false,
+                                            child: AnimatedScale(
+                                              alignment: alignment.resolve(textDirection),
+                                              duration: const Duration(milliseconds: 400),
+                                              curve: Curves.easeInOutCubicEmphasized,
+                                              scale: selected ? 1.0 : 0.95,
+                                              child: NamidaInkWell(
+                                                alignment: alignment,
+                                                bgColor: bgColor,
+                                                decoration: BoxDecoration(
+                                                  borderRadius: borderRadius,
+                                                ),
+                                                animationDurationMS: 300,
+                                                margin: lineMargin,
+                                                padding: padding,
+                                                child: textWidget,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 ),
-                              ],
-                            );
-                          },
                         );
                       },
                     );
@@ -968,7 +1053,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         child: mainLyricsWidget,
       );
     }
-    return Stack(
+    Widget finalStack = Stack(
       alignment: Alignment.center,
       children: [
         videoOrImageChild,
@@ -987,6 +1072,14 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         ),
       ],
     );
+
+    if (fullscreen) {
+      finalStack = BackgroundWrapper(
+        child: finalStack,
+      );
+    }
+
+    return finalStack;
   }
 }
 

@@ -376,6 +376,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                 key: Lyrics.inst.lrcViewKey,
                                                 videoOrImage: const SizedBox(),
                                                 allowOverflow: false,
+                                                blurColorMaskOpacity: 0.75,
                                                 useSafeArea: false,
                                                 isFullScreenView: true,
                                                 canShowToggleFullscreenButton: false,

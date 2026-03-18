@@ -175,19 +175,21 @@ class Lyrics {
     /// 2. cached lrc
     /// 3. track embedded
     if (source != LyricsSource.internet) {
-      final lyricsFilesLocal = lrcUtils.deviceLRCFiles;
-      for (final lf in lyricsFilesLocal) {
-        if (await lf.existsAndValid()) {
-          lrcContent = await lf.readLrcString();
-          break;
-        }
+      final syncedInCache = lrcUtils.cachedLRCFile;
+      if (await syncedInCache.existsAndValid()) {
+        lrcContent = await syncedInCache.readLrcString();
+      } else if (trackLyrics != '') {
+        lrcContent = trackLyrics;
       }
+
       if (lrcContent == null) {
-        final syncedInCache = lrcUtils.cachedLRCFile;
-        if (await syncedInCache.existsAndValid()) {
-          lrcContent = await syncedInCache.readLrcString();
-        } else if (trackLyrics != '') {
-          lrcContent = trackLyrics;
+        final lyricsFilesLocal = lrcUtils.deviceLRCFiles;
+        for (final lf in lyricsFilesLocal) {
+          if (await lf.existsAndValid()) {
+            lrcContent = await lf.readLrcString();
+
+            break;
+          }
         }
       }
       // -- this should be prioritized before searching network again

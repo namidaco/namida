@@ -164,19 +164,19 @@ class TracksSearchWrapper {
     );
 
     String? lrcContent;
-    final lyricsFilesLocal = lrcUtils.deviceLRCFiles;
-    for (final lf in lyricsFilesLocal) {
-      if (lf.existsAndValidSync()) {
-        lrcContent = lf.readLrcStringSync();
-        break;
-      }
+    final syncedInCache = lrcUtils.cachedLRCFile;
+    if (syncedInCache.existsAndValidSync()) {
+      lrcContent = syncedInCache.readLrcStringSync();
+    } else if (embedded.isNotEmpty) {
+      lrcContent = embedded;
     }
     if (lrcContent == null) {
-      final syncedInCache = lrcUtils.cachedLRCFile;
-      if (syncedInCache.existsAndValidSync()) {
-        lrcContent = syncedInCache.readLrcStringSync();
-      } else if (embedded.isNotEmpty) {
-        lrcContent = embedded;
+      final lyricsFilesLocal = lrcUtils.deviceLRCFiles;
+      for (final lf in lyricsFilesLocal) {
+        if (lf.existsAndValidSync()) {
+          lrcContent = lf.readLrcStringSync();
+          break;
+        }
       }
     }
     if (lrcContent == null) {

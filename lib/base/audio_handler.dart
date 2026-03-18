@@ -736,6 +736,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         },
       );
     }
+    Lyrics.inst.updateLyrics(tr);
 
     Duration? duration;
     bool checkInterrupted() {
@@ -862,7 +863,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (playWhenReady.value) onPlayRaw(attemptFixVolume: false);
 
     startCounterToAListen(pi);
-    Lyrics.inst.updateLyrics(tr);
   }
 
   Future<void> onItemPlayYoutubeIDSetQuality({
@@ -1325,7 +1325,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
       if (!wasPlayingFromCache) {
         startCounterToAListen(pi);
-        Lyrics.inst.updateLyrics(item);
         if (settings.youtube.sponsorBlockSettings.value.enabled) {
           SponsorBlockController.inst.updateSegments(item.id);
         }
@@ -1377,6 +1376,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         }
       }
     }
+
+    Lyrics.inst.updateLyrics(item);
 
     Duration? initialPosition = await _getItemInitialPosition(pi, duration);
 
