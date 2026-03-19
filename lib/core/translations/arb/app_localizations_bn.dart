@@ -303,8 +303,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '$numberString টি ট্র্যাকের বিষয়বস্তু সাফ করুন',
-      one: 'টি ট্র্যাকের বিষয়বস্তু সাফ করুন',
+      other: '$numberStringটি ট্র্যাকের বিষয়বস্তু সাফ করুন',
+      one: 'ট্র্যাকের বিষয়বস্তু সাফ করুন',
     );
     return '$_temp0';
   }
@@ -392,8 +392,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString টি অ্যালবাম শিল্পী',
-      one: '$countString টি অ্যালবাম শিল্পী',
+      other: '$countStringটি অ্যালবাম শিল্পী',
+      one: '$countStringটি অ্যালবাম শিল্পী',
     );
     return '$_temp0';
   }
@@ -406,8 +406,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString টি অ্যালবাম',
-      one: '$countString টি অ্যালবাম',
+      other: '$countStringটি অ্যালবাম',
+      one: '$countStringটি অ্যালবাম',
     );
     return '$_temp0';
   }
@@ -462,8 +462,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString টি ফাইল',
-      one: '$countString টি ফাইল',
+      other: '$countStringটি ফাইল',
+      one: '$countStringটি ফাইল',
     );
     return '$_temp0';
   }
@@ -476,8 +476,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString টি ফোল্ডার',
-      one: '$countString টি ফোল্ডার',
+      other: '$countStringটি ফোল্ডার',
+      one: '$countStringটি ফোল্ডার',
     );
     return '$_temp0';
   }
@@ -490,8 +490,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString টি জনরা',
-      one: '$countString টি জনরা',
+      other: '$countStringটি জনরা',
+      one: '$countStringটি জনরা',
     );
     return '$_temp0';
   }
@@ -518,8 +518,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString টি প্লেলিস্ট',
-      one: '$countString টি প্লেলিস্ট',
+      other: '$countStringটি প্লেলিস্ট',
+      one: '$countStringটি প্লেলিস্ট',
     );
     return '$_temp0';
   }
@@ -562,8 +562,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString টি ট্র্যাক',
-      one: '$countString টি ট্র্যাক',
+      other: '$countStringটি ট্র্যাক',
+      one: '$countStringটি ট্র্যাক',
     );
     return '$_temp0';
   }
@@ -576,8 +576,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString টি ভিডিও',
-      one: '$countString টি ভিডিও',
+      other: '$countStringটি ভিডিও',
+      one: '$countStringটি ভিডিও',
     );
     return '$_temp0';
   }
@@ -591,7 +591,7 @@ class AppLocalizationsBn extends AppLocalizations {
       count,
       locale: localeName,
       other: '$countString ভিউ',
-      one: '$countString টি ভিউ',
+      one: '$countStringটি ভিউ',
     );
     return '$_temp0';
   }
@@ -606,8 +606,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString ভিউ',
-      one: '$countString টি ভিউ',
+      other: '$countStringভিউ',
+      one: '$countStringটি ভিউ',
     );
     return '$_temp0';
   }
@@ -729,8 +729,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString টি ফাইল, যার মোট সাইজ $totalSizeText, ডিলিট করবেন?',
-      one: '$totalSizeText টি ফাইল, যার মোট সাইজ $totalSizeText, ডিলিট করবেন?',
+      other: '$countStringটি ফাইল, যার মোট সাইজ $totalSizeText, ডিলিট করবেন?',
+      one: '$countStringটি ফাইল, যার মোট সাইজ $totalSizeText, ডিলিট করবেন?',
     );
     return '$_temp0';
   }
@@ -1061,7 +1061,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '$numberString টি প্যালেট বাকি আছে, এক্সট্র্যাক্ট করবেন?',
+      other: '$numberStringটি প্যালেট বাকি আছে, এক্সট্র্যাক্ট করবেন?',
+      one: '$numberStringটি প্যালেট বাকি আছে, এক্সট্র্যাক্ট করবেন?',
     );
     return '$_temp0';
   }
@@ -1360,8 +1361,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '$numberString টি চ্যানেল সফলভাবে ইম্পোর্ট করা হয়েছে',
-      one: '$numberString টি চ্যানেল সফলভাবে ইম্পোর্ট করা হয়েছে',
+      other: '$numberStringটি চ্যানেল সফলভাবে ইম্পোর্ট করা হয়েছে',
+      one: '$numberStringটি চ্যানেল সফলভাবে ইম্পোর্ট করা হয়েছে',
     );
     return '$_temp0';
   }
@@ -1371,7 +1372,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '$numberText টি প্লেলিস্ট সফলভাবে ইম্পোর্ট করা হয়েছে',
+      other: 'সফলভাবে $numberTextটি প্লেলিস্ট ইম্পোর্ট করা হয়েছে',
+      one: 'সফলভাবে $numberTextটি প্লেলিস্ট ইম্পোর্ট করা হয়েছে',
     );
     return '$_temp0';
   }
@@ -1654,7 +1656,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get minimum => 'সর্বনিম্ন';
 
   @override
-  String get minimumOneFolderSubtitle => 'কমপক্ষে ১টি ফোল্ডার থাকা উচিত, আপনি যদি এটি সরাতে চান তবে আরও ফোল্ডার যোগ করুন';
+  String get minimumOneFolderSubtitle => 'কমপক্ষে একটি ফোল্ডার থাকা উচিত, আপনি যদি এটি সরাতে চান তবে আরও ফোল্ডার যোগ করুন';
 
   @override
   String get minimumOneItem => 'আইটেম সরানো যায়নি';
@@ -1667,8 +1669,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: 'কমপক্ষে $numberString টি আইটেম অবশিষ্ট থাকা উচিত',
-      one: 'কমপক্ষে $numberString টি আইটেম অবশিষ্ট থাকা উচিত',
+      other: 'কমপক্ষে $numberStringটি আইটেম অবশিষ্ট থাকা উচিত',
+      one: 'কমপক্ষে $numberStringটি আইটেম অবশিষ্ট থাকা উচিত',
     );
     return '$_temp0';
   }
@@ -2792,7 +2794,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get unlock => 'আনলক';
 
   @override
-  String get unsubscribe => 'Unsubscribe';
+  String get unsubscribe => 'আনসাবস্ক্রাইব করুন';
 
   @override
   String get update => 'আপডেট';

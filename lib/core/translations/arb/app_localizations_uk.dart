@@ -2822,7 +2822,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get unlock => 'Розблокувати';
 
   @override
-  String get unsubscribe => 'Unsubscribe';
+  String get unsubscribe => 'Відписатися';
 
   @override
   String get update => 'Оновити';

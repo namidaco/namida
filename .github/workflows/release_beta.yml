@@ -107,14 +107,6 @@ jobs:
           echo ${{ secrets.ANDROID_SIGNING_KEYSTORE }} | base64 --decode > android/app/keystore.jks
           echo ${{ secrets.ANDROID_SIGNING_KEY_PROPERTIES }} | base64 --decode > android/key.properties
 
-      - name: Creating original apks
-        run: |
-          mkdir -p build_final
-          flutter build apk --target-platform android-arm64 --release
-          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version_name }}-arm64-v8a.apk
-          flutter build apk --target-platform android-arm --release
-          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build_final/namida-v${{ steps.extract_version.outputs.version_name }}-armeabi-v7a.apk
-
       - name: Patch package ID for clone
         if: matrix.is_clone
         run: find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;

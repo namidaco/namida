@@ -155,25 +155,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get artist => 'الفنان';
 
   @override
-  String get artists => 'الفنانون';
+  String get artists => 'فنانون';
 
   @override
-  String get artwork => 'العمل الفني';
+  String get artwork => 'عمل فني';
 
   @override
   String get artworkGestures => 'إيماءات العمل الفني';
 
   @override
-  String get artworks => 'الأعمال الفنية';
+  String get artworks => 'أعمال فنية';
 
   @override
-  String get audio => 'الصوت';
+  String get audio => 'صوتي';
 
   @override
   String get audioCache => 'ذاكرة التخزين المؤقت الصوتية';
 
   @override
-  String get audioOnly => 'الصوت فقط';
+  String get audioOnly => 'صوت فقط';
 
   @override
   String get auto => 'تلقائي';

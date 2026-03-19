@@ -576,8 +576,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$countString 个视频‌',
-      one: '$countString 个视频‌',
+      other: '$countString 个视频',
+      one: '$countString 个视频',
     );
     return '$_temp0';
   }
@@ -2194,8 +2194,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '再重复 $number 次‌',
-      one: '再重复 $number 次‌',
+      other: '再重复 $number 次',
+      one: '再重复 $number 次',
     );
     return '$_temp0';
   }
@@ -2791,7 +2791,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unlock => '解锁';
 
   @override
-  String get unsubscribe => 'Unsubscribe';
+  String get unsubscribe => '取消订阅';
 
   @override
   String get update => '更新';
