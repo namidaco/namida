@@ -647,8 +647,8 @@ SnackbarController snackyy({
     fontSize: size,
     height: 1.25,
     color: action ? null : itemsColor,
-    fontFamily: "LexendDeca",
-    fontFamilyFallback: const ['sans-serif', 'Roboto'],
+    fontFamily: AppThemes.fontFamily,
+    fontFamilyFallback: AppThemes.fontFamilyFallback,
   );
 
   // -- currently has no effects cuz it looks dogshit

@@ -14,6 +14,9 @@ class AppThemes {
   static const fabForegroundColor = Color.fromRGBO(255, 255, 255, 0.8);
   static const selectedNavigationIconColor = Color.fromRGBO(255, 255, 255, 0.75);
 
+  static const fontFamily = "LexendDeca";
+  static const fontFamilyFallback = ['sans-serif', 'Roboto'];
+
   ThemeData getAppTheme([Color? color, bool? light, bool lighterDialog = true]) {
     color ??= CurrentColor.inst.color;
     light ??= namida.brightness == Brightness.light;
@@ -44,8 +47,6 @@ class AppThemes {
       light ? const Color.fromARGB(255, 255, 255, 255) : pitchGrey,
     );
 
-    const fontFallback = ['sans-serif', 'Roboto'];
-
     final brightness = light ? Brightness.light : Brightness.dark;
     return ThemeData(
       brightness: brightness,
@@ -56,8 +57,8 @@ class AppThemes {
         contrastLevel: 0.05,
         dynamicSchemeVariant: DynamicSchemeVariant.fidelity, // ensure monochrome colors are not modified
       ),
-      fontFamily: "LexendDeca",
-      fontFamilyFallback: fontFallback,
+      fontFamily: fontFamily,
+      fontFamilyFallback: fontFamilyFallback,
       scaffoldBackgroundColor: pitchBlack ?? (light ? Color.alphaBlend(color.withAlpha(60), Colors.white) : null),
       splashColor: Colors.transparent,
       splashFactory: InkRipple.splashFactory,
@@ -191,50 +192,50 @@ class AppThemes {
         bodyMedium: const TextStyle(
           fontSize: 14.0,
           fontWeight: FontWeight.normal,
-          fontFamilyFallback: fontFallback,
+          fontFamilyFallback: fontFamilyFallback,
         ),
         bodySmall: const TextStyle(
           fontSize: 14.0,
           fontWeight: FontWeight.normal,
-          fontFamilyFallback: fontFallback,
+          fontFamilyFallback: fontFamilyFallback,
         ),
         titleSmall: const TextStyle(
           fontSize: 14.0,
           fontWeight: FontWeight.w600,
-          fontFamilyFallback: fontFallback,
+          fontFamilyFallback: fontFamilyFallback,
         ),
         titleLarge: const TextStyle(
           fontSize: 20.0,
           fontWeight: FontWeight.w600,
-          fontFamilyFallback: fontFallback,
+          fontFamilyFallback: fontFamilyFallback,
         ),
         displayLarge: TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: 17.0,
           color: light ? Colors.black.withAlpha(160) : Colors.white.withAlpha(210),
-          fontFamilyFallback: fontFallback,
+          fontFamilyFallback: fontFamilyFallback,
         ),
         displayMedium: TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 15.0,
           color: light ? Colors.black.withAlpha(150) : Colors.white.withAlpha(180),
-          fontFamilyFallback: fontFallback,
+          fontFamilyFallback: fontFamilyFallback,
         ),
         displaySmall: TextStyle(
           fontWeight: FontWeight.w400,
           fontSize: 13.0,
           color: light ? Colors.black.withAlpha(120) : Colors.white.withAlpha(170),
-          fontFamilyFallback: fontFallback,
+          fontFamilyFallback: fontFamilyFallback,
         ),
         headlineMedium: const TextStyle(
           fontWeight: FontWeight.normal,
           fontSize: 14.0,
-          fontFamilyFallback: fontFallback,
+          fontFamilyFallback: fontFamilyFallback,
         ),
         headlineSmall: const TextStyle(
           fontWeight: FontWeight.normal,
           fontSize: 14.0,
-          fontFamilyFallback: fontFallback,
+          fontFamilyFallback: fontFamilyFallback,
         ),
       ),
     );

@@ -165,7 +165,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   void _showAllConfigDialog(BuildContext context) {
-    const visualDensity = null;
+    const visualDensity = VisualDensity.standard;
 
     List<NamidaPopupItem> qualityMenuChildren() => [
       NamidaPopupItem(
@@ -218,7 +218,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               padding: const EdgeInsets.only(left: 16.0, right: 12.0),
               child: YTDownloadOptionFolderListTile(
                 maxTrailingWidth: context.width * 0.2,
-                visualDensity: visualDensity,
                 playlistName: widget.playlistName.translatePlaylistName(),
                 initialFolder: _groupName.value.groupName,
                 onDownloadGroupNameChanged: (newGroupName) {
@@ -361,12 +360,12 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                 ),
               ),
               NamidaContainerDivider(),
+              const SizedBox(height: 4.0),
               Padding(
                 padding: const EdgeInsets.only(left: 16.0, right: 12.0),
                 child: YTDownloadOptionFolderListTile(
                   key: _folderController,
                   iconSize: 20.0,
-                  visualDensity: VisualDensity.compact,
                   trailingPadding: 12.0,
                   playlistName: widget.playlistName.translatePlaylistName(),
                   initialFolder: _groupName.value.groupName,

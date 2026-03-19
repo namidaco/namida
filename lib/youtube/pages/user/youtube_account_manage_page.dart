@@ -183,7 +183,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                           return CustomListTile(
                             borderR: 12.0,
                             onTap: const YoutubeManageSubscriptionPage().navigate,
-                            verticalPadding: 4.0,
+                            dense: false,
                             title: hasMembership ? lang.membershipManage : "${lang.signingInAllowsBasicUsage}.\n${lang.signingInAllowsBasicUsageSubtitle}",
                             icon: Broken.money_3,
                             bgColor: Color.alphaBlend(

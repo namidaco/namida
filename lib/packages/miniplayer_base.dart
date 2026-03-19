@@ -1405,8 +1405,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                               child: Obx(
                                                 (context) {
                                                   final isButtonHighlighed = MiniPlayerController.inst.isPlayPauseButtonHighlighted.valueR;
-                                                  return MouseRegion(
-                                                    cursor: SystemMouseCursors.click,
+                                                  return NamidaMouseRegion(
                                                     child: TapDetector(
                                                       onTap: null,
                                                       initializer: _playPauseTapInitializer,

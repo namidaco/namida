@@ -157,7 +157,6 @@ Future<void> showVideoDownloadOptionsSheet({
                               initialFolder: initialGroupName ?? '',
                               playlistName: initialGroupName ?? '',
                               onDownloadGroupNameChanged: onDownloadGroupNameChanged,
-                              visualDensity: const VisualDensity(horizontal: VisualDensity.minimumDensity, vertical: VisualDensity.minimumDensity),
                             ),
                           ),
                           Padding(
@@ -298,7 +297,6 @@ class YTDownloadOptionFolderListTile extends StatefulWidget {
   final String playlistName;
   final String Function(String value)? subtitle;
   final double trailingPadding;
-  final VisualDensity? visualDensity;
   final double? maxTrailingWidth;
   final double? iconSize;
 
@@ -310,7 +308,6 @@ class YTDownloadOptionFolderListTile extends StatefulWidget {
     this.playlistName = '',
     this.subtitle,
     this.trailingPadding = 0,
-    this.visualDensity,
     this.maxTrailingWidth,
     this.iconSize,
   });

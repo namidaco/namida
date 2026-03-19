@@ -119,11 +119,8 @@ class CustomPopupState extends State<CustomPopup> {
             ? Stack(
                 children: [
                   widget.child,
-                  Positioned.fill(
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      hitTestBehavior: HitTestBehavior.translucent,
-                    ),
+                  const Positioned.fill(
+                    child: NamidaMouseRegion(),
                   ),
                 ],
               )

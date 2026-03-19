@@ -1174,7 +1174,6 @@ class CustomizationSettings extends SettingSubpageProvider {
               ],
             ),
           ),
-          const SizedBox(height: 6.0),
           getItemWrapper(
             key: _CustomizationSettingsKeys.waveformBarsCount,
             child: Obx(
@@ -1182,20 +1181,16 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.waveformBarsCount),
                 icon: Broken.sound,
                 title: lang.waveformBarsCount,
-                trailing: Column(
-                  children: [
-                    NamidaWheelSlider(
-                      width: 80,
-                      min: 40,
-                      max: 400,
-                      initValue: settings.waveformTotalBars.valueR,
-                      onValueChanged: (val) {
-                        settings.save(waveformTotalBars: val);
-                        WaveformController.inst.calculateUIWaveform();
-                      },
-                      text: settings.waveformTotalBars.valueR.toString(),
-                    ),
-                  ],
+                trailing: NamidaWheelSlider(
+                  width: 80,
+                  min: 40,
+                  max: 400,
+                  initValue: settings.waveformTotalBars.valueR,
+                  onValueChanged: (val) {
+                    settings.save(waveformTotalBars: val);
+                    WaveformController.inst.calculateUIWaveform();
+                  },
+                  text: settings.waveformTotalBars.valueR.toString(),
                 ),
               ),
             ),

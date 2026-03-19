@@ -248,7 +248,7 @@ class CustomListTile extends StatelessWidget {
   final TextStyle? titleStyle;
   final double borderR;
   final Color? bgColor;
-  final double verticalPadding;
+  final bool dense;
 
   const CustomListTile({
     super.key,
@@ -267,9 +267,9 @@ class CustomListTile extends StatelessWidget {
     this.maxSubtitleLines = 8,
     this.visualDensity,
     this.titleStyle,
-    this.borderR = 20.0,
+    this.borderR = 18.0,
     this.bgColor,
-    this.verticalPadding = 0.0,
+    this.dense = true,
   });
 
   @override
@@ -277,68 +277,112 @@ class CustomListTile extends StatelessWidget {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     final iconColor = context.defaultIconColor(passedColor);
-    return AnimatedOpacity(
-      duration: const Duration(milliseconds: 400),
-      opacity: enabled ? 1.0 : 0.5,
-      child: ListTile(
-        enabled: enabled,
-        tileColor: bgColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(borderR.multipliedRadius),
-        ),
-        visualDensity: visualDensity,
-        onTap: onTap,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: verticalPadding),
-        minVerticalPadding: 8.0,
-        leading: icon != null
-            ? SizedBox(
-                height: double.infinity,
-                child: rotateIcon != null
-                    ? RotatedBox(
-                        quarterTurns: rotateIcon!,
-                        child: Icon(
-                          icon,
-                          color: iconColor,
-                        ),
-                      )
-                    : Icon(
-                        icon,
-                        color: iconColor,
-                      ),
-              )
-            : leading,
-        title: Text(
-          title,
-          style: titleStyle ?? (largeTitle ? theme.textTheme.displayLarge : theme.textTheme.displayMedium),
-          maxLines: subtitle != null ? 4 : 5,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: subtitle?.isNotEmpty == true
-            ? Text(
-                subtitle!,
-                style: theme.textTheme.displaySmall,
-                maxLines: maxSubtitleLines,
-                overflow: TextOverflow.ellipsis,
-              )
-            : null,
-        trailing:
-            trailingRaw ??
-            (trailing == null && trailingText == null
-                ? null
-                : FittedBox(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minWidth: 0, maxWidth: Dimensions.inst.availableAppContentWidth * 0.3),
-                      child: trailingText != null
-                          ? Text(
-                              trailingText!,
-                              style: textTheme.displayMedium?.copyWith(color: theme.colorScheme.onSurface.withAlpha(200)),
-                              maxLines: 1,
+
+    final baseDensity = (visualDensity ?? VisualDensity.compact).baseSizeAdjustment;
+    var minTileHeight =
+        6.0 +
+        baseDensity.dy +
+        switch ((subtitle?.isNotEmpty == true)) {
+          true => dense ? 60.0 : 68.0, // 2 lines
+          false => dense ? 50.0 : 58.0, // 1 line
+        };
+    var verticalPadding = 6.0;
+    var borderR = this.borderR;
+
+    // -- some tiles already used this to make it more compact, this is backward compatibility
+    if (this.visualDensity == VisualDensity.compact) {
+      minTileHeight *= 0.85;
+      verticalPadding = 1.0;
+      borderR *= 0.8;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 1.0),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 400),
+        opacity: enabled ? 1.0 : 0.5,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: minTileHeight),
+          child: NamidaInkWell(
+            onTap: enabled ? onTap : null,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(borderR.multipliedRadius),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: NamidaMouseRegion(
+              child: Row(
+                children: [
+                  if (icon != null) ...[
+                    rotateIcon != null
+                        ? RotatedBox(
+                            quarterTurns: rotateIcon!,
+                            child: Icon(icon, color: iconColor),
+                          )
+                        : Icon(icon, color: iconColor),
+                    const SizedBox(width: 12.0),
+                  ] else if (leading != null) ...[
+                    leading!,
+                    const SizedBox(width: 12.0),
+                  ],
+
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: verticalPadding),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: titleStyle ?? (largeTitle ? theme.textTheme.displayLarge : theme.textTheme.displayMedium),
+                            maxLines: subtitle != null ? 4 : 5,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (subtitle?.isNotEmpty == true) ...[
+                            const SizedBox(height: 2.0),
+                            Text(
+                              subtitle!,
+                              style: theme.textTheme.displaySmall,
+                              maxLines: maxSubtitleLines,
                               overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                            )
-                          : trailing,
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                  )),
+                  ),
+
+                  if (trailingRaw != null) ...[
+                    const SizedBox(width: 12.0),
+                    trailingRaw!,
+                  ] else if (trailing != null || trailingText != null) ...[
+                    const SizedBox(width: 12.0),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: 0,
+                        maxWidth: Dimensions.inst.availableAppContentWidth * 0.22,
+                        maxHeight: minTileHeight,
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: trailingText != null
+                            ? Text(
+                                trailingText!,
+                                style: textTheme.displayMedium?.copyWith(color: theme.colorScheme.onSurface.withAlpha(200)),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              )
+                            : trailing!,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -903,6 +947,7 @@ class SmallListTile extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
       ),
+      dense: false,
       leading:
           leading ??
           SizedBox(
@@ -1851,9 +1896,8 @@ class NamidaRawLikeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    return MouseRegion(
-      hitTestBehavior: HitTestBehavior.translucent,
-      cursor: onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
+    return NamidaMouseRegion(
+      enabled: onTap != null,
       child: LikeButton(
         size: size,
         padding: padding,
@@ -1984,9 +2028,8 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
   Widget build(BuildContext context) {
     return NamidaTooltip(
       message: widget.tooltip,
-      child: MouseRegion(
-        hitTestBehavior: HitTestBehavior.translucent,
-        cursor: widget.onPressed == null && widget.onLongPress == null ? MouseCursor.defer : SystemMouseCursors.click,
+      child: NamidaMouseRegion(
+        enabled: widget.onPressed != null || widget.onLongPress != null,
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTapDown: (value) => setState(() => isPressed = true),
@@ -6694,5 +6737,28 @@ class NamidaCoolBox extends StatelessWidget {
             ),
       ),
     );
+  }
+}
+
+class NamidaMouseRegion extends StatelessWidget {
+  final bool enabled;
+  final Widget? child;
+
+  const NamidaMouseRegion({
+    super.key,
+    this.enabled = true,
+    this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (enabled && isDesktop) {
+      return MouseRegion(
+        hitTestBehavior: HitTestBehavior.translucent,
+        cursor: SystemMouseCursors.click,
+        child: child,
+      );
+    }
+    return child ?? const SizedBox();
   }
 }

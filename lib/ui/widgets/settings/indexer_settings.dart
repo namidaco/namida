@@ -814,7 +814,6 @@ class IndexerSettings extends SettingSubpageProvider {
                     });
                   },
                 ),
-                const SizedBox(width: 8.0),
                 iconWidget,
               ],
             ),
@@ -951,7 +950,6 @@ class IndexerSettings extends SettingSubpageProvider {
                   });
                 },
               ),
-              const SizedBox(width: 8.0),
               iconWidget,
             ],
           ),

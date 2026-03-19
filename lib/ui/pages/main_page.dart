@@ -84,7 +84,7 @@ class MainPage extends StatelessWidget {
         bottom: false,
         child: DefaultTextStyle(
           style: const TextStyle(
-            fontFamilyFallback: ['sans-serif', 'Roboto'],
+            fontFamilyFallback: AppThemes.fontFamilyFallback,
           ),
           child: Stack(
             alignment: Alignment.bottomCenter,

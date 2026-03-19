@@ -950,7 +950,6 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
                     icon: e.toIcon(),
                     title: e.toText() + extraTitle,
                     subtitle: subtitle,
-                    visualDensity: null,
                     onTap: () {
                       onTap(e);
                       if (isItemEnabled[e] != null) {

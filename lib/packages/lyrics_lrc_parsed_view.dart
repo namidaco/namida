@@ -371,8 +371,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   minWidth: context.width, // vip
                   minHeight: 36.0, // eyeballed to match when textData is valid
                 ),
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.click,
+                child: NamidaMouseRegion(
                   child: TapDetector(
                     onTap: null,
                     initializer: (instance) {

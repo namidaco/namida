@@ -1291,10 +1291,15 @@ class Indexer<T extends Track> {
   }
 
   Future<void> _addServerTracksIfAvailable() async {
+    bool didRefreshSearchList = false; // to ensure same length
     for (final dir in settings.directoriesToScan.value) {
       if (dir is DirectoryIndexServer) {
         MusicWebServer? server = dir.toWebServer();
         if (server != null) {
+          if (!didRefreshSearchList) {
+            didRefreshSearchList = true;
+            _refreshMediaTracksSubListsAfterSort([MediaType.track]);
+          }
           await server.fetchAllMusicAndProcess(
             (trExt) {
               _addTrackToLists(trExt, null);

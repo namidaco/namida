@@ -1466,22 +1466,25 @@ class TracksAddOnTap {
                   title: lang.moods,
                   actions: [
                     const CancelButton(),
-                    NamidaButton(
-                      text: lang.generate,
-                      onPressed: () {
-                        final finalTracks = <Track>[];
-                        selectedmoodsPlaylists.loop((m) {
-                          finalTracks.addAll(allAvailableMoodsPlaylists[m] ?? []);
-                        });
-                        selectedmoodsTracks.loop((m) {
-                          finalTracks.addAll(allAvailableMoodsTracks[m] ?? []);
-                        });
-                        Player.inst.addToQueue(
-                          finalTracks.uniqued(),
-                          insertionType: insertionType,
-                        );
-                        NamidaNavigator.inst.closeDialog();
-                      },
+                    Obx(
+                      (context) => NamidaButton(
+                        enabled: selectedmoodsTracks.valueR.isNotEmpty || selectedmoodsPlaylists.valueR.isNotEmpty,
+                        text: lang.generate,
+                        onPressed: () {
+                          final finalTracks = <Track>[];
+                          selectedmoodsPlaylists.value.loop((m) {
+                            finalTracks.addAll(allAvailableMoodsPlaylists[m] ?? []);
+                          });
+                          selectedmoodsTracks.value.loop((m) {
+                            finalTracks.addAll(allAvailableMoodsTracks[m] ?? []);
+                          });
+                          Player.inst.addToQueue(
+                            finalTracks.uniqued(),
+                            insertionType: insertionType,
+                          );
+                          NamidaNavigator.inst.closeDialog();
+                        },
+                      ),
                     ),
                   ],
                   child: SizedBox(
