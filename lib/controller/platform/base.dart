@@ -54,15 +54,26 @@ class NamidaPlatformBuilder {
     );
   }
 
-  static String _getExecutablePath(String executablesDirPath, String name, {bool preferSystemPath = false, bool Function(String path)? systemPathTester}) {
+  static String _getExecutablePath(String executablesDirPath, String name, {bool fallbackToSystemPath = false, bool Function(String path)? systemPathTester}) {
     final exeName = NamidaPlatformBuilder.init(
       android: () => '',
       windows: () => '$name.exe',
       linux: () => name,
     );
 
+    final fullPathBundled = p.join(executablesDirPath, exeName);
+    if (File(fullPathBundled).existsSync()) {
+      if (Platform.isLinux || Platform.isMacOS) {
+        try {
+          // -- ensure permissions given
+          Process.runSync('chmod', ['+x', fullPathBundled]);
+        } catch (_) {}
+      }
+      return fullPathBundled;
+    }
+
     String? resolvedSystemPath;
-    if (preferSystemPath) {
+    if (fallbackToSystemPath) {
       if (Platform.isWindows) {
         final result = Process.runSync('where', [name]);
         if (result.exitCode == 0) {
@@ -91,14 +102,7 @@ class NamidaPlatformBuilder {
       if (good) return resolvedSystemPath;
     }
 
-    final fullPathBundled = p.join(executablesDirPath, exeName);
-    if (Platform.isLinux || Platform.isMacOS) {
-      try {
-        // -- ensure permissions given
-        Process.runSync('chmod', ['+x', fullPathBundled]);
-      } catch (_) {}
-    }
-    return fullPathBundled;
+    return fullPathBundled; // could be non-existent atp
   }
 
   static bool _testFFmpegBuildIfHasBetterSupport(String path) {
@@ -115,7 +119,7 @@ class NamidaPlatformBuilder {
     return _getExecutablePath(
       executablesDirPath,
       'ffmpeg',
-      preferSystemPath: true,
+      fallbackToSystemPath: true,
       systemPathTester: _testFFmpegBuildIfHasBetterSupport,
     );
   }
@@ -124,7 +128,7 @@ class NamidaPlatformBuilder {
     return _getExecutablePath(
       executablesDirPath,
       'ffprobe',
-      preferSystemPath: true,
+      fallbackToSystemPath: true,
       systemPathTester: _testFFmpegBuildIfHasBetterSupport,
     );
   }
