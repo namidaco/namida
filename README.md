@@ -324,11 +324,12 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 > [!IMPORTANT]
 > Install dependencies first: **mpv** (for playback) and **wpe** (for login)
+> (you may skip this if you used a package manager)
 >
 > ```bash
 > sudo pacman -S mpv wpewebkit              # Arch/Manjaro
-> sudo apt install mpv libwpewebkit-2.0-3   # Debian/Ubuntu/Mint
-> sudo dnf install mpv wpewebkit2gtk        # Fedora/RHEL
+> sudo apt install mpv libwebkit2gtk-4.1-0  # Debian/Ubuntu/Mint
+> sudo dnf install mpv webkit2gtk4.1        # Fedora/RHEL
 > ```
 
 ```bash

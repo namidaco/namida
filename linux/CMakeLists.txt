@@ -9,7 +9,7 @@ include(GNUInstallDirs)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "namida_bin")
+set(BINARY_NAME "namida")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
 set(APPLICATION_ID "com.msob7y.namida")
@@ -158,16 +158,9 @@ endif()
 install(CODE "
   file(GLOB WPE_LIBS
     \"${INSTALL_BUNDLE_LIB_DIR}/libWPEWebKit*\"
-    \"${INSTALL_BUNDLE_LIB_DIR}/libwpe*\"
-    \"${INSTALL_BUNDLE_LIB_DIR}/libWPEBackend*\"
   )
   foreach(WPE_LIB \${WPE_LIBS})
     file(REMOVE \"\${WPE_LIB}\")
     message(STATUS \"Removed: \${WPE_LIB}\")
   endforeach()
   " COMPONENT Runtime)
-
-install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/namida.sh"
-  DESTINATION "${CMAKE_INSTALL_PREFIX}"
-  RENAME "namida"
-)
