@@ -35,7 +35,7 @@ enum _PlaybackSettingsKeys with SettingKeysBase {
   displayFavButtonInNotif(NamidaFeaturesAvailablity.android),
   displayStopButtonInNotif(NamidaFeaturesAvailablity.android),
   displayArtworkOnLockscreen(NamidaFeaturesAvailablity.android12and_below),
-  killPlayerAfterDismissing(NamidaFeaturesAvailablity.android),
+  killPlayerAfterDismissing(NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux])),
   onNotificationTap(NamidaFeaturesAvailablity.android),
   dismissibleMiniplayer,
   replayGain,

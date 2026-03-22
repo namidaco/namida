@@ -14,6 +14,19 @@ class PermissionManager {
 
   static final _shouldRequestManageAllFilesPermission = NamidaFeaturesAvailablity.android11and_plus.resolve();
 
+  Future<bool> hasManageExternalStoragePermission() async {
+    if (!_shouldRequestManageAllFilesPermission) return true;
+    return Permission.manageExternalStorage.isGranted;
+  }
+
+  Future<bool> requestNotificationsPermission() async {
+    try {
+      final status = await Permission.notification.request();
+      return status.isGranted;
+    } catch (_) {}
+    return false;
+  }
+
   /// Granting Storage Permission.
   /// [request] will prompt dialog if not granted.
   Future<bool> requestStoragePermission({bool request = true}) async {

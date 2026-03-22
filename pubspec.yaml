@@ -178,6 +178,10 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/super_native_extensions
       path: super_hot_key
+  tray_manager:
+    git:
+      url: https://github.com/MSOB7YY/tray_manager
+      path: packages/tray_manager
 
   # ---- Linux Packages ----
   dbus: ^0.7.11

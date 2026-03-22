@@ -9,6 +9,7 @@ class _WindowManagerDesktop extends NamidaWindowManager {
   @override
   Future<void> init() async {
     await windowManager.ensureInitialized();
+    await windowManager.setPreventClose(true);
   }
 
   @override
@@ -168,7 +169,15 @@ class _NamidaWindowListener with WindowListener {
 
   @override
   Future<void> onWindowClose() async {
-    await Namida.disposeAllResources().ignoreError();
+    final mode = settings.player.killAfterDismissingApp.value;
+    if (mode == KillAppMode.always || (mode == KillAppMode.ifNotPlaying && !Player.inst.playWhenReady.value)) {
+      await Namida.disposeAllResources().ignoreError();
+      await windowManager.destroy();
+      return;
+    }
+
+    // -- minimize to tray instead
+    await windowManager.hide();
   }
 }
 

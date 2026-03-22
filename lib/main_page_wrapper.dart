@@ -491,7 +491,6 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                   brightness: brightness,
                   onPressed: () async {
                     await windowManager.close().ignoreError();
-                    await windowManager.destroy().ignoreError();
                   },
                 ),
               ),
@@ -538,7 +537,6 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                     type: buttonsType,
                     onPressed: () async {
                       await windowManager.close().ignoreError();
-                      await windowManager.destroy().ignoreError();
                     },
                   ),
                 ],

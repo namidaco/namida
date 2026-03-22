@@ -5,8 +5,8 @@ import 'package:audio_service/audio_service.dart';
 import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:http_cache_stream/http_cache_stream.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:tray_manager/tray_manager.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
@@ -32,12 +32,15 @@ import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/permission_manager/permission_manager.dart';
+import 'package:namida/controller/platform/tray_manager/tray_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smtc_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
+import 'package:namida/controller/tray_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
@@ -289,6 +292,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     SMTCController.instance?.onPlayPause(isPlaying);
     HomeWidgetController.instance?.updateIsPlaying(isPlaying);
     _refreshWindowsTaskbar(isPlaying, null);
+    _refreshTrayService(isPlaying, null);
   }
 
   void _refreshPlatformStatusDependers(MediaItem media, bool isPlaying, bool isFavourite) {
@@ -301,11 +305,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       isFavourite,
     );
     _refreshWindowsTaskbar(isPlaying, isFavourite);
+    _refreshTrayService(isPlaying, isFavourite);
   }
 
   void _refreshWindowsTaskbar(bool isPlaying, bool? isFavourite) async {
     if (Platform.isWindows) {
-      ThumbnailToolbarAssetIcon getIco(String name) => ThumbnailToolbarAssetIcon('assets\\icons\\media_ico\\$name.ico');
+      final trayIcons = TrayIcons.windows;
+      ThumbnailToolbarAssetIcon getIco(String path) => ThumbnailToolbarAssetIcon(path);
 
       isFavourite ??= currentItem.value?.execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: (finalItem) => finalItem.isFavourite);
       void onFavOrUnfavPress() {
@@ -317,13 +323,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
       final repeat = settings.player.repeatMode.value;
       final repeatText = repeat.buildText();
-      final repeatIcoName = switch (repeat) {
-        PlayerRepeatMode.none => 'repeate-music',
-        PlayerRepeatMode.one => 'repeate-one',
-        PlayerRepeatMode.forNtimes => 'status',
-        PlayerRepeatMode.all => 'repeat',
-        PlayerRepeatMode.allShuffle => 'shuffle',
-      };
+      final repeatIco = trayIcons.forRepeatMode(repeat);
+
       void onRepeatPress() {
         final e = settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values);
         settings.player.save(repeatMode: e);
@@ -345,44 +346,44 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                 [
                   if (isFavourite == true)
                     ThumbnailToolbarButton(
-                      getIco('favorited'),
+                      getIco(trayIcons.favorited),
                       lang.removeFromFavourites,
                       onFavOrUnfavPress,
                     )
                   else if (isFavourite == false)
                     ThumbnailToolbarButton(
-                      getIco('favorite'),
+                      getIco(trayIcons.favorite),
                       lang.addToFavourites,
                       onFavOrUnfavPress,
                     ),
                   ThumbnailToolbarButton(
-                    getIco(repeatIcoName),
+                    getIco(repeatIco),
                     repeatText,
                     onRepeatPress,
                   ),
                   ThumbnailToolbarButton(
-                    getIco('previous'),
+                    getIco(trayIcons.previous),
                     lang.previous,
                     Player.inst.previous,
                   ),
                   isPlaying
                       ? ThumbnailToolbarButton(
-                          getIco('pause'),
+                          getIco(trayIcons.pause),
                           lang.pause,
                           Player.inst.pause,
                         )
                       : ThumbnailToolbarButton(
-                          getIco('play'),
+                          getIco(trayIcons.play),
                           lang.play,
                           Player.inst.play,
                         ),
                   ThumbnailToolbarButton(
-                    getIco('next'),
+                    getIco(trayIcons.next),
                     lang.next,
                     Player.inst.next,
                   ),
                   ThumbnailToolbarButton(
-                    getIco('stop'),
+                    getIco(trayIcons.stop),
                     lang.stop,
                     () => Player.inst.pause().whenComplete(Player.inst.dispose),
                     mode: ThumbnailToolbarButtonMode.dismissionClick,
@@ -392,6 +393,56 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           ],
         );
       } catch (_) {}
+    }
+  }
+
+  void _refreshTrayService(bool isPlaying, bool? isFavourite) async {
+    final tc = TrayController.instance;
+    if (tc != null) {
+      final trayIcons = TrayIcons.instance;
+
+      isFavourite ??= currentItem.value?.execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: (finalItem) => finalItem.isFavourite);
+
+      String? title = mediaItem.value?.displayTitle ?? mediaItem.value?.title;
+      final menu = Menu(
+        items: [
+          MenuItem(
+            key: TrayMenuKey.nowPlaying,
+            label: '$title',
+            icon: trayIcons?.icStatMusicnote,
+            disabled: true,
+          ),
+          MenuItem.separator(),
+          MenuItem(
+            key: TrayMenuKey.previous,
+            icon: trayIcons?.previous,
+            label: lang.previous,
+          ),
+          MenuItem(
+            key: TrayMenuKey.playPause,
+            label: isPlaying ? lang.pause : lang.play,
+            icon: isPlaying ? trayIcons?.pause : trayIcons?.play,
+          ),
+          MenuItem(
+            key: TrayMenuKey.next,
+            icon: trayIcons?.next,
+            label: lang.next,
+          ),
+          MenuItem.separator(),
+          MenuItem(
+            key: TrayMenuKey.showWindow,
+            icon: trayIcons?.appIcon,
+            label: lang.open,
+          ),
+          MenuItem.separator(),
+          MenuItem(
+            key: TrayMenuKey.exit,
+            icon: trayIcons?.stop,
+            label: lang.exit,
+          ),
+        ],
+      );
+      tc.update(menu);
     }
   }
 
@@ -806,7 +857,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         printy(e, isError: true);
         // -- playing music from root folders still require `all_file_access`
         // -- this is a fix for not playing some external files reported by some users.
-        final hadPermissionBefore = await Permission.manageExternalStorage.isGranted;
+        final hadPermissionBefore = await PermissionManager.platform.hasManageExternalStoragePermission();
         if (checkInterrupted()) return;
         if (hadPermissionBefore) {
           onPauseRaw();
@@ -2094,6 +2145,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     ].execute();
     SMTCController.instance?.onStop();
     _refreshWindowsTaskbar(false, null);
+    _refreshTrayService(false, null);
   }
 
   Timer? _headsetButtonClickTimer;

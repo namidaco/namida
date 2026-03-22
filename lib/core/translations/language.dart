@@ -7,6 +7,7 @@ import 'package:intl/number_symbols_data.dart' as intl_data;
 import 'package:intl/src/plural_rules.dart' as plural_rules;
 
 import 'package:namida/class/lang.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/extensions.dart';
@@ -58,6 +59,9 @@ class Language {
       if (language != settings.language.value) {
         settings.save(language: language);
       }
+
+      // -- mainly to refresh tray/taskbar language
+      Player.inst.refreshNotification();
 
       return true;
     } catch (e) {

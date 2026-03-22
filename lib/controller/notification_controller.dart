@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/platform/base.dart';
+import 'package:namida/controller/platform/permission_manager/permission_manager.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -58,7 +58,7 @@ class NotificationManager {
 
   Future<void> ensurePermissionGranted() async {
     try {
-      await Permission.notification.request();
+      await PermissionManager.platform.requestNotificationsPermission();
     } catch (_) {}
   }
 

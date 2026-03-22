@@ -51,6 +51,7 @@ import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/smtc_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/tagger_controller.dart';
+import 'package:namida/controller/tray_controller.dart';
 import 'package:namida/controller/version_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
@@ -128,6 +129,7 @@ Future<bool> _mainAppInitialization() async {
 
     await [
       WindowController.instance?.init(),
+      TrayController.instance?.init(),
       HomeWidgetController.instance?.init(),
     ].executeAllAndSilentReportErrors();
 
