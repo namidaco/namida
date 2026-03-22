@@ -356,7 +356,6 @@ class CustomizationSettings extends SettingSubpageProvider {
     required IconData icon,
     required Rx<TrackExecuteActions> rx,
     required void Function(TrackExecuteActions newItem) onSave,
-    VisualDensity visualDensity = VisualDensity.compact,
   }) {
     List<Widget> getChildren() {
       var values = TrackExecuteActions.values;
@@ -415,7 +414,7 @@ class CustomizationSettings extends SettingSubpageProvider {
       child: NamidaPopupWrapper(
         children: getChildren,
         child: CustomListTile(
-          visualDensity: visualDensity,
+          extraDense: true,
           bgColor: getBgColor(key),
           icon: icon,
           title: title,
@@ -1006,7 +1005,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   key: _CustomizationSettingsKeys.thumbAnimationIntensityExpanded,
                   child: Obx(
                     (context) => CustomListTile(
-                      visualDensity: VisualDensity.compact,
+                      extraDense: true,
                       bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityExpanded),
                       icon: Broken.flash,
                       title: lang.expandedMiniplayer,
@@ -1023,7 +1022,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   key: _CustomizationSettingsKeys.thumbAnimationIntensityLyrics,
                   child: Obx(
                     (context) => CustomListTile(
-                      visualDensity: VisualDensity.compact,
+                      extraDense: true,
                       bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityLyrics),
                       leading: const StackedIcon(
                         baseIcon: Broken.flash,
@@ -1044,7 +1043,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   key: _CustomizationSettingsKeys.thumbAnimationIntensityMinimized,
                   child: Obx(
                     (context) => CustomListTile(
-                      visualDensity: VisualDensity.compact,
+                      extraDense: true,
                       bgColor: getBgColor(_CustomizationSettingsKeys.thumbAnimationIntensityMinimized),
                       leading: const StackedIcon(
                         baseIcon: Broken.flash,
@@ -1118,7 +1117,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                     builder: (context, animatingThumbnailScaleMultiplier) {
                       final valueHundred = (animatingThumbnailScaleMultiplier * 100).round();
                       return CustomListTile(
-                        visualDensity: VisualDensity.compact,
+                        extraDense: true,
                         bgColor: getBgColor(_CustomizationSettingsKeys.scaleMultiplier),
                         icon: Broken.maximize,
                         title: lang.scaleMultiplier,

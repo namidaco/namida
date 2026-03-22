@@ -165,8 +165,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   void _showAllConfigDialog(BuildContext context) {
-    const visualDensity = VisualDensity.standard;
-
     List<NamidaPopupItem> qualityMenuChildren() => [
       NamidaPopupItem(
         icon: Broken.musicnote,
@@ -233,7 +231,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             ObxO(
               rx: settings.youtube.autoExtractVideoTagsFromInfo,
               builder: (context, autoExtractVideoTagsFromInfo) => CustomSwitchListTile(
-                visualDensity: visualDensity,
                 icon: Broken.magicpen,
                 title: lang.autoExtractTitleAndArtistFromVideoTitle,
                 value: autoExtractVideoTagsFromInfo,
@@ -243,7 +240,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             ObxO(
               rx: settings.downloadFilesKeepCachedVersions,
               builder: (context, downloadFilesKeepCachedVersions) => CustomSwitchListTile(
-                visualDensity: visualDensity,
                 icon: Broken.copy,
                 title: lang.keepCachedVersions,
                 value: downloadFilesKeepCachedVersions,
@@ -253,7 +249,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             ObxO(
               rx: settings.downloadFilesWriteUploadDate,
               builder: (context, downloadFilesWriteUploadDate) => CustomSwitchListTile(
-                visualDensity: visualDensity,
                 icon: Broken.document_code,
                 title: lang.setFileLastModifiedAsVideoUploadDate,
                 value: downloadFilesWriteUploadDate,
@@ -263,7 +258,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             ObxO(
               rx: settings.downloadAddAudioToLocalLibrary,
               builder: (context, addAudioToLocalLibrary) => CustomSwitchListTile(
-                visualDensity: visualDensity,
                 enabled: true,
                 icon: Broken.music_library_2,
                 title: lang.addAudioToLocalLibrary,
@@ -274,7 +268,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             ObxO(
               rx: settings.downloadOverrideOldFiles,
               builder: (context, override) => CustomSwitchListTile(
-                visualDensity: visualDensity,
                 icon: Broken.danger,
                 title: lang.overrideOldFilesInTheSameFolder,
                 value: override,
@@ -284,7 +277,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             NamidaPopupWrapper(
               childrenDefault: qualityMenuChildren,
               child: CustomListTile(
-                visualDensity: visualDensity,
                 icon: Broken.story,
                 title: lang.videoQuality,
                 trailing: NamidaPopupWrapper(
@@ -321,7 +313,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   icon: Broken.music_playlist,
                   title: widget.playlistName.translatePlaylistName(),
                   subtitle: "${_selectedList.length.formatDecimal()}/${widget.ids.length.formatDecimal()}",
-                  visualDensity: VisualDensity.compact,
                   trailingRaw: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

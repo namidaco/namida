@@ -265,7 +265,9 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     super.initState();
     _videoInfoListener();
     Player.inst.videoPlayerInfo.addListener(_videoInfoListener);
-    WidgetsBinding.instance.addPostFrameCallback((_) => refreshState()); // fix screen touch absorb when minimized
+
+    // -- fix screen touch absorb when minimized, usually happens when switching from yt style to this
+    MiniPlayerController.inst.verticalSnapping();
   }
 
   @override

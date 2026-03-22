@@ -128,7 +128,6 @@ class _AboutPageState extends State<AboutPage> {
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: NamidaAboutListTile(
-                          visualDensity: VisualDensity.compact,
                           trailing: const Icon(Broken.code_circle),
                           leading: Container(
                             clipBehavior: Clip.antiAlias,
@@ -541,7 +540,6 @@ class NamidaAboutListTile extends StatelessWidget {
   final String? link;
   final void Function()? onTap;
   final Widget? trailing;
-  final VisualDensity? visualDensity;
 
   const NamidaAboutListTile({
     super.key,
@@ -552,13 +550,11 @@ class NamidaAboutListTile extends StatelessWidget {
     this.link,
     this.onTap,
     this.trailing,
-    this.visualDensity,
   });
 
   @override
   Widget build(BuildContext context) {
     return CustomListTile(
-      visualDensity: visualDensity,
       leading: leading,
       icon: icon,
       title: title,

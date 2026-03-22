@@ -599,7 +599,6 @@ class IndexerSettings extends SettingSubpageProvider {
                       height: 20.0,
                     );
               return CustomListTile(
-                visualDensity: VisualDensity.compact,
                 icon: assetWidget != null ? null : e.toIcon(),
                 leading: assetWidget,
                 title: e.toText(),
@@ -829,7 +828,7 @@ class IndexerSettings extends SettingSubpageProvider {
                         );
                   final isServer = e is DirectoryIndexServer;
                   return CustomListTile(
-                    visualDensity: VisualDensity.compact,
+                    extraDense: true,
                     leading:
                         assetWidget ??
                         Icon(

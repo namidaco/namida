@@ -209,7 +209,7 @@ class CustomCollapsedListTile extends StatelessWidget {
       title: title(),
       subtitle: subtitle,
       icon: icon,
-      visualDensity: VisualDensity(horizontal: VisualDensity.compact.horizontal * 0.5, vertical: VisualDensity.compact.vertical * 0.5),
+      dense: false,
       trailingRaw: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

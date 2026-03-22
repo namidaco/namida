@@ -100,7 +100,6 @@ void showAddToPlaylistSheet({
                       ObxO(
                         rx: settings.playlistAddTracksAtBeginningYT,
                         builder: (context, atBeginning) => CustomSwitchListTile(
-                          visualDensity: VisualDensity.compact,
                           icon: Broken.arrow_square_up,
                           title: lang.addTracksAtTheBeginning,
                           value: atBeginning,

@@ -211,7 +211,6 @@ class ThemeSetting extends SettingSubpageProvider {
                           ),
                         ),
                         CustomListTile(
-                          visualDensity: VisualDensity.compact,
                           icon: Broken.add_circle,
                           title: lang.addLanguage,
                           subtitle: lang.addLanguageSubtitle,

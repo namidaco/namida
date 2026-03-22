@@ -190,7 +190,10 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                               theme.cardTheme.color?.withOpacityExt(0.3) ?? Colors.transparent,
                               theme.colorScheme.secondaryContainer,
                             ).withOpacityExt(0.5),
-                            trailingRaw: const MembershipCard(displayName: false),
+                            trailingRaw: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 6.0),
+                              child: const MembershipCard(displayName: false),
+                            ),
                           );
                         },
                       ),

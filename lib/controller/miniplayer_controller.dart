@@ -356,12 +356,6 @@ class MiniPlayerController {
 
   void verticalSnapping() async {
     final distance = _prevOffset - _offset;
-    final speed = _velocity.getVelocity().pixelsPerSecond.dy;
-    const threshold = 500.0;
-
-    bool shouldSnapToExpanded = false;
-    bool shouldSnapToQueue = false;
-    bool shouldSnapToMini = false;
 
     if (distance == _headRoom) {
       if (_defaultShouldDismissMiniplayer) {
@@ -370,6 +364,13 @@ class MiniPlayerController {
         return;
       }
     }
+
+    final speed = _velocity.getVelocity().pixelsPerSecond.dy;
+    const threshold = 500.0;
+
+    bool shouldSnapToExpanded = false;
+    bool shouldSnapToQueue = false;
+    bool shouldSnapToMini = false;
 
     // speed threshold is an eyeballed value
     // used to actuate on fast flicks too
@@ -401,9 +402,10 @@ class MiniPlayerController {
 
     if (shouldSnapToExpanded) {
       snapToExpanded();
-    } else {
-      if (shouldSnapToMini) snapToMini();
-      if (shouldSnapToQueue) snapToQueue(animateScrollController: _offset < maxOffset * 1.8);
+    } else if (shouldSnapToMini) {
+      snapToMini();
+    } else if (shouldSnapToQueue) {
+      snapToQueue(animateScrollController: _offset < maxOffset * 1.8);
     }
   }
 

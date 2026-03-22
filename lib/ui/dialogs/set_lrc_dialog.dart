@@ -864,7 +864,6 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                       SliverPadding(padding: EdgeInsetsGeometry.only(top: 8.0)),
                       SliverToBoxAdapter(
                         child: CustomListTile(
-                          visualDensity: VisualDensity.compact,
                           icon: Broken.additem,
                           title: lang.add,
                           onTap: onAddLRCPasteTap,
@@ -872,7 +871,6 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                       ),
                       SliverToBoxAdapter(
                         child: CustomListTile(
-                          visualDensity: VisualDensity.compact,
                           icon: Broken.document_download,
                           title: lang.addLrcFile,
                           onTap: onAddLRCFileTap,

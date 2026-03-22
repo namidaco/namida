@@ -66,7 +66,6 @@ class SettingsSearchPage extends StatelessWidget {
                         Widget tileWidget = CustomListTile(
                           enabled: true,
                           borderR: 16.0,
-                          visualDensity: VisualDensity.compact,
                           leading: ConstrainedBox(
                             constraints: const BoxConstraints(minWidth: 24.0),
                             child: isNotAvailable

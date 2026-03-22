@@ -181,6 +181,8 @@ class CustomSwitchListTile extends StatelessWidget {
   final int maxSubtitleLines;
   final VisualDensity? visualDensity;
   final Color? bgColor;
+  final bool dense;
+  final bool extraDense;
 
   const CustomSwitchListTile({
     super.key,
@@ -197,6 +199,8 @@ class CustomSwitchListTile extends StatelessWidget {
     this.maxSubtitleLines = 8,
     this.visualDensity,
     this.bgColor,
+    this.dense = true,
+    this.extraDense = false,
   });
 
   @override
@@ -213,7 +217,8 @@ class CustomSwitchListTile extends StatelessWidget {
       passedColor: passedColor,
       rotateIcon: rotateIcon,
       onTap: () => onChanged(value),
-      visualDensity: visualDensity,
+      dense: dense,
+      extraDense: extraDense,
       trailing: IgnorePointer(
         child: FittedBox(
           child: Row(
@@ -244,11 +249,11 @@ class CustomListTile extends StatelessWidget {
   final bool enabled;
   final bool largeTitle;
   final int maxSubtitleLines;
-  final VisualDensity? visualDensity;
   final TextStyle? titleStyle;
   final double borderR;
   final Color? bgColor;
   final bool dense;
+  final bool extraDense;
 
   const CustomListTile({
     super.key,
@@ -265,11 +270,11 @@ class CustomListTile extends StatelessWidget {
     this.enabled = true,
     this.largeTitle = false,
     this.maxSubtitleLines = 8,
-    this.visualDensity,
     this.titleStyle,
     this.borderR = 18.0,
     this.bgColor,
     this.dense = true,
+    this.extraDense = false,
   });
 
   @override
@@ -278,19 +283,18 @@ class CustomListTile extends StatelessWidget {
     final textTheme = theme.textTheme;
     final iconColor = context.defaultIconColor(passedColor);
 
-    final baseDensity = (visualDensity ?? VisualDensity.compact).baseSizeAdjustment;
+    final baseDensity = VisualDensity.compact.baseSizeAdjustment;
     var minTileHeight =
         6.0 +
         baseDensity.dy +
         switch ((subtitle?.isNotEmpty == true)) {
-          true => dense ? 60.0 : 68.0, // 2 lines
-          false => dense ? 50.0 : 58.0, // 1 line
+          true => dense ? 60.0 : 62.0, // 2 lines
+          false => dense ? 50.0 : 56.0, // 1 line
         };
-    var verticalPadding = 6.0;
+    var verticalPadding = 8.0;
     var borderR = this.borderR;
 
-    // -- some tiles already used this to make it more compact, this is backward compatibility
-    if (this.visualDensity == VisualDensity.compact) {
+    if (this.extraDense) {
       minTileHeight *= 0.85;
       verticalPadding = 1.0;
       borderR *= 0.8;
@@ -311,6 +315,7 @@ class CustomListTile extends StatelessWidget {
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: NamidaMouseRegion(
+              enabled: enabled && onTap != null,
               child: Row(
                 children: [
                   if (icon != null) ...[
@@ -353,15 +358,17 @@ class CustomListTile extends StatelessWidget {
                     ),
                   ),
 
+                  const SizedBox(width: 6.0),
+
+                  const SizedBox(width: 12.0),
+
                   if (trailingRaw != null) ...[
-                    const SizedBox(width: 12.0),
                     trailingRaw!,
                   ] else if (trailing != null || trailingText != null) ...[
-                    const SizedBox(width: 12.0),
                     ConstrainedBox(
                       constraints: BoxConstraints(
                         minWidth: 0,
-                        maxWidth: Dimensions.inst.availableAppContentWidth * 0.22,
+                        maxWidth: Dimensions.inst.availableAppContentWidth * 0.3,
                         maxHeight: minTileHeight,
                       ),
                       child: FittedBox(

@@ -150,7 +150,6 @@ void showTrackAdvancedDialog({
             ),
           if (NamidaFeaturesVisibility.methodSetMusicAs && isSingle && firstTrackPhysicalExists)
             CustomListTile(
-              visualDensity: VisualDensity.compact,
               passedColor: colorScheme,
               title: lang.setAs,
               subtitle: "${lang.ringtone}, ${lang.notification}, ${lang.alarm}",

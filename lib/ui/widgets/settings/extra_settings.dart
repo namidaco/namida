@@ -105,7 +105,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         icon: icon,
         borderR: 16.0,
         subtitle: LibraryImageSource.values.where((element) => sources.contains(element)).map((e) => e.toText()).join(', '), // to be sorted
-        visualDensity: VisualDensity(horizontal: -4.0, vertical: -4.0),
+        extraDense: true,
         onTap: () {
           void tileOnTap(LibraryImageSource source, {bool removeIfExists = true}) {
             final alreadyExist = settingsKey.value.contains(source);
@@ -1287,7 +1287,6 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                 NamidaPopupWrapper(
                   children: _getTitlebarIconsTypeChildren,
                   child: CustomListTile(
-                    visualDensity: VisualDensity.compact,
                     icon: Broken.close_circle,
                     title: 'desktop_title_bar_icons_type'.toUpperCase(),
                     trailing: NamidaPopupWrapper(
@@ -1314,7 +1313,6 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
               NamidaPopupWrapper(
                 childrenDefault: _getSearchTypeChildren,
                 child: CustomListTile(
-                  visualDensity: VisualDensity.compact,
                   icon: Broken.search_favorite,
                   title: 'preferred_search_tab'.toUpperCase(),
                   trailing: NamidaPopupWrapper(

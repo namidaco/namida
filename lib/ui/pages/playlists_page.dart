@@ -127,7 +127,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
         child: Column(
           children: [
             CustomListTile(
-              visualDensity: VisualDensity.compact,
               icon: Broken.shuffle,
               title: lang.random,
               subtitle: lang.generateRandomPlaylist,
@@ -140,7 +139,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
               },
             ),
             CustomListTile(
-              visualDensity: VisualDensity.compact,
               icon: Broken.import_1,
               title: lang.import,
               subtitle: lang.playlistsImportM3uNative,
@@ -158,7 +156,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
               },
             ),
             CustomListTile(
-              visualDensity: VisualDensity.compact,
               icon: Broken.add_circle,
               title: lang.create,
               subtitle: lang.createNewPlaylist,
@@ -190,7 +187,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
             ObxO(
               rx: settings.enableM3USyncStartup,
               builder: (context, m3usyncstartup) => CustomSwitchListTile(
-                visualDensity: VisualDensity.compact,
                 leading: const StackedIcon(
                   baseIcon: Broken.music_library_2,
                   secondaryIcon: Broken.refresh_square_2,

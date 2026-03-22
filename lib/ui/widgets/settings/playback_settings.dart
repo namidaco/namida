@@ -46,7 +46,7 @@ enum _PlaybackSettingsKeys with SettingKeysBase {
   autoPlayOnNextPrev,
   infinityQueue,
   onVolume0,
-  onInterruption,
+  onInterruption(NamidaFeaturesAvailablity.android),
   jumpToFirstTrackAfterFinishing,
   previousButtonReplays,
   seekDuration,

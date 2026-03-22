@@ -2192,7 +2192,7 @@ class TracksAddOnTap {
               subtitle: subtitle,
               icon: icon,
               maxSubtitleLines: 22,
-              visualDensity: VisualDensity.compact,
+              dense: false,
               onTap: () => onTap(insertionType),
               trailingRaw: trailingFinal,
             );

@@ -1830,7 +1830,6 @@ void showSetTrackStatsDialog({
           shrinkWrap: true,
           children: [
             CustomListTile(
-              visualDensity: VisualDensity.compact,
               icon: Broken.smileys,
               title: lang.setMoods,
               trailing: NamidaInkWellButton(
@@ -1856,7 +1855,6 @@ void showSetTrackStatsDialog({
             ),
 
             CustomListTile(
-              visualDensity: VisualDensity.compact,
               icon: Broken.ticket_discount,
               title: lang.setTags,
               trailing: NamidaInkWellButton(
@@ -1883,7 +1881,6 @@ void showSetTrackStatsDialog({
 
             const SizedBox(height: 6.0),
             CustomListTile(
-              visualDensity: VisualDensity.compact,
               icon: Broken.grammerly,
               title: lang.setRating,
               trailing: ObxO(
