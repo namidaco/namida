@@ -1,0 +1,49 @@
+name: 🔧 Issue
+description: little problem, not sure if it's a bug
+title: "[ISSUE] Write the title here"
+labels:
+  - issue
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **this template is **ONLY** used for reporting small issues, use other templates for other stuff**
+  - type: textarea
+    attributes:
+      label: WHAT EXACTLY HAPPENED
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Screenshots
+      description: upload any screenshot/video if u got, makes things easier
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Logs
+      description: |
+        Go to **Settings > About > Share Logs** and put it here.
+        Issues without logs may not receive support.
+      value: |
+        <details>
+        <summary>Logs</summary>
+        ```
+        <Replace this line by pasting your logs here>
+        ```
+        </details>
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Possible Solution
+      description: any suggestions how could this be possibly fixed/implemented?
+    validations:
+      required: false

@@ -1,0 +1,28 @@
+name: ❓ Question
+description: i got a smol question/ is it only me or..
+title: "[QUESTION] Write the title here"
+labels:
+  - question
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **this template is **ONLY** used for asking questions, use other templates for other stuff**
+  - type: textarea
+    attributes:
+      label: what is it cutie
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Screenshots
+      description: upload any screenshot/video if u got, makes things easier
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Logs
+      description: Go to **Settings > About > Share Logs** and put it here.
+    validations:
+      required: false

@@ -1,0 +1,76 @@
+name: 🐛 Bug Report
+description: Something is broken or not working as expected
+title: "[BUG] Write the title here"
+labels:
+  - bug
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **This template is ONLY for reporting bugs. Please use the appropriate template for other types of issues.**
+
+        **Please fill out the following information as completely as possible.**
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: |
+        Please search for existing issues (including closed ones) before submitting a new one.
+        You may already find an answer to your problem!
+      options:
+        - label: I have searched the existing issues
+          required: true
+  - type: textarea
+    attributes:
+      label: Current Behavior
+      description: What is actually happening?
+      placeholder: |
+        Instead of the expected behavior, this happens...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: What should have happened?
+      placeholder: |
+        This should have happened instead...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: How can someone reproduce this bug? A clear and detailed description will help speed up the fix.
+      value: |
+        1. 
+        2. 
+        3. 
+        4.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Logs
+      description: |
+        Go to **Settings > About > Share Logs** and put it here.
+        Issues without logs may not receive support.
+      value: |
+        <details>
+        <summary>Logs</summary>
+        ```
+        <Replace this line by pasting your logs here>
+        ```
+        </details>
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Screenshots / Video
+      description: upload any screenshot/video recording if u got, makes things easier
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Possible Solution
+      description: If you have any ideas on how this could be fixed or implemented, feel free to share them here.
+    validations:
+      required: false
