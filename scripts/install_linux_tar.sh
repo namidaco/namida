@@ -33,7 +33,7 @@ API_URL="https://api.github.com/repos/namidaco/namida-snapshots/releases"
 
 # Try to find a .tar.gz in the latest 4 releases
 RELEASES_JSON=$(curl -s "$API_URL?per_page=4")
-DOWNLOAD_URL=$(echo "$RELEASES_JSON" | grep "browser_download_url.*\.tar\.gz" | cut -d '"' -f 4 | head -n 1)
+DOWNLOAD_URL=$(echo "$RELEASES_JSON" | grep "browser_download_url.*\.tar\.gz" | grep -v "_login" | cut -d '"' -f 4 | head -n 1)
 
 if [ -z "$DOWNLOAD_URL" ]; then
   echo -e "${RED}Error: Could not find .tar.gz file in the last 4 releases${NC}"
@@ -74,6 +74,9 @@ mkdir -p "$INSTALL_DIR"
 
 # Install namida binary
 install -Dm755 "namida" "${INSTALL_DIR}/namida"
+if [ -f "namida_bin" ]; then
+  install -Dm755 "namida_bin" "${INSTALL_DIR}/namida_bin"
+fi
 
 # Install /bin directory
 if [ -d "bin" ]; then

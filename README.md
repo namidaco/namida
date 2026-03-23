@@ -323,13 +323,29 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 ### Linux Installation
 
 > [!IMPORTANT]
-> Install dependencies first: **mpv** (for playback) and **wpe** (for login)
+> Install **mpv** (for playback)
 > (you may skip this if you used a package manager)
 >
 > ```bash
-> sudo pacman -S mpv wpewebkit              # Arch/Manjaro
-> sudo apt install mpv libwebkit2gtk-4.1-0  # Debian/Ubuntu/Mint
-> sudo dnf install mpv webkit2gtk4.1        # Fedora/RHEL
+> sudo pacman -S mpv      # Arch/Manjaro
+> sudo apt install mpv    # Debian/Ubuntu/Mint
+> sudo dnf install mpv    # Fedora/RHEL
+> ```
+
+> [!IMPORTANT]
+> (Optional) Install **wpe** (for login support) or download the `*_login` variant
+>
+> ```bash
+> # Arch/Manjaro
+> sudo pacman -S wpewebkit
+>
+> # Debian/Ubuntu/Mint
+> sudo apt install libwpewebkit-2.0-1
+>
+> # Fedora/RHEL
+> sudo dnf install dnf-plugins-core
+> sudo dnf copr enable philn/wpewebkit
+> sudo dnf install wpewebkit
 > ```
 
 ```bash

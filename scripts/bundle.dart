@@ -10,12 +10,19 @@ void main(List<String> args) async {
   args = List.from(args);
   final start = DateTime.now();
 
-  final linuxDistDir = _getDirectoryEnsureExistsAndCleaned('./dist');
-  final bundleOutputDir = _getDirectoryEnsureExistsAndCleaned('./scripts/bundle_output');
-
   final isKuru = args.remove('-kuru');
   final tarOnly = args.remove('-tar');
   final noAurPublish = args.remove('--no-aur');
+  final skipClean = args.remove('--no-clean');
+  final bundleWPE = args.remove('--bundle-wpe');
+
+  final environment = <String, String>{
+    ...Platform.environment,
+    if (!bundleWPE) "DISABLE_WPE_WEBKIT": "1",
+  };
+
+  final linuxDistDir = _getDirectoryEnsureExistsAndCleaned('./dist', clean: !skipClean);
+  final bundleOutputDir = _getDirectoryEnsureExistsAndCleaned(bundleWPE ? './scripts/bundle_output_wpe' : './scripts/bundle_output', clean: !skipClean);
 
   print('====> Parsing version...');
 
@@ -31,10 +38,13 @@ void main(List<String> args) async {
   // await _execute('dart', ['bump_version.dart', '-y', '-r', '--skip-git', versionOnly, buildNumberOnly]);
 
   // -- just bcz kernel_blob.bin is sometimes created for release mode
-  await _execute('flutter', ["clean"]);
-  await _execute('flutter', ["pub", "get"]);
+  if (!skipClean) {
+    await _execute('flutter', ["clean"]);
+    await _execute('flutter', ["pub", "get"]);
+  }
 
-  final filename = 'namida-v$versionOnly-beta';
+  var filename = 'namida-v$versionOnly-beta';
+  if (bundleWPE) filename += '_login';
   String buildOutputPath(String ext) {
     return "${bundleOutputDir.path}/$filename.linux.$ext";
   }
@@ -59,6 +69,7 @@ void main(List<String> args) async {
       "--release",
       if (isKuru) "--dart-define=IS_KURU_BUILD=$isKuru",
     ],
+    environment: environment,
   );
 
   if (buildExitCode != 0) {
@@ -68,13 +79,16 @@ void main(List<String> args) async {
 
   print('====> Packaging linux (.tar.gz)...');
 
-  await _execute('tar', [
-    "-czf",
-    buildOutputPath('tar.gz'),
-    "-C",
-    "build/linux/x64/release/bundle",
-    ".",
-  ]);
+  await _execute(
+    'tar',
+    [
+      "-czf",
+      buildOutputPath('tar.gz'),
+      "-C",
+      "build/linux/x64/release/bundle",
+      ".",
+    ],
+  );
   print('====> Success');
 
   if (tarOnly) return;
@@ -88,14 +102,18 @@ void main(List<String> args) async {
   if (availableOutputFormats.contains('appimage')) {
     _ensureAppImageConfigHasAllDeps();
   }
-  await _execute('fastforge', [
-    "package",
-    "--platform=linux",
-    "--targets=${availableOutputFormats.join(',')}",
-    "--skip-clean",
-    "--flutter-build-args=release",
-    if (isKuru) "--build-dart-define=IS_KURU_BUILD=$isKuru",
-  ]);
+  await _execute(
+    'fastforge',
+    [
+      "package",
+      "--platform=linux",
+      "--targets=${availableOutputFormats.join(',')}",
+      "--skip-clean",
+      "--flutter-build-args=release",
+      if (isKuru) "--build-dart-define=IS_KURU_BUILD=$isKuru",
+    ],
+    environment: environment,
+  );
   print('====> Success');
 
   print('====> Copying files');
@@ -174,10 +192,11 @@ Directory _getDirectoryEnsureExistsAndCleaned(String path, {bool clean = true}) 
   return dir;
 }
 
-Future<int> _execute(String executable, List<String> arguments) async {
+Future<int> _execute(String executable, List<String> arguments, {Map<String, String>? environment}) async {
   final p = await Process.start(
     executable,
     arguments,
+    environment: environment,
     mode: ProcessStartMode.inheritStdio,
   );
   _activeProcesses.add(p);

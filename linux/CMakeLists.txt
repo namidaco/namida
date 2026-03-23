@@ -152,15 +152,3 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
   install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endif()
-
-
-# === Remove WPE libraries from bundle (loaded from system at runtime) ===
-install(CODE "
-  file(GLOB WPE_LIBS
-    \"${INSTALL_BUNDLE_LIB_DIR}/libWPEWebKit*\"
-  )
-  foreach(WPE_LIB \${WPE_LIBS})
-    file(REMOVE \"\${WPE_LIB}\")
-    message(STATUS \"Removed: \${WPE_LIB}\")
-  endforeach()
-  " COMPONENT Runtime)

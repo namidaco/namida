@@ -305,8 +305,10 @@ jobs:
         run: |
           export PATH="/opt/flutter/bin:/opt/dart-sdk/bin:$HOME/.pub-cache/bin:$PATH"
           dart ./scripts/bundle.dart --no-aur
+          dart ./scripts/bundle.dart --no-aur --no-clean --bundle-wpe
           mkdir -p build_final
           mv ./scripts/bundle_output/* build_final/ || echo "No files to move"
+          mv ./scripts/bundle_output_wpe/* build_final/ || echo "No files to move"
 
       - name: Upload files to Snapshot Release
         uses: softprops/action-gh-release@v2
@@ -332,7 +334,7 @@ jobs:
           FULL_VERSION="${{ steps.extract_version.outputs.version }}"
           PKGVER=$(echo "$FULL_VERSION" | sed 's/-beta+.*//')
           BUILDNUMBER=$(echo "$FULL_VERSION" | sed 's/.*+//')
-          TARBALL=$(find "$(pwd)/build_final" -name "*.tar.gz" | head -1)
+          TARBALL=$(find "$(pwd)/build_final" -name "*.tar.gz" ! -name "*_login*" | head -1)
           if [ -z "$TARBALL" ]; then
             echo "No tarball found in build_final:"
             ls -la build_final/

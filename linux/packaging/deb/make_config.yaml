@@ -14,7 +14,6 @@ installed_size: 21400
 dependencies:
   - mpv
   - libepoxy0
-  - libwebkit2gtk-4.1-0
 
 essential: false
 
