@@ -84,7 +84,7 @@ class _SMBServer extends MusicWebServer {
   @override
   Future<WebStreamUriDetails?> getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal}) async {
     try {
-      final serverPath = Uri.decodeQueryComponent(id);
+      final serverPath = id;
 
       final tempFile = FileParts.joinAll([
         AppDirs.APP_CACHE,
@@ -111,7 +111,7 @@ class _SMBServer extends MusicWebServer {
   @override
   Future<Uint8List?> getImage(String id) async {
     try {
-      final serverPath = Uri.decodeQueryComponent(id);
+      final serverPath = id;
 
       final res = await _fetchFileAndExtractArtwork(
         serverPath,

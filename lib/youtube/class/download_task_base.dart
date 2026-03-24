@@ -1,6 +1,11 @@
 class DownloadTaskFilename {
-  static final RegExp cleanupFilenameRegex = RegExp(r'[*#\$|/\\!^:"\?%<>]', caseSensitive: false);
-  static String cleanupFilename(String filename) => filename.replaceAll(DownloadTaskFilename.cleanupFilenameRegex, '_');
+  static final RegExp cleanupFilenameRegex = RegExp(r'[*#\$|/\\!^:"\?%<>\u2F38\u2044\u29F8]', caseSensitive: false);
+  static String cleanupFilename(String filename, {int maxLength = 180}) {
+    final cleaned = filename.replaceAll(cleanupFilenameRegex, '_');
+    if (cleaned.length <= maxLength) return cleaned;
+    final ext = cleaned.contains('.') ? '.${cleaned.split('.').last}' : '';
+    return '${cleaned.substring(0, maxLength - ext.length)}$ext';
+  }
 
   static int _numberKey = 0;
 

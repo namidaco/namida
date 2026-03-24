@@ -11,11 +11,13 @@ import 'package:dio/dio.dart';
 import 'package:jellyfin_dart/jellyfin_dart.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:opensubsonic_api/opensubsonic_api.dart';
+import 'package:path/path.dart' as p;
 import 'package:smb_connect/smb_connect.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
+import 'package:namida/class/media_info.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';

@@ -209,7 +209,7 @@ class Video extends Track {
   @override
   Track get track => this;
 
-  const Video.explicit(super.path) : super.explicit();
+  Video.explicit(super.path) : super.explicit();
 
   @override
   String toString() => "Video($path)";

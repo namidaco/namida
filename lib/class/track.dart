@@ -226,11 +226,11 @@ class Track extends Selectable<String> {
   @override
   TrackWithDate? get trackWithDate => null;
 
-  bool get isPhysical => !isNetwork;
-  bool get isNetwork => path.startsWith('http');
+  late final isPhysical = !isNetwork;
+  late final isNetwork = path.startsWith('http');
 
   final String path;
-  const Track.explicit(this.path);
+  Track.explicit(this.path);
 
   factory Track.decide(String path, bool? isVideo) => isVideo == true ? Video.explicit(path) : Track.explicit(path);
 
@@ -1009,7 +1009,7 @@ extension TrackIterableUtils on Iterable<Track> {
 }
 
 class PhysicalMedia extends Track {
-  const PhysicalMedia.explicit(super.path) : super.explicit();
+  PhysicalMedia.explicit(super.path) : super.explicit();
   factory PhysicalMedia.fromTrack(Track tr) => PhysicalMedia.explicit(tr.path);
 }
 

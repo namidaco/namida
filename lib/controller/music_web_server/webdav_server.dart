@@ -6,9 +6,11 @@ class _WebDAVServer extends MusicWebServer {
   late Uri _serverUri;
   late WebDAVAuth _authInfo;
   Uri _buildServerUri(String serverPath) {
+    final basePath = _serverUri.path.endsWith('/') ? _serverUri.path : '${_serverUri.path}/';
+    final trimmed = serverPath.startsWith('/') ? serverPath.substring(1) : serverPath;
     return _serverUri.replace(
       userInfo: '${_authInfo.username}:${_authInfo.password}',
-      path: serverPath,
+      path: '$basePath$trimmed',
     );
   }
 
@@ -39,7 +41,7 @@ class _WebDAVServer extends MusicWebServer {
     final api = _api;
     if (api == null) return null;
 
-    final serverPath = Uri.decodeQueryComponent(id);
+    final serverPath = id; // -- already decoded
     final uri = _buildServerUri(serverPath);
 
     return WebStreamUriDetails.fromUri(
@@ -53,7 +55,7 @@ class _WebDAVServer extends MusicWebServer {
     final api = _api;
     if (api == null) return null;
 
-    final serverPath = Uri.decodeQueryComponent(id);
+    final serverPath = id;
 
     final uri = _buildServerUri(serverPath);
     final uriString = uri.toString();
@@ -134,6 +136,8 @@ class _WebDAVServer extends MusicWebServer {
     required int minDur,
     required int minSize,
   }) async* {
+    final imageFiles = <webdav.File>[];
+    final artworksToExtractLater = <String, List<_ExtractInfo>>{};
     const subBatchSize = 20;
     for (var i = 0; i < files.length; i += subBatchSize) {
       final batch = files.skip(i).take(subBatchSize);
@@ -145,10 +149,14 @@ class _WebDAVServer extends MusicWebServer {
           subdirectories.add(file);
         } else {
           final path = file.path;
-          if (path != null && NamidaFileExtensionsWrapper.audioAndVideo.isPathValid(path)) {
-            subfiles.add(file);
+          if (path != null) {
+            if (NamidaFileExtensionsWrapper.audioAndVideo.isPathValid(path)) {
+              subfiles.add(file);
+            }
+            if (NamidaFileExtensionsWrapper.image.isPathValid(path)) {
+              imageFiles.add(file);
+            }
           }
-          // TODO: fetch folder.jpg
         }
       }
 
@@ -156,7 +164,7 @@ class _WebDAVServer extends MusicWebServer {
         final futures = subfiles.map((file) async {
           final serverPath = file.path;
           if (serverPath == null) return null;
-          final res = await _fetchFileAndExtractInfo(serverPath, file.name, api, identifiersSet);
+          final res = await _fetchFileAndExtractInfo(serverPath, file.name, api, identifiersSet, artworksToExtractLater);
           if (res == null) return null;
           final trExt = await Indexer.convertServerTagToTrack(
             path: serverPath,
@@ -222,43 +230,93 @@ class _WebDAVServer extends MusicWebServer {
         }
       }
     }
+
+    // -- prefer already existing images
+    for (final img in imageFiles) {
+      final imgPath = img.path;
+      if (imgPath != null) {
+        final bytes = await _api?.read(imgPath);
+        final serverPathWOExt = p.basenameWithoutExtension(imgPath);
+        final artworksToExtract = artworksToExtractLater[serverPathWOExt];
+        if (artworksToExtract != null) {
+          for (final e in artworksToExtract) {
+            await _writeOrExtractArtwork(e, bytes);
+          }
+          artworksToExtractLater.remove(serverPathWOExt);
+        }
+      }
+    }
+
+    // -- extract remaining that had no cover.png
+    for (final artworksToExtract in artworksToExtractLater.values) {
+      for (final e in artworksToExtract) {
+        await _writeOrExtractArtwork(e, null);
+      }
+    }
+    artworksToExtractLater.clear();
   }
 
-  Future<(FAudioModel, String, File?)?> _fetchFileAndExtractInfo(String serverPath, String? name, _ClientApiWrapper api, Set<AlbumIdentifier> identifiersSet) async {
+  Future<void> _writeOrExtractArtwork(_ExtractInfo info, List<int>? bytes) async {
+    final serverPath = info.serverPath;
+    final ffmpegInfo = info.ffmpegInfo;
+    final name = serverPath.getFilename;
+    final isVideo = name.isVideo();
+    final filename = TagsExtractor.buildImageFilename(
+      path: serverPath,
+      identifiers: info.identifiersSet,
+      isNetwork: true,
+      networkId: serverPath,
+      infoCallback: () => (
+        albumName: ffmpegInfo?.format?.tags?.album,
+        albumArtist: ffmpegInfo?.format?.tags?.albumArtist,
+        year: ffmpegInfo?.format?.tags?.date,
+        title: ffmpegInfo?.format?.tags?.title,
+        artist: ffmpegInfo?.format?.tags?.artist,
+      ),
+      hashKeyCallback: () => serverPath.toFastHashKey(),
+    );
+
+    final artworkDirectory = isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS;
+    if (bytes != null && bytes.isNotEmpty) {
+      await FileParts.join(artworkDirectory, filename).writeAsBytes(bytes);
+    } else {
+      await TagsExtractor.extractThumbnailCustom(
+        trackPath: info.uriString,
+        filename: filename,
+        artworkDirectory: artworkDirectory,
+        isVideo: isVideo,
+      );
+    }
+  }
+
+  Future<(FAudioModel, String, File?)?> _fetchFileAndExtractInfo(
+    String serverPath,
+    String? name,
+    _ClientApiWrapper api,
+    Set<AlbumIdentifier> identifiersSet,
+    Map<String, List<_ExtractInfo>> artworksToExtractLater,
+  ) async {
     final extractArtwork = Indexer.inst.isNetworkArtworkCachingEnabled;
     if (await _ffmpegSupportsWebDAV) {
       final uri = _buildServerUri(serverPath);
       final uriString = uri.toString();
       final ffmpegInfo = await NamidaFFMPEG.inst.ffmpegExtractMetadata(uriString);
-      File? artworkFile;
+
       if (extractArtwork) {
         name ??= serverPath.getFilename;
-        final isVideo = name.isVideo();
-        final filename = TagsExtractor.buildImageFilename(
-          path: serverPath,
-          identifiers: identifiersSet,
-          isNetwork: true,
-          networkId: serverPath,
-          infoCallback: () => (
-            albumName: ffmpegInfo?.format?.tags?.album,
-            albumArtist: ffmpegInfo?.format?.tags?.albumArtist,
-            year: ffmpegInfo?.format?.tags?.date,
-            title: ffmpegInfo?.format?.tags?.title,
-            artist: ffmpegInfo?.format?.tags?.artist,
-          ),
-          hashKeyCallback: () => serverPath.toFastHashKey(),
+        final extractInfo = _ExtractInfo(
+          serverPath: serverPath,
+          uriString: uriString,
+          name: name,
+          ffmpegInfo: ffmpegInfo,
+          identifiersSet: identifiersSet,
         );
-        artworkFile = await TagsExtractor.extractThumbnailCustom(
-          trackPath: uriString,
-          filename: filename,
-          artworkDirectory: isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS,
-          isVideo: isVideo,
-        );
+        final serverPathWOExt = p.basenameWithoutExtension(serverPath);
+        artworksToExtractLater[serverPathWOExt] ??= [];
+        artworksToExtractLater[serverPathWOExt]!.add(extractInfo);
       }
 
-      final model = ffmpegInfo?.toFAudioModel(
-        artwork: FArtwork(file: artworkFile),
-      );
+      final model = ffmpegInfo?.toFAudioModel(artwork: null);
       if (model != null) {
         return (model, serverPath, null);
       }
@@ -382,6 +440,20 @@ class _ClientApiWrapper {
     );
   }
 
+  Future<List<int>> read(
+    String path, {
+    void Function(int count, int total)? onProgress,
+    CancelToken? cancelToken,
+  }) async {
+    return await _executeEnsureAuthorized(
+      (api) => api.read(
+        path,
+        onProgress: onProgress,
+        cancelToken: cancelToken,
+      ),
+    );
+  }
+
   Future<List<webdav.File>> readDir(String path, [CancelToken? cancelToken]) async {
     return await _executeEnsureAuthorized(
       (api) => api.readDir(
@@ -394,4 +466,20 @@ class _ClientApiWrapper {
   void close({bool force = true}) {
     api.c.close(force: force);
   }
+}
+
+class _ExtractInfo {
+  final String serverPath;
+  final String uriString;
+  final String name;
+  final MediaInfo? ffmpegInfo;
+  final Set<AlbumIdentifier> identifiersSet;
+
+  const _ExtractInfo({
+    required this.serverPath,
+    required this.uriString,
+    required this.name,
+    required this.ffmpegInfo,
+    required this.identifiersSet,
+  });
 }

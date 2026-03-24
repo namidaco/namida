@@ -912,7 +912,7 @@ class NamidaFileExtensionsWrapper {
   static const exe = NamidaFileExtensionsWrapper._({'exe'});
 }
 
-const kDummyTrack = Track.explicit('');
+final kDummyTrack = Track.explicit('');
 const kDummyExtendedTrack = TrackExtended(
   title: "",
   originalArtist: "",

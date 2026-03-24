@@ -476,7 +476,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         maxHeight: maxHeight,
       ),
       textBuilder: textBuilder,
-      canShowBuffering: (currentItem) => false,
+      canShowBuffering: (currentItem) => (currentItem as Selectable).track.isNetwork,
     );
   }
 
