@@ -14,6 +14,7 @@ installed_size: 21400
 dependencies:
   - mpv
   - libepoxy0
+  - libayatana-appindicator3-1
 
 essential: false
 

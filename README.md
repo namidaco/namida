@@ -323,13 +323,13 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 ### Linux Installation
 
 > [!IMPORTANT]
-> Install **mpv** (for playback)
+> Install dependencies: **mpv** (for playback) & **libappindicator** (for tray icon)
 > (you may skip this if you used a package manager)
 >
 > ```bash
-> sudo pacman -S mpv      # Arch/Manjaro
-> sudo apt install mpv    # Debian/Ubuntu/Mint
-> sudo dnf install mpv    # Fedora/RHEL
+> sudo pacman -S mpv libappindicator                # Arch/Manjaro
+> sudo apt install mpv libayatana-appindicator3-1   # Debian/Ubuntu/Mint
+> sudo dnf install mpv libappindicator              # Fedora/RHEL
 > ```
 
 > [!IMPORTANT]
