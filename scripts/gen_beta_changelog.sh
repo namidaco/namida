@@ -1,6 +1,10 @@
 #!/bin/bash
 
-release_info=$(curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/namidaco/namida-snapshots/releases/latest)
+TARGET_REPO="${1:-namidaco/namida-snapshots}"
+
+release_info=$(curl -s -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/${TARGET_REPO}/releases/latest)
+
 PREVIOUS_RELEASE_DATE=$(echo "$release_info" | grep '"published_at":' | sed -E 's/.*"published_at": ?"([^"]+)".*/\1/')
 
 REPO_URL="https://github.com/namidaco/namida/commit/"

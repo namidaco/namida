@@ -7,6 +7,11 @@ name: release_beta
 
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      is_beta:
+        type: boolean
+        default: true
 
 jobs:
   create_release:
@@ -14,11 +19,13 @@ jobs:
     outputs:
       version: ${{ steps.extract_version.outputs.version }}
       version_name: ${{ steps.extract_version.outputs.version_name }}
+      target_repo: ${{ steps.set_vars.outputs.target_repo }}
+      release_token: ${{ steps.set_vars.outputs.release_token }}
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT }}
-          fetch-depth: 0
+          fetch-depth: ${{ inputs.is_beta && 200 || 0 }} # fetch less commits for beta
 
       - name: Extract version from pubspec.yaml
         id: extract_version
@@ -28,26 +35,31 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
 
-      - name: Get the previous release date
+      - name: Set variables
+        id: set_vars
         run: |
-          release_info=$(curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/namidaco/namida-snapshots/releases/latest)
-          release_date=$(echo "$release_info" | jq -r '.published_at')
-          echo "PREVIOUS_RELEASE_DATE=$release_date" >> $GITHUB_ENV
+          if [ "${{ inputs.is_beta }}" = "false" ]; then
+            echo "target_repo=${{ github.repository }}" >> $GITHUB_OUTPUT
+            echo "release_token=" >> $GITHUB_OUTPUT
+          else
+            echo "target_repo=namidaco/namida-snapshots" >> $GITHUB_OUTPUT
+            echo "release_token=${{ secrets.SNAPSHOTS_REPO_SECRET }}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Generate Changelog
         run: |
-          bash scripts/gen_beta_changelog.sh
+          bash scripts/gen_beta_changelog.sh ${{ steps.set_vars.outputs.target_repo }}
           cat ./beta_changelog.md
 
       - name: Create Release with Changelog
         uses: softprops/action-gh-release@v2
         with:
-          repository: namidaco/namida-snapshots
+          repository: ${{ steps.set_vars.outputs.target_repo }}
           make_latest: true
           draft: true
           tag_name: ${{ steps.extract_version.outputs.version }}
           body_path: ./beta_changelog.md
-          token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
+          token: ${{ steps.set_vars.outputs.release_token }}
 
   build_android:
     needs: create_release
@@ -154,15 +166,15 @@ jobs:
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
             build_final/namida-v${{ needs.create_release.outputs.version_name }}${{ matrix.apk_suffix }}-armeabi-v7a.apk
 
-      - name: Creating Snapshot Release at namida-snapshots
+      - name: Creating Snapshot Release at ${{ needs.create_release.outputs.target_repo }}
         uses: softprops/action-gh-release@v2
         with:
-          repository: namidaco/namida-snapshots
+          repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
-          draft: false
+          draft: ${{ !inputs.is_beta }}
           tag_name: ${{ needs.create_release.outputs.version }}
           files: build_final/*
-          token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
+          token: ${{ needs.create_release.outputs.release_token }}
 
   build_windows:
     needs: create_release
@@ -230,15 +242,16 @@ jobs:
       - name: Upload installer to Snapshot Release
         uses: softprops/action-gh-release@v2
         with:
-          repository: namidaco/namida-snapshots
+          repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
-          draft: false
+          draft: ${{ !inputs.is_beta }}
           tag_name: ${{ needs.create_release.outputs.version }}
           files: |
             build_final/*
-          token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
+          token: ${{ needs.create_release.outputs.release_token }}
 
   build_linux:
+    if: ${{ inputs.is_beta }}
     needs: create_release
     runs-on: ubuntu-latest
     container:
@@ -319,13 +332,13 @@ jobs:
       - name: Upload files to Snapshot Release
         uses: softprops/action-gh-release@v2
         with:
-          repository: namidaco/namida-snapshots
+          repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
-          draft: false
+          draft: ${{ !inputs.is_beta }}
           tag_name: ${{ needs.create_release.outputs.version }}
           files: |
             build_final/*
-          token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
+          token: ${{ needs.create_release.outputs.release_token }}
 
       - name: Install SSH key for AUR
         uses: shimataro/ssh-key-action@v2
@@ -338,7 +351,7 @@ jobs:
         run: |
           # Parse version string (e.g. 5.6.5-beta+260114196)
           FULL_VERSION="${{ needs.create_release.outputs.version }}"
-          PKGVER=$(echo "$FULL_VERSION" | sed 's/-beta+.*//')
+          PKGVER=$(echo "$FULL_VERSION" | sed 's/[-+].*//')
           BUILDNUMBER=$(echo "$FULL_VERSION" | sed 's/.*+//')
           TARBALL=$(find "$(pwd)/build_final" -name "*.tar.gz" ! -name "*_login*" | head -1)
           if [ -z "$TARBALL" ]; then

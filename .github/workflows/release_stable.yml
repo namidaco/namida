@@ -1,0 +1,11 @@
+name: release_stable
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    uses: ./.github/workflows/release_beta.yml
+    with:
+      is_beta: false
+    secrets: inherit
