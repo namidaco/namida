@@ -9,7 +9,48 @@ on:
   workflow_dispatch:
 
 jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+      version_name: ${{ steps.extract_version.outputs.version_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+          fetch-depth: 0
+
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        run: |
+          VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
+          VERSION_NAME=$(echo $VERSION | cut -d'+' -f1)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+
+      - name: Get the previous release date
+        run: |
+          release_info=$(curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/namidaco/namida-snapshots/releases/latest)
+          release_date=$(echo "$release_info" | jq -r '.published_at')
+          echo "PREVIOUS_RELEASE_DATE=$release_date" >> $GITHUB_ENV
+
+      - name: Generate Changelog
+        run: |
+          bash scripts/gen_beta_changelog.sh
+          cat ./beta_changelog.md
+
+      - name: Create Release with Changelog
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: namidaco/namida-snapshots
+          make_latest: true
+          draft: true
+          tag_name: ${{ steps.extract_version.outputs.version }}
+          body_path: ./beta_changelog.md
+          token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
+
   build_android:
+    needs: create_release
     runs-on: ubuntu-22.04
     continue-on-error: ${{ matrix.is_clone }}
     strategy:
@@ -90,14 +131,6 @@ jobs:
           flutter pub upgrade
           git submodule update --init --remote --recursive
 
-      - name: Extract version from pubspec.yaml
-        id: extract_version
-        run: |
-          VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
-          VERSION_NAME=$(echo $VERSION | cut -d'+' -f1)
-          echo ::set-output name=version::"$VERSION"
-          echo ::set-output name=version_name::"$VERSION_NAME"
-
       - uses: actions/setup-java@v1
         with:
           java-version: "17"
@@ -116,23 +149,10 @@ jobs:
           mkdir -p build_final
           flutter build apk --target-platform android-arm64 --release
           mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
-            build_final/namida-v${{ steps.extract_version.outputs.version_name }}${{ matrix.apk_suffix }}-arm64-v8a.apk
+            build_final/namida-v${{ needs.create_release.outputs.version_name }}${{ matrix.apk_suffix }}-arm64-v8a.apk
           flutter build apk --target-platform android-arm --release
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
-            build_final/namida-v${{ steps.extract_version.outputs.version_name }}${{ matrix.apk_suffix }}-armeabi-v7a.apk
-
-      - name: Get the previous release date
-        continue-on-error: true
-        run: |
-          release_info=$(curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/namidaco/namida-snapshots/releases/latest)
-          release_date=$(echo "$release_info" | jq -r '.published_at')    
-          echo "PREVIOUS_RELEASE_DATE=$release_date" >> $GITHUB_ENV
-
-      - name: Generate Changelog
-        continue-on-error: true
-        run: |
-          bash scripts/gen_beta_changelog.sh
-          cat ./beta_changelog.md
+            build_final/namida-v${{ needs.create_release.outputs.version_name }}${{ matrix.apk_suffix }}-armeabi-v7a.apk
 
       - name: Creating Snapshot Release at namida-snapshots
         uses: softprops/action-gh-release@v2
@@ -140,12 +160,12 @@ jobs:
           repository: namidaco/namida-snapshots
           make_latest: true
           draft: false
-          tag_name: ${{ steps.extract_version.outputs.version }}
-          body_path: ./beta_changelog.md
+          tag_name: ${{ needs.create_release.outputs.version }}
           files: build_final/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
 
   build_windows:
+    needs: create_release
     runs-on: windows-latest
 
     steps:
@@ -168,14 +188,6 @@ jobs:
           flutter clean
           flutter pub upgrade
           git submodule update --init --remote --recursive
-
-      - name: Extract version from pubspec.yaml
-        id: extract_version
-        run: |
-          $VERSION = (Select-String -Path pubspec.yaml -Pattern 'version:').Line.Split(' ')[1]
-          $VERSION_NAME = $VERSION.Split('+')[0]
-          echo "version=$VERSION" >> $env:GITHUB_OUTPUT
-          echo "version_name=$VERSION_NAME" >> $env:GITHUB_OUTPUT
 
       - name: Build Windows App
         run: |
@@ -213,7 +225,7 @@ jobs:
         run: |
           mkdir -p build_final
           $installer = Get-ChildItem "./build/windows/x64/installer/Release/" -Filter "*.exe" | Select-Object -First 1
-          Move-Item $installer.FullName "build_final/Namida-x86_64-${{ steps.extract_version.outputs.version_name }}-Installer.exe"
+          Move-Item $installer.FullName "build_final/Namida-x86_64-${{ needs.create_release.outputs.version_name }}-Installer.exe"
 
       - name: Upload installer to Snapshot Release
         uses: softprops/action-gh-release@v2
@@ -221,12 +233,13 @@ jobs:
           repository: namidaco/namida-snapshots
           make_latest: true
           draft: false
-          tag_name: ${{ steps.extract_version.outputs.version }}
+          tag_name: ${{ needs.create_release.outputs.version }}
           files: |
             build_final/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
 
   build_linux:
+    needs: create_release
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
@@ -285,14 +298,6 @@ jobs:
           flutter pub upgrade
           git submodule update --init --remote --recursive
 
-      - name: Extract version from pubspec.yaml
-        id: extract_version
-        run: |
-          VERSION=$(grep -o 'version:.*' pubspec.yaml | awk '{print $2}')
-          VERSION_NAME=$(echo $VERSION | cut -d'+' -f1)
-          echo ::set-output name=version::"$VERSION"
-          echo ::set-output name=version_name::"$VERSION_NAME"
-
       - name: Install fastforge
         run: |
           export PATH="/opt/flutter/bin:/opt/dart-sdk/bin:$PATH"
@@ -317,7 +322,7 @@ jobs:
           repository: namidaco/namida-snapshots
           make_latest: true
           draft: false
-          tag_name: ${{ steps.extract_version.outputs.version }}
+          tag_name: ${{ needs.create_release.outputs.version }}
           files: |
             build_final/*
           token: ${{ secrets.SNAPSHOTS_REPO_SECRET }}
@@ -332,7 +337,7 @@ jobs:
       - name: Publish to AUR
         run: |
           # Parse version string (e.g. 5.6.5-beta+260114196)
-          FULL_VERSION="${{ steps.extract_version.outputs.version }}"
+          FULL_VERSION="${{ needs.create_release.outputs.version }}"
           PKGVER=$(echo "$FULL_VERSION" | sed 's/-beta+.*//')
           BUILDNUMBER=$(echo "$FULL_VERSION" | sed 's/.*+//')
           TARBALL=$(find "$(pwd)/build_final" -name "*.tar.gz" ! -name "*_login*" | head -1)
