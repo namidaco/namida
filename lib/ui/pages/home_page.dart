@@ -1317,6 +1317,7 @@ class _MixesCardState extends State<_MixesCard> {
   }
 
   void _extractColor(Track track) {
+    if (!mounted) return;
     if (_cardColor == null) {
       CurrentColor.inst.getTrackColors(track, networkArtworkInfo: null, useIsolate: true).then((value) {
         if (mounted) setState(() => _cardColor = value.color);
@@ -1363,7 +1364,7 @@ class _MixesCardState extends State<_MixesCard> {
         blur: 10,
         disableBlurBgSizeShrink: true,
         borderRadius: fullscreen ? 12.0 : 8.0,
-        forceSquared: !fullscreen,
+        forceSquared: true,
         path: _track?.pathToImage,
         displayIcon: !displayShimmer,
         thumbnailSize: widget.width,

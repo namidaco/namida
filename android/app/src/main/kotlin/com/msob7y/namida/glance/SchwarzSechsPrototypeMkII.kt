@@ -90,6 +90,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
           val roundedBitmap = bitmap.toRoundedBitmap(imageCornerRadiusFloat)
           // TODO: provide good color
           _currentImageProviderWrapper = ImageProviderWrapper(roundedBitmap, null)
+          bitmap.recycle()
         } catch (_: Exception) {
           _currentImageProviderWrapper = null
         }

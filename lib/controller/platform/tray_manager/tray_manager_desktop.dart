@@ -8,6 +8,9 @@ class _TrayManagerDesktop extends NamidaTrayManager with TrayListener {
     trayManager.addListener(this);
     await trayManager.setIcon(iconPath);
     try {
+      await trayManager.setTitle('Namida');
+    } on MissingPluginException catch (_) {}
+    try {
       await trayManager.setToolTip('Namida');
     } on MissingPluginException catch (_) {}
   }

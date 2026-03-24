@@ -121,10 +121,10 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
                           barBehind,
                           ObxO(
                             rx: MiniPlayerController.inst.seekValue,
-                            builder: (context, seek) => ObxO(
+                            builder: (context, seekNull) => ObxO(
                               rx: Player.inst.nowPlayingPosition,
                               builder: (context, nowPlayingPosition) {
-                                final position = seek != 0 ? seek : nowPlayingPosition;
+                                final position = seekNull ?? nowPlayingPosition;
                                 final durInMs = _currentDurationInMSR;
                                 final percentage = (position / durInMs).clampDouble(0.0, durInMs.toDouble());
                                 return ShaderMask(

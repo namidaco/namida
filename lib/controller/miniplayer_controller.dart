@@ -38,7 +38,7 @@ class MiniPlayerController {
   bool get isMinimized => animation.value < 1.0;
 
   /// Used to temporarily hold the seek value.
-  final seekValue = 0.obs;
+  final seekValue = Rxn<int>();
 
   /// Indicates that play/pause button is currently pressed.
   final isPlayPauseButtonHighlighted = false.obs;

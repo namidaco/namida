@@ -438,12 +438,13 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 
     final seekPositionTextChild = ObxO(
       rx: MiniPlayerController.inst.seekValue,
-      builder: (context, seek) => ObxO(
+      builder: (context, seekNull) => ObxO(
         rx: Player.inst.nowPlayingPosition,
         builder: (context, nowPlayingPosition) => NamidaAnimatedSwitcher(
           key: const ValueKey('seek_switcher'),
           firstChild: Obx(
             (context) {
+              final seek = seekNull ?? 0;
               String finalText;
               if (settings.player.displayActualPositionWhenSeeking.value) {
                 final itemDur = Player.inst.currentItemDuration.value?.inMilliseconds;
@@ -464,7 +465,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             },
           ),
           secondChild: const SizedBox(),
-          showFirst: seek != 0,
+          showFirst: seekNull != null,
           durationMS: 700,
           allCurves: Curves.easeInOutQuart,
         ),
@@ -1948,8 +1949,12 @@ class WaveformMiniplayer extends StatelessWidget {
 
   void onSeekEnd() {
     final ms = MiniPlayerController.inst.seekValue.value;
+    if (ms == null) {
+      //-- return early cuz not seeking
+      return;
+    }
     Player.inst.seek(Duration(milliseconds: ms));
-    MiniPlayerController.inst.seekValue.value = 0;
+    MiniPlayerController.inst.seekValue.value = null;
   }
 
   @override
@@ -1964,9 +1969,11 @@ class WaveformMiniplayer extends StatelessWidget {
               padding: fixPadding ? EdgeInsets.symmetric(horizontal: (16.0 / 2).spaceX) : EdgeInsets.zero,
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
-                onTapDown: (details) => onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth),
-                onTapUp: (details) => onSeekEnd(),
-                onTapCancel: () => MiniPlayerController.inst.seekValue.value = 0,
+                onTapUp: (details) {
+                  onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth);
+                  onSeekEnd();
+                },
+                onTapCancel: () => MiniPlayerController.inst.seekValue.value = null,
                 onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth),
                 onHorizontalDragEnd: (details) => onSeekEnd(),
                 child: const WaveformComponent(),
