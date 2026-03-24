@@ -1059,7 +1059,6 @@ class NamidaFeaturesVisibility {
   static final changeApplicationBrightness = _isAndroid;
   static final equalizerAvailable = _isAndroid;
   static final loudnessEnhancerAvailable = _isAndroid;
-  static final gaplessPlaybackAvailable = _isAndroid;
 
   static final showDownloadNotifications = _isWindows || _isLinux;
   static final showVideoControlsOnHover = _isWindows || _isLinux;

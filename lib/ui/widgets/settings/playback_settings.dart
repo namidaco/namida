@@ -40,7 +40,7 @@ enum _PlaybackSettingsKeys with SettingKeysBase {
   dismissibleMiniplayer,
   replayGain,
   skipSilence(NamidaFeaturesAvailablity.android),
-  gaplessPlayback(NamidaFeaturesAvailablity.android),
+  gaplessPlayback,
   crossfade,
   fadeEffectOnPlayPause,
   autoPlayOnNextPrev,

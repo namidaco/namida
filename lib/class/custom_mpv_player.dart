@@ -19,11 +19,35 @@ class CustomMPVPlayer implements AVPlayer {
       if (resolved != null) _videoControllerListener(width: resolved);
     });
 
-    _playerCompletedStreamSub = _player.stream.completed.listen((event) => _updateProcessingState(completed: event));
-    _playerBufferingStreamSub = _player.stream.buffering.listen((event) => _updateProcessingState(buffering: event));
+    _playerCompletedStreamSub = _player.stream.completed.listen((event) {
+      if (event) {
+        _processingState = ProcessingState.completed;
+        _updateProcessingState();
+      }
+    });
+
+    _playerBufferingStreamSub = _player.stream.buffering.listen((event) {
+      if (event) {
+        _processingState = ProcessingState.buffering;
+      } else {
+        _processingState = ProcessingState.ready;
+      }
+      _updateProcessingState();
+    });
+
+    _playerPositionStreamSub = _player.stream.position.listen((p) {
+      if (_processingState != ProcessingState.completed) {
+        if (p < Duration.zero) p = Duration.zero;
+        _position = p;
+        _updatePosition();
+      } else {}
+    });
   }
 
-  final _player = Player(configuration: PlayerConfiguration(pitch: true));
+  ProcessingState _processingState = ProcessingState.idle;
+  Duration _position = Duration.zero;
+
+  final _player = Player(configuration: PlayerConfiguration(pitch: true, bufferSize: 128 * 1024 * 1024));
   VideoController? _videoControllerRaw;
   VideoController get _videoController {
     return _videoControllerRaw ??= _createVideoControllerAndListen();
@@ -45,7 +69,9 @@ class CustomMPVPlayer implements AVPlayer {
 
   StreamSubscription? _playerCompletedStreamSub;
   StreamSubscription? _playerBufferingStreamSub;
+  StreamSubscription? _playerPositionStreamSub;
   final _playerProcessingStateStreamController = StreamController<ProcessingState>();
+  final _playerPositionStreamController = StreamController<Duration>();
 
   final _videoInfoStreamController = StreamController<_VideoDetails>();
   // _VideoDetails? _videoInfo;
@@ -96,35 +122,12 @@ class CustomMPVPlayer implements AVPlayer {
     _updateVideoInfo(newInfo);
   }
 
-  void _updateProcessingState({
-    bool? completed,
-    bool? buffering,
-    bool? loading,
-  }) {
-    final newProcessingState = _getProcessingState(
-      completed: completed,
-      buffering: buffering,
-      loading: loading,
-    );
-    _playerProcessingStateStreamController.add(newProcessingState);
+  void _updateProcessingState() {
+    _playerProcessingStateStreamController.add(_processingState);
   }
 
-  ProcessingState _getProcessingState({
-    bool? completed,
-    bool? buffering,
-    bool? loading,
-  }) {
-    ProcessingState processingState;
-    if (buffering ?? _player.state.buffering) {
-      processingState = ProcessingState.buffering;
-    } else if (completed ?? _player.state.completed) {
-      processingState = ProcessingState.completed;
-    } else if (loading == true) {
-      processingState = ProcessingState.loading;
-    } else {
-      processingState = ProcessingState.ready;
-    }
-    return processingState;
+  void _updatePosition() {
+    _playerPositionStreamController.add(_position);
   }
 
   @override
@@ -154,7 +157,7 @@ class CustomMPVPlayer implements AVPlayer {
   Stream<ProcessingState> get processingStateStream => _playerProcessingStateStreamController.stream.distinct();
 
   @override
-  Stream<Duration> get positionStream => _player.stream.position.map(_normalizePosition);
+  Stream<Duration> get positionStream => _playerPositionStreamController.stream;
   @override
   Stream<Duration?> get durationStream => _player.stream.duration;
   @override
@@ -169,11 +172,11 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   int? get androidAudioSessionId => null;
   @override
-  ProcessingState get processingState => _getProcessingState();
+  ProcessingState get processingState => _processingState;
   @override
   Duration get bufferedPosition => _player.state.buffer;
   @override
-  Duration get position => _normalizePosition(_player.state.position);
+  Duration get position => _position;
   @override
   Duration? get duration => _player.state.duration;
   @override
@@ -189,11 +192,6 @@ class CustomMPVPlayer implements AVPlayer {
   UriSource? get audioSource => _audioSource;
   @override
   bool get isDisposed => _disposed;
-
-  Duration _normalizePosition(Duration pos) {
-    if (pos < Duration.zero) return Duration.zero;
-    return pos;
-  }
 
   @override
   Future<Duration?> setSource<T>(ItemPrepareConfig<T, UriSource> config) async {
@@ -285,8 +283,10 @@ class CustomMPVPlayer implements AVPlayer {
       _playerWidthStreamSub?.cancel(),
       _playerCompletedStreamSub?.cancel(),
       _playerBufferingStreamSub?.cancel(),
+      _playerPositionStreamSub?.cancel(),
       _videoInfoStreamController.close(),
       _playerProcessingStateStreamController.close(),
+      _playerPositionStreamController.close(),
     ].execute();
 
     _videoControllerRaw?.id.removeListener(_videoControllerListener);
@@ -316,11 +316,43 @@ class CustomMPVPlayer implements AVPlayer {
   }
 
   @override
-  Future<void> addMediaNext<T>(ItemPrepareConfig<T, UriSource> config) async {}
+  Future<void> addMediaNext<T>(ItemPrepareConfig<T, UriSource> config) async {
+    final pl = _player;
+    final currentIndex = pl.state.playlist.index;
+    final insertIndex = currentIndex + 1;
+
+    final media = Media(
+      config.source.uri.toString(),
+      start: config.initialPosition,
+    );
+
+    // -- no `insert`, so we add and move
+    await pl.add(media);
+    final addedIndex = pl.state.playlist.medias.length - 1;
+    if (addedIndex != insertIndex) {
+      await pl.move(addedIndex, insertIndex);
+    }
+
+    // -- removing tail
+    final length = pl.state.playlist.medias.length;
+    if (length > insertIndex + 1) {
+      for (int i = length - 1; i > insertIndex; i--) {
+        await pl.remove(i);
+      }
+    }
+
+    // -- removing head after tail
+    if (insertIndex > 1) {
+      for (int i = insertIndex - 2; i >= 0; i--) {
+        await pl.remove(i);
+      }
+    }
+  }
+
   @override
   Future<void> removeAllMediaNext() async {}
 
-  // Features missing: skip silence, looping animations, gapless, equalizer, equalizer presets, loudness enhancer
+  // Features missing: skip silence, looping animations, equalizer, equalizer presets, loudness enhancer
   // quick settings tile, picture in picture
   // `isPlaying()`, `hasVideo()`, `getVideoRational()`.
 }

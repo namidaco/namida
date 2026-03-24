@@ -1965,7 +1965,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get enableCrossFade => settings.player.enableCrossFade.value && currentItem.value is! YoutubeID;
 
   @override
-  bool get defaultGaplessEnabled => NamidaFeaturesVisibility.gaplessPlaybackAvailable && settings.player.enableGaplessPlayback.value && currentItem.value is! YoutubeID;
+  bool get defaultGaplessEnabled => settings.player.enableGaplessPlayback.value && currentItem.value is! YoutubeID;
 
   @override
   int get defaultCrossFadeMilliseconds => settings.player.crossFadeDurationMS.value;
