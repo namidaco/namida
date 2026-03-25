@@ -4790,6 +4790,70 @@ class AnimatedShow extends StatelessWidget {
   }
 }
 
+class DelayedAnimatedShow extends StatefulWidget {
+  final bool show;
+  final bool isHorizontal;
+  final Duration showDelay;
+  final Duration duration;
+  final Widget child;
+
+  const DelayedAnimatedShow({
+    super.key,
+    required this.show,
+    this.isHorizontal = false,
+    required this.child,
+    this.showDelay = const Duration(milliseconds: 600),
+    this.duration = const Duration(milliseconds: 300),
+  });
+
+  @override
+  State<DelayedAnimatedShow> createState() => _DelayedAnimatedShowState();
+}
+
+class _DelayedAnimatedShowState extends State<DelayedAnimatedShow> {
+  Timer? _timer;
+  late bool _visible;
+
+  @override
+  void initState() {
+    super.initState();
+    _visible = widget.show;
+  }
+
+  @override
+  void didUpdateWidget(DelayedAnimatedShow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.show == widget.show) return;
+
+    _timer?.cancel();
+    if (widget.show) {
+      // -- show delayed
+      _timer = Timer(widget.showDelay, () {
+        if (mounted && widget.show) setState(() => _visible = true);
+      });
+    } else {
+      // -- hide instant
+      setState(() => _visible = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedShow(
+      show: _visible,
+      isHorizontal: widget.isHorizontal,
+      duration: widget.duration,
+      child: widget.child,
+    );
+  }
+}
+
 class QueueUtilsRow extends StatelessWidget {
   final String Function(int number) itemsKeyword;
   final void Function() onAddItemsTap;

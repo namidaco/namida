@@ -14,10 +14,12 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/packages/miniplayer_base.dart';
+import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -206,25 +208,33 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   }
 
   void _updateHighlightedLine(int durMS, {bool force = false, bool forceAnimate = false, bool jump = false}) {
-    final lrcDur = lyrics.lastWhereEff((e) => e.timestamp.inMilliseconds <= durMS + 5 && !e.isBGLyrics);
-    if (!force && _latestUpdatedLineInfo.value?.$1 == lrcDur?.timestamp) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final newLineDuration = lrcDur?.timestamp;
-      int? newIndex = newLineDuration == null ? null : highlightTimestampsMap[newLineDuration]?.firstOrNull;
-      _latestUpdatedLineInfo.value = (lrcDur?.timestamp, newIndex);
-      if (newIndex == null) return;
-      if (newIndex + 1 == lyrics.length) {
-        final alreadyHighlightingLastLine = _currentIndex == newIndex;
-        if (alreadyHighlightingLastLine) {
-          return; // overscrolling
-        } else {
-          newIndex = lyrics.length - 1; // go to last line
-        }
-      }
+    final lrcDur = lyrics.lastWhereEff((e) => e.timestamp.inMilliseconds <= durMS + 5 && !e.isBGLyrics) ?? lyrics.firstOrNull;
+    final newLineDuration = lrcDur?.timestamp;
 
-      if ((_canAnimateScroll || forceAnimate) && _listController.isAttached) {
-        if (newIndex < 0) newIndex = 0;
-        if (!force && _currentIndex == newIndex) return;
+    // -- prefer index checks, cuz duration is used in ui directly to highlight
+    // -- and index can be used to force reset (to force scroll to current line) etc
+    // if (!force && _latestUpdatedLineInfo.value?.$1 == newLineDuration) return;
+
+    int? newIndexPre = newLineDuration == null ? null : highlightTimestampsMap[newLineDuration]?.firstOrNull;
+    if (newIndexPre == null) return;
+
+    if (newIndexPre + 1 == lyrics.length) {
+      final alreadyHighlightingLastLine = _currentIndex == newIndexPre;
+      if (alreadyHighlightingLastLine) {
+        return; // overscrolling
+      } else {
+        newIndexPre = lyrics.length - 1; // go to last line
+      }
+    }
+    if (newIndexPre < 0) newIndexPre = 0;
+
+    if (!force && _currentIndex == newIndexPre) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      int newIndex = newIndexPre!;
+      _latestUpdatedLineInfo.value = (lrcDur?.timestamp, newIndex);
+
+      if ((_canAnimateScroll.value || forceAnimate) && _listController.isAttached) {
         _currentIndex = newIndex;
         jump
             ? _listController.jumpToItem(
@@ -277,7 +287,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   }
 
   Timer? _scrollTimer;
-  bool _canAnimateScroll = true;
+  final _canAnimateScroll = true.obs;
 
   final _latestUpdatedLineInfo = Rxn<(Duration?, int?)>();
 
@@ -296,22 +306,27 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     _currentItemDurationMS.close();
     _listController.dispose();
     _scrollController.dispose();
+    _canAnimateScroll.close();
     super.dispose();
   }
 
   void _onPointerDown(dynamic _) {
     _scrollTimer?.cancel();
     _scrollTimer = null;
-    _canAnimateScroll = false;
+    if (currentLRC != null) {
+      // -- only if synced
+      _canAnimateScroll.value = false;
+    }
     if (_isCurrentLineEmpty) {
       _updateIsCurrentLineEmpty(false);
     }
   }
 
   void _onPointerUp(dynamic _) {
+    _scrollTimer?.cancel();
     _scrollTimer = Timer(const Duration(seconds: 3), () {
-      _canAnimateScroll = true;
       if (Player.inst.playWhenReady.value) {
+        _canAnimateScroll.value = true;
         _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true, force: true);
       }
       if (_updateOpacityForEmptyLines && currentLRC != null && _checkIfTextEmpty(_currentLine)) {
@@ -369,7 +384,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
               return ConstrainedBox(
                 constraints: BoxConstraints(
                   minWidth: context.width, // vip
-                  minHeight: 36.0, // eyeballed to match when textData is valid
+                  minHeight: 40.0, // eyeballed to match when textData is valid
                 ),
                 child: NamidaMouseRegion(
                   child: TapDetector(
@@ -394,11 +409,13 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           left: 10.0,
                           bottom: 0,
                           top: 0,
-                          child: NamidaIconButton(
-                            tooltip: () => lang.exit,
-                            icon: Broken.arrow_left_2,
-                            iconColor: context.theme.colorScheme.secondary.withOpacityExt(0.6),
-                            iconSize: 22.0,
+                          child: IconButton(
+                            tooltip: lang.exit,
+                            icon: Icon(
+                              Broken.arrow_left_2,
+                              size: 22.0,
+                              color: context.defaultIconColor(),
+                            ),
                             onPressed: widget.onCloseFullscreenButtonTap ?? toggleFullscreen,
                           ),
                         ),
@@ -444,14 +461,17 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           right: 10.0,
                           bottom: 0,
                           top: 0,
-                          child: NamidaIconButton(
-                            tooltip: () => lang.jump,
-                            icon: Broken.cd,
-                            iconColor: context.theme.colorScheme.secondary.withOpacityExt(0.6),
-                            iconSize: 20.0,
+                          child: IconButton(
+                            tooltip: lang.lyrics,
                             onPressed: () {
-                              _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true, force: true);
+                              final currentItem = Player.inst.currentItem.value;
+                              if (currentItem == null) return;
+                              showLRCSetDialog(currentItem, CurrentColor.inst.miniplayerColor);
                             },
+                            icon: NamidaMiniPlayerBase.getLrcButton(
+                              theme,
+                              color: context.defaultIconColor(),
+                            ),
                           ),
                         ),
                       ],
@@ -957,7 +977,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                             child: InkWell(
                                               splashFactory: InkSparkle.splashFactory,
                                               onTap: () {
-                                                _canAnimateScroll = true;
+                                                _canAnimateScroll.value = true;
+                                                _currentIndex = null; // reset so that tapping the current line still animates to it
                                                 Player.inst.seek(lrc.timestamp); //  should auto scroll bcz position changes
                                               },
                                             ),
@@ -1038,6 +1059,45 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   bottom: 8.0,
                   right: 0.0,
                   child: fullscreenIconButton,
+                ),
+
+              if (fullscreen)
+                Positioned(
+                  bottom: 12.0,
+                  right: 12.0,
+                  child: ObxO(
+                    rx: _canAnimateScroll,
+                    builder: (context, canAnimateScroll) => DelayedAnimatedShow(
+                      show: !canAnimateScroll,
+                      showDelay: const Duration(milliseconds: 1200),
+                      duration: const Duration(milliseconds: 600),
+                      child: NamidaInkWell(
+                        borderRadius: 10.0,
+                        onTap: () {
+                          _updateHighlightedLine(Player.inst.nowPlayingPosition.value, forceAnimate: true, force: true);
+                          _canAnimateScroll.value = true;
+                        },
+                        padding: EdgeInsets.symmetric(vertical: 8.0),
+                        bgColor: context.theme.colorScheme.secondary.withOpacityExt(0.3),
+                        child: Row(
+                          mainAxisSize: .min,
+                          children: [
+                            const SizedBox(width: 12.0),
+                            Icon(
+                              Broken.cd,
+                              size: 18.0,
+                            ),
+                            const SizedBox(width: 6.0),
+                            Text(
+                              lang.jump,
+                              style: context.textTheme.displayMedium,
+                            ),
+                            const SizedBox(width: 12.0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
             ],
           ),

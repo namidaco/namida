@@ -282,7 +282,9 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             LongPressDetector(
                               enableSecondaryTap: true,
                               onLongPress: () {
-                                showLRCSetDialog(Player.inst.currentItem.value!, CurrentColor.inst.miniplayerColor);
+                                final currentItem = Player.inst.currentItem.value;
+                                if (currentItem == null) return;
+                                showLRCSetDialog(currentItem, CurrentColor.inst.miniplayerColor);
                               },
                               child: _ActionItemAlt(
                                 iconSize: 20.0, // not used
