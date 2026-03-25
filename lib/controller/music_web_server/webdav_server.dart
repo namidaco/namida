@@ -9,7 +9,7 @@ class _WebDAVServer extends MusicWebServer {
     final basePath = _serverUri.path.endsWith('/') ? _serverUri.path : '${_serverUri.path}/';
     final trimmed = serverPath.startsWith('/') ? serverPath.substring(1) : serverPath;
     return _serverUri.replace(
-      userInfo: '${_authInfo.username}:${_authInfo.password}',
+      userInfo: _authInfo.username.isEmpty ? null : '${_authInfo.username}:${_authInfo.password}',
       path: '$basePath$trimmed',
     );
   }

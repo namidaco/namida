@@ -412,6 +412,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                     return ObxO(
                       rx: settings.homePageItems,
                       builder: (context, homePageItems) => NamidaListView(
+                        showScrollbarOnStart: true,
                         itemExtent: null,
                         scrollController: mainListController,
                         itemCount: homePageItems.length,

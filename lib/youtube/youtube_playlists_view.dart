@@ -120,12 +120,17 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
 
   bool _isReordering = false;
 
-  void _toggleReordering() {
+  void _toggleReordering() async {
     setState(() => _isReordering = !_isReordering);
-    if (_isReordering && settings.ytPlaylistSort.value != GroupSortType.custom) {
-      // -- for consistent order while enabling/disabling
-      settings.save(ytPlaylistSort: GroupSortType.custom);
-      YoutubePlaylistController.inst.sortPlaylists();
+    if (_isReordering) {
+      await YoutubePlaylistController.inst.waitForPlaylistsLoad;
+      YoutubePlaylistController.inst.ensureCustomOrderValid(removeNonExistent: true);
+
+      if (settings.ytPlaylistSort.value != GroupSortType.custom) {
+        // -- for consistent order while enabling/disabling
+        settings.save(ytPlaylistSort: GroupSortType.custom);
+        YoutubePlaylistController.inst.sortPlaylists();
+      }
     }
   }
 

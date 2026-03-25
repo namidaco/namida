@@ -242,12 +242,16 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
 
   bool _isReordering = false;
 
-  void _toggleReordering() {
+  void _toggleReordering() async {
     setState(() => _isReordering = !_isReordering);
-    if (_isReordering && settings.playlistSort.value != GroupSortType.custom) {
-      // -- for consistent order while enabling/disabling
-      settings.save(playlistSort: GroupSortType.custom);
-      PlaylistController.inst.sortPlaylists();
+    if (_isReordering) {
+      await PlaylistController.inst.waitForPlaylistsLoad;
+      PlaylistController.inst.ensureCustomOrderValid(removeNonExistent: true);
+      if (settings.playlistSort.value != GroupSortType.custom) {
+        // -- for consistent order while enabling/disabling
+        settings.save(playlistSort: GroupSortType.custom);
+        PlaylistController.inst.sortPlaylists();
+      }
     }
   }
 

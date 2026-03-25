@@ -3305,6 +3305,7 @@ class NamidaListView extends StatelessWidget {
   final double scrollStep;
   final Map<String, int> scrollConfig;
   final bool reverse;
+  final bool showScrollbarOnStart;
 
   const NamidaListView({
     super.key,
@@ -3327,6 +3328,7 @@ class NamidaListView extends StatelessWidget {
     this.scrollStep = 0,
     this.scrollConfig = const {},
     this.reverse = false,
+    this.showScrollbarOnStart = false,
   });
 
   @override
@@ -3360,6 +3362,7 @@ class NamidaListView extends StatelessWidget {
           );
     return NamidaListViewRaw(
       reverse: reverse,
+      showScrollbarOnStart: showScrollbarOnStart,
       scrollController: scrollController,
       scrollConfig: scrollConfig,
       scrollStep: scrollStep,
@@ -3399,6 +3402,7 @@ class NamidaListViewRaw extends StatefulWidget {
   final double scrollStep;
   final Axis scrollDirection;
   final bool reverse;
+  final bool showScrollbarOnStart;
 
   const NamidaListViewRaw({
     super.key,
@@ -3415,6 +3419,7 @@ class NamidaListViewRaw extends StatefulWidget {
     this.scrollStep = 0,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
+    this.showScrollbarOnStart = false,
   });
 
   @override
@@ -3523,6 +3528,7 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
     return NamidaScrollbar(
       controller: _scrollController,
       scrollStep: widget.scrollStep,
+      showOnStart: widget.showScrollbarOnStart,
       child: widget.builder?.call(listW) ?? listW,
     );
   }
@@ -4868,8 +4874,6 @@ class QueueUtilsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const tileHeight = 48.0;
-    const tileVPadding = 3.0;
     const buttonStyle = ButtonStyle(
       padding: WidgetStatePropertyAll(
         EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
@@ -4905,22 +4909,35 @@ class QueueUtilsRow extends StatelessWidget {
         GestureDetector(
           onLongPressStart: (details) async {
             Widget buildButton(String title, IconData icon, bool isShuffleAll) {
+              final enabled = isShuffleAll == settings.player.shuffleAllTracks.value;
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: tileVPadding, horizontal: 8.0),
-                child: ObxO(
-                  rx: settings.player.shuffleAllTracks,
-                  builder: (context, shuffleAllTracks) => SizedBox(
-                    height: tileHeight,
-                    child: ListTileWithCheckMark(
-                      active: shuffleAllTracks == isShuffleAll,
-                      leading: StackedIcon(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                child: NamidaInkWell(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                  borderRadius: 10.0,
+                  bgColor: enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null,
+                  onTap: () {
+                    settings.player.save(shuffleAllTracks: isShuffleAll);
+                    NamidaNavigator.inst.popMenu();
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      StackedIcon(
                         baseIcon: Broken.shuffle,
                         secondaryIcon: icon,
                         blurRadius: 8.0,
+                        secondaryIconSize: 12.0,
                       ),
-                      title: title,
-                      onTap: () => settings.player.save(shuffleAllTracks: isShuffleAll),
-                    ),
+                      const SizedBox(width: 8.0),
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: context.textTheme.displayMedium,
+                        ),
+                      ),
+                      const SizedBox(width: 12.0),
+                    ],
                   ),
                 ),
               );
