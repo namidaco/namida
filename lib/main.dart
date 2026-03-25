@@ -324,6 +324,14 @@ Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
   }
 }
 
+void _recheckTimeAwareEssentials() async {
+  YoutubeAccountController.fetchAccSupportDetails();
+  await BackupController.inst.checkForAutoBackup();
+  const StorageCacheManager().trimExtraFiles();
+  VersionController.inst.ensureRefreshed();
+  _clearIntentCachedFiles();
+}
+
 Future<Set<DirectoryIndex>> _getDefaultDirectoriesToScan(List<String> paths) async {
   final dirsToScanDefault = <DirectoryIndex>{};
   void addDirToScan(String path, {bool ignoreExists = false}) {
@@ -545,6 +553,11 @@ class _NamidaState extends State<Namida> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _refreshSystemBarsColors());
     settings.themeMode.addListener(_refreshSystemBarsColors);
+
+    Timer.periodic(
+      const Duration(hours: 24),
+      (_) => _recheckTimeAwareEssentials(),
+    );
   }
 
   static void refreshSystemBarsColors(BuildContext context, {bool forceRefresh = false}) {

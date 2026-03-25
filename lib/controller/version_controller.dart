@@ -28,6 +28,11 @@ class VersionController {
     }
   }
 
+  void ensureRefreshed() async {
+    await VersionWrapper.waitForCurrentVersionFetch;
+    ConnectivityController.inst.executeOrRegister(_fetchLatestVersion);
+  }
+
   Future<VersionWrapper?> _fetchLatestVersion() async {
     final isBeta = _currentVersion?.isBeta ?? false; // use stable if anything
     final latest = await __fetchLatestVersionOnly(isBeta);

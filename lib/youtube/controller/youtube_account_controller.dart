@@ -129,6 +129,10 @@ class YoutubeAccountController {
       return false;
     };
 
+    await fetchAccSupportDetails();
+  }
+
+  static Future<void> fetchAccSupportDetails() async {
     await Future.wait([
       () async {
         final patreonSupportTier = await NamicoSubscriptionManager.patreon.getUserSupportTierInCacheValid();
