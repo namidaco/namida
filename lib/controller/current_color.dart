@@ -439,8 +439,8 @@ class CurrentColor {
   }
 
   Future<void> reExtractNetworkArtworkColorPalette({required NetworkArtworkInfo networkArtworkInfo, required NamidaColor? newNC, bool useIsolate = true}) async {
-    final imagePath = networkArtworkInfo.toArtworkIfExistsAndValidAndEnabled()?.path;
-    if (imagePath == null || !await File(imagePath).exists()) return;
+    final imagePath = networkArtworkInfo.toArtworkIfExistsAndEnabled()?.path;
+    if (imagePath == null) return;
 
     final filenameKeyInMaps = imagePath;
     final filenamePalette = networkArtworkInfo.name;
@@ -449,8 +449,12 @@ class CurrentColor {
       await paletteFile.writeAsJson(newNC.toJson());
       _updateInColorMap(filenameKeyInMaps, newNC);
     } else {
-      final nc = await extractPaletteFromImage(imagePath, forceReExtract: true, useIsolate: useIsolate);
-      _updateInColorMap(filenameKeyInMaps, nc);
+      if (!await File(imagePath).exists()) {
+        snackyy(message: 'Network Image doesn\'t exist at $imagePath', isError: true);
+      } else {
+        final nc = await extractPaletteFromImage(imagePath, forceReExtract: true, useIsolate: useIsolate);
+        _updateInColorMap(filenameKeyInMaps, nc);
+      }
     }
 
     final currentRoute = NamidaNavigator.inst.currentRoute;
