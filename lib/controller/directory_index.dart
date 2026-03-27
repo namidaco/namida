@@ -215,8 +215,9 @@ sealed class DirectoryIndex {
   }
 
   @override
-  bool operator ==(covariant DirectoryIndex other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    if (other is! DirectoryIndex) return false;
     return source == other.source && type == other.type && username == other.username;
   }
 

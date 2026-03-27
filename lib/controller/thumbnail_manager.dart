@@ -269,8 +269,9 @@ class _VideoIdAndTemp {
   });
 
   @override
-  bool operator ==(covariant _VideoIdAndTemp other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    if (other is! _VideoIdAndTemp) return false;
     return other.videoId == videoId && other.isTemp == isTemp;
   }
 

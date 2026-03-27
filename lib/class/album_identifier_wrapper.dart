@@ -50,8 +50,9 @@ class AlbumIdentifierWrapper {
   }
 
   @override
-  bool operator ==(covariant AlbumIdentifierWrapper other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    if (other is! AlbumIdentifierWrapper) return false;
 
     return other.album == album && other.albumArtist == albumArtist && other.year == year;
   }

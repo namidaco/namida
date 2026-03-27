@@ -61,8 +61,9 @@ class LyricsModel {
   }
 
   @override
-  bool operator ==(covariant LyricsModel other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    if (other is! LyricsModel) return false;
     return other.lyrics == lyrics &&
         other.synced == synced &&
         other.isInCache == isInCache &&

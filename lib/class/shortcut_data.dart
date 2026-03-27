@@ -111,8 +111,9 @@ class ShortcutKeyData {
   }
 
   @override
-  bool operator ==(covariant ShortcutKeyData other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    if (other is! ShortcutKeyData) return false;
 
     return other.key == key && other.ctrl == ctrl && other.shift == shift && other.alt == alt && other.meta == meta;
   }

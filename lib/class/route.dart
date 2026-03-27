@@ -36,8 +36,9 @@ abstract class NamidaRoute {
   bool isSameRouteAs(NamidaRoute r);
 
   @override
-  bool operator ==(covariant NamidaRoute other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    if (other is! NamidaRoute) return false;
     return other.route == route && other.name == name;
   }
 

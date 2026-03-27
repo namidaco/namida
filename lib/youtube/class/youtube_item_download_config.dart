@@ -117,7 +117,9 @@ class YoutubeItemDownloadConfig {
   }
 
   @override
-  bool operator ==(covariant YoutubeItemDownloadConfig other) {
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! YoutubeItemDownloadConfig) return false;
     return id == other.id && groupName == other.groupName && filename == other.filename;
   }
 

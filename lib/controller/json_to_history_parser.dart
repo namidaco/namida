@@ -1429,8 +1429,9 @@ class _MissingListenEntry {
   });
 
   @override
-  bool operator ==(covariant _MissingListenEntry other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    if (other is! _MissingListenEntry) return false;
     return other.dateMSSE == dateMSSE && other.source == source && other.youtubeID == youtubeID && other.title == title && other.artistOrChannel == artistOrChannel;
   }
 

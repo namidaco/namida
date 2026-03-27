@@ -78,8 +78,9 @@ class NamidaColor {
   }
 
   @override
-  bool operator ==(covariant NamidaColor other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
+    if (other is! NamidaColor) return false;
     return used == other.used /* && mix == other.mix */ && mix2 == other.mix2 && listEquals(palette, other.palette);
   }
 
