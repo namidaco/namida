@@ -597,7 +597,6 @@ extension TrackExtUtils on TrackExtended {
     final filename = this.isNetwork
         ? DownloadTaskFilename.cleanupFilename(
             [
-              originalArtist,
               title,
               MusicWebServer.baseUrlToId(path) ?? '',
             ].joinText(separator: ' - '),

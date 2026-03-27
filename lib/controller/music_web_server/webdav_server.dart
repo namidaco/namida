@@ -4,12 +4,12 @@ part of 'music_web_server_base.dart';
 class _WebDAVServer extends MusicWebServer {
   _ClientApiWrapper? _api;
   late Uri _serverUri;
+  Map<String, String>? _serverAuthHeaders;
   late WebDAVAuth _authInfo;
   Uri _buildServerUri(String serverPath) {
     final basePath = _serverUri.path.endsWith('/') ? _serverUri.path : '${_serverUri.path}/';
     final trimmed = serverPath.startsWith('/') ? serverPath.substring(1) : serverPath;
     return _serverUri.replace(
-      userInfo: _authInfo.username.isEmpty ? null : '${_authInfo.username}:${_authInfo.password}',
       path: '$basePath$trimmed',
     );
   }
@@ -29,6 +29,15 @@ class _WebDAVServer extends MusicWebServer {
     );
 
     _serverUri = Uri.parse(authDetails.dir.sourceRaw);
+
+    if (_authInfo.username.isNotEmpty) {
+      final userInfo = '${_authInfo.username}:${_authInfo.password}';
+      final credentials = base64Encode(utf8.encode('${_authInfo.username}:${_authInfo.password}'));
+      _serverUri = _serverUri.replace(userInfo: userInfo);
+      _serverAuthHeaders = {
+        "Authorization": "Basic $credentials",
+      };
+    }
   }
 
   @override
@@ -46,6 +55,7 @@ class _WebDAVServer extends MusicWebServer {
 
     return WebStreamUriDetails.fromUri(
       uri,
+      headers: _serverAuthHeaders,
       allowStreamCaching: false, // already cached
     );
   }

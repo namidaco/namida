@@ -3,8 +3,14 @@ part of 'ffmpeg_executer.dart';
 class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
   final _ffmpegKitQueue = Queue(parallel: 128); // concurrent executions could result in being stuck/failed if session size exceeded
 
-  Future<T> _enqueue<T>(Future<T> Function() fn) async {
-    return await _ffmpegKitQueue.add(() => fn().timeout(const Duration(seconds: 10)));
+  Future<T?> _enqueue<T>(Future<T?> Function() fn) async {
+    return await _ffmpegKitQueue.add<T?>(() async {
+      try {
+        return await fn().timeout(const Duration(seconds: 10));
+      } on TimeoutException {
+        return null;
+      }
+    });
   }
 
   @override
@@ -16,17 +22,18 @@ class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
   @override
   Future<bool> ffmpegExecute(List<String> args) async {
     return await _enqueue(
-      () async {
-        final session = await FFmpegKit.executeWithArguments([
-          "-hide_banner",
-          "-loglevel",
-          "quiet",
-          ...args,
-        ]);
-        final rc = await session.getReturnCode();
-        return rc?.isValueSuccess() ?? false;
-      },
-    );
+          () async {
+            final session = await FFmpegKit.executeWithArguments([
+              "-hide_banner",
+              "-loglevel",
+              "quiet",
+              ...args,
+            ]);
+            final rc = await session.getReturnCode();
+            return rc?.isValueSuccess() ?? false;
+          },
+        ) ??
+        false;
   }
 
   /// Automatically appends `-loglevel quiet -v quiet ` for fast execution

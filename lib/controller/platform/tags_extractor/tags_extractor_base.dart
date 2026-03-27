@@ -183,7 +183,6 @@ abstract class TagsExtractor {
       final info = infoCallback();
       filename = DownloadTaskFilename.cleanupFilename(
         [
-          info.artist ?? '',
           info.title ?? '',
           networkId ?? MusicWebServer.baseUrlToId(path) ?? '',
         ].joinText(separator: ' - '),

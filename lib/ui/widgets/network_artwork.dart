@@ -246,7 +246,7 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
   Future<String?> _fetchNetworkArtwork(NetworkArtworkInfo info) async {
     if (_cancelToken?.isCancelled ?? true) _cancelToken = CancelToken();
 
-    final url = await _fetchNetworkArtworkUrlLastFm(info).timeout(const Duration(seconds: 8)).catchError((_) => '');
+    final url = await _fetchNetworkArtworkUrlLastFm(info).timeout(const Duration(seconds: 8), onTimeout: () => '').catchError((_) => '');
     if (url == null) return null;
     if (!mounted) return null;
 
