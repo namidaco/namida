@@ -167,19 +167,26 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   Future<void> _updateTrackLastPosition(Track track, int lastPositionMS) async {
-    /// Saves a starting position in case the remaining was less than 30 seconds.
-    final remaining = track.durationMS - lastPositionMS;
-    lastPositionMS = remaining <= 30000 ? 0 : lastPositionMS;
+    int dur = track.durationMS;
+    if (dur <= 0) dur = currentItemDuration.value?.inMilliseconds ?? 0;
+
+    if (dur > 0) {
+      // -- save a starting position in case the remaining was less than 30 seconds.
+      final remaining = dur - lastPositionMS;
+      lastPositionMS = remaining <= 30000 ? 0 : lastPositionMS;
+    }
 
     await Indexer.inst.updateTrackStats(track, lastPositionInMs: lastPositionMS);
   }
 
   Future<void> _updateYoutubeIDLastPosition(YoutubeID item, int lastPositionMS) async {
-    final duration = await YoutubeInfoController.utils.getVideoDuration(item.id) ?? _currentItemDuration.value;
+    int? dur = (await YoutubeInfoController.utils.getVideoDuration(item.id))?.inMilliseconds;
 
-    if (duration != null) {
-      // Saves a starting position in case the remaining was less than 30 seconds.
-      final remaining = duration.inMilliseconds - lastPositionMS;
+    if (dur == null || dur <= 0) dur = currentItemDuration.value?.inMilliseconds ?? 0;
+
+    if (dur > 0) {
+      // -- save a starting position in case the remaining was less than 30 seconds.
+      final remaining = dur - lastPositionMS;
       lastPositionMS = remaining <= 30000 ? 0 : lastPositionMS;
     }
 
@@ -1918,8 +1925,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   void onItemLastPositionReport(Q? currentItem, int currentPositionMs) async {
     await currentItem?.execute(
-      selectable: (finalItem) => _updateTrackLastPosition(finalItem.track, currentPositionMS.value),
-      youtubeID: (finalItem) => _updateYoutubeIDLastPosition(finalItem, currentPositionMS.value),
+      selectable: (finalItem) => _updateTrackLastPosition(finalItem.track, currentPositionMs),
+      youtubeID: (finalItem) => _updateYoutubeIDLastPosition(finalItem, currentPositionMs),
     );
   }
 
