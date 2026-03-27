@@ -470,11 +470,11 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                 child: QueueUtilsRow(
                                   itemsKeyword: (number) => number.displayVideoKeyword,
                                   onAddItemsTap: () => TracksAddOnTap().onAddVideosTap(context),
-                                  scrollQueueWidget: (buttonStyle) => ObxO(
+                                  scrollQueueWidget: ObxO(
                                     rx: _arrowIcon,
                                     builder: (context, arrowIcon) => NamidaButton(
-                                      style: buttonStyle,
-                                      onPressed: _animateQueueToCurrentTrack,
+                                      tooltip: () => lang.jump,
+                                      onTap: _animateQueueToCurrentTrack,
                                       icon: arrowIcon,
                                     ),
                                   ),
@@ -531,7 +531,7 @@ class YTQueueChipHeaderRow extends StatelessWidget {
         actions: [
           NamidaButton(
             text: lang.done,
-            onPressed: NamidaNavigator.inst.closeDialog,
+            onTap: NamidaNavigator.inst.closeDialog,
           ),
         ],
         child: const _QueueConfigureOptions(),

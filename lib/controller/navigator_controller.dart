@@ -716,35 +716,30 @@ SnackbarController snackyy({
               ),
             ),
             if (button != null)
-              button.icon != null
-                  ? IconButton(
-                      tooltip: button.text,
-                      onPressed: button.function,
-                      icon: Icon(
-                        button.icon!,
-                        size: 20.0,
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: snackWidth == null ? double.infinity : snackWidth * 0.4),
+                child: button.icon != null
+                    ? IconButton(
+                        tooltip: button.text,
+                        onPressed: button.function,
+                        icon: Icon(
+                          button.icon!,
+                          size: 20.0,
+                        ),
+                      )
+                    : NamidaButton(
+                        midColors: true,
+                        onTap: () {
+                          if (alreadyTappedButton) return;
+                          alreadyTappedButton = true;
+                          button.function();
+                          snackbarController.close();
+                        },
+                        icon: button.icon,
+                        tooltip: () => button.text,
+                        text: button.icon != null ? null : button.text,
                       ),
-                    )
-                  : TextButton(
-                      style: ButtonStyle(
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        maximumSize: snackWidth == null
-                            ? null
-                            : material.WidgetStatePropertyAll(
-                                Size(snackWidth * 0.5, double.infinity),
-                              ),
-                      ),
-                      onPressed: () {
-                        if (alreadyTappedButton) return;
-                        alreadyTappedButton = true;
-                        button.function();
-                        snackbarController.close();
-                      },
-                      child: NamidaButtonText(
-                        button.text,
-                        style: getTextStyle(FontWeight.bold, 14.0, action: true),
-                      ),
-                    ),
+              ),
           ],
         ),
       ),

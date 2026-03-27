@@ -386,36 +386,37 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                             rx: _isChecking,
                             builder: (context, isChecking) => ObxO(
                               rx: _isClaiming,
-                              builder: (context, isClaiming) => AnimatedEnabled(
-                                enabled: !isChecking && !isClaiming,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    const SizedBox(width: 8.0),
-                                    NamidaButton(
-                                      icon: Broken.cloud_change,
-                                      iconSize: 20.0,
-                                      onPressed: () async {
-                                        _isChecking.value = true;
-                                        await _onFreeCouponSubmit(YoutubeAccountController.membership.checkSupabase);
-                                        _isChecking.value = false;
-                                      },
-                                      text: lang.check,
-                                    ),
-                                    const SizedBox(width: 8.0),
-                                    NamidaButton(
-                                      icon: Broken.ticket_expired,
-                                      iconSize: 20.0,
-                                      onPressed: () async {
-                                        _isClaiming.value = true;
-                                        await _onFreeCouponSubmit(YoutubeAccountController.membership.claimSupabase);
-                                        _isClaiming.value = false;
-                                      },
-                                      text: lang.claim,
-                                    ),
-                                    const SizedBox(width: 8.0),
-                                  ],
-                                ),
+                              builder: (context, isClaiming) => Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  const SizedBox(width: 8.0),
+                                  NamidaButton(
+                                    enabled: !isChecking && !isClaiming,
+                                    isLoading: isChecking,
+                                    icon: Broken.cloud_change,
+                                    iconSize: 20.0,
+                                    onTap: () async {
+                                      _isChecking.value = true;
+                                      await _onFreeCouponSubmit(YoutubeAccountController.membership.checkSupabase);
+                                      _isChecking.value = false;
+                                    },
+                                    text: lang.check,
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                  NamidaButton(
+                                    enabled: !isChecking && !isClaiming,
+                                    isLoading: isClaiming,
+                                    icon: Broken.ticket_expired,
+                                    iconSize: 20.0,
+                                    onTap: () async {
+                                      _isClaiming.value = true;
+                                      await _onFreeCouponSubmit(YoutubeAccountController.membership.claimSupabase);
+                                      _isClaiming.value = false;
+                                    },
+                                    text: lang.claim,
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                ],
                               ),
                             ),
                           ),

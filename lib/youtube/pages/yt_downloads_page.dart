@@ -92,22 +92,19 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
         isWarning: true,
         actions: [
           NamidaButton(
+            colorScheme: Colors.red,
             text: lang.delete.toUpperCase(),
-            style: ButtonStyle(
-              foregroundColor: WidgetStatePropertyAll(Colors.red),
-            ),
-            onPressed: () {
+            onTap: () {
               confirmed = true;
               delete = true;
               NamidaNavigator.inst.closeDialog();
             },
           ),
-          const SizedBox(width: 4.0),
           const CancelButton(),
-          const SizedBox(width: 4.0),
           NamidaButton(
+            colorScheme: Colors.red,
             text: (confirmMessage != '' ? confirmMessage : lang.confirm).toUpperCase(),
-            onPressed: () {
+            onTap: () {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
             },
@@ -151,10 +148,9 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
         normalTitleStyle: true,
         actions: [
           const CancelButton(),
-          const SizedBox(width: 4.0),
           NamidaButton(
             text: lang.confirm,
-            onPressed: () {
+            onTap: () {
               YoutubeParallelDownloadsHandler.inst.setMaxParalellDownloads(tempCount.value);
               NamidaNavigator.inst.closeDialog();
             },
@@ -251,7 +247,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                         // NamidaIconButton(
                         //   icon: null,
                         //   tooltip: lang.parallelDownloads,
-                        //   onPressed: _showParallelDownloadsDialog,
+                        //   onTap: _showParallelDownloadsDialog,
                         //   child: Obx(
                         //     (context) => StackedIcon(
                         //       baseIcon: Broken.flash,

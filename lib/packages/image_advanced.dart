@@ -519,7 +519,7 @@ class ImageAdvanced extends StatefulWidget {
        assert(cacheWidth == null || cacheWidth > 0),
        assert(cacheHeight == null || cacheHeight > 0);
 
-  // TODO(ianh): Implement the following (see ../services/image_resolution.dart):
+  // !TODO(ianh): Implement the following (see ../services/image_resolution.dart):
   //
   // * If [width] and [height] are both specified, and [scale] is not, then
   //   size-aware asset resolution will be attempted also, with the given
@@ -1114,6 +1114,7 @@ class _ImageState extends State<ImageAdvanced> with WidgetsBindingObserver {
     _updateInvertColors();
     _resolveImage();
 
+    // ignore: deprecated_member_use
     _isPaused = !TickerMode.of(context) || (MediaQuery.maybeDisableAnimationsOf(context) ?? false);
 
     if (_isPaused && _frameNumber != null) {

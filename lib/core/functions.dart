@@ -328,7 +328,7 @@ class NamidaOnTaps {
                     const CancelButton(),
                     NamidaButton(
                       text: lang.confirm,
-                      onPressed: () {
+                      onTap: () {
                         onFinalUpdatePropertySort(newSorts!, newSortReverse);
                         NamidaNavigator.inst.closeDialog();
                       },
@@ -558,22 +558,15 @@ class NamidaOnTaps {
       dialog: CustomBlurryDialog(
         title: lang.clear,
         actions: [
-          const CancelButton(),
-          const SizedBox(width: 8.0),
+          CancelButtonDisabled(
+            disabledRx: isRemoving,
+          ),
           Obx(
             (context) => NamidaButton(
               enabled: !isRemoving.valueR && totalToRemove.valueR > 0,
-              textWidget: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isRemoving.valueR) ...[
-                    const LoadingIndicator(),
-                    const SizedBox(width: 8.0),
-                  ],
-                  Text("${lang.delete} (${totalToRemove.valueR})"),
-                ],
-              ),
-              onPressed: () async {
+              text: "${lang.delete} (${totalToRemove.valueR})",
+              isLoading: isRemoving.valueR,
+              onTap: () async {
                 NamidaNavigator.inst.navigateDialog(
                   dialog: CustomBlurryDialog(
                     isWarning: true,
@@ -581,10 +574,10 @@ class NamidaOnTaps {
                     bodyText: "${lang.delete} ${totalToRemove.value}?",
                     actions: [
                       const CancelButton(),
-                      const SizedBox(width: 8.0),
                       NamidaButton(
+                        colorScheme: Colors.red,
                         text: lang.delete.toUpperCase(),
-                        onPressed: () async {
+                        onTap: () async {
                           NamidaNavigator.inst.closeDialog();
                           isRemoving.value = true;
                           if (nonFavourites.value) {
@@ -698,16 +691,16 @@ class NamidaOnTaps {
         normalTitleStyle: true,
         title: lang.confirm,
         actions: [
-          TextButton(
-            onPressed: NamidaNavigator.inst.closeDialog,
-            child: NamidaButtonText(lang.cancel),
+          NamidaTextButton(
+            onTap: NamidaNavigator.inst.closeDialog,
+            text: lang.cancel,
           ),
           ObxO(
             rx: actionRx,
             builder: (context, action) => NamidaButton(
               enabled: action != null,
               text: lang.confirm,
-              onPressed: () {
+              onTap: () {
                 actionToUse = actionRx.value;
                 NamidaNavigator.inst.closeDialog();
               },
@@ -844,7 +837,7 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
         Obx(
           (context) => NamidaButton(
             enabled: canGenerate.valueR,
-            onPressed: () => onGenerate(dates),
+            onTap: () => onGenerate(dates),
             text: buttonText,
           ),
         ),
@@ -997,7 +990,6 @@ Future<String?> showNamidaBottomSheetWithTextField({
                     children: [
                       SizedBox(width: maxWidth * 0.1),
                       CancelButton(onPressed: context.safePop),
-                      SizedBox(width: maxWidth * 0.1),
                       Expanded(
                         child: NamidaInkWell(
                           borderRadius: 12.0,
@@ -1470,7 +1462,7 @@ class TracksAddOnTap {
                       (context) => NamidaButton(
                         enabled: selectedmoodsTracks.valueR.isNotEmpty || selectedmoodsPlaylists.valueR.isNotEmpty,
                         text: lang.generate,
-                        onPressed: () {
+                        onTap: () {
                           final finalTracks = <Track>[];
                           selectedmoodsPlaylists.value.loop((m) {
                             finalTracks.addAll(allAvailableMoodsPlaylists[m] ?? []);
@@ -1542,7 +1534,7 @@ class TracksAddOnTap {
                     const CancelButton(),
                     NamidaButton(
                       text: lang.generate,
-                      onPressed: () {
+                      onTap: () {
                         if (minRating.value > maxRating.value) {
                           snackyy(title: lang.error, message: lang.minValueCantBeMoreThanMax);
                           return;
@@ -2013,7 +2005,7 @@ class TracksAddOnTap {
             const CancelButton(),
             NamidaButton(
               text: lang.save,
-              onPressed: () {
+              onTap: () {
                 settings.updateQueueInsertion(
                   insertionType,
                   QueueInsertion(
@@ -2251,7 +2243,7 @@ class SussyBaka {
                       NamidaSupportButton(title: lang.yes),
                       NamidaButton(
                         text: lang.no,
-                        onPressed: () {
+                        onTap: () {
                           NamidaNavigator.inst.closeDialog();
                           NamidaNavigator.inst.navigateDialog(
                             dialog: CustomBlurryDialog(
@@ -2260,14 +2252,14 @@ class SussyBaka {
                               actions: [
                                 NamidaButton(
                                   text: lang.unlock.toUpperCase(),
-                                  onPressed: () {
+                                  onTap: () {
                                     NamidaNavigator.inst.closeDialog();
                                     onEnable();
                                   },
                                 ),
                                 NamidaButton(
                                   text: lang.support.toUpperCase(),
-                                  onPressed: () {
+                                  onTap: () {
                                     NamidaNavigator.inst.closeDialog();
                                     NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE);
                                   },

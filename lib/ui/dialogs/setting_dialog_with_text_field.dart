@@ -109,7 +109,7 @@ Future<void> showSettingDialogWithTextField({
           const CancelButton(),
           NamidaButton(
             text: lang.save,
-            onPressed: () {
+            onTap: () {
               if (formKey.currentState!.validate()) {
                 if (trackThumbnailSizeinList) {
                   settings.save(trackThumbnailSizeinList: double.parse(controller.text));

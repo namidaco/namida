@@ -677,11 +677,11 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     child: QueueUtilsRow(
                       itemsKeyword: (number) => widget.itemsKeyword(number, _getcurrentItem),
                       onAddItemsTap: () => widget.onAddItemsTap(_getcurrentItem),
-                      scrollQueueWidget: (buttonStyle) => ObxO(
+                      scrollQueueWidget: ObxO(
                         rx: MiniPlayerController.inst.arrowIcon,
                         builder: (context, arrow) => NamidaButton(
-                          style: buttonStyle,
-                          onPressed: MiniPlayerController.inst.animateQueueToCurrentTrack,
+                          tooltip: () => lang.jump,
+                          onTap: MiniPlayerController.inst.animateQueueToCurrentTrack,
                           icon: arrow,
                         ),
                       ),

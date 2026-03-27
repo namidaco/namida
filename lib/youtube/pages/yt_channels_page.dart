@@ -815,6 +815,11 @@ class __YoutubeChannelVideosPageState extends State<_YoutubeChannelVideosPage> {
           transparentShimmer: true,
           topPadding: 0.0,
           title: lang.channels,
+          headerTrailing: NamidaInkWellButton(
+            icon: Broken.category,
+            text: lang.viewAll,
+            onTap: _onViewAllTap,
+          ),
           isSortable: true,
           cacheReader: YoutiPie.cacheBuilder.forUserChannelsAllVideos(),
           networkFetcher: (details) => YoutubeInfoController.userchannel.fetchUserChannelsAllVideos(details: details),

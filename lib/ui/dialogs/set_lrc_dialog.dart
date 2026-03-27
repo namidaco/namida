@@ -123,10 +123,10 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         title: lang.confirm,
         actions: [
           const CancelButton(),
-          const SizedBox(width: 6.0),
           NamidaButton(
+            colorScheme: Colors.red,
             text: lang.delete.toUpperCase(),
-            onPressed: () async {
+            onTap: () async {
               if ((await l.file?.tryDeleting()) == true) {
                 availableLyrics.remove(l);
               }
@@ -199,10 +199,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         normalTitleStyle: true,
         actions: [
           const CancelButton(),
-          const SizedBox(width: 6.0),
           NamidaButton(
             text: lang.save.toUpperCase(),
-            onPressed: () async {
+            onTap: () async {
               final ct = offsetController.text;
               final tfoffset = ct == '' ? null : int.tryParse(offsetController.text);
               if (tfoffset != null) newOffset.value = tfoffset;
@@ -389,10 +388,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         normalTitleStyle: true,
         actions: [
           const CancelButton(),
-          const SizedBox(width: 6.0),
           NamidaButton(
             text: lang.add.toUpperCase(),
-            onPressed: savePastedLRC,
+            onTap: savePastedLRC,
           ),
         ],
         trailingWidgets: [
@@ -474,10 +472,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         normalTitleStyle: true,
         actions: [
           const CancelButton(),
-          const SizedBox(width: 6.0),
           NamidaButton(
             text: lang.save.toUpperCase(),
-            onPressed: saveEditedLRC,
+            onTap: saveEditedLRC,
           ),
         ],
         child: SizedBox(
@@ -562,17 +559,16 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       actions: [
         NamidaButton(
           text: lang.search,
-          onPressed: onSearchTrigger,
+          onTap: onSearchTrigger,
         ),
         const CancelButton(),
-        const SizedBox(width: 6.0),
         Obx(
           (context) {
             final selected = selectedLyrics.valueR;
             final canAddToCache = selected != null && !selected.isInCache && !selected.isEmbedded /* && (selected.file != null || selected.fromInternet == true) */;
             return NamidaButton(
               text: canAddToCache ? lang.save : lang.done,
-              onPressed: () async {
+              onTap: () async {
                 if (canAddToCache) {
                   final selected = selectedLyrics.value;
                   if (selected != null) {

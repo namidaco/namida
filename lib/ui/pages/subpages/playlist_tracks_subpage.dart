@@ -410,7 +410,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
                   data: AppThemes.inst.getAppTheme(Colors.red, !context.isDarkMode),
                   child: NamidaButton(
                     icon: Broken.trash,
-                    onPressed: () => NamidaDialogs.inst.showDeletePlaylistDialog(widget.playlist),
+                    onTap: () => NamidaDialogs.inst.showDeletePlaylistDialog(widget.playlist),
                     text: lang.deletePlaylist,
                   ),
                 ),
@@ -472,7 +472,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
                       enabled: trl > 0,
                       icon: Broken.add,
                       text: '${lang.add}: ${trl.displayTrackKeyword}',
-                      onPressed: () => PlaylistController.inst.addTracksToPlaylist(widget.playlist, tracksToAddMap.keys.toList()),
+                      onTap: () => PlaylistController.inst.addTracksToPlaylist(widget.playlist, tracksToAddMap.keys.toList()),
                     );
                   },
                 ),

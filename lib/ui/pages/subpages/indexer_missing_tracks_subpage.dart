@@ -535,20 +535,18 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                     bodyText: "${lang.update}: ${_selectedTracksToUpdate.length.displayTrackKeyword}?",
                                     actions: [
                                       const CancelButton(),
-                                      const SizedBox(width: 8.0),
                                       ObxO(
                                         rx: isUpdating,
-                                        builder: (context, updating) => AnimatedEnabled(
+                                        builder: (context, updating) => NamidaButton(
                                           enabled: !updating,
-                                          child: NamidaButton(
-                                            text: lang.update.toUpperCase(),
-                                            onPressed: () async {
-                                              isUpdating.value = true;
-                                              await _onUpdating();
-                                              isUpdating.value = false;
-                                              NamidaNavigator.inst.closeDialog();
-                                            },
-                                          ),
+                                          isLoading: updating,
+                                          text: lang.update.toUpperCase(),
+                                          onTap: () async {
+                                            isUpdating.value = true;
+                                            await _onUpdating();
+                                            isUpdating.value = false;
+                                            NamidaNavigator.inst.closeDialog();
+                                          },
                                         ),
                                       ),
                                     ],

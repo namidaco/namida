@@ -82,10 +82,10 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
         normalTitleStyle: true,
         title: lang.configure,
         actions: [
-          CancelButton(),
+          const CancelButton(),
           NamidaButton(
             text: lang.save,
-            onPressed: () {
+            onTap: () {
               YoutubeInfoController.potoken.updateInfo(
                 visitorData: controllerVisitorData.text,
                 poToken: controllerPoToken.text,
@@ -140,7 +140,8 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
         actions: [
           const CancelButton(),
           NamidaButton(
-            onPressed: () {
+            colorScheme: Colors.red,
+            onTap: () {
               singOutFn();
               NamidaNavigator.inst.closeDialog();
             },

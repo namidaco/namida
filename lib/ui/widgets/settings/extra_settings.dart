@@ -172,7 +172,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         actions: [
           NamidaButton(
             text: lang.done,
-            onPressed: NamidaNavigator.inst.closeDialog,
+            onTap: NamidaNavigator.inst.closeDialog,
           ),
         ],
         child: const _ExtrasFlagsOptions(),
@@ -524,7 +524,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                               const CancelButton(),
                                               NamidaButton(
                                                 text: lang.save,
-                                                onPressed: () => onAdd(controller.text),
+                                                onTap: () => onAdd(controller.text),
                                               ),
                                             ],
                                             child: Padding(
@@ -873,7 +873,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                             const CancelButton(),
                             NamidaButton(
                               text: lang.stop,
-                              onPressed: () {
+                              onTap: () {
                                 CurrentColor.inst.stopGeneratingColorPalettes();
                                 NamidaNavigator.inst.closeDialog();
                               },
@@ -891,7 +891,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                             const CancelButton(),
                             NamidaButton(
                               text: lang.extract,
-                              onPressed: () {
+                              onTap: () {
                                 CurrentColor.inst.generateAllColorPalettes();
                                 NamidaNavigator.inst.closeDialog();
                               },

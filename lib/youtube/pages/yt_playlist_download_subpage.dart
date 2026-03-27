@@ -205,7 +205,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
         actions: [
           NamidaButton(
             text: lang.confirm,
-            onPressed: NamidaNavigator.inst.closeDialog,
+            onTap: NamidaNavigator.inst.closeDialog,
           ),
         ],
         child: Column(

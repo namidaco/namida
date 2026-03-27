@@ -210,8 +210,9 @@ extension YoutubePlaylistShare on YoutubePlaylist {
         actions: [
           const CancelButton(),
           NamidaButton(
+            colorScheme: Colors.red,
             text: lang.delete.toUpperCase(),
-            onPressed: () {
+            onTap: () {
               deleted = true;
               NamidaNavigator.inst.closeDialog();
               YoutubePlaylistController.inst.removePlaylist(this);

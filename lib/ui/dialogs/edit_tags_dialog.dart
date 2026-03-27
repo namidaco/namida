@@ -26,7 +26,6 @@ import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
-import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/pages/yt_search_results_page.dart';
 
 final _editingInProgress = <String, bool>{}.obs;
@@ -136,28 +135,20 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrack, Color colorScheme, {b
         contentPadding: const EdgeInsets.all(12.0).add(const EdgeInsets.only(top: 12.0)),
         leftAction: NamidaButton(
           text: lang.search,
-          onPressed: openSearchDialog,
+          onTap: openSearchDialog,
         ),
         actions: [
-          const CancelButton(),
+          Obx(
+            (context) => CancelButtonDisabledRaw(
+              disabled: canEditComment.valueR && _editingInProgress[singleTrack.path] != true,
+            ),
+          ),
           Obx(
             (context) => NamidaButton(
               enabled: canEditComment.valueR && _editingInProgress[singleTrack.path] != true,
-              textWidget: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_editingInProgress[singleTrack.path] == true) ...[
-                    const LoadingIndicator(),
-                    const SizedBox(width: 8.0),
-                  ],
-                  Text(
-                    lang.save,
-                    softWrap: false,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-              onPressed: () async {
+              text: lang.save,
+              isLoading: _editingInProgress[singleTrack.path] == true,
+              onTap: () async {
                 if (formKey.currentState!.validate()) {
                   _editingInProgress[singleTrack.path] = true;
                   if (singleTrack.isPhysical) {
@@ -491,49 +482,42 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                   },
                 ),
               ],
-              leftAction: NamidaInkWell(
-                bgColor: theme.cardColor,
-                onTap: trimWhiteSpaces.toggle,
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Obx(
-                      (context) => NamidaCheckMark(
-                        size: 18.0,
-                        active: trimWhiteSpaces.valueR,
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 8.0,
-                    ),
-                    Text(
-                      lang.removeWhitespaces,
-                      style: namida.textTheme.displaySmall,
-                    ),
-                  ],
-                ),
-              ),
+              // leftAction: NamidaInkWell(
+              //   bgColor: theme.cardColor,
+              //   onTap: trimWhiteSpaces.toggle,
+              //   padding: const EdgeInsets.all(8.0),
+              //   child: Row(
+              //     mainAxisSize: MainAxisSize.min,
+              //     children: [
+              //       Obx(
+              //         (context) => NamidaCheckMark(
+              //           size: 18.0,
+              //           active: trimWhiteSpaces.valueR,
+              //         ),
+              //       ),
+              //       const SizedBox(
+              //         width: 8.0,
+              //       ),
+              //       Text(
+              //         lang.removeWhitespaces,
+              //         style: namida.textTheme.displaySmall,
+              //       ),
+              //     ],
+              //   ),
+              // ),
               actions: [
+                Obx(
+                  (context) => CancelButtonDisabledRaw(
+                    disabled: canEditTags.valueR && _editingInProgress[track.path] != true,
+                  ),
+                ),
                 Obx(
                   (context) => NamidaButton(
                     enabled: canEditTags.valueR && _editingInProgress[track.path] != true,
                     icon: Broken.pen_add,
-                    textWidget: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_editingInProgress[track.path] == true) ...[
-                          const LoadingIndicator(),
-                          const SizedBox(width: 8.0),
-                        ],
-                        Text(
-                          lang.save,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                    onPressed: () async {
+                    text: lang.save,
+                    isLoading: _editingInProgress[track.path] == true,
+                    onTap: () async {
                       if (formKey.currentState!.validate() == false) return;
 
                       _editingInProgress[track.path] = true;
@@ -773,6 +757,7 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
     TagField.albumArtist,
     TagField.composer,
     TagField.trackTotal,
+    TagField.discNumber,
     TagField.discTotal,
     TagField.tags,
     TagField.rating,
@@ -847,26 +832,19 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
         ],
         actions: [
           Obx(
+            (context) => CancelButtonDisabledRaw(
+              disabled: tracksGoingToBeEditedRx.valueR.keys.any((track) => _editingInProgress[track.path] == true),
+            ),
+          ),
+          Obx(
             (context) {
               final isEditing = tracksGoingToBeEditedRx.valueR.keys.any((track) => _editingInProgress[track.path] == true);
               return NamidaButton(
                 enabled: canEditTags.valueR && !isEditing,
                 icon: Broken.pen_add,
-                textWidget: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isEditing) ...[
-                      const LoadingIndicator(),
-                      const SizedBox(width: 8.0),
-                    ],
-                    Text(
-                      lang.save,
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-                onPressed: () {
+                text: lang.save,
+                isLoading: isEditing,
+                onTap: () {
                   if (formKey.currentState!.validate() == false) return;
 
                   for (final k in tracksGoingToBeEditedRx.value.keys) {
@@ -883,11 +861,11 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                       actions: [
                         NamidaButton(
                           text: lang.cancel,
-                          onPressed: () => NamidaNavigator.inst.closeDialog(),
+                          onTap: () => NamidaNavigator.inst.closeDialog(),
                         ),
                         NamidaButton(
                           text: lang.confirm,
-                          onPressed: () async {
+                          onTap: () async {
                             NamidaNavigator.inst.closeDialog();
                             if (trimWhiteSpaces.value) {
                               editedTags.updateAll((key, value) => value.trimAll());
@@ -905,7 +883,7 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                                   title: lang.failedEdits,
                                   actions: [
                                     NamidaButton(
-                                      onPressed: NamidaNavigator.inst.closeDialog,
+                                      onTap: NamidaNavigator.inst.closeDialog,
                                       text: lang.confirm,
                                     ),
                                   ],
@@ -1040,29 +1018,29 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
             },
           ),
         ],
-        leftAction: NamidaInkWell(
-          bgColor: namida.theme.cardColor,
-          onTap: trimWhiteSpaces.toggle,
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Obx(
-                (context) => NamidaCheckMark(
-                  size: 18.0,
-                  active: trimWhiteSpaces.valueR,
-                ),
-              ),
-              const SizedBox(
-                width: 8.0,
-              ),
-              Text(
-                lang.removeWhitespaces,
-                style: namida.textTheme.displaySmall,
-              ),
-            ],
-          ),
-        ),
+        // leftAction: NamidaInkWell(
+        //   bgColor: namida.theme.cardColor,
+        //   onTap: trimWhiteSpaces.toggle,
+        //   padding: const EdgeInsets.all(8.0),
+        //   child: Row(
+        //     mainAxisSize: MainAxisSize.min,
+        //     children: [
+        //       Obx(
+        //         (context) => NamidaCheckMark(
+        //           size: 18.0,
+        //           active: trimWhiteSpaces.valueR,
+        //         ),
+        //       ),
+        //       const SizedBox(
+        //         width: 8.0,
+        //       ),
+        //       Text(
+        //         lang.removeWhitespaces,
+        //         style: namida.textTheme.displaySmall,
+        //       ),
+        //     ],
+        //   ),
+        // ),
         child: ObxO(
           rx: tracksGoingToBeEditedRx,
           builder: (context, tracksGoingToBeEditedAll) {
@@ -1071,7 +1049,7 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                 ? Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12.0),
                     child: NamidaButton(
-                      onPressed: () {
+                      onTap: () {
                         NamidaNavigator.inst.navigateDialog(
                           dialog: CustomBlurryDialog(
                             title: lang.note,
@@ -1082,9 +1060,7 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                           ),
                         );
                       },
-                      textWidget: Text(
-                        tracksGoingToBeEdited.length.displayTrackKeyword,
-                      ),
+                      text: tracksGoingToBeEdited.length.displayTrackKeyword,
                     ),
                   )
                 : Column(
@@ -1152,7 +1128,7 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                                         SizedBox(
                                           width: namida.width,
                                           child: NamidaButton(
-                                            onPressed: () {
+                                            onTap: () {
                                               NamidaNavigator.inst.navigateDialog(
                                                 dialog: CustomBlurryDialog(
                                                   title: lang.note,
@@ -1162,16 +1138,14 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                                                   actions: [
                                                     NamidaButton(
                                                       text: lang.confirm,
-                                                      onPressed: NamidaNavigator.inst.closeDialog,
+                                                      onTap: NamidaNavigator.inst.closeDialog,
                                                     ),
                                                   ],
                                                   child: toBeEditedTracksColumn,
                                                 ),
                                               );
                                             },
-                                            textWidget: Text(
-                                              tracksGoingToBeEdited.length.displayTrackKeyword,
-                                            ),
+                                            text: tracksGoingToBeEdited.length.displayTrackKeyword,
                                           ),
                                         ),
                                         const SizedBox(
@@ -1181,7 +1155,7 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                                           width: namida.width,
                                           child: NamidaButton(
                                             text: lang.editArtwork,
-                                            onPressed: onArtworkEditTap,
+                                            onTap: onArtworkEditTap,
                                           ),
                                         ),
                                       ],

@@ -122,7 +122,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
         normalTitleStyle: true,
         title: lang.choose,
         actions: const [
-          CancelButton(),
+          CancelButton(addMargin: false),
         ],
         child: Column(
           children: [
@@ -180,7 +180,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
         normalTitleStyle: true,
         title: lang.configure,
         actions: const [
-          CancelButton(),
+          CancelButton(addMargin: false),
         ],
         child: Column(
           children: [
@@ -219,10 +219,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
           bodyText: "${lang.removeFromPlaylist} ${playlist.name.translatePlaylistName().addDQuotation()}?",
           actions: [
             const CancelButton(),
-            const SizedBox(width: 6.0),
             NamidaButton(
+              colorScheme: Colors.red,
               text: lang.remove.toUpperCase(),
-              onPressed: () {
+              onTap: () {
                 NamidaNavigator.inst.closeDialog();
                 PlaylistController.inst.removeTracksFromPlaylist(playlist, indexes);
               },
@@ -247,9 +247,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
     if (_isReordering) {
       await PlaylistController.inst.waitForPlaylistsLoad;
       PlaylistController.inst.ensureCustomOrderValid(removeNonExistent: true);
-      if (settings.playlistSort.value != GroupSortType.custom) {
+      if (settings.playlistSort.value != GroupSortType.custom || settings.playlistSortReversed.value) {
         // -- for consistent order while enabling/disabling
-        settings.save(playlistSort: GroupSortType.custom);
+        settings.save(playlistSort: GroupSortType.custom, playlistSortReversed: false);
         PlaylistController.inst.sortPlaylists();
       }
     }
@@ -347,14 +347,14 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                         icon: Broken.add,
                                         text: lang.add,
                                         iconSize: 20.0,
-                                        onPressed: _onAddPlaylistsTap,
+                                        onTap: _onAddPlaylistsTap,
                                       ),
                                       // const SizedBox(width: 8.0),
                                       // NamidaButton(
                                       //   icon: Broken.pen_add,
                                       //   text: lang.create,
                                       //   iconSize: 19.0,
-                                      //   onPressed: () {
+                                      //   onTap: () {
                                       //     showSettingDialogWithTextField(
                                       //       title: lang.createNewPlaylist,
                                       //       addNewPlaylist: true,
@@ -366,18 +366,14 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                         icon: Broken.edit_2,
                                         iconSize: 20.0,
                                         tooltip: () => _isReordering ? lang.disableReordering : lang.enableReordering,
-                                        onPressed: _toggleReordering,
-                                        style: ButtonStyle(
-                                          backgroundColor: WidgetStatePropertyAll(
-                                            _isReordering ? context.theme.colorScheme.secondaryContainer : null,
-                                          ),
-                                        ),
+                                        onTap: _toggleReordering,
+                                        colorScheme: _isReordering ? context.theme.colorScheme.secondaryContainer : null,
                                       ),
                                       const SizedBox(width: 8.0),
                                       NamidaButton(
                                         icon: Broken.setting_4,
                                         iconSize: 20.0,
-                                        onPressed: _onPlaylistButtonConfigTap,
+                                        onTap: _onPlaylistButtonConfigTap,
                                       ),
                                       const SizedBox(width: 8.0),
                                     ],

@@ -18,7 +18,6 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
 class _YTSubscribeButtonManager {
@@ -133,23 +132,18 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
         title: lang.configure,
         normalTitleStyle: true,
         actions: [
-          const CancelButton(),
+          CancelButtonDisabled(
+            disabledRx: isSaving,
+          ),
           ObxO(
             rx: tileActiveNoti,
             builder: (context, activeNoti) => ObxO(
               rx: isSaving,
               builder: (context, saving) => NamidaButton(
-                enabled: activeNoti != null && !saving,
+                enabled: activeNoti != _currentNotificationsStatus && !saving,
                 text: lang.save.toUpperCase(),
-                textWidget: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (saving) const LoadingIndicator(),
-                    if (saving) const SizedBox(width: 4.0),
-                    NamidaButtonText(lang.save.toUpperCase()),
-                  ],
-                ),
-                onPressed: () async {
+                isLoading: saving,
+                onTap: () async {
                   final notiToActivate = tileActiveNoti.value;
                   if (notiToActivate == null) return;
 
@@ -223,8 +217,9 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
         actions: [
           const CancelButton(),
           NamidaButton(
+            colorScheme: Colors.red,
             text: lang.unsubscribe.toUpperCase(),
-            onPressed: () async {
+            onTap: () async {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
             },
@@ -418,7 +413,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                   alignment: Alignment.centerRight,
                   child: NamidaButton(
                     text: lang.done,
-                    onPressed: Navigator.of(context).pop,
+                    onTap: Navigator.of(context).pop,
                   ),
                 ),
               ],
@@ -445,16 +440,13 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
     final subscribeTextWidget = canDisplaySubscribeTextWidget
         ? NamidaLoadingSwitcher(
             size: 24.0,
-            builder: (loadingController) => TextButton(
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                foregroundColor: Color.alphaBlend(Colors.grey.withOpacityExt(subscribed ? 0.6 : 0.0), context.theme.colorScheme.primary),
-              ),
-              child: NamidaButtonText(
-                subscribed ? lang.subscribed : lang.subscribe,
-              ),
-              onPressed: () async {
+            builder: (loadingController) => NamidaButton(
+              dense: true,
+              minHeight: NamidaButton.kDefaultMinHeight * 0.9,
+              midColors: !subscribed,
+              dimmedColors: subscribed,
+              text: subscribed ? lang.subscribed : lang.subscribe,
+              onTap: () async {
                 final info = widget.mainChannelInfo.value;
                 if (info == null) return;
                 if (subscribed) {
@@ -483,9 +475,10 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (widget.subscribeTextOnLeft) subscribeTextWidget,
-              if (subscribed && notificationIcon != null)
-                NamidaIconButton(
-                  horizontalPadding: 4.0,
+              Opacity(
+                opacity: subscribed && notificationIcon != null ? 1.0 : 0.0, // keep visible to maintain stable space for text
+                child: NamidaIconButton(
+                  horizontalPadding: 8.0,
                   onPressed: () {
                     final info = widget.mainChannelInfo.value;
                     if (info == null) return;
@@ -494,6 +487,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                   icon: null,
                   child: notificationIcon,
                 ),
+              ),
               if (!widget.subscribeTextOnLeft) subscribeTextWidget,
             ],
           ),

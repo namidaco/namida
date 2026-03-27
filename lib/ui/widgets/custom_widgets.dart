@@ -293,6 +293,7 @@ class CustomListTile extends StatelessWidget {
         };
     var verticalPadding = 8.0;
     var borderR = this.borderR;
+    var iconSize = 24.0;
 
     if (this.extraDense) {
       minTileHeight *= 0.85;
@@ -322,9 +323,17 @@ class CustomListTile extends StatelessWidget {
                     rotateIcon != null
                         ? RotatedBox(
                             quarterTurns: rotateIcon!,
-                            child: Icon(icon, color: iconColor),
+                            child: Icon(
+                              icon,
+                              color: iconColor,
+                              size: iconSize,
+                            ),
                           )
-                        : Icon(icon, color: iconColor),
+                        : Icon(
+                            icon,
+                            color: iconColor,
+                            size: iconSize,
+                          ),
                     const SizedBox(width: 12.0),
                   ] else if (leading != null) ...[
                     leading!,
@@ -675,7 +684,7 @@ class CustomBlurryDialog extends StatelessWidget {
                               ),
                             )
                           : Container(
-                              color: ctxth.cardTheme.color,
+                              color: Color.alphaBlend(ctxth.colorScheme.primary.withOpacityExt(0.02), ctxth.cardTheme.color!),
                               padding: const EdgeInsets.all(16),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -758,98 +767,216 @@ class NamidaButtonText extends Text {
   }) : super(style: style ?? const TextStyle(fontSize: 15.0));
 }
 
+class NamidaTextButton extends StatelessWidget {
+  final String text;
+  final double? minHeight;
+  final bool enabled;
+  final double? fontSize;
+  final void Function() onTap;
+
+  const NamidaTextButton({
+    super.key,
+    required this.text,
+    this.minHeight,
+    this.enabled = true,
+    this.fontSize,
+    required this.onTap,
+  });
+
+  static double kDefaultMinHeight = NamidaButton.kDefaultMinHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaButton(
+      onTap: onTap,
+      enabled: enabled,
+      text: text,
+      fontSize: fontSize,
+      minHeight: minHeight,
+      dense: true,
+      dimmedColors: true,
+    );
+  }
+}
+
 class NamidaButton extends StatelessWidget {
   final IconData? icon;
+  final IconData? secondaryIcon;
   final double? iconSize;
   final String? text;
-  final Widget? textWidget;
-  final ButtonStyle? style;
-
-  /// will be used if the icon only is sent.
+  final double? fontSize;
+  final Color? colorScheme;
+  final double? minHeight;
   final String Function()? tooltip;
-  final void Function() onPressed;
+  final void Function() onTap;
   final bool? enabled;
+  final bool? isLoading;
+  final bool dense;
+  final bool midColors;
+  final bool dimmedColors;
 
   const NamidaButton({
     super.key,
     this.icon,
-    this.iconSize,
+    this.secondaryIcon,
+    this.iconSize = 20.0,
     this.text,
-    this.textWidget,
-    this.style,
+    this.fontSize,
+    this.colorScheme,
+    this.minHeight,
     this.tooltip,
-    required this.onPressed,
+    required this.onTap,
     this.enabled,
+    this.isLoading,
+    this.dense = false,
+    this.midColors = false,
+    this.dimmedColors = false,
   });
 
-  Widget _getWidget(Widget child) {
-    return enabled == null
-        ? child
-        : IgnorePointer(
-            ignoring: !enabled!,
-            child: AnimatedOpacity(
-              opacity: enabled! ? 1.0 : 0.6,
-              duration: const Duration(milliseconds: 250),
-              child: child,
-            ),
-          );
-  }
+  static double kDefaultMinHeight = 36.0;
 
   @override
   Widget build(BuildContext context) {
-    final onTap = onPressed;
-    if (textWidget != null) {
-      return _getWidget(
-        ElevatedButton(
-          style: style,
-          onPressed: onTap,
-          child: textWidget,
-        ),
-      );
+    var colorScheme = this.colorScheme ?? context.theme.colorScheme.primary;
+
+    if (dimmedColors) {
+      colorScheme = colorScheme.withOpacityExt(0.1);
+    } else if (midColors) {
+      colorScheme = colorScheme.withOpacityExt(0.2);
+    } else {
+      colorScheme = colorScheme.withOpacityExt(0.45);
     }
 
-    final iconChild = Icon(icon, size: iconSize);
-    final textChild = NamidaButtonText(
-      text ?? '',
-      softWrap: false,
-      overflow: TextOverflow.ellipsis,
+    final bgColor = colorScheme.withOpacityExt(colorScheme.a * 0.2);
+    final borderColor = colorScheme.withOpacityExt(colorScheme.a * 0.6);
+    final foregroundColor = context.defaultIconColor(colorScheme).withOpacityExt(0.75);
+
+    final text = this.text;
+    final icon = this.icon;
+    final iconSize = this.iconSize;
+    final secondaryIcon = this.secondaryIcon;
+    final enabled = this.enabled;
+    final isLoading = this.isLoading;
+
+    final iconChild = (icon == null
+        ? null
+        : secondaryIcon != null
+        ? StackedIcon(
+            disableColor: true,
+            baseIcon: icon,
+            iconSize: iconSize,
+            baseIconColor: foregroundColor,
+            secondaryIconColor: foregroundColor,
+            secondaryIcon: secondaryIcon,
+            secondaryIconSize: 13.0,
+          )
+        : Icon(
+            icon,
+            size: iconSize,
+            color: foregroundColor,
+          ));
+
+    final textStyle = context.textTheme.displayMedium?.copyWith(
+      color: foregroundColor,
+      fontSize: fontSize ?? (dense ? 15.0 : 15.5),
     );
 
-    // -- icon X && text ✓
-    if (icon == null && text != null) {
-      return _getWidget(
-        ElevatedButton(
-          style: style,
-          onPressed: onTap,
-          child: textChild,
-        ),
+    final textChild = (text == null || text.isEmpty
+        ? null
+        : Text(
+            text,
+            style: textStyle,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+          ));
+
+    EdgeInsets padding;
+    double minHeight = this.minHeight ?? kDefaultMinHeight;
+
+    if (dense) {
+      padding = EdgeInsets.symmetric(
+        horizontal: textChild != null
+            ? iconChild != null
+                  ? 10.0
+                  : 12.0
+            : iconChild != null
+            ? 10.0
+            : 8.0,
+        vertical: 8.0,
+      );
+    } else {
+      padding = EdgeInsets.symmetric(
+        horizontal: textChild != null
+            ? iconChild != null
+                  ? 18.0
+                  : 24.0
+            : iconChild != null
+            ? 16.0
+            : 12.0,
+        vertical: 8.0,
       );
     }
-    // -- icon ✓ && text X
-    if (icon != null && text == null) {
-      return Tooltip(
-        message: tooltip,
-        child: _getWidget(
-          ElevatedButton(
-            style: style,
-            onPressed: onTap,
-            child: iconChild,
+
+    if (!dense && textChild != null && iconChild == null) {
+      padding *= 1.25;
+    }
+
+    final brRaw = 20.0;
+    Widget box = NamidaTooltip(
+      message: tooltip,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: minHeight),
+        child: NamidaInkWell(
+          borderRadius: brRaw,
+          onTap: onTap,
+          decoration: BoxDecoration(
+            color: bgColor,
+            border: Border.all(
+              width: 0.5,
+              color: borderColor,
+            ),
+          ),
+          padding: padding,
+          child: Row(
+            mainAxisAlignment: .center,
+            mainAxisSize: .min,
+            children: [
+              ?iconChild,
+              if (iconChild != null && textChild != null) const SizedBox(width: 8.0),
+              if (textChild != null)
+                Flexible(
+                  child: textChild,
+                ),
+            ],
           ),
         ),
+      ),
+    );
+
+    if (isLoading != null) {
+      box = AnimatedRotatingBorder(
+        isLoading: isLoading,
+        duration: const Duration(milliseconds: 1200),
+        borderRadius: brRaw.multipliedRadius,
+        colors: [
+          colorScheme,
+        ],
+        child: box,
       );
     }
-    // -- icon ✓ && text ✓
-    if (icon != null && text != null) {
-      return _getWidget(
-        ElevatedButton.icon(
-          style: style,
-          onPressed: onTap,
-          icon: iconChild,
-          label: textChild,
+
+    if (enabled != null) {
+      box = IgnorePointer(
+        ignoring: !enabled,
+        child: AnimatedOpacity(
+          opacity: enabled ? 1.0 : 0.6,
+          duration: const Duration(milliseconds: 250),
+          child: box,
         ),
       );
     }
-    throw Exception('icon or text must be provided');
+
+    return box;
   }
 }
 
@@ -1316,7 +1443,7 @@ class CreatePlaylistButton extends StatelessWidget {
     return NamidaButton(
       icon: Broken.add,
       text: lang.create,
-      onPressed: () => showSettingDialogWithTextField(
+      onTap: () => showSettingDialogWithTextField(
         title: lang.createNewPlaylist,
         addNewPlaylist: true,
       ),
@@ -1465,15 +1592,74 @@ class SmallIconButton extends StatelessWidget {
   }
 }
 
-class CancelButton extends StatelessWidget {
+class CancelButtonDisabled extends StatelessWidget {
+  final Rx<bool> disabledRx;
+  final bool addMargin;
   final void Function()? onPressed;
-  const CancelButton({super.key, this.onPressed});
+
+  const CancelButtonDisabled({
+    super.key,
+    required this.disabledRx,
+    this.addMargin = true,
+    this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: onPressed ?? NamidaNavigator.inst.closeDialog,
-      child: NamidaButtonText(lang.cancel),
+    return ObxO(
+      rx: disabledRx,
+      builder: (context, disabled) => CancelButtonDisabledRaw(
+        disabled: disabled,
+        addMargin: addMargin,
+        onPressed: onPressed,
+      ),
+    );
+  }
+}
+
+class CancelButtonDisabledRaw extends StatelessWidget {
+  final bool disabled;
+  final bool addMargin;
+  final void Function()? onPressed;
+
+  const CancelButtonDisabledRaw({
+    super.key,
+    required this.disabled,
+    this.addMargin = true,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CancelButton(
+      enabled: !disabled,
+      addMargin: addMargin,
+      onPressed: onPressed,
+    );
+  }
+}
+
+class CancelButton extends StatelessWidget {
+  final bool addMargin;
+  final bool enabled;
+  final void Function()? onPressed;
+
+  const CancelButton({
+    super.key,
+    this.addMargin = true,
+    this.enabled = true,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: addMargin ? const EdgeInsetsGeometry.symmetric(horizontal: 4.0) : EdgeInsetsGeometry.zero,
+      child: NamidaTextButton(
+        onTap: onPressed ?? NamidaNavigator.inst.closeDialog,
+        enabled: enabled,
+        text: lang.cancel,
+      ),
     );
   }
 }
@@ -1488,7 +1674,7 @@ class DoneButton extends StatelessWidget {
     return NamidaButton(
       enabled: enabled,
       text: lang.done,
-      onPressed: () {
+      onTap: () {
         NamidaNavigator.inst.closeDialog();
         if (additional != null) additional!();
       },
@@ -1888,8 +2074,9 @@ class NamidaRawLikeButton extends StatelessWidget {
         actions: [
           const CancelButton(),
           NamidaButton(
+            colorScheme: Colors.red,
             text: lang.remove.toUpperCase(),
-            onPressed: () async {
+            onTap: () async {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
             },
@@ -2317,7 +2504,7 @@ class SubpageInfoContainer extends StatelessWidget {
                       const SizedBox(width: 6.0),
                       NamidaButton(
                         icon: Broken.shuffle,
-                        onPressed: () => Player.inst.playOrPause(
+                        onTap: () => Player.inst.playOrPause(
                           0,
                           tracksFn(),
                           source,
@@ -2325,22 +2512,10 @@ class SubpageInfoContainer extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 6.0),
-                      ElevatedButton.icon(
-                        onPressed: () => Player.inst.addToQueue(tracksFn()),
-                        icon: const StackedIcon(
-                          disableColor: true,
-                          baseIcon: Broken.play,
-                          secondaryIcon: Broken.add_circle,
-                          secondaryIconSize: 13.0,
-                        ),
-                        label: Text(
-                          lang.playLast,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: getFontSize(0.3, 10.0, 20.0),
-                          ),
-                        ),
+                      NamidaButton(
+                        onTap: () => Player.inst.addToQueue(tracksFn()),
+                        icon: Broken.play_cricle,
+                        text: lang.playLast,
                       ),
                       const SizedBox(width: 6.0),
                     ],
@@ -3700,7 +3875,7 @@ class NamidaSupportButton extends StatelessWidget {
     return NamidaButton(
       icon: Broken.heart,
       text: title ?? lang.support,
-      onPressed: () {
+      onTap: () {
         closeDialog.closeDialog();
         NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE);
       },
@@ -4183,9 +4358,9 @@ class NamidaAnimatedSwitcher extends StatelessWidget {
   final bool showFirst;
   final int durationMS;
   final int? reverseDurationMS;
-  final Curve firstCurve;
-  final Curve secondCurve;
-  final Curve sizeCurve;
+  final Curve? firstCurve;
+  final Curve? secondCurve;
+  final Curve? sizeCurve;
   final Curve? allCurves;
   const NamidaAnimatedSwitcher({
     super.key,
@@ -4194,23 +4369,24 @@ class NamidaAnimatedSwitcher extends StatelessWidget {
     required this.showFirst,
     this.durationMS = 400,
     this.reverseDurationMS,
-    this.firstCurve = Curves.linear,
-    this.secondCurve = Curves.linear,
-    this.sizeCurve = Curves.linear,
+    this.firstCurve,
+    this.secondCurve,
+    this.sizeCurve,
     this.allCurves,
   });
 
   @override
   Widget build(BuildContext context) {
+    final allCurves = this.allCurves ?? Curves.fastLinearToSlowEaseIn;
     return AnimatedCrossFade(
       firstChild: firstChild,
       secondChild: secondChild,
       crossFadeState: showFirst ? CrossFadeState.showFirst : CrossFadeState.showSecond,
       duration: Duration(milliseconds: durationMS),
       reverseDuration: Duration(milliseconds: reverseDurationMS ?? durationMS),
-      firstCurve: allCurves ?? firstCurve,
-      secondCurve: allCurves ?? secondCurve,
-      sizeCurve: allCurves ?? sizeCurve,
+      firstCurve: firstCurve ?? allCurves,
+      secondCurve: secondCurve ?? allCurves,
+      sizeCurve: sizeCurve ?? allCurves,
       layoutBuilder: (topChild, topChildKey, bottomChild, bottomChildKey) {
         return Stack(
           clipBehavior: Clip.none,
@@ -4863,7 +5039,7 @@ class _DelayedAnimatedShowState extends State<DelayedAnimatedShow> {
 class QueueUtilsRow extends StatelessWidget {
   final String Function(int number) itemsKeyword;
   final void Function() onAddItemsTap;
-  final Widget Function(ButtonStyle buttonStyle) scrollQueueWidget;
+  final Widget scrollQueueWidget;
 
   const QueueUtilsRow({
     super.key,
@@ -4874,20 +5050,14 @@ class QueueUtilsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const buttonStyle = ButtonStyle(
-      padding: WidgetStatePropertyAll(
-        EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
-      ),
-    );
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         const SizedBox(width: 12.0),
         NamidaButton(
-          style: buttonStyle,
           tooltip: () => lang.removeDuplicates,
           icon: Broken.broom,
-          onPressed: () {
+          onTap: () {
             final removed = Player.inst.removeDuplicatesFromQueue();
             snackyy(
               top: false,
@@ -4898,13 +5068,12 @@ class QueueUtilsRow extends StatelessWidget {
         ),
         const SizedBox(width: 6.0),
         NamidaButton(
-          style: buttonStyle,
           tooltip: () => lang.newTracksAdd,
           icon: Broken.add_circle,
-          onPressed: () => onAddItemsTap(),
+          onTap: () => onAddItemsTap(),
         ),
         const SizedBox(width: 6.0),
-        scrollQueueWidget(buttonStyle),
+        scrollQueueWidget,
         const SizedBox(width: 6.0),
         GestureDetector(
           onLongPressStart: (details) async {
@@ -4954,10 +5123,9 @@ class QueueUtilsRow extends StatelessWidget {
             );
           },
           child: NamidaButton(
-            style: buttonStyle,
             text: lang.shuffle,
             icon: Broken.shuffle,
-            onPressed: () => Player.inst.shuffleTracks(settings.player.shuffleAllTracks.value),
+            onTap: () => Player.inst.shuffleTracks(settings.player.shuffleAllTracks.value),
           ),
         ),
         const SizedBox(width: 12.0),
@@ -5798,7 +5966,7 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
           const CancelButton(),
           NamidaButton(
             text: lang.confirm.toUpperCase(),
-            onPressed: () async {
+            onTap: () async {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
             },
@@ -6137,9 +6305,9 @@ class NamidaUpdateButton extends StatelessWidget {
                   children: [
                     Expanded(
                       flex: 1,
-                      child: TextButton(
-                        onPressed: () => popSheet(context),
-                        child: NamidaButtonText(lang.cancel),
+                      child: NamidaTextButton(
+                        onTap: () => popSheet(context),
+                        text: lang.cancel,
                       ),
                     ),
                     const SizedBox(width: 12.0),
@@ -6551,7 +6719,7 @@ class _HotKeyRecorderDialogState extends State<_HotKeyRecorderDialog> {
         const CancelButton(),
         NamidaButton(
           text: lang.save,
-          onPressed: () {
+          onTap: () {
             _confirmHotkey();
           },
         ),

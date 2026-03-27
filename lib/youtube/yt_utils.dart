@@ -41,7 +41,6 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -974,7 +973,7 @@ class YTUtils {
             (context) => NamidaButton(
               enabled: deleteTempAudio.valueR || deleteTempVideo.valueR || pathsToDelete.values.any((element) => element),
               text: "${lang.delete} (${totalSizeToDelete.valueR.fileSizeFormatted})",
-              onPressed: () async {
+              onTap: () async {
                 await Future.wait([
                   deleteItems(pathsToDelete.keys.where((element) => pathsToDelete[element] == true)),
                   if (deleteTempAudio.value) deleteItems(tempFilesSizeAudio.keys.map((e) => e.path)),

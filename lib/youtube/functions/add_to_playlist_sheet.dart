@@ -227,8 +227,9 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
         actions: [
           const CancelButton(),
           NamidaButton(
+            colorScheme: Colors.red,
             text: lang.remove.toUpperCase(),
-            onPressed: () async {
+            onTap: () async {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
             },

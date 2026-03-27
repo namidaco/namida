@@ -138,7 +138,7 @@ class ThemeSetting extends SettingSubpageProvider {
                 normalTitleStyle: true,
                 actions: [
                   // NamidaButton(
-                  //   onPressed: () async {
+                  //   onTap: () async {
                   //     final files = await NamidaFileBrowser.pickFile(note: lang.addLanguage, allowedExtensions: NamidaFileExtensionsWrapper.json);
                   //     final path = files?.path;
                   //     if (path != null) {
@@ -160,7 +160,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   // ),
                   const CancelButton(),
                   NamidaButton(
-                    onPressed: () => Language.inst.update(language: selectedLangRx.value).closeDialog(),
+                    onTap: () => Language.inst.update(language: selectedLangRx.value).closeDialog(),
                     text: lang.confirm,
                   ),
                 ],
@@ -515,7 +515,7 @@ class NamidaColorPickerDialog extends StatelessWidget {
         if (cancelButton) const CancelButton(),
         NamidaButton(
           text: doneText,
-          onPressed: onDonePressed,
+          onTap: onDonePressed,
         ),
       ],
       child: ColorPicker(

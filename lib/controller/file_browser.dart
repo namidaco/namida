@@ -1062,7 +1062,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                               const CancelButton(),
                               NamidaButton(
                                 text: lang.choose,
-                                onPressed: () {
+                                onTap: () {
                                   final text = dirController.text;
                                   if (text.length > 2) {
                                     NamidaNavigator.inst.closeDialog();

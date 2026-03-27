@@ -212,12 +212,8 @@ class NamidaDialogs {
               rx: alsoDeleteM3uRx,
               builder: (context, deletem3u) => NamidaButton(
                 text: lang.delete.toUpperCase(),
-                style: deletem3u
-                    ? ButtonStyle(
-                        foregroundColor: WidgetStatePropertyAll(Colors.red),
-                      )
-                    : null,
-                onPressed: () async {
+                colorScheme: deletem3u ? Colors.red : null,
+                onTap: () async {
                   await PlaylistController.inst.removePlaylist(playlist);
                   if (alsoDeleteM3uRx.value && m3uPath != null) await File(m3uPath).deleteIfExists();
                   NamidaNavigator.inst.closeDialog();

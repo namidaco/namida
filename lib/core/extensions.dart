@@ -636,9 +636,6 @@ extension WidgetsUtils on Widget {
     required bool showWhen,
     int durationMS = 400,
     int? reverseDurationMS,
-    Curve firstCurve = Curves.linear,
-    Curve secondCurve = Curves.linear,
-    Curve sizeCurve = Curves.linear,
     Curve? allCurves,
   }) {
     return NamidaAnimatedSwitcher(
@@ -647,9 +644,6 @@ extension WidgetsUtils on Widget {
       showFirst: showWhen,
       durationMS: durationMS,
       reverseDurationMS: reverseDurationMS,
-      firstCurve: firstCurve,
-      secondCurve: secondCurve,
-      sizeCurve: sizeCurve,
       allCurves: allCurves,
     );
   }

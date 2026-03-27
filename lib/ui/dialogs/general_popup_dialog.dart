@@ -239,7 +239,7 @@ Future<void> showGeneralPopupDialog(
           const CancelButton(),
           NamidaButton(
             text: lang.save,
-            onPressed: () async {
+            onTap: () async {
               final newMoods = Indexer.splitByCommaList(playlistMoodsController.text);
               PlaylistController.inst.updatePropertyInPlaylist(playlistName, moods: newMoods);
               NamidaNavigator.inst.closeDialog();
@@ -285,7 +285,7 @@ Future<void> showGeneralPopupDialog(
             const CancelButton(),
             NamidaButton(
               text: lang.save,
-              onPressed: () async {
+              onTap: () async {
                 if (formKey.currentState!.validate()) {
                   final didRename = await PlaylistController.inst.renamePlaylist(playlistName!, controller.text);
                   if (didRename) {
@@ -377,17 +377,16 @@ Future<void> showGeneralPopupDialog(
           const CancelButton(),
           ObxO(
             rx: isUpdating,
-            builder: (context, updating) => AnimatedEnabled(
+            builder: (context, updating) => NamidaButton(
               enabled: !updating,
-              child: NamidaButton(
-                text: lang.confirm,
-                onPressed: () async {
-                  isUpdating.value = true;
-                  await EditDeleteController.inst.updateTrackPathInEveryPartOfNamida(tracks.first, newPath);
-                  isUpdating.value = false;
-                  NamidaNavigator.inst.closeDialog(2);
-                },
-              ),
+              isLoading: updating,
+              text: lang.confirm,
+              onTap: () async {
+                isUpdating.value = true;
+                await EditDeleteController.inst.updateTrackPathInEveryPartOfNamida(tracks.first, newPath);
+                isUpdating.value = false;
+                NamidaNavigator.inst.closeDialog(2);
+              },
             ),
           ),
         ],
@@ -454,7 +453,7 @@ Future<void> showGeneralPopupDialog(
           const CancelButton(),
           NamidaButton(
             text: lang.pickFromStorage,
-            onPressed: () {
+            onTap: () {
               NamidaNavigator.inst.closeDialog();
               pickDirectoryToUpdateTrack();
             },
@@ -847,7 +846,7 @@ Future<void> showGeneralPopupDialog(
                                             const CancelButton(),
                                             NamidaButton(
                                               text: lang.pickFromStorage,
-                                              onPressed: () {
+                                              onTap: () {
                                                 NamidaNavigator.inst.closeDialog();
                                                 pickDirectoryToUpdateTrack();
                                               },
@@ -1506,18 +1505,16 @@ class _ArtworkManager extends StatelessWidget {
               title: lang.configure,
               actions: [
                 NamidaButton(
+                  colorScheme: Colors.red,
                   text: lang.delete.toUpperCase(),
-                  style: ButtonStyle(
-                    foregroundColor: WidgetStatePropertyAll(Colors.red),
-                  ),
-                  onPressed: () async {
+                  onTap: () async {
                     await onDelete();
                     NamidaNavigator.inst.closeDialog();
                   },
                 ),
                 NamidaButton(
                   text: lang.pickFromStorage.toUpperCase(),
-                  onPressed: () async {
+                  onTap: () async {
                     await onEdit();
                     NamidaNavigator.inst.closeDialog();
                   },
@@ -1734,7 +1731,7 @@ void showSetTrackStatsDialog({
           const CancelButton(),
           NamidaButton(
             text: lang.add,
-            onPressed: () async {
+            onTap: () async {
               final items = Indexer.splitByCommaList(controller.text);
               for (final e in items) {
                 final didAdd = rxSet.value.add(e);
@@ -1790,36 +1787,35 @@ void showSetTrackStatsDialog({
         const CancelButton(),
         ObxO(
           rx: isEditing,
-          builder: (context, editing) => AnimatedEnabled(
+          builder: (context, editing) => NamidaButton(
             enabled: !editing,
-            child: NamidaButton(
-              text: lang.save,
-              onPressed: () async {
-                isEditing.value = true;
-                await NamidaTaggerController.inst
-                    .updateTracksMetadata(
-                      tracks: [firstTrack],
-                      editedTags: {
-                        TagField.rating: selectedRatingRx.value.toString(),
-                        TagField.mood: selectedMoodsRx.value.join(', '),
-                        TagField.tags: selectedTagsRx.value.join(', '),
-                      },
-                      onStatsEdit: onEdit,
-                      onEdit: (didUpdate, error, _) {
-                        if (!didUpdate) {
-                          var msg = lang.metadataEditFailed;
-                          if (error != null) msg += '\n$error';
-                          snackyy(title: lang.warning, message: msg, isError: true);
-                        }
-                      },
-                      keepFileDates: true,
-                      trimWhiteSpaces: false, // we did here
-                    )
-                    .ignoreError();
-                isEditing.value = false;
-                NamidaNavigator.inst.closeDialog();
-              },
-            ),
+            isLoading: editing,
+            text: lang.save,
+            onTap: () async {
+              isEditing.value = true;
+              await NamidaTaggerController.inst
+                  .updateTracksMetadata(
+                    tracks: [firstTrack],
+                    editedTags: {
+                      TagField.rating: selectedRatingRx.value.toString(),
+                      TagField.mood: selectedMoodsRx.value.join(', '),
+                      TagField.tags: selectedTagsRx.value.join(', '),
+                    },
+                    onStatsEdit: onEdit,
+                    onEdit: (didUpdate, error, _) {
+                      if (!didUpdate) {
+                        var msg = lang.metadataEditFailed;
+                        if (error != null) msg += '\n$error';
+                        snackyy(title: lang.warning, message: msg, isError: true);
+                      }
+                    },
+                    keepFileDates: true,
+                    trimWhiteSpaces: false, // we did here
+                  )
+                  .ignoreError();
+              isEditing.value = false;
+              NamidaNavigator.inst.closeDialog();
+            },
           ),
         ),
       ],

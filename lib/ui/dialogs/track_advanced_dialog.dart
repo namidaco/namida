@@ -171,7 +171,7 @@ void showTrackAdvancedDialog({
                       const CancelButton(),
                       NamidaButton(
                         text: lang.confirm,
-                        onPressed: () async {
+                        onTap: () async {
                           final success = await NamidaChannel.inst.setMusicAs(path: tracks.first.track.path, types: selected.value);
                           if (success) NamidaNavigator.inst.closeDialog();
                         },
@@ -253,7 +253,7 @@ void showTrackAdvancedDialog({
                         const CancelButton(),
                         NamidaButton(
                           text: lang.confirm,
-                          onPressed: () async {
+                          onTap: () async {
                             await HistoryController.inst.replaceAllTracksInsideHistory(trackWillBeReplaced, newTrack);
                             NamidaNavigator.inst.closeDialog(3);
                           },
@@ -409,7 +409,8 @@ void _showTrackColorPaletteDialog({
     );
   }
 
-  final finalColorToBeUsed = (trackColor?.color).obs;
+  final initialColor = trackColor?.color;
+  final finalColorToBeUsed = initialColor.obs;
 
   Widget getText(String text, {TextStyle? style}) {
     return Text(text, style: style ?? namida.textTheme.displaySmall);
@@ -520,9 +521,9 @@ void _showTrackColorPaletteDialog({
           ObxO(
             rx: finalColorToBeUsed,
             builder: (context, finalColor) => NamidaButton(
-              enabled: finalColor != null,
+              enabled: finalColor != null && finalColor != initialColor,
               text: lang.confirm,
-              onPressed: () {
+              onTap: () {
                 if (finalColor != null) {
                   onFinalColor(allPaletteColor.value, finalColor);
                 }
@@ -630,16 +631,18 @@ void _showTrackColorPaletteDialog({
                 getText('${lang.used} : ', style: namida.textTheme.displayMedium),
                 const SizedBox(width: 12.0),
                 Expanded(
-                  child: ObxO(
-                    rx: finalColorToBeUsed,
-                    builder: (context, finalColorToBeUsed) => AnimatedSizedBox(
-                      duration: const Duration(milliseconds: 200),
-                      decoration: BoxDecoration(
-                        color: finalColorToBeUsed,
-                        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 30.0,
+                    child: ObxO(
+                      rx: finalColorToBeUsed,
+                      builder: (context, finalColorToBeUsed) => AnimatedDecoration(
+                        duration: const Duration(milliseconds: 200),
+                        decoration: BoxDecoration(
+                          color: finalColorToBeUsed,
+                          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                        ),
                       ),
-                      width: double.infinity,
-                      height: 30.0,
                     ),
                   ),
                 ),
@@ -677,20 +680,17 @@ void showTrackDeletePermanentlyDialog(List<Selectable> tracks, Color? colorSchem
         const CancelButton(),
         ObxO(
           rx: isDeleting,
-          builder: (context, deleting) => AnimatedEnabled(
+          builder: (context, deleting) => NamidaButton(
             enabled: !deleting,
-            child: NamidaButton(
-              text: lang.delete.toUpperCase(),
-              style: ButtonStyle(
-                foregroundColor: WidgetStatePropertyAll(Colors.red),
-              ),
-              onPressed: () async {
-                isDeleting.value = true;
-                await EditDeleteController.inst.deleteTracksFromStoragePermanently(tracks);
-                isDeleting.value = false;
-                afterConfirm?.call();
-              },
-            ),
+            isLoading: deleting,
+            colorScheme: Colors.red,
+            text: lang.delete.toUpperCase(),
+            onTap: () async {
+              isDeleting.value = true;
+              await EditDeleteController.inst.deleteTracksFromStoragePermanently(tracks);
+              isDeleting.value = false;
+              afterConfirm?.call();
+            },
           ),
         ),
       ],
@@ -749,7 +749,7 @@ void showLibraryTracksChooseDialog({
           builder: (context, selectedTr) => NamidaButton(
             enabled: selectedTr != null,
             text: lang.confirm,
-            onPressed: () => onChoose(selectedTrack.value!),
+            onTap: () => onChoose(selectedTrack.value!),
           ),
         ),
       ],

@@ -432,19 +432,17 @@ class BackupAndRestore extends SettingSubpageProvider {
                         rx: settings.backupItemslist,
                         builder: (context, backupItemslist) {
                           backupItemslist ??= AppPathsBackupEnumCategories.everything;
-                          return AnimatedEnabled(
+                          return NamidaButton(
                             enabled: backupItemslist.isNotEmpty,
-                            child: NamidaButton(
-                              text: lang.createBackup,
-                              onPressed: () {
-                                final items = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
-                                if (items.isNotEmpty) {
-                                  NamidaNavigator.inst.closeDialog();
-                                  final rawPaths = items.map((e) => e.resolve()).toList();
-                                  BackupController.inst.createBackupFile(rawPaths);
-                                }
-                              },
-                            ),
+                            text: lang.createBackup,
+                            onTap: () {
+                              final items = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
+                              if (items.isNotEmpty) {
+                                NamidaNavigator.inst.closeDialog();
+                                final rawPaths = items.map((e) => e.resolve()).toList();
+                                BackupController.inst.createBackupFile(rawPaths);
+                              }
+                            },
                           );
                         },
                       ),
@@ -654,8 +652,8 @@ class BackupAndRestore extends SettingSubpageProvider {
                           Obx(
                             (context) => NamidaButton(
                               enabled: isMatchingTypeLink.valueR || isMatchingTypeTitleAndArtist.valueR,
-                              textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.importTimeRange : lang.importAll)),
-                              onPressed: () async {
+                              text: oldestDate.valueR != null ? lang.importTimeRange : lang.importAll,
+                              onTap: () async {
                                 NamidaNavigator.inst.closeDialog();
                                 await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
                                   files: jsonfiles,
@@ -732,7 +730,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                     actions: [
                       NamidaButton(
                         text: lang.folder,
-                        onPressed: () {
+                        onTap: () {
                           NamidaNavigator.inst.closeDialog();
                           onConfirm(true);
                         },
@@ -740,7 +738,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                       SizedBox(width: 2.0),
                       NamidaButton(
                         text: lang.confirm,
-                        onPressed: () {
+                        onTap: () {
                           NamidaNavigator.inst.closeDialog();
                           onConfirm(false);
                         },
@@ -808,19 +806,21 @@ class BackupAndRestore extends SettingSubpageProvider {
                         title: lang.configure,
                         actions: [
                           const CancelButton(),
-                          NamidaButton(
-                            textWidget: Obx((context) => Text(oldestDate.valueR != null ? lang.importTimeRange : lang.importAll)),
-                            onPressed: () async {
-                              NamidaNavigator.inst.closeDialog();
-                              await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
-                                files: csvFiles,
-                                mainDirectory: mainDirectory,
-                                source: TrackSource.lastfm,
-                                oldestDate: oldestDate.value,
-                                newestDate: newestDate,
-                                matchAll: matchAll.value,
-                              );
-                            },
+                          Obx(
+                            (context) => NamidaButton(
+                              text: oldestDate.valueR != null ? lang.importTimeRange : lang.importAll,
+                              onTap: () async {
+                                NamidaNavigator.inst.closeDialog();
+                                await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
+                                  files: csvFiles,
+                                  mainDirectory: mainDirectory,
+                                  source: TrackSource.lastfm,
+                                  oldestDate: oldestDate.value,
+                                  newestDate: newestDate,
+                                  matchAll: matchAll.value,
+                                );
+                              },
+                            ),
                           ),
                         ],
                         child: Column(
@@ -856,7 +856,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                     actions: [
                       NamidaButton(
                         text: lang.folder,
-                        onPressed: () {
+                        onTap: () {
                           NamidaNavigator.inst.closeDialog();
                           onConfirm(true);
                         },
@@ -864,7 +864,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                       SizedBox(width: 2.0),
                       NamidaButton(
                         text: lang.confirm,
-                        onPressed: () async {
+                        onTap: () async {
                           NamidaNavigator.inst.closeDialog();
                           onConfirm(false);
                         },

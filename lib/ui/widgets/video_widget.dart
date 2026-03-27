@@ -2268,13 +2268,13 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
       child: CustomBlurryDialog(
         title: lang.configure,
         actions: [
-          TextButton(
-            onPressed: NamidaNavigator.inst.closeDialog,
-            child: NamidaButtonText(lang.done),
+          NamidaTextButton(
+            onTap: NamidaNavigator.inst.closeDialog,
+            text: lang.done,
           ),
           NamidaButton(
             text: lang.add,
-            onPressed: () {
+            onTap: () {
               formKey.currentState?.validate();
             },
           ),

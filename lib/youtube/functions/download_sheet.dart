@@ -778,9 +778,10 @@ Future<void> showDownloadVideoBottomSheet({
                                   children: [
                                     Expanded(
                                       flex: 1,
-                                      child: TextButton(
-                                        child: NamidaButtonText(lang.cancel),
-                                        onPressed: () => Navigator.pop(context),
+                                      child: NamidaTextButton(
+                                        text: lang.cancel,
+                                        minHeight: NamidaButton.kDefaultMinHeight * 1.25,
+                                        onTap: () => Navigator.pop(context),
                                       ),
                                     ),
                                     const SizedBox(width: 12.0),
@@ -796,19 +797,11 @@ Future<void> showDownloadVideoBottomSheet({
                                             child: AnimatedOpacity(
                                               duration: const Duration(milliseconds: 200),
                                               opacity: enabled ? 1.0 : 0.6,
-                                              child: NamidaInkWell(
-                                                borderRadius: 12.0,
-                                                padding: const EdgeInsets.all(12.0),
-                                                height: 48.0,
-                                                bgColor: colorScheme,
-                                                decoration: filenameExists.valueR
-                                                    ? BoxDecoration(
-                                                        border: Border.all(
-                                                          width: 3.0,
-                                                          color: Colors.red.withAlpha(80),
-                                                        ),
-                                                      )
-                                                    : const BoxDecoration(),
+                                              child: NamidaButton(
+                                                colorScheme: filenameExists.valueR ? Colors.red.withAlpha(80) : null,
+                                                minHeight: NamidaButton.kDefaultMinHeight * 1.5,
+                                                icon: Broken.import,
+                                                text: '${confirmButtonText == '' ? lang.download : confirmButtonText} $sizeText',
                                                 onTap: () async {
                                                   final group = DownloadTaskGroupName(groupName: groupName);
                                                   final itemConfig = YoutubeItemDownloadConfig(
@@ -848,12 +841,6 @@ Future<void> showDownloadVideoBottomSheet({
                                                     );
                                                   }
                                                 },
-                                                child: Center(
-                                                  child: Text(
-                                                    '${confirmButtonText == '' ? lang.download : confirmButtonText} $sizeText',
-                                                    style: textTheme.displayMedium?.copyWith(color: Colors.white.withOpacityExt(0.9)),
-                                                  ),
-                                                ),
                                               ),
                                             ),
                                           );

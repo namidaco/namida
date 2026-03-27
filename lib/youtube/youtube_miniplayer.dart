@@ -1188,8 +1188,8 @@ class _YTPlayerInnerPage extends StatelessWidget {
                           child: LayoutWidthProvider(
                             builder: (context, maxWidth) {
                               final partThumbMaxWidth = maxWidth * 0.15;
-                              final partTextMaxWidth = maxWidth * 0.65 - (partThumbMaxWidth / 2);
-                              final partButtonMaxWidth = maxWidth * 0.35 - (partThumbMaxWidth / 2);
+                              final partTextMaxWidth = maxWidth * 0.62 - (partThumbMaxWidth / 2);
+                              final partButtonMaxWidth = maxWidth * 0.38 - (partThumbMaxWidth / 2);
 
                               final channelThumbSize = 42.0.withMaximum(partThumbMaxWidth);
                               return Row(

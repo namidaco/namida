@@ -82,22 +82,22 @@ class SearchBarAnimation extends StatefulWidget {
   final TextStyle? enteredTextStyle;
 
   /// OnSaved function for the textFormField, In order to use this user must wrap this widget into 'Form' widget.
-  final Function? onSaved;
+  final Function(String? value)? onSaved;
 
   /// OnChanged function for the textFormField.
-  final Function? onChanged;
+  final void Function(String value)? onChanged;
 
   /// onFieldSubmitted function for the textFormField.
-  final Function? onFieldSubmitted;
+  final void Function(String value)? onFieldSubmitted;
 
   /// onFieldSubmitted function for the textFormField.
-  final Function? onEditingComplete;
+  final void Function()? onEditingComplete;
 
   /// onExpansionComplete functions can be used to perform something just after searchbox is opened.
-  final Function? onExpansionComplete;
+  final void Function()? onExpansionComplete;
 
   /// onCollapseComplete functions can be used to perform something just after searchbox is closed.
-  final Function? onCollapseComplete;
+  final void Function()? onCollapseComplete;
 
   /// onPressButton function can be used to handle open/close searchbar button taps.
   /// it may be used for animation start handling
@@ -458,22 +458,18 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                 setState(() {
                   switcher = true;
                 });
-                (widget.onFieldSubmitted != null) ? widget.onFieldSubmitted!(value) : debugPrint('onFieldSubmitted Not Used');
+                widget.onFieldSubmitted?.call(value);
               },
               onEditingComplete: () {
                 unFocusKeyboard();
                 setState(() {
                   switcher = false;
                 });
-                (widget.onEditingComplete != null) ? widget.onEditingComplete?.call() : debugPrint('onEditingComplete Not Used');
+                widget.onEditingComplete?.call();
               },
               keyboardType: widget.textInputType,
-              onChanged: (var value) {
-                (widget.onChanged != null) ? widget.onChanged?.call(value) : debugPrint('onChanged Not Used');
-              },
-              onSaved: (var value) {
-                (widget.onSaved != null) ? widget.onSaved?.call(value) : debugPrint('onSaved Not Used');
-              },
+              onChanged: widget.onChanged,
+              onSaved: widget.onSaved,
               style: widget.enteredTextStyle ?? const TextStyle(color: _SBColor.black),
               cursorColor: widget.cursorColour,
               textAlign: widget.textAlignToRight ? TextAlign.right : TextAlign.left,

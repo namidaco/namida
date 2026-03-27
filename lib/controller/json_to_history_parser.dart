@@ -84,9 +84,9 @@ class JsonToHistoryParser {
           },
         ),
         actions: [
-          TextButton(
-            child: NamidaButtonText(lang.confirm),
-            onPressed: () {
+          NamidaTextButton(
+            text: lang.confirm,
+            onTap: () {
               _hideParsingDialog();
               NamidaNavigator.inst.closeDialog();
             },
@@ -185,9 +185,8 @@ class JsonToHistoryParser {
           bodyText: confirmMessage,
           actions: [
             const CancelButton(),
-            const SizedBox(width: 6.0),
             NamidaButton(
-              onPressed: () async {
+              onTap: () async {
                 await onConfirm();
                 NamidaNavigator.inst.closeDialog();
               },

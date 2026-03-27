@@ -240,28 +240,22 @@ class _YTUtilsCommentActions {
         normalTitleStyle: true,
         title: "${lang.delete}: $title?",
         actions: [
-          const CancelButton(),
+          CancelButtonDisabled(
+            disabledRx: isDoingStuff,
+          ),
           ObxO(
             rx: isDoingStuff,
-            builder: (context, doing) => AnimatedEnabled(
+            builder: (context, doing) => NamidaButton(
               enabled: !doing,
-              child: NamidaButton(
-                text: lang.delete.toUpperCase(),
-                textWidget: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (doing) const LoadingIndicator(),
-                    if (doing) const SizedBox(width: 4.0),
-                    NamidaButtonText(lang.delete.toUpperCase()),
-                  ],
-                ),
-                onPressed: () async {
-                  isDoingStuff.value = true;
-                  res = await onConfirm!();
-                  isDoingStuff.value = false;
-                  NamidaNavigator.inst.closeDialog();
-                },
-              ),
+              isLoading: doing,
+              colorScheme: Colors.red,
+              text: lang.delete.toUpperCase(),
+              onTap: () async {
+                isDoingStuff.value = true;
+                res = await onConfirm!();
+                isDoingStuff.value = false;
+                NamidaNavigator.inst.closeDialog();
+              },
             ),
           ),
         ],

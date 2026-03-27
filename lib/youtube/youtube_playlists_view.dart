@@ -101,10 +101,10 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
           bodyText: "${lang.removeFromPlaylist} ${playlist.name.translatePlaylistName().addDQuotation()}?",
           actions: [
             const CancelButton(),
-            const SizedBox(width: 6.0),
             NamidaButton(
+              colorScheme: Colors.red,
               text: lang.remove.toUpperCase(),
-              onPressed: () {
+              onTap: () {
                 NamidaNavigator.inst.closeDialog();
                 YoutubePlaylistController.inst.removeTracksFromPlaylist(playlist, indexes);
               },
@@ -126,9 +126,9 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
       await YoutubePlaylistController.inst.waitForPlaylistsLoad;
       YoutubePlaylistController.inst.ensureCustomOrderValid(removeNonExistent: true);
 
-      if (settings.ytPlaylistSort.value != GroupSortType.custom) {
+      if (settings.ytPlaylistSort.value != GroupSortType.custom || settings.ytPlaylistSortReversed.value) {
         // -- for consistent order while enabling/disabling
-        settings.save(ytPlaylistSort: GroupSortType.custom);
+        settings.save(ytPlaylistSort: GroupSortType.custom, ytPlaylistSortReversed: false);
         YoutubePlaylistController.inst.sortPlaylists();
       }
     }
@@ -356,7 +356,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                   'Importing takeout playlists works by picking a single playlists directory, or a main directory that contains multiple takeouts, in that case playlists will be merged and video-sorted by date added',
                               actions: [
                                 NamidaButton(
-                                  onPressed: () async {
+                                  onTap: () async {
                                     NamidaNavigator.inst.closeDialog();
 
                                     final dirPath = await NamidaFileBrowser.getDirectory(note: 'choose playlist directory from a google takeout');

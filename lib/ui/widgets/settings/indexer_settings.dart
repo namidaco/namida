@@ -332,21 +332,16 @@ class IndexerSettings extends SettingSubpageProvider {
             normalTitleStyle: true,
             title: lang.configure,
             actions: [
-              ObxO(
-                rx: isAuthenticatingRx,
-                builder: (context, isAuthenticating) => AnimatedEnabled(
-                  enabled: !isAuthenticating,
-                  child: const CancelButton(),
-                ),
+              CancelButtonDisabled(
+                disabledRx: isAuthenticatingRx,
               ),
               ObxO(
                 rx: isAuthenticatingRx,
-                builder: (context, isAuthenticating) => AnimatedEnabled(
+                builder: (context, isAuthenticating) => NamidaButton(
+                  text: lang.add,
+                  onTap: authenticate,
                   enabled: !isAuthenticating,
-                  child: NamidaButton(
-                    text: lang.add,
-                    onPressed: authenticate,
-                  ),
+                  isLoading: isAuthenticating,
                 ),
               ),
             ],
@@ -586,7 +581,7 @@ class IndexerSettings extends SettingSubpageProvider {
         normalTitleStyle: true,
         title: lang.choose,
         actions: const [
-          CancelButton(),
+          CancelButton(addMargin: false),
         ],
         child: Column(
           children: types.map(
@@ -673,7 +668,7 @@ class IndexerSettings extends SettingSubpageProvider {
           const CancelButton(),
           NamidaButton(
             text: lang.clear,
-            onPressed: () async {
+            onTap: () async {
               NamidaNavigator.inst.closeDialog();
               await Indexer.inst.clearImageCache();
             },
@@ -807,7 +802,7 @@ class IndexerSettings extends SettingSubpageProvider {
                 NamidaButton(
                   icon: Broken.folder_add,
                   text: lang.add,
-                  onPressed: () {
+                  onTap: () {
                     _promptAddFolderType((dirsPath) {
                       settings.save(directoriesToScan: dirsPath);
                     });
@@ -867,8 +862,9 @@ class IndexerSettings extends SettingSubpageProvider {
                               },
                             ),
                           ),
-                        TextButton(
-                          onPressed: () {
+                        NamidaTextButton(
+                          minHeight: NamidaTextButton.kDefaultMinHeight * 0.8,
+                          onTap: () {
                             if (settings.directoriesToScan.length == 1) {
                               snackyy(
                                 title: lang.minimumOneItem,
@@ -889,7 +885,7 @@ class IndexerSettings extends SettingSubpageProvider {
                                     const CancelButton(),
                                     NamidaButton(
                                       text: lang.remove,
-                                      onPressed: () {
+                                      onTap: () {
                                         settings.removeFromList(directoriesToScan1: e);
                                         if (isServer) MusicWebServerAuthDetails.manager.deleteFromDb(e);
                                         NamidaNavigator.inst.closeDialog();
@@ -902,10 +898,8 @@ class IndexerSettings extends SettingSubpageProvider {
                               );
                             }
                           },
-                          child: NamidaButtonText(
-                            lang.remove.toUpperCase(),
-                            style: const TextStyle(fontSize: 14.0),
-                          ),
+                          text: lang.remove.toUpperCase(),
+                          fontSize: 14.0,
                         ),
                       ],
                     ),
@@ -943,7 +937,7 @@ class IndexerSettings extends SettingSubpageProvider {
               NamidaButton(
                 icon: Broken.folder_add,
                 text: lang.add,
-                onPressed: () {
+                onTap: () {
                   _pickLocalFolder((dirsPath) {
                     settings.save(directoriesToExclude: dirsPath);
                   });
@@ -966,15 +960,14 @@ class IndexerSettings extends SettingSubpageProvider {
                     (e) => CustomListTile(
                       title: e.toSourceInfo(),
                       subtitle: e.username,
-                      trailingRaw: TextButton(
-                        onPressed: () {
+                      trailingRaw: NamidaTextButton(
+                        minHeight: NamidaTextButton.kDefaultMinHeight * 0.8,
+                        onTap: () {
                           settings.removeFromList(directoriesToExclude1: e);
                           _maybeShowRefreshPromptDialog(true);
                         },
-                        child: NamidaButtonText(
-                          lang.remove.toUpperCase(),
-                          style: const TextStyle(fontSize: 14.0),
-                        ),
+                        text: lang.remove.toUpperCase(),
+                        fontSize: 14.0,
                       ),
                     ),
                   ),
@@ -993,10 +986,9 @@ class IndexerSettings extends SettingSubpageProvider {
         title: title,
         actions: [
           const CancelButton(),
-          const SizedBox(width: 8.0),
           NamidaButton(
             text: [lang.clear, lang.reIndex].join(' & '),
-            onPressed: () async {
+            onTap: () async {
               NamidaNavigator.inst.closeDialog();
               await Indexer.inst.clearImageCache();
               await Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
@@ -1148,7 +1140,6 @@ class IndexerSettings extends SettingSubpageProvider {
                       title: lang.albumIdentifiers,
                       actions: [
                         const CancelButton(),
-                        const SizedBox(width: 8.0),
                         Obx(
                           (context) {
                             return NamidaButton(
@@ -1156,7 +1147,7 @@ class IndexerSettings extends SettingSubpageProvider {
                                   settings.albumIdentifiers.valueR.any((element) => !tempList.contains(element)) ||
                                   tempList.valueR.any((element) => !settings.albumIdentifiers.contains(element)), // isEqualTo wont work cuz order shouldnt matter
                               text: lang.save,
-                              onPressed: () async {
+                              onTap: () async {
                                 NamidaNavigator.inst.closeDialog();
                                 settings.removeFromList(albumIdentifiersAll: AlbumIdentifier.values);
                                 settings.save(albumIdentifiers: tempList.value);
@@ -1348,7 +1339,7 @@ class IndexerSettings extends SettingSubpageProvider {
                       const CancelButton(),
                       NamidaButton(
                         text: lang.reIndex,
-                        onPressed: () async {
+                        onTap: () async {
                           NamidaNavigator.inst.closeDialog();
                           Future.delayed(const Duration(milliseconds: 500), () async {
                             if (clearArtworks.value) {
@@ -1482,27 +1473,29 @@ class IndexerSettings extends SettingSubpageProvider {
         },
         leftAction: isBlackListDialog
             ? null
-            : NamidaButton(
-                textWidget: Obx((context) {
+            : Obx(
+                (context) {
                   final blLength = trackArtistsSeparators ? settings.trackArtistsSeparatorsBlacklist.length : settings.trackGenresSeparatorsBlacklist.length;
                   final t = blLength == 0 ? '' : ' ($blLength)';
-                  return Text('${lang.blacklist}$t');
-                }),
-                onPressed: () {
-                  if (trackArtistsSeparators) {
-                    _showSeparatorSymbolsDialog(
-                      lang.blacklist,
-                      settings.trackArtistsSeparatorsBlacklist,
-                      trackArtistsSeparatorsBlacklist: true,
-                    );
-                  }
-                  if (trackGenresSeparators) {
-                    _showSeparatorSymbolsDialog(
-                      lang.blacklist,
-                      settings.trackGenresSeparatorsBlacklist,
-                      trackGenresSeparatorsBlacklist: true,
-                    );
-                  }
+                  return NamidaButton(
+                    text: '${lang.blacklist}$t',
+                    onTap: () {
+                      if (trackArtistsSeparators) {
+                        _showSeparatorSymbolsDialog(
+                          lang.blacklist,
+                          settings.trackArtistsSeparatorsBlacklist,
+                          trackArtistsSeparatorsBlacklist: true,
+                        );
+                      }
+                      if (trackGenresSeparators) {
+                        _showSeparatorSymbolsDialog(
+                          lang.blacklist,
+                          settings.trackGenresSeparatorsBlacklist,
+                          trackGenresSeparatorsBlacklist: true,
+                        );
+                      }
+                    },
+                  );
                 },
               ),
       ),
@@ -1615,25 +1608,34 @@ class _ChipsEditorDialog extends StatelessWidget {
     return CustomBlurryDialog(
       title: title,
       actions: [
-        ?leftAction,
-        if (displayDone)
-          TextButton(
-            onPressed: NamidaNavigator.inst.closeDialog,
-            child: NamidaButtonText(lang.done),
+        if (leftAction != null) ...[
+          Padding(
+            padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0),
+            child: leftAction!,
           ),
+        ],
+        if (displayDone) ...[
+          Padding(
+            padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0),
+            child: NamidaTextButton(
+              onTap: NamidaNavigator.inst.closeDialog,
+              text: lang.done,
+            ),
+          ),
+        ],
         if (isLoadingRx != null)
           Obx(
             (context) => isLoadingRx!.valueR
                 ? const LoadingIndicator()
                 : NamidaButton(
                     text: lang.add,
-                    onPressed: () => onAdd(controller.text),
+                    onTap: () => onAdd(controller.text),
                   ),
           )
         else
           NamidaButton(
             text: lang.add,
-            onPressed: () => onAdd(controller.text),
+            onTap: () => onAdd(controller.text),
           ),
       ],
       child: Column(
@@ -1835,7 +1837,7 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder, {bool allowBypassing 
             const CancelButton(),
             NamidaButton(
               text: lang.refresh,
-              onPressed: () async {
+              onTap: () async {
                 NamidaNavigator.inst.closeDialog();
                 await Future.delayed(const Duration(milliseconds: 300));
                 VideoController.inst.rescanLocalVideosPaths();

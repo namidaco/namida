@@ -167,7 +167,7 @@ class NamidaDrawer extends StatelessWidget {
                   ? NamidaButton(
                       icon: Broken.timer_pause,
                       text: lang.stop,
-                      onPressed: () {
+                      onTap: () {
                         Player.inst.resetSleepAfterTimer();
                         NamidaNavigator.inst.closeDialog();
                       },
@@ -175,7 +175,7 @@ class NamidaDrawer extends StatelessWidget {
                   : NamidaButton(
                       icon: Broken.timer_start,
                       text: lang.start,
-                      onPressed: () {
+                      onTap: () {
                         if (minutes.value > 0 || tracks.value > 0) {
                           Player.inst.updateSleepTimerValues(
                             enableSleepAfterMins: minutes.value > 0,

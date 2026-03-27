@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+
 import 'package:youtipie/class/videos/video_result.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
@@ -43,8 +45,9 @@ class YtVideoLikeManager {
         actions: [
           const CancelButton(),
           NamidaButton(
+            colorScheme: Colors.red,
             text: action.toUpperCase(),
-            onPressed: () async {
+            onTap: () async {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
             },

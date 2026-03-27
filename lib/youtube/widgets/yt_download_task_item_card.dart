@@ -222,23 +222,20 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
         actions: [
           if (deleteButton) ...[
             NamidaButton(
+              colorScheme: Colors.red,
               text: lang.delete.toUpperCase(),
-              style: ButtonStyle(
-                foregroundColor: WidgetStatePropertyAll(Colors.red),
-              ),
-              onPressed: () {
+              onTap: () {
                 confirmed = true;
                 delete = true;
                 NamidaNavigator.inst.closeDialog();
               },
             ),
-            const SizedBox(width: 4.0),
           ],
           const CancelButton(),
-          const SizedBox(width: 4.0),
           NamidaButton(
+            colorScheme: Colors.red,
             text: (confirmMessage != '' ? confirmMessage : operationTitle).toUpperCase(),
-            onPressed: () {
+            onTap: () {
               confirmed = true;
               NamidaNavigator.inst.closeDialog();
             },

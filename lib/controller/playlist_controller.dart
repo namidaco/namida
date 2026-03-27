@@ -563,13 +563,12 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       dialog: CustomBlurryDialog(
         actions: [
           const CancelButton(),
-          const SizedBox(width: 8.0),
           ObxO(
             rx: didRead,
             builder: (context, didRead) => NamidaButton(
               enabled: didRead,
               text: lang.confirm,
-              onPressed: () {
+              onTap: () {
                 settings.save(enableM3USync: true);
                 NamidaNavigator.inst.closeDialog();
               },

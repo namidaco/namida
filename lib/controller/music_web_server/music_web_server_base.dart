@@ -376,7 +376,7 @@ class _MusicWebServerAuthManager {
           const CancelButton(),
           NamidaButton(
             text: lang.update.toUpperCase(),
-            onPressed: () {
+            onTap: () {
               NamidaNavigator.inst.closeDialog();
               SettingsSearchController.inst
                   .onResultTap(

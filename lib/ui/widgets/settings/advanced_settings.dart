@@ -340,7 +340,7 @@ class AdvancedSettings extends SettingSubpageProvider {
             builder: (context, isRemoving) => NamidaButton(
               enabled: !isRemoving,
               text: lang.remove,
-              onPressed: () async {
+              onTap: () async {
                 isRemovingRx.value = true;
                 final removedNum = await manager.removeSourcesTracksFromHistory(
                   sourcesToDelete.value,
@@ -758,8 +758,9 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
                   (context) {
                     final total = dirsChoosen.valueR.fold(0, (p, element) => p + (dirsMap[element] ?? 0));
                     return NamidaButton(
+                      colorScheme: Colors.red,
                       text: "${lang.clear.toUpperCase()} (${total.fileSizeFormatted})",
-                      onPressed: () async {
+                      onTap: () async {
                         NamidaNavigator.inst.closeDialog();
 
                         for (final d in dirsChoosen.value) {
@@ -960,50 +961,49 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
                 const CancelButton(),
                 ObxO(
                   rx: isUpdating,
-                  builder: (context, updating) => AnimatedEnabled(
+                  builder: (context, updating) => NamidaButton(
                     enabled: !updating,
-                    child: NamidaButton(
-                      text: lang.update,
-                      onPressed: () async {
-                        Future<void> okUpdate() async {
-                          isUpdating.value = true;
-                          await EditDeleteController.inst.updateDirectoryInEveryPartOfNamida(
-                            oldDirController.text,
-                            newDirController.text,
-                            null,
-                            forThesePathsOnly: tracksPaths,
-                            ensureNewFileExists: updateMissingOnly.value,
-                          );
-                          isUpdating.value = false;
-                          NamidaNavigator.inst.closeDialog();
-                        }
+                    isLoading: updating,
+                    text: lang.update,
+                    onTap: () async {
+                      Future<void> okUpdate() async {
+                        isUpdating.value = true;
+                        await EditDeleteController.inst.updateDirectoryInEveryPartOfNamida(
+                          oldDirController.text,
+                          newDirController.text,
+                          null,
+                          forThesePathsOnly: tracksPaths,
+                          ensureNewFileExists: updateMissingOnly.value,
+                        );
+                        isUpdating.value = false;
+                        NamidaNavigator.inst.closeDialog();
+                      }
 
-                        if (formKey.currentState?.validate() ?? false) {
-                          if (tracksPaths != null && await tracksPaths!.anyAsync((element) => File(element).exists())) {
-                            NamidaNavigator.inst.navigateDialog(
-                              colorScheme: colorScheme,
-                              dialogBuilder: (theme) => CustomBlurryDialog(
-                                normalTitleStyle: true,
-                                isWarning: true,
-                                actions: [
-                                  const CancelButton(),
-                                  NamidaButton(
-                                    text: lang.confirm,
-                                    onPressed: () async {
-                                      NamidaNavigator.inst.closeDialog();
-                                      await okUpdate();
-                                    },
-                                  ),
-                                ],
-                                bodyText: lang.oldDirectoryStillHasTracks,
-                              ),
-                            );
-                          } else {
-                            await okUpdate();
-                          }
+                      if (formKey.currentState?.validate() ?? false) {
+                        if (tracksPaths != null && await tracksPaths!.anyAsync((element) => File(element).exists())) {
+                          NamidaNavigator.inst.navigateDialog(
+                            colorScheme: colorScheme,
+                            dialogBuilder: (theme) => CustomBlurryDialog(
+                              normalTitleStyle: true,
+                              isWarning: true,
+                              actions: [
+                                const CancelButton(),
+                                NamidaButton(
+                                  text: lang.confirm,
+                                  onTap: () async {
+                                    NamidaNavigator.inst.closeDialog();
+                                    await okUpdate();
+                                  },
+                                ),
+                              ],
+                              bodyText: lang.oldDirectoryStillHasTracks,
+                            ),
+                          );
+                        } else {
+                          await okUpdate();
                         }
-                      },
-                    ),
+                      }
+                    },
                   ),
                 ),
               ],
@@ -1140,7 +1140,7 @@ class _CompressImagesListTile extends StatelessWidget {
           const CancelButton(),
           NamidaButton(
             text: lang.compress,
-            onPressed: () {
+            onTap: () {
               NamidaNavigator.inst.closeDialog();
               _startCompressing(dirsToCompress.value, compPerc.value, keepOriginalFileDates.value);
             },

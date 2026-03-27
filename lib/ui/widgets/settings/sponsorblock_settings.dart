@@ -153,7 +153,7 @@ class SponsorBlockSettingsPage extends StatelessWidget with NamidaRouteWidget {
                       const CancelButton(),
                       NamidaButton(
                         text: lang.save,
-                        onPressed: () {
+                        onTap: () {
                           final newConfigs = _currentConfigValue.copyWith(serverAddress: controller.text);
                           settings.youtube.save(sponsorBlockSettings: newConfigs);
                           NamidaNavigator.inst.closeDialog();

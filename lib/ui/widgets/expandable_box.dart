@@ -259,16 +259,18 @@ class SortByMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        TextButton(
-          style: const ButtonStyle(
-            visualDensity: VisualDensity.compact,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: NamidaTextButton(
+            minHeight: kExpandableBoxHeight * 0.5,
+            onTap:
+                onSortTap ??
+                () => NamidaPopupWrapper(
+                  children: () => popupMenuChild?.children(context) ?? [],
+                ).showPopupMenu(context),
+            text: title,
+            fontSize: 14.5,
           ),
-          onPressed:
-              onSortTap ??
-              () => NamidaPopupWrapper(
-                children: () => popupMenuChild?.children(context) ?? [],
-              ).showPopupMenu(context),
-          child: NamidaButtonText(title, style: const TextStyle(fontSize: 14.5)),
         ),
         NamidaIconButton(
           horizontalPadding: 0.0,

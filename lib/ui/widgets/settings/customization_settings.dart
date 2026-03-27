@@ -278,9 +278,11 @@ class CustomizationSettings extends SettingSubpageProvider {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 ...kDefaultDateTimeStrings.entries.map(
-                                  (e) => SmallListTile(
+                                  (e) => CustomListTile(
+                                    extraDense: true,
                                     title: e.value,
-                                    active: settings.dateTimeFormat.value == e.key,
+                                    subtitle: e.key,
+                                    icon: settings.dateTimeFormat.value == e.key ? Broken.arrow_circle_right : Broken.arrow_right_3,
                                     onTap: () {
                                       settings.save(dateTimeFormat: e.key);
                                       TrackTileManager.onTrackItemPropChange();
@@ -499,7 +501,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                           const CancelButton(),
                           NamidaButton(
                             text: lang.confirm,
-                            onPressed: () {
+                            onTap: () {
                               settings.save(albumThumbnailSizeinList: settings.albumListTileHeight.value);
                               NamidaNavigator.inst.closeDialog();
                             },
@@ -643,7 +645,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                           const CancelButton(),
                           NamidaButton(
                             text: lang.confirm,
-                            onPressed: () {
+                            onTap: () {
                               settings.save(trackThumbnailSizeinList: settings.trackListTileHeight.value);
                               NamidaNavigator.inst.closeDialog();
                             },

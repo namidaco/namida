@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -40,7 +40,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
       ),
       leftAction: Obx(
         (context) => Text(
-          lang.playlists.length.displayPlaylistKeyword,
+          lang.countPlaylists(count: PlaylistController.inst.playlistsMap.length),
           style: namida.theme.textTheme.displayMedium,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,

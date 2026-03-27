@@ -274,7 +274,7 @@ Future<void> showVideoDownloadOptionsSheet({
                   flex: 5,
                   child: NamidaButton(
                     text: lang.done,
-                    onPressed: Navigator.of(context).pop,
+                    onTap: Navigator.of(context).pop,
                   ),
                 ),
               ],
@@ -384,10 +384,9 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
           title: lang.addFolder,
           actions: [
             const CancelButton(),
-            const SizedBox(width: 6.0),
             NamidaButton(
               text: lang.add,
-              onPressed: () {
+              onTap: () {
                 if (fk.currentState?.validate() == true) {
                   onFolderAdd(c.text);
                   NamidaNavigator.inst.closeDialog();

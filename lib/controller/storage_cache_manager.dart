@@ -116,15 +116,16 @@ class StorageCacheManager {
           /// Pressing Choose
           NamidaButton(
             text: lang.choose,
-            onPressed: () {
+            onTap: () {
               NamidaNavigator.inst.closeDialog();
               onChoosePrompt();
             },
           ),
           const CancelButton(),
           NamidaButton(
+            colorScheme: Colors.red,
             text: lang.delete.toUpperCase(),
-            onPressed: () async {
+            onTap: () async {
               NamidaNavigator.inst.closeDialog();
               await onDeleteEVERYTHING();
             },
@@ -284,9 +285,10 @@ class StorageCacheManager {
           /// Clear after choosing
           Obx(
             (context) => NamidaButton(
+              colorScheme: Colors.red,
               enabled: itemsToDeleteSize.valueR > 0 || itemsToDelete.valueR.isNotEmpty,
               text: "${lang.delete.toUpperCase()} (${itemsToDeleteSize.valueR.fileSizeFormatted})",
-              onPressed: () async {
+              onTap: () async {
                 final hasTemp = deleteTempFiles.value && tempFilesSizeFinal.value > 0;
                 final finalItemsToDeleteOnlySize = itemsToDeleteSize.value - (hasTemp ? tempFilesSizeFinal.value : 0);
                 final firstLine = itemsToDelete.value.isNotEmpty || finalItemsToDeleteOnlySize > 0 ? confirmDialogText(itemsToDelete.value.length, finalItemsToDeleteOnlySize) : '';
@@ -300,8 +302,9 @@ class StorageCacheManager {
 
                       /// final clear confirm
                       NamidaButton(
+                        colorScheme: Colors.red,
                         text: lang.delete.toUpperCase(),
-                        onPressed: () async {
+                        onTap: () async {
                           NamidaNavigator.inst.closeDialog(2);
                           onDeleteFiles(itemsToDelete.value);
                           if (hasTemp) onDeleteTempFiles();

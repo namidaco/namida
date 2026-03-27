@@ -845,6 +845,7 @@ final List<String> kStockVideoQualities = [
 /// Default values available for setting the Date Time Format.
 const kDefaultDateTimeStrings = {
   'yyyyMMdd': '20220413',
+  'MMM yyyy': 'Apr 2022',
   'dd/MM/yyyy': '13/04/2022',
   'MM/dd/yyyy': '04/13/2022',
   'yyyy/MM/dd': '2022/04/13',

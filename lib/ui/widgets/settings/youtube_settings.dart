@@ -104,7 +104,7 @@ class YoutubeSettings extends SettingSubpageProvider {
         actions: [
           NamidaButton(
             text: lang.done,
-            onPressed: NamidaNavigator.inst.closeDialog,
+            onTap: NamidaNavigator.inst.closeDialog,
           ),
         ],
         child: const _YTFlagsOptions(),
@@ -758,7 +758,7 @@ class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
                   actions: [
                     NamidaButton(
                       text: lang.done,
-                      onPressed: NamidaNavigator.inst.closeDialog,
+                      onTap: NamidaNavigator.inst.closeDialog,
                     ),
                   ],
                   child: ObxO(
@@ -1046,7 +1046,7 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                         const CancelButton(),
                         NamidaButton(
                           text: lang.confirm.toUpperCase(),
-                          onPressed: () async {
+                          onTap: () async {
                             await NamidaNavigator.inst.closeDialog(2);
                             final totalAndActual = await JsonToHistoryParser.inst.copyYTHistoryContentToLocalHistory(matchAll: true);
                             final total = totalAndActual.$1;
@@ -1122,7 +1122,7 @@ class _MaxPageCacheDurationDialogState extends State<_MaxPageCacheDurationDialog
         const CancelButton(),
         NamidaButton(
           text: lang.save,
-          onPressed: () {
+          onTap: () {
             final minutesTotal = daysRx.value > _MaxPageCacheDurationDialogState.maxDays
                 ? settings.youtube.kMinutesInMaxDaysForPageCache + 1
                 : minutesRx.value < 0

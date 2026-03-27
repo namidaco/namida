@@ -1273,6 +1273,7 @@ class _MixesCardState extends State<_MixesCard> {
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 18.0),
                   sliver: SliverFillRemaining(
+                    fillOverscroll: true,
                     child: Container(
                       clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(

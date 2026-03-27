@@ -1,6 +1,9 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+
+import 'package:namida/core/extensions.dart';
 
 class AnimatedDecoration extends ImplicitlyAnimatedWidget {
   final Widget? child;
@@ -163,4 +166,111 @@ class __AnimatedColorState extends AnimatedWidgetBaseState<AnimatedColor> {
       child: widget.child,
     );
   }
+}
+
+class AnimatedRotatingBorder extends StatefulWidget {
+  final Widget child;
+  final bool isLoading;
+  final List<Color> colors;
+  final double borderWidth;
+  final double borderRadius;
+  final Duration duration;
+
+  const AnimatedRotatingBorder({
+    super.key,
+    required this.child,
+    required this.isLoading,
+    required this.colors,
+    this.borderWidth = 2.0,
+    this.borderRadius = 12.0,
+    this.duration = const Duration(milliseconds: 1500),
+  });
+
+  @override
+  State<AnimatedRotatingBorder> createState() => _AnimatedRotatingBorderState();
+}
+
+class _AnimatedRotatingBorderState extends State<AnimatedRotatingBorder> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    if (widget.isLoading) _controller.repeat();
+  }
+
+  @override
+  void didUpdateWidget(AnimatedRotatingBorder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isLoading && !_controller.isAnimating) {
+      _controller.repeat();
+    } else if (!widget.isLoading) {
+      _controller.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.isLoading) return widget.child;
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) => CustomPaint(
+        painter: _AnimatedRotatingBorderPainter(
+          progress: _controller.value,
+          colors: widget.colors,
+          borderWidth: widget.borderWidth,
+          borderRadius: widget.borderRadius,
+        ),
+        child: child,
+      ),
+      child: widget.child,
+    );
+  }
+}
+
+class _AnimatedRotatingBorderPainter extends CustomPainter {
+  final double progress;
+  final List<Color> colors;
+  final double borderWidth;
+  final double borderRadius;
+
+  _AnimatedRotatingBorderPainter({
+    required this.progress,
+    required this.colors,
+    required this.borderWidth,
+    required this.borderRadius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderWidth
+      ..shader = SweepGradient(
+        startAngle: 0,
+        endAngle: 2 * math.pi,
+        transform: GradientRotation(2 * math.pi * progress),
+        colors: [
+          colors.first.withOpacityExt(0.0),
+          ...colors,
+          colors.last.withOpacityExt(0.0),
+        ],
+      ).createShader(rect);
+
+    canvas.drawRRect(rrect, paint);
+  }
+
+  @override
+  @override
+  bool shouldRepaint(_AnimatedRotatingBorderPainter oldDelegate) => oldDelegate.progress != progress || oldDelegate.colors != colors;
 }

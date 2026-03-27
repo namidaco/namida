@@ -24,7 +24,6 @@ class YoutubeUserChannelsPage extends StatelessWidget with NamidaRouteWidget {
   Widget build(BuildContext context) {
     const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
     const thumbnailWidth = thumbnailHeight;
-    const thumbnailItemExtent = thumbnailWidth + 8.0 * 2;
     return YoutubeMainPageFetcherAccBase<YoutiPieUserChannelsResult, YoutiPieChannelInfo>(
       operation: YoutiPieOperation.fetchUserChannels,
       transparentShimmer: true,
@@ -39,7 +38,7 @@ class YoutubeUserChannelsPage extends StatelessWidget with NamidaRouteWidget {
       isSortable: true,
       cacheReader: YoutiPie.cacheBuilder.forUserChannels(),
       networkFetcher: (details) => YoutubeInfoController.userchannel.fetchUserChannels(details: details),
-      itemExtent: thumbnailItemExtent,
+      itemExtent: null,
       dummyCard: const _ReactiveChannelCard(
         channel: null,
         thumbnailSize: thumbnailWidth,

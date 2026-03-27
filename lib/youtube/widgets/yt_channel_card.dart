@@ -43,7 +43,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
     final textTheme = theme.textTheme;
     final channel = widget.channel;
     final thumbnailSize = widget.thumbnailSize;
-    const verticalPadding = 8.0;
+    // const verticalPadding = 8.0;
     final shimmerEnabled = channel == null;
     final subscribersCount = channel?.subscribersCount;
     final avatarUrl = channel?.thumbnails.pick()?.url;
@@ -99,7 +99,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
         final chid = channel?.id;
         if (chid != null) YTChannelSubpage(channelID: chid, channel: channel).navigate();
       },
-      height: thumbnailSize + verticalPadding,
+      // height: thumbnailSize + verticalPadding,
       child: mininmalCard
           ? Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 6.0),
