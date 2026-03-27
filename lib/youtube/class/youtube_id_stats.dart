@@ -9,6 +9,7 @@ class YoutubeIDStats extends PlayableItemStats {
     required super.tags,
     required super.moods,
     required super.lastPositionInMs,
+    required super.audioTrackId,
   });
 
   factory YoutubeIDStats.fromJson(Map<String, dynamic> json) {
@@ -23,6 +24,7 @@ class YoutubeIDStats extends PlayableItemStats {
       tags: stats.tags,
       moods: stats.moods,
       lastPositionInMs: stats.lastPositionInMs,
+      audioTrackId: stats.audioTrackId,
     );
   }
 

@@ -37,7 +37,6 @@ import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
-import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
@@ -258,17 +257,20 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           showSetYTLinkCommentDialog(tr, CurrentColor.inst.miniplayerColor, autoOpenSearch: true);
         },
         onOpen: (currentItem) {
-          if (settings.enableVideoPlayback.value) return true;
+          return true; // -- now we can change audio track
 
-          NamidaNavigator.inst.navigateDialog(
-            dialog: Dialog(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
-                child: PlaybackSettings(isInDialog: true),
-              ),
-            ),
-          );
-          return false;
+          // -- shows playback settings dialog
+          // if (settings.enableVideoPlayback.value) return true;
+
+          // NamidaNavigator.inst.navigateDialog(
+          //   dialog: Dialog(
+          //     child: ConstrainedBox(
+          //       constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
+          //       child: PlaybackSettings(isInDialog: true),
+          //     ),
+          //   ),
+          // );
+          // return false;
         },
         onPressed: (currentItem) => VideoController.inst.toggleVideoPlayback(),
         videoIconBuilder: (currentItem, size, color) => Obx(
@@ -637,7 +639,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
                 final audioStream = Player.inst.currentAudioStream.valueR;
                 final formatName = audioStream?.codecInfo.codec;
                 final bitrate = audioStream?.bitrate ?? Player.inst.currentCachedAudio.valueR?.bitrate;
-                final bitrateText = bitrate == null ? null : "${bitrate ~/ 1000} kbps";
+                final bitrateText = bitrate == null ? null : "${bitrate ~/ 1000} kb/s";
                 final sampleRate = audioStream?.codecInfo.embeddedAudioInfo?.audioSampleRate;
                 final sampleRateText = sampleRate == null ? null : "$sampleRate kHz";
                 final language = audioStream?.audioTrack?.langCode ?? Player.inst.currentCachedAudio.valueR?.langaugeCode;

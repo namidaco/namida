@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:media_kit/media_kit.dart';
+import 'package:media_kit/media_kit.dart' as mk;
 import 'package:media_kit_video/media_kit_video.dart';
 
 import 'package:namida/core/extensions.dart';
@@ -40,14 +40,18 @@ class CustomMPVPlayer implements AVPlayer {
         if (p < Duration.zero) p = Duration.zero;
         _position = p;
         _updatePosition();
-      } else {}
+      }
+    });
+
+    _playerAudioTracksStreamSub = _player.stream.tracks.listen((tracks) {
+      _audioTracksStreamController.add(_toAudioTracks(tracks.audio));
     });
   }
 
   ProcessingState _processingState = ProcessingState.idle;
   Duration _position = Duration.zero;
 
-  final _player = Player(configuration: PlayerConfiguration(pitch: true, bufferSize: 128 * 1024 * 1024));
+  final _player = mk.Player(configuration: mk.PlayerConfiguration(pitch: true, bufferSize: 128 * 1024 * 1024));
   VideoController? _videoControllerRaw;
   VideoController get _videoController {
     return _videoControllerRaw ??= _createVideoControllerAndListen();
@@ -70,8 +74,11 @@ class CustomMPVPlayer implements AVPlayer {
   StreamSubscription? _playerCompletedStreamSub;
   StreamSubscription? _playerBufferingStreamSub;
   StreamSubscription? _playerPositionStreamSub;
+  StreamSubscription? _playerAudioTracksStreamSub;
   final _playerProcessingStateStreamController = StreamController<ProcessingState>();
   final _playerPositionStreamController = StreamController<Duration>();
+
+  final _audioTracksStreamController = StreamController<List<AudioTrack>>();
 
   final _videoInfoStreamController = StreamController<_VideoDetails>();
   // _VideoDetails? _videoInfo;
@@ -132,6 +139,9 @@ class CustomMPVPlayer implements AVPlayer {
 
   @override
   Stream<PlaybackEvent> get playbackEventStream => Stream.empty();
+
+  @override
+  Stream<List<AudioTrack>?> get audioTracksStream => _audioTracksStreamController.stream;
 
   @override
   Stream<VideoInfoData> get videoInfoStream => _videoInfoStreamController.stream.map(
@@ -198,22 +208,25 @@ class CustomMPVPlayer implements AVPlayer {
     _audioSource = config.source;
     if (config.keepOldVideoSource == false) _videoOptions = config.videoOptions;
 
-    if (_videoOptions == null) {
+    final videoOptions = _videoOptions;
+    if (videoOptions == null || videoOptions.videoOnly) {
       _player.open(
-        Media(
+        mk.Media(
           config.source.uri.toString(),
           start: config.initialPosition,
         ),
         play: false,
       );
     } else {
-      final mainMedia = Media(
-        (_videoOptions!.source as UriSource).uri.toString(),
+      final mainMedia = mk.Media(
+        config.source.uri.toString(),
         start: config.initialPosition,
       );
-      final audioTrack = AudioTrack.uri(config.source.uri.toString());
-      _player.open(mainMedia, play: false).then((_) {
-        _player.setAudioTrack(audioTrack);
+
+      _player.open(mainMedia, play: false).then((_) async {
+        final videoTrack = mk.VideoTrack(config.source.uri.toString(), null, null);
+        await _setVideoTrack(videoTrack);
+        _audioTracksStreamController.add(_getPlayerCurrentAudioTracksConverted());
       });
     }
 
@@ -222,7 +235,13 @@ class CustomMPVPlayer implements AVPlayer {
       return null;
     }
 
-    final duration = _player.stream.duration.firstWhere((element) => element > Duration.zero);
+    final duration = await _player.stream.duration.firstWhere((element) => element > Duration.zero);
+
+    final audioTrackId = config.audioTrackId;
+    if (audioTrackId != null) {
+      setAudioTrack(audioTrackId);
+    }
+
     return duration;
   }
 
@@ -237,6 +256,7 @@ class CustomMPVPlayer implements AVPlayer {
           index: 0, // -- not used
           videoOptions: video,
           initialPosition: position,
+          audioTrackId: null,
           keepOldVideoSource: false,
         ),
       );
@@ -244,6 +264,86 @@ class CustomMPVPlayer implements AVPlayer {
       _videoOptions = video;
     }
     _videoControllerListener();
+  }
+
+  // modified version of setAudioTrack
+  // source: package:media_kit/src/player/native/player/real.dart
+  Future<void> _setVideoTrack(mk.VideoTrack track, {bool synchronized = true}) {
+    final player = _player.platform as mk.NativePlayer;
+    Future<void> function() async {
+      if (player.disposed) {
+        throw AssertionError('[Player] has been disposed');
+      }
+      await player.waitForPlayerInitialization;
+      await player.waitForVideoControllerInitializationIfAttached;
+
+      await player.command(
+        [
+          'video-add',
+          track.id,
+          'select',
+          track.title ?? 'external',
+          track.language ?? 'auto',
+        ],
+      );
+
+      player.state = player.state.copyWith(
+        track: player.state.track.copyWith(
+          video: track,
+        ),
+      );
+      // ignore: invalid_use_of_protected_member
+      if (!player.trackController.isClosed) {
+        // ignore: invalid_use_of_protected_member
+        player.trackController.add(player.state.track);
+      }
+    }
+
+    if (synchronized) {
+      return lock.synchronized(function);
+    } else {
+      return function();
+    }
+  }
+
+  List<mk.AudioTrack> _getPlayerCurrentAudioTracks() => _player.state.tracks.audio;
+  List<AudioTrack> _getPlayerCurrentAudioTracksConverted() => _toAudioTracks(_getPlayerCurrentAudioTracks());
+  bool _isAudioTrackDummy(mk.AudioTrack track) => track == mk.AudioTrack.auto() || track == mk.AudioTrack.no();
+  List<AudioTrack> _toAudioTracks(List<mk.AudioTrack> tracks) {
+    final audioTracks = <AudioTrack>[];
+    final playerAudioTrack = _player.state.track.audio;
+    for (var i = 0; i < tracks.length; i++) {
+      final track = tracks[i];
+      if (_isAudioTrackDummy(track)) continue;
+      final selected = _isAudioTrackDummy(playerAudioTrack) ? track.isDefault : playerAudioTrack.id == track.id;
+      audioTracks.add(
+        AudioTrack(
+          groupIndex: 0,
+          trackIndex: i,
+          isSelected: selected ?? false,
+          id: track.id,
+          label: track.title,
+          language: track.language,
+          bitrate: track.bitrate,
+          channelCount: track.channelscount,
+          mimeType: track.codec,
+          sampleRate: track.samplerate,
+        ),
+      );
+    }
+    return audioTracks;
+  }
+
+  @override
+  Future<void> setAudioTrack(String? trackId) async {
+    if (trackId == null) {
+      await _player.setAudioTrack(mk.AudioTrack.auto());
+      _audioTracksStreamController.add(_getPlayerCurrentAudioTracksConverted());
+      return;
+    }
+    final track = _getPlayerCurrentAudioTracks().firstWhereEff((t) => t.id == trackId);
+    await _player.setAudioTrack(track ?? mk.AudioTrack.auto());
+    _audioTracksStreamController.add(_getPlayerCurrentAudioTracksConverted());
   }
 
   @override
@@ -284,9 +384,11 @@ class CustomMPVPlayer implements AVPlayer {
       _playerCompletedStreamSub?.cancel(),
       _playerBufferingStreamSub?.cancel(),
       _playerPositionStreamSub?.cancel(),
+      _playerAudioTracksStreamSub?.cancel(),
       _videoInfoStreamController.close(),
       _playerProcessingStateStreamController.close(),
       _playerPositionStreamController.close(),
+      _audioTracksStreamController.close(),
     ].execute();
 
     _videoControllerRaw?.id.removeListener(_videoControllerListener);
@@ -321,7 +423,7 @@ class CustomMPVPlayer implements AVPlayer {
     final currentIndex = pl.state.playlist.index;
     final insertIndex = currentIndex + 1;
 
-    final media = Media(
+    final media = mk.Media(
       config.source.uri.toString(),
       start: config.initialPosition,
     );

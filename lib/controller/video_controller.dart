@@ -395,6 +395,7 @@ class VideoController {
         source: AudioVideoSource.file(v.path),
         loopingAnimation: canLoopVideo(v, track.durationMS),
         isFile: true,
+        videoOnly: track is Video,
       );
     }
   }

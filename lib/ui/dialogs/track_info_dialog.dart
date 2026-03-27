@@ -74,6 +74,7 @@ Future<void> showTrackInfoDialog(
         await track.toAudioSource(0, 0, null),
         index: 0,
         initialPosition: null,
+        audioTrackId: null,
         videoOptions: null,
       ),
     );

@@ -1291,6 +1291,64 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   ),
                                   // ===== Audio Language Chip =====
                                   ObxO(
+                                    rx: Player.inst.audioTracks,
+                                    builder: (context, tracks) {
+                                      if (tracks == null || tracks.length <= 1) return const SizedBox();
+                                      final selectedTrack = tracks.firstWhereEff((e) => e.isSelected);
+
+                                      return NamidaPopupWrapper(
+                                        openOnTap: true,
+                                        onPop: _startTimer,
+                                        onTap: () {
+                                          _resetTimer();
+                                          setControlsVisibily(true);
+                                        },
+                                        children: () => tracks.map(
+                                          (e) {
+                                            final isSelected = e.isSelected;
+                                            final titleRaw = e.displayName;
+                                            final title = [
+                                              titleRaw.capitalizeFirst(),
+                                              if (e.label != titleRaw) e.label?.capitalizeFirst(),
+                                            ].joinText(separator: ' • ');
+                                            final subtitle = e.mimeType?.toUpperCase();
+                                            final thirdLine = [
+                                              if (e.sampleRate != null) '${e.sampleRate! / 1000} kHz',
+                                              if (e.bitrate != null) "${e.bitrate! ~/ 1000} kb/s",
+                                              if (e.channelCount != null && e.channelCount != 2) "${e.channelCount!} ch",
+                                            ].joinText(separator: ' • ');
+
+                                            return _getQualityChip(
+                                              title: title,
+                                              subtitle: subtitle == null || subtitle.isEmpty ? null : ' • $subtitle',
+                                              thirdLine: thirdLine,
+                                              onPlay: (isSelected) => Player.inst.setAudioTrackAndSave(e.id),
+                                              selected: isSelected,
+                                              isCached: true,
+                                            );
+                                          },
+                                        ).toList(),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(4.0),
+                                          child: NamidaBgBlurClipped(
+                                            blur: 3.0,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withOpacityExt(0.2),
+                                              borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                              child: Text(
+                                                selectedTrack?.displayName.capitalizeFirst() ?? '?',
+                                                style: textTheme.displaySmall?.copyWith(color: itemsColor),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  ObxO(
                                     rx: YoutubeInfoController.current.currentYTStreams,
                                     builder: (context, streams) {
                                       final streamsMap = streams?.audioStreamsOrganizedByLanguage;
@@ -1320,7 +1378,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                   final id = Player.inst.currentVideoR?.id;
                                                   return _getQualityChip(
                                                     title: audioTrack?.displayName ?? '?',
-                                                    subtitle: " • ${audioTrack?.langCode ?? 0}",
+                                                    subtitle: " • ${langCode ?? 0}",
                                                     onPlay: (isSelected) {
                                                       if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized == true) {
                                                         Player.inst.onItemPlayYoutubeIDSetAudio(

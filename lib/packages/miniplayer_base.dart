@@ -856,6 +856,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                               allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs,
                             );
 
+                            final audioTracks = Player.inst.audioTracks.valueR;
+
                             final currentVideoConfig = VideoController.inst.currentVideoConfig;
                             return SuperSmoothListView(
                               padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -891,6 +893,44 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                     trailing: currentVideoConfig.isLoadingCurrentYTStreams.valueR ? const LoadingIndicator() : null,
                                     onTap: () => focusedMenuOptions.loadQualities!(currentItem),
                                   ),
+
+                                if (audioTracks != null && audioTracks.length > 1) ...[
+                                  const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
+                                  _MPQualityButton(
+                                    onTap: () => Player.inst.setAudioTrackAndSave(null),
+                                    bgColor: null,
+                                    icon: Broken.audio_square,
+                                    title: lang.auto,
+                                  ),
+                                  ...audioTracks.map(
+                                    (e) {
+                                      final isCurrent = e.isSelected;
+                                      final title = e.displayName;
+                                      return _MPQualityButton(
+                                        onTap: () => Player.inst.setAudioTrackAndSave(e.id),
+                                        bgColor: isCurrent ? CurrentColor.inst.miniplayerColor.withAlpha(20) : null,
+                                        icon: Broken.audio_square,
+                                        title: [
+                                          title.capitalizeFirst(),
+                                          if (e.label != title) e.label?.capitalizeFirst(),
+                                          ?e.mimeType?.toUpperCase(),
+                                        ].joinText(separator: ' • '),
+                                        subtitle: [
+                                          if (e.sampleRate != null) '${e.sampleRate! / 1000} kHz',
+                                          if (e.bitrate != null) "${e.bitrate! ~/ 1000} kb/s",
+                                          if (e.channelCount != null) "${e.channelCount!} ch",
+                                        ].joinText(separator: ' • '),
+                                        trailing: NamidaCheckMark(
+                                          active: isCurrent,
+                                          size: 12.0.size,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+
+                                const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
+
                                 ...availableVideos.map(
                                   (element) {
                                     final localOrCache = element.ytID == null ? lang.local : lang.cache;
@@ -918,7 +958,6 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                     );
                                   },
                                 ),
-                                const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
                                 ...?ytVideos?.map(
                                   (element) {
                                     final currentId = focusedMenuOptions.currentId(currentItem);
@@ -2009,9 +2048,9 @@ class _MPQualityButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
     return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 42.0),
+      constraints: BoxConstraints(minHeight: 36.0.spaceY),
       child: NamidaInkWell(
-        margin: EdgeInsets.symmetric(horizontal: 12.0.spaceX, vertical: 4.0.spaceY),
+        margin: EdgeInsets.symmetric(horizontal: 8.0.spaceX, vertical: 2.0.spaceY),
         padding: EdgeInsets.all(padding),
         onTap: onTap,
         borderRadius: 8.0.br,
@@ -2019,6 +2058,7 @@ class _MPQualityButton extends StatelessWidget {
         bgColor: bgColor,
         child: Row(
           children: [
+            SizedBox(width: 4.0.spaceX),
             Icon(
               icon,
               size: 18.0.size,
@@ -2049,6 +2089,7 @@ class _MPQualityButton extends StatelessWidget {
               trailing!,
               SizedBox(width: 4.0.spaceX),
             ],
+            SizedBox(width: 4.0.spaceX),
           ],
         ),
       ),

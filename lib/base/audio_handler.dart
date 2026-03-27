@@ -193,6 +193,19 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     await YoutubeController.inst.statsManager.updateStats(item, lastPositionInMs: lastPositionMS);
   }
 
+  FutureOr<String?> _getItemAudioTrackId(Q item) async {
+    return item.executeAsync(
+      selectable: (finalItem) {
+        final track = finalItem.track.toTrackExt();
+        return track.stats?.audioTrackId;
+      },
+      youtubeID: (finalItem) async {
+        final stats = await YoutubeController.inst.statsManager.getStats(finalItem);
+        return stats?.audioTrackId;
+      },
+    );
+  }
+
   FutureOr<Duration?> _getItemInitialPosition(Q item, Duration? itemDuration) async {
     final minValueInSetMinutes = settings.player.minTrackDurationToRestoreLastPosInMinutes.value;
 
@@ -626,6 +639,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
                     await finalItem.toAudioSource(0, 1, null, cache: false),
                     index: 0,
                     initialPosition: null,
+                    audioTrackId: null,
                     videoOptions: null,
                   ),
                 );
@@ -764,7 +778,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         : VideoSourceOptions(
             source: AudioVideoSource.file(initialVideo.path),
             loop: VideoController.inst.canLoopVideo(initialVideo, duration.inMilliseconds),
-            videoOnly: false,
+            videoOnly: isVideo,
           );
     return ItemPrepareConfigSelectable(
       await tr.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
@@ -773,6 +787,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       videoOptions: videoOptions,
       index: index,
       initialPosition: await _getItemInitialPosition(pi, duration),
+      audioTrackId: await _getItemAudioTrackId(pi),
       videoUpdateConfig: configToUpdate,
     );
   }
@@ -845,6 +860,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         item: config.item,
         videoOptions: config.videoOptions,
         initialPosition: config.initialPosition,
+        audioTrackId: config.audioTrackId,
         initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
         isVideoFile: true,
       );
@@ -2203,6 +2219,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required Q? item,
     required int index,
     Duration? initialPosition,
+    String? audioTrackId,
     FutureOr<Duration?> Function(Duration duration)? initialPositionFallback,
     VideoSourceOptions? videoOptions,
     bool isVideoFile = false,
@@ -2223,6 +2240,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         item: item,
         index: index,
         initialPosition: initialPosition,
+        audioTrackId: audioTrackId,
         videoOptions: videoOptions,
         keepOldVideoSource: keepOldVideoSource,
       ),
@@ -2261,7 +2279,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final videoOptions = VideoSourceOptions(
       source: source,
       loop: loopingAnimation,
-      videoOnly: false,
+      videoOnly: videoOnly,
     );
     _latestVideoOptions = videoOptions;
     await super.setVideo(videoOptions);
@@ -2583,7 +2601,7 @@ Future<UriSource> _buildTrackNetworkAudioSource({required Track tr}) async {
   if (uriDDLInfo == null) return AudioVideoSource.file('');
 
   if (!uriDDLInfo.allowStreamCaching) {
-    return AudioVideoSource.uri(uriDDLInfo.uri);
+    return AudioVideoSource.uri(uriDDLInfo.uri, headers: uriDDLInfo.headers);
   }
 
   return _buildCacheableAVSource(
@@ -2602,6 +2620,7 @@ class ItemPrepareConfigSelectable<Q, S extends UriSource> extends ItemPrepareCon
     required super.index,
     required super.initialPosition,
     required super.videoOptions,
+    required super.audioTrackId,
     required this.videoUpdateConfig,
     super.item,
     super.itemExists,

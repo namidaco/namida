@@ -231,22 +231,26 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
   }
 
   Widget? _notificationsToIcon(ChannelNotifications? noti, double iconSize) {
+    final colorScheme = context.theme.colorScheme.secondary;
+    final foregroundColor = context.defaultIconColor(colorScheme).withOpacityExt(0.75);
     return switch (noti) {
       ChannelNotifications.all => Icon(
         Broken.notification_bing,
         size: iconSize,
-        color: context.defaultIconColor(),
+        color: foregroundColor,
       ),
       ChannelNotifications.personalized => Icon(
         Broken.notification_1,
         size: iconSize,
-        color: context.defaultIconColor(),
+        color: foregroundColor,
       ),
       ChannelNotifications.none => StackedIcon(
         baseIcon: Broken.notification_1,
         secondaryIcon: Broken.slash,
         iconSize: iconSize,
         secondaryIconSize: 11.0,
+        baseIconColor: foregroundColor,
+        secondaryIconColor: foregroundColor,
       ),
       null => null,
     };

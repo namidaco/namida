@@ -1368,10 +1368,28 @@ class Indexer<T extends Track> {
       tags: tags,
       moods: moods,
       lastPositionInMs: lastPositionInMs,
+      audioTrackId: track.statsRaw?.audioTrackId,
     );
     trackStatsMap[track] = newStats;
     unawaited(_trackStatsDBManager.put(track.path, newStats.toJsonWithoutTrack()));
     return newStats;
+  }
+
+  Future<void> updateTrackAudioTrackId(
+    Track track, {
+    required String? audioTrackId,
+  }) async {
+    final stats = track.statsRaw;
+    final newStats = TrackStats(
+      track: track,
+      rating: stats?.rating ?? 0,
+      tags: stats?.tags,
+      moods: stats?.moods,
+      lastPositionInMs: stats?.lastPositionInMs ?? 0,
+      audioTrackId: audioTrackId,
+    );
+    trackStatsMap[track] = newStats;
+    unawaited(_trackStatsDBManager.put(track.path, newStats.toJsonWithoutTrack()));
   }
 
   Future<void> _readTrackData([Completer<void>? completer]) async {

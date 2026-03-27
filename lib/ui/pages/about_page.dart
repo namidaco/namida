@@ -641,6 +641,7 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
           AudioVideoSource.uri(Uri.parse(randomSample.$1)),
           index: 0,
           initialPosition: randomSample.$2,
+          audioTrackId: null,
           videoOptions: null,
         ),
       );

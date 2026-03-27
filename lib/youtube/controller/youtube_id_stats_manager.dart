@@ -34,8 +34,25 @@ class _YoutubeIDStatsManager {
       tags: tags,
       moods: moods,
       lastPositionInMs: lastPositionInMs,
+      audioTrackId: stats?.audioTrackId,
     );
 
+    return _statsDBManager.put(item.id, newStats.toJsonWithoutVideoId());
+  }
+
+  Future<void> updateAudioTrackId(
+    YoutubeID item, {
+    required String? audioTrackId,
+  }) async {
+    final stats = await getStats(item);
+    final newStats = YoutubeIDStats(
+      videoId: item.id,
+      rating: stats?.rating ?? 0,
+      tags: stats?.tags,
+      moods: stats?.moods,
+      lastPositionInMs: stats?.lastPositionInMs ?? 0,
+      audioTrackId: audioTrackId,
+    );
     return _statsDBManager.put(item.id, newStats.toJsonWithoutVideoId());
   }
 }

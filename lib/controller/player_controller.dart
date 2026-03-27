@@ -16,6 +16,7 @@ import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
@@ -33,6 +34,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
@@ -68,6 +70,7 @@ class Player {
   RxBaseCore<List<Playable>> get currentQueue => _audioHandler.currentQueue.queueRx;
   RxBaseCore<Playable?> get currentItem => _audioHandler.currentItem;
 
+  RxBaseCore<List<AudioTrack>?> get audioTracks => _audioHandler.audioTracks;
   RxBaseCore<VideoInfoData?> get videoPlayerInfo => _audioHandler.videoPlayerInfo;
 
   AndroidEqualizer get equalizer => _audioHandler.equalizer;
@@ -752,6 +755,15 @@ class Player {
       return await _audioHandler.tryAddingMixPlaylist(currentId);
     }
   }
+
+  Future<void> setAudioTrackAndSave(String? trackId) async {
+    currentItem.value?.execute(
+      selectable: (finalItem) => Indexer.inst.updateTrackAudioTrackId(finalItem.track, audioTrackId: trackId),
+      youtubeID: (finalItem) => YoutubeController.inst.statsManager.updateAudioTrackId(finalItem, audioTrackId: trackId),
+    );
+    await _audioHandler.setAudioTrack(trackId);
+  }
+
   // ------- video -------
 
   Future<void> tryGenerateWaveform(YoutubeID? video) async {

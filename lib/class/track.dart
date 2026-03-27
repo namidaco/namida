@@ -92,6 +92,7 @@ class TrackStats extends PlayableItemStats {
     required super.tags,
     required super.moods,
     required super.lastPositionInMs,
+    required super.audioTrackId,
   });
 
   factory TrackStats.fromJson(Map<String, dynamic> json) {
@@ -106,6 +107,7 @@ class TrackStats extends PlayableItemStats {
       tags: stats.tags,
       moods: stats.moods,
       lastPositionInMs: stats.lastPositionInMs,
+      audioTrackId: stats.audioTrackId,
     );
   }
 
@@ -116,6 +118,7 @@ class TrackStats extends PlayableItemStats {
       tags: track.effectiveTags,
       moods: track.effectiveMoods,
       lastPositionInMs: track.lastPlayedPositionInMs ?? 0,
+      audioTrackId: track.effectiveAudioTrackId,
     );
   }
 
@@ -144,11 +147,14 @@ class PlayableItemStats {
   /// Last Played Position of the track in Milliseconds.
   int lastPositionInMs = 0;
 
+  String? audioTrackId;
+
   PlayableItemStats({
     required this.rating,
     required this.tags,
     required this.moods,
     required this.lastPositionInMs,
+    required this.audioTrackId,
   });
 
   static List<String>? _parseList(dynamic listJson) {
@@ -168,7 +174,8 @@ class PlayableItemStats {
       rating: json['rating'] ?? 0,
       tags: _parseList(json['tags']) ?? [],
       moods: _parseList(json['moods']) ?? [],
-      lastPositionInMs: json['lastPositionInMs'] ?? 0,
+      lastPositionInMs: json['pms'] ?? json['lastPositionInMs'] ?? 0,
+      audioTrackId: json['aid'],
     );
   }
 
@@ -179,7 +186,8 @@ class PlayableItemStats {
       if (rating > 0) 'rating': rating,
       'tags': ?tagsFinal,
       'moods': ?moodsFinal,
-      if (lastPositionInMs > 0) 'lastPositionInMs': lastPositionInMs,
+      if (lastPositionInMs > 0) 'pms': lastPositionInMs,
+      if (audioTrackId != null) 'aid': audioTrackId,
     };
     if (map.isEmpty) return null;
     return map;
@@ -187,7 +195,7 @@ class PlayableItemStats {
 
   @override
   String toString() {
-    return 'PlayableItemStats(rating: $rating, tags: $tags, moods: $moods, lastPositionInMs: $lastPositionInMs)';
+    return 'PlayableItemStats(rating: $rating, tags: $tags, moods: $moods, pms: $lastPositionInMs, aid: $audioTrackId)';
   }
 }
 
@@ -412,7 +420,7 @@ class TrackExtended {
     final initial = [
       durationMS.milliSecondsLabel,
       size.fileSizeFormatted,
-      "$bitrate kbps",
+      "$bitrate kb/s",
       "$sampleRate hz",
     ].join(' • ');
     final gainFormatted = gain == null ? null : TrackExtended.buildGainDataFormatted(gain);
@@ -433,7 +441,7 @@ class TrackExtended {
     return [
       format.toUpperCase(),
       if (channels.isNotEmpty && channels != '2' && !channels.contains('stereo') && !channels.contains('unknown')) "$channels ch",
-      "$bitrate kbps",
+      "$bitrate kb/s",
       if (sampleRate > 0) "${sampleRate / 1000} kHz",
     ].joinText(separator: ' • ');
   }
@@ -909,27 +917,31 @@ extension TrackUtils on Track {
   String get lyrics => toTrackExt().lyrics;
   String get label => toTrackExt().label;
 
-  int? get lastPlayedPositionInMs => _stats?.lastPositionInMs;
-  TrackStats? get _stats => Indexer.inst.trackStatsMap[this];
+  int? get lastPlayedPositionInMs => statsRaw?.lastPositionInMs;
+  TrackStats? get statsRaw => Indexer.inst.trackStatsMap[this];
   int get effectiveRating {
-    int? r = _stats?.rating;
+    int? r = statsRaw?.rating;
     if (r != null && r > 0) return r;
     var percentageRatingEmbedded = toTrackExt().rating;
     return (percentageRatingEmbedded * 100).round();
   }
 
   List<String> get effectiveMoods {
-    List<String>? m = _stats?.moods;
+    List<String>? m = statsRaw?.moods;
     if (m != null && m.isNotEmpty) return m;
     var moodsEmbedded = toTrackExt().moodList;
     return moodsEmbedded;
   }
 
   List<String> get effectiveTags {
-    List<String>? s = _stats?.tags;
+    List<String>? s = statsRaw?.tags;
     if (s != null && s.isNotEmpty) return s;
     var tagsEmbedded = toTrackExt().tagsList;
     return tagsEmbedded;
+  }
+
+  String? get effectiveAudioTrackId {
+    return statsRaw?.audioTrackId;
   }
 
   String get filename => path.getFilename;
