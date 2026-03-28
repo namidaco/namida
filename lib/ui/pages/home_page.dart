@@ -941,7 +941,7 @@ class _AlbumsList extends StatelessWidget {
           ),
           height: 150.0 + 12.0,
           itemCount: itemCount,
-          itemExtent: 98.0,
+          itemExtent: 98.0 + 8.0,
           itemBuilder: (context, index) {
             final albumId = albums[index];
             return AlbumCard(

@@ -118,7 +118,9 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
   bool _triedDeleting = false;
 
-  num get _getThumbnailEffectiveCacheHeight => widget.cacheHeight ?? widget.height ?? widget.width ?? widget.thumbnailSize;
+  num get _getThumbnailEffectiveCacheHeight {
+    return widget.cacheHeight?.validOrNull ?? widget.height?.validOrNull ?? widget.width?.validOrNull ?? widget.thumbnailSize;
+  }
 
   @override
   void initState() {
@@ -353,7 +355,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                           gaplessPlayback: true,
                           fit: widget.fit,
                           alignment: widget.alignment,
-                          filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
+                          filterQuality: FilterQuality.medium, // -- low and high, both cause pixelated image lmao
                           width: (info) {
                             if (widget.forceSquared || widget.staggered || info == null) return realWidthAndHeight;
                             final aspectRatio = info.image.width / info.image.height;
@@ -786,4 +788,8 @@ class MultiArtworks extends StatelessWidget {
       ),
     );
   }
+}
+
+extension<T extends num> on T {
+  T? get validOrNull => this.isFinite ? this : null;
 }

@@ -44,7 +44,7 @@ class CustomMPVPlayer implements AVPlayer {
     });
 
     _playerAudioTracksStreamSub = _player.stream.tracks.listen((tracks) {
-      _audioTracksStreamController.add(_toAudioTracks(tracks.audio));
+      _updateAudioTracks(_toAudioTracks(tracks.audio));
     });
   }
 
@@ -137,6 +137,10 @@ class CustomMPVPlayer implements AVPlayer {
     _playerPositionStreamController.add(_position);
   }
 
+  void _updateAudioTracks([List<AudioTrack>? tracks]) {
+    _audioTracksStreamController.add(tracks ?? _getPlayerCurrentAudioTracksConverted());
+  }
+
   @override
   Stream<PlaybackEvent> get playbackEventStream => Stream.empty();
 
@@ -226,7 +230,7 @@ class CustomMPVPlayer implements AVPlayer {
       _player.open(mainMedia, play: false).then((_) async {
         final videoTrack = mk.VideoTrack(config.source.uri.toString(), null, null);
         await _setVideoTrack(videoTrack);
-        _audioTracksStreamController.add(_getPlayerCurrentAudioTracksConverted());
+        _updateAudioTracks();
       });
     }
 
@@ -338,12 +342,12 @@ class CustomMPVPlayer implements AVPlayer {
   Future<void> setAudioTrack(String? trackId) async {
     if (trackId == null) {
       await _player.setAudioTrack(mk.AudioTrack.auto());
-      _audioTracksStreamController.add(_getPlayerCurrentAudioTracksConverted());
+      _updateAudioTracks();
       return;
     }
     final track = _getPlayerCurrentAudioTracks().firstWhereEff((t) => t.id == trackId);
     await _player.setAudioTrack(track ?? mk.AudioTrack.auto());
-    _audioTracksStreamController.add(_getPlayerCurrentAudioTracksConverted());
+    _updateAudioTracks();
   }
 
   @override

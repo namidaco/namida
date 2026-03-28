@@ -1289,7 +1289,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       ),
                                     ),
                                   ),
-                                  // ===== Audio Language Chip =====
+                                  // ===== Audio Tracks Chip =====
                                   ObxO(
                                     rx: Player.inst.audioTracks,
                                     builder: (context, tracks) {
@@ -1348,6 +1348,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       );
                                     },
                                   ),
+
+                                  // ===== Audio Language Chip =====
                                   ObxO(
                                     rx: YoutubeInfoController.current.currentYTStreams,
                                     builder: (context, streams) {
