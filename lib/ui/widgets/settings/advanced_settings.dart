@@ -455,7 +455,12 @@ class AdvancedSettings extends SettingSubpageProvider {
                   final isCounterVisible = total != 0;
                   final isLoadingVisible = current != null;
 
-                  if (!isCounterVisible && !isLoadingVisible) return Text("${VideoController.inst.localVideosTotalCount}");
+                  if (!isCounterVisible && !isLoadingVisible) {
+                    return Text(
+                      "${VideoController.inst.localVideosTotalCount}",
+                      style: context.textTheme.displayMedium,
+                    );
+                  }
 
                   return Column(
                     mainAxisSize: MainAxisSize.min,

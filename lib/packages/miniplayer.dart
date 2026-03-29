@@ -523,7 +523,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
 
     final menu = NamidaPopupWrapper(
       childrenDefault: () => YTUtils.getVideoCardMenuItemsForCurrentlyPlaying(
-        queueSource: QueueSourceYoutubeID.playerQueue,
+        queueSource: QueueSourceYoutubeID.ytPlayerQueue,
         numberOfRepeats: _numberOfRepeats,
         videoId: video.id,
         videoTitle: videoTitle,
@@ -581,7 +581,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         draggingEnabled: true,
         draggableThumbnail: true,
         horizontalGestures: false,
-        queueSource: QueueSourceYoutubeID.playerQueue,
+        queueSource: QueueSourceYoutubeID.ytPlayerQueue,
         showMoreIcon: true,
       ),
       itemBuilder: (context, i, currentIndex, queue, _, properties) {

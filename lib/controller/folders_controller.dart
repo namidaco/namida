@@ -30,7 +30,7 @@ class FoldersController<T extends Folder, E extends Track> {
 
   RxBaseCore<Map<T, List<E>>> get foldersMap => _foldersMap;
   LibraryTab get libraryTab => _tab;
-  QueueSource get queueSource => _config.queueSource;
+  QueueSource getQueueSource(T folder) => _config.queueSource(folder.path);
   RxBaseCore<Map<T?, T?>> get lastVisitedFolderMap => _lastVisitedFolderMap;
 
   String getCurrentFolderToBookmark() {
@@ -374,7 +374,7 @@ class _ParsedResult {
 }
 
 class FoldersPageConfig {
-  final QueueSource queueSource;
+  final QueueSource Function(String? name) queueSource;
   final Rx<String?> defaultFolderStartupLocation;
   final Rx<bool> enableFoldersHierarchy;
   final void Function() toggleFoldersHierarchy;

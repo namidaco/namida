@@ -7,7 +7,6 @@ import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/generators_controller.dart';
@@ -491,15 +490,11 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                           (context) {
                             final allSelected =
                                 _selectedTracksToUpdate.isNotEmpty && _missingTracksPaths.every((e) => _missingTracksSuggestions[e] == null || _selectedTracksToUpdate[e] == true);
-                            return FloatingActionButton.small(
-                              heroTag: 'indexer_missing_tracks_fab_hero_small',
-                              tooltip: lang.selectAll,
-                              backgroundColor: allSelected ? CurrentColor.inst.color.withOpacityExt(1.0) : theme.disabledColor.withOpacityExt(1.0),
-                              child: Icon(
-                                allSelected ? Broken.tick_square : Broken.task_square,
-                                color: Colors.white.withOpacityExt(0.8),
-                              ),
-                              onPressed: () {
+                            return NamidaFABButton(
+                              tooltip: () => lang.selectAll,
+                              icon: allSelected ? Broken.tick_square : Broken.task_square,
+                              dim: !allSelected,
+                              onTap: () {
                                 final allSelected =
                                     _selectedTracksToUpdate.isNotEmpty &&
                                     _missingTracksPaths.every((e) => _missingTracksSuggestions[e] == null || _selectedTracksToUpdate[e] == true);
@@ -518,11 +513,11 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                         Obx(
                           (context) {
                             final totalLength = _selectedTracksToUpdate.length;
-                            return FloatingActionButton.extended(
-                              heroTag: 'indexer_missing_tracks_fab_hero_extended',
-                              backgroundColor: (totalLength <= 0 ? theme.disabledColor : CurrentColor.inst.color).withOpacityExt(1.0),
-                              extendedPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-                              onPressed: () async {
+                            return NamidaFABButton(
+                              enabled: totalLength > 0,
+                              icon: Broken.pen_add,
+                              text: "${lang.update} ($totalLength)",
+                              onTap: () async {
                                 final isUpdating = false.obs;
                                 NamidaNavigator.inst.navigateDialog(
                                   onDisposing: () {
@@ -553,22 +548,6 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                   ),
                                 );
                               },
-                              label: Row(
-                                children: [
-                                  Icon(
-                                    Broken.pen_add,
-                                    size: 20.0,
-                                    color: Colors.white.withOpacityExt(0.8),
-                                  ),
-                                  const SizedBox(width: 12.0),
-                                  Text(
-                                    "${lang.update} ($totalLength)",
-                                    style: textTheme.displayMedium?.copyWith(
-                                      color: Colors.white.withOpacityExt(0.8),
-                                    ),
-                                  ),
-                                ],
-                              ),
                             );
                           },
                         ),

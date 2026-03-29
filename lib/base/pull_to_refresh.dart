@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/themes.dart';
-import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 typedef PullToRefreshCallback = Future<void> Function();
@@ -169,12 +168,15 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
 
   Widget get pullToRefreshWidget {
     final circleAvatar = RepaintBoundary(
-      child: CircleAvatar(
-        radius: 24.0,
-        backgroundColor: context.theme.colorScheme.secondaryContainer,
-        child: const Icon(
-          Broken.refresh_2,
-          color: AppThemes.fabForegroundColor,
+      child: Align(
+        child: NamidaButton(
+          icon: Broken.refresh_2,
+          opaqueBG: true,
+          minHeight: kFABSize,
+          minWidth: kFABSize,
+          iconSize: 22.0,
+          isCircle: true,
+          onTap: () {},
         ),
       ),
     );

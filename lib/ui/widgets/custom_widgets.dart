@@ -767,11 +767,57 @@ class NamidaButtonText extends Text {
   }) : super(style: style ?? const TextStyle(fontSize: 15.0));
 }
 
+class NamidaFABButton extends StatelessWidget {
+  final IconData icon;
+  final String? text;
+  final String Function()? tooltip;
+  final void Function() onTap;
+  final void Function()? onLongPress;
+  final bool? enabled;
+  final bool big;
+  final bool dim;
+
+  const NamidaFABButton({
+    super.key,
+    required this.icon,
+    this.text,
+    this.tooltip,
+    required this.onTap,
+    this.onLongPress,
+    this.enabled,
+    this.big = false,
+    this.dim = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final size = big ? kFABSize * 1.25 : kFABSize;
+    final iconSize = big ? 28.0 : 22.0;
+    final fontSizeMultiplier = big ? 1.15 : 1.0;
+    return NamidaButton(
+      tooltip: tooltip,
+      minHeight: size,
+      minWidth: size,
+      fontSizeMultiplier: fontSizeMultiplier,
+      icon: icon,
+      text: text,
+      enabled: enabled,
+      opaqueBG: true,
+      isMinimumSquared: text == null,
+      colors: dim ? NamidaButtonColors.dimmed : NamidaButtonColors.fab,
+      iconSize: iconSize,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      tooltipPreferBelow: false,
+    );
+  }
+}
+
 class NamidaTextButton extends StatelessWidget {
   final String text;
   final double? minHeight;
   final bool enabled;
-  final double? fontSize;
+  final double fontSizeMultiplier;
   final void Function() onTap;
 
   const NamidaTextButton({
@@ -779,11 +825,11 @@ class NamidaTextButton extends StatelessWidget {
     required this.text,
     this.minHeight,
     this.enabled = true,
-    this.fontSize,
+    this.fontSizeMultiplier = 1.0,
     required this.onTap,
   });
 
-  static double kDefaultMinHeight = NamidaButton.kDefaultMinHeight;
+  static const double kDefaultMinHeight = NamidaButton.kDefaultMinHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -791,12 +837,24 @@ class NamidaTextButton extends StatelessWidget {
       onTap: onTap,
       enabled: enabled,
       text: text,
-      fontSize: fontSize,
+      fontSizeMultiplier: fontSizeMultiplier,
       minHeight: minHeight,
       dense: true,
-      dimmedColors: true,
+      colors: NamidaButtonColors.dimmed,
     );
   }
+}
+
+enum NamidaButtonColors {
+  selected,
+  fab,
+  saturated,
+  normal,
+  mid,
+  dimmed,
+  ;
+
+  static const defaultValue = normal;
 }
 
 class NamidaButton extends StatelessWidget {
@@ -804,16 +862,21 @@ class NamidaButton extends StatelessWidget {
   final IconData? secondaryIcon;
   final double? iconSize;
   final String? text;
-  final double? fontSize;
+  final double fontSizeMultiplier;
   final Color? colorScheme;
   final double? minHeight;
+  final double? minWidth;
   final String Function()? tooltip;
   final void Function() onTap;
+  final void Function()? onLongPress;
   final bool? enabled;
   final bool? isLoading;
   final bool dense;
-  final bool midColors;
-  final bool dimmedColors;
+  final NamidaButtonColors colors;
+  final bool opaqueBG;
+  final bool isCircle;
+  final bool isMinimumSquared;
+  final bool? tooltipPreferBelow;
 
   const NamidaButton({
     super.key,
@@ -821,35 +884,43 @@ class NamidaButton extends StatelessWidget {
     this.secondaryIcon,
     this.iconSize = 20.0,
     this.text,
-    this.fontSize,
+    this.fontSizeMultiplier = 1.0,
     this.colorScheme,
     this.minHeight,
+    this.minWidth,
     this.tooltip,
     required this.onTap,
+    this.onLongPress,
     this.enabled,
     this.isLoading,
     this.dense = false,
-    this.midColors = false,
-    this.dimmedColors = false,
+    this.colors = NamidaButtonColors.normal,
+    this.opaqueBG = false,
+    this.isCircle = false,
+    this.isMinimumSquared = false,
+    this.tooltipPreferBelow,
   });
 
-  static double kDefaultMinHeight = 36.0;
+  static const double kDefaultMinHeight = 36.0;
 
   @override
   Widget build(BuildContext context) {
     var colorScheme = this.colorScheme ?? context.theme.colorScheme.primary;
+    double foregroundOpacity = 0.85;
 
-    if (dimmedColors) {
-      colorScheme = colorScheme.withOpacityExt(0.1);
-    } else if (midColors) {
-      colorScheme = colorScheme.withOpacityExt(0.2);
-    } else {
-      colorScheme = colorScheme.withOpacityExt(0.45);
-    }
+    colorScheme = switch (colors) {
+      NamidaButtonColors.selected => colorScheme.withOpacityExt(0.8),
+      NamidaButtonColors.fab => colorScheme.withOpacityExt(0.5),
+      NamidaButtonColors.saturated => colorScheme.withOpacityExt(0.4),
+      NamidaButtonColors.normal => colorScheme.withOpacityExt(0.3),
+      NamidaButtonColors.mid => colorScheme.withOpacityExt(0.2),
+      NamidaButtonColors.dimmed => colorScheme.withOpacityExt(0.1),
+    };
 
-    final bgColor = colorScheme.withOpacityExt(colorScheme.a * 0.2);
+    var bgColor = colorScheme.withOpacityExt(colorScheme.a * 0.2);
+    if (opaqueBG) bgColor = Color.alphaBlend(bgColor, context.theme.scaffoldBackgroundColor);
     final borderColor = colorScheme.withOpacityExt(colorScheme.a * 0.6);
-    final foregroundColor = context.defaultIconColor(colorScheme).withOpacityExt(0.75);
+    final foregroundColor = context.defaultIconColor(colorScheme).withOpacityExt(foregroundOpacity);
 
     final text = this.text;
     final icon = this.icon;
@@ -878,7 +949,7 @@ class NamidaButton extends StatelessWidget {
 
     final textStyle = context.textTheme.displayMedium?.copyWith(
       color: foregroundColor,
-      fontSize: fontSize ?? (dense ? 15.0 : 15.5),
+      fontSize: fontSizeMultiplier * (dense ? 15.0 : 15.5),
     );
 
     final textChild = (text == null || text.isEmpty
@@ -893,7 +964,12 @@ class NamidaButton extends StatelessWidget {
     EdgeInsets padding;
     double minHeight = this.minHeight ?? kDefaultMinHeight;
 
-    if (dense) {
+    if (isCircle || isMinimumSquared) {
+      padding = EdgeInsets.symmetric(
+        horizontal: 12.0,
+        vertical: 12.0,
+      );
+    } else if (dense) {
       padding = EdgeInsets.symmetric(
         horizontal: textChild != null
             ? iconChild != null
@@ -921,14 +997,16 @@ class NamidaButton extends StatelessWidget {
       padding *= 1.25;
     }
 
-    final brRaw = 20.0;
+    final brRaw = isCircle ? 99.0 : 20.0;
     Widget box = NamidaTooltip(
       message: tooltip,
+      preferBelow: tooltipPreferBelow,
       child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: minHeight),
+        constraints: BoxConstraints(minHeight: minHeight, minWidth: isCircle || isMinimumSquared ? minHeight : 0.0),
         child: NamidaInkWell(
           borderRadius: brRaw,
           onTap: onTap,
+          onLongPress: onLongPress,
           decoration: BoxDecoration(
             color: bgColor,
             border: Border.all(
@@ -974,6 +1052,27 @@ class NamidaButton extends StatelessWidget {
           child: box,
         ),
       );
+
+      if (opaqueBG) {
+        box = IgnorePointer(
+          ignoring: !enabled,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(brRaw.multipliedRadius),
+                      color: bgColor,
+                    ),
+                  ),
+                ),
+              ),
+              box,
+            ],
+          ),
+        );
+      }
     }
 
     return box;
@@ -2807,9 +2906,7 @@ class SearchPageTitleRow extends StatelessWidget {
   final IconData icon;
   final Widget? trailing;
   final Widget? subtitleWidget;
-  final String? buttonText;
-  final IconData? buttonIcon;
-  final void Function()? onPressed;
+
   const SearchPageTitleRow({
     super.key,
     required this.title,
@@ -2817,9 +2914,6 @@ class SearchPageTitleRow extends StatelessWidget {
     required this.icon,
     this.trailing,
     this.subtitleWidget,
-    this.buttonText,
-    this.buttonIcon,
-    this.onPressed,
   });
 
   @override
@@ -2850,13 +2944,7 @@ class SearchPageTitleRow extends StatelessWidget {
           ],
         ),
         const Spacer(),
-        trailing ??
-            TextButton.icon(
-              style: TextButton.styleFrom(foregroundColor: context.theme.listTileTheme.iconColor),
-              icon: Icon(buttonIcon, size: 20.0),
-              label: NamidaButtonText(buttonText ?? ''),
-              onPressed: onPressed,
-            ),
+        ?trailing,
         const SizedBox(width: 8.0),
       ],
     );
@@ -3772,7 +3860,7 @@ class NamidaTracksList extends StatelessWidget {
   final bool Function()? isTrackSelectable;
   final void Function()? onTap;
   final ScrollPhysics? physics;
-  final QueueSource queueSource;
+  final QueueSourceBase queueSource;
   final bool displayTrackNumber;
   final bool shouldAnimate;
   final String Function(Selectable track)? thirdLineText;
@@ -4976,6 +5064,7 @@ class DelayedAnimatedShow extends StatefulWidget {
   final bool show;
   final bool isHorizontal;
   final Duration showDelay;
+  final Duration hideDelay;
   final Duration duration;
   final Widget child;
 
@@ -4985,6 +5074,7 @@ class DelayedAnimatedShow extends StatefulWidget {
     this.isHorizontal = false,
     required this.child,
     this.showDelay = const Duration(milliseconds: 600),
+    this.hideDelay = Duration.zero,
     this.duration = const Duration(milliseconds: 300),
   });
 
@@ -4995,6 +5085,16 @@ class DelayedAnimatedShow extends StatefulWidget {
 class _DelayedAnimatedShowState extends State<DelayedAnimatedShow> {
   Timer? _timer;
   late bool _visible;
+
+  void _setVisible(bool visible, Duration delay) {
+    if (delay == Duration.zero) {
+      if (mounted) setState(() => _visible = visible);
+      return;
+    }
+    _timer = Timer(delay, () {
+      if (mounted && widget.show == visible) setState(() => _visible = visible);
+    });
+  }
 
   @override
   void initState() {
@@ -5009,13 +5109,9 @@ class _DelayedAnimatedShowState extends State<DelayedAnimatedShow> {
 
     _timer?.cancel();
     if (widget.show) {
-      // -- show delayed
-      _timer = Timer(widget.showDelay, () {
-        if (mounted && widget.show) setState(() => _visible = true);
-      });
+      _setVisible(true, widget.showDelay);
     } else {
-      // -- hide instant
-      setState(() => _visible = false);
+      _setVisible(false, widget.hideDelay);
     }
   }
 
@@ -6058,12 +6154,7 @@ class SwipeQueueAddTileInfo {
   });
 
   Color? get getCurrentColor =>
-      queueSource == QueueSourceYoutubeID.playerQueue ||
-          queueSource ==
-              QueueSourceYoutubeID
-                  .playerQueue //
-      ? CurrentColor.inst.miniplayerColor
-      : CurrentColor.inst.color;
+      queueSource == QueueSourceYoutubeID.ytPlayerQueue || queueSource == QueueSourceYoutubeID.ytPlayerQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.color;
 
   void copyToClipboard(String text) {
     NamidaUtils.copyToClipboard(

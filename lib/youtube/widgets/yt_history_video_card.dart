@@ -13,6 +13,7 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -41,12 +42,13 @@ class VideoTilePropertiesProvider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    var queueSource = configs.queueSource;
-    final comingFromQueue = queueSource == QueueSourceYoutubeID.playerQueue;
+    final queueSource = configs.queueSource;
+    final queueSupportResuming = queueSource.supportResuming;
+    final comingFromQueue = queueSource == QueueSourceYoutubeID.ytPlayerQueue;
     final canHaveDuplicates = queueSource.canHaveDuplicates;
 
     final backgroundColorNotPlaying = theme.cardTheme.color ?? Colors.transparent;
-    final selectionColorLayer = theme.focusColor;
+    final highlightColorLayer = queueSupportResuming ? theme.focusColor.withOpacityExt(0.2) : null;
 
     final itemsColor7 = Colors.white.withOpacityExt(0.7);
     final itemsColor6 = Colors.white.withOpacityExt(0.6);
@@ -74,47 +76,57 @@ class VideoTilePropertiesProvider extends StatelessWidget {
       rx: settings.onTrackSwipeLeft,
       builder: (context, onTrackSwipeLeft) => ObxO(
         rx: settings.onTrackSwipeRight,
-        builder: (context, onTrackSwipeRight) => ObxO(
-          rx: Player.inst.currentIndex,
-          builder: (context, currentPlayingIndex) => Obx(
-            (context) {
-              int? sleepingIndex;
-              if (comingFromQueue) {
-                final sleepconfig = Player.inst.sleepTimerConfig.valueR;
-                if (sleepconfig.enableSleepAfterItems) {
-                  final repeatMode = settings.player.repeatMode.valueR;
-                  if (repeatMode == PlayerRepeatMode.all || repeatMode == PlayerRepeatMode.none) {
-                    sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+        builder: (context, onTrackSwipeRight) => ObxPrefer(
+          enabled: queueSupportResuming,
+          rx: QueueController.latestPlayedForSourceManager.map,
+          builder: (context, latestPlayedForSource) {
+            YoutubeID? currentHighlightedVideo;
+            final currentHighlightedPlayable = latestPlayedForSource?[queueSource];
+            if (currentHighlightedPlayable is YoutubeID) currentHighlightedVideo = currentHighlightedPlayable;
+            return ObxO(
+              rx: Player.inst.currentIndex,
+              builder: (context, currentPlayingIndex) => Obx(
+                (context) {
+                  int? sleepingIndex;
+                  if (comingFromQueue) {
+                    final sleepconfig = Player.inst.sleepTimerConfig.valueR;
+                    if (sleepconfig.enableSleepAfterItems) {
+                      final repeatMode = settings.player.repeatMode.valueR;
+                      if (repeatMode == PlayerRepeatMode.all || repeatMode == PlayerRepeatMode.none) {
+                        sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+                      }
+                    }
                   }
-                }
-              }
-              final currentPlayingVideo = Player.inst.currentVideoR;
+                  final currentPlayingVideo = Player.inst.currentVideoR;
 
-              final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
-                  ? CurrentColor.inst.miniplayerColor
-                  : CurrentColor.inst.currentColorScheme; // always follow track color
+                  final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
+                      ? CurrentColor.inst.miniplayerColor
+                      : CurrentColor.inst.currentColorScheme; // always follow track color
 
-              final properties = VideoTileProperties(
-                threeLines: threeLines,
-                threeLinesPlaying: threeLinesPlaying,
-                itemsColor7: itemsColor7,
-                itemsColor6: itemsColor6,
-                itemsColor5: itemsColor5,
-                backgroundColorPlaying: backgroundColorPlaying,
-                backgroundColorNotPlaying: backgroundColorNotPlaying,
-                selectionColorLayer: selectionColorLayer,
-                currentPlayingVideo: currentPlayingVideo,
-                currentPlayingIndex: currentPlayingIndex,
-                sleepingIndex: sleepingIndex,
-                comingFromQueue: comingFromQueue,
-                configs: configs,
-                canHaveDuplicates: canHaveDuplicates,
-                allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
-                allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
-              );
-              return builder(properties);
-            },
-          ),
+                  final properties = VideoTileProperties(
+                    threeLines: threeLines,
+                    threeLinesPlaying: threeLinesPlaying,
+                    itemsColor7: itemsColor7,
+                    itemsColor6: itemsColor6,
+                    itemsColor5: itemsColor5,
+                    backgroundColorPlaying: backgroundColorPlaying,
+                    backgroundColorNotPlaying: backgroundColorNotPlaying,
+                    highlightColorLayer: highlightColorLayer,
+                    currentPlayingVideo: currentPlayingVideo,
+                    currentPlayingIndex: currentPlayingIndex,
+                    currentHighlightedVideo: currentHighlightedVideo,
+                    sleepingIndex: sleepingIndex,
+                    comingFromQueue: comingFromQueue,
+                    configs: configs,
+                    canHaveDuplicates: canHaveDuplicates,
+                    allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
+                    allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
+                  );
+                  return builder(properties);
+                },
+              ),
+            );
+          },
         ),
       ),
     );
@@ -159,10 +171,11 @@ class VideoTileProperties {
 
   final Color backgroundColorPlaying;
   final Color backgroundColorNotPlaying;
-  final Color selectionColorLayer;
+  final Color? highlightColorLayer;
 
   final YoutubeID? currentPlayingVideo;
   final int? currentPlayingIndex;
+  final YoutubeID? currentHighlightedVideo;
   final int? sleepingIndex;
   final bool comingFromQueue;
   final bool canHaveDuplicates;
@@ -179,9 +192,10 @@ class VideoTileProperties {
     required this.itemsColor5,
     required this.backgroundColorPlaying,
     required this.backgroundColorNotPlaying,
-    required this.selectionColorLayer,
+    required this.highlightColorLayer,
     required this.currentPlayingVideo,
     required this.currentPlayingIndex,
+    required this.currentHighlightedVideo,
     required this.sleepingIndex,
     required this.comingFromQueue,
     required this.canHaveDuplicates,
@@ -443,7 +457,8 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    final configs = widget.properties.configs;
+    final properties = widget.properties;
+    final configs = properties.configs;
 
     double thumbHeight = widget.thumbnailHeight ?? (widget.minimalCard ? 24.0 * 3.2 : Dimensions.youtubeCardItemHeight);
     double thumbWidth = widget.minimalCardWidth ?? thumbHeight * 16 / 9;
@@ -484,7 +499,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
       }
     }
 
-    final willSleepAfterThis = widget.properties.sleepingIndex == index;
+    final willSleepAfterThis = properties.sleepingIndex == index;
 
     final videoTitle = _videoTitle;
     final videoChannel = _videoChannel;
@@ -492,13 +507,15 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
     final displayVideoChannel = videoChannel != null && videoChannel.isNotEmpty;
     final displayDateText = dateText != null && dateText.isNotEmpty;
 
-    final bool isRightIndex = widget.properties.canHaveDuplicates ? index == widget.properties.currentPlayingIndex : true;
+    final bool isRightIndex = properties.canHaveDuplicates ? index == properties.currentPlayingIndex : true;
     bool isCurrentlyPlaying = false;
 
     if (isRightIndex) {
-      final curr = widget.properties.currentPlayingVideo;
+      final curr = properties.currentPlayingVideo;
       if (videoId == curr?.id && videoWatch == curr?.watchNull) isCurrentlyPlaying = true;
     }
+    final currentHighlightedVideo = properties.currentHighlightedVideo;
+    final bool isVideoHighlighted = !widget.minimalCard && currentHighlightedVideo != null && (item == currentHighlightedVideo);
 
     Widget? threeLines;
     Color? itemsColor7;
@@ -506,12 +523,12 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
     Color? itemsColor5;
 
     if (isCurrentlyPlaying) {
-      itemsColor7 = widget.properties.itemsColor7;
-      itemsColor6 = widget.properties.itemsColor6;
-      itemsColor5 = widget.properties.itemsColor5;
-      threeLines = widget.properties.threeLinesPlaying;
+      itemsColor7 = properties.itemsColor7;
+      itemsColor6 = properties.itemsColor6;
+      itemsColor5 = properties.itemsColor5;
+      threeLines = properties.threeLinesPlaying;
     } else {
-      threeLines = widget.properties.threeLines;
+      threeLines = properties.threeLines;
     }
 
     final children = [
@@ -594,11 +611,23 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
     final borderRadiusRawValue = widget.minimalCard ? YTHistoryVideoCardBase.kDefaultBorderRadiusMinimalCard : YTHistoryVideoCardBase.kDefaultBorderRadius;
 
     BoxDecoration decoration;
-    final bgColor =
+    Border? border;
+    var bgColor =
         widget.bgColor ??
-        (isCurrentlyPlaying
-            ? (widget.properties.comingFromQueue ? CurrentColor.inst.miniplayerColor : CurrentColor.inst.currentColorScheme).withAlpha(140)
-            : (theme.cardColor.withOpacityExt(widget.cardColorOpacity)));
+        (isCurrentlyPlaying ? (properties.backgroundColorPlaying).withAlpha(140) : (properties.backgroundColorNotPlaying.withOpacityExt(widget.cardColorOpacity)));
+
+    if (!isCurrentlyPlaying && isVideoHighlighted && properties.highlightColorLayer != null) {
+      border = Border(
+        right: BorderSide(
+          width: 3.0,
+          color: properties.backgroundColorPlaying,
+        ),
+      );
+      bgColor = Color.alphaBlend(
+        properties.highlightColorLayer!,
+        bgColor,
+      );
+    }
 
     if (settings.gradientTiles.value) {
       Color? bgColorAlt;
@@ -619,9 +648,13 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
           ],
           stops: [0.6, 1.0],
         ),
+        border: border,
       );
     } else {
-      decoration = BoxDecoration(color: bgColor);
+      decoration = BoxDecoration(
+        color: bgColor,
+        border: border,
+      );
     }
 
     Widget finalChild = NamidaPopupWrapper(
@@ -649,7 +682,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
             widget.onTap ??
             () {
               YTUtils.expandMiniplayer();
-              if (widget.properties.comingFromQueue) {
+              if (properties.comingFromQueue) {
                 final i = this.widget.index;
                 if (i == Player.inst.currentIndex.value) {
                   Player.inst.togglePlayPause();
@@ -751,7 +784,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
       ),
     );
 
-    if (!widget.minimalCard && configs.horizontalGestures && (widget.properties.allowSwipeLeft || widget.properties.allowSwipeRight)) {
+    if (!widget.minimalCard && configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
       final plItem = itemToYTIDPlay(item);
       return SwipeQueueAddTile(
         item: plItem,
@@ -760,8 +793,8 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
           heroTag: null,
         ),
         dismissibleKey: plItem,
-        allowSwipeLeft: widget.properties.allowSwipeLeft,
-        allowSwipeRight: widget.properties.allowSwipeRight,
+        allowSwipeLeft: properties.allowSwipeLeft,
+        allowSwipeRight: properties.allowSwipeRight,
         child: finalChild,
       );
     }

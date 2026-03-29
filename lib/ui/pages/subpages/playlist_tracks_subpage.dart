@@ -391,8 +391,8 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return TrackTilePropertiesProvider(
-      configs: const TrackTilePropertiesConfigs(
-        queueSource: QueueSource.playlist,
+      configs: TrackTilePropertiesConfigs(
+        queueSource: QueueSource.playlist(null),
       ),
       builder: (properties) => SmoothCustomScrollView(
         slivers: [
@@ -535,14 +535,15 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
 
           final sort = playlist.sortsType?.firstOrNull;
           final sortReverse = playlist.sortReverse;
-
           final heroTag = 'playlist_${playlist.name}';
+
+          final queueSource = playlist.toQueueSource();
 
           return ObxO(
             rx: PlaylistController.inst.canReorderItems,
             builder: (context, reorderable) => TrackTilePropertiesProvider(
               configs: TrackTilePropertiesConfigs(
-                queueSource: playlist.toQueueSource(),
+                queueSource: queueSource,
                 playlistName: playlist.name,
                 draggableThumbnail: reorderable,
                 horizontalGestures: !reorderable,
@@ -554,7 +555,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                 infoBox: (maxWidth) => SubpageInfoContainer(
                   bottomPadding: 0.0,
                   maxWidth: maxWidth,
-                  source: playlist.toQueueSource(),
+                  source: queueSource,
                   title: playlist.name.translatePlaylistName(),
                   subtitle: playlist.creationDate.dateFormatted,
                   thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',

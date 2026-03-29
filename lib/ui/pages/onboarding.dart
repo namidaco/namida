@@ -86,7 +86,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
       const MainPageWrapper(),
     );
     Indexer.inst.prepareTracksFile();
-    return QueueController.inst.prepareLatestQueueAsync();
+    return QueueController.inst.prepareLatestQueueAndLatestPlayedForSourceAsync();
   }
 
   void _onRestoreBackupIconTap() async {

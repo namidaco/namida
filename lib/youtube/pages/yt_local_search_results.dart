@@ -156,7 +156,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
           Expanded(
             child: VideoTilePropertiesProvider(
               configs: VideoTilePropertiesConfigs(
-                queueSource: QueueSourceYoutubeID.search,
+                queueSource: QueueSourceYoutubeID.ytSearch,
                 showMoreIcon: true,
               ),
               builder: (properties) => NamidaScrollbar(

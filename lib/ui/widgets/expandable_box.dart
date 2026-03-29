@@ -269,7 +269,7 @@ class SortByMenu extends StatelessWidget {
                   children: () => popupMenuChild?.children(context) ?? [],
                 ).showPopupMenu(context),
             text: title,
-            fontSize: 14.5,
+            fontSizeMultiplier: 0.95,
           ),
         ),
         NamidaIconButton(

@@ -9,6 +9,7 @@ import 'package:playlist_manager/playlist_manager.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -206,6 +207,17 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   @override
   void onPlaylistRemovedFromMap(List<String> names) {
     // -- the ui uses the playlist map directly. this can be used to remove from other lists if required.
+
+    QueueController.latestPlayedForSourceManager.deleteMultiple(names.map(QueueSourceYoutubeID.ytPlaylist));
+  }
+
+  @override
+  Future<bool> renamePlaylist(String playlistName, String newName) async {
+    final didRename = await super.renamePlaylist(playlistName, newName);
+    if (didRename) {
+      QueueController.latestPlayedForSourceManager.move(QueueSourceYoutubeID.ytPlaylist(playlistName), QueueSourceYoutubeID.ytPlaylist(newName));
+    }
+    return didRename;
   }
 
   @override

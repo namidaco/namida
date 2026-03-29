@@ -49,7 +49,7 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
 
     return VideoTilePropertiesProvider(
       configs: VideoTilePropertiesConfigs(
-        queueSource: QueueSourceYoutubeID.historyHosted,
+        queueSource: QueueSourceYoutubeID.ytHistoryHosted,
         showMoreIcon: true,
       ),
       builder: (properties) => ObxO(
@@ -185,7 +185,7 @@ class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
 
     return VideoTilePropertiesProvider(
       configs: VideoTilePropertiesConfigs(
-        queueSource: QueueSourceYoutubeID.historyFilteredHosted,
+        queueSource: QueueSourceYoutubeID.ytHistoryFilteredHosted,
         playlistName: k_PLAYLIST_NAME_HISTORY,
       ),
       builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieHistoryResult, YoutiPieHistoryChunk>(

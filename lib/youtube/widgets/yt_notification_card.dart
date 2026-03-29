@@ -95,7 +95,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
     Player.inst.playOrPause(
       startIndex,
       itemsToPlay,
-      QueueSourceYoutubeID.notificationsHosted,
+      QueueSourceYoutubeID.ytNotificationsHosted,
     );
     YTUtils.expandMiniplayer();
     await _markAsRead(mainList);
@@ -107,7 +107,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
     if (videoId.isEmpty) return [];
     if (widget.notification.isComment) return [];
     return YTUtils.getVideoCardMenuItems(
-      queueSource: QueueSourceYoutubeID.notificationsHosted,
+      queueSource: QueueSourceYoutubeID.ytNotificationsHosted,
       downloadIndex: null,
       totalLength: null,
       streamInfoItem: null,
@@ -279,7 +279,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
       return SwipeQueueAddTile(
         item: plItem,
         infoCallback: () => SwipeQueueAddTileInfo(
-          queueSource: QueueSourceYoutubeID.notificationsHosted,
+          queueSource: QueueSourceYoutubeID.ytNotificationsHosted,
           heroTag: null,
         ),
         dismissibleKey: plItem,

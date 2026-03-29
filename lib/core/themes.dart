@@ -11,7 +11,6 @@ class AppThemes {
   static final AppThemes _instance = AppThemes._internal();
   AppThemes._internal();
 
-  static const fabForegroundColor = Color.fromRGBO(255, 255, 255, 0.8);
   static const selectedNavigationIconColor = Color.fromRGBO(255, 255, 255, 0.75);
 
   static const fontFamily = "LexendDeca";

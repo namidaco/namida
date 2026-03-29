@@ -35,7 +35,7 @@ void showTrackAdvancedDialog({
   required List<Selectable> tracks,
   required NetworkArtworkInfo? networkArtworkInfo,
   required Color colorScheme,
-  required QueueSource source,
+  required QueueSourceBase source,
   required List<(String, String)> albumsUniqued,
 }) async {
   if (tracks.isEmpty) return;
@@ -818,8 +818,8 @@ void showLibraryTracksChooseDialog({
               child: NamidaScrollbar(
                 controller: scrollController,
                 child: TrackTilePropertiesProvider(
-                  configs: const TrackTilePropertiesConfigs(
-                    queueSource: QueueSource.others,
+                  configs: TrackTilePropertiesConfigs(
+                    queueSource: QueueSource.others(searchController.text),
                   ),
                   builder: (properties) => Obx(
                     (context) => SuperSmoothListView.builder(

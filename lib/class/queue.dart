@@ -4,6 +4,8 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 class Queue {
+  String getKey() => date.toString();
+
   final QueueSourceBase source;
   final HomePageItems? homePageItem;
   final int date;
@@ -30,7 +32,7 @@ class Queue {
         }).toList() ??
         [];
     return Queue(
-      source: QueueSource.values.getEnum(json['source'] ?? '') ?? QueueSourceYoutubeID.values.getEnum(json['source'] ?? '') ?? QueueSource.others,
+      source: QueueSource.fromJson(json['source']) ?? QueueSourceYoutubeID.fromJson(json['source']) ?? QueueSource.others(null),
       homePageItem: HomePageItems.values.getEnum(json['homePageItem'] ?? ''),
       date: json['date'] ?? DateTime(1970),
       isFav: json['isFav'] ?? false,
@@ -43,7 +45,7 @@ class Queue {
   /// BREAKING(>v2.5.6): no longer saving allTracks as empty queue.
   Map<String, dynamic> toJson() {
     return {
-      'source': source.name,
+      'source': source.toJson(),
       'homePageItem': homePageItem?.name,
       'date': date,
       'isFav': isFav,

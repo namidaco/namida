@@ -178,7 +178,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
             Align(
               alignment: Alignment.centerRight,
               child: YTVideosActionBar(
-                queueSource: QueueSourceYoutubeID.channelHosted,
+                queueSource: QueueSourceYoutubeID.ytChannelHosted,
                 title: channelInfo?.title ?? widget.localChannel.title,
                 urlBuilder: channelInfo?.buildUrl,
                 barOptions: const YTVideosActionBarOptions(
@@ -216,7 +216,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
         Expanded(
           child: VideoTilePropertiesProvider(
             configs: VideoTilePropertiesConfigs(
-              queueSource: QueueSourceYoutubeID.channel,
+              queueSource: QueueSourceYoutubeID.ytChannel(channelID),
               showMoreIcon: true,
             ),
             builder: (properties) => NamidaScrollbar(

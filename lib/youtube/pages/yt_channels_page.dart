@@ -456,7 +456,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                               )
                             : VideoTilePropertiesProvider(
                                 configs: VideoTilePropertiesConfigs(
-                                  queueSource: QueueSourceYoutubeID.channel,
+                                  queueSource: QueueSourceYoutubeID.ytChannel(channelID),
                                   showMoreIcon: true,
                                 ),
                                 builder: (properties) => LazyLoadListView(
@@ -807,7 +807,7 @@ class __YoutubeChannelVideosPageState extends State<_YoutubeChannelVideosPage> {
     if (channelId == null) {
       return VideoTilePropertiesProvider(
         configs: VideoTilePropertiesConfigs(
-          queueSource: QueueSourceYoutubeID.channel,
+          queueSource: QueueSourceYoutubeID.ytChannel(channelId),
           showMoreIcon: true,
         ),
         builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieUserChannelsAllVideosResult, YoutubeFeed>(
@@ -851,7 +851,7 @@ class __YoutubeChannelVideosPageState extends State<_YoutubeChannelVideosPage> {
           ? const SizedBox()
           : VideoTilePropertiesProvider(
               configs: VideoTilePropertiesConfigs(
-                queueSource: QueueSourceYoutubeID.channel,
+                queueSource: QueueSourceYoutubeID.ytChannel(channelId),
                 showMoreIcon: true,
               ),
               builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieChannelTabResult, YoutubeFeed>(

@@ -19,14 +19,15 @@ class QueueTracksPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
+    final queueSource = QueueSource.queuePage(queue);
     return BackgroundWrapper(
       child: NamidaTracksList(
-        queueSource: QueueSource.queuePage,
+        queueSource: queueSource,
         queueLength: queue.tracks.length,
         queue: queue.tracks,
         infoBox: (maxWidth) => SubpageInfoContainer(
           maxWidth: maxWidth,
-          source: QueueSource.queuePage,
+          source: queueSource,
           title: queue.date.dateFormattedOriginal,
           subtitle: queue.date.clockFormatted,
           thirdLineText: [

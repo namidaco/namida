@@ -819,7 +819,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
       ignoring: !_canScrollQueue,
       child: VideoTilePropertiesProvider(
         configs: VideoTilePropertiesConfigs(
-          queueSource: QueueSourceYoutubeID.relatedVideos,
+          queueSource: QueueSourceYoutubeID.ytRelatedVideos,
           showMoreIcon: true,
         ),
         builder: (properties) => LazyLoadListView(
@@ -889,7 +889,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                 _numberOfRepeats.value = 1;
                               },
                               childrenDefault: () => YTUtils.getVideoCardMenuItemsForCurrentlyPlaying(
-                                queueSource: QueueSourceYoutubeID.playerQueue,
+                                queueSource: QueueSourceYoutubeID.ytPlayerQueue,
                                 numberOfRepeats: _numberOfRepeats,
                                 videoId: currentId,
                                 videoTitle: videoTitle,
@@ -1459,7 +1459,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                               return Padding(
                                                 padding: const EdgeInsets.symmetric(horizontal: hPadding),
                                                 child: YoutubeShortVideoTallCard(
-                                                  queueSource: QueueSourceYoutubeID.relatedVideos,
+                                                  queueSource: QueueSourceYoutubeID.ytRelatedVideos,
                                                   index: index,
                                                   short: short,
                                                   thumbnailWidth: width,
@@ -1489,7 +1489,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                           playlistID: null,
                                         ),
                                         const (StreamInfoItemShort) => YoutubeShortVideoCard(
-                                          queueSource: QueueSourceYoutubeID.relatedVideos,
+                                          queueSource: QueueSourceYoutubeID.ytRelatedVideos,
                                           key: Key("${(item as StreamInfoItemShort?)?.id}"),
                                           thumbnailHeight: relatedThumbnailHeight,
                                           thumbnailWidth: relatedThumbnailWidth,
@@ -1497,7 +1497,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                           playlistID: null,
                                         ),
                                         const (PlaylistInfoItem) => YoutubePlaylistCard(
-                                          queueSource: QueueSourceYoutubeID.relatedVideos,
+                                          queueSource: QueueSourceYoutubeID.ytRelatedVideos,
                                           key: Key((item as PlaylistInfoItem).id),
                                           thumbnailHeight: relatedThumbnailHeight,
                                           thumbnailWidth: relatedThumbnailWidth,

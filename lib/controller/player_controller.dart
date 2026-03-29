@@ -685,9 +685,9 @@ class Player {
     return newSeconds;
   }
 
-  Future<void> playOrPause<Q extends Playable>(
+  Future<void> playOrPause(
     int index,
-    Iterable<Q> queue,
+    Iterable<Playable> queue,
     QueueSourceBase source, {
     HomePageItems? homePageItem,
     bool shuffle = false,
@@ -716,6 +716,35 @@ class Player {
       _audioHandler.togglePlayPause();
     }
 
+    if (source.supportResuming) {
+      queue = queue.map(
+        (queueItem) =>
+            queueItem.execute(
+                  selectable: (e) => e is TrackWithDate
+                      ? TrackWithDate(
+                          dateAdded: e.dateAdded,
+                          track: e.track,
+                          queueSource: source,
+                          source: e.sourceNull,
+                        )
+                      : TrackWithDate(
+                          dateAdded: 0, // 0 to allow correct comparison with old queue
+                          track: e.track,
+                          queueSource: source,
+                          source: null,
+                        ),
+                  youtubeID: (e) => YoutubeID(
+                    id: e.id,
+                    playlistID: e.playlistID,
+                    queueSource: source,
+                    source: e.sourceNull,
+                    watchNull: e.watchNull,
+                  ),
+                )
+                as Playable,
+      );
+    }
+
     await _audioHandler.assignNewQueue(
       playAtIndex: index,
       queue: queue,
@@ -723,14 +752,23 @@ class Player {
       onIndexAndQueueSame: togglePlayPauseExclusive,
       onQueueDifferent: (finalizedQueue) {
         if (updateQueue) {
+          int? queueDate;
+          if (source.s == QueueSourceEnum.queuePage) {
+            // -- allow skip adding as a new queue (if same as latest queue)
+            final dateText = source.title;
+            if (dateText != null) {
+              queueDate = int.tryParse(dateText);
+            }
+          }
           if (queue.firstOrNull is Selectable) {
             try {
               final trs = finalizedQueue.cast<Selectable>().tracks.toList();
-              QueueController.inst.addNewQueue(source: source, homePageItem: homePageItem, tracks: trs);
+              QueueController.inst.addNewQueue(source: source, dateComparison: queueDate, homePageItem: homePageItem, tracks: trs);
             } catch (_) {
               // -- is mixed queue
             }
           }
+
           QueueController.inst.updateLatestQueue(finalizedQueue);
         }
       },
@@ -738,7 +776,7 @@ class Player {
       startPlaying: startPlaying,
       shuffle: shuffle,
       onAssigningCurrentItem: onAssigningCurrentItem,
-      duplicateRemover: source == QueueSource.history || source == QueueSourceYoutubeID.history
+      duplicateRemover: source == QueueSource.history || source == QueueSourceYoutubeID.ytHistory
           ? (item) {
               return item.execute(
                 selectable: (finalItem) => finalItem.track.path,

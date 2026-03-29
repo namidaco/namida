@@ -20,12 +20,15 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget with NamidaRouteWidget {
   @override
+  String? get name => foldersController.currentFolder.value?.path;
+
+  @override
   final RouteType route;
   final FoldersController foldersController;
   final LibraryTab tab;
   final MediaType Function() mediaType;
   final FoldersPageConfig config;
-  final QueueSource _queueSource;
+  final QueueSource Function(String? name) _queueSource;
 
   const FoldersPage._(
     this._queueSource, {
@@ -100,84 +103,79 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
     return BackgroundWrapper(
       child: ObxO(
         rx: foldersController.indexToScrollTo,
-        builder: (context, indexToScrollTo) => TrackTilePropertiesProvider(
-          configs: TrackTilePropertiesConfigs(
-            queueSource: _queueSource,
-          ),
-          builder: (properties) => Stack(
-            children: [
-              ObxO(
-                rx: config.enableFoldersHierarchy,
-                builder: (context, enableFoldersHierarchy) => enableFoldersHierarchy
-                    ? Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                            child: ObxO(
-                              rx: foldersController.isHome,
-                              builder: (context, isHome) => ObxO(
-                                rx: foldersController.currentFolder,
-                                builder: (context, currentFolder) {
-                                  return CustomListTile(
-                                    borderR: 16.0,
-                                    icon: isHome ? Broken.home_2 : Broken.folder_2,
-                                    title: isHome ? lang.home : currentFolder?.formattedPath() ?? lang.home,
-                                    titleStyle: textTheme.displaySmall,
-                                    onTap: () => foldersController.stepOut(),
-                                    trailingRaw: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const SizedBox(width: 4.0),
-                                        ObxO(
-                                          rx: config.defaultFolderStartupLocation,
-                                          builder: (context, defaultFolderStartupLocation) {
-                                            final isDefaultFolderEmpty = defaultFolderStartupLocation == null || defaultFolderStartupLocation.isEmpty;
-                                            return NamidaIconButton(
-                                              verticalPadding: 8.0,
-                                              horizontalPadding: 4.0,
-                                              tooltip: () => lang.setAsDefault,
-                                              icon: (isDefaultFolderEmpty && isHome)
-                                                  ? Broken.archive_tick
-                                                  : currentFolder == null || isDefaultFolderEmpty || !currentFolder.hasSamePathAs(defaultFolderStartupLocation)
-                                                  ? Broken.save_2
-                                                  : Broken.archive_tick,
-                                              iconSize: 22.0,
-                                              onPressed: () => config.onDefaultStartupFolderChanged(),
-                                            );
-                                          },
-                                        ),
-                                        const SizedBox(width: 4.0),
-                                        NamidaIconButton(
-                                          verticalPadding: 8.0,
-                                          horizontalPadding: 4.0,
-                                          icon: Broken.sort,
-                                          onPressed: () {
-                                            NamidaOnTaps.inst.onSubPageTracksSortIconTap(
-                                              mediaType(),
-                                              header: _getSortDialogHeader(),
-                                            );
-                                          },
-                                        ),
-                                      ],
+        builder: (context, indexToScrollTo) => ObxO(
+          rx: foldersController.lastVisitedFolderMap,
+          builder: (context, lastVisitedFolderMap) => ObxO(
+            rx: foldersController.currentFolder,
+            builder: (context, currentFolder) {
+              final folderTracks = foldersController.folderToTracks(currentFolder) ?? [];
+              final highlightedFolder = lastVisitedFolderMap[currentFolder];
+              return TrackTilePropertiesProvider(
+                configs: TrackTilePropertiesConfigs(
+                  queueSource: _queueSource(currentFolder?.path),
+                ),
+                builder: (properties) => Stack(
+                  children: [
+                    ObxO(
+                      rx: config.enableFoldersHierarchy,
+                      builder: (context, enableFoldersHierarchy) => enableFoldersHierarchy
+                          ? Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                                  child: ObxO(
+                                    rx: foldersController.isHome,
+                                    builder: (context, isHome) => CustomListTile(
+                                      borderR: 16.0,
+                                      icon: isHome ? Broken.home_2 : Broken.folder_2,
+                                      title: isHome ? lang.home : currentFolder?.formattedPath() ?? lang.home,
+                                      titleStyle: textTheme.displaySmall,
+                                      onTap: () => foldersController.stepOut(),
+                                      trailingRaw: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const SizedBox(width: 4.0),
+                                          ObxO(
+                                            rx: config.defaultFolderStartupLocation,
+                                            builder: (context, defaultFolderStartupLocation) {
+                                              final isDefaultFolderEmpty = defaultFolderStartupLocation == null || defaultFolderStartupLocation.isEmpty;
+                                              return NamidaIconButton(
+                                                verticalPadding: 8.0,
+                                                horizontalPadding: 4.0,
+                                                tooltip: () => lang.setAsDefault,
+                                                icon: (isDefaultFolderEmpty && isHome)
+                                                    ? Broken.archive_tick
+                                                    : currentFolder == null || isDefaultFolderEmpty || !currentFolder.hasSamePathAs(defaultFolderStartupLocation)
+                                                    ? Broken.save_2
+                                                    : Broken.archive_tick,
+                                                iconSize: 22.0,
+                                                onPressed: () => config.onDefaultStartupFolderChanged(),
+                                              );
+                                            },
+                                          ),
+                                          const SizedBox(width: 4.0),
+                                          NamidaIconButton(
+                                            verticalPadding: 8.0,
+                                            horizontalPadding: 4.0,
+                                            icon: Broken.sort,
+                                            onPressed: () {
+                                              NamidaOnTaps.inst.onSubPageTracksSortIconTap(
+                                                mediaType(),
+                                                header: _getSortDialogHeader(),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: NamidaScrollbar(
-                              controller: scrollController,
-                              child: ObxO(
-                                rx: foldersController.isHome,
-                                builder: (context, isHome) => ObxO(
-                                  rx: foldersController.lastVisitedFolderMap,
-                                  builder: (context, lastVisitedFolderMap) => ObxO(
-                                    rx: foldersController.currentFolder,
-                                    builder: (context, currentFolder) {
-                                      final folderTracks = foldersController.folderToTracks(currentFolder) ?? [];
-                                      final highlightedFolder = lastVisitedFolderMap[currentFolder];
-                                      return SmoothCustomScrollView(
+                                  ),
+                                ),
+                                Expanded(
+                                  child: NamidaScrollbar(
+                                    controller: scrollController,
+                                    child: ObxO(
+                                      rx: foldersController.isHome,
+                                      builder: (context, isHome) => SmoothCustomScrollView(
                                         controller: scrollController,
                                         slivers: [
                                           ObxO(
@@ -218,60 +216,48 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                           kBottomPaddingWidgetSliver,
                                           scrollToiconBottomPaddingSliver,
                                         ],
-                                      );
-                                    },
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    // == All Folders
-                    : ObxO(
-                        rx: foldersController.isHome,
-                        builder: (context, isHome) => Column(
-                          children: [
-                            ObxO(
-                              rx: foldersController.currentFolder,
-                              builder: (context, currentFolder) => CustomListTile(
-                                borderR: 16.0,
-                                icon: isHome ? Broken.home_2 : Broken.folder_2,
-                                title: isHome ? lang.home : currentFolder?.formattedPath() ?? lang.home,
-                                titleStyle: textTheme.displaySmall,
-                                onTap: () => foldersController.stepOut(),
-                                trailingRaw: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const SizedBox(width: 4.0),
-                                    NamidaIconButton(
-                                      verticalPadding: 8.0,
-                                      horizontalPadding: 4.0,
-                                      icon: Broken.sort,
-                                      onPressed: () {
-                                        NamidaOnTaps.inst.onSubPageTracksSortIconTap(
-                                          mediaType(),
-                                          header: _getSortDialogHeader(),
-                                        );
-                                      },
+                              ],
+                            )
+                          // == All Folders
+                          : ObxO(
+                              rx: foldersController.isHome,
+                              builder: (context, isHome) => Column(
+                                children: [
+                                  CustomListTile(
+                                    borderR: 16.0,
+                                    icon: isHome ? Broken.home_2 : Broken.folder_2,
+                                    title: isHome ? lang.home : currentFolder?.formattedPath() ?? lang.home,
+                                    titleStyle: textTheme.displaySmall,
+                                    onTap: () => foldersController.stepOut(),
+                                    trailingRaw: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const SizedBox(width: 4.0),
+                                        NamidaIconButton(
+                                          verticalPadding: 8.0,
+                                          horizontalPadding: 4.0,
+                                          icon: Broken.sort,
+                                          onPressed: () {
+                                            NamidaOnTaps.inst.onSubPageTracksSortIconTap(
+                                              mediaType(),
+                                              header: _getSortDialogHeader(),
+                                            );
+                                          },
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: NamidaScrollbar(
-                                controller: scrollController,
-                                child: ObxO(
-                                  rx: foldersController.isInside,
-                                  builder: (context, isInside) => ObxO(
-                                    rx: foldersController.lastVisitedFolderMap,
-                                    builder: (context, lastVisitedFolderMap) => ObxO(
-                                      rx: foldersController.currentFolder,
-                                      builder: (context, currentFolder) {
-                                        final folderTracks = foldersController.folderToTracks(currentFolder) ?? [];
-                                        final highlightedFolder = lastVisitedFolderMap[currentFolder];
-                                        return SmoothCustomScrollView(
+                                  ),
+
+                                  Expanded(
+                                    child: NamidaScrollbar(
+                                      controller: scrollController,
+                                      child: ObxO(
+                                        rx: foldersController.isInside,
+                                        builder: (context, isInside) => SmoothCustomScrollView(
                                           controller: scrollController,
                                           slivers: [
                                             if (!isInside)
@@ -318,38 +304,38 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                             kBottomPaddingWidgetSliver,
                                             scrollToiconBottomPaddingSliver,
                                           ],
-                                        );
-                                      },
+                                        ),
+                                      ),
                                     ),
                                   ),
+                                ],
+                              ),
+                            ),
+                    ),
+                    indexToScrollTo != null
+                        ? Obx(
+                            (context) => Positioned(
+                              bottom: Dimensions.inst.globalBottomPaddingEffectiveR + 8.0,
+                              right: (Dimensions.inst.shouldHideFABR ? 0.0 : kFABSize) + 12.0 + 8.0,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: theme.scaffoldBackgroundColor,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: _SmolIconFolderScroll(
+                                  foldersController: foldersController,
+                                  iconSize: scrollToIconSize,
+                                  controller: scrollController,
+                                  indexToScrollTo: indexToScrollTo,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-              ),
-              indexToScrollTo != null
-                  ? Obx(
-                      (context) => Positioned(
-                        bottom: Dimensions.inst.globalBottomPaddingEffectiveR + 8.0,
-                        right: (Dimensions.inst.shouldHideFABR ? 0.0 : kFABSize) + 12.0 + 8.0,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: theme.scaffoldBackgroundColor,
-                            shape: BoxShape.circle,
-                          ),
-                          child: _SmolIconFolderScroll(
-                            foldersController: foldersController,
-                            iconSize: scrollToIconSize,
-                            controller: scrollController,
-                            indexToScrollTo: indexToScrollTo,
-                          ),
-                        ),
-                      ),
-                    )
-                  : const SizedBox(),
-            ],
+                          )
+                        : const SizedBox(),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -409,7 +395,7 @@ class __SmolIconFolderScrollState extends State<_SmolIconFolderScroll> {
   @override
   Widget build(BuildContext context) {
     return NamidaIconButton(
-      padding: const EdgeInsets.all(7.0),
+      padding: const EdgeInsets.all(8.0),
       iconSize: widget.iconSize,
       onPressed: () {
         try {

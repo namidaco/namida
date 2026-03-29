@@ -45,11 +45,12 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Ma
   Widget build(BuildContext context) {
     final name = widget.name;
     final tracks = widget.tracks;
+    final queueSource = QueueSource.genre(name);
     return AnimationLimiter(
       child: BackgroundWrapper(
         child: TrackTilePropertiesProvider(
           configs: TrackTilePropertiesConfigs(
-            queueSource: QueueSource.genre,
+            queueSource: queueSource,
           ),
           builder: (properties) => Obx(
             (context) {
@@ -66,7 +67,7 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Ma
                 infoBox: (maxWidth) => SubpageInfoContainer(
                   maxWidth: maxWidth,
                   title: name,
-                  source: QueueSource.genre,
+                  source: queueSource,
                   subtitle: tracks.map((e) => e.originalArtist).takeUnique(10).join(', '),
                   heroTag: 'genre_$name',
                   imageBuilder: (size) => MultiArtworkContainer(

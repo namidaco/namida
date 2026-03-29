@@ -10,6 +10,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -18,6 +19,7 @@ class YoutubeID with ItemWithDate implements Playable<Map<String, dynamic>>, Pla
   final String id;
   final YTWatch? watchNull;
   final PlaylistID? playlistID;
+  final QueueSourceBase? queueSource;
 
   @override
   final TrackSource? sourceNull;
@@ -31,14 +33,16 @@ class YoutubeID with ItemWithDate implements Playable<Map<String, dynamic>>, Pla
     required this.id,
     TrackSource? source,
     this.watchNull,
+    this.queueSource,
     required this.playlistID,
   }) : sourceNull = source;
 
   factory YoutubeID.fromJson(Map<String, dynamic> json) {
     return YoutubeID(
       id: json['id'] ?? '',
-      source: json['source'] == null ? null : TrackSource.values.getEnum(json['source']),
       watchNull: YTWatch.fromJson(json['watch']),
+      queueSource: QueueSourceYoutubeID.fromJson(json['qs']),
+      source: json['source'] == null ? null : TrackSource.values.getEnum(json['source']),
       playlistID: json['playlistID'] == null ? null : PlaylistID.fromJson(json['playlistID']),
     );
   }
@@ -48,6 +52,7 @@ class YoutubeID with ItemWithDate implements Playable<Map<String, dynamic>>, Pla
     return {
       "id": id,
       "watch": watch.toJson(),
+      if (queueSource != null) 'qs': queueSource?.toJson(),
       if (sourceNull != null) "source": sourceNull!.name,
       if (playlistID != null) "playlistID": playlistID?.toJson(),
     };

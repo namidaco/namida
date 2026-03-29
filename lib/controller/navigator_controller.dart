@@ -728,7 +728,7 @@ SnackbarController snackyy({
                         ),
                       )
                     : NamidaButton(
-                        midColors: true,
+                        colors: .mid,
                         onTap: () {
                           if (alreadyTappedButton) return;
                           alreadyTappedButton = true;

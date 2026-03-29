@@ -498,7 +498,7 @@ class YTUtils {
     final isCurrentlyPlaying = currentVideo != null && videoId == currentVideo.id;
     if (displayGoToChannel && (channelID == null || channelID.isEmpty)) channelID = await YoutubeInfoController.utils.getVideoChannelID(videoId);
 
-    final isFromQueue = queueIndex != null && queueSource == QueueSourceYoutubeID.playerQueue;
+    final isFromQueue = queueIndex != null && queueSource == QueueSourceYoutubeID.ytPlayerQueue;
 
     NamidaPopupItem? favouriteItem;
     if (showFavouritesTile) {
@@ -576,7 +576,7 @@ class YTUtils {
               icon: Broken.play,
               title: lang.play,
               onTap: () {
-                Player.inst.playOrPause(0, [YoutubeID(id: videoId, playlistID: playlistID)], QueueSource.others);
+                Player.inst.playOrPause(0, [YoutubeID(id: videoId, playlistID: playlistID)], queueSource);
               },
             ),
       NamidaPopupItem(
@@ -791,7 +791,7 @@ class YTUtils {
       playlistName: k_PLAYLIST_NAME_FAV,
       isEditable: false,
       reversedList: true,
-      queueSource: QueueSourceYoutubeID.favourites,
+      queueSource: QueueSourceYoutubeID.ytFavourites,
     ).navigate();
   }
 

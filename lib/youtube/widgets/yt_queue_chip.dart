@@ -197,14 +197,9 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
             // final singleWidget = queue.length == 1
             //     ? Padding(
             //         padding: const EdgeInsets.all(12.0),
-            //         child: FloatingActionButton(
-            //           heroTag: 'yt_queue_fab_hero',
-            //           backgroundColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.9),
-            //           onPressed: () => _animateSmallToBig(),
-            //           child: const Icon(
-            //             Broken.driver,
-            //             color: AppThemes.fabForegroundColor,
-            //           ),
+            //         child: NamidaFABButton(
+            //           icon: Broken.driver,
+            //           onTap: () => _animateSmallToBig(),
             //         ),
             //       )
             //     : null;
@@ -398,7 +393,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                         Expanded(
                           child: VideoTilePropertiesProvider(
                             configs: VideoTilePropertiesConfigs(
-                              queueSource: QueueSourceYoutubeID.playerQueue,
+                              queueSource: QueueSourceYoutubeID.ytPlayerQueue,
                               playlistName: '',
                               openMenuOnLongPress: false,
                               displayTimeAgo: false,

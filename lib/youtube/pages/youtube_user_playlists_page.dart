@@ -93,7 +93,7 @@ class _YoutubeUserPlaylistsPageState extends State<YoutubeUserPlaylistsPage> {
       ),
       itemBuilder: (playlist, index, list) {
         return YoutubePlaylistCard(
-          queueSource: QueueSourceYoutubeID.playlistHosted,
+          queueSource: QueueSourceYoutubeID.ytPlaylistHosted,
           key: Key(playlist.id),
           playlist: playlist,
           subtitle: playlist.infoTexts?.join(' - '), // the second text is mostly like 'updated today' etc

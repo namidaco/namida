@@ -24,7 +24,7 @@ class YoutubeNotificationsPage extends StatelessWidget {
 
     return VideoTilePropertiesProvider(
       configs: const VideoTilePropertiesConfigs(
-        queueSource: QueueSourceYoutubeID.notificationsHosted,
+        queueSource: QueueSourceYoutubeID.ytNotificationsHosted,
       ),
       builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieNotificationResult, StreamInfoItemNotification>(
         operation: YoutiPieOperation.fetchNotifications,

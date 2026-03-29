@@ -2620,7 +2620,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
         final videoId = item.videoId;
         if (videoId == null) return [];
         return YTUtils.getVideoCardMenuItems(
-          queueSource: QueueSourceYoutubeID.videoEndCard,
+          queueSource: QueueSourceYoutubeID.ytVideoEndCard,
           downloadIndex: null,
           totalLength: null,
           streamInfoItem: null,
@@ -2682,7 +2682,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
           ];
         } else {
           return item.basicInfo.getPopupMenuItems(
-            queueSource: QueueSourceYoutubeID.videoEndCard,
+            queueSource: QueueSourceYoutubeID.ytVideoEndCard,
             displayOpenPlaylist: true,
             showProgressSheet: true,
             playlistToFetch: fetchedPlaylist,

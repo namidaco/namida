@@ -70,9 +70,12 @@ class SearchPage extends StatelessWidget {
         child: SearchPageTitleRow(
           title: title,
           icon: icon,
-          buttonIcon: Broken.category,
-          buttonText: lang.viewAll,
-          onPressed: ArtistSearchResultsPage(artists: rxList(), type: type).navigate,
+          trailing: NamidaButton(
+            colors: .mid,
+            icon: Broken.category,
+            text: lang.viewAll,
+            onTap: ArtistSearchResultsPage(artists: rxList(), type: type).navigate,
+          ),
         ),
       ),
       _horizontalSliverList(
@@ -262,9 +265,12 @@ class SearchPage extends StatelessWidget {
                                             child: SearchPageTitleRow(
                                               title: '${lang.albums} • ${albumSearchTemp.length}',
                                               icon: Broken.music_dashboard,
-                                              buttonIcon: Broken.category,
-                                              buttonText: lang.viewAll,
-                                              onPressed: const AlbumSearchResultsPage().navigate,
+                                              trailing: NamidaButton(
+                                                colors: .mid,
+                                                icon: Broken.category,
+                                                text: lang.viewAll,
+                                                onTap: const AlbumSearchResultsPage().navigate,
+                                              ),
                                             ),
                                           ),
                                           _horizontalSliverList(
@@ -480,12 +486,15 @@ class SearchPage extends StatelessWidget {
                                                     ),
                                                   ],
                                                 ),
-                                                buttonIcon: Broken.play,
-                                                buttonText: settings.trackPlayMode.valueR.toText(),
-                                                onPressed: () {
-                                                  final element = settings.trackPlayMode.value.nextElement(TrackPlayMode.values);
-                                                  settings.save(trackPlayMode: element);
-                                                },
+                                                trailing: NamidaButton(
+                                                  colors: .mid,
+                                                  icon: Broken.play,
+                                                  text: settings.trackPlayMode.valueR.toText(),
+                                                  onTap: () {
+                                                    final element = settings.trackPlayMode.value.nextElement(TrackPlayMode.values);
+                                                    settings.save(trackPlayMode: element);
+                                                  },
+                                                ),
                                               ),
                                             ),
                                           ),

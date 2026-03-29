@@ -33,12 +33,14 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> with ItemWithDate i
 
   final int dateAdded;
   final Track _track;
+  final QueueSourceBase? queueSource;
   @override
   final TrackSource? sourceNull;
 
   const TrackWithDate({
     required this.dateAdded,
     required Track track,
+    this.queueSource,
     TrackSource? source,
   }) : _track = track,
        sourceNull = source;
@@ -48,6 +50,7 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> with ItemWithDate i
     return TrackWithDate(
       dateAdded: json['dateAdded'] ?? currentTimeMS,
       track: finalTrack,
+      queueSource: QueueSource.fromJson(json['qs']),
       source: json['source'] == null ? null : TrackSource.values.getEnum(json['source']),
     );
   }
@@ -57,6 +60,7 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> with ItemWithDate i
     return {
       'dateAdded': dateAdded,
       'track': _track.path,
+      if (queueSource != null) 'qs': queueSource?.toJson(),
       if (sourceNull != null) 'source': sourceNull?.name,
       if (_track is Video) 'v': true,
     };

@@ -447,8 +447,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
             builder: (loadingController) => NamidaButton(
               dense: true,
               minHeight: NamidaButton.kDefaultMinHeight * 0.9,
-              midColors: !subscribed,
-              dimmedColors: subscribed,
+              colors: subscribed ? .dimmed : .mid,
               text: subscribed ? lang.subscribed : lang.subscribe,
               onTap: () async {
                 final info = widget.mainChannelInfo.value;

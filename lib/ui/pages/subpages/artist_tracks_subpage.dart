@@ -67,17 +67,18 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
 
   @override
   Widget build(BuildContext context) {
+    final name = widget.name;
     final type = widget.type;
     final queueSource = type == MediaType.albumArtist
-        ? QueueSource.albumArtist
+        ? QueueSource.albumArtist(name)
         : type == MediaType.composer
-        ? QueueSource.composer
-        : QueueSource.artist;
+        ? QueueSource.composer(name)
+        : QueueSource.artist(name);
     final tracks = widget.tracks;
     final albumsInitiallyExpanded = settings.extra.artistAlbumsExpanded ?? true;
     final singlesInitiallyExpanded = settings.extra.artistSinglesExpanded ?? false; // cuz no space
     final extrasInitiallyExpanded = widget.albumIdentifiers.isEmpty && widget.singlesIdentifiers.isEmpty;
-    final heroTag = 'artist_${widget.name}';
+    final heroTag = 'artist_$name';
     return AnimationLimiter(
       child: BackgroundWrapper(
         child: TrackTilePropertiesProvider(
@@ -134,12 +135,12 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                   maxWidth: maxWidth,
                   topPadding: 8.0,
                   bottomPadding: 8.0,
-                  title: widget.name,
+                  title: name,
                   source: queueSource,
                   subtitle: tracks.year.yearFormatted,
                   heroTag: heroTag,
                   imageBuilder: (size) {
-                    final info = NetworkArtworkInfo.artist(widget.name);
+                    final info = NetworkArtworkInfo.artist(name);
                     final tracksPathToImage = tracks.pathToImage;
                     final artworkPre = NetworkArtwork.orLocal(
                       key: Key(tracksPathToImage),
@@ -226,6 +227,7 @@ class _AlbumsRow extends StatelessWidget {
       child: BorderRadiusClip(
         borderRadius: BorderRadiusGeometry.circular(8.0.multipliedRadius),
         child: NamidaExpansionTile(
+          compact: false,
           bgColor: context.theme.cardColor,
           icon: icon,
           borderless: true,

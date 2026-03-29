@@ -722,9 +722,22 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       () async {
         return await item.execute(
           selectable: (finalItem) async {
+            final twd = finalItem.trackWithDate;
+            if (twd != null) {
+              final qs = twd.queueSource;
+              if (qs != null && qs.supportResuming) {
+                QueueController.latestPlayedForSourceManager.update(qs, finalItem);
+              }
+            }
+
             await onItemPlaySelectable(item, finalItem, index, skipItem, preparedItemInfo);
           },
           youtubeID: (finalItem) async {
+            final qs = finalItem.queueSource;
+            if (qs != null && qs.supportResuming) {
+              QueueController.latestPlayedForSourceManager.update(qs, finalItem);
+            }
+
             await onItemPlayYoutubeID(item, finalItem, index, skipItem);
             tryAddingMixPlaylist(finalItem.id);
           },

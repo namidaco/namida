@@ -63,7 +63,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
           Expanded(
             child: VideoTilePropertiesProvider(
               configs: VideoTilePropertiesConfigs(
-                queueSource: QueueSourceYoutubeID.history,
+                queueSource: QueueSourceYoutubeID.ytHistory,
                 playlistName: k_PLAYLIST_NAME_HISTORY,
                 playlistID: PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
                 playlistInfo: () => PlaylistBasicInfo(
@@ -107,7 +107,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                               menu: NamidaPopupWrapper(
                                 openOnLongPress: false,
                                 childrenDefault: () => YTUtils.getVideosMenuItems(
-                                  queueSource: QueueSourceYoutubeID.history,
+                                  queueSource: QueueSourceYoutubeID.ytHistory,
                                   context: context,
                                   playlistName: k_PLAYLIST_NAME_HISTORY,
                                   videos: videos,

@@ -239,7 +239,7 @@ Future<bool> _mainAppInitialization() async {
       if (args != null && args.isNotEmpty) {
         // -- will play from args instead of latest queue
       } else if (!shouldShowOnBoarding) {
-        return ytInfoInitSyncItemsCompleter.future.whenComplete(QueueController.inst.prepareLatestQueueAsync);
+        return ytInfoInitSyncItemsCompleter.future.whenComplete(QueueController.inst.prepareLatestQueueAndLatestPlayedForSourceAsync);
       }
     }
 

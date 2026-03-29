@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/clipboard_controller.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
@@ -133,15 +134,78 @@ class MainPage extends StatelessWidget {
                   final fabBottomOffset = MediaQuery.viewInsetsOf(context).bottom - MediaQuery.viewPaddingOf(context).bottom - kBottomNavigationBarHeight + 8.0;
                   return Obx(
                     (context) {
+                      final currentRoute = NamidaNavigator.inst.currentRouteR;
+                      if (currentRoute == null) return const SizedBox();
+
+                      final mainFABHidden = Dimensions.inst.shouldHideFABR;
+                      final bottom = fabBottomOffset.withMinimum(isMiniplayerAlwaysVisible ? 12.0 : Dimensions.inst.globalBottomPaddingEffectiveR);
+                      final right = (mainFABHidden ? 0.0 : kFABSize + 12.0) + 8.0;
+                      bool shouldHide;
+                      bool shouldPlay = false;
+
+                      final currentQueueSource = currentRoute.toQueueSource();
+                      if (!currentQueueSource.supportResuming) {
+                        shouldHide = true;
+                      } else {
+                        shouldHide = ScrollSearchController.inst.isGlobalSearchMenuShown.valueR;
+                        if (!shouldHide) {
+                          final item = QueueController.latestPlayedForSourceManager.map.valueR[currentQueueSource];
+                          if (item == null) {
+                            shouldHide = true;
+                          } else if (Player.inst.currentItem.valueR != item) {
+                            shouldPlay = true;
+                          }
+                        }
+                      }
+
+                      if (!shouldHide) {
+                        // -- only update shouldPlay when fab is showing
+                        // -- to prevent switching buttons while hiding
+                        _MainPageFABResumeButton._latestShouldPlay = shouldPlay;
+                      }
+
+                      return AnimatedPositioned(
+                        key: const Key('fab_resume_active'),
+                        right: right,
+                        bottom: bottom,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.fastEaseInToSlowEaseOut,
+                        child: AnimatedShow(
+                          isHorizontal: true,
+                          show: !shouldHide,
+                          duration: const Duration(milliseconds: 400),
+                          child: _MainPageFABResumeButton._latestShouldPlay
+                              ? _MainPageFABResumeButton(
+                                  key: const ValueKey('shouldPlay_true'),
+                                  shouldPlay: true,
+                                  getInfo: () => (currentRoute: currentRoute, currentQueueSource: currentQueueSource),
+                                )
+                              : _MainPageFABResumeButton(
+                                  key: const ValueKey('shouldPlay_false'),
+                                  shouldPlay: false,
+                                  getInfo: () => (currentRoute: currentRoute, currentQueueSource: currentQueueSource),
+                                ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              Builder(
+                builder: (context) {
+                  final fabBottomOffset = MediaQuery.viewInsetsOf(context).bottom - MediaQuery.viewPaddingOf(context).bottom - kBottomNavigationBarHeight + 8.0;
+                  return Obx(
+                    (context) {
                       final shouldHide = Dimensions.inst.shouldHideFABR;
+                      final bottom = fabBottomOffset.withMinimum(isMiniplayerAlwaysVisible ? 12.0 : Dimensions.inst.globalBottomPaddingEffectiveR);
                       return AnimatedPositioned(
                         key: const Key('fab_active'),
                         right: 12.0,
-                        bottom: fabBottomOffset.withMinimum(isMiniplayerAlwaysVisible ? 12.0 : Dimensions.inst.globalBottomPaddingEffectiveR),
+                        bottom: bottom,
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.fastEaseInToSlowEaseOut,
                         child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 400),
+                          duration: const Duration(milliseconds: 300),
                           child: shouldHide ? const SizedBox(key: Key('fab_dummy')) : fabChild,
                         ),
                       );
@@ -286,6 +350,31 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
     ScrollSearchController.inst.unfocusKeyboard();
   }
 
+  void _onTap() {
+    final fab = settings.floatingActionButton.value;
+    final isMenuOpened = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
+    if (fab == FABType.search || isMenuOpened) {
+      if (_shouldShowSubmitSearch && ScrollSearchController.inst.currentSearchType.value == SearchType.youtube) {
+        ScrollSearchController.inst.searchBarWidget.submit(ScrollSearchController.inst.searchTextEditingController.text);
+        return;
+      }
+      final isOpen = ScrollSearchController.inst.searchBarKey.currentState?.isOpen ?? false;
+      if (isOpen && !isMenuOpened) {
+        SearchSortController.inst.prepareResources();
+        ScrollSearchController.inst.showSearchMenu();
+        ScrollSearchController.inst.searchBarKey.currentState?.focusNode.requestFocus();
+      } else {
+        isMenuOpened ? SearchSortController.inst.disposeResources() : SearchSortController.inst.prepareResources();
+        ScrollSearchController.inst.toggleSearchMenu();
+        ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
+      }
+    } else if (fab == FABType.shuffle || fab == FABType.play) {
+      Player.inst.playOrPause(0, SelectedTracksController.inst.getCurrentAllTracks(), QueueSource.allTracks, shuffle: fab == FABType.shuffle);
+    }
+  }
+
+  String _tooltip() => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.clear : settings.floatingActionButton.value.toText();
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -299,76 +388,149 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
       },
     );
     return Builder(
-      builder: (context) => NamidaTooltip(
-        message: () => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.clear : settings.floatingActionButton.value.toText(),
-        child: FloatingActionButton(
-          heroTag: 'main_page_fab_hero',
-          backgroundColor: Color.alphaBlend(CurrentColor.inst.currentColorScheme.withOpacityExt(0.6), theme.cardColor),
-          onPressed: () {
-            final fab = settings.floatingActionButton.value;
-            final isMenuOpened = ScrollSearchController.inst.isGlobalSearchMenuShown.value;
-            if (fab == FABType.search || isMenuOpened) {
-              if (_shouldShowSubmitSearch && ScrollSearchController.inst.currentSearchType.value == SearchType.youtube) {
-                ScrollSearchController.inst.searchBarWidget.submit(ScrollSearchController.inst.searchTextEditingController.text);
-                return;
-              }
-              final isOpen = ScrollSearchController.inst.searchBarKey.currentState?.isOpen ?? false;
-              if (isOpen && !isMenuOpened) {
-                SearchSortController.inst.prepareResources();
-                ScrollSearchController.inst.showSearchMenu();
-                ScrollSearchController.inst.searchBarKey.currentState?.focusNode.requestFocus();
-              } else {
-                isMenuOpened ? SearchSortController.inst.disposeResources() : SearchSortController.inst.prepareResources();
-                ScrollSearchController.inst.toggleSearchMenu();
-                ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar();
-              }
-            } else if (fab == FABType.shuffle || fab == FABType.play) {
-              Player.inst.playOrPause(0, SelectedTracksController.inst.getCurrentAllTracks(), QueueSource.allTracks, shuffle: fab == FABType.shuffle);
-            }
-          },
-          child: ObxO(
-            rx: ScrollSearchController.inst.isGlobalSearchMenuShown,
-            builder: (context, isGlobalSearchMenuShown) => isGlobalSearchMenuShown
-                ? VerticalDragDetector(
-                    onUpdate: (details) {
-                      _dragValue += details.delta.dy * 0.02;
-                    },
-                    onEnd: (details) {
-                      if (_dragValue < -_dragThreshold) {
-                        _onDragUpwards();
-                      } else if (_dragValue > _dragThreshold) {
-                        _onDragDownwards();
-                      }
-                      _dragValue = 0;
-                    },
-                    onCancel: () => _dragValue = 0,
-                    child: ObxO(
-                      rx: SearchSortController.inst.runningSearchesTempCount,
-                      builder: (context, runningSearchesCount) => Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          ObxO(
-                            rx: ScrollSearchController.inst.currentSearchType,
-                            builder: (context, currentSearchType) => Icon(
-                              _shouldShowSubmitSearch && currentSearchType == SearchType.youtube ? Broken.search_normal : Broken.shield_slash,
-                              color: AppThemes.fabForegroundColor,
-                            ),
-                          ),
-                          if (runningSearchesCount > 0) searchProgressWidget,
-                        ],
+      builder: (context) => ObxO(
+        rx: ScrollSearchController.inst.isGlobalSearchMenuShown,
+        builder: (context, isGlobalSearchMenuShown) => isGlobalSearchMenuShown
+            ? VerticalDragDetector(
+                onUpdate: (details) {
+                  _dragValue += details.delta.dy * 0.02;
+                },
+                onEnd: (details) {
+                  if (_dragValue < -_dragThreshold) {
+                    _onDragUpwards();
+                  } else if (_dragValue > _dragThreshold) {
+                    _onDragDownwards();
+                  }
+                  _dragValue = 0;
+                },
+                onCancel: () => _dragValue = 0,
+                child: ObxO(
+                  rx: SearchSortController.inst.runningSearchesTempCount,
+                  builder: (context, runningSearchesCount) => Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      ObxO(
+                        rx: ScrollSearchController.inst.currentSearchType,
+                        builder: (context, currentSearchType) => NamidaFABButton(
+                          tooltip: _tooltip,
+                          icon: _shouldShowSubmitSearch && currentSearchType == SearchType.youtube ? Broken.search_normal : Broken.shield_slash,
+                          onTap: _onTap,
+                        ),
                       ),
-                    ),
-                  )
-                : ObxO(
-                    rx: settings.floatingActionButton,
-                    builder: (context, fabButton) => Icon(
-                      fabButton.toIcon(),
-                      color: AppThemes.fabForegroundColor,
-                    ),
+                      if (runningSearchesCount > 0) searchProgressWidget,
+                    ],
                   ),
-          ),
-        ),
+                ),
+              )
+            : ObxO(
+                rx: settings.floatingActionButton,
+                builder: (context, fabButton) => NamidaFABButton(
+                  tooltip: _tooltip,
+                  onTap: _onTap,
+                  icon: fabButton.toIcon(),
+                ),
+              ),
       ),
+    );
+  }
+}
+
+class _MainPageFABResumeButton extends StatelessWidget {
+  final bool shouldPlay;
+  final ({NamidaRoute currentRoute, QueueSourceBase currentQueueSource}) Function() getInfo;
+
+  const _MainPageFABResumeButton({
+    super.key,
+    required this.shouldPlay,
+    required this.getInfo,
+  });
+
+  static bool _latestShouldPlay = false;
+
+  T? _resumeFABResolver<T>(NamidaRoute currentRoute, QueueSourceBase currentQueueSource, {required T Function(int index, List<Playable> items) callback}) {
+    final latestItemPlayable = QueueController.latestPlayedForSourceManager.map.value[currentQueueSource];
+    return latestItemPlayable?.execute(
+      selectable: (latestItem) {
+        final tracks = currentRoute.tracksListInside();
+        var index = tracks.indexWhere((e) => e == latestItem);
+        if (index < 0) index = tracks.indexWhere((e) => e.track == latestItem.track);
+        if (index < 0) index = 0;
+        return callback(index, tracks);
+      },
+      youtubeID: (latestItem) {
+        final videos = currentRoute.videosListInside();
+        var index = videos.indexWhere((e) => e == latestItem);
+        if (index < 0) index = videos.indexWhere((e) => e.id == latestItem.id);
+        if (index < 0) index = 0;
+        return callback(index, videos);
+      },
+    );
+  }
+
+  void _resumeFABJumpToItem(int index, List<Playable> items) {
+    try {
+      final itemExtent = items.firstOrNull is YoutubeID ? Dimensions.youtubeCardItemExtent : Dimensions.inst.trackTileItemExtent;
+      final offset = (index + 1) * itemExtent;
+      final controllerPosition = NamidaScrollController.latestAddedScrollController?.positions.lastOrNull;
+      final maxOffset = controllerPosition?.maxScrollExtent;
+      if (maxOffset != null && offset > maxOffset) {
+        return;
+      }
+      controllerPosition?.animateToEff(
+        offset,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.fastLinearToSlowEaseIn,
+      );
+    } catch (_) {}
+  }
+
+  void _onTap() {
+    final info = getInfo();
+    _resumeFABResolver(
+      info.currentRoute,
+      info.currentQueueSource,
+      callback: (index, items) {
+        _resumeFABJumpToItem(index, items);
+        if (shouldPlay) {
+          Player.inst.playOrPause(
+            index,
+            items,
+            info.currentQueueSource,
+            gentlePlay: false,
+          );
+        }
+      },
+    );
+  }
+
+  void _onLongPress() {
+    final info = getInfo();
+    _resumeFABResolver(
+      info.currentRoute,
+      info.currentQueueSource,
+      callback: _resumeFABJumpToItem,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaTooltip(
+      message: () => lang.resume,
+      child: shouldPlay
+          ? NamidaFABButton(
+              tooltip: null,
+              icon: Broken.play_circle,
+              text: lang.resume,
+              onTap: _onTap,
+              onLongPress: _onLongPress,
+            )
+          : NamidaFABButton(
+              tooltip: () => lang.jump,
+              icon: Broken.cd,
+              text: null,
+              onTap: _onTap,
+              onLongPress: _onLongPress,
+            ),
     );
   }
 }

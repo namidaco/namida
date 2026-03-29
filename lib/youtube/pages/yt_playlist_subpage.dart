@@ -71,7 +71,7 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
   Widget build(BuildContext context) {
     return VideoTilePropertiesProvider(
       configs: VideoTilePropertiesConfigs(
-        queueSource: QueueSourceYoutubeID.mostPlayed,
+        queueSource: QueueSourceYoutubeID.ytMostPlayed,
         playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
         playlistName: k_PLAYLIST_NAME_MOST_PLAYED,
         playlistInfo: () => PlaylistBasicInfo(
@@ -605,7 +605,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     final theme = AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode);
     return VideoTilePropertiesProvider(
       configs: VideoTilePropertiesConfigs(
-        queueSource: QueueSourceYoutubeID.playlistHosted,
+        queueSource: QueueSourceYoutubeID.ytPlaylistHosted,
         showMoreIcon: true,
       ),
       builder: (properties) => AnimatedThemeOrTheme(
@@ -718,7 +718,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                         onPressed: () async {
                                           final videos = await _getAllPlaylistVideos();
                                           if (videos.isEmpty) return;
-                                          Player.inst.playOrPause(0, videos, QueueSourceYoutubeID.playlistHosted, shuffle: true);
+                                          Player.inst.playOrPause(0, videos, QueueSourceYoutubeID.ytPlaylistHosted, shuffle: true);
                                         },
                                       ),
                                       NamidaIconButton(
@@ -750,7 +750,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                       NamidaPopupWrapper(
                                         openOnLongPress: false,
                                         childrenDefault: () => playlist.basicInfo.getPopupMenuItems(
-                                          queueSource: QueueSourceYoutubeID.playlistHosted,
+                                          queueSource: QueueSourceYoutubeID.ytPlaylistHosted,
                                           playlistToFetch: _playlist,
                                           userPlaylist: widget.userPlaylist,
                                           showProgressSheet: true,

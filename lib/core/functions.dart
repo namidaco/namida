@@ -500,7 +500,7 @@ class NamidaOnTaps {
 
     final selectedToClear = <QueueSource>[].obs;
     final selectedHomepageItemToClear = <HomePageItems>[].obs;
-    final values = List<QueueSource>.from(QueueSource.values);
+    final values = List<QueueSource>.from(QueueSourceEnum.values);
     values.remove(QueueSource.homePageItem);
 
     final lookup = <QueueSourceBase, List<int>>{};
@@ -634,7 +634,7 @@ class NamidaOnTaps {
                               padding: const EdgeInsets.all(3.0),
                               child: ListTileWithCheckMark(
                                 dense: true,
-                                title: "${e.toText()} (${list.length})",
+                                title: "${e.s.toText()} (${list.length})",
                                 subtitle: getSubtitle(sizesLookup, list),
                                 active: selectedToClear.contains(e),
                                 onTap: () {
@@ -1432,8 +1432,6 @@ class TracksAddOnTap {
                                           ),
                                         ).animateEntrance(
                                           showWhen: isSelected,
-                                          allCurves: Curves.fastLinearToSlowEaseIn,
-                                          durationMS: 200,
                                         ),
                                   ),
                                 );
@@ -2151,7 +2149,6 @@ class TracksAddOnTap {
                       onPressed: () => openQueueInsertionConfigure(insertionType, title),
                     ).animateEntrance(
                       showWhen: shouldShowConfigureIcon.valueR,
-                      durationMS: 200,
                     ),
               ),
             );

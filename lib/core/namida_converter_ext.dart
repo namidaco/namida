@@ -366,8 +366,27 @@ extension QueueNameGetter on Queue {
   String toText() =>
       homePageItem?.toText() ??
       switch (source) {
-        final QueueSource s => s.toText(),
-        final QueueSourceYoutubeID s => s.toText(),
+        final QueueSource s => [
+          s.s.toText(),
+          ?switch (s.s) {
+            QueueSourceEnum.playlist || QueueSourceEnum.favourites || QueueSourceEnum.history || QueueSourceEnum.mostPlayed => s.title?.translatePlaylistName(),
+            QueueSourceEnum.folder || QueueSourceEnum.folderMusic || QueueSourceEnum.folderVideos => s.title?.formatPath(),
+            QueueSourceEnum.queuePage => null, // has date as title
+            _ => s.title,
+          },
+        ].join(' - '),
+        final QueueSourceYoutubeID s => [
+          s.s.toText(),
+          ?switch (s.s) {
+            QueueSourceYoutubeIDEnum.ytPlaylist ||
+            QueueSourceYoutubeIDEnum.ytFavourites ||
+            QueueSourceYoutubeIDEnum.ytHistory ||
+            QueueSourceYoutubeIDEnum.ytHistoryFiltered ||
+            QueueSourceYoutubeIDEnum.ytMostPlayed => s.title?.translatePlaylistName(),
+            _ => s.title,
+          },
+          ?s.title?.translatePlaylistName(),
+        ].join(' - '),
       };
 }
 
@@ -423,7 +442,7 @@ extension PlaylistToQueueSource on LocalPlaylist {
     if (name == k_PLAYLIST_NAME_FAV) {
       return QueueSource.favourites;
     }
-    return QueueSource.playlist;
+    return QueueSource.playlist(name);
   }
 }
 
@@ -564,7 +583,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
     final queueSource =
         currentItem.execute(
               selectable: (_) => QueueSource.playerQueue,
-              youtubeID: (_) => QueueSourceYoutubeID.playerQueue,
+              youtubeID: (_) => QueueSourceYoutubeID.ytPlayerQueue,
             )
             as QueueSourceBase;
     this.execute(
@@ -872,7 +891,7 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
         showAddToPlaylistSheet(ids: ids, idsNamesLookup: {});
         return true;
       case OnYoutubeLinkOpenAction.play:
-        await Player.inst.playOrPause(0, getPlayables(), QueueSourceYoutubeID.externalLink, gentlePlay: true);
+        await Player.inst.playOrPause(0, getPlayables(), QueueSourceYoutubeID.ytExternalLink, gentlePlay: true);
         return true;
       case OnYoutubeLinkOpenAction.playNext:
         return Player.inst.addToQueue(getPlayables(), insertNext: true);
@@ -1100,27 +1119,45 @@ extension RouteUtils on NamidaRoute {
     return iter is List ? iter as List<Selectable> : iter.toList();
   }
 
+  List<YoutubeID> videosListInside() {
+    final iter = videosInside();
+    return iter is List ? iter as List<YoutubeID> : iter.toList();
+  }
+
   bool hasTracksInside() => tracksInside().isNotEmpty;
   bool hasTracksInsideReactive() => tracksInsideReactive().isNotEmpty;
 
-  QueueSource toQueueSource() {
+  QueueSourceBase toQueueSource() {
     return switch (route) {
       RouteType.PAGE_allTracks => QueueSource.allTracks,
-      RouteType.PAGE_folders => QueueSource.folder,
-      RouteType.PAGE_folders_music => QueueSource.folderMusic,
-      RouteType.PAGE_folders_videos => QueueSource.folderVideos,
-      RouteType.SUBPAGE_albumTracks => QueueSource.album,
-      RouteType.SUBPAGE_artistTracks => QueueSource.artist,
-      RouteType.SUBPAGE_albumArtistTracks => QueueSource.albumArtist,
-      RouteType.SUBPAGE_composerTracks => QueueSource.composer,
-      RouteType.SUBPAGE_genreTracks => QueueSource.genre,
-      RouteType.SUBPAGE_queueTracks => QueueSource.queuePage,
-      RouteType.SUBPAGE_playlistTracks => QueueSource.playlist,
+      RouteType.PAGE_folders => QueueSource.folder(name),
+      RouteType.PAGE_folders_music => QueueSource.folderMusic(name),
+      RouteType.PAGE_folders_videos => QueueSource.folderVideos(name),
+      RouteType.SUBPAGE_albumTracks => QueueSource.album(name),
+      RouteType.SUBPAGE_artistTracks => QueueSource.artist(name),
+      RouteType.SUBPAGE_albumArtistTracks => QueueSource.albumArtist(name),
+      RouteType.SUBPAGE_composerTracks => QueueSource.composer(name),
+      RouteType.SUBPAGE_genreTracks => QueueSource.genre(name),
+      RouteType.SUBPAGE_queueTracks => QueueSource.queuePageByName(name),
+      RouteType.SUBPAGE_playlistTracks => QueueSource.playlist(name),
       RouteType.SUBPAGE_favPlaylistTracks => QueueSource.favourites,
       RouteType.SUBPAGE_historyTracks => QueueSource.history,
       RouteType.SUBPAGE_mostPlayedTracks => QueueSource.mostPlayed,
       RouteType.SUBPAGE_recentlyAddedTracks => QueueSource.recentlyAdded,
-      _ => QueueSource.others,
+
+      // -- YOUTUBE
+      RouteType.YOUTUBE_HOME => QueueSourceYoutubeID.ytHomeFeed,
+      RouteType.YOUTUBE_PLAYLIST_SUBPAGE => QueueSourceYoutubeID.ytPlaylist(name),
+      RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE => QueueSourceYoutubeID.ytDownloadTask,
+      RouteType.YOUTUBE_PLAYLIST_SUBPAGE_HOSTED => QueueSourceYoutubeID.ytPlaylistHosted,
+      RouteType.YOUTUBE_LIKED_SUBPAGE => QueueSourceYoutubeID.ytFavourites,
+      RouteType.YOUTUBE_HISTORY_SUBPAGE => QueueSourceYoutubeID.ytHistory,
+      RouteType.YOUTUBE_MOST_PLAYED_SUBPAGE => QueueSourceYoutubeID.ytMostPlayed,
+      RouteType.YOUTUBE_CHANNEL_SUBPAGE => QueueSourceYoutubeID.ytChannel(name),
+      RouteType.YOUTUBE_USER_CHANNELS_PAGE_HOSTED => QueueSourceYoutubeID.ytChannelHosted,
+      RouteType.YOUTUBE_HISTORY_HOSTED_SUBPAGE => QueueSourceYoutubeID.ytHistoryHosted,
+      // -----------
+      _ => QueueSource.others(name),
     };
   }
 
@@ -1142,6 +1179,16 @@ extension RouteUtils on NamidaRoute {
           RouteType.SUBPAGE_historyTracks => HistoryController.inst.historyTracks,
           // RouteType.SUBPAGE_mostPlayedTracks => HistoryController.inst.currentMostPlayedTracks,
           RouteType.SUBPAGE_recentlyAddedTracks => Indexer.inst.recentlyAddedTracksSorted(),
+          _ => null,
+        } ??
+        [];
+  }
+
+  /// NOTE: only few pages supported based on [QueueSourceYoutubeIDEnum.supportResuming]
+  Iterable<YoutubeID> videosInside() {
+    return switch (route) {
+          RouteType.YOUTUBE_PLAYLIST_SUBPAGE => name == null ? null : ytplc.YoutubePlaylistController.inst.getPlaylist(name!)?.tracks,
+          RouteType.YOUTUBE_LIKED_SUBPAGE => name == null ? null : ytplc.YoutubePlaylistController.inst.favouritesPlaylist.value.tracks,
           _ => null,
         } ??
         [];
@@ -1821,54 +1868,54 @@ extension TrackTileItemL10n on TrackTileItem {
   };
 }
 
-extension QueueSourceL10n on QueueSource {
+extension QueueSourceL10n on QueueSourceEnum {
   String toText() => switch (this) {
-    QueueSource.allTracks => lang.tracks,
-    QueueSource.album => lang.album,
-    QueueSource.artist => lang.artist,
-    QueueSource.albumArtist => lang.albumArtist,
-    QueueSource.composer => lang.composer,
-    QueueSource.genre => lang.genre,
-    QueueSource.playlist => lang.playlist,
-    QueueSource.favourites => lang.favourites,
-    QueueSource.history => lang.history,
-    QueueSource.mostPlayed => lang.mostPlayed,
-    QueueSource.folder => lang.folder,
-    QueueSource.folderMusic => "${lang.folder} (${lang.tracks})",
-    QueueSource.folderVideos => "${lang.folder} (${lang.videos})",
-    QueueSource.search => lang.search,
-    QueueSource.playerQueue => lang.queue,
-    QueueSource.queuePage => lang.queues,
-    QueueSource.selectedTracks => lang.selectedTracks,
-    QueueSource.externalFile => lang.externalFiles,
-    QueueSource.recentlyAdded => lang.recentlyAdded,
-    QueueSource.homePageItem => '',
-    QueueSource.others => lang.others,
+    QueueSourceEnum.allTracks => lang.tracks,
+    QueueSourceEnum.album => lang.album,
+    QueueSourceEnum.artist => lang.artist,
+    QueueSourceEnum.albumArtist => lang.albumArtist,
+    QueueSourceEnum.composer => lang.composer,
+    QueueSourceEnum.genre => lang.genre,
+    QueueSourceEnum.playlist => lang.playlist,
+    QueueSourceEnum.favourites => lang.favourites,
+    QueueSourceEnum.history => lang.history,
+    QueueSourceEnum.mostPlayed => lang.mostPlayed,
+    QueueSourceEnum.folder => lang.folder,
+    QueueSourceEnum.folderMusic => "${lang.folder} (${lang.tracks})",
+    QueueSourceEnum.folderVideos => "${lang.folder} (${lang.videos})",
+    QueueSourceEnum.search => lang.search,
+    QueueSourceEnum.playerQueue => lang.queue,
+    QueueSourceEnum.queuePage => lang.queues,
+    QueueSourceEnum.selectedTracks => lang.selectedTracks,
+    QueueSourceEnum.externalFile => lang.externalFiles,
+    QueueSourceEnum.recentlyAdded => lang.recentlyAdded,
+    QueueSourceEnum.homePageItem => '',
+    QueueSourceEnum.others => lang.others,
   };
 }
 
-extension QueueSourceYoutubeIDL10n on QueueSourceYoutubeID {
+extension QueueSourceYoutubeIDL10n on QueueSourceYoutubeIDEnum {
   String toText() => switch (this) {
-    QueueSourceYoutubeID.channel => lang.channel,
-    QueueSourceYoutubeID.playlist => lang.playlist,
-    QueueSourceYoutubeID.search => lang.search,
-    QueueSourceYoutubeID.playerQueue => lang.queue,
-    QueueSourceYoutubeID.mostPlayed => lang.mostPlayed,
-    QueueSourceYoutubeID.history => lang.history,
-    QueueSourceYoutubeID.historyFiltered => lang.history,
-    QueueSourceYoutubeID.favourites => lang.favourites,
-    QueueSourceYoutubeID.externalLink => lang.externalFiles,
-    QueueSourceYoutubeID.homeFeed => lang.home,
-    QueueSourceYoutubeID.relatedVideos => lang.relatedVideos,
-    QueueSourceYoutubeID.historyFilteredHosted => lang.history,
-    QueueSourceYoutubeID.searchHosted => lang.search,
-    QueueSourceYoutubeID.channelHosted => lang.channel,
-    QueueSourceYoutubeID.historyHosted => lang.history,
-    QueueSourceYoutubeID.playlistHosted => lang.playlist,
-    QueueSourceYoutubeID.downloadTask => lang.downloads,
-    QueueSourceYoutubeID.videoEndCard => lang.video,
-    QueueSourceYoutubeID.videoDescription => lang.description,
-    QueueSourceYoutubeID.notificationsHosted => lang.notifications,
+    QueueSourceYoutubeIDEnum.ytChannel => lang.channel,
+    QueueSourceYoutubeIDEnum.ytPlaylist => lang.playlist,
+    QueueSourceYoutubeIDEnum.ytSearch => lang.search,
+    QueueSourceYoutubeIDEnum.ytPlayerQueue => lang.queue,
+    QueueSourceYoutubeIDEnum.ytMostPlayed => lang.mostPlayed,
+    QueueSourceYoutubeIDEnum.ytHistory => lang.history,
+    QueueSourceYoutubeIDEnum.ytHistoryFiltered => lang.history,
+    QueueSourceYoutubeIDEnum.ytFavourites => lang.favourites,
+    QueueSourceYoutubeIDEnum.ytExternalLink => lang.externalFiles,
+    QueueSourceYoutubeIDEnum.ytHomeFeed => lang.home,
+    QueueSourceYoutubeIDEnum.ytRelatedVideos => lang.relatedVideos,
+    QueueSourceYoutubeIDEnum.ytHistoryFilteredHosted => lang.history,
+    QueueSourceYoutubeIDEnum.ytSearchHosted => lang.search,
+    QueueSourceYoutubeIDEnum.ytChannelHosted => lang.channel,
+    QueueSourceYoutubeIDEnum.ytHistoryHosted => lang.history,
+    QueueSourceYoutubeIDEnum.ytPlaylistHosted => lang.playlist,
+    QueueSourceYoutubeIDEnum.ytDownloadTask => lang.downloads,
+    QueueSourceYoutubeIDEnum.ytVideoEndCard => lang.video,
+    QueueSourceYoutubeIDEnum.ytVideoDescription => lang.description,
+    QueueSourceYoutubeIDEnum.ytNotificationsHosted => lang.notifications,
   };
 }
 

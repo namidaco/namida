@@ -7,6 +7,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -36,12 +37,14 @@ class TrackTilePropertiesProvider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    var queueSource = configs.queueSource;
+    final queueSource = configs.queueSource;
+    final queueSupportResuming = queueSource.supportResuming;
     final comingFromQueue = queueSource == QueueSource.playerQueue;
     final canHaveDuplicates = queueSource.canHaveDuplicates;
 
     final backgroundColorNotPlaying = theme.cardTheme.color ?? Colors.transparent;
     final selectionColorLayer = theme.focusColor;
+    final highlightColorLayer = queueSupportResuming ? theme.focusColor.withOpacityExt(0.2) : null;
 
     final listenToTopHistoryItems = settings.trackItem.values.any(
       (element) => element == TrackTileItem.listenCount || element == TrackTileItem.latestListenDate || element == TrackTileItem.firstListenDate,
@@ -63,65 +66,76 @@ class TrackTilePropertiesProvider extends StatelessWidget {
                   rx: settings.trackListTileHeight,
                   builder: (context, trackTileHeight) => ObxO(
                     rx: Indexer.inst.tracksInfoList,
-                    builder: (context, _) => ObxO(
-                      rx: SelectedTracksController.inst.existingTracksMap,
-                      builder: (context, selectedTracksMap) => _ObxPrefer(
-                        rx: HistoryController.inst.topTracksMapListens,
-                        enabled: listenToTopHistoryItems,
-                        builder: (context, _) => ObxO(
-                          rx: CurrentColor.inst.currentPlayingTrack,
-                          builder: (context, currentPlayingTrack) => ObxO(
-                            rx: CurrentColor.inst.currentPlayingIndex,
-                            builder: (context, currentPlayingIndex) => Obx(
-                              (context) {
-                                int? sleepingIndex;
-                                if (comingFromQueue) {
-                                  final sleepconfig = Player.inst.sleepTimerConfig.valueR;
-                                  if (sleepconfig.enableSleepAfterItems) {
-                                    final repeatMode = settings.player.repeatMode.valueR;
-                                    if (repeatMode == PlayerRepeatMode.all || repeatMode == PlayerRepeatMode.none) {
-                                      sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+                    builder: (context, _) => ObxPrefer(
+                      enabled: queueSupportResuming,
+                      rx: QueueController.latestPlayedForSourceManager.map,
+                      builder: (context, latestPlayedForSource) {
+                        Selectable? currentHighlightedTrack;
+                        final currentHighlightedPlayable = latestPlayedForSource?[queueSource];
+                        if (currentHighlightedPlayable is Selectable) currentHighlightedTrack = currentHighlightedPlayable;
+                        return ObxO(
+                          rx: SelectedTracksController.inst.existingTracksMap,
+                          builder: (context, selectedTracksMap) => ObxPrefer(
+                            rx: HistoryController.inst.topTracksMapListens,
+                            enabled: listenToTopHistoryItems,
+                            builder: (context, _) => ObxO(
+                              rx: CurrentColor.inst.currentPlayingTrack,
+                              builder: (context, currentPlayingTrack) => ObxO(
+                                rx: CurrentColor.inst.currentPlayingIndex,
+                                builder: (context, currentPlayingIndex) => Obx(
+                                  (context) {
+                                    int? sleepingIndex;
+                                    if (comingFromQueue) {
+                                      final sleepconfig = Player.inst.sleepTimerConfig.valueR;
+                                      if (sleepconfig.enableSleepAfterItems) {
+                                        final repeatMode = settings.player.repeatMode.valueR;
+                                        if (repeatMode == PlayerRepeatMode.all || repeatMode == PlayerRepeatMode.none) {
+                                          sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+                                        }
+                                      }
                                     }
-                                  }
-                                }
 
-                                final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
-                                    ? CurrentColor.inst.miniplayerColor
-                                    : CurrentColor.inst.currentColorScheme; // always follow track color
+                                    final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
+                                        ? CurrentColor.inst.miniplayerColor
+                                        : CurrentColor.inst.currentColorScheme; // always follow track color
 
-                                Color? backgroundColorPlayingAlt;
+                                    Color? backgroundColorPlayingAlt;
 
-                                final palette = CurrentColor.inst.miniplayerColorM.palette;
-                                if (palette.isNotEmpty) {
-                                  backgroundColorPlayingAlt = palette[0].withOpacityExt(0.4);
-                                }
+                                    final palette = CurrentColor.inst.miniplayerColorM.palette;
+                                    if (palette.isNotEmpty) {
+                                      backgroundColorPlayingAlt = palette[0].withOpacityExt(0.4);
+                                    }
 
-                                final properties = TrackTileProperties(
-                                  backgroundColorPlaying: backgroundColorPlaying,
-                                  backgroundColorPlayingAlt: backgroundColorPlayingAlt,
-                                  backgroundColorNotPlaying: backgroundColorNotPlaying,
-                                  selectionColorLayer: selectionColorLayer,
-                                  thumbnailSize: thumbnailSize,
-                                  trackTileHeight: trackTileHeight,
-                                  forceSquaredThumbnails: forceSquaredThumbnails,
-                                  sleepingIndex: sleepingIndex,
-                                  displayThirdRow: displayThirdRow,
-                                  displayFavouriteIconInListTile: displayFavouriteIconInListTile,
-                                  comingFromQueue: comingFromQueue,
-                                  configs: configs,
-                                  canHaveDuplicates: canHaveDuplicates,
-                                  currentPlayingTrack: currentPlayingTrack,
-                                  currentPlayingIndex: currentPlayingIndex,
-                                  isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
-                                  allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
-                                  allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
-                                );
-                                return builder(properties);
-                              },
+                                    final properties = TrackTileProperties(
+                                      backgroundColorPlaying: backgroundColorPlaying,
+                                      backgroundColorPlayingAlt: backgroundColorPlayingAlt,
+                                      backgroundColorNotPlaying: backgroundColorNotPlaying,
+                                      selectionColorLayer: selectionColorLayer,
+                                      highlightColorLayer: highlightColorLayer,
+                                      thumbnailSize: thumbnailSize,
+                                      trackTileHeight: trackTileHeight,
+                                      forceSquaredThumbnails: forceSquaredThumbnails,
+                                      sleepingIndex: sleepingIndex,
+                                      displayThirdRow: displayThirdRow,
+                                      displayFavouriteIconInListTile: displayFavouriteIconInListTile,
+                                      comingFromQueue: comingFromQueue,
+                                      configs: configs,
+                                      canHaveDuplicates: canHaveDuplicates,
+                                      currentPlayingTrack: currentPlayingTrack,
+                                      currentPlayingIndex: currentPlayingIndex,
+                                      currentHighlightedTrack: currentHighlightedTrack,
+                                      isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
+                                      allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
+                                      allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
+                                    );
+                                    return builder(properties);
+                                  },
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -134,20 +148,8 @@ class TrackTilePropertiesProvider extends StatelessWidget {
   }
 }
 
-class _ObxPrefer<T> extends StatelessWidget {
-  final RxBaseCore<T> rx;
-  final Widget Function(BuildContext context, T? value) builder;
-  final bool enabled;
-  const _ObxPrefer({required this.rx, required this.builder, required this.enabled, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return enabled ? ObxO(rx: rx, builder: builder) : builder(context, null);
-  }
-}
-
 class TrackTilePropertiesConfigs {
-  final QueueSource queueSource;
+  final QueueSourceBase queueSource;
 
   /// Disable if you want to have priority to hold & reorder instead of selecting.
   final bool Function()? selectable;
@@ -176,6 +178,7 @@ class TrackTileProperties {
   final Color? backgroundColorPlayingAlt;
   final Color backgroundColorNotPlaying;
   final Color selectionColorLayer;
+  final Color? highlightColorLayer;
 
   final double thumbnailSize;
   final double trackTileHeight;
@@ -187,7 +190,8 @@ class TrackTileProperties {
   final bool canHaveDuplicates;
   final Selectable? currentPlayingTrack;
   final int? currentPlayingIndex;
-  final Function(Selectable trOrTwd) isTrackSelected;
+  final Selectable? currentHighlightedTrack;
+  final bool Function(Selectable trOrTwd) isTrackSelected;
 
   final bool allowSwipeLeft;
   final bool allowSwipeRight;
@@ -198,6 +202,7 @@ class TrackTileProperties {
     required this.backgroundColorPlayingAlt,
     required this.backgroundColorNotPlaying,
     required this.selectionColorLayer,
+    required this.highlightColorLayer,
     required this.thumbnailSize,
     required this.trackTileHeight,
     required this.forceSquaredThumbnails,
@@ -208,6 +213,7 @@ class TrackTileProperties {
     required this.canHaveDuplicates,
     required this.currentPlayingTrack,
     required this.currentPlayingIndex,
+    required this.currentHighlightedTrack,
     required this.isTrackSelected,
     required this.allowSwipeLeft,
     required this.allowSwipeRight,
@@ -293,10 +299,14 @@ class TrackTile extends StatelessWidget {
     final bool isRightIndex = properties.canHaveDuplicates ? index == properties.currentPlayingIndex : true;
     final bool isTrackCurrentlyPlaying = isRightIndex && isTrackSame && isRightHistoryList;
 
-    final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
+    final currentHighlightedTrack = properties.currentHighlightedTrack;
+    final bool isTrackHighlighted = currentHighlightedTrack != null && (trackWithDate == currentHighlightedTrack.trackWithDate || track == currentHighlightedTrack.track);
+
+    final textColor = isTrackCurrentlyPlaying && !isTrackSelected && !isTrackHighlighted ? Colors.white : null;
 
     Color backgroundColor;
     Color? backgroundColorAlt;
+    Border? border;
     if (bgColor != null) {
       backgroundColor = bgColor!;
     } else {
@@ -309,6 +319,17 @@ class TrackTile extends StatelessWidget {
       if (isTrackSelected && queueSource != QueueSource.selectedTracks) {
         backgroundColor = Color.alphaBlend(
           properties.selectionColorLayer,
+          backgroundColor,
+        );
+      } else if (!isTrackCurrentlyPlaying && isTrackHighlighted && properties.highlightColorLayer != null) {
+        border = Border(
+          right: BorderSide(
+            width: 3.0,
+            color: properties.backgroundColorPlaying,
+          ),
+        );
+        backgroundColor = Color.alphaBlend(
+          properties.highlightColorLayer!,
           backgroundColor,
         );
       }
@@ -327,9 +348,13 @@ class TrackTile extends StatelessWidget {
           ],
           stops: [0.6, 1.0],
         ),
+        border: border,
       );
     } else {
-      decoration = BoxDecoration(color: backgroundColor);
+      decoration = BoxDecoration(
+        color: backgroundColor,
+        border: border,
+      );
     }
 
     Widget threeLinesColumn;

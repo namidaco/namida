@@ -802,6 +802,7 @@ class IndexerSettings extends SettingSubpageProvider {
                 NamidaButton(
                   icon: Broken.folder_add,
                   text: lang.add,
+                  opaqueBG: true,
                   onTap: () {
                     _promptAddFolderType((dirsPath) {
                       settings.save(directoriesToScan: dirsPath);
@@ -899,7 +900,7 @@ class IndexerSettings extends SettingSubpageProvider {
                             }
                           },
                           text: lang.remove.toUpperCase(),
-                          fontSize: 14.0,
+                          fontSizeMultiplier: 0.92,
                         ),
                       ],
                     ),
@@ -937,6 +938,7 @@ class IndexerSettings extends SettingSubpageProvider {
               NamidaButton(
                 icon: Broken.folder_add,
                 text: lang.add,
+                opaqueBG: true,
                 onTap: () {
                   _pickLocalFolder((dirsPath) {
                     settings.save(directoriesToExclude: dirsPath);
@@ -967,7 +969,7 @@ class IndexerSettings extends SettingSubpageProvider {
                           _maybeShowRefreshPromptDialog(true);
                         },
                         text: lang.remove.toUpperCase(),
-                        fontSize: 14.0,
+                        fontSizeMultiplier: 0.92,
                       ),
                     ),
                   ),

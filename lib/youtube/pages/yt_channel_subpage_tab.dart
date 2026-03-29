@@ -168,7 +168,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
         Expanded(
           child: VideoTilePropertiesProvider(
             configs: VideoTilePropertiesConfigs(
-              queueSource: QueueSourceYoutubeID.channelHosted,
+              queueSource: QueueSourceYoutubeID.ytChannelHosted,
             ),
             builder: (properties) => NamidaScrollbar(
               controller: widget.scrollController,
@@ -281,7 +281,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
 
                                             if (subItem is PlaylistInfoItem) {
                                               return YoutubePlaylistCard(
-                                                queueSource: QueueSourceYoutubeID.channelHosted,
+                                                queueSource: QueueSourceYoutubeID.ytChannelHosted,
                                                 playlist: subItem,
                                                 minimalCard: true,
                                                 thumbnailHeight: itemThumbnailHeight,
@@ -366,7 +366,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                   showThirdLine: false,
                                 ),
                                 const (StreamInfoItemShort) => YoutubeShortVideoCard(
-                                  queueSource: QueueSourceYoutubeID.channelHosted,
+                                  queueSource: QueueSourceYoutubeID.ytChannelHosted,
                                   key: Key("${(item as StreamInfoItemShort?)?.id}"),
                                   thumbnailHeight: itemThumbnailHeight,
                                   thumbnailWidth: itemThumbnailWidth,
@@ -374,7 +374,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                   playlistID: null,
                                 ),
                                 const (PlaylistInfoItem) => YoutubePlaylistCard(
-                                  queueSource: QueueSourceYoutubeID.channelHosted,
+                                  queueSource: QueueSourceYoutubeID.ytChannelHosted,
                                   key: Key((item as PlaylistInfoItem).id),
                                   thumbnailHeight: itemThumbnailHeight,
                                   thumbnailWidth: itemThumbnailWidth,

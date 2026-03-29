@@ -410,7 +410,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
       openOnTap: true,
       openOnLongPress: true,
       childrenDefault: () => YTUtils.getVideoCardMenuItems(
-        queueSource: QueueSourceYoutubeID.downloadTask,
+        queueSource: QueueSourceYoutubeID.ytDownloadTask,
         downloadIndex: item.originalIndex,
         totalLength: item.totalLength,
         playlistId: item.playlistId,

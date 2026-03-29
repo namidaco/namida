@@ -30,7 +30,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
 
     return VideoTilePropertiesProvider(
       configs: VideoTilePropertiesConfigs(
-        queueSource: QueueSourceYoutubeID.homeFeed,
+        queueSource: QueueSourceYoutubeID.ytHomeFeed,
         showMoreIcon: true,
       ),
       builder: (properties) => ObxO(
@@ -93,7 +93,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                               return Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: hPadding),
                                 child: YoutubeShortVideoTallCard(
-                                  queueSource: QueueSourceYoutubeID.homeFeed,
+                                  queueSource: QueueSourceYoutubeID.ytHomeFeed,
                                   index: index,
                                   short: short,
                                   thumbnailWidth: width,
@@ -126,7 +126,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                       playlistID: null,
                     ),
                     const (StreamInfoItemShort) => YoutubeShortVideoCard(
-                      queueSource: QueueSourceYoutubeID.homeFeed,
+                      queueSource: QueueSourceYoutubeID.ytHomeFeed,
                       key: Key("${(item as StreamInfoItemShort?)?.id}"),
                       thumbnailWidth: thumbnailWidth,
                       thumbnailHeight: thumbnailHeight,
@@ -134,7 +134,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                       playlistID: null,
                     ),
                     const (PlaylistInfoItem) => YoutubePlaylistCard(
-                      queueSource: QueueSourceYoutubeID.homeFeed,
+                      queueSource: QueueSourceYoutubeID.ytHomeFeed,
                       key: Key((item as PlaylistInfoItem).id),
                       playlist: item,
                       firstVideoID: item.initialVideos.firstOrNull?.id,

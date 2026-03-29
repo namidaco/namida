@@ -53,7 +53,7 @@ class SelectedTracksController {
   // bool isTrackSelected(Selectable twd) => _tracksOrTwdList.contains(twd);
   bool isTrackSelected(Selectable twd) => _allTracksHashCodes[twd.track] != null;
 
-  void selectOrUnselect(Selectable track, int index, QueueSource source, String? playlistName, {bool ranged = false}) {
+  void selectOrUnselect(Selectable track, int index, QueueSourceBase source, String? playlistName, {bool ranged = false}) {
     playlistName ??= '';
     final rawTrack = track.track;
     if (isTrackSelected(track)) {
@@ -117,7 +117,7 @@ class SelectedTracksController {
     bottomPadding.value = 0.0;
   }
 
-  (List<Selectable>?, QueueSource?, NamidaRoute?) _getCurrentActiveTracksList({QueueSource? queueSource}) {
+  (List<Selectable>?, QueueSourceBase?, NamidaRoute?) _getCurrentActiveTracksList({QueueSourceBase? queueSource}) {
     List<Selectable>? tracks;
 
     NamidaRoute? routeTracks; // if the tracks are obtained from route
@@ -133,11 +133,11 @@ class SelectedTracksController {
       routeTracks = currentRoute;
       queueSource ??= currentRoute?.toQueueSource();
     }
-    queueSource ??= QueueSource.others;
+    queueSource ??= QueueSource.others(ScrollSearchController.inst.searchTextEditingController.text);
     return (tracks, queueSource, routeTracks);
   }
 
-  void selectAllTracks({(int, int)? range, QueueSource? source}) {
+  void selectAllTracks({(int, int)? range, QueueSourceBase? source}) {
     final currentInfo = _getCurrentActiveTracksList(queueSource: source);
     final tracks = currentInfo.$1;
     final routeTracks = currentInfo.$3;

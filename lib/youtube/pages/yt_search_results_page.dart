@@ -223,7 +223,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                         return SliverToBoxAdapter(
                           child: VideoTilePropertiesProvider(
                             configs: VideoTilePropertiesConfigs(
-                              queueSource: QueueSourceYoutubeID.search,
+                              queueSource: QueueSourceYoutubeID.ytSearch,
                             ),
                             builder: (properties) => SizedBox(
                               height: horizontalListHeight,
@@ -343,7 +343,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                         ? const SliverToBoxAdapter()
                         : VideoTilePropertiesProvider(
                             configs: VideoTilePropertiesConfigs(
-                              queueSource: QueueSourceYoutubeID.searchHosted,
+                              queueSource: QueueSourceYoutubeID.ytSearchHosted,
                             ),
                             builder: (properties) => ObxO(
                               rx: settings.youtube.ytVisibleShorts,
@@ -413,14 +413,14 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                                                       onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
                                                     ),
                                                     const (StreamInfoItemShort) => YoutubeShortVideoCard(
-                                                      queueSource: QueueSourceYoutubeID.searchHosted,
+                                                      queueSource: QueueSourceYoutubeID.ytSearchHosted,
                                                       thumbnailHeight: thumbnailHeight,
                                                       thumbnailWidth: thumbnailWidth,
                                                       short: item as StreamInfoItemShort,
                                                       playlistID: null,
                                                     ),
                                                     const (PlaylistInfoItem) => YoutubePlaylistCard(
-                                                      queueSource: QueueSourceYoutubeID.searchHosted,
+                                                      queueSource: QueueSourceYoutubeID.ytSearchHosted,
                                                       thumbnailHeight: thumbnailHeight,
                                                       thumbnailWidth: thumbnailWidth,
                                                       playOnTap: false,

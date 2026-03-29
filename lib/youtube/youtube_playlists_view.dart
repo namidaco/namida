@@ -157,7 +157,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                 final length = YoutubeHistoryController.inst.totalHistoryItemsCount.valueR;
                 final lengthDummy = length == -1;
                 return _HorizontalSliverList(
-                  queueSource: QueueSourceYoutubeID.historyFiltered,
+                  queueSource: QueueSourceYoutubeID.ytHistoryFiltered,
                   title: lang.history,
                   icon: Broken.refresh,
                   onPageOpen: YTUtils.onYoutubeHistoryPlaylistTap,
@@ -195,7 +195,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                         )
                         .toList();
                     return _HorizontalSliverList(
-                      queueSource: QueueSourceYoutubeID.mostPlayed,
+                      queueSource: QueueSourceYoutubeID.ytMostPlayed,
                       title: lang.mostPlayed,
                       icon: Broken.crown_1,
                       onPageOpen: YTUtils.onYoutubeMostPlayedPlaylistTap,
@@ -226,7 +226,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                 return ObxO(
                   rx: YoutubeHistoryController.inst.topTracksMapListens, // refresh cards after listens initialized
                   builder: (context, _) => _HorizontalSliverList(
-                    queueSource: QueueSourceYoutubeID.favourites,
+                    queueSource: QueueSourceYoutubeID.ytFavourites,
                     title: lang.favourites,
                     icon: Broken.heart_circle,
                     onPageOpen: YTUtils.onYoutubeLikedPlaylistTap,
@@ -441,7 +441,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                     smallBoxText: favouritesPlaylist.value.tracks.length.formatDecimal(),
                     smallBoxIcon: Broken.play_cricle,
                     checkmarkStatus: allIdsExist,
-                    menuChildrenDefault: widget.displayMenu ? () => getMenuItems(context, favouritesPlaylist.value, QueueSourceYoutubeID.favourites) : null,
+                    menuChildrenDefault: widget.displayMenu ? () => getMenuItems(context, favouritesPlaylist.value, QueueSourceYoutubeID.ytFavourites) : null,
                   );
                 },
               ),
@@ -573,7 +573,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                   : creationDateText;
 
                               return NamidaPopupWrapper(
-                                childrenDefault: widget.displayMenu ? () => getMenuItems(context, playlist, QueueSourceYoutubeID.playlist) : null,
+                                childrenDefault: widget.displayMenu ? () => getMenuItems(context, playlist, QueueSourceYoutubeID.ytPlaylist(playlist.name)) : null,
                                 openOnTap: false,
                                 child: YoutubeCard(
                                   thumbnailType: ThumbnailType.playlist,
@@ -597,14 +597,14 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                     } else {
                                       YTNormalPlaylistSubpage(
                                         playlistName: playlist.name,
-                                        queueSource: QueueSourceYoutubeID.playlist,
+                                        queueSource: QueueSourceYoutubeID.ytPlaylist(playlist.name),
                                       ).navigate();
                                     }
                                   },
                                   smallBoxText: playlist.tracks.length.formatDecimal(),
                                   smallBoxIcon: Broken.play_cricle,
                                   checkmarkStatus: allIdsExist,
-                                  menuChildrenDefault: widget.displayMenu ? () => getMenuItems(context, playlist, QueueSourceYoutubeID.playlist) : null,
+                                  menuChildrenDefault: widget.displayMenu ? () => getMenuItems(context, playlist, QueueSourceYoutubeID.ytPlaylist(playlist.name)) : null,
                                 ),
                               );
                             },
@@ -689,7 +689,6 @@ class _HorizontalSliverList extends StatelessWidget {
                     subtitle: totalVideosCountInMainList.displayVideoKeyword,
                     icon: icon,
                     trailing: const Icon(Broken.arrow_right_3),
-                    onPressed: onPageOpen,
                   ),
                   ?subHeader,
                 ],

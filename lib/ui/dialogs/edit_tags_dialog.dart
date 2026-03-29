@@ -702,8 +702,8 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
         width: namida.width,
         height: namida.height * 0.5,
         child: TrackTilePropertiesProvider(
-          configs: const TrackTilePropertiesConfigs(
-            queueSource: QueueSource.others,
+          configs: TrackTilePropertiesConfigs(
+            queueSource: QueueSource.others(null),
           ),
           builder: (properties) => ObxO(
             rx: tracksGoingToBeEditedRx,
@@ -895,7 +895,7 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                                       listBottomPadding: 0,
                                       queue: failedEditsTracks.value,
                                       queueLength: failedEditsTracks.length,
-                                      queueSource: QueueSource.others,
+                                      queueSource: QueueSource.others(null),
                                       onTap: () {},
                                     ),
                                   ),

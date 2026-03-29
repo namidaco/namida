@@ -16,7 +16,6 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -1370,32 +1369,18 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 200),
                         child: T == File && _selectedFiles.isNotEmpty
-                            ? FloatingActionButton.extended(
-                                heroTag: 'file_browser_fab_hero_extended',
-                                extendedPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                onPressed: () => _onSelectionComplete(_selectedFiles as List<T>),
-                                label: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Broken.tick_square,
-                                      size: 24.0,
-                                    ),
-                                    const SizedBox(width: 8.0),
-                                    Text(_selectedFiles.length.displayFilesKeyword),
-                                  ],
-                                ),
+                            ? NamidaFABButton(
+                                big: true,
+                                icon: Broken.tick_square,
+                                text: _selectedFiles.length.displayFilesKeyword,
+                                onTap: () => _onSelectionComplete(_selectedFiles as List<T>),
                               )
                             : T == Directory && (_selectedFolders.isNotEmpty || !isPathRoot(_currentFolderPath))
-                            ? FloatingActionButton(
-                                heroTag: 'file_browser_fab_hero',
-                                onPressed: () => _onSelectionComplete(
+                            ? NamidaFABButton(
+                                big: true,
+                                icon: Broken.tick_square,
+                                onTap: () => _onSelectionComplete(
                                   _selectedFolders.isNotEmpty ? _selectedFolders as List<T> : [Directory(_currentFolderPath) as T],
-                                ),
-                                child: const Icon(
-                                  Broken.tick_square,
-                                  size: 32.0,
-                                  color: AppThemes.fabForegroundColor,
                                 ),
                               )
                             : const SizedBox(),

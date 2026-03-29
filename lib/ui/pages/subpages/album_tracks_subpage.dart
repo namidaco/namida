@@ -63,7 +63,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
       child: AnimationLimiter(
         child: TrackTilePropertiesProvider(
           configs: TrackTilePropertiesConfigs(
-            queueSource: QueueSource.album,
+            queueSource: QueueSource.album(widget.albumIdentifier),
             displayTrackNumber: displayTrackNumberinAlbumPage,
             fallbackToAlbumCover: false,
           ),
@@ -103,7 +103,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                           infoBox: (maxWidth) => SubpageInfoContainer(
                             maxWidth: maxWidth,
                             title: name,
-                            source: QueueSource.album,
+                            source: QueueSource.album(widget.albumIdentifier),
                             subtitle: tracks.albumArtist,
                             thirdLineText: tracks.year.yearFormatted,
                             heroTag: 'album_${widget.albumIdentifier}',

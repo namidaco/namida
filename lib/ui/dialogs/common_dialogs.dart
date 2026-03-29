@@ -37,7 +37,7 @@ class NamidaDialogs {
     int? index,
     bool isFromPlayerQueue = false,
     Object? errorPlayingTrack,
-    required QueueSource source,
+    required QueueSourceBase source,
     String? heroTag,
   }) async {
     final trExt = track.toTrackExt();
@@ -60,16 +60,17 @@ class NamidaDialogs {
   Future<void> showAlbumDialog(String albumIdentifier) async {
     final tracks = albumIdentifier.getAlbumTracks();
     final artists = tracks.mappedUniquedList((e) => e.artistsList);
+    final album = tracks.album;
     await showGeneralPopupDialog(
       tracks,
-      tracks.album.overflow,
+      album.overflow,
       "${tracks.displayTrackKeyword} & ${artists.length.displayArtistKeyword}",
-      QueueSource.album,
+      QueueSource.album(albumIdentifier),
       thirdLineText: artists.join(', ').overflow,
       forceSquared: Dimensions.inst.shouldAlbumBeSquared(rootContext),
       forceSingleArtwork: true,
       heroTag: 'album_$albumIdentifier',
-      albumToAddFrom: (tracks.album, albumIdentifier),
+      albumToAddFrom: (album, albumIdentifier),
       networkArtworkInfo: NetworkArtworkInfo.album(albumIdentifier, artists.firstOrNull),
     );
   }
@@ -78,10 +79,10 @@ class NamidaDialogs {
     final tracks = name.getArtistTracksFor(type);
     final albums = tracks.mappedUniqued((e) => e.album);
     final queueSource = type == MediaType.albumArtist
-        ? QueueSource.albumArtist
+        ? QueueSource.albumArtist(name)
         : type == MediaType.composer
-        ? QueueSource.composer
-        : QueueSource.artist;
+        ? QueueSource.composer(name)
+        : QueueSource.artist(name);
     await showGeneralPopupDialog(
       tracks,
       name.overflow,
@@ -103,7 +104,7 @@ class NamidaDialogs {
       tracks,
       name,
       [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
-      QueueSource.genre,
+      QueueSource.genre(name),
       extractColor: false,
       heroTag: 'genre_$name',
       forceSquared: true,
@@ -257,7 +258,7 @@ class NamidaDialogs {
       queue.tracks,
       queue.date.dateFormatted,
       queue.date.clockFormatted,
-      QueueSource.queuePage,
+      QueueSource.queuePage(queue),
       thirdLineText: [
         queue.tracks.displayTrackKeyword,
         queue.tracks.totalDurationFormatted,
@@ -276,7 +277,7 @@ class NamidaDialogs {
     required List<Track> tracks,
   }) async {
     if (isTracksRecursive) VibratorController.medium();
-    final queueSource = controller.queueSource;
+    final queueSource = controller.getQueueSource(folder);
     final titleParts = folder.folderNameTryFormatNetworkAsParts();
     await showGeneralPopupDialog(
       tracks,

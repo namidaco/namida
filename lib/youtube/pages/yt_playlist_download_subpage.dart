@@ -8,7 +8,6 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -204,7 +203,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
         normalTitleStyle: true,
         actions: [
           NamidaButton(
-            text: lang.confirm,
+            text: lang.done,
             onTap: NamidaNavigator.inst.closeDialog,
           ),
         ],
@@ -281,7 +280,12 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                 title: lang.videoQuality,
                 trailing: NamidaPopupWrapper(
                   childrenDefault: qualityMenuChildren,
-                  child: Obx((context) => Text(settings.downloadAudioOnly.valueR ? lang.audioOnly : preferredQuality.valueR)),
+                  child: Obx(
+                    (context) => Text(
+                      settings.downloadAudioOnly.valueR ? lang.audioOnly : preferredQuality.valueR,
+                      style: context.textTheme.displayMedium,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -455,9 +459,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                   }
                                   if (latestIndex != null && originalIndex > latestIndex) {
                                     final selectedRange = widget.ids.getRange(latestIndex + 1, originalIndex + 1);
-                                    selectedRange.toList().loop((e) {
+                                    for (final e in selectedRange) {
                                       if (!_selectedList.contains(e.id)) _selectedList.add(e.id);
-                                    });
+                                    }
                                   } else {
                                     _onItemTap(id);
                                   }
@@ -570,32 +574,18 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               right: 12.0,
               child: Row(
                 children: [
-                  FloatingActionButton.small(
-                    backgroundColor: theme.disabledColor.withOpacityExt(1.0),
-                    heroTag: 'config_fab',
-                    child: Icon(Broken.setting_3, color: Colors.white.withOpacityExt(0.8)),
-                    onPressed: () {
-                      _showAllConfigDialog(context);
-                    },
+                  NamidaFABButton(
+                    dim: true,
+                    icon: Broken.setting_3,
+                    onTap: () => _showAllConfigDialog(context),
                   ),
                   const SizedBox(width: 8.0),
                   Obx(
-                    (context) => FloatingActionButton.extended(
-                      heroTag: 'download_fab',
-                      backgroundColor: (_selectedList.isEmpty ? theme.disabledColor : CurrentColor.inst.color).withOpacityExt(1.0),
-                      isExtended: true,
-                      icon: Icon(
-                        Broken.import_2,
-                        size: 28.0,
-                        color: Colors.white.withOpacityExt(0.7),
-                      ),
-                      label: Text(
-                        lang.download,
-                        style: textTheme.displayMedium?.copyWith(
-                          color: Colors.white.withOpacityExt(0.7),
-                        ),
-                      ),
-                      onPressed: () async {
+                    (context) => NamidaFABButton(
+                      enabled: _selectedList.isNotEmpty,
+                      icon: Broken.import_2,
+                      text: lang.download,
+                      onTap: () async {
                         if (_selectedList.isEmpty) return;
                         if (!await requestManageStoragePermission()) return;
                         final timeNow = DateTime.now();

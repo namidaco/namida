@@ -1,9 +1,14 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 // ignore_for_file: constant_identifier_names
+
+import 'dart:convert';
 
 import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
+import 'package:namida/class/queue.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 
 export 'package:basic_audio_handler/basic_audio_handler.dart' show PlayerRepeatMode, InterruptionType, InterruptionAction;
 export 'package:history_manager/history_manager.dart' show TrackSource;
@@ -272,25 +277,23 @@ enum TrackPlayMode {
   trackGenre,
 }
 
-sealed class QueueSourceBase implements Enum {}
-
-enum QueueSource implements QueueSourceBase {
-  allTracks(false),
-  album(false),
-  artist(false),
-  albumArtist(false),
-  composer(false),
-  genre(false),
-  playlist(true),
+enum QueueSourceEnum {
+  allTracks(false, supportResuming: true),
+  album(false, supportResuming: true),
+  artist(false, supportResuming: true),
+  albumArtist(false, supportResuming: true),
+  composer(false, supportResuming: true),
+  genre(false, supportResuming: true),
+  playlist(true, supportResuming: true),
   folder(false),
   folderMusic(false),
   folderVideos(false),
   search(false),
-  queuePage(true),
+  queuePage(true, supportResuming: true),
   playerQueue(true),
   mostPlayed(false),
   history(true),
-  favourites(false),
+  favourites(false, supportResuming: true),
   selectedTracks(false),
   externalFile(false),
   homePageItem(false),
@@ -300,35 +303,202 @@ enum QueueSource implements QueueSourceBase {
   ;
 
   final bool canHaveDuplicates;
-  const QueueSource(this.canHaveDuplicates);
+  final bool supportResuming;
+  const QueueSourceEnum(this.canHaveDuplicates, {this.supportResuming = false});
 }
 
-enum QueueSourceYoutubeID implements QueueSourceBase {
-  channel(true),
-  playlist(true),
-  search(false),
-  playerQueue(true),
-  mostPlayed(false),
-  history(true),
-  historyFiltered(false),
-  favourites(false),
-  externalLink(true),
-  homeFeed(false),
-  notificationsHosted(false),
-  relatedVideos(false),
-  historyFilteredHosted(false),
-  searchHosted(false),
-  channelHosted(false),
-  historyHosted(true),
-  playlistHosted(true),
+enum QueueSourceYoutubeIDEnum {
+  // -- must have different name from QueueSourceEnum
+  // -- so that name matching works properly
 
-  downloadTask(false),
-  videoEndCard(false),
-  videoDescription(false)
+  ytChannel(true),
+  ytPlaylist(true, supportResuming: true),
+  ytSearch(false),
+  ytPlayerQueue(true),
+  ytMostPlayed(false),
+  ytHistory(true),
+  ytHistoryFiltered(false),
+  ytFavourites(false, supportResuming: true),
+  ytExternalLink(true),
+  ytHomeFeed(false),
+  ytNotificationsHosted(false),
+  ytRelatedVideos(false),
+  ytHistoryFilteredHosted(false),
+  ytSearchHosted(false),
+  ytChannelHosted(false),
+  ytHistoryHosted(true),
+  ytPlaylistHosted(true),
+
+  ytDownloadTask(false),
+  ytVideoEndCard(false),
+  ytVideoDescription(false)
   ;
 
   final bool canHaveDuplicates;
-  const QueueSourceYoutubeID(this.canHaveDuplicates);
+  final bool supportResuming;
+  const QueueSourceYoutubeIDEnum(this.canHaveDuplicates, {this.supportResuming = false});
+}
+
+sealed class QueueSourceBase<E extends Enum> {
+  final E s;
+  bool get canHaveDuplicates;
+  bool get supportResuming;
+
+  final String? title;
+  const QueueSourceBase._(this.s, {required this.title});
+
+  dynamic toJson();
+  String toDbKey() => jsonEncode(toJson());
+}
+
+class QueueSource extends QueueSourceBase<QueueSourceEnum> {
+  @override
+  bool get canHaveDuplicates => s.canHaveDuplicates;
+  @override
+  bool get supportResuming => s.supportResuming;
+
+  const QueueSource._(super.s, {super.title}) : super._();
+
+  static const allTracks = QueueSource._(QueueSourceEnum.allTracks);
+  static QueueSource album(String? name) => QueueSource._(QueueSourceEnum.album, title: name);
+  static QueueSource artist(String? name) => QueueSource._(QueueSourceEnum.artist, title: name);
+  static QueueSource albumArtist(String? name) => QueueSource._(QueueSourceEnum.albumArtist, title: name);
+  static QueueSource composer(String? name) => QueueSource._(QueueSourceEnum.composer, title: name);
+  static QueueSource genre(String? name) => QueueSource._(QueueSourceEnum.genre, title: name);
+  static QueueSource playlist(String? name) => QueueSource._(QueueSourceEnum.playlist, title: name);
+  static QueueSource folder(String? name) => QueueSource._(QueueSourceEnum.folder, title: name);
+  static QueueSource folderMusic(String? name) => QueueSource._(QueueSourceEnum.folderMusic, title: name);
+  static QueueSource folderVideos(String? name) => QueueSource._(QueueSourceEnum.folderVideos, title: name);
+  static const search = QueueSource._(QueueSourceEnum.search, title: null);
+  static QueueSource queuePage(Queue? queue) => queuePageByName(queue?.getKey());
+  static QueueSource queuePageByName(String? name) => QueueSource._(QueueSourceEnum.queuePage, title: name);
+  static const playerQueue = QueueSource._(QueueSourceEnum.playerQueue);
+  static const mostPlayed = QueueSource._(QueueSourceEnum.mostPlayed);
+  static const history = QueueSource._(QueueSourceEnum.history);
+  static const favourites = QueueSource._(QueueSourceEnum.favourites);
+  static const selectedTracks = QueueSource._(QueueSourceEnum.selectedTracks);
+  static const externalFile = QueueSource._(QueueSourceEnum.externalFile);
+  static const homePageItem = QueueSource._(QueueSourceEnum.homePageItem);
+  static const recentlyAdded = QueueSource._(QueueSourceEnum.recentlyAdded);
+
+  static QueueSource others(String? name) => QueueSource._(QueueSourceEnum.others, title: name);
+
+  static QueueSource? fromJson(dynamic value) {
+    String? sourceString;
+    String? title;
+    if (value is Map) {
+      sourceString = value['s'];
+      title = value['t'];
+    } else if (value is String) {
+      sourceString = value;
+    }
+
+    if (sourceString != null) {
+      final v = QueueSourceEnum.values.getEnum(sourceString);
+      if (v != null) {
+        return QueueSource._(v, title: title);
+      }
+    }
+
+    return null;
+  }
+
+  @override
+  dynamic toJson() {
+    if (title == null) {
+      return s.name;
+    }
+    return {
+      't': title,
+      's': s.name,
+    };
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QueueSource && other.s == s && other.title == title;
+  }
+
+  @override
+  int get hashCode => s.hashCode ^ title.hashCode;
+
+  @override
+  String toString() => 'QueueSource(s: $s, title: $title)';
+}
+
+class QueueSourceYoutubeID extends QueueSourceBase<QueueSourceYoutubeIDEnum> {
+  @override
+  bool get canHaveDuplicates => s.canHaveDuplicates;
+  @override
+  bool get supportResuming => s.supportResuming;
+
+  const QueueSourceYoutubeID._(super.s, {super.title}) : super._();
+
+  static QueueSourceYoutubeID ytChannel(String? name) => QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytChannel, title: name);
+  static QueueSourceYoutubeID ytPlaylist(String? name) => QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytPlaylist, title: name);
+  static const ytSearch = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytSearch);
+  static const ytPlayerQueue = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytPlayerQueue);
+  static const ytMostPlayed = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytMostPlayed);
+  static const ytHistory = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHistory);
+  static const ytHistoryFiltered = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHistoryFiltered);
+  static const ytFavourites = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytFavourites);
+  static const ytExternalLink = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytExternalLink);
+  static const ytHomeFeed = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHomeFeed);
+  static const ytNotificationsHosted = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytNotificationsHosted);
+  static const ytRelatedVideos = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytRelatedVideos);
+  static const ytHistoryFilteredHosted = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHistoryFilteredHosted);
+  static const ytSearchHosted = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytSearchHosted);
+  static const ytChannelHosted = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytChannelHosted);
+  static const ytHistoryHosted = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHistoryHosted);
+  static const ytPlaylistHosted = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytPlaylistHosted);
+
+  static const ytDownloadTask = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytDownloadTask);
+  static const ytVideoEndCard = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytVideoEndCard);
+  static const ytVideoDescription = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytVideoDescription);
+
+  static QueueSourceYoutubeID? fromJson(dynamic value) {
+    String? sourceString;
+    String? title;
+    if (value is Map) {
+      sourceString = value['s'];
+      title = value['t'];
+    } else if (value is String) {
+      sourceString = value;
+    }
+
+    if (sourceString != null) {
+      final v = QueueSourceYoutubeIDEnum.values.getEnum(sourceString);
+      if (v != null) {
+        return QueueSourceYoutubeID._(v, title: title);
+      }
+    }
+
+    return null;
+  }
+
+  @override
+  dynamic toJson() {
+    if (title == null) {
+      return s.name;
+    }
+    return {
+      't': title,
+      's': s.name,
+    };
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is QueueSourceYoutubeID && other.s == s && other.title == title;
+  }
+
+  @override
+  int get hashCode => s.hashCode ^ title.hashCode;
+
+  @override
+  String toString() => 'QueueSourceYoutubeID(s: $s, title: $title)';
 }
 
 enum TagField {

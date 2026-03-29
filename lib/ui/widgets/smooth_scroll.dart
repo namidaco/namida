@@ -3,6 +3,10 @@
 part of 'custom_widgets.dart';
 
 class NamidaScrollController {
+  // -- useful to animate latest opened page (eg: resume button in pages)
+  static ScrollController? get latestAddedScrollController => _latestAddedScrollControllers.lastOrNull;
+  static final _latestAddedScrollControllers = <ScrollController>[];
+
   static ScrollController create({
     double initialScrollOffset = 0.0,
     bool keepScrollOffset = true,
@@ -51,11 +55,13 @@ class __SmoothScrollControllerBuilderState extends State<_SmoothScrollController
   void initState() {
     super.initState();
     _controller = widget.controller ?? NamidaScrollController.create();
+    NamidaScrollController._latestAddedScrollControllers.add(_controller);
   }
 
   @override
   void dispose() {
     if (widget.controller == null) _controller.dispose();
+    NamidaScrollController._latestAddedScrollControllers.remove(_controller);
     super.dispose();
   }
 

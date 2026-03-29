@@ -14,6 +14,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -166,7 +167,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   @override
   Future<bool> renamePlaylist(String playlistName, String newName) async {
     final didRename = await super.renamePlaylist(playlistName, newName);
-    if (didRename) _popPageIfCurrent(() => playlistName);
+    if (didRename) {
+      _popPageIfCurrent(() => playlistName);
+      QueueController.latestPlayedForSourceManager.move(QueueSource.playlist(playlistName), QueueSource.playlist(newName));
+    }
     return didRename;
   }
 
@@ -693,6 +697,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       if (plIndex > -1) searchList.value.removeAt(plIndex);
     }
     searchList.refresh();
+
+    QueueController.latestPlayedForSourceManager.deleteMultiple(names.map(QueueSource.playlist));
   }
 
   /// Navigate back in case the current route is this playlist.

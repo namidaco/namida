@@ -54,7 +54,7 @@ Future<void> showGeneralPopupDialog(
   List<Track> tracks,
   String title,
   String subtitle,
-  QueueSource source, {
+  QueueSourceBase source, {
   int? titleMaxLines = 1,
   NetworkArtworkInfo? networkArtworkInfo,
   CustomArtworkManager? customArtworkManager,
@@ -655,7 +655,7 @@ Future<void> showGeneralPopupDialog(
                 icon: Broken.video,
                 onTap: () {
                   NamidaNavigator.inst.closeDialog();
-                  Player.inst.playOrPause(0, availableYoutubeIDs, QueueSource.others, gentlePlay: true);
+                  Player.inst.playOrPause(0, availableYoutubeIDs, QueueSource.others(title), gentlePlay: true);
                 },
                 trailing: isSingle && firstVideolId != null
                     ? FutureBuilder(

@@ -3,6 +3,8 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+
 import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
@@ -17,9 +19,10 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
 class QueueController {
-  static QueueController get inst => _instance;
-  static final QueueController _instance = QueueController._internal();
+  static final QueueController inst = QueueController._internal();
   QueueController._internal();
+
+  static final latestPlayedForSourceManager = _LatestPlayedForSourceManager();
 
   /// holds all queues mapped & sorted by `date` chronologically & reversly.
   final Rx<SplayTreeMap<int, Queue>> queuesMap = SplayTreeMap<int, Queue>((date1, date2) => date2.compareTo(date1)).obs;
@@ -34,6 +37,7 @@ class QueueController {
     required QueueSourceBase source,
     required HomePageItems? homePageItem,
     int? date,
+    int? dateComparison,
     List<Track> tracks = const <Track>[],
   }) async {
     /// If there are more than 2000 tracks.
@@ -54,7 +58,7 @@ class QueueController {
     // -- Prevents saving [allTracks] source over and over.
     final latestQueue = _latestQueueInMap;
     if (latestQueue != null) {
-      if (source == QueueSource.allTracks && latestQueue.source == QueueSource.allTracks) {
+      if ((source == QueueSource.allTracks && latestQueue.source == QueueSource.allTracks) || dateComparison == latestQueue.date) {
         await removeQueue(latestQueue);
       }
     }
@@ -153,7 +157,7 @@ class QueueController {
     final queuesToSave = <Queue>{};
     final pathsOnlySet = forThesePathsOnly?.toSet();
     final existenceCache = <String, bool>{};
-    queuesMap.value.entries.toList().loop((entry) {
+    for (final entry in queuesMap.value.entries) {
       final q = entry.value;
       q.tracks.replaceWhere(
         (e) {
@@ -170,7 +174,7 @@ class QueueController {
         (old) => Track.fromTypeParameter(old.runtimeType, getNewPath(old.path)),
         onMatch: () => queuesToSave.add(q),
       );
-    });
+    }
     for (final q in queuesToSave) {
       _updateMap(q);
       await _saveQueueToStorage(q);
@@ -179,7 +183,7 @@ class QueueController {
 
   Future<void> replaceTrackInAllQueues(Map<Track, Track> oldNewTrack) async {
     final queuesToSave = <Queue>[];
-    queuesMap.value.entries.toList().loop((entry) {
+    for (final entry in queuesMap.value.entries) {
       final q = entry.value;
       for (final e in oldNewTrack.entries) {
         q.tracks.replaceItems(
@@ -188,7 +192,7 @@ class QueueController {
           onMatch: () => queuesToSave.add(q),
         );
       }
-    });
+    }
     for (final q in queuesToSave) {
       _updateMap(q);
       await _saveQueueToStorage(q);
@@ -234,8 +238,16 @@ class QueueController {
     await File(AppPaths.LATEST_QUEUE).tryDeleting();
   }
 
+  Future<void> prepareLatestQueueAndLatestPlayedForSourceAsync() async {
+    try {
+      await _prepareLatestQueueAsync();
+    } catch (_) {}
+
+    unawaited(latestPlayedForSourceManager.prepareAll());
+  }
+
   /// Assigns the last queue to the [Player]
-  Future<void> prepareLatestQueueAsync() async {
+  Future<void> _prepareLatestQueueAsync() async {
     final latestQueue = await _prepareLatestQueueSync.thready(AppPaths.LATEST_QUEUE);
     if (latestQueue == null || latestQueue.isEmpty) return;
 
@@ -259,8 +271,11 @@ class QueueController {
       if (items != null) {
         items.loop((e) {
           final type = e['t'] as String;
-          final item = e['p'];
-          latestQueue.add(_LatestQueueSaver._typesBuilderMapLookup[type]?.call(item) ?? Track.explicit(e));
+          final valueMap = e['p'];
+          final item = _LatestQueueSaver._typesBuilderMapLookup[type]?.call(valueMap);
+          if (item != null) {
+            latestQueue.add(item);
+          }
         });
       }
     } catch (_) {}
@@ -313,6 +328,67 @@ class QueueController {
   final List<Queue> _queuesToAddAfterAllQueuesLoad = <Queue>[];
   bool _isLoadingQueues = true;
   bool get isLoadingQueues => _isLoadingQueues;
+}
+
+class _LatestPlayedForSourceManager {
+  RxBaseCore<Map<QueueSourceBase<dynamic>, Playable>> get map => _mapRx;
+  static final _mapRx = <QueueSourceBase<dynamic>, Playable>{}.obs;
+
+  late final _dBManager = DBWrapper.openFromInfo(
+    fileInfo: AppPaths.LATEST_PLAYED_FOR_SOURCE,
+    config: const DBConfig(createIfNotExist: true),
+  );
+
+  Future<void> prepareAll() async {
+    final res = await _dBManager.loadEverythingKeyedResult();
+    for (final entry in res.entries) {
+      final sourceRaw = jsonDecode(entry.key);
+      final QueueSourceBase source = QueueSource.fromJson(sourceRaw) ?? QueueSourceYoutubeID.fromJson(sourceRaw) ?? QueueSource.others(null);
+
+      final map = entry.value;
+      final type = map['t'] as String;
+      final valueMap = map['p'];
+      final item = _LatestQueueSaver._typesBuilderMapLookup[type]?.call(valueMap);
+      if (item != null) {
+        _mapRx.value[source] ??= item;
+      }
+    }
+    _mapRx.refresh();
+  }
+
+  void update(QueueSourceBase source, Playable item) async {
+    _mapRx[source] = item;
+    await _dBManager.put(source.toDbKey(), {
+      'p': item.toJson(),
+      't': _LatestQueueSaver._typesMapLookup[item.runtimeType],
+    });
+  }
+
+  Future<void> move(QueueSourceBase oldSource, QueueSourceBase newSource) async {
+    final oldValue = _mapRx.value.remove(oldSource);
+    if (oldValue != null) {
+      _mapRx.value[newSource] = oldValue;
+      _mapRx.refresh();
+    }
+    final oldValueDB = await _dBManager.get(oldSource.toDbKey());
+    await _dBManager.put(newSource.toDbKey(), oldValueDB);
+    await delete(oldSource);
+  }
+
+  Future<void> delete(QueueSourceBase source) async {
+    _mapRx.remove(source);
+    await _dBManager.delete(source.toDbKey());
+  }
+
+  Future<void> deleteMultiple(Iterable<QueueSourceBase> sources) async {
+    final keysToRemove = <String>[];
+    for (final source in sources) {
+      _mapRx.value.remove(source);
+      keysToRemove.add(source.toDbKey());
+    }
+    _mapRx.refresh();
+    await _dBManager.deleteBulk(keysToRemove);
+  }
 }
 
 class _LatestQueueSaver {

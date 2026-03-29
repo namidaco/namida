@@ -97,7 +97,20 @@ class QueueTile extends StatelessWidget {
                       NamidaHero(
                         tag: 'line2_$hero',
                         child: Text(
-                          [queue.toText(), queue.tracks.displayTrackKeyword].join(' - '),
+                          queue.toText(),
+                          style: textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      NamidaHero(
+                        tag: 'line3_$hero',
+                        child: Text(
+                          [
+                            queue.tracks.displayTrackKeyword,
+                            queue.tracks.totalDurationFormatted,
+                          ].join(' - '),
                           style: textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),

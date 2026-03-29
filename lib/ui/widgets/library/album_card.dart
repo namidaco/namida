@@ -159,7 +159,7 @@ class AlbumCard extends StatelessWidget {
                                       ],
                                     ),
                                     borderRadius: 8.0.withMaximum(imageSize * 0.07),
-                                    onTap: () => Player.inst.playOrPause(0, album, QueueSource.album, homePageItem: homepageItem),
+                                    onTap: () => Player.inst.playOrPause(0, album, QueueSource.album(identifier), homePageItem: homepageItem),
                                     padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
                                     child: Icon(
                                       Broken.play,
