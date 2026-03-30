@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 
 // ignore: depend_on_referenced_packages
 import 'package:dio/dio.dart';
-import 'package:jellyfin_dart/jellyfin_dart.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:opensubsonic_api/opensubsonic_api.dart';
 import 'package:path/path.dart' as p;
@@ -44,6 +43,7 @@ part 'jellyfin_server.dart';
 part 'smb_server.dart';
 part 'subsonic_web_server.dart';
 part 'webdav_server.dart';
+part 'jellyfin_api.dart';
 
 abstract class MusicWebServer {
   final MusicWebServerAuthDetails authDetails;

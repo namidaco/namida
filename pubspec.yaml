@@ -93,7 +93,6 @@ dependencies:
   smb_connect:
     git:
       url: https://github.com/MSOB7YY/smb_connect
-  jellyfin_dart: ^0.1.2
 
   # ---- Audio Indexing & Playback ----
   just_audio:
