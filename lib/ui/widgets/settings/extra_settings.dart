@@ -920,110 +920,46 @@ class ExtrasSettings extends SettingSubpageProvider {
           icon: Broken.color_swatch,
           title: lang.libraryTabs,
           trailingText: "${settings.libraryTabs.length}",
-          onTap: () {
-            final subList = <LibraryTab>[].obs;
-
-            LibraryTab.values.loop((e) {
-              if (!settings.libraryTabs.contains(e)) {
-                subList.add(e);
-              }
-            });
-
-            NamidaNavigator.inst.navigateDialog(
-              scale: 1.0,
-              onDisposing: () {
-                subList.close();
-              },
-              dialog: CustomBlurryDialog(
-                title: lang.libraryTabs,
-                actions: const [
-                  DoneButton(),
-                ],
-                child: SizedBox(
-                  width: namida.width,
-                  height: namida.height * 0.5,
-                  child: Obx(
-                    (context) => Column(
-                      children: [
-                        Text(
-                          lang.libraryTabsReorder,
-                          style: textTheme.displayMedium,
+          onTap: () => NamidaNavigator.inst.navigateDialog(
+            scale: 1.0,
+            dialog: CustomBlurryDialog(
+              title: "${lang.libraryTabs} (${lang.reorderable})",
+              actions: const [
+                DoneButton(),
+              ],
+              child: SizedBox(
+                width: namida.width,
+                height: namida.height * 0.5,
+                child: Obx(
+                  (context) => Column(
+                    children: [
+                      Text(
+                        lang.libraryTabsReorder,
+                        style: textTheme.displayMedium,
+                      ),
+                      const SizedBox(height: 12.0),
+                      Expanded(
+                        child: NamidaReorderableActiveListView(
+                          enumValues: LibraryTab.values,
+                          rxList: settings.libraryTabs,
+                          toText: (item) => item.toText(),
+                          toIcon: (item) => item.toIcon(),
+                          minimumItems: 3,
+                          onItemRemoved: (i, activeItems) {
+                            settings.extra.save(selectedLibraryTab: activeItems.first);
+                          },
+                          onSave: (activeItems) {
+                            settings.libraryTabs.value = activeItems;
+                            settings.save(libraryTabs: null);
+                          },
                         ),
-                        const SizedBox(height: 12.0),
-                        Expanded(
-                          flex: 6,
-                          child: NamidaListView(
-                            itemExtent: null,
-                            listBottomPadding: 0,
-                            itemCount: settings.libraryTabs.length,
-                            itemBuilder: (context, i) {
-                              final tab = settings.libraryTabs[i];
-                              return Padding(
-                                key: ValueKey(i),
-                                padding: const EdgeInsets.all(4.0),
-                                child: ListTileWithCheckMark(
-                                  title: "${i + 1}. ${tab.toText()}",
-                                  icon: tab.toIcon(),
-                                  onTap: () {
-                                    if (settings.libraryTabs.length > 3) {
-                                      settings.removeFromList(libraryTab1: tab);
-                                      settings.extra.save(selectedLibraryTab: settings.libraryTabs[0]);
-                                      subList.add(tab);
-                                    } else {
-                                      showMinimumItemsSnack(3);
-                                    }
-                                  },
-                                  active: settings.libraryTabs.contains(tab),
-                                ),
-                              );
-                            },
-                            onReorder: (oldIndex, newIndex) {
-                              if (newIndex > oldIndex) {
-                                newIndex -= 1;
-                              }
-                              final item = settings.libraryTabs.value.elementAt(oldIndex);
-                              settings.removeFromList(
-                                libraryTab1: item,
-                              );
-                              settings.insertInList(newIndex, libraryTab1: item);
-                            },
-                          ),
-                        ),
-                        const NamidaContainerDivider(height: 4.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
-                        const SizedBox(height: 8.0),
-                        if (subList.isNotEmpty)
-                          Expanded(
-                            flex: subList.length,
-                            child: SuperSmoothListView.builder(
-                              padding: EdgeInsets.zero,
-                              itemCount: subList.length,
-                              itemBuilder: (context, index) {
-                                final item = subList[index];
-                                return Material(
-                                  type: MaterialType.transparency,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                    child: ListTileWithCheckMark(
-                                      title: "${index + 1}. ${item.toText()}",
-                                      icon: item.toIcon(),
-                                      onTap: () {
-                                        settings.save(libraryTabs: [item]);
-                                        subList.remove(item);
-                                      },
-                                      active: settings.libraryTabs.contains(item),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );

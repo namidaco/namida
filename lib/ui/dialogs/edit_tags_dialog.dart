@@ -206,22 +206,6 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrack, Color colorScheme, {b
   if (autoOpenSearch) openSearchDialog();
 }
 
-Widget get _getKeepDatesWidget => ObxO(
-  rx: settings.editTagsKeepFileDates,
-  builder: (context, editTagsKeepFileDates) => NamidaIconButton(
-    tooltip: () => lang.keepFileDates,
-    icon: editTagsKeepFileDates ? Broken.document_code_2 : Broken.calendar_edit,
-    onPressed: () {
-      settings.save(editTagsKeepFileDates: !settings.editTagsKeepFileDates.value);
-    },
-    child: StackedIcon(
-      disableColor: true,
-      baseIcon: Broken.document_code_2,
-      secondaryIcon: editTagsKeepFileDates ? Broken.tick_circle : Broken.close_circle,
-    ),
-  ),
-);
-
 Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme, {bool instantEditArtwork = false}) async {
   if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
 
@@ -386,100 +370,39 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
               icon: Broken.edit,
               title: lang.editTags,
               trailingWidgets: [
-                _getKeepDatesWidget,
+                _KeepDatesToggleWidget(
+                  colorScheme: theme.colorScheme.secondary,
+                ),
                 NamidaIconButton(
                   icon: Broken.edit_2,
-                  onPressed: () async {
-                    final subList = List<TagField>.from(TagField.values).obs;
-                    subList.removeWhere((element) => settings.tagFieldsToEdit.value.contains(element));
-
-                    await NamidaNavigator.inst.navigateDialog(
-                      scale: 1.0,
-                      onDisposing: () {
-                        subList.close();
-                      },
-                      dialog: CustomBlurryDialog(
-                        title: lang.tagFields,
+                  onPressed: () => NamidaNavigator.inst.navigateDialog(
+                    scale: 1.0,
+                    dialog: Theme(
+                      data: theme,
+                      child: CustomBlurryDialog(
+                        theme: theme,
+                        title: "${lang.tagFields} (${lang.reorderable})",
+                        actions: const [
+                          DoneButton(),
+                        ],
                         child: SizedBox(
                           width: namida.width,
                           height: namida.height * 0.6,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 6.0),
-                              Text('${lang.active} (${lang.reorderable})', style: namida.textTheme.displayMedium),
-                              const SizedBox(height: 6.0),
-                              Expanded(
-                                child: ObxO(
-                                  rx: settings.tagFieldsToEdit,
-                                  builder: (context, tagFieldsToEdit) => NamidaListView(
-                                    itemExtent: null,
-                                    listBottomPadding: 24.0,
-                                    itemCount: tagFieldsToEdit.length,
-                                    onReorder: (oldIndex, newIndex) {
-                                      if (newIndex > oldIndex) {
-                                        newIndex -= 1;
-                                      }
-                                      final tfOld = tagFieldsToEdit[oldIndex];
-                                      settings.removeFromList(tagFieldsToEdit1: tfOld);
-                                      settings.insertInList(newIndex, tagFieldsToEdit1: tfOld);
-                                    },
-                                    itemBuilder: (context, i) {
-                                      final tf = tagFieldsToEdit[i];
-                                      return Padding(
-                                        key: ValueKey(i),
-                                        padding: const EdgeInsets.only(top: 8.0),
-                                        child: ListTileWithCheckMark(
-                                          active: true,
-                                          title: tf.toText(),
-                                          icon: tf.toIcon(),
-                                          onTap: () {
-                                            if (tagFieldsToEdit.length <= 3) {
-                                              showMinimumItemsSnack(3);
-                                              return;
-                                            }
-                                            settings.removeFromList(tagFieldsToEdit1: tf);
-                                            subList.add(tf);
-                                          },
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12.0),
-                              Text(lang.nonActive, style: namida.textTheme.displayMedium),
-                              const SizedBox(height: 6.0),
-                              Expanded(
-                                child: Obx(
-                                  (context) => SuperSmoothListView.builder(
-                                    padding: const EdgeInsets.only(bottom: 24.0),
-                                    itemBuilder: (context, i) {
-                                      final tf = subList[i];
-                                      return Padding(
-                                        key: Key(i.toString()),
-                                        padding: const EdgeInsets.only(top: 8.0),
-                                        child: ListTileWithCheckMark(
-                                          active: false,
-                                          title: tf.toText(),
-                                          icon: tf.toIcon(),
-                                          onTap: () {
-                                            settings.save(tagFieldsToEdit: [tf]);
-                                            subList.remove(tf);
-                                          },
-                                        ),
-                                      );
-                                    },
-                                    itemCount: subList.length,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          child: NamidaReorderableActiveListView(
+                            enumValues: TagField.values,
+                            rxList: settings.tagFieldsToEdit,
+                            toText: (item) => item.toText(),
+                            toIcon: (item) => item.toIcon(),
+                            minimumItems: 3,
+                            onSave: (activeItems) {
+                              settings.tagFieldsToEdit.value = activeItems;
+                              settings.save(tagFieldsToEdit: null);
+                            },
                           ),
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ],
               // leftAction: NamidaInkWell(
@@ -828,7 +751,7 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
         icon: Broken.edit,
         title: lang.editTags,
         trailingWidgets: [
-          _getKeepDatesWidget,
+          const _KeepDatesToggleWidget(),
         ],
         actions: [
           Obx(
@@ -1218,6 +1141,31 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
       ),
     ),
   );
+}
+
+class _KeepDatesToggleWidget extends StatelessWidget {
+  final Color? colorScheme;
+  const _KeepDatesToggleWidget({this.colorScheme});
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.editTagsKeepFileDates,
+      builder: (context, editTagsKeepFileDates) => NamidaIconButton(
+        tooltip: () => lang.keepFileDates,
+        icon: editTagsKeepFileDates ? Broken.document_code_2 : Broken.calendar_edit,
+        onPressed: () {
+          settings.save(editTagsKeepFileDates: !settings.editTagsKeepFileDates.value);
+        },
+        child: StackedIcon(
+          baseIcon: Broken.document_code_2,
+          secondaryIcon: editTagsKeepFileDates ? Broken.tick_circle : Broken.close_circle,
+          baseIconColor: colorScheme,
+          secondaryIconColor: colorScheme,
+        ),
+      ),
+    );
+  }
 }
 
 class CustomTagTextField extends StatefulWidget {

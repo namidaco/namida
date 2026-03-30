@@ -3548,6 +3548,123 @@ class NamidaCircularPercentage extends StatelessWidget {
   }
 }
 
+class NamidaReorderableActiveListView<E> extends StatefulWidget {
+  final List<E> enumValues;
+  final RxBaseCore<List<E>> rxList;
+  final String Function(E item) toText;
+  final IconData Function(E item) toIcon;
+  final IconData? Function(E item)? toSecondaryIcon;
+  final void Function(List<E> activeItems) onSave;
+  final void Function(int i, List<E> activeItems)? onItemRemoved;
+  final int minimumItems;
+
+  const NamidaReorderableActiveListView({
+    super.key,
+    required this.enumValues,
+    required this.rxList,
+    required this.toText,
+    required this.toIcon,
+    this.toSecondaryIcon,
+    required this.onSave,
+    this.onItemRemoved,
+    this.minimumItems = 3,
+  });
+
+  @override
+  State<NamidaReorderableActiveListView<E>> createState() => _NamidaReorderableActiveListViewState<E>();
+}
+
+class _NamidaReorderableActiveListViewState<E> extends State<NamidaReorderableActiveListView<E>> {
+  late final RxList<({E item, bool active})> _itemsRx;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeList();
+  }
+
+  void _initializeList() {
+    final combined = <({E item, bool active})>{};
+    for (final e in widget.rxList.value) {
+      combined.add((item: e, active: true));
+    }
+    for (final e in widget.enumValues) {
+      combined.add((item: e, active: false));
+    }
+
+    _itemsRx = combined.toList().obs;
+  }
+
+  @override
+  void dispose() {
+    _itemsRx.close();
+    super.dispose();
+  }
+
+  List<E> getActiveItems() => _itemsRx.value.where((e) => e.active).map((e) => e.item).toList();
+
+  void _onTap(int i) {
+    final (:item, :active) = _itemsRx.value[i];
+    if (active) {
+      if (_itemsRx.value.where((e) => e.active).length <= widget.minimumItems) {
+        showMinimumItemsSnack(widget.minimumItems);
+        return;
+      }
+    }
+    _itemsRx[i] = (item: item, active: !active);
+    final newItems = getActiveItems();
+    widget.onSave(newItems);
+
+    if (!_itemsRx.value[i].active) {
+      widget.onItemRemoved?.call(i, newItems);
+    }
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
+    if (newIndex > oldIndex) newIndex -= 1;
+    final entry = _itemsRx.value.removeAt(oldIndex);
+    _itemsRx.value.insert(newIndex, entry);
+    _itemsRx.refresh();
+    widget.onSave(getActiveItems());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: _itemsRx,
+      builder: (context, items) => NamidaListView(
+        showScrollbarOnStart: true,
+        itemExtent: null,
+        listBottomPadding: 0,
+        itemCount: items.length,
+        onReorder: _onReorder,
+        itemBuilder: (context, i) {
+          final (:item, :active) = items[i];
+          final mainIcon = widget.toIcon(item);
+          final secondaryIcon = widget.toSecondaryIcon?.call(item);
+          return Padding(
+            key: ValueKey(item),
+            padding: const EdgeInsets.all(4.0),
+            child: ListTileWithCheckMark(
+              title: "${i + 1}. ${widget.toText(item)}",
+              icon: secondaryIcon == null ? mainIcon : null,
+              leading: secondaryIcon == null
+                  ? null
+                  : StackedIcon(
+                      baseIcon: mainIcon,
+                      secondaryIcon: secondaryIcon,
+                      disableColor: true,
+                    ),
+              active: active,
+              onTap: () => _onTap(i),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class NamidaListView extends StatelessWidget {
   final Widget Function(Widget list)? listBuilder;
   final Widget Function(BuildContext context, int i) itemBuilder;

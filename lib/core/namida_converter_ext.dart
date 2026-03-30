@@ -2089,6 +2089,30 @@ extension HomePageItemsL10n on HomePageItems {
     HomePageItems.topRecentAlbums => lang.topRecentAlbums,
     HomePageItems.topRecentArtists => lang.topRecentArtists,
   };
+
+  IconData toMainIcon() => switch (this) {
+    HomePageItems.mixes => Broken.scanning,
+    HomePageItems.recentListens => Broken.command_square,
+    HomePageItems.topRecentListens => Broken.crown_1,
+    HomePageItems.lostMemories => Broken.link_21,
+    HomePageItems.recentlyAdded => Broken.back_square,
+    HomePageItems.recentAlbums => Broken.undo,
+    HomePageItems.recentArtists => Broken.undo,
+    HomePageItems.topRecentAlbums => Broken.crown_1,
+    HomePageItems.topRecentArtists => Broken.crown_1,
+  };
+
+  IconData? toIcon() => switch (this) {
+    HomePageItems.mixes => null,
+    HomePageItems.recentListens => null,
+    HomePageItems.topRecentListens => null,
+    HomePageItems.lostMemories => null,
+    HomePageItems.recentlyAdded => null,
+    HomePageItems.recentAlbums => Broken.music_dashboard,
+    HomePageItems.topRecentAlbums => Broken.music_dashboard,
+    HomePageItems.recentArtists => Broken.user,
+    HomePageItems.topRecentArtists => Broken.user,
+  };
 }
 
 extension NotificationTapActionL10n on NotificationTapAction {

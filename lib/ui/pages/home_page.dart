@@ -370,120 +370,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   }
 
   void showReorderHomeItemsDialog() async {
-    final subList = <HomePageItems>[].obs;
-    HomePageItems.values.loop((e) {
-      if (!settings.homePageItems.contains(e)) {
-        subList.add(e);
-      }
-    });
     final mainListController = NamidaScrollController.create();
-    // void jumpToLast() {
-    //   mainListController.animateTo(
-    //     mainListController.positions.first.maxScrollExtent,
-    //     duration: const Duration(milliseconds: 200),
-    //     curve: Curves.easeInOut,
-    //   );
-    // }
-
-    // WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-    //   jumpToLast();
-    // });
 
     await NamidaNavigator.inst.navigateDialog(
       scale: 1.0,
       onDisposing: () {
-        subList.close();
         mainListController.dispose();
       },
       dialog: CustomBlurryDialog(
         title: "${lang.configure} (${lang.reorderable})",
-        actions: const [
-          DoneButton(),
-        ],
+        actions: const [DoneButton()],
         child: SizedBox(
           width: namida.width,
           height: namida.height * 0.5,
-          child: Column(
-            children: [
-              Expanded(
-                flex: 6,
-                child: Builder(
-                  builder: (context) {
-                    return ObxO(
-                      rx: settings.homePageItems,
-                      builder: (context, homePageItems) => NamidaListView(
-                        showScrollbarOnStart: true,
-                        itemExtent: null,
-                        scrollController: mainListController,
-                        itemCount: homePageItems.length,
-                        itemBuilder: (context, index) {
-                          final item = homePageItems[index];
-                          return Material(
-                            key: ValueKey(item),
-                            type: MaterialType.transparency,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4.0),
-                              child: ListTileWithCheckMark(
-                                active: true,
-                                icon: Broken.recovery_convert,
-                                title: item.toText(),
-                                onTap: () {
-                                  if (settings.homePageItems.length <= 3) {
-                                    showMinimumItemsSnack(3);
-                                    return;
-                                  }
-                                  subList.add(item);
-                                  settings.removeFromList(homePageItem1: item);
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                        onReorder: (oldIndex, newIndex) {
-                          if (newIndex > oldIndex) newIndex -= 1;
-                          final item = settings.homePageItems.value.elementAt(oldIndex);
-                          settings.removeFromList(homePageItem1: item);
-                          settings.insertInList(newIndex, homePageItem1: item);
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const NamidaContainerDivider(height: 4.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
-              if (subList.isNotEmpty)
-                ObxO(
-                  rx: subList,
-                  builder: (context, subList) => subList.isEmpty
-                      ? const SizedBox()
-                      : Expanded(
-                          flex: subList.length,
-                          child: SuperSmoothListView.builder(
-                            padding: EdgeInsets.zero,
-                            itemCount: subList.length,
-                            itemBuilder: (context, index) {
-                              final item = subList[index];
-                              return Material(
-                                type: MaterialType.transparency,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                  child: ListTileWithCheckMark(
-                                    active: false,
-                                    icon: Broken.recovery_convert,
-                                    title: item.toText(),
-                                    onTap: () {
-                                      settings.save(homePageItems: [item]);
-                                      subList.remove(item);
-                                      // jumpToLast();
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                ),
-            ],
+          child: NamidaReorderableActiveListView(
+            enumValues: HomePageItems.values,
+            rxList: settings.homePageItems,
+            toText: (item) => item.toText(),
+            toIcon: (item) => item.toMainIcon(),
+            toSecondaryIcon: (item) => item.toIcon(),
+            minimumItems: 3,
+            onSave: (activeItems) {
+              settings.homePageItems.value = activeItems;
+              settings.save(homePageItems: null);
+            },
           ),
         ),
       ),
@@ -561,7 +471,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                         homepageItem: element,
                                         isLoading: _isLoading,
                                         title: lang.mixes,
-                                        icon: Broken.scanning,
+                                        icon: element.toMainIcon(),
                                         height: 186.0 + 12.0,
                                         itemCount: _isLoading ? _shimmerList.length : _mixes.length,
                                         itemExtent: 240.0,
@@ -586,7 +496,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       homepageItem: element,
                                       isLoading: _isLoading,
                                       title: lang.recentListens,
-                                      icon: Broken.command_square,
+                                      icon: element.toMainIcon(),
                                       listy: _recentListened,
                                       onTap: NamidaOnTaps.inst.onHistoryPlaylistTap,
                                       topRightText: (track) {
@@ -602,7 +512,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       homepageItem: element,
                                       isLoading: _isLoading,
                                       title: lang.topRecents,
-                                      icon: Broken.crown_1,
+                                      icon: element.toMainIcon(),
                                       listy: const [],
                                       listWithListens: _topRecentListened,
                                       onTap: () {
@@ -663,11 +573,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       homepageItem: element,
                                       isLoading: _isLoading,
                                       title: lang.lostMemories,
+                                      icon: element.toMainIcon(),
                                       subtitle: () {
                                         final diff = DateTime.now().year - currentYearLostMemories;
                                         return lang.lostMemoriesSubtitle(number: diff);
                                       }(),
-                                      icon: Broken.link_21,
                                       listy: const [],
                                       listWithListens: _sameTimeYearAgo,
                                       onTap: () {
@@ -728,7 +638,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       isLoading: _isLoading,
                                       homepageItem: element,
                                       title: lang.recentlyAdded,
-                                      icon: Broken.back_square,
+                                      icon: element.toMainIcon(),
                                       listy: _recentlyAdded,
                                       onTap: _navigateToRecentlyListened,
                                       topRightText: (track) {
@@ -744,7 +654,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       isLoading: _isLoading,
                                       homepageItem: element,
                                       title: lang.recentAlbums,
-                                      mainIcon: Broken.undo,
+                                      mainIcon: element.toMainIcon(),
                                       albums: _listOrShimmer(_recentAlbums),
                                       listens: null,
                                     );
@@ -755,7 +665,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       isLoading: _isLoading,
                                       homepageItem: element,
                                       title: lang.topRecentAlbums,
-                                      mainIcon: Broken.crown_1,
+                                      mainIcon: element.toMainIcon(),
                                       albums: _listOrShimmer(keys),
                                       listens: (album) => _topRecentAlbums[album] ?? 0,
                                     );
@@ -765,7 +675,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       isLoading: _isLoading,
                                       homepageItem: element,
                                       title: lang.recentArtists,
-                                      mainIcon: Broken.undo,
+                                      mainIcon: element.toMainIcon(),
                                       artists: _listOrShimmer(_recentArtists),
                                       listens: null,
                                     );
@@ -776,7 +686,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       isLoading: _isLoading,
                                       homepageItem: element,
                                       title: lang.topRecentArtists,
-                                      mainIcon: Broken.crown_1,
+                                      mainIcon: element.toMainIcon(),
                                       artists: _listOrShimmer(keys),
                                       listens: (artist) => _topRecentArtists[artist] ?? 0,
                                     );
