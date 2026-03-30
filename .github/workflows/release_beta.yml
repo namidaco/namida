@@ -7,6 +7,10 @@ name: release_beta
 
 on:
   workflow_dispatch:
+    inputs:
+      is_beta:
+        type: boolean
+        default: true
   workflow_call:
     inputs:
       is_beta:
@@ -20,7 +24,6 @@ jobs:
       version: ${{ steps.extract_version.outputs.version }}
       version_name: ${{ steps.extract_version.outputs.version_name }}
       target_repo: ${{ steps.set_vars.outputs.target_repo }}
-      release_token: ${{ steps.set_vars.outputs.release_token }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,10 +43,8 @@ jobs:
         run: |
           if [ "${{ inputs.is_beta }}" = "false" ]; then
             echo "target_repo=${{ github.repository }}" >> $GITHUB_OUTPUT
-            echo "release_token=" >> $GITHUB_OUTPUT
           else
             echo "target_repo=namidaco/namida-snapshots" >> $GITHUB_OUTPUT
-            echo "release_token=${{ secrets.SNAPSHOTS_REPO_SECRET }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Generate Changelog
@@ -59,7 +60,7 @@ jobs:
           draft: true
           tag_name: ${{ steps.extract_version.outputs.version }}
           body_path: ./beta_changelog.md
-          token: ${{ steps.set_vars.outputs.release_token }}
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || '' }}
 
   build_android:
     needs: create_release
@@ -174,7 +175,7 @@ jobs:
           draft: ${{ !inputs.is_beta }}
           tag_name: ${{ needs.create_release.outputs.version }}
           files: build_final/*
-          token: ${{ needs.create_release.outputs.release_token }}
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || '' }}
 
   build_windows:
     needs: create_release
@@ -248,7 +249,7 @@ jobs:
           tag_name: ${{ needs.create_release.outputs.version }}
           files: |
             build_final/*
-          token: ${{ needs.create_release.outputs.release_token }}
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || '' }}
 
   build_linux:
     if: ${{ inputs.is_beta }}
@@ -338,7 +339,7 @@ jobs:
           tag_name: ${{ needs.create_release.outputs.version }}
           files: |
             build_final/*
-          token: ${{ needs.create_release.outputs.release_token }}
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || '' }}
 
       - name: Install SSH key for AUR
         uses: shimataro/ssh-key-action@v2
