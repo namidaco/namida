@@ -61,7 +61,9 @@ import 'package:namida/ui/pages/folders_page.dart';
 import 'package:namida/ui/pages/genres_page.dart';
 import 'package:namida/ui/pages/home_page.dart';
 import 'package:namida/ui/pages/playlists_page.dart';
+import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
+import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -111,6 +113,10 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.home => null,
       LibraryTab.search => null,
       LibraryTab.youtube => null,
+      LibraryTab.queues => null,
+      LibraryTab.favourites => null,
+      LibraryTab.history => null,
+      LibraryTab.mostPlayed => null,
     };
   }
 
@@ -146,6 +152,13 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.home => HomePage.tracks(),
       LibraryTab.youtube => const YouTubeHomeView(),
       LibraryTab.search => const NamidaDummyPage(),
+      LibraryTab.queues => const QueuesPage(),
+      LibraryTab.favourites => const NormalPlaylistTracksPage(
+        playlistName: k_PLAYLIST_NAME_FAV,
+        disableAnimation: true,
+      ),
+      LibraryTab.history => const HistoryTracksPage(),
+      LibraryTab.mostPlayed => const MostPlayedTracksPage(),
     };
   }
 }
@@ -1318,13 +1331,7 @@ extension RouteUtils on NamidaRoute {
     );
   }
 
-  List<Widget> toActions() {
-    final shouldShowInitialActions =
-        route != RouteType.PAGE_stats &&
-        route != RouteType.SETTINGS_page &&
-        route != RouteType.SETTINGS_subpage &&
-        route != RouteType.YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE &&
-        route != RouteType.YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE;
+  List<Widget> toActions({required bool isInnerPage}) {
     final shouldShowProgressPercentage = route != RouteType.SETTINGS_page && route != RouteType.SETTINGS_subpage;
     const shouldShowMissingServerDirAuth = true;
 
@@ -1346,7 +1353,7 @@ extension RouteUtils on NamidaRoute {
         route == RouteType.SUBPAGE_historyTracks ||
         route == RouteType.SUBPAGE_mostPlayedTracks;
 
-    final shouldShowSettingsIcon = !showMainMenu && !showPlaylistMenu && shouldShowInitialActions;
+    final shouldShowSettingsIcon = !isInnerPage;
 
     return <Widget>[
       const SizedBox(width: 2.0),
@@ -1602,6 +1609,10 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.home => lang.home,
     LibraryTab.search => lang.search,
     LibraryTab.youtube => lang.youtube,
+    LibraryTab.queues => lang.queues,
+    LibraryTab.favourites => lang.favourites,
+    LibraryTab.history => lang.history,
+    LibraryTab.mostPlayed => lang.mostPlayed,
   };
 
   IconData toIcon() => switch (this) {
@@ -1616,6 +1627,10 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.home => Broken.home_2,
     LibraryTab.search => Broken.search_normal_1,
     LibraryTab.youtube => Broken.video_square,
+    LibraryTab.queues => Broken.driver,
+    LibraryTab.favourites => Broken.heart,
+    LibraryTab.history => Broken.refresh,
+    LibraryTab.mostPlayed => Broken.award,
   };
 }
 

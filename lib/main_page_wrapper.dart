@@ -26,7 +26,6 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/main_page.dart';
-import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/inner_drawer.dart';
@@ -263,24 +262,6 @@ class NamidaDrawer extends StatelessWidget {
                         ),
                       ),
                     ),
-                NamidaDrawerListTile(
-                  enabled: false,
-                  title: lang.favourites,
-                  icon: Broken.heart,
-                  onTap: () {
-                    NamidaOnTaps.inst.onNormalPlaylistTap(k_PLAYLIST_NAME_FAV);
-                    toggleDrawer();
-                  },
-                ),
-                NamidaDrawerListTile(
-                  enabled: false,
-                  title: lang.queues,
-                  icon: Broken.driver,
-                  onTap: () {
-                    const QueuesPage().navigate();
-                    toggleDrawer();
-                  },
-                ),
               ],
             ),
           ),

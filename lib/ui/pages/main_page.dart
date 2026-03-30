@@ -725,15 +725,17 @@ class _CustomAppBar extends StatelessWidget {
     final overlayStyle = _systemOverlayStyleForBrightness(ThemeData.estimateBrightnessForColor(backgroundColor), theme.useMaterial3 ? const Color(0x00000000) : null);
     final appbar = Obx(
       (context) {
+        final currentWidgetStack = NamidaNavigator.inst.currentWidgetStack.valueR;
+        final isInnerPage = currentWidgetStack.length > 1;
         final title = ScrollSearchController.inst.isGlobalSearchMenuShown.valueR
             ? ScrollSearchController.inst.searchBarWidget
             : NamidaNavigator.inst.currentRouteR?.toTitle(context);
-        final actions = NamidaNavigator.inst.currentRouteR?.toActions();
+        final actions = NamidaNavigator.inst.currentRouteR?.toActions(isInnerPage: isInnerPage);
         return Row(
           children: [
             ConstrainedBox(
               constraints: const BoxConstraints.tightFor(width: kToolbarHeight),
-              child: NamidaNavigator.inst.currentWidgetStack.length > 1
+              child: isInnerPage
                   ? NamidaAppBarIcon(
                       icon: Broken.arrow_left_2,
                       onPressed: NamidaNavigator.inst.popPage,

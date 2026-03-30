@@ -267,6 +267,10 @@ enum LibraryTab {
   foldersVideos,
   search,
   youtube,
+  queues,
+  favourites,
+  history,
+  mostPlayed,
 }
 
 enum TrackPlayMode {
