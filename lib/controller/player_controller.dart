@@ -523,8 +523,7 @@ class Player {
     await _audioHandler.replaceAllItemsInQueueBulk(oldNewTrack);
   }
 
-  Future<void> replaceTracksDirectoryInQueue(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
-    String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
+  Future<void> replaceTracksDirectoryInQueue(String normalizedOldDir, String normalizedNewDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
     if (currentItem.value is Selectable) {
       final pathsOnlySet = forThesePathsOnly?.toSet();
       final existenceCache = <String, bool>{};
@@ -533,8 +532,8 @@ class Player {
           final tr = (e as Selectable).track;
           return replaceFunctionForUpdatedPaths(
             tr,
-            oldDir,
-            newDir,
+            normalizedOldDir,
+            normalizedNewDir,
             pathsOnlySet,
             ensureNewFileExists,
             existenceCache,
@@ -542,7 +541,7 @@ class Player {
         },
         (old) {
           old as Selectable;
-          final newtr = Track.fromTypeParameter(old.track.runtimeType, getNewPath(old.track.path));
+          final newtr = Track.fromTypeParameter(old.track.runtimeType, replaceFunctionGetNewPath(old.track.path, normalizedOldDir, normalizedNewDir));
           if (old is TrackWithDate) {
             return TrackWithDate(
               dateAdded: old.dateAdded,

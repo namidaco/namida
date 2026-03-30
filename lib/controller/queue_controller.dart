@@ -151,9 +151,7 @@ class QueueController {
   }
 
   /// Only use when updating missing track.
-  Future<void> replaceTracksDirectoryInQueues(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
-    String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
-
+  Future<void> replaceTracksDirectoryInQueues(String normalizedOldDir, String normalizedNewDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
     final queuesToSave = <Queue>{};
     final pathsOnlySet = forThesePathsOnly?.toSet();
     final existenceCache = <String, bool>{};
@@ -164,14 +162,14 @@ class QueueController {
           final tr = e.track;
           return replaceFunctionForUpdatedPaths(
             tr,
-            oldDir,
-            newDir,
+            normalizedOldDir,
+            normalizedNewDir,
             pathsOnlySet,
             ensureNewFileExists,
             existenceCache,
           );
         },
-        (old) => Track.fromTypeParameter(old.runtimeType, getNewPath(old.path)),
+        (old) => Track.fromTypeParameter(old.runtimeType, replaceFunctionGetNewPath(old.path, normalizedOldDir, normalizedNewDir)),
         onMatch: () => queuesToSave.add(q),
       );
     }

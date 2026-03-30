@@ -193,8 +193,7 @@ class SelectedTracksController {
     _allTracksHashCodes[newTrack] = true;
   }
 
-  void replaceTrackDirectory(String oldDir, String newDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) {
-    String getNewPath(String old) => old.replaceFirst(oldDir, newDir);
+  void replaceTrackDirectory(String normalizedOldDir, String normalizedNewDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) {
     final pathsOnlySet = forThesePathsOnly?.toSet();
     final existenceCache = <String, bool>{};
     _tracksOrTwdList.replaceWhere(
@@ -202,15 +201,15 @@ class SelectedTracksController {
         final tr = e.track;
         return replaceFunctionForUpdatedPaths(
           tr,
-          oldDir,
-          newDir,
+          normalizedOldDir,
+          normalizedNewDir,
           pathsOnlySet,
           ensureNewFileExists,
           existenceCache,
         );
       },
       (old) {
-        final newtr = Track.fromTypeParameter(old.track.runtimeType, getNewPath(old.track.path));
+        final newtr = Track.fromTypeParameter(old.track.runtimeType, replaceFunctionGetNewPath(old.track.path, normalizedOldDir, normalizedNewDir));
         if (old is TrackWithDate) {
           return TrackWithDate(
             dateAdded: old.dateAdded,

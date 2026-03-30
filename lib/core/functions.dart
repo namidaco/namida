@@ -2292,16 +2292,32 @@ class _VerticalDivider extends StatelessWidget {
   }
 }
 
-String _getNewPath(String old, String oldDir, String newDir) => old.replaceFirst(oldDir, newDir);
-bool replaceFunctionForUpdatedPaths(Track tr, String oldDir, String newDir, Set<String>? pathsOnlySet, bool ensureNewFileExists, Map<String, bool> existenceCache) {
-  final trackPath = tr.path;
+String replaceFunctionNormalizePath(String path) => path.replaceAll('\\', '/');
+String replaceFunctionGetNewPath(String old, String normalizedOldDir, String normalizedNewDir) => replaceFunctionNormalizePath(old)
+    .replaceFirst(
+      normalizedOldDir,
+      normalizedNewDir,
+    )
+    .replaceAll(
+      '/',
+      Platform.pathSeparator,
+    );
+bool replaceFunctionForUpdatedPaths(
+  Track tr,
+  String normalizedOldDir,
+  String normalizedNewDir,
+  Set<String>? pathsOnlySet,
+  bool ensureNewFileExists,
+  Map<String, bool> existenceCache,
+) {
+  final trackPath = replaceFunctionNormalizePath(tr.path);
 
-  if (!trackPath.startsWith(oldDir)) return false;
+  if (!trackPath.startsWith(normalizedOldDir)) return false;
 
-  if (pathsOnlySet != null && !pathsOnlySet.contains(trackPath)) return false;
+  if (pathsOnlySet != null && !pathsOnlySet.contains(tr.path)) return false;
 
   if (ensureNewFileExists) {
-    final newPath = _getNewPath(trackPath, oldDir, newDir);
+    final newPath = replaceFunctionGetNewPath(trackPath, normalizedOldDir, normalizedNewDir);
     final exists = existenceCache[newPath] ??= Track.explicit(newPath).existsSync();
     if (!exists) return false;
   }

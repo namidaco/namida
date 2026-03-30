@@ -16,6 +16,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/main.dart';
 
 class EditDeleteController {
@@ -216,24 +217,27 @@ class EditDeleteController {
   }
 
   Future<void> updateDirectoryInEveryPartOfNamida(
-    String oldDir,
-    String newDir,
+    String oldDirPre,
+    String newDirPre,
     DirectoryIndexType? newDirType, {
     Iterable<String>? forThesePathsOnly,
     bool ensureNewFileExists = false,
   }) async {
-    if (!settings.directoriesToScan.value.any((dir) => newDir.startsWith(dir.sourceRaw))) settings.save(directoriesToScan: [DirectoryIndex.guess(newDir, newDirType)]);
-    final pathSeparator = Platform.pathSeparator;
-    if (!oldDir.endsWith(pathSeparator)) oldDir += pathSeparator;
-    if (!newDir.endsWith(pathSeparator)) newDir += pathSeparator;
+    if (!settings.directoriesToScan.value.any((dir) => newDirPre.startsWith(dir.sourceRaw))) settings.save(directoriesToScan: [DirectoryIndex.guess(newDirPre, newDirType)]);
+
+    var normalizedOldDir = replaceFunctionNormalizePath(oldDirPre);
+    var normalizedNewDir = replaceFunctionNormalizePath(newDirPre);
+    if (!normalizedOldDir.endsWith('/')) normalizedOldDir += '/';
+    if (!normalizedNewDir.endsWith('/')) normalizedNewDir += '/';
+
     await Future.wait([
-      PlaylistController.inst.replaceTracksDirectory(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
-      QueueController.inst.replaceTracksDirectoryInQueues(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
-      Player.inst.replaceTracksDirectoryInQueue(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
-      HistoryController.inst.replaceTracksDirectoryInHistory(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
+      PlaylistController.inst.replaceTracksDirectory(normalizedOldDir, normalizedNewDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
+      QueueController.inst.replaceTracksDirectoryInQueues(normalizedOldDir, normalizedNewDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
+      Player.inst.replaceTracksDirectoryInQueue(normalizedOldDir, normalizedNewDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
+      HistoryController.inst.replaceTracksDirectoryInHistory(normalizedOldDir, normalizedNewDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists),
     ]);
     if (SelectedTracksController.inst.selectedTracks.value.isNotEmpty) {
-      SelectedTracksController.inst.replaceTrackDirectory(oldDir, newDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists);
+      SelectedTracksController.inst.replaceTrackDirectory(normalizedOldDir, normalizedNewDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists);
     }
   }
 }
