@@ -68,7 +68,6 @@ Future<void> showGeneralPopupDialog(
   bool? forceSingleArtwork,
   bool extractColor = true,
   bool isCircle = false,
-  bool isFromPlayerQueue = false,
   Object? errorPlayingTrack,
   String? artistToAddFrom,
   (String, String)? albumToAddFrom,

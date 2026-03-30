@@ -456,9 +456,11 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         localVideos: VideoController.inst.currentVideoConfig.currentPossibleLocalVideos,
         streams: VideoController.inst.currentVideoConfig.currentYTStreams,
         onLocalVideoTap: (item, video) async {
+          VideoController.inst.ensureVideoPlaybackActive();
           VideoController.inst.playVideoCurrent(video: video, track: (item as Selectable).track);
         },
         onStreamVideoTap: (item, videoId, stream, cacheFile, streams) async {
+          VideoController.inst.ensureVideoPlaybackActive();
           final cacheExists = cacheFile != null;
           if (!cacheExists) await VideoController.inst.getVideoFromYoutubeAndUpdate(videoId, stream: stream);
           VideoController.inst.playVideoCurrent(

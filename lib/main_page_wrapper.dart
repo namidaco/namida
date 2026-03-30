@@ -271,15 +271,15 @@ class NamidaDrawer extends StatelessWidget {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return ToggleThemeModeContainer(
-                  maxWidth: constraints.maxWidth - 12.0,
+                  maxWidth: constraints.maxWidth * 0.9,
                   blurRadius: 3.0,
                 );
               },
             ),
           ),
-          const SizedBox(height: 8.0),
+          const SizedBox(height: 6.0),
           NamidaDrawerListTile(
-            margin: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 12.0),
+            margin: const EdgeInsets.symmetric(horizontal: 12.0),
             enabled: false,
             title: lang.sleepTimer,
             icon: Broken.timer_1,
@@ -288,12 +288,14 @@ class NamidaDrawer extends StatelessWidget {
               openSleepTimerDialog(context);
             },
           ),
+          const SizedBox(height: 6.0),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const SizedBox(width: 12.0),
               Expanded(
                 child: NamidaDrawerListTile(
-                  margin: const EdgeInsets.symmetric(vertical: 5.0).add(const EdgeInsets.only(left: 12.0)),
+                  margin: EdgeInsets.zero,
                   padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
                   enabled: false,
                   isCentered: true,
@@ -310,10 +312,10 @@ class NamidaDrawer extends StatelessWidget {
                   },
                 ),
               ),
-              const SizedBox(width: 8.0),
+              const SizedBox(width: 6.0),
               Expanded(
                 child: NamidaDrawerListTile(
-                  margin: const EdgeInsets.symmetric(vertical: 5.0).add(const EdgeInsets.only(right: 12.0)),
+                  margin: EdgeInsets.zero,
                   padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
                   enabled: false,
                   isCentered: true,
@@ -326,8 +328,10 @@ class NamidaDrawer extends StatelessWidget {
                   },
                 ),
               ),
+              const SizedBox(width: 12.0),
             ],
           ),
+          const SizedBox(height: 6.0),
           const SizedBox(height: 8.0),
         ],
       ),

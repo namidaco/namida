@@ -286,6 +286,7 @@ class _PopupRoute extends PopupRoute<void> {
   final void Function() reOpenMenuCallback;
 
   double _maxHeight = _viewportRect.height;
+  double _maxWidth = _viewportRect.width;
   _ArrowDirection? _arrowDirection;
   double _arrowHorizontal = 0;
   double _scaleAlignDx = 0.5;
@@ -474,6 +475,8 @@ class _PopupRoute extends PopupRoute<void> {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
+    _maxHeight = _viewportRect.height;
+    _maxWidth = _viewportRect.width;
     child = _PopupContent(
       childKey: _childKey,
       arrowKey: _arrowKey,
@@ -510,7 +513,7 @@ class _PopupRoute extends PopupRoute<void> {
           bottom: _bottom,
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: _viewportRect.width,
+              maxWidth: _maxWidth,
               maxHeight: _maxHeight,
             ),
             child: child,

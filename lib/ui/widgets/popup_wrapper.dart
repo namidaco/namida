@@ -112,7 +112,7 @@ class NamidaPopupWrapper extends StatelessWidget {
                   ],
                 ),
               ),
-              if (e.trailing != null) const SizedBox(width: 6.0),
+              if (e.trailing != null) const SizedBox(width: 12.0),
               if (e.trailing != null) e.trailing!,
               const SizedBox(width: 2.0),
             ],

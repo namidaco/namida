@@ -212,9 +212,14 @@ class CustomMPVPlayer implements AVPlayer {
     _audioSource = config.source;
     if (config.keepOldVideoSource == false) _videoOptions = config.videoOptions;
 
+    final durationFuture = _player.stream.duration.firstWhere(
+      (e) => e > Duration.zero,
+      orElse: () => Duration.zero,
+    );
+
     final videoOptions = _videoOptions;
     if (videoOptions == null || videoOptions.videoOnly) {
-      _player.open(
+      await _player.open(
         mk.Media(
           config.source.uri.toString(),
           start: config.initialPosition,
@@ -227,7 +232,7 @@ class CustomMPVPlayer implements AVPlayer {
         start: config.initialPosition,
       );
 
-      _player.open(mainMedia, play: false).then((_) async {
+      await _player.open(mainMedia, play: false).then((_) async {
         final videoTrack = mk.VideoTrack(config.source.uri.toString(), null, null);
         await _setVideoTrack(videoTrack);
         _updateAudioTracks();
@@ -239,14 +244,12 @@ class CustomMPVPlayer implements AVPlayer {
       return null;
     }
 
-    final duration = await _player.stream.duration.firstWhere((element) => element > Duration.zero);
-
     final audioTrackId = config.audioTrackId;
     if (audioTrackId != null) {
       setAudioTrack(audioTrackId);
     }
 
-    return duration;
+    return await durationFuture;
   }
 
   bool _checkIsSourceLive(AudioVideoSource? source) => source is HlsSource || source is DashSource;

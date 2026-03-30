@@ -229,8 +229,8 @@ class _MediaStoreArtworkExtractStrategy extends _ArtworkExtractStrategy {
         info.$2,
         ArtworkType.AUDIO,
         format: ArtworkFormat.PNG,
-        quality: 100,
-        size: 720,
+        quality: null,
+        size: null,
       );
 
       if (artwork != null) {

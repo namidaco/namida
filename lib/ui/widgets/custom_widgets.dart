@@ -866,6 +866,7 @@ class NamidaButton extends StatelessWidget {
   final Color? colorScheme;
   final double? minHeight;
   final double? minWidth;
+  final double? borderRadius;
   final String Function()? tooltip;
   final void Function() onTap;
   final void Function()? onLongPress;
@@ -873,10 +874,13 @@ class NamidaButton extends StatelessWidget {
   final bool? isLoading;
   final bool dense;
   final NamidaButtonColors colors;
+  final List<BoxShadow>? boxShadow;
   final bool opaqueBG;
+  final bool animatedDecoration;
   final bool isCircle;
   final bool isMinimumSquared;
   final bool? tooltipPreferBelow;
+  final bool isCentered;
 
   const NamidaButton({
     super.key,
@@ -888,6 +892,7 @@ class NamidaButton extends StatelessWidget {
     this.colorScheme,
     this.minHeight,
     this.minWidth,
+    this.borderRadius,
     this.tooltip,
     required this.onTap,
     this.onLongPress,
@@ -895,32 +900,39 @@ class NamidaButton extends StatelessWidget {
     this.isLoading,
     this.dense = false,
     this.colors = NamidaButtonColors.normal,
+    this.boxShadow,
     this.opaqueBG = false,
+    this.animatedDecoration = false,
     this.isCircle = false,
     this.isMinimumSquared = false,
     this.tooltipPreferBelow,
+    this.isCentered = true,
   });
 
   static const double kDefaultMinHeight = 36.0;
 
   @override
   Widget build(BuildContext context) {
-    var colorScheme = this.colorScheme ?? context.theme.colorScheme.primary;
-    double foregroundOpacity = 0.85;
-
-    colorScheme = switch (colors) {
-      NamidaButtonColors.selected => colorScheme.withOpacityExt(0.8),
-      NamidaButtonColors.fab => colorScheme.withOpacityExt(0.5),
-      NamidaButtonColors.saturated => colorScheme.withOpacityExt(0.4),
-      NamidaButtonColors.normal => colorScheme.withOpacityExt(0.3),
-      NamidaButtonColors.mid => colorScheme.withOpacityExt(0.2),
-      NamidaButtonColors.dimmed => colorScheme.withOpacityExt(0.1),
+    final (double colorSchemeOpacity, double bgOpacity, double borderOpacity, double foregroundOpacity) = switch (colors) {
+      NamidaButtonColors.selected => (0.8, 0.8, 0.8, 0.8),
+      NamidaButtonColors.fab => (0.5, 0.2, 0.6, 0.85),
+      NamidaButtonColors.saturated => (0.4, 0.2, 0.6, 0.85),
+      NamidaButtonColors.normal => (0.3, 0.2, 0.6, 0.85),
+      NamidaButtonColors.mid => (0.2, 0.2, 0.6, 0.85),
+      NamidaButtonColors.dimmed => (0.1, 0.2, 0.6, 0.85),
     };
 
-    var bgColor = colorScheme.withOpacityExt(colorScheme.a * 0.2);
+    final colorScheme = (this.colorScheme ?? context.theme.colorScheme.primary).withOpacityExt(colorSchemeOpacity);
+
+    bool whiteForeground = switch (colors) {
+      .selected => true,
+      _ => false,
+    };
+
+    var bgColor = colorScheme.withOpacityExt(colorScheme.a * bgOpacity);
     if (opaqueBG) bgColor = Color.alphaBlend(bgColor, context.theme.scaffoldBackgroundColor);
-    final borderColor = colorScheme.withOpacityExt(colorScheme.a * 0.6);
-    final foregroundColor = context.defaultIconColor(colorScheme).withOpacityExt(foregroundOpacity);
+    final borderColor = colorScheme.withOpacityExt(colorScheme.a * borderOpacity);
+    final foregroundColor = (whiteForeground ? Colors.white : context.defaultIconColor(colorScheme)).withOpacityExt(foregroundOpacity);
 
     final text = this.text;
     final icon = this.icon;
@@ -997,13 +1009,14 @@ class NamidaButton extends StatelessWidget {
       padding *= 1.25;
     }
 
-    final brRaw = isCircle ? 99.0 : 20.0;
+    final brRaw = borderRadius ?? (isCircle ? 99.0 : 20.0);
     Widget box = NamidaTooltip(
       message: tooltip,
       preferBelow: tooltipPreferBelow,
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: minHeight, minWidth: isCircle || isMinimumSquared ? minHeight : 0.0),
         child: NamidaInkWell(
+          animationDurationMS: animatedDecoration ? 300 : 0,
           borderRadius: brRaw,
           onTap: onTap,
           onLongPress: onLongPress,
@@ -1013,10 +1026,11 @@ class NamidaButton extends StatelessWidget {
               width: 0.5,
               color: borderColor,
             ),
+            boxShadow: boxShadow,
           ),
           padding: padding,
           child: Row(
-            mainAxisAlignment: .center,
+            mainAxisAlignment: isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
             mainAxisSize: .min,
             children: [
               ?iconChild,
@@ -2840,14 +2854,15 @@ class NamidaDrawerListTile extends StatelessWidget {
     required this.icon,
     this.width,
     this.height,
-    this.margin = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 3.5),
-    this.padding = const EdgeInsets.symmetric(vertical: 11.0, horizontal: 10.0),
+    this.margin = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 3.0),
+    this.padding = const EdgeInsets.symmetric(horizontal: 10.0, vertical: 11.0),
     this.isCentered = false,
     this.iconSize = 20.0,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = CurrentColor.inst.color;
     final theme = context.theme;
     final textTheme = theme.textTheme;
     return NamidaInkWell(
@@ -2856,15 +2871,15 @@ class NamidaDrawerListTile extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: enabled ? CurrentColor.inst.color : theme.cardColor,
+        color: enabled ? colorScheme : theme.cardColor,
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
         boxShadow: enabled
             ? [
                 BoxShadow(
-                  color: CurrentColor.inst.color.withAlpha(100),
+                  color: colorScheme.withAlpha(100),
                   spreadRadius: 0.2,
                   blurRadius: 8.0,
-                  offset: const Offset(0.0, 4.0),
+                  offset: const Offset(0.0, 3.0),
                 ),
               ]
             : null,
@@ -2881,7 +2896,7 @@ class NamidaDrawerListTile extends StatelessWidget {
             color: enabled ? Colors.white.withAlpha(200) : null,
             size: iconSize,
           ),
-          if (title != '') const SizedBox(width: 12.0),
+          if (title != '') const SizedBox(width: 10.0),
           if (title != '')
             Expanded(
               child: Text(
@@ -6242,7 +6257,7 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
                 .toList(),
             child: NamidaInkWell(
               padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
-              bgColor: theme.cardColor,
+              bgColor: theme.cardColor.withOpacityExt(0.5),
               child: Text(
                 cachePriority?.toText() ?? '?',
                 style: widget.smaller ? theme.textTheme.displaySmall : theme.textTheme.displayMedium,
@@ -6662,6 +6677,9 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
       dialog: _HotKeyRecorderDialog(
         title: title,
         initalHotKey: settings.shortcuts.shortcuts.value[action],
+        onDelete: () {
+          ShortcutsController.instance?.setUserShortcut(action: action, data: null);
+        },
         onHotKeyRecorded: (data) {
           if (data != null) {
             // -- its not likely for already registered system hotkeys to be caught again here, but anyways
@@ -6813,11 +6831,13 @@ class _HotKeyRecorderDialog extends StatefulWidget {
   final String? title;
   final ShortcutKeyData? initalHotKey;
   final String? Function(ShortcutKeyData? data) onHotKeyRecorded;
+  final void Function() onDelete;
 
   const _HotKeyRecorderDialog({
     required this.title,
     this.initalHotKey,
     required this.onHotKeyRecorded,
+    required this.onDelete,
   });
 
   @override
@@ -6901,6 +6921,11 @@ class _HotKeyRecorderDialogState extends State<_HotKeyRecorderDialog> {
     }
   }
 
+  void _confirmDelete() {
+    widget.onDelete();
+    NamidaNavigator.inst.closeDialog();
+  }
+
   @override
   Widget build(BuildContext context) {
     final keyLabelNormalized = _hotKey?.buildKeyLabel() ?? '';
@@ -6911,6 +6936,12 @@ class _HotKeyRecorderDialogState extends State<_HotKeyRecorderDialog> {
       title: widget.title ?? (isEdit ? lang.edit : lang.add),
       normalTitleStyle: true,
       trailingWidgets: [
+        if (isEdit)
+          NamidaIconButton(
+            icon: Broken.trash,
+            tooltip: () => lang.delete,
+            onPressed: _confirmDelete,
+          ),
         if (isKeyGood)
           NamidaIconButton(
             icon: Broken.refresh,
@@ -6927,9 +6958,7 @@ class _HotKeyRecorderDialogState extends State<_HotKeyRecorderDialog> {
         const CancelButton(),
         NamidaButton(
           text: lang.save,
-          onTap: () {
-            _confirmHotkey();
-          },
+          onTap: _confirmHotkey,
         ),
       ],
       child: Column(
@@ -7170,6 +7199,7 @@ class NamidaCoolBox extends StatelessWidget {
   final String text;
   final Widget Function(BuildContext context)? builder;
   final bool extraVPadding;
+  final bool extraBorder;
 
   const NamidaCoolBox({
     super.key,
@@ -7177,6 +7207,7 @@ class NamidaCoolBox extends StatelessWidget {
     this.text = '',
     this.builder,
     this.extraVPadding = false,
+    this.extraBorder = false,
   });
 
   @override
@@ -7188,6 +7219,7 @@ class NamidaCoolBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
         color: colorScheme.withOpacityExt(0.08),
         border: Border.all(
+          width: extraBorder ? 2.0 : 1.0,
           color: colorScheme.withOpacityExt(0.4),
         ),
       ),

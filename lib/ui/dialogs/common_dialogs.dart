@@ -35,7 +35,6 @@ class NamidaDialogs {
     String? playlistName,
     TrackWithDate? trackWithDate,
     int? index,
-    bool isFromPlayerQueue = false,
     Object? errorPlayingTrack,
     required QueueSourceBase source,
     String? heroTag,
@@ -51,7 +50,6 @@ class NamidaDialogs {
       tracksWithDates: trackWithDate == null ? [] : [trackWithDate],
       playlistName: playlistName,
       index: index,
-      isFromPlayerQueue: isFromPlayerQueue,
       errorPlayingTrack: errorPlayingTrack,
       heroTag: heroTag,
     );

@@ -447,7 +447,11 @@ class _MainPageFABResumeButton extends StatelessWidget {
 
   static bool _latestShouldPlay = false;
 
-  T? _resumeFABResolver<T>(NamidaRoute currentRoute, QueueSourceBase currentQueueSource, {required T Function(int index, List<Playable> items) callback}) {
+  T? _resumeFABResolver<T>(
+    NamidaRoute currentRoute,
+    QueueSourceBase currentQueueSource, {
+    required T Function(int index, List<Playable> items, NamidaRoute currentRoute) callback,
+  }) {
     final latestItemPlayable = QueueController.latestPlayedForSourceManager.map.value[currentQueueSource];
     return latestItemPlayable?.execute(
       selectable: (latestItem) {
@@ -455,22 +459,29 @@ class _MainPageFABResumeButton extends StatelessWidget {
         var index = tracks.indexWhere((e) => e == latestItem);
         if (index < 0) index = tracks.indexWhere((e) => e.track == latestItem.track);
         if (index < 0) index = 0;
-        return callback(index, tracks);
+        return callback(index, tracks, currentRoute);
       },
       youtubeID: (latestItem) {
         final videos = currentRoute.videosListInside();
         var index = videos.indexWhere((e) => e == latestItem);
         if (index < 0) index = videos.indexWhere((e) => e.id == latestItem.id);
         if (index < 0) index = 0;
-        return callback(index, videos);
+        return callback(index, videos, currentRoute);
       },
     );
   }
 
-  void _resumeFABJumpToItem(int index, List<Playable> items) {
+  void _resumeFABJumpToItem(int index, List<Playable> items, NamidaRoute currentRoute) {
     try {
+      final topOffset = Dimensions.inst.showSubpageInfoAtSide
+          ? 0.0
+          : switch (currentRoute.route) {
+              RouteType.PAGE_allTracks => 0.0,
+              _ => 224.0, // most pages have top info container
+            };
       final itemExtent = items.firstOrNull is YoutubeID ? Dimensions.youtubeCardItemExtent : Dimensions.inst.trackTileItemExtent;
-      final offset = (index + 1) * itemExtent;
+      final offset = topOffset + ((index - 2) * itemExtent);
+
       final controllerPosition = NamidaScrollController.latestAddedScrollController?.positions.lastOrNull;
       final maxOffset = controllerPosition?.maxScrollExtent;
       if (maxOffset != null && offset > maxOffset) {
@@ -489,8 +500,8 @@ class _MainPageFABResumeButton extends StatelessWidget {
     _resumeFABResolver(
       info.currentRoute,
       info.currentQueueSource,
-      callback: (index, items) {
-        _resumeFABJumpToItem(index, items);
+      callback: (index, items, currentRoute) {
+        _resumeFABJumpToItem(index, items, currentRoute);
         if (shouldPlay) {
           Player.inst.playOrPause(
             index,

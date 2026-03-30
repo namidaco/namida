@@ -680,6 +680,7 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
     final child = widget.child;
 
     return DoubleTapDetector(
+      behavior: .translucent,
       onDoubleTap: () => _initAndAnimate(),
       child: animation == null
           ? child

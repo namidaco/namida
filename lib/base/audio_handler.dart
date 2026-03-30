@@ -913,7 +913,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           );
           NamidaDialogs.inst.showTrackDialog(
             tr,
-            isFromPlayerQueue: true,
             errorPlayingTrack: e,
             source: QueueSource.playerQueue,
           );

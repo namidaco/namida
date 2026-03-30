@@ -315,7 +315,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                     indexToScrollTo != null
                         ? Obx(
                             (context) => Positioned(
-                              bottom: Dimensions.inst.globalBottomPaddingEffectiveR + 8.0,
+                              bottom: Dimensions.inst.globalBottomPaddingEffectiveR + 6.0,
                               right: (Dimensions.inst.shouldHideFABR ? 0.0 : kFABSize) + 12.0 + 8.0,
                               child: DecoratedBox(
                                 decoration: BoxDecoration(

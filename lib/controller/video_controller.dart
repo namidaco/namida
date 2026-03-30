@@ -406,6 +406,11 @@ class VideoController {
     return video.durationMS < trackDurationMS * p;
   }
 
+  Future<void> ensureVideoPlaybackActive() async {
+    if (settings.enableVideoPlayback.value) return;
+    this.toggleVideoPlayback();
+  }
+
   Future<void> toggleVideoPlayback() async {
     final currentValue = settings.enableVideoPlayback.value;
     settings.save(enableVideoPlayback: !currentValue);

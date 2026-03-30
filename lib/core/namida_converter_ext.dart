@@ -376,30 +376,23 @@ extension MediaInfoToFAudioModel on MediaInfo {
 }
 
 extension QueueNameGetter on Queue {
-  String toText() =>
+  String? toSourceText() =>
       homePageItem?.toText() ??
       switch (source) {
-        final QueueSource s => [
-          s.s.toText(),
-          ?switch (s.s) {
-            QueueSourceEnum.playlist || QueueSourceEnum.favourites || QueueSourceEnum.history || QueueSourceEnum.mostPlayed => s.title?.translatePlaylistName(),
-            QueueSourceEnum.folder || QueueSourceEnum.folderMusic || QueueSourceEnum.folderVideos => s.title?.formatPath(),
-            QueueSourceEnum.queuePage => null, // has date as title
-            _ => s.title,
-          },
-        ].join(' - '),
-        final QueueSourceYoutubeID s => [
-          s.s.toText(),
-          ?switch (s.s) {
-            QueueSourceYoutubeIDEnum.ytPlaylist ||
-            QueueSourceYoutubeIDEnum.ytFavourites ||
-            QueueSourceYoutubeIDEnum.ytHistory ||
-            QueueSourceYoutubeIDEnum.ytHistoryFiltered ||
-            QueueSourceYoutubeIDEnum.ytMostPlayed => s.title?.translatePlaylistName(),
-            _ => s.title,
-          },
-          ?s.title?.translatePlaylistName(),
-        ].join(' - '),
+        final QueueSource s => switch (s.s) {
+          QueueSourceEnum.playlist || QueueSourceEnum.favourites || QueueSourceEnum.history || QueueSourceEnum.mostPlayed => s.title?.translatePlaylistName(),
+          QueueSourceEnum.folder || QueueSourceEnum.folderMusic || QueueSourceEnum.folderVideos => s.title?.formatPath(),
+          QueueSourceEnum.queuePage => null, // has date as title
+          _ => s.title,
+        },
+        final QueueSourceYoutubeID s => switch (s.s) {
+          QueueSourceYoutubeIDEnum.ytPlaylist ||
+          QueueSourceYoutubeIDEnum.ytFavourites ||
+          QueueSourceYoutubeIDEnum.ytHistory ||
+          QueueSourceYoutubeIDEnum.ytHistoryFiltered ||
+          QueueSourceYoutubeIDEnum.ytMostPlayed => s.title?.translatePlaylistName(),
+          _ => s.title,
+        },
       };
 }
 

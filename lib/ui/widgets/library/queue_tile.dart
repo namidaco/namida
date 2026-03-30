@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -31,6 +32,7 @@ class QueueTile extends StatelessWidget {
         width: context.width,
       ),
     );
+    final sourceText = queue.toSourceText();
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: Dimensions.tileBottomMargin6)),
       decoration: BoxDecoration(
@@ -79,52 +81,57 @@ class QueueTile extends StatelessWidget {
                       reduceQuality: true,
                     ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      NamidaHero(
-                        tag: 'line1_$hero',
-                        child: Text(
-                          queue.date.dateAndClockFormattedOriginal,
-                          style: textTheme.displayMedium?.copyWith(
-                            fontSize: 14.0,
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        NamidaHero(
+                          tag: 'line1_$hero',
+                          child: Text(
+                            [
+                              queue.source.toText(),
+                              ?sourceText,
+                            ].joinText(separator: ' - '),
+                            style: textTheme.displayMedium?.copyWith(
+                              fontSize: 14.0,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(height: 1.0),
-                      NamidaHero(
-                        tag: 'line2_$hero',
-                        child: Text(
-                          queue.toText(),
-                          style: textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
+                        const SizedBox(height: 1.0),
+                        NamidaHero(
+                          tag: 'line2_$hero',
+                          child: Text(
+                            [
+                              queue.tracks.displayTrackKeyword,
+                              queue.tracks.totalDurationFormatted,
+                            ].joinText(separator: ' - '),
+                            style: textTheme.displaySmall?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      NamidaHero(
-                        tag: 'line3_$hero',
-                        child: Text(
-                          [
-                            queue.tracks.displayTrackKeyword,
-                            queue.tracks.totalDurationFormatted,
-                          ].join(' - '),
-                          style: textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
+                        NamidaHero(
+                          tag: 'line3_$hero',
+                          child: Text(
+                            queue.date.dateAndClockFormattedOriginal,
+                            style: textTheme.displaySmall?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 12.0),
                   Text(
-                    queue.tracks.totalDurationFormatted,
+                    TimeAgoController.dateMSSEFromNow(queue.date),
                     style: textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.w500,
-                      fontSize: 12.5,
+                      fontSize: 11.5,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),

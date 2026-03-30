@@ -573,13 +573,17 @@ class AppPaths {
       await deviceInfoFile.writeAsString(deviceInfo);
       existingPaths.add(deviceInfoFile);
     } catch (_) {}
-    final permissionsInfoFile = FileParts.join(tmpDirPath, 'permissions.txt');
-    try {
-      final permissionsInfo = await _getPermissionsInfo();
-      await permissionsInfoFile.create(recursive: true);
-      await permissionsInfoFile.writeAsString(permissionsInfo);
-      existingPaths.add(permissionsInfoFile);
-    } catch (_) {}
+    if (Platform.isLinux) {
+      // -- permissions not supported on linux
+    } else {
+      final permissionsInfoFile = FileParts.join(tmpDirPath, 'permissions.txt');
+      try {
+        final permissionsInfo = await _getPermissionsInfo();
+        await permissionsInfoFile.create(recursive: true);
+        await permissionsInfoFile.writeAsString(permissionsInfo);
+        existingPaths.add(permissionsInfoFile);
+      } catch (_) {}
+    }
     for (final p in [
       AppPaths.LOGS,
       AppPaths.LOGS_FALLBACK,

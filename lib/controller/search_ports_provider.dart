@@ -35,12 +35,13 @@ abstract class SearchPortsProvider {
     _sendPortsStreamSubs[type]?.cancel();
     _sendPortsStreamSubs[type] = null;
 
+    _sendPorts[type] = null;
+
     final port = _ports[type];
     if (port != null) {
       _ports[type] = null;
       await _closePortAndRemoveListener(port);
     }
-    _sendPorts[type] = null;
   }
 
   Future<void> _closePortAndRemoveListener(PortsComm port) async {
@@ -58,8 +59,8 @@ abstract class SearchPortsProvider {
     final sendPort = await preparePortBase(
       type: type,
       portN: _ports[type],
-      onPortNull: () async {
-        await closePorts(type);
+      onPortNull: () {
+        closePorts(type);
         return _ports[type] ??= (items: ReceivePort(), search: Completer<SendPort>());
       },
       onResult: onResult,
@@ -71,14 +72,14 @@ abstract class SearchPortsProvider {
   Future<SendPort> preparePortBase({
     required MediaType type,
     required PortsComm? portN,
-    required Future<PortsComm> Function() onPortNull,
+    required PortsComm Function() onPortNull,
     required void Function(dynamic result) onResult,
     required Future<void> Function(SendPort itemsSendPort) isolateFunction,
     bool force = false,
   }) async {
     if (portN != null && !force) return await portN.search.future;
 
-    final port = await onPortNull();
+    final port = onPortNull();
     _sendPortsStreamSubs[type] = port.items.listen((result) {
       if (result is SendPort) {
         port.search.completeIfWasnt(result);

@@ -613,7 +613,6 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                 addLeftMargin: true,
               ),
             ),
-            const SizedBox(height: 2.0),
             Expanded(
               child: _QueueListChildWrapper(
                 queueItemExtent: widget.queueItemExtent,
@@ -645,7 +644,6 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                 addLeftMargin: true,
               ),
             ),
-            const SizedBox(height: 2.0),
             Expanded(
               child: _QueueListChildWrapper(
                 queueItemExtent: widget.queueItemExtent,
@@ -2152,6 +2150,9 @@ class _QueueListChildWrapper extends StatelessWidget {
                 child: SmoothCustomScrollView(
                   controller: MiniPlayerController.inst.queueScrollController,
                   slivers: [
+                    SliverPadding(
+                      padding: EdgeInsets.only(top: 2.0),
+                    ),
                     NamidaSliverReorderableList(
                       itemCount: queueLength,
                       itemExtent: queueItemExtent,

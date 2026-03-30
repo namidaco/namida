@@ -9,6 +9,7 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 
 export 'package:basic_audio_handler/basic_audio_handler.dart' show PlayerRepeatMode, InterruptionType, InterruptionAction;
 export 'package:history_manager/history_manager.dart' show TrackSource;
@@ -313,7 +314,7 @@ enum QueueSourceEnum {
 
 enum QueueSourceYoutubeIDEnum {
   // -- must have different name from QueueSourceEnum
-  // -- so that name matching works properly
+  // -- so that name matching works properly (workaround but sheshh)
 
   ytChannel(true),
   ytPlaylist(true, supportResuming: true),
@@ -347,6 +348,7 @@ sealed class QueueSourceBase<E extends Enum> {
   final E s;
   bool get canHaveDuplicates;
   bool get supportResuming;
+  String toText();
 
   final String? title;
   const QueueSourceBase._(this.s, {required this.title});
@@ -360,6 +362,8 @@ class QueueSource extends QueueSourceBase<QueueSourceEnum> {
   bool get canHaveDuplicates => s.canHaveDuplicates;
   @override
   bool get supportResuming => s.supportResuming;
+  @override
+  String toText() => s.toText();
 
   const QueueSource._(super.s, {super.title}) : super._();
 
@@ -436,6 +440,8 @@ class QueueSourceYoutubeID extends QueueSourceBase<QueueSourceYoutubeIDEnum> {
   bool get canHaveDuplicates => s.canHaveDuplicates;
   @override
   bool get supportResuming => s.supportResuming;
+  @override
+  String toText() => s.toText();
 
   const QueueSourceYoutubeID._(super.s, {super.title}) : super._();
 

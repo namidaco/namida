@@ -182,7 +182,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
               track: track,
               compressed: false,
               checkFileFirst: false,
-              size: widget.compressed ? _getThumbnailEffectiveCacheHeight.round() : null,
+              size: null,
             )
             .then(updateValues);
       } else if (_bytes == null) {

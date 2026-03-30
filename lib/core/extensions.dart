@@ -20,6 +20,7 @@ import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -1128,15 +1129,15 @@ extension DirectoryIndexServerUtils on DirectoryIndex {
     final type = e.type;
     if (title == null) {
       final typeText = e.type.toText();
-      final titleHeader = [typeText, e.username ?? '?'].joinText(separator: ' - ');
-      final stillExists = stillExistsCallback?.call(e) ?? true;
-      final removedText = stillExists ? '' : ' (${lang.removed})';
-      title = '$titleHeader$removedText';
+      title = [typeText, e.username ?? '?'].joinText(separator: ' - ');
     }
-    final mainColorScheme = type.toColor(theme);
+
+    final stillExists = stillExistsCallback?.call(e) ?? true;
+    final mainColorScheme = stillExists ? type.toColor(theme) : Colors.red;
     return NamidaCoolBox(
       colorScheme: mainColorScheme,
       extraVPadding: true,
+      extraBorder: !stillExists,
       builder: (context) {
         final assetImagePath = type.toAssetImage();
         Widget? assetWidget = assetImagePath == null
@@ -1171,6 +1172,13 @@ extension DirectoryIndexServerUtils on DirectoryIndex {
                 ],
               ),
             ),
+            if (!stillExists) ...[
+              const SizedBox(width: 12.0),
+              Icon(
+                Broken.trash,
+                size: 20.0,
+              ),
+            ],
           ],
         );
       },
