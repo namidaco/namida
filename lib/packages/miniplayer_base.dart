@@ -589,19 +589,43 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 
     final maxQueueHeight = MiniPlayerController.inst.maxOffset - 100.0 - MiniPlayerController.inst.topInset - 12.0;
 
+    final colorScheme = CurrentColor.inst.color;
+    final scaffoldBgColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor.withOpacityExt(0.5), context.isDarkMode ? Colors.black : Colors.white);
+
     Widget queueListChild;
     if (widget.trackTileConfigs != null) {
       queueListChild = TrackTilePropertiesProvider(
         configs: widget.trackTileConfigs!,
-        builder: (properties) => _QueueListChildWrapper(
-          queueItemExtent: widget.queueItemExtent,
-          queueItemExtentBuilder: widget.queueItemExtentBuilder,
-          itemBuilder: (context, index, currentIndex, queue) => _queueItemBuilder(context, index, currentIndex, queue, trackTileProperties: properties, videoTileProperties: null),
+        builder: (properties) => Column(
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.90), colorScheme).withOpacityExt(0.5),
+                    Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.65), colorScheme).withOpacityExt(0.5),
+                  ],
+                ),
+              ),
+              child: const LocalQueueChipHeaderRow(
+                addLeftMargin: true,
+              ),
+            ),
+            const SizedBox(height: 2.0),
+            Expanded(
+              child: _QueueListChildWrapper(
+                queueItemExtent: widget.queueItemExtent,
+                queueItemExtentBuilder: widget.queueItemExtentBuilder,
+                itemBuilder: (context, index, currentIndex, queue) =>
+                    _queueItemBuilder(context, index, currentIndex, queue, trackTileProperties: properties, videoTileProperties: null),
+              ),
+            ),
+          ],
         ),
       );
     } else if (widget.videoTileConfigs != null) {
-      final colorScheme = CurrentColor.inst.color;
-      final scaffoldBgColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor.withOpacityExt(0.5), context.isDarkMode ? Colors.black : Colors.white);
       queueListChild = VideoTilePropertiesProvider(
         configs: widget.videoTileConfigs!,
         builder: (properties) => Column(
@@ -612,13 +636,13 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.90), colorScheme).withOpacityExt(0.75),
-                    Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.65), colorScheme).withOpacityExt(0.75),
+                    Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.90), colorScheme).withOpacityExt(0.5),
+                    Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.65), colorScheme).withOpacityExt(0.5),
                   ],
                 ),
               ),
               child: YTQueueChipHeaderRow(
-                onArrowDownPressed: MiniPlayerController.inst.snapToExpanded,
+                addLeftMargin: true,
               ),
             ),
             const SizedBox(height: 2.0),

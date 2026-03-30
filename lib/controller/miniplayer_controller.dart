@@ -21,6 +21,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 
 class MiniPlayerController {
   static MiniPlayerController get inst => _instance;
@@ -286,8 +287,11 @@ class MiniPlayerController {
     _velocity.addPosition(event.timeStamp, event.position);
 
     if (_offset <= maxOffset) return;
-    // a rough estimation of the top bar when inside queue.
-    if (_isInsideQueue() && event.position.dy > screenSize.height * 0.15) return;
+    // a rough estimation of the top area when inside queue.
+    if (_isInsideQueue() &&
+        event.position.dy > ((WindowController.instance?.windowTitleBarHeightIfActive ?? 0) + 100 + _deadSpace + topInset + 12.0 + QueueChipHeaderRow.minHeight)) {
+      return;
+    }
 
     _offset -= event.delta.dy;
     _offset = _offset.clampDouble(-_headRoom, maxOffset * 2);

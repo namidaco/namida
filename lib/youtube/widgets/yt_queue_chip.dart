@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/class/route.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -20,6 +22,8 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
+import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
+import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
@@ -513,9 +517,48 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
   }
 }
 
+class LocalQueueChipHeaderRow extends StatelessWidget {
+  final bool addLeftMargin;
+  const LocalQueueChipHeaderRow({super.key, required this.addLeftMargin});
+
+  @override
+  Widget build(BuildContext context) {
+    return QueueChipHeaderRow(
+      isLocal: true,
+      addLeftMargin: addLeftMargin,
+      onArrowDownPressed: MiniPlayerController.inst.snapToExpanded,
+    );
+  }
+}
+
 class YTQueueChipHeaderRow extends StatelessWidget {
+  final bool addLeftMargin;
+  final void Function()? onArrowDownPressed;
+  const YTQueueChipHeaderRow({super.key, this.addLeftMargin = false, this.onArrowDownPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return QueueChipHeaderRow(
+      isLocal: false,
+      addLeftMargin: addLeftMargin,
+      onArrowDownPressed: onArrowDownPressed ?? MiniPlayerController.inst.snapToExpanded,
+    );
+  }
+}
+
+class QueueChipHeaderRow extends StatelessWidget {
+  final bool isLocal;
+  final bool addLeftMargin;
   final void Function() onArrowDownPressed;
-  const YTQueueChipHeaderRow({super.key, required this.onArrowDownPressed});
+
+  const QueueChipHeaderRow({
+    super.key,
+    required this.isLocal,
+    required this.addLeftMargin,
+    required this.onArrowDownPressed,
+  });
+
+  static const minHeight = 42.0;
 
   void _onConfigureTap() {
     NamidaNavigator.inst.navigateDialog(
@@ -529,8 +572,21 @@ class YTQueueChipHeaderRow extends StatelessWidget {
             onTap: NamidaNavigator.inst.closeDialog,
           ),
         ],
-        child: const _QueueConfigureOptions(),
+        child: _QueueConfigureOptions(isLocal: isLocal),
       ),
+    );
+  }
+
+  void _onMoreTap() {
+    final tracks = Player.inst.currentQueue.value.whereType<Selectable>().map((e) => e.track).toList();
+    showGeneralPopupDialog(
+      tracks,
+      tracks.displayTrackKeyword,
+      [
+        tracks.totalSizeFormatted,
+        tracks.totalDurationFormatted,
+      ].join(' • '),
+      QueueSource.playerQueue,
     );
   }
 
@@ -548,6 +604,7 @@ class YTQueueChipHeaderRow extends StatelessWidget {
             final iconsMaxWidth = (maxWidth - textMaxWidth);
             return Row(
               children: [
+                if (addLeftMargin) const SizedBox(width: 6.0),
                 Expanded(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: textMaxWidth),
@@ -590,38 +647,54 @@ class YTQueueChipHeaderRow extends StatelessWidget {
                             icon: Broken.music_playlist,
                             tooltip: lang.addToPlaylist,
                             onTap: () {
-                              showAddToPlaylistSheet(
-                                ids: Player.inst.currentQueue.value.whereType<YoutubeID>().map((e) => e.id),
-                                idsNamesLookup: const {},
-                              );
+                              if (isLocal) {
+                                showAddToPlaylistDialog(
+                                  Player.inst.currentQueue.value.whereType<Selectable>().map((e) => e.track).toList(),
+                                );
+                              } else {
+                                showAddToPlaylistSheet(
+                                  ids: Player.inst.currentQueue.value.whereType<YoutubeID>().map((e) => e.id),
+                                  idsNamesLookup: const {},
+                                );
+                              }
                             },
                           ),
                           const SizedBox(width: 6.0),
-                          _ActionItem(
-                            icon: Broken.import,
-                            tooltip: lang.download,
-                            onTap: () {
-                              YTPlaylistDownloadPage(
-                                ids: Player.inst.currentQueue.value.whereType<YoutubeID>().toList(),
-                                playlistName: lang.queue,
-                                infoLookup: const {},
-                                playlistInfo: PlaylistBasicInfo(
-                                  id: '',
-                                  title: lang.queue,
-                                  videosCountText: Player.inst.currentQueue.value.length.toString(),
-                                  videosCount: Player.inst.currentQueue.value.length,
-                                  thumbnails: [],
-                                ),
-                              ).navigate();
-                            },
-                          ),
-                          const SizedBox(width: 6.0),
+                          if (!isLocal) ...[
+                            _ActionItem(
+                              icon: Broken.import,
+                              tooltip: lang.download,
+                              onTap: () {
+                                YTPlaylistDownloadPage(
+                                  ids: Player.inst.currentQueue.value.whereType<YoutubeID>().toList(),
+                                  playlistName: lang.queue,
+                                  infoLookup: const {},
+                                  playlistInfo: PlaylistBasicInfo(
+                                    id: '',
+                                    title: lang.queue,
+                                    videosCountText: Player.inst.currentQueue.value.length.toString(),
+                                    videosCount: Player.inst.currentQueue.value.length,
+                                    thumbnails: [],
+                                  ),
+                                ).navigate();
+                              },
+                            ),
+                            const SizedBox(width: 6.0),
+                          ],
                           _ActionItem(
                             icon: Broken.setting_3,
                             tooltip: lang.configure,
                             onTap: () => _onConfigureTap(),
                           ),
-                          const SizedBox(width: 4.0),
+                          const SizedBox(width: 6.0),
+                          if (isLocal) ...[
+                            _ActionItem(
+                              icon: Broken.more,
+                              tooltip: lang.more,
+                              onTap: _onMoreTap,
+                            ),
+                            const SizedBox(width: 4.0),
+                          ],
                           NamidaIconButton(
                             iconColor: context.defaultIconColor().withOpacityExt(0.95),
                             icon: Broken.arrow_down_2,
@@ -707,7 +780,8 @@ class _ActionItemAlt extends StatelessWidget {
 }
 
 class _QueueConfigureOptions extends StatelessWidget {
-  const _QueueConfigureOptions();
+  final bool isLocal;
+  const _QueueConfigureOptions({required this.isLocal});
 
   @override
   Widget build(BuildContext context) {
@@ -722,10 +796,12 @@ class _QueueConfigureOptions extends StatelessWidget {
           padding: EdgeInsets.zero,
           shrinkWrap: true,
           children: [
-            ytSettings.getAutoStartRadioWidget(),
-            NamidaContainerDivider(
-              margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-            ),
+            if (!isLocal) ...[
+              ytSettings.getAutoStartRadioWidget(),
+              NamidaContainerDivider(
+                margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+              ),
+            ],
             playbackSettings.getAutoPlayOnNextPrevWidget(),
             playbackSettings.getInfinityQueueOnNextPrevWidget(),
             playbackSettings.getJumpToFirstTrackAfterFinishingWidget(),
