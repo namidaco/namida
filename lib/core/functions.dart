@@ -1087,23 +1087,97 @@ class DirsFileFilterResult {
   });
 }
 
+class DirsFileFilterSimple {
+  final NamidaFileExtensionsWrapper extensions;
+
+  final List<DirectoryIndex> _directoriesToScan;
+  final List<DirectoryIndex> _directoriesToExclude;
+
+  DirsFileFilterSimple({
+    required this.extensions,
+  }) : _directoriesToScan = settings.directoriesToScan.value,
+       _directoriesToExclude = settings.directoriesToExclude.value;
+
+  Future<DirsFileFilterResult> filter() async {
+    return await Isolate.run(() => _filterIsolate(this));
+  }
+
+  Future<DirsFileFilterResult> filterSync() => _filterIsolate(this);
+
+  static Future<DirsFileFilterResult> _filterIsolate(DirsFileFilterSimple parameters) async {
+    final directoriesToExclude = parameters._directoriesToExclude;
+    final extensions = parameters.extensions;
+
+    final allPaths = <String>{};
+
+    final directoriesToScan = parameters._directoriesToScan;
+
+    final allAvailableDirectories = <DirectoryIndex>{};
+
+    for (final d in directoriesToScan) {
+      // -- skip if a parent already exists
+      if (allAvailableDirectories.any((k) => d.sourceRaw.startsWith(k.sourceRaw))) continue;
+
+      // -- remove existing children for this current parent
+      allAvailableDirectories.removeWhere((k) => k.sourceRaw.startsWith(d.sourceRaw));
+      allAvailableDirectories.add(d);
+    }
+
+    Future<void> listFilesAndAdd(DirectoryIndex d) async {
+      try {
+        final stream = d.list(recursive: true);
+        if (stream != null) {
+          await for (final systemEntity in stream) {
+            if (systemEntity is File) {
+              final path = systemEntity.path;
+
+              // -- skips if the file is included in one of the excluded folders.
+              if (directoriesToExclude.any((exc) => path.startsWith(exc.sourceRaw))) {
+                continue;
+              }
+
+              // -- skip if not in extensions
+              if (!extensions.isPathValid(path)) {
+                continue;
+              }
+
+              // -- skip if hidden
+              if (path.getFilename.startsWith('.')) continue;
+
+              allPaths.add(path);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    await Future.wait(allAvailableDirectories.map(listFilesAndAdd));
+
+    return DirsFileFilterResult(
+      allPaths: allPaths,
+      excludedByNoMedia: {},
+      folderCovers: {},
+    );
+  }
+}
+
 class DirsFileFilter {
-  final List<DirectoryIndex>? directoriesToExclude;
   final NamidaFileExtensionsWrapper extensions;
   final NamidaFileExtensionsWrapper? imageExtensions;
   final List<String>? blacklistExtensions;
   final bool strictNoMedia;
 
   final List<DirectoryIndex> _directoriesToScan;
+  final List<DirectoryIndex> _directoriesToExclude;
   final bool _respectNoMedia;
 
   DirsFileFilter({
-    required this.directoriesToExclude,
     required this.extensions,
     this.imageExtensions,
     this.blacklistExtensions,
     this.strictNoMedia = true,
   }) : _directoriesToScan = settings.directoriesToScan.value,
+       _directoriesToExclude = settings.directoriesToExclude.value,
        _respectNoMedia = settings.respectNoMedia.value;
 
   Future<DirsFileFilterResult> filter() async {
@@ -1119,7 +1193,7 @@ class DirsFileFilter {
       strictNoMedia: parameters.strictNoMedia,
     );
 
-    final directoriesToExclude = parameters.directoriesToExclude;
+    final directoriesToExclude = parameters._directoriesToExclude;
     final extensions = parameters.extensions.without(parameters.blacklistExtensions);
     final imageExtensions = parameters.imageExtensions;
     final respectNoMedia = parameters._respectNoMedia;
@@ -1166,7 +1240,7 @@ class DirsFileFilter {
               }
 
               // -- skips if the file is included in one of the excluded folders.
-              if (directoriesToExclude != null && directoriesToExclude.any((exc) => path.startsWith(exc.sourceRaw))) {
+              if (directoriesToExclude.any((exc) => path.startsWith(exc.sourceRaw))) {
                 continue;
               }
 

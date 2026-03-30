@@ -1540,7 +1540,6 @@ class Indexer<T extends Track> {
 
     final extensions = _includeVideosAsTracks ? NamidaFileExtensionsWrapper.audioAndVideo : NamidaFileExtensionsWrapper.audio;
     final dirsFilterer = DirsFileFilter(
-      directoriesToExclude: settings.directoriesToExclude.value,
       extensions: extensions,
       imageExtensions: NamidaFileExtensionsWrapper.image,
       blacklistExtensions: settings.extensionsBlacklist.value,

@@ -827,7 +827,6 @@ class VideoController {
 
   Future<Set<String>> _fetchVideoPathsFromStorage({bool strictNoMedia = true}) async {
     final dirsFilterer = DirsFileFilter(
-      directoriesToExclude: settings.directoriesToExclude.value,
       extensions: NamidaFileExtensionsWrapper.video,
       blacklistExtensions: settings.extensionsBlacklist.value,
       strictNoMedia: strictNoMedia,

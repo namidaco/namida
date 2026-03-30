@@ -221,8 +221,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     final paths = resBoth.paths;
     final listy = <Track>[];
     for (final p in paths.entries) {
-      listy.addAll(p.value.$3);
-      _ensureM3UArtUrlObtained(p.key, p.value.$1, p.value.$2);
+      listy.addAll(p.value.tracks);
+      _ensureM3UArtUrlObtained(p.key, p.value.path, p.value.artUrl);
     }
 
     return listy;
@@ -260,10 +260,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     try {
       var allm3uPaths = <String>{};
       if (forPaths.isEmpty) {
-        final dirsFilterer = DirsFileFilter(
-          directoriesToExclude: null,
+        final dirsFilterer = DirsFileFilterSimple(
           extensions: NamidaFileExtensionsWrapper.m3u,
-          strictNoMedia: false,
         );
         final result = await dirsFilterer.filter();
         allm3uPaths = result.allPaths;
@@ -291,8 +289,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       for (final e in paths.entries) {
         try {
           final plName = e.key;
-          final m3uPath = e.value.$1;
-          final trs = e.value.$3;
+          final m3uPath = e.value.path;
+          final trs = e.value.tracks;
           final creationDate = (await File(m3uPath).stat()).creationDate.millisecondsSinceEpoch;
           final plAlreadyExisting = playlistsMap.value[plName];
           if (plAlreadyExisting != null) {
@@ -313,7 +311,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
             );
           }
 
-          _ensureM3UArtUrlObtained(plName, e.value.$1, e.value.$2);
+          _ensureM3UArtUrlObtained(plName, e.value.path, e.value.artUrl);
         } catch (_) {}
       }
 
@@ -413,7 +411,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     late final albumartUrlRegex = RegExp(r'(?<=#EXTALBUMARTURL:\s*).+');
     final pathSepRegex = RegExp(r'[\\/]');
 
-    final all = <String, (String, String?, List<Track>)>{};
+    final all = <String, _M3UPlaylistTempInfo>{};
     final infoMap = <String, String?>{};
     for (final path in allm3uPaths) {
       final file = File(path);
@@ -469,10 +467,14 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         }
       }
       if (all[filename] == null) {
-        all[filename] = (path, artUrl, fullTracks);
+        all[filename] = _M3UPlaylistTempInfo(path: path, artUrl: artUrl, tracks: fullTracks);
       } else {
-        // -- filename already exists
-        all[file.path.formatPath()] = (path, artUrl, fullTracks);
+        final oldEntry = all.remove(filename)!;
+        final oldParent = oldEntry.path.getDirectoryPath.getFilename;
+        all[_uniqueName(all, oldParent, filename)] = oldEntry;
+
+        final parent = file.path.getDirectoryPath.getFilename;
+        all[_uniqueName(all, parent, filename)] = _M3UPlaylistTempInfo(path: path, artUrl: artUrl, tracks: fullTracks);
       }
 
       latestInfo = null; // resetting info between each file looping
@@ -482,7 +484,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     for (final m3u in all.entries) {
       final backupFile = File("$backupDirPath${m3u.key}.m3u");
       if (!backupFile.existsSync()) {
-        File(m3u.value.$1).copySync(backupFile.path);
+        File(m3u.value.path).copySync(backupFile.path);
       }
     }
 
@@ -490,6 +492,16 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       paths: all,
       infoMap: infoMap,
     );
+  }
+
+  static String _uniqueName(Map<String, _M3UPlaylistTempInfo> all, String parent, String filename) {
+    var name = '$parent - $filename';
+    var i = 2;
+    while (all[name] != null) {
+      name = '$parent - $filename ($i)';
+      i++;
+    }
+    return name;
   }
 
   static Future<void> _saveM3UPlaylistToFile(Map params) async {
@@ -788,11 +800,23 @@ class _ParseM3UPlaylistFilesParams {
 }
 
 class _ParseM3UPlaylistFilesResult {
-  final Map<String, (String, String?, List<Track>)> paths;
+  final Map<String, _M3UPlaylistTempInfo> paths;
   final Map<String, String?> infoMap;
 
   const _ParseM3UPlaylistFilesResult({
     required this.paths,
     required this.infoMap,
+  });
+}
+
+class _M3UPlaylistTempInfo {
+  final String path;
+  final String? artUrl;
+  final List<Track> tracks;
+
+  const _M3UPlaylistTempInfo({
+    required this.path,
+    this.artUrl,
+    required this.tracks,
   });
 }
