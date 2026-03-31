@@ -10,6 +10,7 @@ class TrayController with TrayListener {
 
 class TrayIcons {
   final String appIcon;
+  final String showWindow;
   final String icStatMusicnote;
   final String favorited;
   final String favorite;
@@ -26,6 +27,7 @@ class TrayIcons {
 
   const TrayIcons({
     required this.appIcon,
+    required this.showWindow,
     required this.icStatMusicnote,
     required this.favorited,
     required this.favorite,
@@ -48,7 +50,7 @@ class TrayIcons {
       android: () => null,
       ios: () => null,
       windows: () => TrayIcons.windows,
-      linux: () => null,
+      linux: () => TrayIcons.linux,
       macos: () => null,
     );
   }
@@ -56,6 +58,7 @@ class TrayIcons {
   static String _getWindowsIco(String name) => 'assets/icons/media_ico/$name.ico';
   static final windows = TrayIcons(
     appIcon: _getWindowsIco('app_icon'),
+    showWindow: _getWindowsIco('app_icon'),
     icStatMusicnote: _getWindowsIco('ic_stat_musicnote'),
     favorited: _getWindowsIco('favorited'),
     favorite: _getWindowsIco('favorite'),
@@ -69,6 +72,24 @@ class TrayIcons {
     repeatForNTimes: _getWindowsIco('status'),
     repeatAll: _getWindowsIco('repeat'),
     repeatAllShuffle: _getWindowsIco('shuffle'),
+  );
+
+  static const linux = TrayIcons(
+    appIcon: '♫',
+    showWindow: '❐',
+    icStatMusicnote: '♪',
+    favorited: '♥',
+    favorite: '♡',
+    previous: '⏮',
+    pause: '⏸',
+    play: '⏵',
+    next: '⏭',
+    stop: '✖',
+    repeatNone: '➔',
+    repeatOne: '🔂',
+    repeatForNTimes: '#',
+    repeatAll: '🔁',
+    repeatAllShuffle: '🔀',
   );
 
   String forRepeatMode(PlayerRepeatMode repeat) {

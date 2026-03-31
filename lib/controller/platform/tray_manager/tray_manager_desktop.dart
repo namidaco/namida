@@ -16,8 +16,8 @@ class _TrayManagerDesktop extends NamidaTrayManager with TrayListener {
   }
 
   @override
-  Future<void> update(Menu menu) async {
-    await trayManager.setContextMenu(menu);
+  Future<void> update(TrayMenu menu, String playingItemTitle) async {
+    await trayManager.setContextMenu(menu.toDefaultMenu());
   }
 
   @override
@@ -27,53 +27,13 @@ class _TrayManagerDesktop extends NamidaTrayManager with TrayListener {
   }
 
   @override
-  void onTrayIconMouseDown() => _showWindow();
+  void onTrayIconMouseDown() => NamidaTrayManager.showWindow();
 
   @override
   void onTrayIconRightMouseDown() => trayManager.popUpContextMenu();
 
   @override
   void onTrayMenuItemClick(MenuItem menuItem) async {
-    switch (menuItem.key) {
-      case TrayMenuKey.playPause:
-        Player.inst.togglePlayPause();
-      case TrayMenuKey.previous:
-        Player.inst.previous();
-      case TrayMenuKey.next:
-        Player.inst.next();
-      case TrayMenuKey.showWindow:
-        _showWindow();
-      case TrayMenuKey.exit:
-        await Namida.disposeAllResources().ignoreError();
-        await windowManager.destroy().ignoreError();
-    }
+    NamidaTrayManager.executeKey(menuItem.key);
   }
-
-  // Future<void> _toggleWindow() async {
-  //   if (await windowManager.isVisible()) {
-  //     await windowManager.hide();
-  //   } else {
-  //     await _showWindow();
-  //   }
-  // }
-
-  Future<void> _showWindow() async {
-    if (Platform.isLinux) {
-      // trigger refresh, otherwise won't show mostly
-      await windowManager.hide();
-    }
-
-    WindowController.instance?.ensurePositionRestored();
-  }
-}
-
-class TrayMenuKey {
-  TrayMenuKey._();
-
-  static const String nowPlaying = 'now_playing';
-  static const String previous = 'previous';
-  static const String playPause = 'play_pause';
-  static const String next = 'next';
-  static const String showWindow = 'show_window';
-  static const String exit = 'exit';
 }

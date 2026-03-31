@@ -6,7 +6,6 @@ import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:http_cache_stream/http_cache_stream.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
-import 'package:tray_manager/tray_manager.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
@@ -127,6 +126,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       currentPositionMS.addListener(taskbarListener);
       currentItemDuration.addListener(taskbarListener);
     }
+
+    _refreshWindowsTaskbar(playWhenReady.value, null);
+    _refreshTrayService(playWhenReady.value, null);
   }
 
   final currentVideoStream = Rxn<VideoStream>();
@@ -423,46 +425,46 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
       isFavourite ??= currentItem.value?.execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: (finalItem) => finalItem.isFavourite);
 
-      String? title = mediaItem.value?.displayTitle ?? mediaItem.value?.title;
-      final menu = Menu(
+      String title = mediaItem.value?.displayTitle ?? mediaItem.value?.title ?? 'Chilling...';
+      final menu = TrayMenu(
         items: [
-          MenuItem(
+          TrayMenuItem(
             key: TrayMenuKey.nowPlaying,
-            label: '$title',
             icon: trayIcons?.icStatMusicnote,
+            label: title,
             disabled: true,
           ),
-          MenuItem.separator(),
-          MenuItem(
+          TrayMenuItem.separator(),
+          TrayMenuItem(
             key: TrayMenuKey.previous,
             icon: trayIcons?.previous,
             label: lang.previous,
           ),
-          MenuItem(
+          TrayMenuItem(
             key: TrayMenuKey.playPause,
             label: isPlaying ? lang.pause : lang.play,
             icon: isPlaying ? trayIcons?.pause : trayIcons?.play,
           ),
-          MenuItem(
+          TrayMenuItem(
             key: TrayMenuKey.next,
             icon: trayIcons?.next,
             label: lang.next,
           ),
-          MenuItem.separator(),
-          MenuItem(
+          TrayMenuItem.separator(),
+          TrayMenuItem(
             key: TrayMenuKey.showWindow,
-            icon: trayIcons?.appIcon,
+            icon: trayIcons?.showWindow,
             label: lang.open,
           ),
-          MenuItem.separator(),
-          MenuItem(
+          TrayMenuItem.separator(),
+          TrayMenuItem(
             key: TrayMenuKey.exit,
             icon: trayIcons?.stop,
             label: lang.exit,
           ),
         ],
       );
-      tc.update(menu);
+      tc.update(menu, title);
     }
   }
 

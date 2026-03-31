@@ -184,6 +184,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/tray_manager
       path: packages/tray_manager
+  dart_xdg_status_notifier_item: ^1.1.0
 
   # ---- Linux Packages ----
   dbus: ^0.7.11
