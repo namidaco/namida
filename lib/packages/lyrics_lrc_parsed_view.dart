@@ -1215,7 +1215,10 @@ class _TextWithFadingProgress extends StatelessWidget {
                           ],
                         ).createShader(bounds),
                         blendMode: BlendMode.dstIn,
-                        child: child,
+                        child: ClipRect(
+                          // -- clip is important to avoid artifacts caused by font exisitng outside shader mask area
+                          child: child,
+                        ),
                       );
                     },
                   ),

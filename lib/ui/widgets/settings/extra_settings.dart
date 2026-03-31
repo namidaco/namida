@@ -911,7 +911,6 @@ class ExtrasSettings extends SettingSubpageProvider {
   }
 
   Widget getLibraryTabsTile(BuildContext context) {
-    final textTheme = context.textTheme;
     return getItemWrapper(
       key: _ExtraSettingsKeys.libraryTabs,
       child: Obx(
@@ -930,31 +929,20 @@ class ExtrasSettings extends SettingSubpageProvider {
               child: SizedBox(
                 width: namida.width,
                 height: namida.height * 0.5,
-                child: Obx(
-                  (context) => Column(
-                    children: [
-                      Text(
-                        lang.libraryTabsReorder,
-                        style: textTheme.displayMedium,
-                      ),
-                      const SizedBox(height: 12.0),
-                      Expanded(
-                        child: NamidaReorderableActiveListView(
-                          enumValues: LibraryTab.values,
-                          rxList: settings.libraryTabs,
-                          toText: (item) => item.toText(),
-                          toIcon: (item) => item.toIcon(),
-                          minimumItems: 3,
-                          onItemRemoved: (i, activeItems) {
-                            settings.extra.save(selectedLibraryTab: activeItems.first);
-                          },
-                          onSave: (activeItems) {
-                            settings.libraryTabs.value = activeItems;
-                            settings.save(libraryTabs: null);
-                          },
-                        ),
-                      ),
-                    ],
+                child: Expanded(
+                  child: NamidaReorderableActiveListView(
+                    enumValues: LibraryTab.values,
+                    rxList: settings.libraryTabs,
+                    toText: (item) => item.toText(),
+                    toIcon: (item) => item.toIcon(),
+                    minimumItems: 3,
+                    onItemRemoved: (i, activeItems) {
+                      settings.extra.save(selectedLibraryTab: activeItems.first);
+                    },
+                    onSave: (activeItems) {
+                      settings.libraryTabs.value = activeItems;
+                      settings.save(libraryTabs: null);
+                    },
                   ),
                 ),
               ),

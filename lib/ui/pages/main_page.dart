@@ -875,14 +875,9 @@ class _CustomNavBar extends StatelessWidget {
   }
 }
 
-class _CustomRailBar extends StatefulWidget {
+class _CustomRailBar extends StatelessWidget {
   const _CustomRailBar();
 
-  @override
-  State<_CustomRailBar> createState() => __CustomRailBarState();
-}
-
-class __CustomRailBarState extends State<_CustomRailBar> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;

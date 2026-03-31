@@ -493,6 +493,8 @@ class Namida extends StatefulWidget {
       AppSingleInstanceBase.instance?.dispose(),
     ].executeAllAndSilentReportErrors();
   }
+
+  static final shouldAddEdgeAbsorbers =  Platform.isAndroid || Platform.isIOS;
 }
 
 class _NamidaState extends State<Namida> {
@@ -576,7 +578,7 @@ class _NamidaState extends State<Namida> {
     final shouldShowOnBoarding = _shouldShowOnBoarding;
     if (shouldShowOnBoarding == null) return const SizedBox();
 
-    final shouldAddEdgeAbsorbers = Platform.isAndroid || Platform.isIOS;
+    final shouldAddEdgeAbsorbers = Namida.shouldAddEdgeAbsorbers;
     final mainPageWrapper = shouldShowOnBoarding ? const FirstRunConfigureScreen() : const MainPageWrapper();
     Widget finalApp = Directionality(
       textDirection: TextDirection.ltr,

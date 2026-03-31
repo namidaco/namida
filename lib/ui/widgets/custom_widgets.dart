@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 import 'dart:ui';
 
@@ -3599,7 +3600,7 @@ class _NamidaReorderableActiveListViewState<E> extends State<NamidaReorderableAc
   }
 
   void _initializeList() {
-    final combined = <({E item, bool active})>{};
+    final combined = LinkedHashSet<({E item, bool active})>(equals: (p0, p1) => p0.item == p1.item, hashCode: (p0) => p0.item.hashCode);
     for (final e in widget.rxList.value) {
       combined.add((item: e, active: true));
     }
@@ -3659,7 +3660,7 @@ class _NamidaReorderableActiveListViewState<E> extends State<NamidaReorderableAc
           final secondaryIcon = widget.toSecondaryIcon?.call(item);
           return Padding(
             key: ValueKey(item),
-            padding: const EdgeInsets.all(4.0),
+            padding: const EdgeInsets.all(3.0),
             child: ListTileWithCheckMark(
               title: "${i + 1}. ${widget.toText(item)}",
               icon: secondaryIcon == null ? mainIcon : null,

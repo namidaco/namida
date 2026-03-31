@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -126,7 +127,7 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
               ),
             ),
             // -- absort edge drags so that drawer can be swiped
-            if (_canSwipe)
+            if (_canSwipe && Namida.shouldAddEdgeAbsorbers)
               ColoredBox(
                 color: Colors.transparent,
                 child: SizedBox(
