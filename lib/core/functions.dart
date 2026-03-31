@@ -498,12 +498,12 @@ class NamidaOnTaps {
       return "${total.fileSizeFormatted}${suffix ?? ''}";
     }
 
-    final selectedToClear = <QueueSource>[].obs;
+    final selectedToClear = <QueueSourceEnum>[].obs;
     final selectedHomepageItemToClear = <HomePageItems>[].obs;
-    final values = List<QueueSource>.from(QueueSourceEnum.values);
-    values.remove(QueueSource.homePageItem);
+    final values = List<QueueSourceEnum>.from(QueueSourceEnum.values);
+    values.remove(QueueSourceEnum.homePageItem);
 
-    final lookup = <QueueSourceBase, List<int>>{};
+    final lookup = <Enum, List<int>>{};
     final lookupHomepageItem = <HomePageItems, List<int>>{};
     final lookupNonFavourites = <int, bool>{};
     final map = QueueController.inst.queuesMap.value;
@@ -515,7 +515,7 @@ class NamidaOnTaps {
       if (hpi != null) {
         lookupHomepageItem.addForce(hpi, date);
       } else {
-        lookup.addForce(queue.source, date);
+        lookup.addForce(queue.source.s, date);
       }
     }
     final nonFavourites = false.obs;
@@ -634,7 +634,7 @@ class NamidaOnTaps {
                               padding: const EdgeInsets.all(3.0),
                               child: ListTileWithCheckMark(
                                 dense: true,
-                                title: "${e.s.toText()} (${list.length})",
+                                title: "${e.toText()} (${list.length})",
                                 subtitle: getSubtitle(sizesLookup, list),
                                 active: selectedToClear.contains(e),
                                 onTap: () {
