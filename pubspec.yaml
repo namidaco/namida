@@ -18,6 +18,9 @@ dependency_overrides:
     git:
       url: https://github.com/MSOB7YY/screen_retriever
       path: packages/screen_retriever/
+  safe_local_storage:
+    git:
+      url: https://github.com/MSOB7YY/safe_local_storage
 
 dependencies:
   flutter:
@@ -33,10 +36,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
   path: ^1.9.0
-  rhttp:
-    git:
-      url: https://codeberg.org/MSOB7YY/rhttp
-      path: rhttp
+  rhttp: ^0.16.0
   path_provider: ^2.1.3
   permission_handler:
     git:

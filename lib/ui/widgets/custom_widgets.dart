@@ -4723,6 +4723,22 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
     controller = (widget.scrollController ?? NamidaScrollController.create())..addListener(_scrollListener);
   }
 
+  Future<void> _fetchIfNotScrollable() async {
+    if (_isExecuting) return;
+    if (!controller.hasClients) return;
+    if (controller.position.maxScrollExtent > 0) return;
+    if (widget.requiresNetwork && !ConnectivityController.inst.hasConnection) return;
+
+    _isExecuting = true;
+    _lastWasSuccess = await widget.onReachingEnd();
+    _isExecuting = false;
+
+    if (_lastWasSuccess == true) {
+      // -- keep fetching until list is scrollable or source is exhausted
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fetchIfNotScrollable());
+    }
+  }
+
   @override
   void dispose() {
     controller.removeListener(_scrollListener);
@@ -4734,7 +4750,22 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.listview(controller);
+    return NotificationListener<ScrollMetricsNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.maxScrollExtent == 0) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) {
+              if (controller.position.maxScrollExtent == 0) {
+                // -- ensure still 0
+                _fetchIfNotScrollable();
+              }
+            },
+          );
+        }
+        return false;
+      },
+      child: widget.listview(controller),
+    );
   }
 }
 
@@ -7257,5 +7288,59 @@ class NamidaMouseRegion extends StatelessWidget {
       );
     }
     return child ?? const SizedBox();
+  }
+}
+
+class NamidaNavigatorWidget extends StatelessWidget {
+  final GlobalKey<NavigatorState> navKey;
+  final List<Page<dynamic>> pages;
+  final List<NavigatorObserver> observers;
+  final bool allowPop;
+  final String? restorationScopeId;
+  final RouteListFactory onGenerateInitialRoutes;
+
+  const NamidaNavigatorWidget({
+    super.key,
+    required this.navKey,
+    this.pages = const <Page<dynamic>>[],
+    this.observers = const <NavigatorObserver>[],
+    this.allowPop = true,
+    this.restorationScopeId,
+    this.onGenerateInitialRoutes = Navigator.defaultGenerateInitialRoutes,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Navigator(
+      key: navKey,
+      restorationScopeId: restorationScopeId,
+      requestFocus: false,
+      // ignore: deprecated_member_use
+      onPopPage: allowPop ? null : (route, result) => false,
+      observers: observers,
+      pages: pages,
+      onGenerateInitialRoutes: onGenerateInitialRoutes,
+    );
+  }
+}
+
+class NamidaPopScope extends StatelessWidget {
+  // ignore: deprecated_member_use
+  final WillPopCallback? onWillPop;
+  final Widget child;
+
+  const NamidaPopScope({
+    super.key,
+    this.onWillPop,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // ignore: deprecated_member_use
+    return WillPopScope(
+      onWillPop: onWillPop,
+      child: child,
+    );
   }
 }

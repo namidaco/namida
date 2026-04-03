@@ -52,15 +52,14 @@ class MainPage extends StatelessWidget {
     final theme = context.theme;
     final showNavigationAtSide = Dimensions.inst.showNavigationAtSide;
     final main = RepaintBoundary(
-      child: WillPopScope(
+      child: NamidaPopScope(
         onWillPop: () async {
           await NamidaNavigator.inst.popPage();
           return false;
         },
-        child: Navigator(
-          key: NamidaNavigator.inst.navKey,
+        child: NamidaNavigatorWidget(
+          navKey: NamidaNavigator.inst.navKey,
           restorationScopeId: 'namida',
-          requestFocus: false,
           observers: [NamidaNavigator.inst.heroController],
           onGenerateInitialRoutes: (_, _) {
             NamidaNavigator.inst.onFirstLoad();

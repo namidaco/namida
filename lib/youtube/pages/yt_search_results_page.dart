@@ -140,10 +140,9 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
     const maxLocalSeachHorizontalCount = 40;
 
     return BackgroundWrapper(
-      child: Navigator(
-        key: NamidaNavigator.inst.ytLocalSearchNavigatorKey,
-        onPopPage: (route, result) => false,
-        requestFocus: false,
+      child: NamidaNavigatorWidget(
+        navKey: NamidaNavigator.inst.ytLocalSearchNavigatorKey,
+        allowPop: false,
         pages: [
           MaterialPage(
             child: LazyLoadListView(

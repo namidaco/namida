@@ -360,9 +360,9 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
       YTSortType.date => (e) => YoutubeInfoController.utils.getVideoReleaseDateSyncTemp(e.id) ?? DateTime(0),
       YTSortType.dateAdded => (e) => e.dateAddedMS,
       YTSortType.shuffle => null,
-      YTSortType.mostPlayed => (e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.length ?? 0,
-      YTSortType.latestPlayed => (e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.lastOrNull ?? 0,
-      YTSortType.firstListen => (e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.firstOrNull ?? 0,
+      YTSortType.mostPlayed => (e) => -(YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.length ?? 0),
+      YTSortType.latestPlayed => (e) => -(YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.lastOrNull ?? 0),
+      YTSortType.firstListen => (e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.firstOrNull ?? DateTime(99999).millisecondsSinceEpoch,
     };
   }
 }

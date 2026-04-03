@@ -19,6 +19,7 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:rhttp/rhttp.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/file_parts.dart';
@@ -411,8 +412,7 @@ void _initErrorInterpreters() {
 
 void _initLifeCycle() {
   NamidaChannel.inst.addOnDestroy(() async {
-    final mode = settings.player.killAfterDismissingApp.value;
-    if (mode == KillAppMode.always || (mode == KillAppMode.ifNotPlaying && !Player.inst.playWhenReady.value)) {
+    if (settings.player.killAfterDismissingApp.value.resolveShouldKill()) {
       await Player.inst.pause();
       await Player.inst.dispose();
     }
@@ -480,7 +480,19 @@ class Namida extends StatefulWidget {
   @override
   State<Namida> createState() => _NamidaState();
 
-  static Future<void> disposeAllResources() async {
+  static Future<Never> disposeAllResourcesAndExit() async {
+    await Future.any(
+      [
+        // -- usually it takes few milliseconds, but limit to 2 seconds just in case.
+        Future.delayed(const Duration(seconds: 2)),
+        Namida._disposeAllResources().ignoreError(),
+      ],
+    );
+    await windowManager.destroy().ignoreError();
+    return exit(0); // -- sometimes it takes seconds to actually close on windows, this forces exiting the process
+  }
+
+  static Future<void> _disposeAllResources() async {
     YoutubeInfoController.dispose();
     await [
       logger.dispose(),
@@ -491,10 +503,11 @@ class Namida extends StatefulWidget {
       NamicoDBWrapper.dispose(),
       SMTCController.instance?.dispose(),
       AppSingleInstanceBase.instance?.dispose(),
+      TrayController.instance?.dispose(),
     ].executeAllAndSilentReportErrors();
   }
 
-  static final shouldAddEdgeAbsorbers =  Platform.isAndroid || Platform.isIOS;
+  static final shouldAddEdgeAbsorbers = Platform.isAndroid || Platform.isIOS;
 }
 
 class _NamidaState extends State<Namida> {
@@ -548,7 +561,7 @@ class _NamidaState extends State<Namida> {
 
     if (MusicWebServerAuthDetails.manager.hasMissingAuthRx.value) {
       Timer(
-        Duration(seconds: 3),
+        const Duration(seconds: 3),
         MusicWebServerAuthDetails.manager.promptFillMissingAuthDialog,
       );
     }

@@ -355,7 +355,9 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                           gaplessPlayback: true,
                           fit: widget.fit,
                           alignment: widget.alignment,
-                          filterQuality: FilterQuality.medium, // -- low and high, both cause pixelated image lmao
+                          // -- low and high, both cause pixelated image lmao
+                          // -- but medium also causes delayed rendering especially while animating
+                          filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
                           width: (info) {
                             if (widget.forceSquared || widget.staggered || info == null) return realWidthAndHeight;
                             final aspectRatio = info.image.width / info.image.height;

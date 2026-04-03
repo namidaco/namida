@@ -95,8 +95,8 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
 
   static void _searchTracksIsolate(Map params) {
     final sendPort = params['sendPort'] as SendPort;
-    final receivePort = ReceivePort();
 
+    final receivePort = ReceivePort();
     sendPort.send(receivePort.sendPort);
 
     final searchWrapper = TracksSearchWrapper.init(params);

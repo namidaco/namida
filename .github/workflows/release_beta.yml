@@ -270,7 +270,7 @@ jobs:
             clang cmake ninja pkgconf gcc gtk3 libstdc++ \
             alsa-lib libx11 libxrender libxext mesa libgl \
             libepoxy libdrm wayland libxkbcommon glibc binutils \
-            mpv libappindicator libappindicator-gtk3 wpewebkit dpkg rpm-tools
+            mpv wpewebkit dpkg rpm-tools
           pacman -Scc --noconfirm
 
       - uses: actions/checkout@v4

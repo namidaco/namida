@@ -42,7 +42,7 @@ void showAddToPlaylistSheet({
   NamidaNavigator.inst.showSheet(
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    heightPercentage: 0.65,
+    heightPercentage: 0.72,
     decoration: (context) => BoxDecoration(
       borderRadius: BorderRadius.circular(24.0.multipliedRadius),
       color: context.theme.scaffoldBackgroundColor,
@@ -109,11 +109,10 @@ void showAddToPlaylistSheet({
                       Expanded(
                         child: YoutubePlaylistsView(
                           idsToAdd: ids,
-                          displayMenu: false,
-                          disableSorting: true,
+                          isInsideAddSheet: true,
                         ),
                       ),
-                      const SizedBox(height: 6.0),
+                      const SizedBox(height: 12.0),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [

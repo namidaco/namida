@@ -57,7 +57,8 @@ mixin PortsProvider<E> {
     _activePortsProviders.remove(this);
     _recievePort?.close();
     _streamSub?.cancel();
-    await sendPort(_PortsProviderDisposeMessage);
+    // -- no longer wait, if the port was never assigned, this would wait forever
+    unawaited(sendPort(_PortsProviderDisposeMessage));
     _isolate?.kill(priority: Isolate.immediate);
     _isInitialized = false;
     onPreparing(false);
@@ -80,14 +81,17 @@ mixin PortsProvider<E> {
     _activePortsProviders[this] = true;
     final portCompleter = _portCompleter = Completer<SendPort>();
     _recievePort = ReceivePort();
-    _streamSub = _recievePort?.listen((result) {
+    void Function(dynamic) onResultVarFn;
+    onResultVarFn = (result) {
       if (result is SendPort) {
         portCompleter.completeIfWasnt(result);
         _portCompleterResult = result;
+        onResultVarFn = onResult; // -- just small optimization
       } else {
         onResult(result);
       }
-    });
+    };
+    _streamSub = _recievePort?.listen((result) => onResultVarFn(result));
     await isolateFunction(_recievePort!.sendPort);
     return await portCompleter.future;
   }
@@ -107,14 +111,17 @@ mixin PortsProvider<E> {
     _isInitialized = false;
     onPreparing(false);
 
+    void Function(dynamic) onResultVarFn;
+    onResultVarFn = (result) {
+      if (result == null) {
+        _initializingCompleter?.completeIfWasnt();
+        onResultVarFn = onResult; // -- just small optimization
+      } else {
+        onResult(result);
+      }
+    };
     await preparePortRaw(
-      onResult: (result) async {
-        if (result == null) {
-          _initializingCompleter?.completeIfWasnt();
-        } else {
-          onResult(result);
-        }
-      },
+      onResult: (result) => onResultVarFn(result), // don't assign fn directly
       isolateFunction: (itemsSendPort) async {
         final isolateFn = isolateFunction(itemsSendPort);
         _isolate = await Isolate.spawn(isolateFn.entryPoint, isolateFn.message);

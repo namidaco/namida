@@ -21,13 +21,13 @@ class _TrayManagerDesktop extends NamidaTrayManager with TrayListener {
   }
 
   @override
-  Future<void> destroy() async {
+  Future<void> dispose() async {
     trayManager.removeListener(this);
     await trayManager.destroy();
   }
 
   @override
-  void onTrayIconMouseDown() => NamidaTrayManager.showWindow();
+  void onTrayIconMouseDown() => NamidaTrayManager.toggleWindow();
 
   @override
   void onTrayIconRightMouseDown() => trayManager.popUpContextMenu();

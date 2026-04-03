@@ -16,7 +16,7 @@ import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
-import 'package:namida/youtube/controller/parallel_downloads_controller.dart';
+// import 'package:namida/youtube/controller/parallel_downloads_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_ongoing_finished_downloads.dart';
 import 'package:namida/youtube/widgets/yt_download_task_item_card.dart';
@@ -137,50 +137,50 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
     return (confirmed: confirmed, delete: delete);
   }
 
-  void _showParallelDownloadsDialog() {
-    final tempCount = YoutubeParallelDownloadsHandler.inst.maxParallelDownloadingItems.obs;
-    NamidaNavigator.inst.navigateDialog(
-      onDisposing: () {
-        tempCount.close();
-      },
-      dialog: CustomBlurryDialog(
-        title: lang.configure,
-        normalTitleStyle: true,
-        actions: [
-          const CancelButton(),
-          NamidaButton(
-            text: lang.confirm,
-            onTap: () {
-              YoutubeParallelDownloadsHandler.inst.setMaxParalellDownloads(tempCount.value);
-              NamidaNavigator.inst.closeDialog();
-            },
-          ),
-        ],
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 12.0),
-            CustomListTile(
-              icon: Broken.flash,
-              title: lang.parallelDownloads,
-              trailing: Obx(
-                (context) {
-                  final temp = tempCount.valueR;
-                  return NamidaWheelSlider(
-                    max: 10,
-                    initValue: temp,
-                    onValueChanged: (val) => tempCount.value = val.withMinimum(1),
-                    text: temp.toString(),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 12.0),
-          ],
-        ),
-      ),
-    );
-  }
+  // void _showParallelDownloadsDialog() {
+  //   final tempCount = YoutubeParallelDownloadsHandler.inst.maxParallelDownloadingItems.obs;
+  //   NamidaNavigator.inst.navigateDialog(
+  //     onDisposing: () {
+  //       tempCount.close();
+  //     },
+  //     dialog: CustomBlurryDialog(
+  //       title: lang.configure,
+  //       normalTitleStyle: true,
+  //       actions: [
+  //         const CancelButton(),
+  //         NamidaButton(
+  //           text: lang.confirm,
+  //           onTap: () {
+  //             YoutubeParallelDownloadsHandler.inst.setMaxParalellDownloads(tempCount.value);
+  //             NamidaNavigator.inst.closeDialog();
+  //           },
+  //         ),
+  //       ],
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           const SizedBox(height: 12.0),
+  //           CustomListTile(
+  //             icon: Broken.flash,
+  //             title: lang.parallelDownloads,
+  //             trailing: Obx(
+  //               (context) {
+  //                 final temp = tempCount.valueR;
+  //                 return NamidaWheelSlider(
+  //                   max: 10,
+  //                   initValue: temp,
+  //                   onValueChanged: (val) => tempCount.value = val.withMinimum(1),
+  //                   text: temp.toString(),
+  //                 );
+  //               },
+  //             ),
+  //           ),
+  //           const SizedBox(height: 12.0),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   bool? get _isOnGoingSelectedR => YTOnGoingFinishedDownloads.inst.isOnGoingSelected.valueR;
   set _isOnGoingSelected(bool? val) => YTOnGoingFinishedDownloads.inst.isOnGoingSelected.value = val;

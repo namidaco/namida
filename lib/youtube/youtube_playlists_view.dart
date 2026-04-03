@@ -37,15 +37,13 @@ class YoutubePlaylistsView extends StatefulWidget with NamidaRouteWidget {
   RouteType get route => RouteType.YOUTUBE_PLAYLISTS;
 
   final Iterable<String> idsToAdd;
-  final bool displayMenu;
-  final bool disableSorting;
+  final bool isInsideAddSheet;
   final bool? minimalView;
 
   const YoutubePlaylistsView({
     super.key,
     this.idsToAdd = const <String>[],
-    this.displayMenu = true,
-    this.disableSorting = false,
+    this.isInsideAddSheet = false,
     this.minimalView,
   });
 
@@ -140,6 +138,8 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
     final textTheme = theme.textTheme;
     final idsToAdd = widget.idsToAdd;
     final isMinimalView = widget.minimalView ?? idsToAdd.isNotEmpty;
+    final disableSortOrEdit = widget.isInsideAddSheet;
+    final disableMenu = widget.isInsideAddSheet;
 
     const playlistsItemExtent = Dimensions.youtubeCardItemExtent * 0.9;
     const playlistThumbnailHeight = playlistsItemExtent - Dimensions.tileBottomMargin - (Dimensions.youtubeCardItemVerticalPadding * 2);
@@ -260,7 +260,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                         title: "${lang.playlists} - ${YoutubePlaylistController.inst.playlistsMap.length}",
                         icon: Broken.music_library_2,
                         trailing: const SizedBox(),
-                        subtitleWidget: widget.disableSorting
+                        subtitleWidget: disableSortOrEdit
                             ? null
                             : Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -313,93 +313,96 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 4.0),
-                  NamidaInkWellButton(
-                    icon: Broken.add_circle,
-                    text: lang.create,
-                    borderRadius: 8.0,
-                    onTap: YTUtils.showCreateLocalYTPlaylistSheet,
-                  ),
-                  SizedBox(width: 6.0),
-                  NamidaTooltip(
-                    message: () => _isReordering ? lang.disableReordering : lang.enableReordering,
-                    child: NamidaInkWellButton(
-                      icon: Broken.edit_2,
-                      text: '',
+                  const SizedBox(width: 8.0),
+
+                  if (!disableSortOrEdit) ...[
+                    NamidaInkWellButton(
+                      icon: Broken.add_circle,
+                      text: lang.create,
                       borderRadius: 8.0,
-                      decoration: _isReordering
-                          ? BoxDecoration(
-                              border: Border.all(
-                                color: theme.iconTheme.color?.withOpacityExt(0.4) ?? theme.colorScheme.primaryContainer.withOpacityExt(0.8),
-                              ),
-                            )
-                          : const BoxDecoration(),
-                      onTap: _toggleReordering,
+                      onTap: YTUtils.showCreateLocalYTPlaylistSheet,
                     ),
-                  ),
-                  SizedBox(width: 6.0),
-                  ObxO(
-                    rx: YoutubeImportController.inst.isImportingPlaylists,
-                    builder: (context, isImportingPlaylists) => Tooltip(
-                      message: lang.import,
+                    SizedBox(width: 6.0),
+                    NamidaTooltip(
+                      message: () => _isReordering ? lang.disableReordering : lang.enableReordering,
                       child: NamidaInkWellButton(
-                        icon: Broken.import_2,
+                        icon: Broken.edit_2,
                         text: '',
-                        enabled: !isImportingPlaylists,
                         borderRadius: 8.0,
-                        onTap: () {
-                          NamidaNavigator.inst.navigateDialog(
-                            dialog: CustomBlurryDialog(
-                              title: lang.note,
-                              normalTitleStyle: true,
-                              bodyText:
-                                  'Importing takeout playlists works by picking a single playlists directory, or a main directory that contains multiple takeouts, in that case playlists will be merged and video-sorted by date added',
-                              actions: [
-                                NamidaButton(
-                                  onTap: () async {
-                                    NamidaNavigator.inst.closeDialog();
-
-                                    final dirPath = await NamidaFileBrowser.getDirectory(note: 'choose playlist directory from a google takeout');
-                                    if (dirPath == null) return;
-
-                                    final details = await YoutubeImportController.inst.importPlaylists(dirPath);
-                                    if (details == null) {
-                                      snackyy(
-                                        icon: Broken.forbidden,
-                                        message: "Operation Canceled",
-                                      );
-                                      return;
-                                    }
-                                    if (details.totalCount <= 0) {
-                                      snackyy(
-                                        icon: Broken.danger,
-                                        message: "Failed to import\nPlease choose a valid playlists directory taken from google takeout",
-                                        isError: true,
-                                      );
-                                      return;
-                                    }
-
-                                    final importedSucessText = lang.importedNPlaylistsSuccessfully(
-                                      number: details.countAfterMerging,
-                                      numberText: details.countAfterMerging.formatDecimal(),
-                                    );
-                                    final detailsText = 'Total Count: ${details.totalCount} | Merged Count: ${details.mergedCount} | Final Count: ${details.countAfterMerging}';
-                                    snackyy(
-                                      icon: Broken.copy_success,
-                                      message: '$importedSucessText\n$detailsText',
-                                      borderColor: Colors.green.withOpacityExt(0.8),
-                                    );
-                                  },
-                                  text: lang.pickFromStorage,
+                        decoration: _isReordering
+                            ? BoxDecoration(
+                                border: Border.all(
+                                  color: theme.iconTheme.color?.withOpacityExt(0.4) ?? theme.colorScheme.primaryContainer.withOpacityExt(0.8),
                                 ),
-                              ],
-                            ),
-                          );
-                        },
+                              )
+                            : const BoxDecoration(),
+                        onTap: _toggleReordering,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 4.0),
+                    SizedBox(width: 6.0),
+                    ObxO(
+                      rx: YoutubeImportController.inst.isImportingPlaylists,
+                      builder: (context, isImportingPlaylists) => Tooltip(
+                        message: lang.import,
+                        child: NamidaInkWellButton(
+                          icon: Broken.import_2,
+                          text: '',
+                          enabled: !isImportingPlaylists,
+                          borderRadius: 8.0,
+                          onTap: () {
+                            NamidaNavigator.inst.navigateDialog(
+                              dialog: CustomBlurryDialog(
+                                title: lang.note,
+                                normalTitleStyle: true,
+                                bodyText:
+                                    'Importing takeout playlists works by picking a single playlists directory, or a main directory that contains multiple takeouts, in that case playlists will be merged and video-sorted by date added',
+                                actions: [
+                                  NamidaButton(
+                                    onTap: () async {
+                                      NamidaNavigator.inst.closeDialog();
+
+                                      final dirPath = await NamidaFileBrowser.getDirectory(note: 'choose playlist directory from a google takeout');
+                                      if (dirPath == null) return;
+
+                                      final details = await YoutubeImportController.inst.importPlaylists(dirPath);
+                                      if (details == null) {
+                                        snackyy(
+                                          icon: Broken.forbidden,
+                                          message: "Operation Canceled",
+                                        );
+                                        return;
+                                      }
+                                      if (details.totalCount <= 0) {
+                                        snackyy(
+                                          icon: Broken.danger,
+                                          message: "Failed to import\nPlease choose a valid playlists directory taken from google takeout",
+                                          isError: true,
+                                        );
+                                        return;
+                                      }
+
+                                      final importedSucessText = lang.importedNPlaylistsSuccessfully(
+                                        number: details.countAfterMerging,
+                                        numberText: details.countAfterMerging.formatDecimal(),
+                                      );
+                                      final detailsText = 'Total Count: ${details.totalCount} | Merged Count: ${details.mergedCount} | Final Count: ${details.countAfterMerging}';
+                                      snackyy(
+                                        icon: Broken.copy_success,
+                                        message: '$importedSucessText\n$detailsText',
+                                        borderColor: Colors.green.withOpacityExt(0.8),
+                                      );
+                                    },
+                                    text: lang.pickFromStorage,
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4.0),
+                  ],
                 ],
               ),
             ),
@@ -441,7 +444,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                     smallBoxText: favouritesPlaylist.value.tracks.length.formatDecimal(),
                     smallBoxIcon: Broken.play_cricle,
                     checkmarkStatus: allIdsExist,
-                    menuChildrenDefault: widget.displayMenu ? () => getMenuItems(context, favouritesPlaylist.value, QueueSourceYoutubeID.ytFavourites) : null,
+                    menuChildrenDefault: disableMenu ? null : () => getMenuItems(context, favouritesPlaylist.value, QueueSourceYoutubeID.ytFavourites),
                   );
                 },
               ),
@@ -573,7 +576,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                   : creationDateText;
 
                               return NamidaPopupWrapper(
-                                childrenDefault: widget.displayMenu ? () => getMenuItems(context, playlist, QueueSourceYoutubeID.ytPlaylist(playlist.name)) : null,
+                                childrenDefault: disableMenu ? null : () => getMenuItems(context, playlist, QueueSourceYoutubeID.ytPlaylist(playlist.name)),
                                 openOnTap: false,
                                 child: YoutubeCard(
                                   thumbnailType: ThumbnailType.playlist,
@@ -604,7 +607,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                   smallBoxText: playlist.tracks.length.formatDecimal(),
                                   smallBoxIcon: Broken.play_cricle,
                                   checkmarkStatus: allIdsExist,
-                                  menuChildrenDefault: widget.displayMenu ? () => getMenuItems(context, playlist, QueueSourceYoutubeID.ytPlaylist(playlist.name)) : null,
+                                  menuChildrenDefault: disableMenu ? null : () => getMenuItems(context, playlist, QueueSourceYoutubeID.ytPlaylist(playlist.name)),
                                 ),
                               );
                             },

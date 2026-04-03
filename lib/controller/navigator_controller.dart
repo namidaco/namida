@@ -206,7 +206,7 @@ class NamidaNavigator {
     WakelockController.inst.updateFullscreenStatus(true);
 
     _rootNav.currentState?.pushPage(
-      WillPopScope(
+      NamidaPopScope(
         onWillPop: () async {
           if (onWillPop != null) await onWillPop();
           exitFullScreen();
@@ -332,7 +332,7 @@ class NamidaNavigator {
     theme ??= AppThemes.inst.getAppTheme(colorScheme, null, lighterDialogColor);
 
     final res = await _rootNav.currentState?.pushPage<T>(
-      WillPopScope(
+      NamidaPopScope(
         onWillPop: onWillPop,
         child: material.RepaintBoundary(
           child: NamidaBgBlur(
@@ -715,6 +715,7 @@ SnackbarController snackyy({
                 ],
               ),
             ),
+            if (button != null) const SizedBox(width: 8.0),
             if (button != null)
               ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: snackWidth == null ? double.infinity : snackWidth * 0.4),

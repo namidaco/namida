@@ -1,3 +1,8 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+
+import 'package:path/path.dart' as p;
 import 'package:tray_manager/tray_manager.dart';
 
 import 'package:namida/controller/platform/base.dart';
@@ -55,7 +60,17 @@ class TrayIcons {
     );
   }
 
-  static String _getWindowsIco(String name) => 'assets/icons/media_ico/$name.ico';
+  static String _getWindowsIco(String name) {
+    String parent;
+    if (kDebugMode) {
+      parent = '';
+    } else {
+      final processDir = p.dirname(Platform.resolvedExecutable);
+      parent = '${p.join(processDir, 'data', 'flutter_assets').replaceAll(r'\', '/')}/';
+    }
+    return '${parent}assets/icons/media_ico/$name.ico';
+  }
+
   static final windows = TrayIcons(
     appIcon: _getWindowsIco('app_icon'),
     showWindow: _getWindowsIco('app_icon'),

@@ -15,7 +15,6 @@ requires:
   - mpv # (has mpv-devel as sub)
   - libepoxy
   - bzip2-libs
-  - libappindicator
 
 keywords:
   - API

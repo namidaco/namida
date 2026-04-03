@@ -117,9 +117,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         final durationMS = currentItemDuration.value?.inMilliseconds;
         if (durationMS != null && durationMS > 0) {
           final positionMS = currentPositionMS.value;
-          WindowsTaskbar.setProgress(positionMS, durationMS);
+          WindowsTaskbar.setProgress(positionMS, durationMS).ignoreError();
         } else {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.normal);
+          WindowsTaskbar.setProgressMode(TaskbarProgressMode.normal).ignoreError();
         }
       }
 
@@ -360,60 +360,58 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         } else {
           title = '$title • Namida';
         }
-        await Future.wait(
-          [
-            WindowsTaskbar.setWindowTitle(title),
-            if (currentItem.value != null) // idk it just breaks if set after disposing
-              WindowsTaskbar.setThumbnailToolbar(
-                [
-                  if (isFavourite == true)
-                    ThumbnailToolbarButton(
-                      getIco(trayIcons.favorited),
-                      lang.removeFromFavourites,
-                      onFavOrUnfavPress,
-                    )
-                  else if (isFavourite == false)
-                    ThumbnailToolbarButton(
-                      getIco(trayIcons.favorite),
-                      lang.addToFavourites,
-                      onFavOrUnfavPress,
-                    ),
+        await [
+          WindowsTaskbar.setWindowTitle(title),
+          if (currentItem.value != null) // idk it just breaks if set after disposing
+            WindowsTaskbar.setThumbnailToolbar(
+              [
+                if (isFavourite == true)
                   ThumbnailToolbarButton(
-                    getIco(repeatIco),
-                    repeatText,
-                    onRepeatPress,
-                  ),
+                    getIco(trayIcons.favorited),
+                    lang.removeFromFavourites,
+                    onFavOrUnfavPress,
+                  )
+                else if (isFavourite == false)
                   ThumbnailToolbarButton(
-                    getIco(trayIcons.previous),
-                    lang.previous,
-                    Player.inst.previous,
+                    getIco(trayIcons.favorite),
+                    lang.addToFavourites,
+                    onFavOrUnfavPress,
                   ),
-                  isPlaying
-                      ? ThumbnailToolbarButton(
-                          getIco(trayIcons.pause),
-                          lang.pause,
-                          Player.inst.pause,
-                        )
-                      : ThumbnailToolbarButton(
-                          getIco(trayIcons.play),
-                          lang.play,
-                          Player.inst.play,
-                        ),
-                  ThumbnailToolbarButton(
-                    getIco(trayIcons.next),
-                    lang.next,
-                    Player.inst.next,
-                  ),
-                  ThumbnailToolbarButton(
-                    getIco(trayIcons.stop),
-                    lang.stop,
-                    () => Player.inst.pause().whenComplete(Player.inst.dispose),
-                    mode: ThumbnailToolbarButtonMode.dismissionClick,
-                  ),
-                ],
-              ),
-          ],
-        );
+                ThumbnailToolbarButton(
+                  getIco(repeatIco),
+                  repeatText,
+                  onRepeatPress,
+                ),
+                ThumbnailToolbarButton(
+                  getIco(trayIcons.previous),
+                  lang.previous,
+                  Player.inst.previous,
+                ),
+                isPlaying
+                    ? ThumbnailToolbarButton(
+                        getIco(trayIcons.pause),
+                        lang.pause,
+                        Player.inst.pause,
+                      )
+                    : ThumbnailToolbarButton(
+                        getIco(trayIcons.play),
+                        lang.play,
+                        Player.inst.play,
+                      ),
+                ThumbnailToolbarButton(
+                  getIco(trayIcons.next),
+                  lang.next,
+                  Player.inst.next,
+                ),
+                ThumbnailToolbarButton(
+                  getIco(trayIcons.stop),
+                  lang.stop,
+                  () => Player.inst.pause().whenComplete(Player.inst.dispose),
+                  mode: ThumbnailToolbarButtonMode.dismissionClick,
+                ),
+              ],
+            ),
+        ].executeAllAndSilentReportErrors();
       } catch (_) {}
     }
   }

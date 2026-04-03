@@ -51,7 +51,7 @@ class CustomMPVPlayer implements AVPlayer {
   ProcessingState _processingState = ProcessingState.idle;
   Duration _position = Duration.zero;
 
-  final _player = mk.Player(configuration: mk.PlayerConfiguration(pitch: true, bufferSize: 128 * 1024 * 1024));
+  final _player = mk.Player(configuration: mk.PlayerConfiguration(pitch: true, bufferSize: 64 * 1024 * 1024));
   VideoController? _videoControllerRaw;
   VideoController get _videoController {
     return _videoControllerRaw ??= _createVideoControllerAndListen();
@@ -219,12 +219,11 @@ class CustomMPVPlayer implements AVPlayer {
 
     final videoOptions = _videoOptions;
     if (videoOptions == null || videoOptions.videoOnly) {
-      await _player.open(
+      await _tryOpen(
         mk.Media(
           config.source.uri.toString(),
           start: config.initialPosition,
         ),
-        play: false,
       );
     } else {
       final mainMedia = mk.Media(
@@ -232,8 +231,8 @@ class CustomMPVPlayer implements AVPlayer {
         start: config.initialPosition,
       );
 
-      await _player.open(mainMedia, play: false).then((_) async {
-        final videoTrack = mk.VideoTrack(config.source.uri.toString(), null, null);
+      await _tryOpen(mainMedia).then((_) async {
+        final videoTrack = mk.VideoTrack((videoOptions.source as UriSource).uri.toString(), null, null);
         await _setVideoTrack(videoTrack);
         _updateAudioTracks();
       });
@@ -250,6 +249,20 @@ class CustomMPVPlayer implements AVPlayer {
     }
 
     return await durationFuture;
+  }
+
+  mk.Playable? _playableOpening;
+  Future<void> _tryOpen(mk.Playable playable, {bool play = false}) async {
+    _playableOpening = playable;
+
+    try {
+      await _player.open(playable, play: play);
+    } catch (_) {
+      await Future.delayed(const Duration(seconds: 3));
+      if (identical(playable, _playableOpening)) {
+        await _player.open(playable, play: play);
+      }
+    }
   }
 
   bool _checkIsSourceLive(AudioVideoSource? source) => source is HlsSource || source is DashSource;
@@ -273,37 +286,56 @@ class CustomMPVPlayer implements AVPlayer {
     _videoControllerListener();
   }
 
+  // -- attempts to avoid flashing of previous video, but doesn't work.
+  // mk.VideoTrack? _latestSetVideoTrack;
+  // Future<void> _disposePreviouslySetVideoTrack() async {
+  //   if (_latestSetVideoTrack != null) {
+  //     try {
+  //       final player = _player.platform as mk.NativePlayer;
+  //       await player.command(['video-remove', '1']);
+  //       await player.command(['set', 'vid', 'no']);
+  //     } catch (_) {}
+  //     _latestSetVideoTrack = null;
+  //   }
+  // }
+
   // modified version of setAudioTrack
   // source: package:media_kit/src/player/native/player/real.dart
-  Future<void> _setVideoTrack(mk.VideoTrack track, {bool synchronized = true}) {
+  Future<void> _setVideoTrack(mk.VideoTrack videoTrack, {bool synchronized = true}) async {
     final player = _player.platform as mk.NativePlayer;
     Future<void> function() async {
       if (player.disposed) {
         throw AssertionError('[Player] has been disposed');
       }
+
       await player.waitForPlayerInitialization;
       await player.waitForVideoControllerInitializationIfAttached;
 
       await player.command(
         [
           'video-add',
-          track.id,
+          videoTrack.id,
           'select',
-          track.title ?? 'external',
-          track.language ?? 'auto',
+          videoTrack.title ?? 'external',
+          videoTrack.language ?? 'auto',
         ],
       );
-
       player.state = player.state.copyWith(
         track: player.state.track.copyWith(
-          video: track,
+          video: videoTrack,
         ),
+        // -- not really needed
+        // tracks: mk.Tracks(
+        //   video: [
+        //     ...player.state.tracks.video,
+        //     videoTrack,
+        //   ],
+        // ),
       );
       // ignore: invalid_use_of_protected_member
-      if (!player.trackController.isClosed) {
-        // ignore: invalid_use_of_protected_member
-        player.trackController.add(player.state.track);
-      }
+      if (!player.trackController.isClosed) player.trackController.add(player.state.track);
+      // ignore: invalid_use_of_protected_member
+      // if (!player.tracksController.isClosed) player.tracksController.add(player.state.tracks);
     }
 
     if (synchronized) {

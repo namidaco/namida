@@ -149,8 +149,10 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
       imageBuilder: (item, brMultiplier) {
         return item is Selectable ? trackConfig.imageBuilder(item, brMultiplier) : ytConfig.imageBuilder(item, brMultiplier);
       },
-      currentImageBuilder: (item, brMultiplier, maxHeight) {
-        return item is Selectable ? trackConfig.currentImageBuilder(item, brMultiplier, maxHeight) : ytConfig.currentImageBuilder(item, brMultiplier, maxHeight);
+      currentImageBuilder: (item, brMultiplier, maxHeight, maxWidth) {
+        return item is Selectable
+            ? trackConfig.currentImageBuilder(item, brMultiplier, maxHeight, maxWidth)
+            : ytConfig.currentImageBuilder(item, brMultiplier, maxHeight, maxWidth);
       },
       textBuilder: (item) {
         return item is Selectable
@@ -474,10 +476,11 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         track: (item as Selectable).track,
         brMultiplier: brMultiplier,
       ),
-      currentImageBuilder: (item, brMultiplier, maxHeight) => _AnimatingTrackImage(
+      currentImageBuilder: (item, brMultiplier, maxHeight, maxWidth) => _AnimatingTrackImage(
         track: (item as Selectable).track,
         brMultiplier: brMultiplier,
         maxHeight: maxHeight,
+        maxWidth: maxWidth,
       ),
       textBuilder: textBuilder,
       canShowBuffering: (currentItem) => (currentItem as Selectable).track.isNetwork,
@@ -752,10 +755,11 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         video: item as YoutubeID,
         brMultiplier: brMultiplier,
       ),
-      currentImageBuilder: (item, brMultiplier, maxHeight) => _AnimatingYoutubeIDImage(
+      currentImageBuilder: (item, brMultiplier, maxHeight, maxWidth) => _AnimatingYoutubeIDImage(
         video: item as YoutubeID,
         brMultiplier: brMultiplier,
         maxHeight: maxHeight,
+        maxWidth: maxWidth,
       ),
       textBuilder: (item) => textBuilder(context, item),
       canShowBuffering: (currentItem) => true,
@@ -774,11 +778,13 @@ class _AnimatingTrackImage extends StatelessWidget {
   final Track track;
   final double Function(double borderRadius) brMultiplier;
   final double? maxHeight;
+  final double? maxWidth;
 
   const _AnimatingTrackImage({
     required this.track,
     required this.brMultiplier,
     required this.maxHeight,
+    required this.maxWidth,
   });
 
   @override
@@ -787,6 +793,7 @@ class _AnimatingTrackImage extends StatelessWidget {
       brMultiplier: brMultiplier,
       isLocal: true,
       maxHeight: maxHeight,
+      maxWidth: maxWidth,
       fallback: _TrackImage(
         track: track,
         brMultiplier: brMultiplier,
@@ -800,12 +807,14 @@ class _AnimatingThumnailWidget extends StatelessWidget {
   final bool isLocal;
   final Widget fallback;
   final double? maxHeight;
+  final double? maxWidth;
 
   const _AnimatingThumnailWidget({
     required this.brMultiplier,
     required this.isLocal,
     required this.fallback,
     required this.maxHeight,
+    required this.maxWidth,
   });
 
   @override
@@ -873,6 +882,7 @@ class _AnimatingThumnailWidget extends StatelessWidget {
                       ? LyricsLRCParsedView(
                           key: Lyrics.inst.lrcViewKey,
                           videoOrImage: videoOrImage,
+                          maxWidth: maxWidth,
                           maxHeight: maxHeight, // limit height for when sizes are internally mutated
                         )
                       : KeyedSubtree(
@@ -934,7 +944,7 @@ class _TrackImage extends StatelessWidget {
         track: track,
         path: track.pathToImage,
         thumbnailSize: maxWidth,
-        compressed: true,
+        compressed: MiniPlayerController.inst.shouldCompressArtwork,
         borderRadius: 6.0 + brMultiplier(8.0.multipliedRadius) * (maxWidth * 0.004),
         fadeMilliSeconds: 0,
         forceSquared: settings.forceSquaredTrackThumbnail.value,
@@ -972,7 +982,7 @@ class _YoutubeIDImage extends StatelessWidget {
         width: maxWidth,
         forceSquared: settings.forceSquaredTrackThumbnail.value,
         isImportantInCache: true,
-        compressed: false,
+        compressed: MiniPlayerController.inst.shouldCompressArtwork,
         preferLowerRes: false,
         fadeMilliSeconds: 0,
         borderRadius: 6.0 + brMultiplier(8.0.multipliedRadius) * (maxWidth * 0.004),
@@ -995,11 +1005,13 @@ class _AnimatingYoutubeIDImage extends StatelessWidget {
   final YoutubeID video;
   final double Function(double borderRadius) brMultiplier;
   final double? maxHeight;
+  final double? maxWidth;
 
   const _AnimatingYoutubeIDImage({
     required this.video,
     required this.brMultiplier,
     required this.maxHeight,
+    required this.maxWidth,
   });
 
   @override
@@ -1008,6 +1020,7 @@ class _AnimatingYoutubeIDImage extends StatelessWidget {
       brMultiplier: brMultiplier,
       isLocal: false,
       maxHeight: maxHeight,
+      maxWidth: maxWidth,
       fallback: _YoutubeIDImage(
         video: video,
         brMultiplier: brMultiplier,

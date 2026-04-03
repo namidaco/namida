@@ -456,7 +456,6 @@ class SearchSortController extends SearchPortsProvider {
     final sendPort = params['sendPort'] as SendPort;
 
     final receivePort = ReceivePort();
-
     sendPort.send(receivePort.sendPort);
 
     final searchWrapper = TracksSearchWrapper.init(params);
@@ -560,7 +559,6 @@ class SearchSortController extends SearchPortsProvider {
     final sendPort = params['sendPort'] as SendPort;
 
     final receivePort = ReceivePort();
-
     sendPort.send(receivePort.sendPort);
 
     String translatePlName(String n) {
@@ -861,13 +859,10 @@ class SearchSortController extends SearchPortsProvider {
         break;
       case SortType.mostPlayed:
         sortThis((e) => -(HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0));
-        break;
       case SortType.latestPlayed:
-        sortThis((e) => HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0);
-        break;
+        sortThis((e) => -(HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0));
       case SortType.firstListen:
-        sortThis((e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? 0);
-        break;
+        sortThis((e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? DateTime(99999).millisecondsSinceEpoch);
       case SortType.titleSort:
         sortThisAlts([
           (e) => e.sortInfo?.title ?? '',
@@ -1124,7 +1119,6 @@ class SearchSortController extends SearchPortsProvider {
     final sendPort = parameters['sendPort'] as SendPort;
 
     final receivePort = ReceivePort();
-
     sendPort.send(receivePort.sendPort);
 
     final textCleanedForSearch = _functionOfCleanup(cleanup);

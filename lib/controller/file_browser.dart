@@ -970,7 +970,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     final textTheme = theme.textTheme;
     final chipColor = theme.cardColor;
     final pathSplitsChildren = _getCurrentPathsSplitsChildren;
-    return WillPopScope(
+    return NamidaPopScope(
       onWillPop: () async {
         if (isPathRoot(_currentFolderPath)) {
           _onSelectionComplete(<T>[]);

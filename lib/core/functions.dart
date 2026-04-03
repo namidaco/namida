@@ -398,7 +398,7 @@ class NamidaOnTaps {
         ],
         child: SizedBox(
           width: namida.width,
-          height: namida.height * 0.4,
+          height: namida.height * 0.5,
           child: Column(
             children: [
               ?header,

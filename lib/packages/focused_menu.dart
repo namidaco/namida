@@ -140,7 +140,7 @@ class FocusedMenuDetails extends StatelessWidget {
     final topOffset = (childOffset.dy + menuHeight + childSize.height) < size.height - bottomOffsetHeight
         ? childOffset.dy + childSize.height + menuOffset!
         : childOffset.dy - menuHeight - menuOffset!;
-    return WillPopScope(
+    return NamidaPopScope(
       onWillPop: () async {
         _onDismiss(context);
         return false;

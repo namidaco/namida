@@ -7,6 +7,7 @@ import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
 import 'package:namida/class/queue.dart';
 import 'package:namida/controller/platform/base.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -746,6 +747,9 @@ enum KillAppMode {
   always,
   ifNotPlaying,
   never,
+  ;
+
+  bool resolveShouldKill() => this == KillAppMode.always || (this == KillAppMode.ifNotPlaying && !Player.inst.playWhenReady.value);
 }
 
 enum SettingSubpageEnum {

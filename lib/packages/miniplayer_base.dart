@@ -126,7 +126,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   final void Function(Playable currentItem, TapUpDetails details) onMenuOpen;
   final FocusedMenuOptions Function(Playable item) focusedMenuOptions;
   final Widget Function(Playable item, double Function(double borderRadius) brMultiplier) imageBuilder;
-  final Widget Function(Playable item, double Function(double borderRadius) brMultiplier, double? maxHeight) currentImageBuilder;
+  final Widget Function(Playable item, double Function(double borderRadius) brMultiplier, double? maxHeight, double? maxWidth) currentImageBuilder;
   final MiniplayerInfoData<E, S> Function(Playable item) textBuilder;
   final bool Function(Playable item) canShowBuffering;
   final TrackTilePropertiesConfigs? trackTileConfigs;
@@ -1251,7 +1251,12 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     final imageEmptyRightSpace = screenSize.width - imageSize;
                     final imageLeftOffset = ((imageEmptyRightSpace / 2) - imagePadding.left - rightInset) * bcp;
 
-                    Widget currentImage = widget.currentImageBuilder(currentItem, (borderRadius) => borderRadius.br, _imageHeightActual == null ? null : (imageMaxHeightPre * 0.7));
+                    Widget currentImage = widget.currentImageBuilder(
+                      currentItem,
+                      (borderRadius) => borderRadius.br,
+                      _imageHeightActual == null ? null : (imageMaxHeightPre * 0.7),
+                      imageWidthBig,
+                    );
 
                     if (settings.artworkTapAction.value != TrackExecuteActions.none) {
                       currentImage = TapDetector(

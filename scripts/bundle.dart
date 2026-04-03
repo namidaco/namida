@@ -18,7 +18,8 @@ void main(List<String> args) async {
 
   final environment = <String, String>{
     ...Platform.environment,
-    if (!bundleWPE) "DISABLE_WPE_WEBKIT": "1",
+    // -- always specify, otherwise could have a value from previous command env.
+    "DISABLE_WPE_WEBKIT": bundleWPE ? "0" : "1",
   };
 
   final linuxDistDir = _getDirectoryEnsureExistsAndCleaned('./dist', clean: !skipClean);

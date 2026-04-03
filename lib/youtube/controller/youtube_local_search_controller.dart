@@ -54,9 +54,9 @@ class YTLocalSearchController with PortsProvider<Map> {
     if (streams.isEmpty) return; // cuz empty might be const
     switch (_sortType) {
       case YTLocalSearchSortType.mostPlayed:
-        streams.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.length ?? 0);
+        streams.sortBy((e) => -(YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.length ?? 0));
       case YTLocalSearchSortType.latestPlayed:
-        streams.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.lastOrNull ?? 0);
+        streams.sortBy((e) => -(YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.lastOrNull ?? 0));
       case YTLocalSearchSortType.firstListen:
         streams.sortBy((e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.firstOrNull ?? DateTime(99999).millisecondsSinceEpoch);
     }

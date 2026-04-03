@@ -418,10 +418,9 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                                           startDimTimer();
                                                           _updateCanScrollQueue(true);
                                                         },
-                                                        child: Navigator(
-                                                          key: NamidaNavigator.inst.ytMiniplayerCommentsPageKey,
-                                                          requestFocus: false,
-                                                          onPopPage: (route, result) => false,
+                                                        child: NamidaNavigatorWidget(
+                                                          navKey: NamidaNavigator.inst.ytMiniplayerCommentsPageKey,
+                                                          allowPop: false,
                                                           restorationScopeId: currentId,
                                                           pages: [
                                                             MaterialPage(

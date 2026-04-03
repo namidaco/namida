@@ -35,6 +35,7 @@ class LyricsLRCParsedView extends StatefulWidget {
   final bool useSafeArea;
   final double blurColorMaskOpacity;
   final double? maxHeight;
+  final double? maxWidth;
   final double? verticalPadding;
   final Widget? bottomPadding;
 
@@ -48,6 +49,7 @@ class LyricsLRCParsedView extends StatefulWidget {
     this.useSafeArea = true,
     this.blurColorMaskOpacity = 0.6,
     this.maxHeight,
+    this.maxWidth,
     this.verticalPadding,
     this.bottomPadding,
   });
@@ -968,46 +970,54 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                             // softWrap: false, // keep the text steady while animating mp
                                           );
 
-                                    return Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        Positioned.fill(
-                                          child: Material(
-                                            type: MaterialType.transparency,
-                                            child: InkWell(
-                                              splashFactory: InkSparkle.splashFactory,
-                                              onTap: () {
-                                                _canAnimateScroll.value = true;
-                                                _currentIndex = null; // reset so that tapping the current line still animates to it
-                                                Player.inst.seek(lrc.timestamp); //  should auto scroll bcz position changes
-                                              },
-                                            ),
-                                          ),
+                                    return Align(
+                                      alignment: alignment, // needed for constraints
+                                      child: ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          maxWidth: widget.maxWidth != null ? widget.maxWidth! : double.infinity,
                                         ),
-                                        IgnorePointer(
-                                          child: NamidaHero(
-                                            tag: 'LYRICS_LINE_${lrc.timestamp}',
-                                            enabled: false,
-                                            child: AnimatedScale(
-                                              alignment: alignment.resolve(textDirection),
-                                              duration: const Duration(milliseconds: 400),
-                                              curve: Curves.easeInOutCubicEmphasized,
-                                              scale: selected ? 1.0 : 0.95,
-                                              child: NamidaInkWell(
-                                                alignment: alignment,
-                                                bgColor: bgColor,
-                                                decoration: BoxDecoration(
-                                                  borderRadius: borderRadius,
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Positioned.fill(
+                                              child: Material(
+                                                type: MaterialType.transparency,
+                                                child: InkWell(
+                                                  splashFactory: InkSparkle.splashFactory,
+                                                  onTap: () {
+                                                    _canAnimateScroll.value = true;
+                                                    _currentIndex = null; // reset so that tapping the current line still animates to it
+                                                    Player.inst.seek(lrc.timestamp); //  should auto scroll bcz position changes
+                                                  },
                                                 ),
-                                                animationDurationMS: 300,
-                                                margin: lineMargin,
-                                                padding: padding,
-                                                child: textWidget,
                                               ),
                                             ),
-                                          ),
+                                            IgnorePointer(
+                                              child: NamidaHero(
+                                                tag: 'LYRICS_LINE_${lrc.timestamp}',
+                                                enabled: false,
+                                                child: AnimatedScale(
+                                                  alignment: alignment.resolve(textDirection),
+                                                  duration: const Duration(milliseconds: 400),
+                                                  curve: Curves.easeInOutCubicEmphasized,
+                                                  scale: selected ? 1.0 : 0.95,
+                                                  child: NamidaInkWell(
+                                                    alignment: alignment,
+                                                    bgColor: bgColor,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius: borderRadius,
+                                                    ),
+                                                    animationDurationMS: 300,
+                                                    margin: lineMargin,
+                                                    padding: padding,
+                                                    child: textWidget,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     );
                                   },
                                 ),
@@ -1119,6 +1129,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         ConstrainedBox(
           constraints: BoxConstraints(
             maxHeight: widget.maxHeight != null ? widget.maxHeight! * 0.75 : double.infinity,
+            maxWidth: widget.maxWidth != null ? widget.maxWidth! : double.infinity,
           ),
           child: mainLyricsWidget,
         ),

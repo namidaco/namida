@@ -169,15 +169,12 @@ class _NamidaWindowListener with WindowListener {
 
   @override
   Future<void> onWindowClose() async {
-    final mode = settings.player.killAfterDismissingApp.value;
-    if (mode == KillAppMode.always || (mode == KillAppMode.ifNotPlaying && !Player.inst.playWhenReady.value)) {
-      await Namida.disposeAllResources().ignoreError();
-      await windowManager.destroy();
-      return;
+    if (settings.player.killAfterDismissingApp.value.resolveShouldKill()) {
+      await Namida.disposeAllResourcesAndExit();
+    } else {
+      // -- minimize to tray instead
+      await windowManager.hide();
     }
-
-    // -- minimize to tray instead
-    await windowManager.hide();
   }
 }
 

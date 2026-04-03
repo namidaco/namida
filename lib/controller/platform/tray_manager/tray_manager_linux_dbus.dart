@@ -20,17 +20,19 @@ class _TrayManagerLinuxDBus extends NamidaTrayManager {
       category: StatusNotifierItemCategory.applicationStatus,
       status: StatusNotifierItemStatus.active,
       onContextMenu: (x, y) async {
-        NamidaTrayManager.showWindow();
+        NamidaTrayManager.toggleWindow();
       },
       onScroll: (delta, orientation) async {
         if (delta.isNegative) {
-          Player.inst.volumeDown();
+          final newVol = Player.inst.volumeDown();
+          snackyy(message: "${lang.volume} ↓: ${newVol.roundDecimals(2)}");
         } else {
-          Player.inst.volumeUp();
+          final newVol = Player.inst.volumeUp();
+          snackyy(message: "${lang.volume} ↑: ${newVol.roundDecimals(2)}");
         }
       },
       onActivate: (x, y) async {
-        NamidaTrayManager.showWindow();
+        NamidaTrayManager.toggleWindow();
       },
       onSecondaryActivate: (x, y) async {
         NamidaTrayManager.executeKey(TrayMenuKey.playPause);
@@ -52,18 +54,20 @@ class _TrayManagerLinuxDBus extends NamidaTrayManager {
 
   @override
   Future<void> update(TrayMenu menu, String playingItemTitle) async {
-    final dbusMenu = menu.toDBusMenu(onTrayTap: NamidaTrayManager.showWindow);
-    if (_clientFuture == null) {
-      _clientFuture = _createClient(dbusMenu, playingItemTitle);
-    } else {
-      final c = await _clientFuture!;
-      await c.updateMenu(dbusMenu);
-      c.toolTip = _createToolTip(playingItemTitle);
-    }
+    try {
+      final dbusMenu = menu.toDBusMenu(onTrayTap: NamidaTrayManager.toggleWindow);
+      if (_clientFuture == null) {
+        _clientFuture = _createClient(dbusMenu, playingItemTitle);
+      } else {
+        final c = await _clientFuture!;
+        await c.updateMenu(dbusMenu);
+        c.toolTip = _createToolTip(playingItemTitle);
+      }
+    } on DBusClosedException catch (_) {}
   }
 
   @override
-  Future<void> destroy() async {
+  Future<void> dispose() async {
     await (await _clientFuture)?.close();
   }
 }

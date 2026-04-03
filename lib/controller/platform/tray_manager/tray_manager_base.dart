@@ -16,13 +16,13 @@ abstract class NamidaTrayManager {
     );
   }
 
-  // Future<void> _toggleWindow() async {
-  //   if (await windowManager.isVisible()) {
-  //     await windowManager.hide();
-  //   } else {
-  //     await _showWindow();
-  //   }
-  // }
+  static Future<void> toggleWindow() async {
+    if (await windowManager.isVisible()) {
+      await windowManager.hide();
+    } else {
+      await NamidaTrayManager.showWindow();
+    }
+  }
 
   static Future<void> showWindow() async {
     if (Platform.isLinux) {
@@ -42,17 +42,16 @@ abstract class NamidaTrayManager {
       case TrayMenuKey.next:
         Player.inst.next().ignoreError();
       case TrayMenuKey.showWindow:
-        showWindow();
+        await showWindow();
       case TrayMenuKey.exit:
-        await Namida.disposeAllResources().ignoreError();
-        await windowManager.destroy().ignoreError();
+        await Namida.disposeAllResourcesAndExit();
       case null:
     }
   }
 
   Future<void> init();
   Future<void> update(TrayMenu menu, String playingItemTitle);
-  Future<void> destroy();
+  Future<void> dispose();
 }
 
 class TrayMenuKey {
@@ -78,6 +77,7 @@ class TrayMenu {
             (e) => e._isSeparator
                 ? MenuItem.separator()
                 : MenuItem(
+                    key: e.key,
                     icon: e.icon,
                     label: e.label,
                     disabled: e.disabled,
