@@ -16,6 +16,7 @@ abstract class NamidaSMTCManager {
   void onPlay();
   void onPause();
   void onStop();
+
   Future<void> dispose();
 
   void updateMetadata(MediaItem mediaItem);

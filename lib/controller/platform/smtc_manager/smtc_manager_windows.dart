@@ -1,16 +1,16 @@
 part of 'smtc_manager.dart';
 
 class _SMTCManagerWindows extends NamidaSMTCManager {
-  SMTCWindows? smtc;
+  swin.SMTCWindows? smtc;
 
   @override
   Future<void> init() async {
     try {
-      await SMTCWindows.initialize();
-      smtc = SMTCWindows(
+      await swin.SMTCWindows.initialize();
+      smtc = swin.SMTCWindows(
         appId: NamidaWindowManager.appId,
         enabled: true,
-        config: const SMTCConfig(
+        config: const swin.SMTCConfig(
           fastForwardEnabled: true,
           nextEnabled: true,
           pauseEnabled: true,
@@ -23,25 +23,25 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
 
       smtc?.buttonPressStream.listen((event) {
         switch (event) {
-          case PressedButton.play:
+          case swin.PressedButton.play:
             Player.inst.togglePlayPause();
-          case PressedButton.pause:
+          case swin.PressedButton.pause:
             Player.inst.pause();
-          case PressedButton.next:
+          case swin.PressedButton.next:
             Player.inst.next();
-          case PressedButton.previous:
+          case swin.PressedButton.previous:
             Player.inst.previous();
-          case PressedButton.stop:
+          case swin.PressedButton.stop:
             Player.inst.pause().whenComplete(Player.inst.dispose);
-          case PressedButton.fastForward:
+          case swin.PressedButton.fastForward:
             Player.inst.seekSecondsForward();
-          case PressedButton.rewind:
+          case swin.PressedButton.rewind:
             Player.inst.seekSecondsBackward();
 
           // -- none
-          case PressedButton.record:
-          case PressedButton.channelUp:
-          case PressedButton.channelDown:
+          case swin.PressedButton.record:
+          case swin.PressedButton.channelUp:
+          case swin.PressedButton.channelDown:
         }
       });
     } catch (e, st) {
@@ -59,27 +59,27 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
   @override
   void onPlay() {
     _ensureEnabled();
-    smtc?.setPlaybackStatus(PlaybackStatus.playing);
+    smtc?.setPlaybackStatus(swin.PlaybackStatus.playing);
   }
 
   @override
   void onPause() {
     _ensureEnabled();
-    smtc?.setPlaybackStatus(PlaybackStatus.paused);
+    smtc?.setPlaybackStatus(swin.PlaybackStatus.paused);
   }
 
   @override
   void onStop() {
     if (_isEnabled == false) return;
     _isEnabled = false;
-    smtc?.setPlaybackStatus(PlaybackStatus.stopped);
+    smtc?.setPlaybackStatus(swin.PlaybackStatus.stopped);
     smtc?.disableSmtc();
   }
 
   @override
   Future<void> dispose() async {
     _isEnabled = false;
-    smtc?.setPlaybackStatus(PlaybackStatus.stopped);
+    smtc?.setPlaybackStatus(swin.PlaybackStatus.stopped);
     await smtc?.dispose();
     smtc = null;
   }
@@ -87,7 +87,7 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
   @override
   void updateMetadata(MediaItem mediaItem) {
     _ensureEnabled();
-    final metadata = MusicMetadata(
+    final metadata = swin.MusicMetadata(
       title: mediaItem.title,
       artist: mediaItem.artist,
       album: mediaItem.album,
@@ -101,7 +101,7 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
   void updateTimeline(int positionMS, int? durationMS) {
     _ensureEnabled();
     smtc?.updateTimeline(
-      PlaybackTimeline(
+      swin.PlaybackTimeline(
         startTimeMs: 0,
         endTimeMs: durationMS ?? 0,
         positionMs: positionMS,

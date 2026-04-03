@@ -18,7 +18,7 @@ abstract class NamidaTrayManager {
 
   static Future<void> toggleWindow() async {
     if (await windowManager.isVisible()) {
-      await windowManager.hide();
+      await NamidaTrayManager.hideWindow();
     } else {
       await NamidaTrayManager.showWindow();
     }
@@ -31,6 +31,10 @@ abstract class NamidaTrayManager {
     }
 
     WindowController.instance?.ensurePositionRestored();
+  }
+
+  static Future<void> hideWindow() async {
+    await windowManager.hide();
   }
 
   static void executeKey(String? key) async {

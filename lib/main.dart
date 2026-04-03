@@ -90,8 +90,6 @@ void main(List<String> args) {
         await singleInstance.acquireSingleInstanceOrExit(args);
       }
 
-      await SMTCController.instance?.init();
-
       runApp(const Namida());
     },
     (error, stack) => logger.error(error.runtimeType, e: error, st: stack),
@@ -131,6 +129,7 @@ Future<bool> _mainAppInitialization() async {
     await [
       WindowController.instance?.init(),
       TrayController.instance?.init(),
+      SMTCController.instance?.init(),
       HomeWidgetController.instance?.init(),
     ].executeAllAndSilentReportErrors();
 
