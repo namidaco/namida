@@ -35,7 +35,7 @@ abstract class LrcSearchUtils {
   String get embeddedLyrics;
   File get cachedTxtFile;
   File get cachedLRCFile;
-  List<File> get deviceLRCFiles;
+  List<File Function()> get deviceLRCFiles;
 
   Future<int> getItemDurationMS();
 
@@ -48,7 +48,7 @@ abstract class LrcSearchUtils {
 
   @mustCallSuper
   Future<bool> hasLyrics() async {
-    return await cachedLRCFile.exists() || await deviceLRCFiles.anyAsync((element) => element.exists()) || await cachedTxtFile.exists();
+    return await cachedLRCFile.exists() || await deviceLRCFiles.anyAsync((element) => element().exists()) || await cachedTxtFile.exists();
   }
 
   List<LRCSearchDetails> searchDetailsQueries();

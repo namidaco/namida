@@ -32,6 +32,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
   final availableLyrics = <LyricsModel>[].obs;
   final fetchedLyrics = <LyricsModel>[].obs;
   final trackDurationMSRx = Rxn<int>();
+  bool requiresUpdatingLyrics = false;
 
   lrcUtils.getItemDurationMS().then((value) {
     trackDurationMSRx.value = value;
@@ -80,7 +81,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
   }
   final int length = localLRCFiles.length;
   for (int i = 0; i < length; i++) {
-    var localLRC = localLRCFiles[i];
+    var localLRC = localLRCFiles[i]();
     if (await localLRC.exists()) {
       availableLyrics.add(
         LyricsModel(
@@ -95,23 +96,22 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     }
   }
 
-  void updateForCurrentTrack() {
-    if (item == Player.inst.currentItem.value) {
-      Lyrics.inst.updateLyrics(item);
-    }
+  void markRequiresUpdating() {
+    // -- mark dirty instead, otherwise can interfere with the selection process
+    requiresUpdatingLyrics = true;
   }
 
   void updateEditLyrics(LyricsModel l, LyricsModel newL) {
     final indexOfLrc = availableLyrics.value.indexOf(l);
     if (indexOfLrc >= 0) {
       availableLyrics[indexOfLrc] = newL;
-      updateForCurrentTrack();
+      markRequiresUpdating();
       return;
     }
     final indexOfLrc2 = fetchedLyrics.value.indexOf(l);
     if (indexOfLrc2 >= 0) {
       fetchedLyrics[indexOfLrc2] = newL;
-      updateForCurrentTrack();
+      markRequiresUpdating();
       return;
     }
   }
@@ -130,7 +130,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
               if ((await l.file?.tryDeleting()) == true) {
                 availableLyrics.remove(l);
               }
-              updateForCurrentTrack();
+              markRequiresUpdating();
               NamidaNavigator.inst.closeDialog();
             },
           ),
@@ -337,13 +337,15 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       final lrcModel = LyricsModel(
         lyrics: text,
         synced: synced,
-        isInCache: false,
+        isInCache: true,
         fromInternet: false,
         file: file,
         isEmbedded: false,
       );
-      availableLyrics.add(lrcModel);
-      updateForCurrentTrack();
+      availableLyrics.value.removeWhere((element) => element.file?.path == file.path);
+      availableLyrics.value.add(lrcModel);
+      availableLyrics.refresh();
+      markRequiresUpdating();
       // selectedLyrics.value = lrcModel;
     }
   }
@@ -366,7 +368,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         isEmbedded: false,
       );
       availableLyrics.add(lrcModel);
-      updateForCurrentTrack();
+      markRequiresUpdating();
       // selectedLyrics.value = lrcModel;
 
       NamidaNavigator.inst.closeDialog();
@@ -501,7 +503,16 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     );
   }
 
+  void updateLyricsIfRequired() {
+    if (requiresUpdatingLyrics) {
+      if (item == Player.inst.currentItem.value) {
+        Lyrics.inst.updateLyrics(item);
+      }
+    }
+  }
+
   await NamidaNavigator.inst.navigateDialog(
+    onDismissing: updateLyricsIfRequired,
     onDisposing: () {
       fetchingFromInternet.close();
       availableLyrics.close();
@@ -561,7 +572,6 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
           text: lang.search,
           onTap: onSearchTrigger,
         ),
-        const CancelButton(),
         Obx(
           (context) {
             final selected = selectedLyrics.valueR;
@@ -573,9 +583,10 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   final selected = selectedLyrics.value;
                   if (selected != null) {
                     await lrcUtils.saveLyricsToCache(selected.lyrics, selected.synced);
-                    updateForCurrentTrack();
+                    markRequiresUpdating();
                   }
                 }
+                updateLyricsIfRequired();
 
                 NamidaNavigator.inst.closeDialog();
               },

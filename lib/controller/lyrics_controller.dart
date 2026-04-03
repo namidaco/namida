@@ -184,7 +184,8 @@ class Lyrics {
 
       if (lrcContent == null) {
         final lyricsFilesLocal = lrcUtils.deviceLRCFiles;
-        for (final lf in lyricsFilesLocal) {
+        for (final lfn in lyricsFilesLocal) {
+          final lf = lfn();
           if (await lf.existsAndValid()) {
             lrcContent = await lf.readLrcString();
 

@@ -172,7 +172,8 @@ class TracksSearchWrapper {
     }
     if (lrcContent == null) {
       final lyricsFilesLocal = lrcUtils.deviceLRCFiles;
-      for (final lf in lyricsFilesLocal) {
+      for (final lfn in lyricsFilesLocal) {
+        final lf = lfn();
         if (lf.existsAndValidSync()) {
           lrcContent = lf.readLrcStringSync();
           break;

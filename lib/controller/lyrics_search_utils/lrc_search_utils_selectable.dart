@@ -29,14 +29,18 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
   File get cachedLRCFile => File(p.join(mainLyricsCacheDirectory, "${track.cacheKey}.lrc"));
 
   @override
-  List<File> get deviceLRCFiles {
+  List<File Function()> get deviceLRCFiles {
     if (track.isNetwork) return [];
     final dirPath = track.path.getDirectoryPath;
+    final fwoe = track.filenameWOExt;
+    final fwe = track.filename;
     return [
-      File(p.join(dirPath, "${track.filename}.lrc")),
-      File(p.join(dirPath, "${track.filenameWOExt}.lrc")),
-      File(p.join(dirPath, "${track.filename}.LRC")),
-      File(p.join(dirPath, "${track.filenameWOExt}.LRC")),
+      () => File(p.join(dirPath, "$fwoe.lrc")),
+      () => File(p.join(dirPath, "$fwe.lrc")),
+      () => File(p.join(dirPath, "$fwoe.ttml")),
+      () => File(p.join(dirPath, "$fwe.ttml")),
+      () => File(p.join(dirPath, "$fwoe.LRC")),
+      () => File(p.join(dirPath, "$fwe.LRC")),
     ];
   }
 
