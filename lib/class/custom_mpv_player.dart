@@ -218,10 +218,17 @@ class CustomMPVPlayer implements AVPlayer {
     );
 
     final videoOptions = _videoOptions;
-    if (videoOptions == null || videoOptions.videoOnly) {
+    if (videoOptions == null) {
       await _tryOpen(
         mk.Media(
           config.source.uri.toString(),
+          start: config.initialPosition,
+        ),
+      );
+    } else if (videoOptions.videoOnly) {
+      await _tryOpen(
+        mk.Media(
+          (videoOptions.source as UriSource).uri.toString(),
           start: config.initialPosition,
         ),
       );

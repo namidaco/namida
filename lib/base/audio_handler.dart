@@ -1630,7 +1630,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           if (prefferedMixedStream != null) {
             final mixedUri = prefferedMixedStream.buildUrl();
             if (mixedUri != null) {
-              finalMixedSource = HlsSource(mixedUri);
+              finalMixedSource = AudioVideoSource.uri(mixedUri); // -- this is not an hls nor dash
             }
           }
           if (finalMixedSource != null) {
@@ -1659,7 +1659,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             if (prefferedMixedStream != null) {
               final mixedUri = prefferedMixedStream.buildUrl();
               if (mixedUri != null) {
-                finalLiveSource = HlsSource(mixedUri);
+                finalLiveSource = AudioVideoSource.uri(mixedUri); // -- this is not an hls nor dash
               }
             }
           }
@@ -1781,12 +1781,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         if (checkInterrupted()) return;
 
         // -----------------------
-      } catch (e) {
+      } catch (e, st) {
         if (checkInterrupted()) return;
         if (!okaySetFromCache()) {
           void showSnackError(String nextAction) {
             if (item == currentItem.value) {
               snackyy(title: lang.error, message: 'Error playing video, $nextAction: $e', top: false, isError: true);
+              logger.error('Error playing video, $nextAction', e: e, st: st);
             }
           }
 
@@ -2326,16 +2327,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required void Function(File cachedFile) onFirstCacheDone,
   }) {
     // -- this part might not be used, live streams are built different early
-    final isLive = streamsResult != null && (streamsResult.info?.isLive == true || streamsResult.audioStreams.isEmpty && streamsResult.mixedStreams.isNotEmpty);
-    if (isLive) {
-      if (streamsResult.hlsManifestUrl != null) {
-        return HlsSource(Uri.parse(streamsResult.hlsManifestUrl!));
-      } else if (streamsResult.dashManifestUrl != null) {
-        return DashSource(Uri.parse(streamsResult.dashManifestUrl!));
-      } else {
-        return AudioVideoSource.file('');
-      }
-    }
+    // final isLive = streamsResult != null && (streamsResult.info?.isLive == true || streamsResult.audioStreams.isEmpty && streamsResult.mixedStreams.isNotEmpty);
+    // if (isLive) {
+    //   if (streamsResult.hlsManifestUrl != null) {
+    //     return HlsSource(Uri.parse(streamsResult.hlsManifestUrl!));
+    //   } else if (streamsResult.dashManifestUrl != null) {
+    //     return DashSource(Uri.parse(streamsResult.dashManifestUrl!));
+    //   } else {
+    //     return AudioVideoSource.file('');
+    //   }
+    // }
     return _buildCacheableAVSource(
       uriDDL,
       cacheFile: cacheFile,
