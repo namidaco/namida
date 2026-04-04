@@ -113,13 +113,23 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
 
     if (Platform.isWindows) {
+      WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress).ignoreError();
+      const int staleProgressValue = -1;
+      int latestProgress = staleProgressValue;
       void taskbarListener() {
         final durationMS = currentItemDuration.value?.inMilliseconds;
         if (durationMS != null && durationMS > 0) {
           final positionMS = currentPositionMS.value;
-          WindowsTaskbar.setProgress(positionMS, durationMS).ignoreError();
+          final progress = (positionMS / durationMS * 100).floor().clampInt(0, 100);
+          if (progress != latestProgress) {
+            latestProgress = progress;
+            WindowsTaskbar.setProgress(progress, 100).ignoreError();
+          }
         } else {
-          WindowsTaskbar.setProgressMode(TaskbarProgressMode.normal).ignoreError();
+          if (latestProgress != staleProgressValue) {
+            latestProgress = staleProgressValue;
+            WindowsTaskbar.setProgressMode(TaskbarProgressMode.noProgress).ignoreError();
+          }
         }
       }
 
