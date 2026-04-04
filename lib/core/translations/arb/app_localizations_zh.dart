@@ -1871,6 +1871,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oldestWatch => '最久的观看';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => '中断时';
 
   @override
@@ -2261,6 +2264,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resumeIfWasInterrupted => '若受其他程序干扰暂停，则恢复播放';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => '若因静音暂停，则恢复播放';
 
   @override
@@ -2365,6 +2371,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => '将文件上次修改日期设置为视频上传日期';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => '设定情绪';
@@ -2906,6 +2915,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get week => '周';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => '年';

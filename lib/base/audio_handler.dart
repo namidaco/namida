@@ -2036,9 +2036,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   PlayerRepeatMode get playerRepeatMode => settings.player.repeatMode.value;
 
   @override
-  bool get playerResumeAfterOnVolume0Pause => settings.player.resumeAfterOnVolume0Pause.value;
-
-  @override
   bool get jumpToFirstItemAfterFinishingQueue => settings.player.jumpToFirstTrackAfterFinishingQueue.value;
 
   @override
@@ -2061,6 +2058,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Duration get defaultVolume0ResumeThreshold => Duration(minutes: settings.player.volume0ResumeThresholdMin.value);
+
+  @override
+  Duration get defaultConnectWiredResumeThresholdMin => Duration(minutes: settings.player.connectWiredResumeThresholdMin.value);
+
+  @override
+  Duration get defaultConnectWirelessResumeThresholdMin => Duration(minutes: settings.player.connectWirelessResumeThresholdMin.value);
 
   bool get previousButtonReplays => settings.previousButtonReplays.value;
 

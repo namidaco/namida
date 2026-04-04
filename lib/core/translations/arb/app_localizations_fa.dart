@@ -1861,6 +1861,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get oldestWatch => 'قدیمی ترین تماشا';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'اگر وقفه ای صورت گرفت';
 
   @override
@@ -2251,6 +2254,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get resumeIfWasInterrupted => 'اگر وقفه ای صورت گرفت، پخش ادامه یابد';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'افزایش صدا باعث ادامه پخش شود';
 
   @override
@@ -2354,6 +2360,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'آخرین ویرایش فایل را بعنوان تاریخ آپلود ویدیو قرار بده';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'حال و هوا را مشخص کن';
@@ -2896,6 +2905,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get week => 'هفته';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'سال';

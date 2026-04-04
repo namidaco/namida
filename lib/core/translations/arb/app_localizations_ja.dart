@@ -1861,6 +1861,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get oldestWatch => '一番昔に見た';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => '中断時';
 
   @override
@@ -2250,6 +2253,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get resumeIfWasInterrupted => '中断により一時停止された場合は再開する';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => '音量によって一時停止された場合は再開する';
 
   @override
@@ -2353,6 +2359,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'ファイルの最終更新日を動画のアップロード日として設定する';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => '雰囲気を設定';
@@ -2894,6 +2903,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get week => '週';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => '年';

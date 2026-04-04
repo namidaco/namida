@@ -797,7 +797,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get discNumber => 'ডিস্ক নম্বর';
 
   @override
-  String get discNumberTotal => 'ডিস্কের মোট সংখ্যা';
+  String get discNumberTotal => 'মোট ডিস্ক সংখ্যা';
 
   @override
   String get discover => 'ডিসকভার';
@@ -827,19 +827,19 @@ class AppLocalizationsBn extends AppLocalizations {
   String get displayAudioInfoInMiniplayer => 'অডিওর তথ্য প্রদর্শন করুন';
 
   @override
-  String get displayFavButtonInNotification => 'নোটিফিকেশনে পছন্দের বোতাম প্রদর্শন করুন';
+  String get displayFavButtonInNotification => 'নোটিফিকেশনে \'লাইক\' বাটন দেখান';
 
   @override
   String get displayFavButtonInNotificationSubtitle => 'থাম্বনেইল স্থানচ্যুত হতে পারে।';
 
   @override
-  String get displayFavouriteIconInTrackTile => 'পছন্দের বোতাম প্রদর্শন করুন';
+  String get displayFavouriteIconInTrackTile => '\'লাইক\' বাটন দেখান';
 
   @override
   String get displayRemainingDurationInsteadOfTotal => 'মোট সময়ের পরিবর্তে অবশিষ্ট সময় প্রদর্শন করুন';
 
   @override
-  String get displayStopButtonInNotification => 'নোটিফিকেশনে স্টপ বোতাম প্রদর্শন করুন';
+  String get displayStopButtonInNotification => 'নোটিফিকেশনে \'স্টপ\' বাটন দেখান';
 
   @override
   String get displayThirdItemInRowInTrackTile => 'প্রতিটি সারিতে তৃতীয় আইটেম প্রদর্শন করুন';
@@ -956,7 +956,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get enableCrossfadeEffect => 'ক্রসফেড ইফেক্ট সক্রিয় করুন';
 
   @override
-  String get enableFadeEffectOnPlayPause => 'প্লে/পজে ফেড ইফেক্ট সক্রিয় করুন';
+  String get enableFadeEffectOnPlayPause => 'ফেড ইফেক্ট সক্রিয় করুন';
 
   @override
   String get enableFoldersHierarchy => 'ফোল্ডার হায়ারার্কি';
@@ -1092,7 +1092,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get failedEdits => 'ব্যর্থ সম্পাদনাগুলো';
 
   @override
-  String get favourites => 'ফেভারিটস';
+  String get favourites => 'পছন্দের তালিকা';
 
   @override
   String get features => 'ফিচার';
@@ -1165,7 +1165,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get fixYtdlpBigThumbnailSize => 'yt-dlp বড় থাম্বনেইল সাইজ ঠিক করুন';
 
   @override
-  String get floatingActionButton => 'ভাসমান অ্যাকশন বোতাম';
+  String get floatingActionButton => 'ভাসমান অ্যাকশন বাটন';
 
   @override
   String get folder => 'ফোল্ডার';
@@ -1258,7 +1258,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get heightOfTrackTile => 'ট্র্যাক টাইলের উচ্চতা';
 
   @override
-  String get hideSkipButtonAfter => 'এরপর স্কিপ বোতাম লুকান';
+  String get hideSkipButtonAfter => 'এরপর \'স্কিপ\' বাটন লুকান';
 
   @override
   String get highMatches => 'সর্বোচ্চ মিল';
@@ -1397,7 +1397,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get infinityQueueOnNextPrev => 'পরবর্তী/পূর্ববর্তীতে ইনফিনিটি কিউ';
 
   @override
-  String get infinityQueueOnNextPrevSubtitle => 'শেষ ট্র্যাক চালানোর সময় \'পরবর্তী\' বোতাম চাপলে প্রথম ট্র্যাকে চলে যাবে, এবং তদ্বিপরীত';
+  String get infinityQueueOnNextPrevSubtitle => 'শেষ ট্র্যাক চালানোর সময় \'পরবর্তী\' বাটন চাপলে প্রথম ট্র্যাকে চলে যাবে, এবং তদ্বিপরীত';
 
   @override
   String get info => 'তথ্য';
@@ -1824,7 +1824,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get nonActive => 'নিষ্ক্রিয়';
 
   @override
-  String get nonFavourites => 'অপছন্দ';
+  String get nonFavourites => 'পছন্দের তালিকাভুক্ত নয়';
 
   @override
   String get none => 'কোনোটিই নয়';
@@ -1870,6 +1870,9 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get oldestWatch => 'অনেক আগের দেখা';
+
+  @override
+  String get onDeviceConnect => 'On Device Connect';
 
   @override
   String get onInterruption => 'প্লেব্যাক বিঘ্নিত হলে করণীয়';
@@ -2026,7 +2029,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get playbackSetting => 'প্লেব্যাক';
 
   @override
-  String get playbackSettingSubtitle => 'অডিও বোতামে লং-প্রেস করে সরাসরি এই সেটিংস অ্যাক্সেস করুন';
+  String get playbackSettingSubtitle => '\'অডিও\' বাটনে লং-প্রেস করে সরাসরি এই সেটিংস অ্যাক্সেস করুন';
 
   @override
   String get playlist => 'প্লেলিস্ট';
@@ -2072,7 +2075,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get previous => 'পূর্ববর্তী';
 
   @override
-  String get previousButtonReplays => '\'পূর্ববর্তী\' বোতাম দ্বারা পুনঃচালনা করুন';
+  String get previousButtonReplays => '\'পূর্ববর্তী\' বাটন দ্বারা পুনঃচালনা করুন';
 
   @override
   String get previousButtonReplaysSubtitle => 'যখন বর্তমান অবস্থান সিক সময়কালের চেয়ে বেশি থাকবে';
@@ -2264,6 +2267,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get resumeIfWasInterrupted => 'পুনরায় শুরু করুন যদি কোনো বাধা দ্বারা থামানো হয়ে থাকে';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'পুনরায় শুরু করুন যদি ভলিউম দ্বারা থামানো হয়ে থাকে';
 
   @override
@@ -2370,6 +2376,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get setFileLastModifiedAsVideoUploadDate => 'ফাইলের সর্বশেষ পরিবর্তনকে ভিডিও আপলোডের তারিখ হিসাবে সেট করুন';
 
   @override
+  String get setMonoAudio => 'Set Mono Audio';
+
+  @override
   String get setMoods => 'মুড সেট করুন';
 
   @override
@@ -2436,7 +2445,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get showShortVideosIn => 'শর্টগুলোতে দেখান';
 
   @override
-  String get showSkipButton => 'স্কিপ বোতাম দেখান';
+  String get showSkipButton => '\'স্কিপ\' বাটন দেখান';
 
   @override
   String get showVideoEndcards => 'ভিডিও এন্ডকার্ড দেখান';
@@ -2630,7 +2639,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get tagFields => 'ট্যাগ ক্ষেত্রসমূহ';
 
   @override
-  String get tags => 'ট্যাগসমূহ';
+  String get tags => 'ট্যাগ';
 
   @override
   String get tapAction => 'ট্যাপ অ্যাকশন';
@@ -2910,6 +2919,12 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get week => 'সপ্তাহ';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'বছর';

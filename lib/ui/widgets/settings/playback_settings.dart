@@ -47,6 +47,7 @@ enum _PlaybackSettingsKeys with SettingKeysBase {
   infinityQueue,
   onVolume0,
   onInterruption(NamidaFeaturesAvailablity.android),
+  onConnect(NamidaFeaturesAvailablity.android),
   jumpToFirstTrackAfterFinishing,
   previousButtonReplays,
   seekDuration,
@@ -88,6 +89,7 @@ class PlaybackSettings extends SettingSubpageProvider {
     _PlaybackSettingsKeys.infinityQueue: [lang.infinityQueueOnNextPrev, lang.infinityQueueOnNextPrevSubtitle],
     _PlaybackSettingsKeys.onVolume0: [lang.onVolumeZero],
     _PlaybackSettingsKeys.onInterruption: [lang.onInterruption],
+    _PlaybackSettingsKeys.onConnect: [lang.onDeviceConnect],
     _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing: [lang.jumpToFirstTrackAfterQueueFinish],
     _PlaybackSettingsKeys.previousButtonReplays: [lang.previousButtonReplays, lang.previousButtonReplaysSubtitle],
     _PlaybackSettingsKeys.seekDuration: [lang.seekDuration, lang.seekDurationInfo],
@@ -797,29 +799,24 @@ class PlaybackSettings extends SettingSubpageProvider {
             Obx(
               (context) {
                 final valInSet = settings.player.volume0ResumeThresholdMin.valueR;
-                final disabled = !settings.player.resumeAfterOnVolume0Pause.valueR;
-                const max = 61;
                 return CustomListTile(
                   icon: Broken.play_circle,
-                  title: disabled
-                      ? lang.dontResume
-                      : valInSet == 0
+                  title: valInSet == 0
                       ? lang.resumeIfWasPausedByVolume
+                      : valInSet <= -1
+                      ? lang.dontResume
                       : lang.resumeIfWasPausedForLessThanNMin(number: settings.player.volume0ResumeThresholdMin.valueR),
                   trailing: NamidaWheelSlider(
-                    max: max,
+                    max: 60,
+                    extraValue: true,
                     initValue: valInSet,
                     onValueChanged: (val) {
-                      if (val == max) {
-                        settings.player.save(resumeAfterOnVolume0Pause: false);
-                      } else {
-                        settings.player.save(resumeAfterOnVolume0Pause: true, volume0ResumeThresholdMin: val);
-                      }
+                      settings.player.save(volume0ResumeThresholdMin: val);
                     },
-                    text: disabled
-                        ? lang.never
-                        : valInSet == 0
+                    text: valInSet == 0
                         ? lang.always
+                        : valInSet <= -1
+                        ? lang.never
                         : "${valInSet}m",
                   ),
                 );
@@ -883,38 +880,103 @@ class PlaybackSettings extends SettingSubpageProvider {
             ),
             const NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 16.0)),
             const SizedBox(height: 6.0),
-            Obx(
-              (context) {
-                final valInSet = settings.player.interruptionResumeThresholdMin.valueR;
-                final disabled = !settings.player.resumeAfterWasInterrupted.valueR;
-                const max = 61;
-                return CustomListTile(
-                  icon: Broken.play_circle,
-                  title: disabled
-                      ? lang.dontResume
-                      : valInSet == 0
-                      ? lang.resumeIfWasInterrupted
-                      : lang.resumeIfWasPausedForLessThanNMin(number: settings.player.interruptionResumeThresholdMin.valueR),
-                  trailing: NamidaWheelSlider(
-                    max: max,
-                    initValue: valInSet,
-                    onValueChanged: (val) {
-                      if (val == max) {
-                        settings.player.save(resumeAfterWasInterrupted: false);
-                      } else {
-                        settings.player.save(resumeAfterWasInterrupted: true, interruptionResumeThresholdMin: val);
-                      }
-                    },
-                    text: disabled
-                        ? lang.never
-                        : valInSet == 0
-                        ? lang.always
-                        : "${valInSet}m",
-                  ),
-                );
-              },
+            ObxO(
+              rx: settings.player.interruptionResumeThresholdMin,
+              builder: (context, valInSet) => CustomListTile(
+                icon: Broken.play_circle,
+                title: valInSet == 0
+                    ? lang.resumeIfWasInterrupted
+                    : valInSet <= -1
+                    ? lang.dontResume
+                    : lang.resumeIfWasPausedForLessThanNMin(number: valInSet),
+                trailing: NamidaWheelSlider(
+                  max: 60,
+                  extraValue: true,
+                  initValue: valInSet,
+                  onValueChanged: (val) {
+                    settings.player.save(interruptionResumeThresholdMin: val);
+                  },
+                  text: valInSet == 0
+                      ? lang.always
+                      : valInSet <= -1
+                      ? lang.never
+                      : "${valInSet}m",
+                ),
+              ),
             ),
             const SizedBox(height: 6.0),
+          ],
+        ),
+      ),
+      getItemWrapper(
+        key: _PlaybackSettingsKeys.onConnect,
+        child: NamidaExpansionTile(
+          bgColor: getBgColor(_PlaybackSettingsKeys.onConnect),
+          bigahh: true,
+          childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+          iconColor: context.defaultIconColor(),
+          icon: Broken.electricity,
+          titleText: lang.onDeviceConnect,
+          initiallyExpanded: initialItem == _PlaybackSettingsKeys.onConnect,
+          children: [
+            ObxO(
+              rx: settings.player.connectWiredResumeThresholdMin,
+              builder: (context, valInSet) => CustomListTile(
+                leading: const StackedIcon(
+                  baseIcon: Broken.headphones,
+                  secondaryIcon: Broken.play_circle,
+                  secondaryIconSize: 13.0,
+                ),
+                title: lang.wiredDevice,
+                subtitle: valInSet == 0
+                    ? lang.resumeIfWasPausedByDeviceDisconnect
+                    : valInSet <= -1
+                    ? lang.dontResume
+                    : lang.resumeIfWasPausedForLessThanNMin(number: valInSet),
+                trailing: NamidaWheelSlider(
+                  max: 120,
+                  extraValue: true,
+                  initValue: valInSet,
+                  onValueChanged: (val) {
+                    settings.player.save(connectWiredResumeThresholdMin: val);
+                  },
+                  text: valInSet == 0
+                      ? lang.always
+                      : valInSet <= -1
+                      ? lang.never
+                      : "${valInSet}m",
+                ),
+              ),
+            ),
+            ObxO(
+              rx: settings.player.connectWirelessResumeThresholdMin,
+              builder: (context, valInSet) => CustomListTile(
+                leading: const StackedIcon(
+                  baseIcon: Broken.airpods,
+                  secondaryIcon: Broken.play_circle,
+                  secondaryIconSize: 13.0,
+                ),
+                title: lang.wirelessDevice,
+                subtitle: valInSet == 0
+                    ? lang.resumeIfWasPausedByDeviceDisconnect
+                    : valInSet <= -1
+                    ? lang.dontResume
+                    : lang.resumeIfWasPausedForLessThanNMin(number: valInSet),
+                trailing: NamidaWheelSlider(
+                  max: 120,
+                  extraValue: true,
+                  initValue: valInSet,
+                  onValueChanged: (val) {
+                    settings.player.save(connectWirelessResumeThresholdMin: val);
+                  },
+                  text: valInSet == 0
+                      ? lang.always
+                      : valInSet <= -1
+                      ? lang.never
+                      : "${valInSet}m",
+                ),
+              ),
+            ),
           ],
         ),
       ),

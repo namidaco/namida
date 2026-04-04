@@ -1898,6 +1898,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get oldestWatch => 'Переглянуті найдавніше';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'При перериванні';
 
   @override
@@ -2290,6 +2293,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get resumeIfWasInterrupted => 'Продовжити відтворення, якщо було призупинено через преривання';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'Продовжити відтворення, якщо було призупинено через гучність';
 
   @override
@@ -2396,6 +2402,9 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'Встановити дату зміни файлу датою завантаження відео';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'Встановити настрої';
@@ -2939,6 +2948,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get week => 'Тиждень';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'Рік';

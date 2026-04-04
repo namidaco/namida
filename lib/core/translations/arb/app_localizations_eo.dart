@@ -1861,6 +1861,9 @@ class AppLocalizationsEo extends AppLocalizations {
   String get oldestWatch => 'Plej Malnova Spekto';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'Ĉe Interrompo';
 
   @override
@@ -2251,6 +2254,9 @@ class AppLocalizationsEo extends AppLocalizations {
   String get resumeIfWasInterrupted => 'Daŭrigi se estis paŭzita per interrompo';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'Daŭrigi se estis paŭzita per volumo';
 
   @override
@@ -2354,6 +2360,9 @@ class AppLocalizationsEo extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'Agordi dosieran lastan modifon kiel videan alŝutdaton';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'Agordi humorojn';
@@ -2897,6 +2906,12 @@ class AppLocalizationsEo extends AppLocalizations {
 
   @override
   String get week => 'Semajno';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'Jaro';

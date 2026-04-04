@@ -1862,6 +1862,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get oldestWatch => 'Terlama Ditonton';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'Dalam Gangguan';
 
   @override
@@ -2252,6 +2255,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get resumeIfWasInterrupted => 'Lanjutkan jika dijeda karena gangguan';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'Lanjutkan jika dijeda berdasarkan volume';
 
   @override
@@ -2355,6 +2361,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'Tetapkan file yang terakhir diubah sebagai tanggal pengunggahan video';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'Tetapkan Atmosfer';
@@ -2897,6 +2906,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get week => 'Pekan';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'Tahun';

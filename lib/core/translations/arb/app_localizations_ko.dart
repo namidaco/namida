@@ -1861,6 +1861,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get oldestWatch => '가장 예전에 본';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => '중단 시';
 
   @override
@@ -2250,6 +2253,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get resumeIfWasInterrupted => '중단으로 인해 일시 정지된 경우 다시 시작';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => '볼륨에 의해 일시 정지된 경우 다시 시작';
 
   @override
@@ -2353,6 +2359,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => '파일의 마지막 업데이트 날짜를 동영상 업로드 날짜로 설정';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => '분위기 설정';
@@ -2894,6 +2903,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get week => '주';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => '년';

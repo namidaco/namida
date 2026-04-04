@@ -1861,6 +1861,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get oldestWatch => 'Najstarejši ogled';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'Ob prekinitvi';
 
   @override
@@ -2251,6 +2254,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get resumeIfWasInterrupted => 'Nadaljuj, če je bilo prekinjeno';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'Nadaljuj, če je bilo pavzirano zaradi glasnosti';
 
   @override
@@ -2354,6 +2360,9 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'Nastavi datum zadnje spremembe datoteke kot datum nalaganja videa';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'Nastavi razpoloženja';
@@ -2897,6 +2906,12 @@ class AppLocalizationsSl extends AppLocalizations {
 
   @override
   String get week => 'Teden';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'Leto';

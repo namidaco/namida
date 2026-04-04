@@ -1861,6 +1861,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get oldestWatch => 'Reprodução Mais Antiga';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'Em interrupção';
 
   @override
@@ -2251,6 +2254,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get resumeIfWasInterrupted => 'Continuar caso pausado por uma interrupção';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'Continuar caso pausado pelo volume';
 
   @override
@@ -2354,6 +2360,9 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'Arqivo selecionado modificado como data de upload do vídeo';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'Estabelecer humores';
@@ -2897,6 +2906,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get week => 'Semana';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'Ano';

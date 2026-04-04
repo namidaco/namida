@@ -54,6 +54,12 @@ class _NamidaChannelWindows extends NamidaChannel {
   }
 
   @override
+  Future<bool> setMonoAudio(bool? enabled) async {
+    // -- unsupported
+    return false;
+  }
+
+  @override
   Future<bool> setMusicAs({required String path, required List<SetMusicAsAction> types}) async {
     // -- unsupported
     return false;

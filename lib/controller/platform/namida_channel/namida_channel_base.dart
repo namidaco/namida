@@ -48,6 +48,8 @@ abstract class NamidaChannel {
 
   Future<int> getPlatformSdk();
 
+  Future<bool> setMonoAudio(bool? enabled);
+
   Future<bool> setMusicAs({required String path, required List<SetMusicAsAction> types});
 
   Future<bool> openSystemEqualizer(int? sessionId);

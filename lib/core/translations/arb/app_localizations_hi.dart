@@ -1862,6 +1862,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get oldestWatch => 'सबसे पुराना वॉच';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'बाधित होने पर';
 
   @override
@@ -2253,6 +2256,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get resumeIfWasInterrupted => 'यदि रुकावट के कारण रोक दिया गया था तो फिर से शुरू करें';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'यदि वॉल्यूम द्वारा रोक दिया गया था तो फिर से शुरू करें';
 
   @override
@@ -2357,6 +2363,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'वीडियो अपलोड दिनांक के रूप में फ़ाइल को अंतिम रूप से संशोधित करें';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'मूड सेट करें';
@@ -2901,6 +2910,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get week => 'सप्ताह';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'साल';

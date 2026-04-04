@@ -1864,6 +1864,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get oldestWatch => 'பார்க்கப்பட்டவற்றில் மிகப் பழமையானது';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'குறுக்கீடு செய்யப்பட்டது';
 
   @override
@@ -2255,6 +2258,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get resumeIfWasInterrupted => 'குறுக்கீட்டால் நிறுத்தப்பட்டிருந்தால் மீண்டும் தொடங்கு';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'ஒலியளவால் நிறுத்தப்பட்டிருந்தால் மீண்டும் தொடங்கு';
 
   @override
@@ -2359,6 +2365,9 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'கோப்பை கடைசியாக வீடியோ பதிவேற்ற தேதியாக அமைக்கவும்';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'மனநிலைகளை அமைக்கவும்';
@@ -2903,6 +2912,12 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get week => 'வாரம்';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'வருடம்';

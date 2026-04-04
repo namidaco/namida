@@ -1059,6 +1059,7 @@ class NamidaFeaturesVisibility {
   static final mediaWaveHaptic = _isAndroid;
 
   static final methodSetCanEnterPip = _isAndroid;
+  static final methodSetMonoAudio = _isAndroid;
   static final methodSetMusicAs = _isAndroid;
   static final methodOpenSystemEqualizer = _isAndroid;
   static final methodOnNotificationTapAction = _isAndroid;

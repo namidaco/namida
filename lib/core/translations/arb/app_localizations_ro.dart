@@ -1861,6 +1861,9 @@ class AppLocalizationsRo extends AppLocalizations {
   String get oldestWatch => 'Cea mai veche vizionare';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'La întrerupere';
 
   @override
@@ -2251,6 +2254,9 @@ class AppLocalizationsRo extends AppLocalizations {
   String get resumeIfWasInterrupted => 'Reia dacă a fost întreruptă';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'Reia dacă a fost pusă pe pauză de volum';
 
   @override
@@ -2354,6 +2360,9 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'Setează data ultimei modificări a fișierului ca dată de încărcare video';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'Setează stări';
@@ -2897,6 +2906,12 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get week => 'Săptămână';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'An';

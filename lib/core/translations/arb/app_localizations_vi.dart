@@ -1863,6 +1863,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get oldestWatch => 'Video cũ nhất';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'Khi bị gián đoạn';
 
   @override
@@ -2253,6 +2256,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get resumeIfWasInterrupted => 'Tiếp tục nếu bị tạm dừng do gián đoạn';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'Tiếp tục nếu bị tạm dừng bởi âm lượng';
 
   @override
@@ -2356,6 +2362,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'Đặt tệp được sửa đổi lần cuối làm ngày tải lên video';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'Đặt tâm trạng';
@@ -2900,6 +2909,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get week => 'Tuần';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'Năm';

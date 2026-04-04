@@ -3263,6 +3263,12 @@ abstract class AppLocalizations {
   /// **'Oldest Watch'**
   String get oldestWatch;
 
+  /// No description provided for @onDeviceConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'On Device Connect'**
+  String get onDeviceConnect;
+
   /// No description provided for @onInterruption.
   ///
   /// In en, this message translates to:
@@ -3290,7 +3296,7 @@ abstract class AppLocalizations {
   /// No description provided for @onVolumeZero.
   ///
   /// In en, this message translates to:
-  /// **'On volume 0'**
+  /// **'On Volume 0'**
   String get onVolumeZero;
 
   /// No description provided for @ongoing.
@@ -4019,6 +4025,12 @@ abstract class AppLocalizations {
   /// **'Resume if was paused by interruption'**
   String get resumeIfWasInterrupted;
 
+  /// No description provided for @resumeIfWasPausedByDeviceDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume if was paused by device disconnect'**
+  String get resumeIfWasPausedByDeviceDisconnect;
+
   /// No description provided for @resumeIfWasPausedByVolume.
   ///
   /// In en, this message translates to:
@@ -4204,6 +4216,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set file last modified as video upload date'**
   String get setFileLastModifiedAsVideoUploadDate;
+
+  /// No description provided for @setMonoAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Mono Audio'**
+  String get setMonoAudio;
 
   /// No description provided for @setMoods.
   ///
@@ -5266,6 +5284,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Week'**
   String get week;
+
+  /// No description provided for @wiredDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Wired Device'**
+  String get wiredDevice;
+
+  /// No description provided for @wirelessDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Wireless Device'**
+  String get wirelessDevice;
 
   /// No description provided for @year.
   ///

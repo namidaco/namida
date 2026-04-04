@@ -69,6 +69,12 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
+  Future<bool> setMonoAudio(bool? enabled) async {
+    final res = await _channel.invokeMethod<bool?>('setMonoAudio', {'enabled': enabled});
+    return res ?? false;
+  }
+
+  @override
   Future<bool> setMusicAs({required String path, required List<SetMusicAsAction> types}) async {
     final t = <int>[];
     types.loop((e) {

@@ -1868,6 +1868,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get oldestWatch => 'الأقدم مشاهدة';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'عند المقاطعة';
 
   @override
@@ -2259,6 +2262,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get resumeIfWasInterrupted => 'استئناف إذا تم إيقافه مؤقتًا بسبب المقاطعة';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'استئناف إذا تم إيقافه مؤقتًا حسب مستوى الصوت';
 
   @override
@@ -2363,6 +2369,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'قم بتعيين الملف الذي تم تعديله مؤخرًا كتاريخ تحميل الفيديو';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'تعيين المزاج';
@@ -2905,6 +2914,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get week => 'اسبوع';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'سنة';

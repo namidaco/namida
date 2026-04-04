@@ -22,6 +22,8 @@ class _PlayerSettings with SettingsFileWriter {
   final minTrackDurationToRestoreLastPosInMinutes = 20.obs;
   final interruptionResumeThresholdMin = 2.obs;
   final volume0ResumeThresholdMin = 5.obs;
+  final connectWiredResumeThresholdMin = (-1).obs;
+  final connectWirelessResumeThresholdMin = (-1).obs;
   final enableGaplessPlayback = false.obs;
   final enableCrossFade = false.obs;
   final crossFadeDurationMS = 500.obs;
@@ -30,8 +32,6 @@ class _PlayerSettings with SettingsFileWriter {
   final skipSilenceEnabled = false.obs;
   final shuffleAllTracks = false.obs;
   final pauseOnVolume0 = true.obs;
-  final resumeAfterOnVolume0Pause = true.obs;
-  final resumeAfterWasInterrupted = true.obs;
   final jumpToFirstTrackAfterFinishingQueue = false.obs;
   final repeatMode = PlayerRepeatMode.none.obs;
   final infiniyQueueOnNextPrevious = true.obs;
@@ -68,6 +68,8 @@ class _PlayerSettings with SettingsFileWriter {
     int? minTrackDurationToRestoreLastPosInMinutes,
     int? interruptionResumeThresholdMin,
     int? volume0ResumeThresholdMin,
+    int? connectWiredResumeThresholdMin,
+    int? connectWirelessResumeThresholdMin,
     bool? enableGaplessPlayback,
     bool? enableCrossFade,
     int? crossFadeDurationMS,
@@ -76,8 +78,6 @@ class _PlayerSettings with SettingsFileWriter {
     bool? skipSilenceEnabled,
     bool? shuffleAllTracks,
     bool? pauseOnVolume0,
-    bool? resumeAfterOnVolume0Pause,
-    bool? resumeAfterWasInterrupted,
     bool? jumpToFirstTrackAfterFinishingQueue,
     PlayerRepeatMode? repeatMode,
     KillAppMode? killAfterDismissingApp,
@@ -104,6 +104,8 @@ class _PlayerSettings with SettingsFileWriter {
     if (minTrackDurationToRestoreLastPosInMinutes != null) this.minTrackDurationToRestoreLastPosInMinutes.value = minTrackDurationToRestoreLastPosInMinutes;
     if (interruptionResumeThresholdMin != null) this.interruptionResumeThresholdMin.value = interruptionResumeThresholdMin;
     if (volume0ResumeThresholdMin != null) this.volume0ResumeThresholdMin.value = volume0ResumeThresholdMin;
+    if (connectWiredResumeThresholdMin != null) this.connectWiredResumeThresholdMin.value = connectWiredResumeThresholdMin;
+    if (connectWirelessResumeThresholdMin != null) this.connectWirelessResumeThresholdMin.value = connectWirelessResumeThresholdMin;
     if (enableGaplessPlayback != null) this.enableGaplessPlayback.value = enableGaplessPlayback;
     if (enableCrossFade != null) this.enableCrossFade.value = enableCrossFade;
     if (crossFadeDurationMS != null) this.crossFadeDurationMS.value = crossFadeDurationMS;
@@ -112,8 +114,6 @@ class _PlayerSettings with SettingsFileWriter {
     if (skipSilenceEnabled != null) this.skipSilenceEnabled.value = skipSilenceEnabled;
     if (shuffleAllTracks != null) this.shuffleAllTracks.value = shuffleAllTracks;
     if (pauseOnVolume0 != null) this.pauseOnVolume0.value = pauseOnVolume0;
-    if (resumeAfterOnVolume0Pause != null) this.resumeAfterOnVolume0Pause.value = resumeAfterOnVolume0Pause;
-    if (resumeAfterWasInterrupted != null) this.resumeAfterWasInterrupted.value = resumeAfterWasInterrupted;
     if (jumpToFirstTrackAfterFinishingQueue != null) this.jumpToFirstTrackAfterFinishingQueue.value = jumpToFirstTrackAfterFinishingQueue;
     if (repeatMode != null) this.repeatMode.value = repeatMode;
     if (killAfterDismissingApp != null) this.killAfterDismissingApp.value = killAfterDismissingApp;
@@ -160,6 +160,8 @@ class _PlayerSettings with SettingsFileWriter {
       minTrackDurationToRestoreLastPosInMinutes.value = json['minTrackDurationToRestoreLastPosInMinutes'] ?? minTrackDurationToRestoreLastPosInMinutes.value;
       interruptionResumeThresholdMin.value = json['interruptionResumeThresholdMin'] ?? interruptionResumeThresholdMin.value;
       volume0ResumeThresholdMin.value = json['volume0ResumeThresholdMin'] ?? volume0ResumeThresholdMin.value;
+      connectWiredResumeThresholdMin.value = json['connectWiredResumeThresholdMin'] ?? connectWiredResumeThresholdMin.value;
+      connectWirelessResumeThresholdMin.value = json['connectWirelessResumeThresholdMin'] ?? connectWirelessResumeThresholdMin.value;
       enableGaplessPlayback.value = json['enableGaplessPlayback'] ?? enableGaplessPlayback.value;
       enableCrossFade.value = json['enableCrossFade'] ?? enableCrossFade.value;
       crossFadeDurationMS.value = json['crossFadeDurationMS'] ?? crossFadeDurationMS.value;
@@ -168,8 +170,6 @@ class _PlayerSettings with SettingsFileWriter {
       skipSilenceEnabled.value = json['skipSilenceEnabled'] ?? skipSilenceEnabled.value;
       shuffleAllTracks.value = json['shuffleAllTracks'] ?? shuffleAllTracks.value;
       pauseOnVolume0.value = json['pauseOnVolume0'] ?? pauseOnVolume0.value;
-      resumeAfterOnVolume0Pause.value = json['resumeAfterOnVolume0Pause'] ?? resumeAfterOnVolume0Pause.value;
-      resumeAfterWasInterrupted.value = json['resumeAfterWasInterrupted'] ?? resumeAfterWasInterrupted.value;
       jumpToFirstTrackAfterFinishingQueue.value = json['jumpToFirstTrackAfterFinishingQueue'] ?? jumpToFirstTrackAfterFinishingQueue.value;
       repeatMode.value = PlayerRepeatMode.values.getEnum(json['repeatMode']) ?? repeatMode.value;
       infiniyQueueOnNextPrevious.value = json['infiniyQueueOnNextPrevious'] ?? infiniyQueueOnNextPrevious.value;
@@ -219,6 +219,8 @@ class _PlayerSettings with SettingsFileWriter {
     'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
     'interruptionResumeThresholdMin': interruptionResumeThresholdMin.value,
     'volume0ResumeThresholdMin': volume0ResumeThresholdMin.value,
+    'connectWiredResumeThresholdMin': connectWiredResumeThresholdMin.value,
+    'connectWirelessResumeThresholdMin': connectWirelessResumeThresholdMin.value,
     'enableGaplessPlayback': enableGaplessPlayback.value,
     'enableCrossFade': enableCrossFade.value,
     'crossFadeDurationMS': crossFadeDurationMS.value,
@@ -227,8 +229,6 @@ class _PlayerSettings with SettingsFileWriter {
     'skipSilenceEnabled': skipSilenceEnabled.value,
     'shuffleAllTracks': shuffleAllTracks.value,
     'pauseOnVolume0': pauseOnVolume0.value,
-    'resumeAfterOnVolume0Pause': resumeAfterOnVolume0Pause.value,
-    'resumeAfterWasInterrupted': resumeAfterWasInterrupted.value,
     'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
     'repeatMode': repeatMode.value.name,
     'killAfterDismissingApp': killAfterDismissingApp.value.name,

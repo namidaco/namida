@@ -1871,6 +1871,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oldestWatch => 'Oldest Watch';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'On Interruption';
 
   @override
@@ -1883,7 +1886,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onSwiping => 'On Swiping';
 
   @override
-  String get onVolumeZero => 'On volume 0';
+  String get onVolumeZero => 'On Volume 0';
 
   @override
   String get ongoing => 'Ongoing';
@@ -2262,6 +2265,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resumeIfWasInterrupted => 'Resume if was paused by interruption';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'Resume if was paused by volume';
 
   @override
@@ -2366,6 +2372,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'Set file last modified as video upload date';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'Set moods';
@@ -2908,6 +2917,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get week => 'Week';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'Year';

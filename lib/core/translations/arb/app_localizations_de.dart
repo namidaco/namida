@@ -1262,7 +1262,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get highPerformance => 'Hohe Leistung';
 
   @override
-  String get highlight => 'Highlight';
+  String get highlight => 'Markierung';
 
   @override
   String get history => 'Verlauf';
@@ -1730,7 +1730,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get newDirectory => 'Neues Verzeichnis';
 
   @override
-  String get newLabel => 'New';
+  String get newLabel => 'Neu';
 
   @override
   String get newTracksAdd => 'Titel hinzufügen';
@@ -1861,6 +1861,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get oldestWatch => 'Älteste Uhr';
+
+  @override
+  String get onDeviceConnect => 'On Device Connect';
 
   @override
   String get onInterruption => 'Bei Unterbrechung';
@@ -2254,6 +2257,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get resumeIfWasInterrupted => 'Fortsetzen, wenn durch Unterbrechung angehalten wurde';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'Fortsetzen, wenn durch Lautstärke angehalten wurde';
 
   @override
@@ -2358,6 +2364,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'Letzte Änderung der Datei als Datum des Video-Uploads festlegen';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'Stimmungen einstellen';
@@ -2516,10 +2525,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sleepTimer => 'Schlaftimer';
 
   @override
-  String get socials => 'Socials';
+  String get socials => 'Sozialen';
 
   @override
-  String get socialsSubtitle => 'Join us on our platforms for Updates, Tips, Discussion & Ideas';
+  String get socialsSubtitle => 'Besuchen Sie uns auf Unseren Plattformen für Updates, Tipps, Diskussionen & Ideen';
 
   @override
   String get someWebServersRequireAuthentication => 'Some web servers require authentication. Please update credentials to maintain access to your library.';
@@ -2592,7 +2601,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String suggestionSubtitle({required String site}) {
-    return 'Have an Issue or Suggestion? Open an issue on $site';
+    return 'Haben Sie ein Problem oder einen Vorschlag? Öffnen Sie einen Problem auf $site';
   }
 
   @override
@@ -2784,7 +2793,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get unlock => 'Freischalten';
 
   @override
-  String get unsubscribe => 'Unsubscribe';
+  String get unsubscribe => 'Abmelden';
 
   @override
   String get update => 'Update';
@@ -2903,6 +2912,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get week => 'Woche';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'Jahr';

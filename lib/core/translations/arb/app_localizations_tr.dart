@@ -1863,6 +1863,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get oldestWatch => 'En Eski İzleme';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'Kesintide';
 
   @override
@@ -2253,6 +2256,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get resumeIfWasInterrupted => 'Kesintiye uğradıysa devam et';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'Ses nedeniyle duraklatıldıysa devam et';
 
   @override
@@ -2356,6 +2362,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'Son düzenleme tarihini video yükleme tarihi olarak ayarla';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'Modları ayarla';
@@ -2900,6 +2909,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get week => 'Hafta';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'Yıl';

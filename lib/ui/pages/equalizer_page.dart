@@ -423,16 +423,38 @@ class EqualizerPageState extends State<EqualizerPage> {
                               displayValue: false,
                               trailing: Row(
                                 children: [
+                                  if (NamidaFeaturesVisibility.methodSetMonoAudio) ...[
+                                    IconButton(
+                                      padding: EdgeInsets.zero,
+                                      visualDensity: VisualDensity.compact,
+                                      style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                                      tooltip: lang.setMonoAudio,
+                                      icon: Icon(
+                                        Broken.airpods,
+                                        size: 20.0,
+                                        color: context.defaultIconColor(),
+                                      ),
+                                      iconSize: 20.0,
+                                      onPressed: () => NamidaChannel.inst.setMonoAudio(null),
+                                    ),
+                                    const SizedBox(width: 2.0),
+                                  ],
+
                                   if (NamidaFeaturesVisibility.methodOpenSystemEqualizer)
-                                    NamidaIconButton(
-                                      horizontalPadding: 4.0,
-                                      tooltip: () => lang.openApp,
-                                      icon: Broken.export_2,
-                                      iconColor: context.defaultIconColor(),
+                                    IconButton(
+                                      padding: EdgeInsets.zero,
+                                      visualDensity: VisualDensity.compact,
+                                      style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                                      tooltip: lang.openApp,
+                                      icon: Icon(
+                                        Broken.export_2,
+                                        size: 20.0,
+                                        color: context.defaultIconColor(),
+                                      ),
                                       iconSize: 20.0,
                                       onPressed: () => NamidaChannel.inst.openSystemEqualizer(Player.inst.androidSessionId),
                                     ),
-                                  const SizedBox(width: 12.0),
+                                  const SizedBox(width: 8.0),
                                   CustomSwitch(
                                     active: enabled,
                                     passedColor: null,
@@ -738,13 +760,18 @@ class _SliderTextWidget extends StatelessWidget {
           ?featuredButton,
           const SizedBox(width: 6.0),
           if (restoreDefault != null)
-            NamidaIconButton(
-              horizontalPadding: 8.0,
-              tooltip: () => lang.restoreDefaults,
-              icon: Broken.refresh,
-              iconSize: 20.0,
+            IconButton(
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+              tooltip: lang.restoreDefaults,
+              icon: Icon(
+                Broken.refresh,
+                size: 20.0,
+              ),
               onPressed: restoreDefault,
             ),
+          if (restoreDefault != null) const SizedBox(width: 8.0),
           ?trailing,
           const SizedBox(width: 8.0),
           const SizedBox(width: 6.0),

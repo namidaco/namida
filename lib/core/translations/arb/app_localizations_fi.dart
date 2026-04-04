@@ -1861,6 +1861,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get oldestWatch => 'Vanhin Kello';
 
   @override
+  String get onDeviceConnect => 'On Device Connect';
+
+  @override
   String get onInterruption => 'Keskeytyksestä';
 
   @override
@@ -2251,6 +2254,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get resumeIfWasInterrupted => 'Jatka, jos se keskeytettiin keskeytyksen vuoksi';
 
   @override
+  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+
+  @override
   String get resumeIfWasPausedByVolume => 'Jatka toistoa jos toisto pysäytettiin äänenvoimakkuudella';
 
   @override
@@ -2354,6 +2360,9 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get setFileLastModifiedAsVideoUploadDate => 'Aseta tiedoston viimeisin muokkauspäivä videon latauspäiväksi';
+
+  @override
+  String get setMonoAudio => 'Set Mono Audio';
 
   @override
   String get setMoods => 'Aseta tunnelmat';
@@ -2897,6 +2906,12 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get week => 'Viikko';
+
+  @override
+  String get wiredDevice => 'Wired Device';
+
+  @override
+  String get wirelessDevice => 'Wireless Device';
 
   @override
   String get year => 'Vuosi';

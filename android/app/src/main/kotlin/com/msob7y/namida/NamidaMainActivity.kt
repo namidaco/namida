@@ -117,6 +117,22 @@ class NamidaMainActivity : FlutterActivity() {
           }
         }
 
+        "setMonoAudio" -> {
+          // -- not really supported, open accessibility instead
+          try {
+            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+              addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+              val args = Bundle().apply { putString("preference_key", "mono_audio") }
+              putExtra(":settings:show_fragment_args", args)
+              putExtra(":settings:fragment_args_key", "mono_audio")
+            }
+            startActivity(intent)
+            result.success(true)
+          } catch (e: Exception) {
+            result.success(false)
+          }
+        }
+
         "openEqualizer" -> {
           result.success(openSystemEqualizer(call.argument<Int?>("sessionId")))
         }
@@ -472,11 +488,7 @@ class NamidaMainActivity : FlutterActivity() {
     intent.putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.getPackageName())
     intent.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
     intent.putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
-    intent.setFlags(
-      Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT or
-          Intent.FLAG_ACTIVITY_NEW_TASK or
-          Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-    )
+    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
 
     try {
       activity.startActivityForResult(intent, NamidaRequestCodes.REQUEST_CODE_OPEN_EQ)
