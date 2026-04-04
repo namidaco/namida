@@ -727,16 +727,10 @@ class _ActionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    return IconButton.filledTonal(
-      padding: EdgeInsets.zero,
-      style: ButtonStyle(
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        visualDensity: const VisualDensity(horizontal: -2.0, vertical: -2.0),
-        backgroundColor: WidgetStatePropertyAll(theme.colorScheme.secondary.withOpacityExt(0.18)),
-      ),
-      onPressed: onTap,
-      icon: Icon(icon, size: 20.0),
+    return CustomIconButtonTonal(
+      onTap: onTap,
+      icon: icon,
+      iconSize: 20.0,
       tooltip: tooltip,
     );
   }

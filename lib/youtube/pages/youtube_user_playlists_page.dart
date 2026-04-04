@@ -157,11 +157,10 @@ class _AccountHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12.0),
-              IconButton.filledTonal(
-                onPressed: const YoutubeAccountManagePage().navigate,
-                icon: const Icon(
-                  Broken.edit,
-                ),
+              CustomIconButtonTonal(
+                onTap: const YoutubeAccountManagePage().navigate,
+                icon: Broken.edit,
+                dense: false,
               ),
               const SizedBox(width: 18.0),
             ],

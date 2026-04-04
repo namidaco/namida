@@ -1,8 +1,6 @@
 /// source: https://pub.dev/packages/flutter_popup
 /// modified to fit namida
 
-// ignore_for_file: unused_element_parameter, use_build_context_synchronously, deprecated_member_use
-
 part of '../../ui/widgets/popup_wrapper.dart';
 
 enum _ArrowDirection { top, bottom }
@@ -144,7 +142,6 @@ class _PopupContent extends StatelessWidget {
   final BoxDecoration? contentDecoration;
 
   const _PopupContent({
-    super.key,
     required this.child,
     required this.childKey,
     required this.arrowKey,
@@ -192,7 +189,7 @@ class _PopupContent extends StatelessWidget {
                 borderRadius: BorderRadius.circular(contentRadius ?? 10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withOpacityExt(0.1),
                     blurRadius: 10,
                   ),
                 ],
@@ -298,9 +295,6 @@ class _PopupRoute extends PopupRoute<void> {
 
   _PopupRoute({
     this.menuController,
-    super.settings,
-    super.filter,
-    super.traversalEdgeBehavior,
     required this.child,
     required this.targetRect,
     this.backgroundColor,
@@ -318,7 +312,7 @@ class _PopupRoute extends PopupRoute<void> {
   });
 
   @override
-  Color? get barrierColor => barriersColor ?? Colors.black.withOpacity(0.1);
+  Color? get barrierColor => barriersColor ?? Colors.black.withOpacityExt(0.1);
 
   @override
   bool get barrierDismissible => true;

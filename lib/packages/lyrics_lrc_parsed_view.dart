@@ -349,7 +349,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     final textTheme = theme.textTheme;
     final textDirection = Directionality.of(context);
     final fullscreen = widget.isFullScreenView;
-    final alignAtStart = fullscreen;
+    final alignAtStart = fullscreen && context.width < 864.0; // -- align at center if screen got too wide
     final initialFontSize = fullscreen ? 26.0 : 15.0;
     final normalTextStyle = textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize);
     final plainLyricsTextStyle = normalTextStyle.copyWith(height: 1.8);
@@ -648,6 +648,11 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                         },
                       ),
                     ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: context.isDarkMode ? Colors.black.withOpacityExt(0.4) : Colors.white.withOpacityExt(0.2),
                   ),
                 ),
                 Positioned.fill(

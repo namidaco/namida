@@ -381,35 +381,28 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                               ),
                                             ),
                                             SizedBox(width: 4.0),
-                                            IconButton.filledTonal(
-                                              padding: EdgeInsets.zero,
-                                              visualDensity: VisualDensity.compact,
-                                              style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                                              onPressed: () {
-                                                YoutubeController.inst.resumeDownloadTasks(groupName: groupName);
-                                              },
-                                              icon: const Icon(Broken.play, size: 18.0),
+                                            CustomIconButtonTonal(
+                                              icon: Broken.play,
+                                              iconSize: 18.0,
+                                              onTap: () => YoutubeController.inst.resumeDownloadTasks(groupName: groupName),
                                             ),
                                             SizedBox(width: 4.0),
-                                            IconButton.filledTonal(
-                                              padding: EdgeInsets.zero,
-                                              visualDensity: VisualDensity.compact,
-                                              style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                                              onPressed: () {
+                                            CustomIconButtonTonal(
+                                              icon: Broken.pause,
+                                              iconSize: 18.0,
+                                              onTap: () {
                                                 YoutubeController.inst.pauseDownloadTask(
                                                   itemsConfig: [],
                                                   groupName: groupName,
                                                   allInGroupName: true,
                                                 );
                                               },
-                                              icon: const Icon(Broken.pause, size: 18.0),
                                             ),
                                             SizedBox(width: 4.0),
-                                            IconButton.filledTonal(
-                                              padding: EdgeInsets.zero,
-                                              visualDensity: VisualDensity.compact,
-                                              style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                                              onPressed: () async {
+                                            CustomIconButtonTonal(
+                                              icon: Broken.close_circle,
+                                              iconSize: 18.0,
+                                              onTap: () async {
                                                 final confirmation = await _confirmCancelDialog(
                                                   context: context,
                                                   operationTitle: lang.cancel,
@@ -426,7 +419,6 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                                   );
                                                 }
                                               },
-                                              icon: const Icon(Broken.close_circle, size: 18.0),
                                             ),
                                             const SizedBox(width: 4.0),
                                             const Icon(

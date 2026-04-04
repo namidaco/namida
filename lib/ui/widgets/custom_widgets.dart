@@ -7344,3 +7344,39 @@ class NamidaPopScope extends StatelessWidget {
     );
   }
 }
+
+class CustomIconButtonTonal extends StatelessWidget {
+  final IconData icon;
+  final double? iconSize;
+  final String? tooltip;
+  final bool dense;
+  final void Function()? onTap;
+
+  const CustomIconButtonTonal({
+    super.key,
+    required this.icon,
+    this.iconSize,
+    this.tooltip,
+    this.dense = true,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.filledTonal(
+      padding: dense ? EdgeInsets.zero : null,
+      style: ButtonStyle(
+        tapTargetSize: dense ? MaterialTapTargetSize.shrinkWrap : null,
+        visualDensity: dense ? VisualDensity.compact : null,
+        backgroundColor: WidgetStatePropertyAll(context.theme.colorScheme.secondary.withOpacityExt(0.18)),
+      ),
+      onPressed: onTap,
+      icon: Icon(
+        icon,
+        size: iconSize,
+        color: context.defaultIconColor().withOpacityExt(0.65),
+      ),
+      tooltip: tooltip,
+    );
+  }
+}
