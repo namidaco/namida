@@ -472,9 +472,13 @@ class TrackExtended {
     Map<String, dynamic> json, {
     required SplitArtistGenreConfigsWrapper splitConfig,
   }) {
-    final originalAlbum = json['originalAlbum'] ?? json['album'] ?? '';
-    final albumArtist = json['albumArtist'] ?? '';
-    final year = json['year'] ?? 0;
+    final String originalAlbum = json['originalAlbum'] ?? json['album'] ?? '';
+    final String albumArtist = json['albumArtist'] ?? '';
+    final albumsList = Indexer.splitAlbum(
+      originalAlbum,
+      config: splitConfig.albumConfig,
+    );
+    final int? year = json['year'];
     final albumsIdentifiersWrappersJson = json['albumsIdentifiersWrappers'] ?? json['albumIdentifierWrapper'];
     final albumsIdentifiersWrappers = <AlbumIdentifierWrapper>[];
     if (albumsIdentifiersWrappersJson is List) {
@@ -485,14 +489,16 @@ class TrackExtended {
       albumsIdentifiersWrappers.add(AlbumIdentifierWrapper.fromMap(albumsIdentifiersWrappersJson.cast()));
     }
     // -- if wrappers don't have any with the album name
-    if (!albumsIdentifiersWrappers.any((w) => w.album == originalAlbum)) {
-      albumsIdentifiersWrappers.add(
-        AlbumIdentifierWrapper(
-          album: originalAlbum,
-          albumArtist: albumArtist,
-          year: year,
-        ),
-      );
+    for (final a in albumsList) {
+      if (!albumsIdentifiersWrappers.any((w) => w.album == a)) {
+        albumsIdentifiersWrappers.add(
+          AlbumIdentifierWrapper(
+            album: originalAlbum,
+            albumArtist: albumArtist,
+            year: year?.toString() ?? '',
+          ),
+        );
+      }
     }
     return TrackExtended(
       title: json['title'] ?? '',
@@ -503,10 +509,7 @@ class TrackExtended {
         config: splitConfig.artistsConfig,
       ),
       originalAlbum: originalAlbum,
-      albumsList: Indexer.splitAlbum(
-        originalAlbum,
-        config: splitConfig.albumConfig,
-      ),
+      albumsList: albumsList,
       albumArtist: albumArtist,
       originalGenre: json['originalGenre'] ?? '',
       genresList: Indexer.splitGenre(
@@ -521,7 +524,7 @@ class TrackExtended {
       composer: json['composer'] ?? '',
       trackNo: json['trackNo'] ?? 0,
       durationMS: json['durationMS'] ?? (json['duration'] is int ? json['duration'] * 1000 : 0),
-      year: year,
+      year: year ?? 0,
       yearText: json['yearText'] ?? '',
       size: json['size'] ?? 0,
       dateAdded: json['dateAdded'] ?? 0,

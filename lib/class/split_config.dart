@@ -106,7 +106,7 @@ class SimpleSplitConfig extends SplitterConfig {
   factory SimpleSplitConfig() {
     // `/` are pretty common for album names
     // `\` could exist too
-    final finalSplitters = {';', '//', r'\\'};
+    final finalSplitters = {';', '//', r'\\', '\u00A0'};
     return SimpleSplitConfig._(
       separators: finalSplitters.toList(),
       separatorsBlacklist: [],
