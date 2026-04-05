@@ -11,7 +11,15 @@ import 'lrc_search_utils_base.dart';
 class LrcSearchUtilsYoutubeID extends LrcSearchUtils {
   final YoutubeID video;
   final String? videoTitle;
-  const LrcSearchUtilsYoutubeID(this.video, this.videoTitle);
+  final String? channelTitle;
+  final Duration? duration;
+
+  const LrcSearchUtilsYoutubeID(
+    this.video, {
+    required this.videoTitle,
+    required this.channelTitle,
+    required this.duration,
+  });
 
   @override
   String? get pickFileInitialDirectory => null;
@@ -33,6 +41,10 @@ class LrcSearchUtilsYoutubeID extends LrcSearchUtils {
 
   @override
   Future<int> getItemDurationMS() async {
+    final dur = this.duration;
+    if (dur != null && dur > Duration.zero) {
+      return dur.inMilliseconds;
+    }
     final seconds = await YoutubeInfoController.utils.getVideoDurationSeconds(video.id);
     if (seconds == null) return 0;
     return seconds * 1000;
@@ -47,5 +59,23 @@ class LrcSearchUtilsYoutubeID extends LrcSearchUtils {
   }
 
   @override
-  List<LRCSearchDetails> searchDetailsQueries() => []; //none
+  List<LRCSearchDetails> searchDetailsQueries() {
+    final durMS = duration?.inMilliseconds ?? 0;
+    return [
+      LRCSearchDetails(
+        title: videoTitle ?? '',
+        artist: channelTitle ?? '',
+        album: '',
+        durationMS: durMS,
+        isDurationModified: false,
+      ),
+      LRCSearchDetails(
+        title: videoTitle ?? '',
+        artist: '',
+        album: '',
+        durationMS: durMS,
+        isDurationModified: false,
+      ),
+    ];
+  }
 }

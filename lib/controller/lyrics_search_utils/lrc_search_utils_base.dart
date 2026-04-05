@@ -15,16 +15,22 @@ import 'package:namida/youtube/controller/youtube_info_controller.dart';
 abstract class LrcSearchUtils {
   const LrcSearchUtils();
 
-  static FutureOr<LrcSearchUtils?> fromPlayable(Playable item) {
+  static FutureOr<LrcSearchUtils?> fromPlayable(Playable item) async {
     if (item is Selectable) {
       final tr = item.track;
       return LrcSearchUtilsSelectable(tr.toTrackExt(), tr);
     } else if (item is YoutubeID) {
-      return YoutubeInfoController.utils
-          .getVideoName(item.id)
-          .then(
-            (value) => LrcSearchUtilsYoutubeID(item, value),
-          );
+      final info = await (
+        YoutubeInfoController.utils.getVideoName(item.id),
+        YoutubeInfoController.utils.getVideoChannelName(item.id),
+        YoutubeInfoController.utils.getVideoDuration(item.id),
+      ).wait;
+      return LrcSearchUtilsYoutubeID(
+        item,
+        videoTitle: info.$1,
+        channelTitle: info.$2,
+        duration: info.$3,
+      );
     }
     return null;
   }

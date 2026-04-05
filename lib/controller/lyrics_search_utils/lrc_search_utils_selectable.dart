@@ -52,7 +52,7 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
     return track.lyrics != '' || await super.hasLyrics();
   }
 
-  static final _durationModifiedRegex = RegExp('nightcore|sped up', caseSensitive: false);
+  static final _durationModifiedRegex = RegExp('nightcore|sped up|slowed', caseSensitive: false);
   static bool _checkIsDurationModified(String property) {
     return _durationModifiedRegex.firstMatch(property) != null;
   }
