@@ -251,7 +251,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       itemsKeyword: (number, item) => number.displayTrackKeyword,
       onAddItemsTap: (currentItem) => TracksAddOnTap().onAddTracksTap(context),
       topText: (currentItem) => (currentItem as Selectable).track.originalAlbum,
-      onTopTextTap: (currentItem) => NamidaOnTaps.inst.onAlbumTap((currentItem as Selectable).track.albumsIdentifiersResolved.firstOrNull),
+      onTopTextTap: (currentItem) => NamidaOnTaps.inst.onAlbumTap((currentItem as Selectable).track.albumsIdentifiersModified.firstOrNull),
       onMenuOpen: (currentItem, _) => openMenu((currentItem as Selectable).trackWithDate, currentItem.track),
       focusedMenuOptions: (currentItem) => FocusedMenuOptions(
         onSearch: (item) {

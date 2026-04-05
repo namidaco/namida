@@ -68,7 +68,7 @@ class NamidaOnTaps {
 
     final albumIdsMap = <AlbumIdentifierWrapper, List<Track>>{};
     for (final tr in tracks) {
-      tr.albumsIdentifiersResolved.loop((album) {
+      tr.albumsIdentifiersModified.loop((album) {
         albumIdsMap[album] ??= album.getAlbumTracks();
       });
     }

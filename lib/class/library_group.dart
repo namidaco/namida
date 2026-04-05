@@ -57,7 +57,7 @@ class LibraryGroup<T extends Track> {
         final trExt = trackToExtended(tr);
 
         // -- Assigning Albums
-        final identifiers = trExt.getAlbumsIdentifiersResolved(albumIdentifier);
+        final identifiers = trExt.getAlbumsIdentifiersModified(albumIdentifier);
         identifiers.loop((item) {
           mainMapAlbums.addForce(item, tr);
         });

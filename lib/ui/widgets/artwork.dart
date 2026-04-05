@@ -209,7 +209,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
         if (widget.fallbackToAlbumCover) {
           if (stillInvalid()) {
-            for (final albumIdentifier in track.albumsIdentifiersResolved) {
+            for (final albumIdentifier in track.albumsIdentifiersModified) {
               final info = NetworkArtworkInfo.albumAutoArtist(albumIdentifier);
               final fallbackImagePath = info.toArtworkIfExistsAndValidAndEnabled()?.path ?? albumIdentifier.getAlbumTracks().trackOfImage?.pathToImage;
               if (!mounted) break;

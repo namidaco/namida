@@ -1183,9 +1183,19 @@ class SearchSortController extends SearchPortsProvider {
 
     for (int i = 0; i < keys.length; i++) {
       var kd = keys[i];
-      albumKeysCleaned.add(textCleanedForSearch(kd.displayAlbumName));
+      final albumName = kd.displayAlbumName;
+      final albumArtistName = kd.albumArtist;
+      String cleanedText = textCleanedForSearch(albumName);
+      if (albumArtistName.isNotEmpty) {
+        cleanedText += ' ${textCleanedForSearch(albumArtistName)}';
+      }
+      albumKeysCleaned.add(cleanedText);
       if (albumKeysNonCleaned != null) {
-        albumKeysNonCleaned.add(textNonCleanedForSearch!(kd.displayAlbumName));
+        String nonCleanedText = textNonCleanedForSearch!(albumName);
+        if (albumArtistName.isNotEmpty) {
+          nonCleanedText += ' ${textNonCleanedForSearch(albumArtistName)}';
+        }
+        albumKeysNonCleaned.add(nonCleanedText);
       }
     }
 

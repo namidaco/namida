@@ -141,7 +141,7 @@ extension TracksUtils on List<Track> {
   Set<AlbumIdentifierWrapper> toUniqueAlbums() {
     final tracks = this;
     final albums = <AlbumIdentifierWrapper>{};
-    tracks.loop((t) => t.albumsIdentifiersResolved.loop(albums.add));
+    tracks.loop((t) => t.albumsIdentifiersModified.loop(albums.add));
     return albums;
   }
 
@@ -528,7 +528,7 @@ extension TRACKPLAYMODE on TrackPlayMode {
           TrackPlayMode.searchResults =>
             searchQueue ??
                 (SearchSortController.inst.trackSearchTemp.value.isNotEmpty ? SearchSortController.inst.trackSearchTemp.value : SearchSortController.inst.trackSearchList.value),
-          TrackPlayMode.trackAlbum => track.albumsIdentifiersResolved.firstOrNull?.getAlbumTracks(),
+          TrackPlayMode.trackAlbum => track.albumsIdentifiersModified.firstOrNull?.getAlbumTracks(),
           TrackPlayMode.trackArtist => track.artistsList.firstOrNull?.getArtistTracks(),
           TrackPlayMode.trackGenre => track.artistsList.firstOrNull?.getGenresTracks(),
         } ??

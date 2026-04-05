@@ -162,7 +162,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     _updateSameTimeNYearsAgo(timeNow, minusYearClamped);
 
     // -- Recent Albums --
-    if (_recentAlbums.isEmpty) _recentAlbums.addAll(_recentListened.mappedUniquedList((e) => e.track.albumsIdentifiersResolved).take(25));
+    if (_recentAlbums.isEmpty) _recentAlbums.addAll(_recentListened.mappedUniquedList((e) => e.track.albumsIdentifiersModified).take(25));
 
     // -- Recent Artists --
     if (_recentArtists.isEmpty) _recentArtists.addAll(_recentListened.mappedUniquedList((e) => e.track.artistsList).take(25));
@@ -383,7 +383,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     _topRecentListened = sortedMap.entriesSortedByValue.toList();
     _topRecentListened.loop((e) {
       // -- Top Recent Albums --
-      e.key.albumsIdentifiersResolved.loop((identifier) {
+      e.key.albumsIdentifiersModified.loop((identifier) {
         _topRecentAlbums.update(identifier, (value) => value + 1, ifAbsent: () => 1);
       });
 

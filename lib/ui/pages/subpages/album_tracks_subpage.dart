@@ -25,7 +25,7 @@ class AlbumTracksPage extends StatefulWidget with NamidaRouteWidget {
   @override
   String? get name => albumIdentifier.resolved();
   @override
-  AlbumIdentifierWrapper? get routeData => albumIdentifier.modified();
+  AlbumIdentifierWrapper? get routeData => albumIdentifier.modifiedOnly();
 
   @override
   RouteType get route => RouteType.SUBPAGE_albumTracks;

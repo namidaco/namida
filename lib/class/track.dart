@@ -322,7 +322,7 @@ class TrackExtended {
   final bool isVideo;
   final String? server;
 
-  List<AlbumIdentifierWrapper> albumsIdentifiersWrappersResolved(List<AlbumIdentifier> identifiers) => albumsIdentifiersWrappers.map((e) => e.modify(identifiers)).toList();
+  List<AlbumIdentifierWrapper> albumsIdentifiersWrappersModifed(List<AlbumIdentifier> identifiers) => albumsIdentifiersWrappers.map((e) => e.modifyOnly(identifiers)).toList();
 
   const TrackExtended({
     required this.title,
@@ -645,7 +645,7 @@ extension TrackExtUtils on TrackExtended {
 
   String get cacheKeyForImage {
     if (settings.groupArtworksByAlbum.value) {
-      final id = albumsIdentifiersResolved.join();
+      final id = albumsIdentifiersModified.map((e) => e.resolved()).join();
       if (id.isNotEmpty) return id;
     }
     final rawCacheKey = this.rawCacheKey;
@@ -655,8 +655,8 @@ extension TrackExtUtils on TrackExtended {
     return rawCacheKey;
   }
 
-  List<AlbumIdentifierWrapper> get albumsIdentifiersResolved => albumsIdentifiersWrappersResolved(settings.albumIdentifiers.value);
-  List<AlbumIdentifierWrapper> getAlbumsIdentifiersResolved(List<AlbumIdentifier> identifiers) => albumsIdentifiersWrappersResolved(identifiers);
+  List<AlbumIdentifierWrapper> get albumsIdentifiersModified => albumsIdentifiersWrappersModifed(settings.albumIdentifiers.value);
+  List<AlbumIdentifierWrapper> getAlbumsIdentifiersModified(List<AlbumIdentifier> identifiers) => albumsIdentifiersWrappersModifed(identifiers);
 
   String get youtubeLink {
     var comment = this.comment;
@@ -1012,8 +1012,8 @@ extension TrackUtils on Track {
 
   String get rawCacheKey => toTrackExt().rawCacheKey;
   String get cacheKeyForImage => toTrackExt().cacheKeyForImage;
-  List<AlbumIdentifierWrapper> get albumsIdentifiersResolved => toTrackExt().albumsIdentifiersResolved;
-  List<AlbumIdentifierWrapper> getAlbumsIdentifiersResolved(List<AlbumIdentifier> identifiers) => toTrackExt().getAlbumsIdentifiersResolved(identifiers);
+  List<AlbumIdentifierWrapper> get albumsIdentifiersModified => toTrackExt().albumsIdentifiersModified;
+  List<AlbumIdentifierWrapper> getAlbumsIdentifiersModified(List<AlbumIdentifier> identifiers) => toTrackExt().getAlbumsIdentifiersModified(identifiers);
 
   ReplayGainData? get gainData => toTrackExt().gainData;
   FTagsSortInfo? get sortInfo => toTrackExt().sortInfo;

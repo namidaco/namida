@@ -732,7 +732,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       case TrackExecuteActions.goToAlbum:
         item.execute(
           selectable: (finalItem) {
-            NamidaOnTaps.inst.onAlbumTap(finalItem.track.albumsIdentifiersResolved.firstOrNull);
+            NamidaOnTaps.inst.onAlbumTap(finalItem.track.albumsIdentifiersModified.firstOrNull);
           },
           youtubeID: (finalItem) {},
         );
@@ -1528,7 +1528,7 @@ extension RouteUtils on NamidaRoute {
 }
 
 extension AlbumsFromMaps on AlbumIdentifierWrapper {
-  List<Track> getAlbumTracks() => Indexer.inst.mainMapAlbums.value[this.modified()] ?? [];
+  List<Track> getAlbumTracks() => Indexer.inst.mainMapAlbums.value[this.modifiedOnly()] ?? [];
 }
 
 extension TracksFromMaps on String {

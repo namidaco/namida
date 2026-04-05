@@ -12,7 +12,7 @@ class AlbumIdentifierWrapper {
     required this.year,
   });
 
-  static String _normalize(String text) => DownloadTaskFilename.cleanupFilename(text);
+  static String _normalize(String text) => text.isEmpty ? text : DownloadTaskFilename.cleanupFilename(text);
 
   static List<AlbumIdentifierWrapper> fromAlbums({
     required List<String> albums,
@@ -21,7 +21,7 @@ class AlbumIdentifierWrapper {
   }) {
     return albums
         .map(
-          (a) => AlbumIdentifierWrapper.normalize(
+          (a) => AlbumIdentifierWrapper(
             album: a,
             albumArtist: albumArtist,
             year: year,
@@ -30,26 +30,14 @@ class AlbumIdentifierWrapper {
         .toList();
   }
 
-  factory AlbumIdentifierWrapper.normalize({
-    required String album,
-    required String albumArtist,
-    required String year,
-  }) {
-    return AlbumIdentifierWrapper(
-      album: _normalize(album),
-      albumArtist: _normalize(albumArtist),
-      year: _normalize(year),
-    );
-  }
-
   String resolved() => resolve(settings.albumIdentifiers.value);
   String resolve(List<AlbumIdentifier> identifiers) {
-    final modified = modify(identifiers);
-    return "${modified.album}${modified.albumArtist}${modified.year}";
+    final modified = modifyOnly(identifiers);
+    return "${_normalize(modified.album)}${_normalize(modified.albumArtist)}${_normalize(modified.year)}";
   }
 
-  AlbumIdentifierWrapper modified() => modify(settings.albumIdentifiers.value);
-  AlbumIdentifierWrapper modify(List<AlbumIdentifier> identifiers) {
+  AlbumIdentifierWrapper modifiedOnly() => modifyOnly(settings.albumIdentifiers.value);
+  AlbumIdentifierWrapper modifyOnly(List<AlbumIdentifier> identifiers) {
     final idWrapper = this;
     final n = identifiers.contains(AlbumIdentifier.albumName) ? idWrapper.album : '';
     final aa = identifiers.contains(AlbumIdentifier.albumArtist) ? idWrapper.albumArtist : '';

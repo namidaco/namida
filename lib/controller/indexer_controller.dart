@@ -456,7 +456,7 @@ class Indexer<T extends Track> {
   /// Removes Specific tracks from their corresponding media, useful when updating track metadata or reindexing a track.
   void _removeThisTrackFromAlbumGenreArtistEtc(Track tr) {
     final trExt = tr.toTrackExt();
-    trExt.albumsIdentifiersResolved.loop((identifier) {
+    trExt.albumsIdentifiersModified.loop((identifier) {
       mainMapAlbums.value[identifier]?.remove(tr);
     });
 
@@ -542,7 +542,7 @@ class Indexer<T extends Track> {
       final newTrack = newtr.asTrack();
 
       // -- Assigning Albums
-      final newOldAlbums = oldtr == null ? (newtr.albumsIdentifiersResolved, const []) : differenceLists(newtr.albumsIdentifiersResolved, oldtr.albumsIdentifiersResolved);
+      final newOldAlbums = oldtr == null ? (newtr.albumsIdentifiersModified, const []) : differenceLists(newtr.albumsIdentifiersModified, oldtr.albumsIdentifiersModified);
       for (final alNew in newOldAlbums.$1) {
         addCustom(MediaType.album, mainMapAlbums, null, alNew, newTrack);
       }
