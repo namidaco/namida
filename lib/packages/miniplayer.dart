@@ -258,22 +258,6 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           final tr = (item as Selectable).track;
           showSetYTLinkCommentDialog(tr, CurrentColor.inst.miniplayerColor, autoOpenSearch: true);
         },
-        onOpen: (currentItem) {
-          return true; // -- now we can change audio track
-
-          // -- shows playback settings dialog
-          // if (settings.enableVideoPlayback.value) return true;
-
-          // NamidaNavigator.inst.navigateDialog(
-          //   dialog: Dialog(
-          //     child: ConstrainedBox(
-          //       constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
-          //       child: PlaybackSettings(isInDialog: true),
-          //     ),
-          //   ),
-          // );
-          // return false;
-        },
         onPressed: (currentItem) => VideoController.inst.toggleVideoPlayback(),
         videoIconBuilder: (currentItem, size, color) => Obx(
           (context) => Icon(
@@ -626,7 +610,6 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
       onMenuOpen: (currentItem, d) => openMenu(context, (currentItem as YoutubeID), d),
       focusedMenuOptions: (currentItem) => FocusedMenuOptions(
         onSearch: null,
-        onOpen: (currentItem) => true,
         onPressed: (currentItem) => Player.inst.setAudioOnlyPlayback(!settings.youtube.isAudioOnlyMode.value),
         videoIconBuilder: (currentItem, size, color) => Obx(
           (context) => Icon(

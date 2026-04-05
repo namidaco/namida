@@ -131,7 +131,7 @@ class FocusedMenuDetails extends StatelessWidget {
     final childOffset = Offset(offset.dx, offset.dy);
     final childSize = renderBox.size;
 
-    final maxMenuHeight = this.menuHeight ?? size.height * 0.45;
+    final maxMenuHeight = this.menuHeight ?? size.height * 0.5;
     final listHeight = menuItems.length * menuItemExtent;
 
     final maxMenuWidth = menuWidth?.call(context) ?? (size.width * 0.70);

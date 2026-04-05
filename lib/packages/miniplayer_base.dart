@@ -45,6 +45,7 @@ import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
@@ -52,7 +53,6 @@ import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 
 class FocusedMenuOptions {
-  final bool Function(Playable currentItem) onOpen;
   final void Function(Playable currentItem) onPressed;
   final Widget Function(Playable currentItem, double size, Color color) videoIconBuilder;
   final Widget Function(Playable currentItem, double Function(double value) fontSizeMultiplier, double Function(double value) sizeMultiplier) builder;
@@ -65,7 +65,6 @@ class FocusedMenuOptions {
   final Future<void> Function(Playable item, String? videoId, VideoStream stream, File? cacheFile, VideoStreamsResult? mainStreams) onStreamVideoTap;
 
   const FocusedMenuOptions({
-    required this.onOpen,
     required this.onPressed,
     required this.videoIconBuilder,
     required this.builder,
@@ -845,9 +844,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                         leftOffsetHeight: 4.0,
                         onMenuOpen: () {
                           // ScrollSearchController.inst.unfocusKeyboard(); // the miniplayer should have alr done that.
-                          final canOpen = focusedMenuOptions.onOpen(_getcurrentItem);
-                          isMenuOpened.value = canOpen;
-                          if (canOpen && focusedMenuOptions.loadQualities != null) {
+                          isMenuOpened.value = true;
+                          if (focusedMenuOptions.loadQualities != null) {
                             final currentId = focusedMenuOptions.currentId(currentItem);
                             // auto load if possible
                             if (currentId != null &&
@@ -859,7 +857,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                               focusedMenuOptions.loadQualities!(currentItem);
                             }
                           }
-                          return canOpen;
+                          return true;
                         },
                         onMenuClose: () => isMenuOpened.value = false,
                         blurSize: 2.0,
@@ -884,6 +882,18 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                             return SuperSmoothListView(
                               padding: const EdgeInsets.symmetric(vertical: 12.0),
                               children: [
+                                _MPQualityButton(
+                                  icon: Broken.play_cricle,
+                                  title: lang.playbackSetting,
+                                  onTap: () => NamidaNavigator.inst.navigateDialog(
+                                    dialog: Dialog(
+                                      child: ConstrainedBox(
+                                        constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
+                                        child: PlaybackSettings(isInDialog: true),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 Obx(
                                   (context) {
                                     final hasHighConnection = ConnectivityController.inst.hasHighConnection;
