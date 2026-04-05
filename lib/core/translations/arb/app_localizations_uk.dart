@@ -1898,7 +1898,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get oldestWatch => 'Переглянуті найдавніше';
 
   @override
-  String get onDeviceConnect => 'On Device Connect';
+  String get onDeviceConnect => 'При підключенні пристрою';
 
   @override
   String get onInterruption => 'При перериванні';
@@ -2158,6 +2158,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get recentListens => 'Нещодавно прослухане';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Нещодавно додані';
 
   @override
@@ -2293,7 +2296,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get resumeIfWasInterrupted => 'Продовжити відтворення, якщо було призупинено через преривання';
 
   @override
-  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+  String get resumeIfWasPausedByDeviceDisconnect => 'Продовжити відтворення, якщо було призупинено через від’єднання пристрою';
 
   @override
   String get resumeIfWasPausedByVolume => 'Продовжити відтворення, якщо було призупинено через гучність';
@@ -2404,7 +2407,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get setFileLastModifiedAsVideoUploadDate => 'Встановити дату зміни файлу датою завантаження відео';
 
   @override
-  String get setMonoAudio => 'Set Mono Audio';
+  String get setMonoAudio => 'Встановити монозвук';
 
   @override
   String get setMoods => 'Встановити настрої';
@@ -2950,10 +2953,10 @@ class AppLocalizationsUk extends AppLocalizations {
   String get week => 'Тиждень';
 
   @override
-  String get wiredDevice => 'Wired Device';
+  String get wiredDevice => 'Підключення через кабель';
 
   @override
-  String get wirelessDevice => 'Wireless Device';
+  String get wirelessDevice => 'Бездротове з’єднання';
 
   @override
   String get year => 'Рік';

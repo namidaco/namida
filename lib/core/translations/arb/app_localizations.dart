@@ -3773,6 +3773,12 @@ abstract class AppLocalizations {
   /// **'Recent Listens'**
   String get recentListens;
 
+  /// No description provided for @recentQueues.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Queues'**
+  String get recentQueues;
+
   /// No description provided for @recentlyAdded.
   ///
   /// In en, this message translates to:

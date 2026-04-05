@@ -1905,7 +1905,7 @@ extension QueueSourceL10n on QueueSourceEnum {
     QueueSourceEnum.selectedTracks => lang.selectedTracks,
     QueueSourceEnum.externalFile => lang.externalFiles,
     QueueSourceEnum.recentlyAdded => lang.recentlyAdded,
-    QueueSourceEnum.homePageItem => '',
+    QueueSourceEnum.homePageItem => lang.home,
     QueueSourceEnum.others => lang.others,
   };
 }
@@ -2084,6 +2084,7 @@ extension HomePageItemsL10n on HomePageItems {
     HomePageItems.recentListens => lang.recentListens,
     HomePageItems.topRecentListens => lang.topRecents,
     HomePageItems.lostMemories => lang.lostMemories,
+    HomePageItems.recentQueues => lang.recentQueues,
     HomePageItems.recentlyAdded => lang.recentlyAdded,
     HomePageItems.recentAlbums => lang.recentAlbums,
     HomePageItems.recentArtists => lang.recentArtists,
@@ -2096,6 +2097,7 @@ extension HomePageItemsL10n on HomePageItems {
     HomePageItems.recentListens => Broken.command_square,
     HomePageItems.topRecentListens => Broken.crown_1,
     HomePageItems.lostMemories => Broken.link_21,
+    HomePageItems.recentQueues => Broken.undo,
     HomePageItems.recentlyAdded => Broken.back_square,
     HomePageItems.recentAlbums => Broken.undo,
     HomePageItems.recentArtists => Broken.undo,
@@ -2108,6 +2110,7 @@ extension HomePageItemsL10n on HomePageItems {
     HomePageItems.recentListens => null,
     HomePageItems.topRecentListens => null,
     HomePageItems.lostMemories => null,
+    HomePageItems.recentQueues => Broken.driver,
     HomePageItems.recentlyAdded => null,
     HomePageItems.recentAlbums => Broken.music_dashboard,
     HomePageItems.topRecentAlbums => Broken.music_dashboard,

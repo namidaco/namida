@@ -2121,6 +2121,9 @@ class AppLocalizationsSl extends AppLocalizations {
   String get recentListens => 'Nedavna poslušanja';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Nedavno dodano';
 
   @override

@@ -2121,6 +2121,9 @@ class AppLocalizationsRo extends AppLocalizations {
   String get recentListens => 'Ascultări recente';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Adăugate recent';
 
   @override

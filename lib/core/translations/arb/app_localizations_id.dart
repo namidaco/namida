@@ -2122,6 +2122,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get recentListens => 'Baru diputar';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Baru-baru ini ditambahkan';
 
   @override

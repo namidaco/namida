@@ -695,6 +695,7 @@ enum HomePageItems {
   recentListens,
   topRecentListens,
   lostMemories,
+  recentQueues,
   recentlyAdded,
   recentAlbums,
   recentArtists,

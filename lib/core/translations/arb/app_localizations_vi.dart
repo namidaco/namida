@@ -2123,6 +2123,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get recentListens => 'Lượt nghe gần đây';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Được thêm gần đây';
 
   @override

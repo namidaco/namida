@@ -2123,6 +2123,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recentListens => 'हाल ही में सुने गए';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'हाल ही में जोड़ा गया';
 
   @override

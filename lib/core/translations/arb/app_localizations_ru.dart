@@ -2152,6 +2152,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get recentListens => 'Недавно Прослушанное';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Недавно Добавленные';
 
   @override

@@ -2131,6 +2131,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentListens => 'Recent Listens';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Recently Added';
 
   @override

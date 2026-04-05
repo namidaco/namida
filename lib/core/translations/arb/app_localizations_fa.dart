@@ -2121,6 +2121,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get recentListens => 'گوش دادن های اخیر';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'اضافه شده های اخیر';
 
   @override

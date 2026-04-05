@@ -2120,6 +2120,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recentListens => '최근 청취';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => '최근 추가됨';
 
   @override

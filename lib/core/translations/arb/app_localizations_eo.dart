@@ -2121,6 +2121,9 @@ class AppLocalizationsEo extends AppLocalizations {
   String get recentListens => 'Lastatempaj Aŭskultoj';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Lastatempe Aldonitaj';
 
   @override

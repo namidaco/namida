@@ -2122,6 +2122,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get recentListens => 'Ostatnio odsłuchane';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Ostatnio dodane';
 
   @override

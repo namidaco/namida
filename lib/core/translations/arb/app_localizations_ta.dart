@@ -2125,6 +2125,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get recentListens => 'சமீபத்தில் கேட்டவை';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'சமீபத்தில் சேர்க்கப்பட்டது';
 
   @override

@@ -2121,6 +2121,9 @@ class AppLocalizationsAf extends AppLocalizations {
   String get recentListens => 'Onlangse Luisters';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Onlangs Bygevoeg';
 
   @override

@@ -2120,6 +2120,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get recentListens => '最近聞いた';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => '最近追加された';
 
   @override

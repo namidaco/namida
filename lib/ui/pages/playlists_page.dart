@@ -462,7 +462,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                 colorScheme: Colors.blue,
                                                 icon: Broken.driver,
                                                 title: lang.queues,
-                                                displayLoadingIndicator: QueueController.inst.isLoadingQueues,
+                                                displayLoadingIndicator: !QueueController.inst.isQueuesLoaded,
                                                 text: QueueController.inst.queuesMap.valueR.length.formatDecimal(),
                                                 onTap: const QueuesPage().navigate,
                                               ),

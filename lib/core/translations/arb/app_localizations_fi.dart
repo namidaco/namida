@@ -2121,6 +2121,9 @@ class AppLocalizationsFi extends AppLocalizations {
   String get recentListens => 'Viimeaikaiset kuuntelut';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Äskettäin lisätty';
 
   @override

@@ -2123,6 +2123,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get recentListens => 'Son Dinlemeler';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Son Eklenenler';
 
   @override

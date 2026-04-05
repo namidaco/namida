@@ -7374,7 +7374,7 @@ class CustomIconButtonTonal extends StatelessWidget {
       icon: Icon(
         icon,
         size: iconSize,
-        color: context.defaultIconColor().withOpacityExt(0.75),
+        color: context.theme.iconTheme.color?.withOpacityExt(0.7) ?? context.defaultIconColor().withOpacityExt(0.75),
       ),
       tooltip: tooltip,
     );

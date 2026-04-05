@@ -566,7 +566,7 @@ class MultiArtworks extends StatelessWidget {
             forceSquared: true,
             iconSize: iconSize,
             blur: 0,
-            borderRadius: 0,
+            borderRadius: borderRadius,
             compressed: false,
             width: thumbnailSize,
             height: thumbnailSize,

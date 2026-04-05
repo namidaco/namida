@@ -1186,7 +1186,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get forceSquaredAlbumThumbnail => 'সকল অ্যালবাম থাম্বনেইল বর্গাকার করুন';
 
   @override
-  String get forceSquaredThumbnailNote => 'থাম্বনেইল সাইজ এবং টাইল উচ্চতা সমান নয়, বর্গাকারের মতো দেখতে প্রত্যাশিত হবে না, আপনি কি সেগুলো সমান করতে চান?';
+  String get forceSquaredThumbnailNote => 'থাম্বনেইল ও টাইলের মাপ সমান নয়, তাই এটি বর্গাকার দেখাবে না। আপনি কি এগুলো সমান করতে চান?';
 
   @override
   String get forceSquaredTrackThumbnail => 'সকল ট্র্যাক থাম্বনেইল বর্গাকার করুন';
@@ -1406,7 +1406,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get inserted => 'যোগ করা হয়েছে';
 
   @override
-  String get instantlyApplies => 'তাত্ক্ষণিকভাবে প্রযোজ্য';
+  String get instantlyApplies => 'তাৎক্ষণিকভাবে প্রযোজ্য';
 
   @override
   String get interactionReminder => 'ইন্টারঅ্যাকশন রিমাইন্ডার';
@@ -1521,8 +1521,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       number,
       locale: localeName,
-      other: '$numberString বছর আগে, প্রায় এই সময়ে',
-      one: '$numberString বছর আগে, প্রায় এই সময়ে',
+      other: '$numberString বছর আগে, প্রায় এই সময়ে শোনা হয়েছে ',
+      one: '$numberString বছর আগে, প্রায় এই সময়ে শোনা হয়েছে ',
     );
     return '$_temp0';
   }
@@ -1872,7 +1872,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get oldestWatch => 'অনেক আগের দেখা';
 
   @override
-  String get onDeviceConnect => 'On Device Connect';
+  String get onDeviceConnect => 'ডিভাইস সংযোগ করলে';
 
   @override
   String get onInterruption => 'প্লেব্যাক বিঘ্নিত হলে করণীয়';
@@ -2127,10 +2127,13 @@ class AppLocalizationsBn extends AppLocalizations {
   String get recentAlbums => 'সাম্প্রতিক অ্যালবাম';
 
   @override
-  String get recentArtists => 'সাম্প্রতিক শিল্পীগণ';
+  String get recentArtists => 'সাম্প্রতিক শিল্পী';
 
   @override
   String get recentListens => 'সাম্প্রতিক শোনা';
+
+  @override
+  String get recentQueues => 'Recent Queues';
 
   @override
   String get recentlyAdded => 'সাম্প্রতিক সংযোজন';
@@ -2267,7 +2270,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get resumeIfWasInterrupted => 'পুনরায় শুরু করুন যদি কোনো বাধা দ্বারা থামানো হয়ে থাকে';
 
   @override
-  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+  String get resumeIfWasPausedByDeviceDisconnect => 'ডিভাইস বিচ্ছিন্ন হওয়ার কারণে বন্ধ হলে পুনরায় চালু করুন';
 
   @override
   String get resumeIfWasPausedByVolume => 'পুনরায় শুরু করুন যদি ভলিউম দ্বারা থামানো হয়ে থাকে';
@@ -2346,7 +2349,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get selectAll => 'সব নির্বাচন করুন';
 
   @override
-  String get selectFilesAlreadyInLocalLibrary => 'স্থানীয় লাইব্রেরিতে ইতিমধ্যে থাকা ফাইল নির্বাচন করুন';
+  String get selectFilesAlreadyInLocalLibrary => 'স্থানীয় লাইব্রেরিতে থাকা ফাইল নির্বাচন করুন';
 
   @override
   String get selectedTracks => 'নির্বাচিত ট্র্যাক';
@@ -2376,7 +2379,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get setFileLastModifiedAsVideoUploadDate => 'ফাইলের সর্বশেষ পরিবর্তনকে ভিডিও আপলোডের তারিখ হিসাবে সেট করুন';
 
   @override
-  String get setMonoAudio => 'Set Mono Audio';
+  String get setMonoAudio => 'মোনো অডিও সেট করুন';
 
   @override
   String get setMoods => 'মুড সেট করুন';
@@ -2598,7 +2601,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get subscribe => 'সাবস্ক্রাইব';
 
   @override
-  String get subscribed => 'সাবস্ক্রাইব করা';
+  String get subscribed => 'সাবস্ক্রাইবকৃত';
 
   @override
   String get subscriber => 'সাবস্ক্রাইবার';
@@ -2693,7 +2696,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get topRecentAlbums => 'সাম্প্রতিক শীর্ষ অ্যালবাম';
 
   @override
-  String get topRecentArtists => 'সাম্প্রতিক শীর্ষ শিল্পীগণ';
+  String get topRecentArtists => 'সাম্প্রতিক শীর্ষ শিল্পী';
 
   @override
   String get topRecents => 'সাম্প্রতিক শীর্ষ তালিকা';
@@ -2803,7 +2806,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get unlock => 'আনলক';
 
   @override
-  String get unsubscribe => 'আনসাবস্ক্রাইব করুন';
+  String get unsubscribe => 'আনসাবস্ক্রাইব';
 
   @override
   String get update => 'আপডেট';
@@ -2921,10 +2924,10 @@ class AppLocalizationsBn extends AppLocalizations {
   String get week => 'সপ্তাহ';
 
   @override
-  String get wiredDevice => 'Wired Device';
+  String get wiredDevice => 'তারযুক্ত ডিভাইস';
 
   @override
-  String get wirelessDevice => 'Wireless Device';
+  String get wirelessDevice => 'তারবিহীন ডিভাইস';
 
   @override
   String get year => 'বছর';
@@ -2953,7 +2956,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get youtubeStyleMiniplayer => 'ইউটিউব-স্টাইল মিনিপ্লেয়ার';
 
   @override
-  String get ytPreferNewComments => 'নতুন কমেন্টগুলো অগ্রাধিকার দিন';
+  String get ytPreferNewComments => 'নতুন কমেন্ট অগ্রাধিকার দিন';
 
   @override
   String get ytPreferNewCommentsSubtitle => 'ক্যাশ সংস্করণ শুধুমাত্র তখনই ব্যবহৃত হবে যখন কোন সংযোগ থাকবে না';

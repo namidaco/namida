@@ -2128,6 +2128,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get recentListens => 'المستمع لها حديثا';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'مضافة حديثا';
 
   @override

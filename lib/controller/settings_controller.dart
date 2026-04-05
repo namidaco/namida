@@ -289,6 +289,7 @@ class _SettingsController with SettingsFileWriter {
     HomePageItems.recentListens,
     HomePageItems.topRecentListens,
     HomePageItems.lostMemories,
+    HomePageItems.recentQueues,
     HomePageItems.recentlyAdded,
     HomePageItems.recentAlbums,
     HomePageItems.recentArtists,

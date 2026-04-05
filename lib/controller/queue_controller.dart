@@ -48,7 +48,7 @@ class QueueController {
 
     date ??= currentTimeMS;
 
-    if (_isLoadingQueues) {
+    if (!isQueuesLoaded) {
       // after queues full load, [addNewQueue] will be called to add Queues inside [_queuesToAddAfterAllQueuesLoad].
       _queuesToAddAfterAllQueuesLoad.add(Queue(source: source, homePageItem: homePageItem, date: date, isFav: false, tracks: tracks));
       printy("Queue adding suspended until queues full load");
@@ -202,7 +202,7 @@ class QueueController {
     final mapAndLatest = await _readQueueFilesCompute.thready(AppDirs.QUEUES);
     queuesMap.value = mapAndLatest.$1;
     _latestAddedQueueDate = mapAndLatest.$2;
-    _isLoadingQueues = false;
+    _queuesLoad.completeIfWasnt(true);
     // Adding queues that were rejected by [addNewQueue] since Queues wasn't fully loaded.
     if (_queuesToAddAfterAllQueuesLoad.isNotEmpty) {
       for (final q in _queuesToAddAfterAllQueuesLoad) {
@@ -324,8 +324,9 @@ class QueueController {
 
   /// Used to add Queues that were rejected by [addNewQueue] after full loading of queues.
   final List<Queue> _queuesToAddAfterAllQueuesLoad = <Queue>[];
-  bool _isLoadingQueues = true;
-  bool get isLoadingQueues => _isLoadingQueues;
+  final _queuesLoad = Completer<bool>();
+  Future<bool> get waitForQueuesLoad => _queuesLoad.future;
+  bool get isQueuesLoaded => _queuesLoad.isCompleted;
 }
 
 class _LatestPlayedForSourceManager {

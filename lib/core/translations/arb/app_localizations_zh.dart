@@ -2130,6 +2130,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recentListens => '最近收听';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => '最近添加';
 
   @override

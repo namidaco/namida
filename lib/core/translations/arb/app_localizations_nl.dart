@@ -2124,6 +2124,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get recentListens => 'Recent beluisterd';
 
   @override
+  String get recentQueues => 'Recent Queues';
+
+  @override
   String get recentlyAdded => 'Onlangs toegevoegd';
 
   @override

@@ -8,6 +8,7 @@ import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/base/pull_to_refresh.dart';
+import 'package:namida/class/queue.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -17,6 +18,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -29,11 +31,13 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/artist_card.dart';
+import 'package:namida/ui/widgets/library/queue_card.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/stats.dart';
 
@@ -71,13 +75,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
 
   final _mixes = <MapEntry<String, List<Track>>>[];
 
+  var _recentsItemsList = <Queue>[];
   var _lostMemoriesYears = <int>[];
   final _topRecentsDaysList = List<int>.generate(21, (index) => index == 0 ? 1 : index * 3);
 
+  QueueSourceEnum? currentRecentsSourceType = QueueSourceEnum.playlist;
   int currentYearLostMemories = 0;
   DateRange? currentYearLostMemoriesDateRange;
   int currentTopRecentsDaysAgo = 0;
   late final ScrollController _scrollController;
+  late final ScrollController _recentsScrollController;
   late final ScrollController _lostMemoriesScrollController;
   late final ScrollController _topRecentsScrollController;
 
@@ -85,6 +92,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   void initState() {
     super.initState();
     _scrollController = NamidaScrollController.create();
+    _recentsScrollController = NamidaScrollController.create();
     _lostMemoriesScrollController = NamidaScrollController.create();
     _topRecentsScrollController = NamidaScrollController.create();
     _fillLists();
@@ -94,6 +102,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   void dispose() {
     _emptyAll();
     _scrollController.dispose();
+    _recentsScrollController.dispose();
     _lostMemoriesScrollController.dispose();
     _topRecentsScrollController.dispose();
     super.dispose();
@@ -147,6 +156,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     final oldestYear = _lostMemoriesYears.lastOrNull ?? 0;
 
     final minusYearClamped = (timeNow.year - 1).withMinimum(oldestYear);
+
+    _updateCurrentRecentsSourceTypeAndSetState(currentRecentsSourceType);
 
     _updateSameTimeNYearsAgo(timeNow, minusYearClamped);
 
@@ -308,6 +319,36 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     if (mounted) setState(() {});
   }
 
+  Future<void> _updateCurrentRecentsSourceTypeAndSetState(QueueSourceEnum? type) async {
+    await QueueController.inst.waitForQueuesLoad;
+
+    currentRecentsSourceType = type;
+
+    final map = QueueController.inst.queuesMap.value;
+    final keysSortedByLatest = map.keys.toList().reversed;
+    final addedSources = <QueueSourceBase>{};
+    final queuesToTake = <Queue>[];
+    for (final k in keysSortedByLatest) {
+      final q = map[k];
+      if (q != null) {
+        if (type == null || q.source.s == type) {
+          if (addedSources.add(q.source)) {
+            queuesToTake.add(q);
+            if (queuesToTake.length >= 30) {
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    _recentsItemsList = queuesToTake;
+
+    if (_recentsScrollController.hasClients) _recentsScrollController.jumpTo(0);
+
+    if (mounted) setState(() {});
+  }
+
   void _updateSameTimeNYearsAgo(DateTime timeNow, int year) {
     final dateRange = DateRange(
       oldest: DateTime(year, timeNow.month, timeNow.day - 5),
@@ -409,6 +450,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     }
   }
 
+  void _navigateToRecentsPage() {
+    QueuesPage().navigate();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -472,8 +517,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       child: _HorizontalList(
                                         homepageItem: element,
                                         isLoading: _isLoading,
-                                        title: lang.mixes,
                                         icon: element.toMainIcon(),
+                                        title: element.toText(),
                                         height: 186.0 + 12.0,
                                         itemCount: _isLoading ? _shimmerList.length : _mixes.length,
                                         itemExtent: 240.0,
@@ -497,8 +542,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       listId: 'recentListens',
                                       homepageItem: element,
                                       isLoading: _isLoading,
-                                      title: lang.recentListens,
                                       icon: element.toMainIcon(),
+                                      title: element.toText(),
                                       listy: _recentListened,
                                       onTap: NamidaOnTaps.inst.onHistoryPlaylistTap,
                                       topRightText: (track) {
@@ -513,8 +558,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       controller: _topRecentsScrollController,
                                       homepageItem: element,
                                       isLoading: _isLoading,
-                                      title: lang.topRecents,
                                       icon: element.toMainIcon(),
+                                      title: element.toText(),
                                       listy: const [],
                                       listWithListens: _topRecentListened,
                                       onTap: () {
@@ -574,8 +619,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       controller: _lostMemoriesScrollController,
                                       homepageItem: element,
                                       isLoading: _isLoading,
-                                      title: lang.lostMemories,
                                       icon: element.toMainIcon(),
+                                      title: element.toText(),
                                       subtitle: () {
                                         final diff = DateTime.now().year - currentYearLostMemories;
                                         return lang.lostMemoriesSubtitle(number: diff);
@@ -639,8 +684,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       queueSource: QueueSource.recentlyAdded,
                                       isLoading: _isLoading,
                                       homepageItem: element,
-                                      title: lang.recentlyAdded,
                                       icon: element.toMainIcon(),
+                                      title: element.toText(),
                                       listy: _recentlyAdded,
                                       onTap: _navigateToRecentlyListened,
                                       topRightText: (track) {
@@ -651,12 +696,89 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                       },
                                     );
 
+                                  case HomePageItems.recentQueues:
+                                    return SliverToBoxAdapter(
+                                      child: _HorizontalList(
+                                        isLoading: _isLoading,
+                                        homepageItem: element,
+                                        leading: StackedIcon(
+                                          baseIcon: element.toMainIcon(),
+                                          secondaryIcon: element.toIcon(),
+                                        ),
+                                        title: element.toText(),
+                                        onTap: _navigateToRecentsPage,
+                                        height: 150.0 + 12.0,
+                                        thirdWidget: SizedBox(
+                                          height: 32.0,
+                                          width: context.width,
+                                          child: SmoothSingleChildScrollView(
+                                            scrollDirection: Axis.horizontal,
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(top: 4.0),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children:
+                                                    [
+                                                          QueueSourceEnum.playlist,
+                                                          QueueSourceEnum.folder,
+                                                          QueueSourceEnum.folderMusic,
+                                                          QueueSourceEnum.folderVideos,
+                                                          null,
+                                                        ]
+                                                        .map(
+                                                          (sourceType) => Padding(
+                                                            padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                                                            child: TapDetector(
+                                                              onTap: () {
+                                                                _updateCurrentRecentsSourceTypeAndSetState(sourceType);
+                                                              },
+                                                              child: AnimatedDecoration(
+                                                                duration: const Duration(milliseconds: 250),
+                                                                decoration: BoxDecoration(
+                                                                  color: currentRecentsSourceType == sourceType
+                                                                      ? CurrentColor.inst.currentColorScheme.withAlpha(160)
+                                                                      : theme.cardColor,
+                                                                  borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                                                                ),
+                                                                child: Padding(
+                                                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                                                                  child: Text(
+                                                                    sourceType?.toText() ?? lang.all,
+                                                                    style: textTheme.displaySmall?.copyWith(
+                                                                      color: currentRecentsSourceType == sourceType ? Colors.white.withAlpha(240) : null,
+                                                                      fontWeight: FontWeight.w600,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        )
+                                                        .toList(),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        itemCount: _recentsItemsList.length,
+                                        itemExtent: 98.0 + 8.0,
+                                        itemBuilder: (context, i) {
+                                          final queue = _recentsItemsList[i];
+                                          return QueueCard(
+                                            queue: queue,
+                                            fullInfo: false,
+                                            homepageItem: element,
+                                            preferOpenOriginalSource: true,
+                                          );
+                                        },
+                                      ),
+                                    );
+
                                   case HomePageItems.recentAlbums:
                                     return _AlbumsList(
                                       isLoading: _isLoading,
                                       homepageItem: element,
-                                      title: lang.recentAlbums,
                                       mainIcon: element.toMainIcon(),
+                                      title: element.toText(),
                                       albums: _listOrShimmer(_recentAlbums),
                                       listens: null,
                                     );
@@ -666,8 +788,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                     return _AlbumsList(
                                       isLoading: _isLoading,
                                       homepageItem: element,
-                                      title: lang.topRecentAlbums,
                                       mainIcon: element.toMainIcon(),
+                                      title: element.toText(),
                                       albums: _listOrShimmer(keys),
                                       listens: (album) => _topRecentAlbums[album] ?? 0,
                                     );
@@ -676,8 +798,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                     return _ArtistsList(
                                       isLoading: _isLoading,
                                       homepageItem: element,
-                                      title: lang.recentArtists,
                                       mainIcon: element.toMainIcon(),
+                                      title: element.toText(),
                                       artists: _listOrShimmer(_recentArtists),
                                       listens: null,
                                     );
@@ -687,8 +809,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                     return _ArtistsList(
                                       isLoading: _isLoading,
                                       homepageItem: element,
-                                      title: lang.topRecentArtists,
                                       mainIcon: element.toMainIcon(),
+                                      title: element.toText(),
                                       artists: _listOrShimmer(keys),
                                       listens: (artist) => _topRecentArtists[artist] ?? 0,
                                     );
@@ -1030,7 +1152,7 @@ class _HorizontalList extends StatelessWidget {
                           HomePageItems.mixes => '',
                           HomePageItems.recentListens || HomePageItems.topRecentListens => lang.noTracksInHistory,
                           HomePageItems.lostMemories => lang.noTracksFoundBetweenDates,
-                          HomePageItems.recentlyAdded => lang.noTracksFound,
+                          HomePageItems.recentlyAdded || HomePageItems.recentQueues => lang.noTracksFound,
                           HomePageItems.recentAlbums || HomePageItems.recentArtists => "${lang.none}: ${lang.noTracksInHistory}",
                           HomePageItems.topRecentAlbums || HomePageItems.topRecentArtists => "${lang.none}: ${lang.noTracksInHistory}",
                         },
