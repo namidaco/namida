@@ -23,10 +23,10 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
   String get embeddedLyrics => trackExt.lyrics;
 
   @override
-  File get cachedTxtFile => File(p.join(mainLyricsCacheDirectory, "${track.cacheKey}.txt"));
+  File get cachedTxtFile => File(p.join(mainLyricsCacheDirectory, "${track.rawCacheKey}.txt"));
 
   @override
-  File get cachedLRCFile => File(p.join(mainLyricsCacheDirectory, "${track.cacheKey}.lrc"));
+  File get cachedLRCFile => File(p.join(mainLyricsCacheDirectory, "${track.rawCacheKey}.lrc"));
 
   @override
   List<File Function()> get deviceLRCFiles {

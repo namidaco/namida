@@ -277,7 +277,7 @@ class CurrentColor {
     bool delightnedAndAlpha = true,
     bool useIsolate = _defaultUseIsolate,
   }) {
-    final filename = networkArtworkInfo?.toArtworkIfExistsAndEnabled()?.path ?? track.cacheKey;
+    final filename = networkArtworkInfo?.toArtworkIfExistsAndEnabled()?.path ?? track.cacheKeyForImage;
 
     final valInMap = _colorsMap[filename];
 
@@ -294,12 +294,12 @@ class CurrentColor {
   int getRemainingColorsToExtractCount(List<Track> tracks) {
     int remainingCount = 0;
     for (final tr in tracks) {
-      if (_colorsMap[tr.cacheKey] == null) {
+      if (_colorsMap[tr.cacheKeyForImage] == null) {
         remainingCount++;
         continue;
       }
 
-      final pf = _getPaletteFile(tr.cacheKey);
+      final pf = _getPaletteFile(tr.cacheKeyForImage);
       if (!pf.existsSync()) {
         remainingCount++;
         continue;
@@ -330,7 +330,7 @@ class CurrentColor {
       useIsolate: useIsolate,
     );
 
-    final filename = networkArtwork ?? track.cacheKey;
+    final filename = networkArtwork ?? track.cacheKeyForImage;
 
     final finalnc = _maybeDelightned(
       nc,
@@ -392,7 +392,7 @@ class CurrentColor {
   }) async {
     // if (!forceReExtract && !await File(imagePath).exists()) return null; // _extractPaletteGenerator tries to get artwork from audio
 
-    final filename = track != null ? track.cacheKey : imagePath.getFilenameWOExt;
+    final filename = track != null ? track.cacheKeyForImage : imagePath.getFilenameWOExt;
     final paletteFile = _getPaletteFile(filename, paletteSaveDirectory: paletteSaveDirectory);
 
     // -- try reading the cached file
@@ -424,7 +424,7 @@ class CurrentColor {
   Future<void> reExtractTrackColorPalette({required Track track, required NamidaColor? newNC, required String? imagePath, bool useIsolate = true}) async {
     assert(newNC != null || imagePath != null, 'a color or imagePath must be provided');
 
-    final key = track.cacheKey;
+    final key = track.cacheKeyForImage;
     final paletteFile = FileParts.join(AppDirs.PALETTES, "$key.palette");
     if (newNC != null) {
       await paletteFile.writeAsJson(newNC.toJson());

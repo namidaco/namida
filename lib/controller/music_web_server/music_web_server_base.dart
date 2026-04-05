@@ -24,6 +24,7 @@ import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/music_web_server/server_auth_model.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
@@ -39,11 +40,11 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 
+part 'jellyfin_api.dart';
 part 'jellyfin_server.dart';
 part 'smb_server.dart';
 part 'subsonic_web_server.dart';
 part 'webdav_server.dart';
-part 'jellyfin_api.dart';
 
 abstract class MusicWebServer {
   final MusicWebServerAuthDetails authDetails;

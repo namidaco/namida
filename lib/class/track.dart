@@ -628,16 +628,12 @@ extension TrackExtUtils on TrackExtended {
   String get folderPath => isNetwork ? DirectoryIndexServer.parseFromEncodedUrlPath(path).toDbKey() : path.getDirectoryPath;
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
-    final identifier = this.cacheKey;
+    final identifier = this.cacheKeyForImage;
     return "${isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS}$identifier.png";
   }
 
-  String get cacheKey {
-    if (settings.groupArtworksByAlbum.value) {
-      final id = albumsIdentifiersResolved.join();
-      if (id.isNotEmpty) return id;
-    }
-    final filename = this.isNetwork
+  String get rawCacheKey {
+    return this.isNetwork
         ? DownloadTaskFilename.cleanupFilename(
             [
               title,
@@ -645,10 +641,18 @@ extension TrackExtUtils on TrackExtended {
             ].joinText(separator: ' - '),
           )
         : this.filename;
-    if (TagsExtractor.defaultUniqueArtworkHash) {
-      return hashKey != null ? "${filename}_$hashKey" : filename;
+  }
+
+  String get cacheKeyForImage {
+    if (settings.groupArtworksByAlbum.value) {
+      final id = albumsIdentifiersResolved.join();
+      if (id.isNotEmpty) return id;
     }
-    return filename;
+    final rawCacheKey = this.rawCacheKey;
+    if (TagsExtractor.defaultUniqueArtworkHash) {
+      return hashKey != null ? "${rawCacheKey}_$hashKey" : rawCacheKey;
+    }
+    return rawCacheKey;
   }
 
   List<AlbumIdentifierWrapper> get albumsIdentifiersResolved => albumsIdentifiersWrappersResolved(settings.albumIdentifiers.value);
@@ -995,7 +999,7 @@ extension TrackUtils on Track {
   String get folderPath => isNetwork ? DirectoryIndexServer.parseFromEncodedUrlPath(path).toDbKey() : path.getDirectoryPath;
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
-    final identifier = this.cacheKey;
+    final identifier = this.cacheKeyForImage;
     return "${this is Video ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS}$identifier.png";
   }
 
@@ -1006,7 +1010,8 @@ extension TrackUtils on Track {
   String? get gainDataFormatted => toTrackExt().gainDataFormatted;
   String get audioInfoFormattedCompact => toTrackExt().audioInfoFormattedCompact;
 
-  String get cacheKey => toTrackExt().cacheKey;
+  String get rawCacheKey => toTrackExt().rawCacheKey;
+  String get cacheKeyForImage => toTrackExt().cacheKeyForImage;
   List<AlbumIdentifierWrapper> get albumsIdentifiersResolved => toTrackExt().albumsIdentifiersResolved;
   List<AlbumIdentifierWrapper> getAlbumsIdentifiersResolved(List<AlbumIdentifier> identifiers) => toTrackExt().getAlbumsIdentifiersResolved(identifiers);
 

@@ -47,11 +47,11 @@ class EditDeleteController {
   }
 
   Future<void> deleteTXTLyrics(List<Selectable> tracks) async {
-    await _deleteAll(AppDirs.LYRICS, 'txt', tracks);
+    await _deleteAll(AppDirs.LYRICS, 'txt', tracks, EditDeleteController._cacheKeyBuilder);
   }
 
   Future<void> deleteLRCLyrics(List<Selectable> tracks) async {
-    await _deleteAll(AppDirs.LYRICS, 'lrc', tracks);
+    await _deleteAll(AppDirs.LYRICS, 'lrc', tracks, EditDeleteController._cacheKeyBuilder);
   }
 
   Future<void> deleteArtwork(List<Selectable> tracks) async {
@@ -62,11 +62,11 @@ class EditDeleteController {
   }
 
   Future<void> deleteExtractedColor(List<Selectable> tracks) async {
-    await _deleteAll(AppDirs.PALETTES, 'palette', tracks);
+    await _deleteAll(AppDirs.PALETTES, 'palette', tracks, EditDeleteController._cacheKeyForImageBuilder);
   }
 
-  Future<void> _deleteAll(String dir, String extension, List<Selectable> tracks) async {
-    final files = tracks.map((e) => FileParts.joinPath(dir, "${e.track.cacheKey}.$extension")).toList();
+  Future<void> _deleteAll(String dir, String extension, List<Selectable> tracks, String Function(Selectable e) cacheKeyBuilder) async {
+    final files = tracks.map((e) => FileParts.joinPath(dir, "${cacheKeyBuilder(e)}.$extension")).toList();
     await Isolate.run(() => _deleteAllIsolate(files));
   }
 
@@ -240,15 +240,19 @@ class EditDeleteController {
       SelectedTracksController.inst.replaceTrackDirectory(normalizedOldDir, normalizedNewDir, forThesePathsOnly: forThesePathsOnly, ensureNewFileExists: ensureNewFileExists);
     }
   }
+
+  static String _cacheKeyBuilder(Selectable e) => e.track.rawCacheKey;
+  static String _cacheKeyForImageBuilder(Selectable e) => e.track.cacheKeyForImage;
 }
 
 extension HasCachedFiles on List<Selectable> {
   // we use [pathToImage] to ensure when [settings.groupArtworksByAlbum] is enabled
-  Future<bool> get hasArtworkCached => _doesAnyPathExist(AppDirs.ARTWORKS, 'png', fullPath: (tr) => tr.track.pathToImage);
+  Future<bool> get hasArtworkCached => _doesAnyPathExist(AppDirs.ARTWORKS, 'png', EditDeleteController._cacheKeyForImageBuilder, fullPath: (tr) => tr.track.pathToImage);
+  Future<bool> get hasColorCached => _doesAnyPathExist(AppDirs.PALETTES, 'palette', EditDeleteController._cacheKeyForImageBuilder);
 
-  Future<bool> get hasTXTLyricsCached => _doesAnyPathExist(AppDirs.LYRICS, 'txt');
-  Future<bool> get hasLRCLyricsCached => _doesAnyPathExist(AppDirs.LYRICS, 'lrc');
-  Future<bool> get hasColorCached => _doesAnyPathExist(AppDirs.PALETTES, 'palette');
+  Future<bool> get hasTXTLyricsCached => _doesAnyPathExist(AppDirs.LYRICS, 'txt', EditDeleteController._cacheKeyBuilder);
+  Future<bool> get hasLRCLyricsCached => _doesAnyPathExist(AppDirs.LYRICS, 'lrc', EditDeleteController._cacheKeyBuilder);
+
   bool get hasVideoCached {
     for (int i = 0; i < length; i++) {
       final tr = this[i];
@@ -273,10 +277,10 @@ extension HasCachedFiles on List<Selectable> {
 
   Future<bool> get hasAnythingCached async => await hasArtworkCached || await hasTXTLyricsCached || await hasLRCLyricsCached /* || await hasColorCached */;
 
-  Future<bool> _doesAnyPathExist(String directory, String extension, {String Function(Selectable tr)? fullPath}) async {
+  Future<bool> _doesAnyPathExist(String directory, String extension, String Function(Selectable e) cacheKeyBuilder, {String Function(Selectable tr)? fullPath}) async {
     for (int i = 0; i < length; i++) {
       final track = this[i];
-      if (await File(fullPath != null ? fullPath(track) : "$directory${track.track.cacheKey}.$extension").exists()) {
+      if (await File(fullPath != null ? fullPath(track) : "$directory${cacheKeyBuilder(track)}.$extension").exists()) {
         return true;
       }
     }

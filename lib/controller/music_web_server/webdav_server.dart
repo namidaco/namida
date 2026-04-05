@@ -147,6 +147,8 @@ class _WebDAVServer extends MusicWebServer {
     required int minSize,
   }) async* {
     final imageFiles = <webdav.File>[];
+    final lrcFiles = <(webdav.File, bool)>[];
+    final lrcFilesInfoToExtractLater = <String, TrackExtended>{};
     final artworksToExtractLater = <String, List<_ExtractInfo>>{};
     const subBatchSize = 20;
     for (var i = 0; i < files.length; i += subBatchSize) {
@@ -162,9 +164,12 @@ class _WebDAVServer extends MusicWebServer {
           if (path != null) {
             if (NamidaFileExtensionsWrapper.audioAndVideo.isPathValid(path)) {
               subfiles.add(file);
-            }
-            if (NamidaFileExtensionsWrapper.image.isPathValid(path)) {
+            } else if (NamidaFileExtensionsWrapper.image.isPathValid(path)) {
               imageFiles.add(file);
+            } else if (NamidaFileExtensionsWrapper.lrc.isPathValid(path)) {
+              lrcFiles.add((file, true));
+            } else if (NamidaFileExtensionsWrapper.txt.isPathValid(path)) {
+              lrcFiles.add((file, false));
             }
           }
         }
@@ -209,7 +214,12 @@ class _WebDAVServer extends MusicWebServer {
               },
             );
             final newPath = newUri.toString();
-            return trExt.copyWith(generatePathHash: true, path: newPath);
+            final newTrExt = trExt.copyWith(generatePathHash: true, path: newPath);
+
+            final serverPathWOExt = p.basenameWithoutExtension(serverPath);
+            lrcFilesInfoToExtractLater[serverPathWOExt] = newTrExt;
+
+            return newTrExt;
           }
           return null;
         });
@@ -237,6 +247,23 @@ class _WebDAVServer extends MusicWebServer {
             minDur: minDur,
             minSize: minSize,
           );
+        }
+      }
+    }
+
+    for (final lrc in lrcFiles) {
+      final lrcPath = lrc.$1.path;
+      if (lrcPath != null) {
+        final lrcPathWOExt = p.basenameWithoutExtension(lrcPath);
+        final trackInfo = lrcFilesInfoToExtractLater[lrcPathWOExt];
+        if (trackInfo != null) {
+          final bytes = await _api?.read(lrcPath);
+          if (bytes != null) {
+            final lrcUtils = LrcSearchUtilsSelectable(trackInfo, trackInfo.asTrack());
+            final isSynced = lrc.$2;
+            final lrcFileInCache = isSynced ? lrcUtils.cachedLRCFile : lrcUtils.cachedTxtFile;
+            await lrcFileInCache.writeAsBytes(bytes);
+          }
         }
       }
     }
