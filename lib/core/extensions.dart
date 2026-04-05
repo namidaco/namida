@@ -195,23 +195,40 @@ extension TracksUtils on List<Track> {
   String get albumArtist {
     if (isEmpty) return '';
 
-    String? cumulativeArtist = this[0].artistsList.firstOrNull ?? ''; //  `?? ''` cuz null is used to mark invalid
-    for (var i = 0; i < this.length; i++) {
+    // -- set this to null to mark as invalid
+    List<String>? cumulativeArtists = this[0].artistsList;
+    for (var i = 0; i < length; i++) {
       final e = this[i];
       final aa = e.albumArtist;
       if (aa.isNotEmpty) return aa;
 
-      if (cumulativeArtist != null) {
-        final currentArtist = this[i].artistsList[0];
-        if (currentArtist != cumulativeArtist) {
-          // set to null to mark as invalid
-          cumulativeArtist = null;
+      if (cumulativeArtists != null) {
+        final currentArtists = this[i].artistsList;
+        if (currentArtists.length == 1) {
+          // -- just some performance optimizations (benchmarks 30us -> 2us)
+          final singleArtistCurrent = currentArtists[0];
+          if (cumulativeArtists.length == 1) {
+            if (singleArtistCurrent != cumulativeArtists[0]) {
+              cumulativeArtists = null;
+            }
+          } else {
+            if (cumulativeArtists.contains(singleArtistCurrent)) {
+              cumulativeArtists = currentArtists;
+            } else {
+              cumulativeArtists = null;
+            }
+          }
+        } else {
+          cumulativeArtists.retainWhere(currentArtists.contains);
+          if (cumulativeArtists.isEmpty) {
+            cumulativeArtists = null;
+          }
         }
       }
     }
 
-    // -- return artist as an album artist if all tracks has the same one.
-    return cumulativeArtist ?? '';
+    // -- return common artists as an album artist if all tracks has the same one.
+    return cumulativeArtists?.join(', ') ?? '';
   }
 
   String get composer => _firstNonEmpty((e) => e.composer);
