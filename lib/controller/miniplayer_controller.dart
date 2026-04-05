@@ -14,11 +14,13 @@ import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/controller/window_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/mp.dart';
+import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/widgets/yt_queue_chip.dart';
@@ -287,10 +289,18 @@ class MiniPlayerController {
     _velocity.addPosition(event.timeStamp, event.position);
 
     if (_offset <= maxOffset) return;
-    // a rough estimation of the top area when inside queue.
-    if (_isInsideQueue() &&
-        event.position.dy > ((WindowController.instance?.windowTitleBarHeightIfActive ?? 0) + 100 + _deadSpace + topInset + 12.0 + QueueChipHeaderRow.minHeight)) {
-      return;
+
+    if (!isKuru) {
+      if (isScrollbarThumbDragging) {
+        return;
+      }
+    }
+
+    if (_isInsideQueue()) {
+      // a rough estimation of the top area when inside queue.
+      if (event.position.dy > ((WindowController.instance?.windowTitleBarHeightIfActive ?? 0) + 100 + _deadSpace + topInset + 12.0 + QueueChipHeaderRow.minHeight)) {
+        return;
+      }
     }
 
     _offset -= event.delta.dy;
