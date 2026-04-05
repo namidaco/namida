@@ -1167,7 +1167,7 @@ class IndexerSettings extends SettingSubpageProvider {
                               return NamidaOpacity(
                                 opacity: isForcelyEnabled ? 0.7 : 1.0,
                                 child: Padding(
-                                  padding: const EdgeInsets.all(6.0),
+                                  padding: const EdgeInsets.all(3.0),
                                   child: Obx(
                                     (context) => ListTileWithCheckMark(
                                       title: e.toText(),

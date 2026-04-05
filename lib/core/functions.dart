@@ -66,17 +66,18 @@ class NamidaOnTaps {
   Future<void> onArtistTap(String name, MediaType type, [List<Track>? tracksPre]) async {
     final tracks = tracksPre ?? name.getArtistTracksFor(type);
 
-    final albumIdsMap = <String, List<Track>>{};
+    final albumIdsMap = <AlbumIdentifierWrapper, List<Track>>{};
     for (final tr in tracks) {
-      final album = tr.albumIdentifier;
-      albumIdsMap[album] ??= album.getAlbumTracks();
+      tr.albumsIdentifiersResolved.loop((album) {
+        albumIdsMap[album] ??= album.getAlbumTracks();
+      });
     }
     final albumIdsFinalList = albumIdsMap.entries.toList();
     SearchSortController.inst.sortAlbumsListRaw(albumIdsFinalList, settings.albumSort.value, settings.albumSortReversed.value);
 
-    final albumIds = <String>[];
-    final singlesIds = <String>[];
-    final extrasIds = <String>[];
+    final albumIds = <AlbumIdentifierWrapper>[];
+    final singlesIds = <AlbumIdentifierWrapper>[];
+    final extrasIds = <AlbumIdentifierWrapper>[];
     for (final a in albumIdsFinalList) {
       final albumArtist = (albumIdsMap[a.key] ?? a.key.getAlbumTracks()).albumArtist;
       if (albumArtist.contains(name)) {
@@ -100,7 +101,8 @@ class NamidaOnTaps {
     ).navigate();
   }
 
-  Future<void> onAlbumTap(String albumIdentifier) async {
+  Future<void> onAlbumTap(AlbumIdentifierWrapper? albumIdentifier) async {
+    if (albumIdentifier == null) return;
     final tracks = albumIdentifier.getAlbumTracks();
 
     AlbumTracksPage(

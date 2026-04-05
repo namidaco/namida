@@ -103,9 +103,9 @@ abstract class TagsExtractor {
       isNetwork: track.isNetwork,
       networkId: networkId,
       identifiers: null,
-      identifierCallback: () => trExt?.albumIdentifierWrapper?.resolved(),
+      identifierCallback: () => trExt?.albumsIdentifiersWrappers.map((e) => e.resolved()).join(),
       infoCallback: () => (
-        albumName: trExt?.album,
+        albumName: trExt?.originalAlbum,
         albumArtist: trExt?.albumArtist,
         year: trExt?.year.toString(),
         title: trExt?.title,

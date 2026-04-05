@@ -342,8 +342,15 @@ Future<void> showTrackInfoDialog(
 
                               if (shouldShowTheField(trackExt.hasUnknownAlbum))
                                 TrackInfoListTile(
-                                  title: lang.album,
-                                  value: trackExt.hasUnknownAlbum ? UnknownTags.ALBUM : trackExt.album,
+                                  title:
+                                      Indexer.splitAlbum(
+                                            trackExt.originalAlbum,
+                                            config: SimpleSplitConfig(),
+                                          ).length ==
+                                          1
+                                      ? lang.album
+                                      : lang.albums,
+                                  value: trackExt.hasUnknownAlbum ? UnknownTags.ALBUM : trackExt.originalAlbum,
                                   icon: Broken.music_dashboard,
                                 ),
 

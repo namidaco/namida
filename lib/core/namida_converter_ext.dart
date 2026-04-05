@@ -732,7 +732,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       case TrackExecuteActions.goToAlbum:
         item.execute(
           selectable: (finalItem) {
-            NamidaOnTaps.inst.onAlbumTap(finalItem.track.albumIdentifier);
+            NamidaOnTaps.inst.onAlbumTap(finalItem.track.albumsIdentifiersResolved.firstOrNull);
           },
           youtubeID: (finalItem) {},
         );
@@ -1120,6 +1120,8 @@ extension SponsorBlockActionExt on SponsorBlockAction {
 }
 
 extension RouteUtils on NamidaRoute {
+  AlbumIdentifierWrapper? get routeDataAlbumIdentifier => routeData is AlbumIdentifierWrapper ? (routeData as AlbumIdentifierWrapper) : null;
+
   List<Selectable> tracksListInside() {
     final iter = tracksInside();
     return iter is List ? iter as List<Selectable> : iter.toList();
@@ -1139,7 +1141,7 @@ extension RouteUtils on NamidaRoute {
       RouteType.PAGE_folders => QueueSource.folder(name),
       RouteType.PAGE_folders_music => QueueSource.folderMusic(name),
       RouteType.PAGE_folders_videos => QueueSource.folderVideos(name),
-      RouteType.SUBPAGE_albumTracks => QueueSource.album(name),
+      RouteType.SUBPAGE_albumTracks => QueueSource.album(routeDataAlbumIdentifier, name),
       RouteType.SUBPAGE_artistTracks => QueueSource.artist(name),
       RouteType.SUBPAGE_albumArtistTracks => QueueSource.albumArtist(name),
       RouteType.SUBPAGE_composerTracks => QueueSource.composer(name),
@@ -1174,7 +1176,7 @@ extension RouteUtils on NamidaRoute {
           RouteType.PAGE_folders => FoldersController.tracksAndVideos.currentFolderTracksList,
           RouteType.PAGE_folders_music => FoldersController.tracks.currentFolderTracksList,
           RouteType.PAGE_folders_videos => FoldersController.videos.currentFolderTracksList,
-          RouteType.SUBPAGE_albumTracks => name?.getAlbumTracks(),
+          RouteType.SUBPAGE_albumTracks => routeDataAlbumIdentifier?.getAlbumTracks(),
           RouteType.SUBPAGE_artistTracks => name?.getArtistTracks(),
           RouteType.SUBPAGE_albumArtistTracks => name?.getAlbumArtistTracks(),
           RouteType.SUBPAGE_composerTracks => name?.getComposerTracks(),
@@ -1213,7 +1215,7 @@ extension RouteUtils on NamidaRoute {
           RouteType.PAGE_folders_videos => FoldersController.videos.currentFolderTracksList,
           RouteType.SUBPAGE_mostPlayedTracks =>
             HistoryController.inst.currentTopTracksMapListensReactive(HistoryController.inst.currentMostPlayedTimeRange.valueR).valueR.keysSortedByValue,
-          RouteType.SUBPAGE_albumTracks => _registerAndReturn(name?.getAlbumTracks(), () => Indexer.inst.mainMapAlbums.valueR),
+          RouteType.SUBPAGE_albumTracks => _registerAndReturn(routeDataAlbumIdentifier?.getAlbumTracks(), () => Indexer.inst.mainMapAlbums.valueR),
           RouteType.SUBPAGE_artistTracks => _registerAndReturn(name?.getArtistTracks(), () => Indexer.inst.mainMapArtists.valueR),
           RouteType.SUBPAGE_albumArtistTracks => _registerAndReturn(name?.getAlbumArtistTracks(), () => Indexer.inst.mainMapAlbumArtists.valueR),
           RouteType.SUBPAGE_composerTracks => _registerAndReturn(name?.getComposerTracks(), () => Indexer.inst.mainMapComposer.valueR),
@@ -1236,7 +1238,7 @@ extension RouteUtils on NamidaRoute {
   Track? get trackOfColor {
     final name = this.name;
     if (name == null) return null;
-    if (route == RouteType.SUBPAGE_albumTracks) return name.getAlbumTracks().trackOfImage;
+    if (route == RouteType.SUBPAGE_albumTracks) return routeDataAlbumIdentifier?.getAlbumTracks().trackOfImage;
     if (route == RouteType.SUBPAGE_artistTracks) return name.getArtistTracks().trackOfImage;
     if (route == RouteType.SUBPAGE_albumArtistTracks) return name.getAlbumArtistTracks().trackOfImage;
     if (route == RouteType.SUBPAGE_composerTracks) return name.getComposerTracks().trackOfImage;
@@ -1246,7 +1248,11 @@ extension RouteUtils on NamidaRoute {
   NetworkArtworkInfo? get getNetworkArtworkInfo {
     final name = this.name;
     if (name == null) return null;
-    if (route == RouteType.SUBPAGE_albumTracks) return NetworkArtworkInfo.albumAutoArtist(name);
+    if (route == RouteType.SUBPAGE_albumTracks) {
+      final identifier = routeDataAlbumIdentifier;
+      if (identifier == null) return null;
+      return NetworkArtworkInfo.albumAutoArtist(identifier);
+    }
     if (route == RouteType.SUBPAGE_artistTracks) return NetworkArtworkInfo.artist(name);
     if (route == RouteType.SUBPAGE_albumArtistTracks) return NetworkArtworkInfo.artist(name);
     if (route == RouteType.SUBPAGE_composerTracks) return NetworkArtworkInfo.artist(name);
@@ -1469,7 +1475,7 @@ extension RouteUtils on NamidaRoute {
           if (name == null) return;
           switch (route) {
             case RouteType.SUBPAGE_albumTracks:
-              NamidaDialogs.inst.showAlbumDialog(name);
+              NamidaDialogs.inst.showAlbumDialog(routeDataAlbumIdentifier);
               break;
             case RouteType.SUBPAGE_artistTracks:
               NamidaDialogs.inst.showArtistDialog(name, MediaType.artist);
@@ -1521,9 +1527,11 @@ extension RouteUtils on NamidaRoute {
   }
 }
 
-extension TracksFromMaps on String {
-  List<Track> getAlbumTracks() => Indexer.inst.mainMapAlbums.value[this] ?? [];
+extension AlbumsFromMaps on AlbumIdentifierWrapper {
+  List<Track> getAlbumTracks() => Indexer.inst.mainMapAlbums.value[this.modified()] ?? [];
+}
 
+extension TracksFromMaps on String {
   List<Track> getArtistTracks() => Indexer.inst.mainMapArtists.value[this] ?? [];
 
   List<Track> getArtistTracksFor(MediaType type) {

@@ -45,7 +45,7 @@ class NamidaDialogs {
       trExt.originalArtist,
       trExt.title.overflow,
       source,
-      thirdLineText: trExt.album.overflow,
+      thirdLineText: trExt.originalAlbum.overflow,
       forceSquared: settings.forceSquaredTrackThumbnail.value,
       tracksWithDates: trackWithDate == null ? [] : [trackWithDate],
       playlistName: playlistName,
@@ -55,27 +55,34 @@ class NamidaDialogs {
     );
   }
 
-  Future<void> showAlbumDialog(String albumIdentifier) async {
+  Future<void> showAlbumDialog(AlbumIdentifierWrapper? albumIdentifier) async {
+    if (albumIdentifier == null) return;
     final tracks = albumIdentifier.getAlbumTracks();
     final artists = tracks.mappedUniquedList((e) => e.artistsList);
-    final album = tracks.album;
+    final name = albumIdentifier.displayAlbumName;
     await showGeneralPopupDialog(
       tracks,
-      album.overflow,
+      name.overflow,
       "${tracks.displayTrackKeyword} & ${artists.length.displayArtistKeyword}",
-      QueueSource.album(albumIdentifier),
+      QueueSource.album(albumIdentifier, name),
       thirdLineText: artists.join(', ').overflow,
       forceSquared: Dimensions.inst.shouldAlbumBeSquared(rootContext),
       forceSingleArtwork: true,
       heroTag: 'album_$albumIdentifier',
-      albumToAddFrom: (album, albumIdentifier),
-      networkArtworkInfo: NetworkArtworkInfo.album(albumIdentifier, artists.firstOrNull),
+      albumToAddFrom: albumIdentifier,
+      networkArtworkInfo: NetworkArtworkInfo.album(name, artists.firstOrNull),
     );
   }
 
   Future<void> showArtistDialog(String name, MediaType type) async {
     final tracks = name.getArtistTracksFor(type);
-    final albums = tracks.mappedUniqued((e) => e.album);
+    final albumsSet = <String>{};
+    for (final t in tracks) {
+      for (final a in t.albumsList) {
+        albumsSet.add(a);
+      }
+      albumsSet.add(t.originalAlbum); // -- if albums list was empty
+    }
     final queueSource = type == MediaType.albumArtist
         ? QueueSource.albumArtist(name)
         : type == MediaType.composer
@@ -84,9 +91,9 @@ class NamidaDialogs {
     await showGeneralPopupDialog(
       tracks,
       name.overflow,
-      "${tracks.displayTrackKeyword} & ${albums.length.displayAlbumKeyword}",
+      "${tracks.displayTrackKeyword} & ${albumsSet.length.displayAlbumKeyword}",
       queueSource,
-      thirdLineText: albums.take(5).join(', ').overflow,
+      thirdLineText: albumsSet.take(5).join(', ').overflow,
       forceSquared: true,
       forceSingleArtwork: true,
       heroTag: 'artist_$name',

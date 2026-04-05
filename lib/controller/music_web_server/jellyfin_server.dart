@@ -31,8 +31,8 @@ class _JellyfinServer extends MusicWebServer {
 
     final server = authDetails.dir.toDbKey();
     final serverUriParsed = Uri.parse(server);
-    final artistsSplitConfig = ArtistsSplitConfig.settings();
-    final genresSplitConfig = GenresSplitConfig.settings();
+
+    final splitConfig = SplitArtistGenreConfigsWrapper.settings();
 
     final stream = wrapper.fetchAllMedia(
       batchSize: 400,
@@ -42,8 +42,7 @@ class _JellyfinServer extends MusicWebServer {
       callback(
         _baseItemDtoToTrackExtended(
           item,
-          artistsSplitConfig: artistsSplitConfig,
-          genresSplitConfig: genresSplitConfig,
+          splitConfig: splitConfig,
           server: server,
           serverUriParsed: serverUriParsed,
         ),
@@ -93,8 +92,7 @@ class _JellyfinServer extends MusicWebServer {
 
   TrackExtended _baseItemDtoToTrackExtended(
     _JellyfinItem item, {
-    required ArtistsSplitConfig artistsSplitConfig,
-    required GenresSplitConfig genresSplitConfig,
+    required SplitArtistGenreConfigsWrapper splitConfig,
     required String server,
     required Uri serverUriParsed,
   }) {
@@ -110,6 +108,10 @@ class _JellyfinServer extends MusicWebServer {
 
     final title = item.name ?? '';
     final album = item.album ?? '';
+    final albumsList = Indexer.splitAlbum(
+      album,
+      config: splitConfig.albumConfig,
+    );
     final albumArtist = item.albumArtist ?? '';
 
     final originalArtist = item.artists.join(', ');
@@ -118,7 +120,7 @@ class _JellyfinServer extends MusicWebServer {
       (p) => Indexer.splitArtist(
         title: title,
         originalArtist: p,
-        config: artistsSplitConfig,
+        config: splitConfig.artistsConfig,
       ),
     ).toList();
 
@@ -127,7 +129,7 @@ class _JellyfinServer extends MusicWebServer {
       item.genres,
       (p) => Indexer.splitGenre(
         p,
-        config: genresSplitConfig,
+        config: splitConfig.genresConfig,
       ),
     ).toList();
 
@@ -148,7 +150,8 @@ class _JellyfinServer extends MusicWebServer {
       title: title,
       originalArtist: originalArtist,
       artistsList: artistsList,
-      album: album,
+      originalAlbum: album,
+      albumsList: albumsList,
       albumArtist: albumArtist,
       originalGenre: originalGenre,
       genresList: genresList,
@@ -184,8 +187,8 @@ class _JellyfinServer extends MusicWebServer {
       hashKey: id,
       isVideo: isVideo,
       server: server,
-      albumIdentifierWrapper: AlbumIdentifierWrapper.normalize(
-        album: album,
+      albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
+        albums: albumsList,
         albumArtist: albumArtist,
         year: yearString,
       ),

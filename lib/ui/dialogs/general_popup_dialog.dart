@@ -70,7 +70,7 @@ Future<void> showGeneralPopupDialog(
   bool isCircle = false,
   Object? errorPlayingTrack,
   String? artistToAddFrom,
-  (String, String)? albumToAddFrom,
+  AlbumIdentifierWrapper? albumToAddFrom,
   String? heroTag,
   IconData? trailingIcon,
   bool comingFromPlaylistMenu = false,
@@ -127,10 +127,7 @@ Future<void> showGeneralPopupDialog(
   }
 
   /// name, identifier
-  final List<(String, String)> availableAlbums = tracks.mappedUniqued((e) {
-    final ext = e.toTrackExt();
-    return (ext.album, ext.albumIdentifier);
-  });
+  final Set<AlbumIdentifierWrapper> availableAlbums = tracks.toUniqueAlbums();
   final List<String> availableArtists = tracks.mappedUniquedList((e) => e.toTrackExt().artistsList);
   final List<Folder> availableFolders = tracks.mapAsPhysical().mappedUniqued((e) => e.folder);
 
@@ -541,7 +538,6 @@ Future<void> showGeneralPopupDialog(
                 networkArtworkInfo: networkArtworkInfo,
                 colorScheme: colorDelightened,
                 source: source,
-                albumsUniqued: availableAlbums,
               );
             },
           ),
@@ -901,14 +897,14 @@ Future<void> showGeneralPopupDialog(
                                   color: colorDelightened,
                                   compact: true,
                                   title: lang.goToAlbum,
-                                  subtitle: availableAlbums.first.$1,
+                                  subtitle: availableAlbums.first.displayAlbumName,
                                   icon: Broken.music_dashboard,
-                                  onTap: () => NamidaOnTaps.inst.onAlbumTap(availableAlbums.first.$2),
+                                  onTap: () => NamidaOnTaps.inst.onAlbumTap(availableAlbums.first),
                                   trailing: IconButton(
                                     tooltip: lang.addMoreFromThisAlbum,
                                     onPressed: () {
                                       NamidaNavigator.inst.closeDialog();
-                                      final tracks = availableAlbums.first.$2.getAlbumTracks();
+                                      final tracks = availableAlbums.first.getAlbumTracks();
                                       Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreAlbum);
                                     },
                                     icon: const Icon(Broken.add),
@@ -918,10 +914,10 @@ Future<void> showGeneralPopupDialog(
                                 SmallListTile(
                                   color: colorDelightened,
                                   compact: true,
-                                  title: lang.addMoreFromToQueue(media: '"${albumToAddFrom.$1}"'),
+                                  title: lang.addMoreFromToQueue(media: '"${albumToAddFrom.displayAlbumName}"'),
                                   icon: Broken.music_dashboard,
                                   onTap: () {
-                                    final tracks = albumToAddFrom.$2.getAlbumTracks();
+                                    final tracks = albumToAddFrom.getAlbumTracks();
                                     Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreAlbum);
                                   },
                                   trailing: IgnorePointer(
@@ -934,6 +930,9 @@ Future<void> showGeneralPopupDialog(
 
                               if (availableAlbums.length > 1)
                                 NamidaExpansionTile(
+                                  borderless: true,
+                                  bigahh: true,
+                                  initiallyExpanded: availableAlbums.length < 5,
                                   icon: Broken.music_dashboard,
                                   iconColor: iconColor,
                                   titleText: lang.goToAlbum,
@@ -945,9 +944,9 @@ Future<void> showGeneralPopupDialog(
                                       children: [
                                         ...availableAlbums.map(
                                           (e) => _SmallUnderlinedChip(
-                                            text: e.$1,
+                                            text: e.displayAlbumName,
                                             textTheme: theme.textTheme,
-                                            onTap: () => NamidaOnTaps.inst.onAlbumTap(e.$2),
+                                            onTap: () => NamidaOnTaps.inst.onAlbumTap(e),
                                           ),
                                         ),
                                       ],
@@ -992,6 +991,9 @@ Future<void> showGeneralPopupDialog(
 
                               if (artistToAddFrom == null && availableArtists.length > 1)
                                 NamidaExpansionTile(
+                                  borderless: true,
+                                  bigahh: true,
+                                  initiallyExpanded: availableArtists.length < 5,
                                   icon: Broken.profile_2user,
                                   iconColor: iconColor,
                                   titleText: lang.goToArtist,

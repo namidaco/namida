@@ -64,9 +64,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
   var _topRecentListened = <MapEntry<Track, List<int>>>[];
   var _sameTimeYearAgo = <MapEntry<Track, List<int>>>[];
 
-  final _recentAlbums = <String>[];
+  final _recentAlbums = <AlbumIdentifierWrapper>[];
   final _recentArtists = <String>[];
-  final _topRecentAlbums = <String, int>{};
+  final _topRecentAlbums = <AlbumIdentifierWrapper, int>{};
   final _topRecentArtists = <String, int>{};
 
   final _mixes = <MapEntry<String, List<Track>>>[];
@@ -151,7 +151,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     _updateSameTimeNYearsAgo(timeNow, minusYearClamped);
 
     // -- Recent Albums --
-    if (_recentAlbums.isEmpty) _recentAlbums.addAll(_recentListened.mappedUniqued((e) => e.track.albumIdentifier).take(25));
+    if (_recentAlbums.isEmpty) _recentAlbums.addAll(_recentListened.mappedUniquedList((e) => e.track.albumsIdentifiersResolved).take(25));
 
     // -- Recent Artists --
     if (_recentArtists.isEmpty) _recentArtists.addAll(_recentListened.mappedUniquedList((e) => e.track.artistsList).take(25));
@@ -342,7 +342,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     _topRecentListened = sortedMap.entriesSortedByValue.toList();
     _topRecentListened.loop((e) {
       // -- Top Recent Albums --
-      _topRecentAlbums.update(e.key.albumIdentifier, (value) => value + 1, ifAbsent: () => 1);
+      e.key.albumsIdentifiersResolved.loop((identifier) {
+        _topRecentAlbums.update(identifier, (value) => value + 1, ifAbsent: () => 1);
+      });
 
       // -- Top Recent Artists --
       e.key.artistsList.loop((e) => _topRecentArtists.update(e, (value) => value + 1, ifAbsent: () => 1));
@@ -821,8 +823,8 @@ class _AlbumsList extends StatelessWidget {
   final bool isLoading;
   final String title;
   final IconData mainIcon;
-  final List<String?> albums;
-  final int Function(String? album)? listens;
+  final List<AlbumIdentifierWrapper?> albums;
+  final int Function(AlbumIdentifierWrapper? album)? listens;
   final HomePageItems homepageItem;
 
   const _AlbumsList({
@@ -860,7 +862,7 @@ class _AlbumsList extends StatelessWidget {
               homepageItem: homepageItem,
               displayIcon: !isLoading,
               compact: true,
-              identifier: albumId ?? '',
+              identifier: albumId,
               album: albumId?.getAlbumTracks() ?? [],
               staggered: false,
               extraInfo: listens == null ? null : "${listens!(albumId)}",

@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
 import 'package:namida/class/queue.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -369,7 +370,7 @@ class QueueSource extends QueueSourceBase<QueueSourceEnum> {
   const QueueSource._(super.s, {super.title}) : super._();
 
   static const allTracks = QueueSource._(QueueSourceEnum.allTracks);
-  static QueueSource album(String? name) => QueueSource._(QueueSourceEnum.album, title: name);
+  static QueueSource album(AlbumIdentifierWrapper? identifier, String? name) => QueueSource._(QueueSourceEnum.album, title: identifier?.displayAlbumName ?? name);
   static QueueSource artist(String? name) => QueueSource._(QueueSourceEnum.artist, title: name);
   static QueueSource albumArtist(String? name) => QueueSource._(QueueSourceEnum.albumArtist, title: name);
   static QueueSource composer(String? name) => QueueSource._(QueueSourceEnum.composer, title: name);

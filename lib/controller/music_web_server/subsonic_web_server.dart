@@ -93,8 +93,8 @@ class _SubsonicWebServer extends MusicWebServer {
 
     final server = authDetails.dir.toDbKey();
     final serverUriParsed = Uri.parse(server);
-    final artistsSplitConfig = ArtistsSplitConfig.settings();
-    final genresSplitConfig = GenresSplitConfig.settings();
+
+    final splitConfig = SplitArtistGenreConfigsWrapper.settings();
 
     const batchSize = 400;
     int offset = 0;
@@ -116,8 +116,7 @@ class _SubsonicWebServer extends MusicWebServer {
         server: server,
         serverUriParsed: serverUriParsed,
         albums: albums,
-        artistsSplitConfig: artistsSplitConfig,
-        genresSplitConfig: genresSplitConfig,
+        splitConfig: splitConfig,
       );
 
       await for (final tr in stream) {
@@ -149,8 +148,7 @@ class _SubsonicWebServer extends MusicWebServer {
     required String server,
     required Uri serverUriParsed,
     required List<AlbumModel> albums,
-    required ArtistsSplitConfig artistsSplitConfig,
-    required GenresSplitConfig genresSplitConfig,
+    required SplitArtistGenreConfigsWrapper splitConfig,
   }) async* {
     const subBatchSize = 10;
     for (var i = 0; i < albums.length; i += subBatchSize) {
@@ -163,8 +161,7 @@ class _SubsonicWebServer extends MusicWebServer {
         for (final s in songs) {
           yield _mediaModelToTrackExtended(
             s,
-            artistsSplitConfig: artistsSplitConfig,
-            genresSplitConfig: genresSplitConfig,
+            splitConfig: splitConfig,
             server: server,
             serverUriParsed: serverUriParsed,
           );
@@ -175,8 +172,7 @@ class _SubsonicWebServer extends MusicWebServer {
 
   TrackExtended _mediaModelToTrackExtended(
     MediaModel media, {
-    required ArtistsSplitConfig artistsSplitConfig,
-    required GenresSplitConfig genresSplitConfig,
+    required SplitArtistGenreConfigsWrapper splitConfig,
     required String server,
     required Uri serverUriParsed,
   }) {
@@ -192,6 +188,10 @@ class _SubsonicWebServer extends MusicWebServer {
     final artist = media.artist;
     final genre = media.genre;
     final album = media.album ?? '';
+    final albums = Indexer.splitAlbum(
+      album,
+      config: splitConfig.albumConfig,
+    );
     const albumArtist = ''; // not there
     final year = media.year;
     final yearString = year?.toString() ?? '';
@@ -200,19 +200,20 @@ class _SubsonicWebServer extends MusicWebServer {
         : Indexer.splitArtist(
             title: title,
             originalArtist: artist,
-            config: artistsSplitConfig,
+            config: splitConfig.artistsConfig,
           );
     final genres = genre == null
         ? <String>[]
         : Indexer.splitGenre(
             genre,
-            config: genresSplitConfig,
+            config: splitConfig.genresConfig,
           );
     return TrackExtended(
       title: media.title,
       originalArtist: media.artist ?? '',
       artistsList: artists,
-      album: album,
+      originalAlbum: album,
+      albumsList: albums,
       albumArtist: albumArtist,
       originalGenre: media.genre ?? '',
       genresList: genres,
@@ -248,8 +249,8 @@ class _SubsonicWebServer extends MusicWebServer {
       hashKey: media.id, // TrackExtended.generateHashKeyIfEnabled(null, path, null)
       isVideo: media.isVideo ?? false,
       server: server,
-      albumIdentifierWrapper: AlbumIdentifierWrapper.normalize(
-        album: album,
+      albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
+        albums: albums,
         albumArtist: albumArtist,
         year: yearString,
       ),

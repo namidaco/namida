@@ -465,11 +465,11 @@ sealed class NetworkArtworkInfo {
   const NetworkArtworkInfo._(this.name, this.icon, {this.fileIdentifier});
 
   factory NetworkArtworkInfo.album(String name, String? artist) = _NetworkArtworkInfoAlbum;
-  factory NetworkArtworkInfo.albumAutoArtist(String identifier) {
+  factory NetworkArtworkInfo.albumAutoArtist(AlbumIdentifierWrapper identifier) {
     final tracks = identifier.getAlbumTracks();
-    final album = tracks.album;
+    final album = identifier.displayAlbumName;
     final artist = tracks.firstOrNull?.artistsList.firstOrNull;
-    return _NetworkArtworkInfoAlbum(album, artist, fileIdentifier: identifier);
+    return _NetworkArtworkInfoAlbum(album, artist, fileIdentifier: identifier.resolved());
   }
   factory NetworkArtworkInfo.artist(String name) = _NetworkArtworkInfoArtist;
 

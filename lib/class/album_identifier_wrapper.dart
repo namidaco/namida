@@ -2,6 +2,8 @@
 part of 'track.dart';
 
 class AlbumIdentifierWrapper {
+  String get displayAlbumName => album.isEmpty ? UnknownTags.ALBUM : album;
+
   final String album, albumArtist, year;
 
   const AlbumIdentifierWrapper({
@@ -11,6 +13,22 @@ class AlbumIdentifierWrapper {
   });
 
   static String _normalize(String text) => DownloadTaskFilename.cleanupFilename(text);
+
+  static List<AlbumIdentifierWrapper> fromAlbums({
+    required List<String> albums,
+    required String albumArtist,
+    required String year,
+  }) {
+    return albums
+        .map(
+          (a) => AlbumIdentifierWrapper.normalize(
+            album: a,
+            albumArtist: albumArtist,
+            year: year,
+          ),
+        )
+        .toList();
+  }
 
   factory AlbumIdentifierWrapper.normalize({
     required String album,
@@ -26,11 +44,21 @@ class AlbumIdentifierWrapper {
 
   String resolved() => resolve(settings.albumIdentifiers.value);
   String resolve(List<AlbumIdentifier> identifiers) {
+    final modified = modify(identifiers);
+    return "${modified.album}${modified.albumArtist}${modified.year}";
+  }
+
+  AlbumIdentifierWrapper modified() => modify(settings.albumIdentifiers.value);
+  AlbumIdentifierWrapper modify(List<AlbumIdentifier> identifiers) {
     final idWrapper = this;
     final n = identifiers.contains(AlbumIdentifier.albumName) ? idWrapper.album : '';
     final aa = identifiers.contains(AlbumIdentifier.albumArtist) ? idWrapper.albumArtist : '';
     final y = identifiers.contains(AlbumIdentifier.year) ? idWrapper.year : '';
-    return "$n$aa$y";
+    return AlbumIdentifierWrapper(
+      album: n,
+      albumArtist: aa,
+      year: y,
+    );
   }
 
   Map<String, dynamic> toMap() {

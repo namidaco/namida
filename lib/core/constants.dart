@@ -926,7 +926,8 @@ const kDummyExtendedTrack = TrackExtended(
   title: "",
   originalArtist: "",
   artistsList: [],
-  album: "",
+  originalAlbum: "",
+  albumsList: [],
   albumArtist: "",
   originalGenre: "",
   genresList: [],
@@ -960,7 +961,7 @@ const kDummyExtendedTrack = TrackExtended(
   hashKey: null,
   gainData: null,
   sortInfo: null,
-  albumIdentifierWrapper: null,
+  albumsIdentifiersWrappers: [],
   isVideo: false,
   server: null,
 );

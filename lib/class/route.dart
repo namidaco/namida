@@ -18,16 +18,21 @@ mixin NamidaRouteWidget on Widget implements NamidaRoute {
   String? get name => null;
 
   @override
+  dynamic get routeData => null;
+
+  @override
   bool isSameRouteAs(NamidaRoute r) => this.name == r.name && this.route == r.route;
 }
 
 abstract class NamidaRoute {
   final RouteType route;
   final String? name;
+  final dynamic routeData;
 
   const NamidaRoute(
     this.route,
     this.name,
+    this.routeData,
   );
 
   @override

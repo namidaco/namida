@@ -72,7 +72,7 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
       LRCSearchDetails(
         title: trackExt.title,
         artist: trackExt.originalArtist,
-        album: trackExt.album,
+        album: trackExt.originalAlbum,
         durationMS: durMS,
         isDurationModified: isDurationModified,
       ),
@@ -88,7 +88,7 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
         LRCSearchDetails(
           title: trackExt.title,
           artist: trackExt.artistsList.first,
-          album: trackExt.album,
+          album: trackExt.originalAlbum,
           durationMS: durMS,
           isDurationModified: isDurationModified,
         ),

@@ -144,7 +144,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                   children: [
                     ...LibraryImageSource.values.map(
                       (e) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
+                        padding: const EdgeInsets.all(3.0),
                         child: ListTileWithCheckMark(
                           active: imageSources.contains(e),
                           icon: e.toIcon(),
@@ -255,8 +255,8 @@ class ExtrasSettings extends SettingSubpageProvider {
                               .map(
                                 (e) => ObxO(
                                   rx: settings.floatingActionButton,
-                                  builder: (context, floatingActionButton) => Container(
-                                    margin: const EdgeInsets.all(4.0),
+                                  builder: (context, floatingActionButton) => Padding(
+                                    padding: const EdgeInsets.all(3.0),
                                     child: ListTileWithCheckMark(
                                       title: e.toText(),
                                       icon: e.toIcon(),
@@ -293,8 +293,8 @@ class ExtrasSettings extends SettingSubpageProvider {
                       width: context.width,
                       child: Column(
                         children: [
-                          Container(
-                            margin: const EdgeInsets.all(4.0),
+                          Padding(
+                            padding: const EdgeInsets.all(3.0),
                             child: Obx(
                               (context) => ListTileWithCheckMark(
                                 title: lang.auto,
@@ -309,8 +309,8 @@ class ExtrasSettings extends SettingSubpageProvider {
                           const SizedBox(height: 12.0),
                           ...settings.libraryTabs.value.asMap().entries.map(
                             (e) => Obx(
-                              (context) => Container(
-                                margin: const EdgeInsets.all(4.0),
+                              (context) => Padding(
+                                padding: const EdgeInsets.all(3.0),
                                 child: ListTileWithCheckMark(
                                   title: "${e.key + 1}. ${e.value.toText()}",
                                   icon: e.value.toIcon(),
@@ -384,7 +384,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                           children: [
                             ...TrackSearchFilter.values.map(
                               (e) => Padding(
-                                padding: const EdgeInsets.all(4.0),
+                                padding: const EdgeInsets.all(3.0),
                                 child: Obx(
                                   (context) => ListTileWithCheckMark(
                                     title: e.toText(),
@@ -559,7 +559,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                             NamidaContainerDivider(),
                             ...list.map(
                               (e) => Padding(
-                                padding: const EdgeInsets.all(4.0),
+                                padding: const EdgeInsets.all(3.0),
                                 child: Obx(
                                   (context) => ListTileWithCheckMark(
                                     title: e.toText(),
@@ -652,7 +652,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                             ),
                             ...LyricsSource.values.map(
                               (e) => Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 3.0),
+                                padding: const EdgeInsets.all(3.0),
                                 child: ListTileWithCheckMark(
                                   active: lyricsSource == e,
                                   title: e.toText(),

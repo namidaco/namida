@@ -6,12 +6,14 @@ class SplitArtistGenreConfigsWrapper {
   final String dbPath;
   final ArtistsSplitConfig artistsConfig;
   final GenresSplitConfig genresConfig;
+  final SimpleSplitConfig albumConfig;
   final GeneralSplitConfig generalConfig;
 
   const SplitArtistGenreConfigsWrapper({
     required this.dbPath,
     required this.artistsConfig,
     required this.genresConfig,
+    required this.albumConfig,
     required this.generalConfig,
   });
 
@@ -20,6 +22,7 @@ class SplitArtistGenreConfigsWrapper {
       dbPath: AppPaths.TRACKS_DB_INFO.file.path,
       artistsConfig: ArtistsSplitConfig.settings(),
       genresConfig: GenresSplitConfig.settings(),
+      albumConfig: SimpleSplitConfig(),
       generalConfig: GeneralSplitConfig(),
     );
   }
@@ -91,6 +94,23 @@ class GenresSplitConfig extends SplitterConfig {
       "separators": separators,
       "separatorsBlacklist": separatorsBlacklist,
     };
+  }
+}
+
+class SimpleSplitConfig extends SplitterConfig {
+  SimpleSplitConfig._({
+    required super.separators,
+    required super.separatorsBlacklist,
+  });
+
+  factory SimpleSplitConfig() {
+    // `/` are pretty common for album names
+    // `\` could exist too
+    final finalSplitters = {';', '//', r'\\'};
+    return SimpleSplitConfig._(
+      separators: finalSplitters.toList(),
+      separatorsBlacklist: [],
+    );
   }
 }
 

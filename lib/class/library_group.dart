@@ -24,7 +24,7 @@ class LibraryGroup<T extends Track> {
     didFill = other.didFill;
   }
 
-  final mainMapAlbums = LibraryItemMap();
+  final mainMapAlbums = LibraryItemMapRaw<AlbumIdentifierWrapper>(equals: (item1, item2) => item1 == item2, hashCode: (p0) => p0.hashCode);
   final mainMapArtists = LibraryItemMap();
   final mainMapAlbumArtists = LibraryItemMap();
   final mainMapComposer = LibraryItemMap();
@@ -57,7 +57,10 @@ class LibraryGroup<T extends Track> {
         final trExt = trackToExtended(tr);
 
         // -- Assigning Albums
-        mainMapAlbums.addForce(trExt.getAlbumIdentifier(albumIdentifier), tr);
+        final identifiers = trExt.getAlbumsIdentifiersResolved(albumIdentifier);
+        identifiers.loop((item) {
+          mainMapAlbums.addForce(item, tr);
+        });
 
         // -- Assigning Artists
         trExt.artistsList.loop((artist) {

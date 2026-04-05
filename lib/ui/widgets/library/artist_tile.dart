@@ -13,7 +13,7 @@ import 'package:namida/ui/widgets/network_artwork.dart';
 class ArtistTile extends StatelessWidget {
   final String name;
   final List<Track> tracks;
-  final Set<String> albums;
+  final Set<AlbumIdentifierWrapper> albums;
   final MediaType type;
   final String? extraText;
 

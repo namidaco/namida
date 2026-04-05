@@ -236,7 +236,7 @@ class _SponsorBlockCategoryTile extends StatelessWidget {
                   )
                 : null;
             return Padding(
-              padding: const EdgeInsets.all(4.0),
+              padding: const EdgeInsets.all(3.0),
               child: ListTileWithCheckMark(
                 leading: leading,
                 icon: icon,

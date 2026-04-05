@@ -138,10 +138,10 @@ extension TracksWithDatesUtils on List<Selectable> {
 }
 
 extension TracksUtils on List<Track> {
-  Set<String> toUniqueAlbums() {
+  Set<AlbumIdentifierWrapper> toUniqueAlbums() {
     final tracks = this;
-    final albums = <String>{};
-    tracks.loop((t) => albums.add(t.albumIdentifier));
+    final albums = <AlbumIdentifierWrapper>{};
+    tracks.loop((t) => t.albumsIdentifiersResolved.loop(albums.add));
     return albums;
   }
 
@@ -190,7 +190,8 @@ extension TracksUtils on List<Track> {
     return '';
   }
 
-  String get album => _firstNonEmpty((e) => e.album);
+  String get originalAlbum => _firstNonEmpty((e) => e.originalAlbum);
+
   String get albumArtist {
     if (isEmpty) return '';
 
@@ -510,7 +511,7 @@ extension TRACKPLAYMODE on TrackPlayMode {
           TrackPlayMode.searchResults =>
             searchQueue ??
                 (SearchSortController.inst.trackSearchTemp.value.isNotEmpty ? SearchSortController.inst.trackSearchTemp.value : SearchSortController.inst.trackSearchList.value),
-          TrackPlayMode.trackAlbum => track.albumIdentifier.getAlbumTracks(),
+          TrackPlayMode.trackAlbum => track.albumsIdentifiersResolved.firstOrNull?.getAlbumTracks(),
           TrackPlayMode.trackArtist => track.artistsList.firstOrNull?.getArtistTracks(),
           TrackPlayMode.trackGenre => track.artistsList.firstOrNull?.getGenresTracks(),
         } ??

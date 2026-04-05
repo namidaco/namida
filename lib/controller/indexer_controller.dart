@@ -78,7 +78,7 @@ class Indexer<T extends Track> {
   final artworksSizeInStorage = 0.obs;
 
   final mainMapsGroup = LibraryGroup<T>();
-  LibraryItemMap get mainMapAlbums => mainMapsGroup.mainMapAlbums;
+  LibraryItemMapRaw<AlbumIdentifierWrapper> get mainMapAlbums => mainMapsGroup.mainMapAlbums;
   LibraryItemMap get mainMapArtists => mainMapsGroup.mainMapArtists;
   LibraryItemMap get mainMapAlbumArtists => mainMapsGroup.mainMapAlbumArtists;
   LibraryItemMap get mainMapComposer => mainMapsGroup.mainMapComposer;
@@ -456,7 +456,9 @@ class Indexer<T extends Track> {
   /// Removes Specific tracks from their corresponding media, useful when updating track metadata or reindexing a track.
   void _removeThisTrackFromAlbumGenreArtistEtc(Track tr) {
     final trExt = tr.toTrackExt();
-    mainMapAlbums.value[trExt.albumIdentifier]?.remove(tr);
+    trExt.albumsIdentifiersResolved.loop((identifier) {
+      mainMapAlbums.value[identifier]?.remove(tr);
+    });
 
     trExt.artistsList.loop((artist) {
       mainMapArtists.value[artist]?.remove(tr);
@@ -521,9 +523,9 @@ class Indexer<T extends Track> {
       }
     }
 
-    (List<String> newOnes, List<String> oldOnes) differenceLists(List<String> newOnes, List<String> oldOnes) {
-      final oldOnesCopy = List<String>.from(oldOnes);
-      final newOnesFinal = <String>[];
+    (List<D> newOnes, List<D> oldOnes) differenceLists<D>(List<D> newOnes, List<D> oldOnes) {
+      final oldOnesCopy = List<D>.from(oldOnes);
+      final newOnesFinal = <D>[];
       newOnes.loop(
         (element) {
           final alreadyExistedInOld = oldOnesCopy.remove(element);
@@ -540,7 +542,13 @@ class Indexer<T extends Track> {
       final newTrack = newtr.asTrack();
 
       // -- Assigning Albums
-      addCustom(MediaType.album, mainMapAlbums, oldtr?.albumIdentifier, newtr.albumIdentifier, newTrack);
+      final newOldAlbums = oldtr == null ? (newtr.albumsIdentifiersResolved, const []) : differenceLists(newtr.albumsIdentifiersResolved, oldtr.albumsIdentifiersResolved);
+      for (final alNew in newOldAlbums.$1) {
+        addCustom(MediaType.album, mainMapAlbums, null, alNew, newTrack);
+      }
+      for (final alOld in newOldAlbums.$2) {
+        removeCustom(MediaType.album, mainMapAlbums, null, alOld);
+      }
 
       // -- Assigning Artists
       final newOldArtists = oldtr == null ? (newtr.artistsList, const []) : differenceLists(newtr.artistsList, oldtr.artistsList);
@@ -657,7 +665,8 @@ class Indexer<T extends Track> {
         title: UnknownTags.TITLE,
         originalArtist: UnknownTags.ARTIST,
         artistsList: [UnknownTags.ARTIST],
-        album: UnknownTags.ALBUM,
+        originalAlbum: UnknownTags.ALBUM,
+        albumsList: [UnknownTags.ALBUM],
         albumArtist: UnknownTags.ALBUMARTIST,
         originalGenre: UnknownTags.GENRE,
         genresList: [UnknownTags.GENRE],
@@ -690,7 +699,7 @@ class Indexer<T extends Track> {
         tagsList: [],
         gainData: null,
         sortInfo: null,
-        albumIdentifierWrapper: null,
+        albumsIdentifiersWrappers: [],
         isVideo: trackPath.isVideo(),
         hashKey: TrackExtended.generateHashKeyIfEnabled(null, trackPath, null),
         server: null,
@@ -708,6 +717,12 @@ class Indexer<T extends Track> {
         final album = tags.album;
         final albumArtist = tags.albumArtist;
         final yearText = tags.year;
+
+        // -- Split Albums
+        final albums = splitAlbum(
+          album,
+          config: splittersConfigs.albumConfig,
+        );
 
         // -- Split Artists
         final artists = splitArtist(
@@ -742,7 +757,8 @@ class Indexer<T extends Track> {
           title: doMagic(tags.title),
           originalArtist: doMagic(tags.artist),
           artistsList: artists,
-          album: doMagic(tags.album),
+          originalAlbum: doMagic(tags.album),
+          albumsList: albums,
           albumArtist: doMagic(tags.albumArtist),
           originalGenre: doMagic(tags.genre),
           genresList: genres,
@@ -769,8 +785,8 @@ class Indexer<T extends Track> {
           rating: tags.ratingPercentage,
           originalTags: tags.tags,
           tagsList: tagsEmbedded,
-          albumIdentifierWrapper: AlbumIdentifierWrapper.normalize(
-            album: album ?? '',
+          albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
+            albums: albums,
             albumArtist: albumArtist ?? '',
             year: yearText ?? '',
           ),
@@ -1496,7 +1512,17 @@ class Indexer<T extends Track> {
 
   static List<String> splitGeneral(
     String? originalText, {
-    required SplitterConfig config,
+    required GeneralSplitConfig config,
+  }) {
+    return config.splitText(
+      originalText,
+      fallback: null,
+    );
+  }
+
+  static List<String> splitAlbum(
+    String? originalText, {
+    required SimpleSplitConfig config,
   }) {
     return config.splitText(
       originalText,
@@ -1575,9 +1601,8 @@ class Indexer<T extends Track> {
       ) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */,
     );
     final tracks = <TrackExtended>[];
-    final artistsSplitConfig = ArtistsSplitConfig.settings();
-    final genresSplitConfig = GenresSplitConfig.settings();
-    final generalSplitConfig = GeneralSplitConfig();
+
+    final splitConfig = SplitArtistGenreConfigsWrapper.settings();
 
     final int length = allMusic.length;
     for (int i = 0; i < length; i++) {
@@ -1585,6 +1610,12 @@ class Indexer<T extends Track> {
 
       final map = e.getMap;
       final album = e.album;
+      final albums = album == null
+          ? <String>[]
+          : Indexer.splitAlbum(
+              album,
+              config: splitConfig.albumConfig,
+            );
       final albumArtist = map['album_artist'] as String?;
       final artist = e.artist;
       final artists = artist == null
@@ -1592,28 +1623,28 @@ class Indexer<T extends Track> {
           : Indexer.splitArtist(
               title: e.title,
               originalArtist: artist,
-              config: artistsSplitConfig,
+              config: splitConfig.artistsConfig,
             );
       final genre = e.genre;
       final genres = genre == null
           ? <String>[]
           : Indexer.splitGenre(
               genre,
-              config: genresSplitConfig,
+              config: splitConfig.genresConfig,
             );
       final mood = map['mood'];
       final moods = mood == null
           ? <String>[]
           : Indexer.splitGeneral(
               mood,
-              config: generalSplitConfig,
+              config: splitConfig.generalConfig,
             );
       final tag = map['tag'] ?? map['tags'];
       final tags = tag == null
           ? <String>[]
           : Indexer.splitGeneral(
               tag,
-              config: generalSplitConfig,
+              config: splitConfig.generalConfig,
             );
       final bitrate = map['bitrate'] as int?;
       final disc = map['disc_number'] as int?;
@@ -1623,7 +1654,8 @@ class Indexer<T extends Track> {
         title: e.title,
         originalArtist: e.artist ?? UnknownTags.ARTIST,
         artistsList: artists,
-        album: album ?? UnknownTags.ALBUM,
+        originalAlbum: album ?? UnknownTags.ALBUM,
+        albumsList: albums,
         albumArtist: albumArtist ?? UnknownTags.ALBUMARTIST,
         originalGenre: e.genre ?? UnknownTags.GENRE,
         genresList: genres,
@@ -1656,8 +1688,8 @@ class Indexer<T extends Track> {
         tagsList: tags,
         gainData: null,
         sortInfo: null,
-        albumIdentifierWrapper: AlbumIdentifierWrapper.normalize(
-          album: album ?? '',
+        albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
+          albums: albums,
           albumArtist: albumArtist ?? '',
           year: yearString ?? '',
         ),
@@ -1872,9 +1904,7 @@ class _IndexerIsolateExecuter {
           final trExt = TrackExtended.fromJson(
             path,
             item,
-            artistsSplitConfig: splitconfig.artistsConfig,
-            genresSplitConfig: splitconfig.genresConfig,
-            generalSplitConfig: splitconfig.generalConfig,
+            splitConfig: splitconfig,
           );
           final track = trExt.asTrack();
           allTracksMappedByPath[track.path] = trExt;
@@ -1894,9 +1924,7 @@ class _IndexerIsolateExecuter {
               final trExt = TrackExtended.fromJson(
                 item['path'] ?? '',
                 item,
-                artistsSplitConfig: splitconfig.artistsConfig,
-                genresSplitConfig: splitconfig.genresConfig,
-                generalSplitConfig: splitconfig.generalConfig,
+                splitConfig: splitconfig,
               );
               final track = trExt.asTrack();
               allTracksMappedByPath[track.path] = trExt;

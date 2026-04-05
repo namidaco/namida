@@ -37,9 +37,9 @@ class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
   final String name;
 
   final List<Track> tracks;
-  final List<String> albumIdentifiers;
-  final List<String> singlesIdentifiers;
-  final List<String> extrasIdentifiers;
+  final List<AlbumIdentifierWrapper> albumIdentifiers;
+  final List<AlbumIdentifierWrapper> singlesIdentifiers;
+  final List<AlbumIdentifierWrapper> extrasIdentifiers;
   final MediaType type;
 
   const ArtistTracksPage({
@@ -208,7 +208,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
 class _AlbumsRow extends StatelessWidget {
   final String title;
   final IconData icon;
-  final List<String> identifiers;
+  final List<AlbumIdentifierWrapper> identifiers;
   final bool initiallyExpanded;
   final ValueChanged<bool>? onExpansionChanged;
 

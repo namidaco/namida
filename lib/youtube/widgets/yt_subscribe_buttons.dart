@@ -394,7 +394,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                         children: allChannelGroups
                             .map(
                               (e) => Padding(
-                                padding: const EdgeInsets.all(4.0),
+                                padding: const EdgeInsets.all(3.0),
                                 child: ListTileWithCheckMark(
                                   icon: Broken.smileys,
                                   title: e,

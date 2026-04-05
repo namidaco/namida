@@ -36,7 +36,6 @@ void showTrackAdvancedDialog({
   required NetworkArtworkInfo? networkArtworkInfo,
   required Color colorScheme,
   required QueueSourceBase source,
-  required List<(String, String)> albumsUniqued,
 }) async {
   if (tracks.isEmpty) return;
   final isSingle = tracks.length == 1;
@@ -182,7 +181,7 @@ void showTrackAdvancedDialog({
                           .map(
                             (e) => Obx(
                               (context) => Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                padding: const EdgeInsets.all(3.0),
                                 child: ListTileWithCheckMark(
                                   active: selected.contains(e),
                                   title: e.toText(),

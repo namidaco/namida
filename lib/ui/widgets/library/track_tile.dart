@@ -807,7 +807,7 @@ class TrackTileManager {
   static final _lookup = <TrackTileItem, String Function(TrackExtended track)>{
     TrackTileItem.title: (track) => track.title.overflow,
     TrackTileItem.artists: (track) => track.originalArtist.overflow,
-    TrackTileItem.album: (track) => track.album.overflow,
+    TrackTileItem.album: (track) => track.originalAlbum.overflow,
     TrackTileItem.albumArtist: (track) => track.albumArtist.overflow,
     TrackTileItem.genres: (track) => track.originalGenre.overflow,
     TrackTileItem.duration: (track) => track.durationMS.milliSecondsLabel,

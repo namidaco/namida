@@ -683,7 +683,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                         children: [
                           ...OnYoutubeLinkOpenAction.values.map(
                             (e) => Padding(
-                              padding: const EdgeInsets.all(6.0),
+                              padding: const EdgeInsets.all(3.0),
                               child: ObxO(
                                 rx: settings.youtube.onYoutubeLinkOpen,
                                 builder: (context, onYoutubeLinkOpen) => ListTileWithCheckMark(

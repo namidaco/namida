@@ -363,7 +363,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                       children: [
                         ...VideoPlaybackSource.values.map(
                           (e) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
+                            padding: const EdgeInsets.all(3.0),
                             child: ListTileWithCheckMark(
                               active: videoPlaybackSource == e,
                               title: e.toText(),
@@ -436,7 +436,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                               children: [
                                 ...kStockVideoQualities.asMap().entries.map(
                                   (e) => Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                    padding: const EdgeInsets.all(3.0),
                                     child: ListTileWithCheckMark(
                                       icon: Broken.story,
                                       active: youtubeVideoQualities.contains(e.value),

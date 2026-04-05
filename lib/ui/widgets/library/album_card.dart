@@ -14,7 +14,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
 
 class AlbumCard extends StatelessWidget {
-  final String identifier;
+  final AlbumIdentifierWrapper? identifier;
   final List<Track> album;
   final bool staggered;
   final bool compact;
@@ -44,6 +44,7 @@ class AlbumCard extends StatelessWidget {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     final finalYear = album.year.yearFormatted;
+    final name = identifier?.displayAlbumName ?? '';
     final albumArtist = album.albumArtist;
 
     final hero = 'album_$identifier$additionalHeroTag';
@@ -111,7 +112,7 @@ class AlbumCard extends StatelessWidget {
                       thumbnailSize: imageSize,
                       path: album.pathToImage,
                       borderRadius: 10.0,
-                      info: NetworkArtworkInfo.albumAutoArtist(identifier),
+                      info: identifier == null ? null : NetworkArtworkInfo.albumAutoArtist(identifier!),
                       blur: 8.0,
                       // disableBlurBgSizeShrink: true,
                       iconSize: 32.0,
@@ -159,7 +160,7 @@ class AlbumCard extends StatelessWidget {
                                       ],
                                     ),
                                     borderRadius: 8.0.withMaximum(imageSize * 0.07),
-                                    onTap: () => Player.inst.playOrPause(0, album, QueueSource.album(identifier), homePageItem: homepageItem),
+                                    onTap: () => Player.inst.playOrPause(0, album, QueueSource.album(identifier, name), homePageItem: homepageItem),
                                     padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
                                     child: Icon(
                                       Broken.play,
@@ -185,7 +186,7 @@ class AlbumCard extends StatelessWidget {
                             NamidaHero(
                               tag: 'line1_$hero',
                               child: Text(
-                                album.album.overflow,
+                                name.overflow,
                                 style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28)),
                                 textAlign: TextAlign.start,
                                 softWrap: false,

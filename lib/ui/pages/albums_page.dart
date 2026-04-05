@@ -5,6 +5,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -27,7 +28,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.PAGE_albums;
 
-  final RxList<String>? albumIdentifiers;
+  final RxList<AlbumIdentifierWrapper>? albumIdentifiers;
   final CountPerRow countPerRow;
   final bool enableGridIconButton;
   final bool animateTiles;

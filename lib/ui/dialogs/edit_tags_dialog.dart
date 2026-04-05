@@ -58,7 +58,7 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrack, Color colorScheme, {b
   void openSearchDialog() {
     final trExt = singleTrack.toTrackExt();
     final title = trExt.title == UnknownTags.TITLE ? null : trExt.title;
-    final album = trExt.album == UnknownTags.ALBUM ? null : trExt.album;
+    final album = trExt.originalAlbum == UnknownTags.ALBUM ? null : trExt.originalAlbum;
     final artist = trExt.originalArtist == UnknownTags.ARTIST ? null : trExt.originalArtist;
     final searchText = [
       ?title,

@@ -172,7 +172,7 @@ class ThemeSetting extends SettingSubpageProvider {
                       children: [
                         ...allLanguages.map(
                           (e) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            padding: const EdgeInsets.all(3.0),
                             child: ObxO(
                               rx: selectedLangRx,
                               builder: (context, selectedLang) => ListTileWithCheckMark(

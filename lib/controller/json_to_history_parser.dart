@@ -584,7 +584,7 @@ class JsonToHistoryParser {
           .map(
             (e) => {
               'title': e.title,
-              'album': e.album,
+              'album': e.originalAlbum,
               'artist': e.originalArtist,
               'path': e.path,
               'filename': e.filename,

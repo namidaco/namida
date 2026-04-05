@@ -23,12 +23,14 @@ import 'package:namida/ui/widgets/network_artwork.dart';
 
 class AlbumTracksPage extends StatefulWidget with NamidaRouteWidget {
   @override
-  String? get name => albumIdentifier;
+  String? get name => albumIdentifier.resolved();
+  @override
+  AlbumIdentifierWrapper? get routeData => albumIdentifier.modified();
 
   @override
   RouteType get route => RouteType.SUBPAGE_albumTracks;
 
-  final String albumIdentifier;
+  final AlbumIdentifierWrapper albumIdentifier;
   final List<Track> tracks;
 
   const AlbumTracksPage({
@@ -55,15 +57,16 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
     final theme = context.theme;
     final textTheme = theme.textTheme;
     final tracks = widget.tracks;
-    final name = tracks.album;
+    final name = widget.albumIdentifier.displayAlbumName;
     final displayTrackNumberinAlbumPage = settings.displayTrackNumberinAlbumPage.value;
+    final queueSource = QueueSource.album(widget.albumIdentifier, name);
     final heroTag = 'album_${widget.albumIdentifier}';
 
     return BackgroundWrapper(
       child: AnimationLimiter(
         child: TrackTilePropertiesProvider(
           configs: TrackTilePropertiesConfigs(
-            queueSource: QueueSource.album(widget.albumIdentifier),
+            queueSource: queueSource,
             displayTrackNumber: displayTrackNumberinAlbumPage,
             fallbackToAlbumCover: false,
           ),
@@ -103,7 +106,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                           infoBox: (maxWidth) => SubpageInfoContainer(
                             maxWidth: maxWidth,
                             title: name,
-                            source: QueueSource.album(widget.albumIdentifier),
+                            source: queueSource,
                             subtitle: tracks.albumArtist,
                             thirdLineText: tracks.year.yearFormatted,
                             heroTag: 'album_${widget.albumIdentifier}',

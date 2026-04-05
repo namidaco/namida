@@ -34,7 +34,7 @@ class TracksSearchWrapper {
             (e) => {
               'title': e.title,
               'artist': e.originalArtist,
-              'album': e.album,
+              'album': e.originalAlbum,
               'albumArtist': e.albumArtist,
               'genre': e.originalGenre,
               'composer': e.composer,
@@ -46,8 +46,7 @@ class TracksSearchWrapper {
             },
           )
           .toList(),
-      'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
-      'genresSplitConfig': GenresSplitConfig.settings().toMap(),
+      'splitConfig': SplitArtistGenreConfigsWrapper.settings(),
       'filters': filters,
       'cleanup': settings.enableSearchCleanup.value,
       'lyricsCacheDirectory': AppDirs.LYRICS,
@@ -57,8 +56,7 @@ class TracksSearchWrapper {
 
   factory TracksSearchWrapper.init(Map params) {
     final tracks = params['tracks'] as List<Map>;
-    final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
-    final genresSplitConfig = GenresSplitConfig.fromMap(params['genresSplitConfig']);
+    final splitConfig = params['splitConfig'] as SplitArtistGenreConfigsWrapper;
     final tsf = params['filters'] as List<TrackSearchFilter>;
     final cleanup = params['cleanup'] as bool;
     final lyricsCacheDirectory = params['lyricsCacheDirectory'] as String;
@@ -104,14 +102,23 @@ class TracksSearchWrapper {
           splitTitle: splitThis(title, stitle),
           splitFilename: splitThis(path.getFilename, sfilename),
           splitFolder: splitThis(Track.explicit(path).folderName, sfolder),
-          splitAlbum: splitThis(trMap['album'], salbum),
+          splitAlbum: salbum
+              ? _mapListCleanedAndNonCleaned(
+                  Indexer.splitAlbum(
+                    trMap['album'],
+                    config: splitConfig.albumConfig,
+                  ),
+                  textCleanedForSearch,
+                  textNonCleanedForSearch,
+                )
+              : [],
           splitAlbumArtist: splitThis(trMap['albumArtist'], salbumartist),
           splitArtist: sartist
               ? _mapListCleanedAndNonCleaned(
                   Indexer.splitArtist(
                     title: title,
                     originalArtist: trMap['artist'],
-                    config: artistsSplitConfig,
+                    config: splitConfig.artistsConfig,
                   ),
                   textCleanedForSearch,
                   textNonCleanedForSearch,
@@ -121,7 +128,7 @@ class TracksSearchWrapper {
               ? _mapListCleanedAndNonCleaned(
                   Indexer.splitGenre(
                     trMap['genre'],
-                    config: genresSplitConfig,
+                    config: splitConfig.genresConfig,
                   ),
                   textCleanedForSearch,
                   textNonCleanedForSearch,

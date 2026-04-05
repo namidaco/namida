@@ -280,7 +280,8 @@ class TrackExtended {
   final String title;
   final String originalArtist;
   final List<String> artistsList;
-  final String album;
+  final String originalAlbum;
+  final List<String> albumsList;
   final String albumArtist;
   final String originalGenre;
   final List<String> genresList;
@@ -317,15 +318,18 @@ class TrackExtended {
   final FTagsSortInfo? sortInfo;
   final String? hashKey;
 
-  final AlbumIdentifierWrapper? albumIdentifierWrapper;
+  final List<AlbumIdentifierWrapper> albumsIdentifiersWrappers;
   final bool isVideo;
   final String? server;
+
+  List<AlbumIdentifierWrapper> albumsIdentifiersWrappersResolved(List<AlbumIdentifier> identifiers) => albumsIdentifiersWrappers.map((e) => e.modify(identifiers)).toList();
 
   const TrackExtended({
     required this.title,
     required this.originalArtist,
     required this.artistsList,
-    required this.album,
+    required this.originalAlbum,
+    required this.albumsList,
     required this.albumArtist,
     required this.originalGenre,
     required this.genresList,
@@ -359,7 +363,7 @@ class TrackExtended {
     required this.gainData,
     required this.sortInfo,
     required this.hashKey,
-    required this.albumIdentifierWrapper,
+    required this.albumsIdentifiersWrappers,
     required this.isVideo,
     required this.server,
   });
@@ -466,34 +470,58 @@ class TrackExtended {
   factory TrackExtended.fromJson(
     String path,
     Map<String, dynamic> json, {
-    required ArtistsSplitConfig artistsSplitConfig,
-    required GenresSplitConfig genresSplitConfig,
-    required GeneralSplitConfig generalSplitConfig,
+    required SplitArtistGenreConfigsWrapper splitConfig,
   }) {
+    final originalAlbum = json['originalAlbum'] ?? json['album'] ?? '';
+    final albumArtist = json['albumArtist'] ?? '';
+    final year = json['year'] ?? 0;
+    final albumsIdentifiersWrappersJson = json['albumsIdentifiersWrappers'] ?? json['albumIdentifierWrapper'];
+    final albumsIdentifiersWrappers = <AlbumIdentifierWrapper>[];
+    if (albumsIdentifiersWrappersJson is List) {
+      for (final m in albumsIdentifiersWrappersJson) {
+        albumsIdentifiersWrappers.add(AlbumIdentifierWrapper.fromMap(m));
+      }
+    } else if (albumsIdentifiersWrappersJson is Map) {
+      albumsIdentifiersWrappers.add(AlbumIdentifierWrapper.fromMap(albumsIdentifiersWrappersJson.cast()));
+    }
+    // -- if wrappers don't have any with the album name
+    if (!albumsIdentifiersWrappers.any((w) => w.album == originalAlbum)) {
+      albumsIdentifiersWrappers.add(
+        AlbumIdentifierWrapper(
+          album: originalAlbum,
+          albumArtist: albumArtist,
+          year: year,
+        ),
+      );
+    }
     return TrackExtended(
       title: json['title'] ?? '',
       originalArtist: json['originalArtist'] ?? '',
       artistsList: Indexer.splitArtist(
         title: json['title'],
         originalArtist: json['originalArtist'],
-        config: artistsSplitConfig,
+        config: splitConfig.artistsConfig,
       ),
-      album: json['album'] ?? '',
-      albumArtist: json['albumArtist'] ?? '',
+      originalAlbum: originalAlbum,
+      albumsList: Indexer.splitAlbum(
+        originalAlbum,
+        config: splitConfig.albumConfig,
+      ),
+      albumArtist: albumArtist,
       originalGenre: json['originalGenre'] ?? '',
       genresList: Indexer.splitGenre(
         json['originalGenre'],
-        config: genresSplitConfig,
+        config: splitConfig.genresConfig,
       ),
       originalMood: json['originalMood'] ?? '',
       moodList: Indexer.splitGeneral(
         json['originalMood'],
-        config: generalSplitConfig,
+        config: splitConfig.generalConfig,
       ),
       composer: json['composer'] ?? '',
       trackNo: json['trackNo'] ?? 0,
       durationMS: json['durationMS'] ?? (json['duration'] is int ? json['duration'] * 1000 : 0),
-      year: json['year'] ?? 0,
+      year: year,
       yearText: json['yearText'] ?? '',
       size: json['size'] ?? 0,
       dateAdded: json['dateAdded'] ?? 0,
@@ -516,12 +544,12 @@ class TrackExtended {
       originalTags: json['originalTags'],
       tagsList: Indexer.splitGeneral(
         json['originalTags'],
-        config: generalSplitConfig,
+        config: splitConfig.generalConfig,
       ),
       gainData: json['gainData'] == null ? null : ReplayGainData.fromMap(json['gainData']),
       sortInfo: json['sortInfo'] == null ? null : FTagsSortInfo.fromMap(json['sortInfo']),
       hashKey: json['hashKey'],
-      albumIdentifierWrapper: json['albumIdentifierWrapper'] == null ? null : AlbumIdentifierWrapper.fromMap(json['albumIdentifierWrapper']),
+      albumsIdentifiersWrappers: albumsIdentifiersWrappers,
       isVideo: json['v'] ?? false,
       server: json['server'],
     );
@@ -531,7 +559,7 @@ class TrackExtended {
     return {
       if (title.isNotEmpty) 'title': title,
       if (originalArtist.isNotEmpty) 'originalArtist': originalArtist,
-      if (album.isNotEmpty) 'album': album,
+      if (originalAlbum.isNotEmpty) 'originalAlbum': originalAlbum,
       if (albumArtist.isNotEmpty) 'albumArtist': albumArtist,
       if (originalGenre.isNotEmpty) 'originalGenre': originalGenre,
       if (originalMood.isNotEmpty) 'originalMood': originalMood,
@@ -561,7 +589,7 @@ class TrackExtended {
       if (gainData != null) 'gainData': ?gainData?.toMap(),
       if (sortInfo != null) 'sortInfo': ?sortInfo?.toMap(),
       if (hashKey != null) 'hashKey': hashKey,
-      if (albumIdentifierWrapper != null) 'albumIdentifierWrapper': albumIdentifierWrapper?.toMap(),
+      if (albumsIdentifiersWrappers.isNotEmpty) 'albumsIdentifiersWrappers': albumsIdentifiersWrappers.map((e) => e.toMap()).toList(),
       if (isVideo) 'v': isVideo,
       if (server != null) 'server': server,
     };
@@ -579,7 +607,7 @@ class TrackExtended {
 extension TrackExtUtils on TrackExtended {
   Track asTrack() => isVideo ? Video.explicit(path) : Track.explicit(path);
   bool get hasUnknownTitle => title == UnknownTags.TITLE;
-  bool get hasUnknownAlbum => album == '' || album == UnknownTags.ALBUM;
+  bool get hasUnknownAlbum => originalAlbum == '' || originalAlbum == UnknownTags.ALBUM;
   bool get hasUnknownAlbumArtist => albumArtist == '' || albumArtist == UnknownTags.ALBUMARTIST;
   bool get hasUnknownComposer => composer == '' || composer == UnknownTags.COMPOSER;
   bool get hasUnknownArtist => artistsList.isEmpty || artistsList.first == UnknownTags.ARTIST;
@@ -603,7 +631,7 @@ extension TrackExtUtils on TrackExtended {
 
   String get cacheKey {
     if (settings.groupArtworksByAlbum.value) {
-      final id = albumIdentifier;
+      final id = albumsIdentifiersResolved.join();
       if (id.isNotEmpty) return id;
     }
     final filename = this.isNetwork
@@ -620,8 +648,8 @@ extension TrackExtUtils on TrackExtended {
     return filename;
   }
 
-  String get albumIdentifier => albumIdentifierWrapper?.resolved() ?? '';
-  String getAlbumIdentifier(List<AlbumIdentifier> identifiers) => albumIdentifierWrapper?.resolve(identifiers) ?? '';
+  List<AlbumIdentifierWrapper> get albumsIdentifiersResolved => albumsIdentifiersWrappersResolved(settings.albumIdentifiers.value);
+  List<AlbumIdentifierWrapper> getAlbumsIdentifiersResolved(List<AlbumIdentifier> identifiers) => albumsIdentifiersWrappersResolved(identifiers);
 
   String get youtubeLink {
     var comment = this.comment;
@@ -701,6 +729,13 @@ extension TrackExtUtils on TrackExtended {
     String? server,
   }) {
     final finaltitle = tag.title ?? title;
+    final originalAlbum = tag.album ?? this.originalAlbum;
+    final finalalbums = tag.tags != null
+        ? Indexer.splitAlbum(
+            originalAlbum,
+            config: splittersConfigs.albumConfig,
+          )
+        : tagsList;
     final finalartists = tag.artist != null
         ? Indexer.splitArtist(
             title: finaltitle,
@@ -726,7 +761,6 @@ extension TrackExtUtils on TrackExtended {
             config: splittersConfigs.generalConfig,
           )
         : tagsList;
-    final album = tag.album ?? this.album;
     final albumArtist = tag.albumArtist ?? this.albumArtist;
     final yearText = tag.year ?? this.year.toString();
     final year = TrackExtended.enforceYearFormat(tag.year) ?? this.year;
@@ -737,7 +771,8 @@ extension TrackExtUtils on TrackExtended {
       title: finaltitle,
       originalArtist: tag.artist ?? originalArtist,
       artistsList: finalartists,
-      album: album,
+      originalAlbum: originalAlbum,
+      albumsList: finalalbums,
       albumArtist: albumArtist,
       originalGenre: tag.genre ?? originalGenre,
       genresList: finalgenres,
@@ -772,8 +807,8 @@ extension TrackExtUtils on TrackExtended {
       bits: bits,
       isLossless: isLossless,
       size: size,
-      albumIdentifierWrapper: AlbumIdentifierWrapper.normalize(
-        album: album,
+      albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
+        albums: finalalbums,
         albumArtist: albumArtist,
         year: yearText,
       ),
@@ -787,7 +822,8 @@ extension TrackExtUtils on TrackExtended {
     String? title,
     String? originalArtist,
     List<String>? artistsList,
-    String? album,
+    String? originalAlbum,
+    List<String>? albumsList,
     String? albumArtist,
     String? originalGenre,
     List<String>? genresList,
@@ -822,7 +858,7 @@ extension TrackExtUtils on TrackExtended {
     List<String>? tagsList,
     ReplayGainData? gainData,
     FTagsSortInfo? sortInfo,
-    AlbumIdentifierWrapper? albumIdentifierWrapper,
+    List<AlbumIdentifierWrapper>? albumsIdentifiersWrappers,
     bool? isVideo,
     required bool generatePathHash,
     String? server,
@@ -833,7 +869,8 @@ extension TrackExtUtils on TrackExtended {
       title: title ?? this.title,
       originalArtist: originalArtist ?? this.originalArtist,
       artistsList: artistsList ?? this.artistsList,
-      album: album ?? this.album,
+      originalAlbum: originalAlbum ?? this.originalAlbum,
+      albumsList: albumsList ?? this.albumsList,
       albumArtist: albumArtist ?? this.albumArtist,
       originalGenre: originalGenre ?? this.originalGenre,
       genresList: genresList ?? this.genresList,
@@ -867,7 +904,7 @@ extension TrackExtUtils on TrackExtended {
       gainData: gainData ?? this.gainData,
       sortInfo: sortInfo ?? this.sortInfo,
       hashKey: newHashKey,
-      albumIdentifierWrapper: albumIdentifierWrapper ?? this.albumIdentifierWrapper,
+      albumsIdentifiersWrappers: albumsIdentifiersWrappers ?? this.albumsIdentifiersWrappers,
       isVideo: isVideo ?? this.isVideo,
       server: server ?? this.server,
     );
@@ -892,7 +929,8 @@ extension TrackUtils on Track {
   String get title => toTrackExt().title;
   String get originalArtist => toTrackExt().originalArtist;
   List<String> get artistsList => toTrackExt().artistsList;
-  String get album => toTrackExt().album;
+  String get originalAlbum => toTrackExt().originalAlbum;
+  List<String> get albumsList => toTrackExt().albumsList;
   String get albumArtist => toTrackExt().albumArtist;
   String get originalGenre => toTrackExt().originalGenre;
   List<String> get genresList => toTrackExt().genresList;
@@ -965,11 +1003,9 @@ extension TrackUtils on Track {
   String? get gainDataFormatted => toTrackExt().gainDataFormatted;
   String get audioInfoFormattedCompact => toTrackExt().audioInfoFormattedCompact;
 
-  AlbumIdentifierWrapper? get albumIdentifierWrapper => toTrackExtOrNull()?.albumIdentifierWrapper;
-
   String get cacheKey => toTrackExt().cacheKey;
-  String get albumIdentifier => toTrackExt().albumIdentifier;
-  String getAlbumIdentifier(List<AlbumIdentifier> identifiers) => toTrackExt().getAlbumIdentifier(identifiers);
+  List<AlbumIdentifierWrapper> get albumsIdentifiersResolved => toTrackExt().albumsIdentifiersResolved;
+  List<AlbumIdentifierWrapper> getAlbumsIdentifiersResolved(List<AlbumIdentifier> identifiers) => toTrackExt().getAlbumsIdentifiersResolved(identifiers);
 
   ReplayGainData? get gainData => toTrackExt().gainData;
   FTagsSortInfo? get sortInfo => toTrackExt().sortInfo;
