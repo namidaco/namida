@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
-import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -23,7 +22,6 @@ Future<void> showSettingDialogWithTextField({
   bool fontScaleFactor = false,
   bool dateTimeFormat = false,
   bool trackTileSeparator = false,
-  bool addNewPlaylist = false,
 }) async {
   final controller = TextEditingController();
   final formKey = GlobalKey<FormState>();
@@ -56,56 +54,54 @@ Future<void> showSettingDialogWithTextField({
       child: CustomBlurryDialog(
         title: title,
         actions: [
-          if (!addNewPlaylist)
-            IconButton(
-              tooltip: lang.restoreDefaults,
-              onPressed: () {
-                if (trackThumbnailSizeinList) {
-                  settings.save(trackThumbnailSizeinList: 70.0);
-                  showResetToDefaultSnackBar("${settings.trackThumbnailSizeinList.value}", title: title);
-                  onTTSetChange();
-                }
-                if (trackListTileHeight) {
-                  settings.save(trackListTileHeight: 70.0);
-                  showResetToDefaultSnackBar("${settings.trackListTileHeight.value}", title: title);
-                  Dimensions.inst.updateTrackTileDimensions();
-                  onTTSetChange();
-                }
-                if (albumThumbnailSizeinList) {
-                  settings.save(albumThumbnailSizeinList: 90.0);
-                  showResetToDefaultSnackBar("${settings.albumThumbnailSizeinList.value}", title: title);
-                }
-                if (albumListTileHeight) {
-                  settings.save(albumListTileHeight: 90.0);
-                  showResetToDefaultSnackBar("${settings.albumListTileHeight.value}", title: title);
-                  Dimensions.inst.updateAlbumTileDimensions();
-                }
+          IconButton(
+            tooltip: lang.restoreDefaults,
+            onPressed: () {
+              if (trackThumbnailSizeinList) {
+                settings.save(trackThumbnailSizeinList: 70.0);
+                showResetToDefaultSnackBar("${settings.trackThumbnailSizeinList.value}", title: title);
+                onTTSetChange();
+              }
+              if (trackListTileHeight) {
+                settings.save(trackListTileHeight: 70.0);
+                showResetToDefaultSnackBar("${settings.trackListTileHeight.value}", title: title);
+                Dimensions.inst.updateTrackTileDimensions();
+                onTTSetChange();
+              }
+              if (albumThumbnailSizeinList) {
+                settings.save(albumThumbnailSizeinList: 90.0);
+                showResetToDefaultSnackBar("${settings.albumThumbnailSizeinList.value}", title: title);
+              }
+              if (albumListTileHeight) {
+                settings.save(albumListTileHeight: 90.0);
+                showResetToDefaultSnackBar("${settings.albumListTileHeight.value}", title: title);
+                Dimensions.inst.updateAlbumTileDimensions();
+              }
+              if (borderRadiusMultiplier) {
+                settings.save(borderRadiusMultiplier: 1.0);
+                showResetToDefaultSnackBar("${settings.borderRadiusMultiplier.value}", title: title);
+              }
+              if (fontScaleFactor) {
+                settings.save(fontScaleFactor: 0.9);
+                showResetToDefaultSnackBar("${settings.fontScaleFactor.value.toInt() * 100}%", title: title);
+              }
+              if (dateTimeFormat) {
+                settings.save(dateTimeFormat: 'MMM yyyy');
+                showResetToDefaultSnackBar("${settings.dateTimeFormat}", title: title);
+                onTIPropChange();
+              }
+              if (trackTileSeparator) {
+                settings.save(trackTileSeparator: '•');
+                showResetToDefaultSnackBar("${settings.trackTileSeparator}", title: title);
+                onTTSetChange();
+                onTIPropChange();
+              }
 
-                if (borderRadiusMultiplier) {
-                  settings.save(borderRadiusMultiplier: 1.0);
-                  showResetToDefaultSnackBar("${settings.borderRadiusMultiplier.value}", title: title);
-                }
-                if (fontScaleFactor) {
-                  settings.save(fontScaleFactor: 0.9);
-                  showResetToDefaultSnackBar("${settings.fontScaleFactor.value.toInt() * 100}%", title: title);
-                }
-                if (dateTimeFormat) {
-                  settings.save(dateTimeFormat: 'MMM yyyy');
-                  showResetToDefaultSnackBar("${settings.dateTimeFormat}", title: title);
-                  onTIPropChange();
-                }
-                if (trackTileSeparator) {
-                  settings.save(trackTileSeparator: '•');
-                  showResetToDefaultSnackBar("${settings.trackTileSeparator}", title: title);
-                  onTTSetChange();
-                  onTIPropChange();
-                }
-
-                NamidaNavigator.inst.closeDialog();
-                Player.inst.refreshRxVariables();
-              },
-              icon: const Icon(Broken.refresh),
-            ),
+              NamidaNavigator.inst.closeDialog();
+              Player.inst.refreshRxVariables();
+            },
+            icon: const Icon(Broken.refresh),
+          ),
           const CancelButton(),
           NamidaButton(
             text: lang.save,
@@ -127,7 +123,6 @@ Future<void> showSettingDialogWithTextField({
                   settings.save(albumListTileHeight: double.parse(controller.text));
                   Dimensions.inst.updateAlbumTileDimensions();
                 }
-
                 if (borderRadiusMultiplier) {
                   settings.save(borderRadiusMultiplier: double.parse(controller.text));
                 }
@@ -144,9 +139,6 @@ Future<void> showSettingDialogWithTextField({
                   onTTSetChange();
                   onTIPropChange();
                 }
-                if (addNewPlaylist) {
-                  PlaylistController.inst.addNewPlaylist(controller.text);
-                }
 
                 NamidaNavigator.inst.closeDialog();
                 Player.inst.refreshRxVariables();
@@ -161,9 +153,9 @@ Future<void> showSettingDialogWithTextField({
             Padding(
               padding: const EdgeInsets.only(top: 14.0),
               child: CustomTagTextField(
-                keyboardType: dateTimeFormat || trackTileSeparator || addNewPlaylist ? TextInputType.text : TextInputType.number,
+                keyboardType: dateTimeFormat || trackTileSeparator ? TextInputType.text : TextInputType.number,
                 controller: controller,
-                hintText: addNewPlaylist ? lang.name : lang.value,
+                hintText: lang.value,
                 labelText: '',
                 validator: (value) {
                   if (fontScaleFactor) {
@@ -175,9 +167,6 @@ Future<void> showSettingDialogWithTextField({
                     if ((double.parse(value!) < 0 || double.parse(value) > 5)) {
                       return '0.0-5.0';
                     }
-                  }
-                  if (addNewPlaylist) {
-                    return PlaylistController.inst.validatePlaylistName(value);
                   }
                   return null;
                 },

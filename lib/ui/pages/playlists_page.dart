@@ -27,7 +27,6 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
-import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -161,10 +160,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
               subtitle: lang.createNewPlaylist,
               onTap: () {
                 _closeDialog();
-                showSettingDialogWithTextField(
-                  title: lang.createNewPlaylist,
-                  addNewPlaylist: true,
-                );
+                CreatePlaylistButton().promptCreate();
               },
             ),
           ],

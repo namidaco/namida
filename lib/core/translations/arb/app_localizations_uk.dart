@@ -359,6 +359,12 @@ class AppLocalizationsUk extends AppLocalizations {
   String get confirmRefresh => 'Підтвердити оновлення?';
 
   @override
+  String get convertToM3UPlaylist => 'Конвертувати у плейлист M3U';
+
+  @override
+  String get convertToNormalPlaylist => 'Конвертувати у звичайний плейлист';
+
+  @override
   String get copiedArtwork => 'Обкладинку скопійовано';
 
   @override
@@ -1868,6 +1874,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get notSupportedForNetworkFiles => 'Не підтримується для мережевих файлів';
 
   @override
+  String get notSupportedForVideoFiles => 'Не підтримується для відеофайлів';
+
+  @override
   String get note => 'Примітка';
 
   @override
@@ -2158,7 +2167,7 @@ class AppLocalizationsUk extends AppLocalizations {
   String get recentListens => 'Нещодавно прослухане';
 
   @override
-  String get recentQueues => 'Recent Queues';
+  String get recentQueues => 'Нещодавні черги';
 
   @override
   String get recentlyAdded => 'Нещодавно додані';

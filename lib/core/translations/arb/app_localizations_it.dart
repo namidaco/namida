@@ -357,6 +357,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get confirmRefresh => 'Confermi il ricaricamento?';
 
   @override
+  String get convertToM3UPlaylist => 'Convert to M3U Playlist';
+
+  @override
+  String get convertToNormalPlaylist => 'Convert to Normal Playlist';
+
+  @override
   String get copiedArtwork => 'Copertina copiata';
 
   @override
@@ -1831,6 +1837,9 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notSupportedForNetworkFiles => 'Non supportato per file di Rete';
+
+  @override
+  String get notSupportedForVideoFiles => 'Not Supported for Video Files';
 
   @override
   String get note => 'Nota';

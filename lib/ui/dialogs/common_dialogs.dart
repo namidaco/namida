@@ -182,9 +182,9 @@ class NamidaDialogs {
     }
   }
 
-  Future<void> showDeletePlaylistDialog(LocalPlaylist playlist, {bool withUndo = false}) async {
+  Future<void> showDeletePlaylistDialog(LocalPlaylist playlist, {bool deleteM3uFileOnly = false, bool withUndo = false, void Function()? onM3uFileDeleted}) async {
     final m3uPath = playlist.m3uPath;
-    if (withUndo && m3uPath == null) {
+    if (withUndo && m3uPath == null && !deleteM3uFileOnly) {
       Uint8List? artworkBytes;
       final artworkFile = PlaylistController.inst.getArtworkFileForPlaylist(playlist.name);
       if (await artworkFile.exists()) {
@@ -204,7 +204,8 @@ class NamidaDialogs {
         ),
       );
     } else {
-      final alsoDeleteM3uRx = true.obs;
+      final hasM3u = m3uPath != null;
+      final alsoDeleteM3uRx = (hasM3u || deleteM3uFileOnly).obs;
       NamidaNavigator.inst.navigateDialog(
         onDisposing: () {
           alsoDeleteM3uRx.close();
@@ -217,11 +218,14 @@ class NamidaDialogs {
             ObxO(
               rx: alsoDeleteM3uRx,
               builder: (context, deletem3u) => NamidaButton(
-                text: lang.delete.toUpperCase(),
+                text: (deleteM3uFileOnly ? lang.confirm : lang.delete).toUpperCase(),
                 colorScheme: deletem3u ? Colors.red : null,
                 onTap: () async {
-                  await PlaylistController.inst.removePlaylist(playlist);
-                  if (alsoDeleteM3uRx.value && m3uPath != null) await File(m3uPath).deleteIfExists();
+                  if (!deleteM3uFileOnly) await PlaylistController.inst.removePlaylist(playlist);
+                  if (alsoDeleteM3uRx.value && hasM3u) {
+                    onM3uFileDeleted?.call();
+                    await File(m3uPath).deleteIfExists();
+                  }
                   NamidaNavigator.inst.closeDialog();
                 },
               ),
@@ -234,21 +238,23 @@ class NamidaDialogs {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '${lang.deletePlaylist}: "${playlist.name.translatePlaylistName()}"?',
+                  deleteM3uFileOnly ? lang.convertToNormalPlaylist : '${lang.deletePlaylist}: "${playlist.name.translatePlaylistName()}"?',
                   style: theme.textTheme.displayMedium,
                 ),
-                SizedBox(height: 12.0),
-                ObxO(
-                  rx: alsoDeleteM3uRx,
-                  builder: (context, deletem3u) => ListTileWithCheckMark(
-                    dense: true,
-                    icon: Broken.broom,
-                    title: "${lang.delete}: ${lang.m3uPlaylist}",
-                    subtitle: m3uPath ?? '',
-                    active: deletem3u,
-                    onTap: alsoDeleteM3uRx.toggle,
+                if (hasM3u) ...[
+                  SizedBox(height: 12.0),
+                  ObxO(
+                    rx: alsoDeleteM3uRx,
+                    builder: (context, deletem3u) => ListTileWithCheckMark(
+                      dense: true,
+                      icon: Broken.broom,
+                      title: "${lang.delete}: ${lang.m3uPlaylist}",
+                      subtitle: m3uPath,
+                      active: deletem3u,
+                      onTap: deleteM3uFileOnly ? null : alsoDeleteM3uRx.toggle,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

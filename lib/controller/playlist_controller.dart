@@ -40,7 +40,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   @override
   Track identifyBy(TrackWithDate item) => item.track;
 
-  void addNewPlaylist(
+  Future<GeneralPlaylist<TrackWithDate, SortType>> addNewPlaylist(
     String name, {
     List<Track> tracks = const <Track>[],
     int? creationDate,
@@ -48,21 +48,19 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     List<String> moods = const [],
     String? m3uPath,
     PlaylistAddDuplicateAction? actionIfAlreadyExists,
-  }) async {
-    super.addNewPlaylistRaw(
-      name,
-      tracks: tracks,
-      convertItem: (e, dateAdded, playlistID) => TrackWithDate(
-        dateAdded: dateAdded,
-        track: e,
-      ),
-      creationDate: creationDate,
-      comment: comment,
-      moods: moods,
-      m3uPath: m3uPath,
-      actionIfAlreadyExists: () => actionIfAlreadyExists ?? NamidaOnTaps.inst.showDuplicatedDialogAction(PlaylistAddDuplicateAction.valuesForAdd),
-    );
-  }
+  }) => super.addNewPlaylistRaw(
+    name,
+    tracks: tracks,
+    convertItem: (e, dateAdded, playlistID) => TrackWithDate(
+      dateAdded: dateAdded,
+      track: e,
+    ),
+    creationDate: creationDate,
+    comment: comment,
+    moods: moods,
+    m3uPath: m3uPath,
+    actionIfAlreadyExists: () => actionIfAlreadyExists ?? NamidaOnTaps.inst.showDuplicatedDialogAction(PlaylistAddDuplicateAction.valuesForAdd),
+  );
 
   void addTracksToPlaylist(
     LocalPlaylist playlist,

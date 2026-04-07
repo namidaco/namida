@@ -312,7 +312,7 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  Future<void> deletePlaylist() async {
+  Future<void> deletePlaylist({bool deleteM3uFileOnly = false}) async {
     // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
     cancelSkipTimer();
@@ -321,7 +321,16 @@ Future<void> showGeneralPopupDialog(
 
     final pl = PlaylistController.inst.getPlaylist(playlistName!);
     if (pl == null) return;
-    await NamidaDialogs.inst.showDeletePlaylistDialog(pl, withUndo: true);
+    await NamidaDialogs.inst.showDeletePlaylistDialog(
+      pl,
+      withUndo: true,
+      deleteM3uFileOnly: deleteM3uFileOnly,
+      onM3uFileDeleted: deleteM3uFileOnly ? () => PlaylistController.inst.updatePropertyInPlaylist(playlistName, m3uPath: '') : null,
+    );
+  }
+
+  Future<void> convertPlaylistToNormal() async {
+    await deletePlaylist(deleteM3uFileOnly: true);
   }
 
   Future<void> removePlaylistDuplicates() async {
@@ -337,7 +346,7 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  Future<void> exportPlaylist() async {
+  Future<void> convertPlaylistToM3u() async {
     // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
     cancelSkipTimer();
@@ -356,6 +365,7 @@ Future<void> showGeneralPopupDialog(
       altDesign: true,
       top: false,
     );
+    await PlaylistController.inst.updatePropertyInPlaylist(playlistName, m3uPath: savePath);
   }
 
   void updatePathDialog(String newPath) async {
@@ -561,6 +571,9 @@ Future<void> showGeneralPopupDialog(
         )
       : null;
 
+  final playlist = playlistName == null ? null : PlaylistController.inst.getPlaylist(playlistName);
+  final playlistIsM3u = playlist?.m3uPath != null;
+
   final Widget? playlistUtilsRow = shoulShowPlaylistUtils()
       ? SizedBox(
           height: 48.0,
@@ -589,10 +602,16 @@ Future<void> showGeneralPopupDialog(
               ),
               const SizedBox(width: 8.0),
               Expanded(child: bigIcon(Broken.trash, () => lang.deletePlaylist, deletePlaylist)),
-              if (PlaylistController.inst.getPlaylist(playlistName ?? '')?.m3uPath == null) ...[
-                const SizedBox(width: 8.0),
-                Expanded(child: bigIcon(Broken.directbox_send, () => lang.exportAsM3u, exportPlaylist)),
-              ],
+              if (playlistIsM3u)
+                Expanded(
+                  child: bigIcon(Broken.driver_2, () => lang.convertToNormalPlaylist, convertPlaylistToNormal),
+                )
+              else
+                Expanded(
+                  child: bigIcon(Broken.directbox_send, () => lang.convertToM3UPlaylist, convertPlaylistToM3u),
+                ),
+              const SizedBox(width: 8.0),
+
               const SizedBox(width: 24.0),
             ],
           ),
@@ -1231,7 +1250,7 @@ Future<void> showGeneralPopupDialog(
 
                               /// Track Utils
                               /// TODO: support for multiple tracks editing
-                              if (isSingle /*  && playlistUtilsRow == null */ )
+                              if (isSingle && playlistUtilsRow == null)
                                 Row(
                                   children: [
                                     const SizedBox(width: 24.0),

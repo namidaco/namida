@@ -357,6 +357,12 @@ class AppLocalizationsTa extends AppLocalizations {
   String get confirmRefresh => 'Confirm Refresh?';
 
   @override
+  String get convertToM3UPlaylist => 'Convert to M3U Playlist';
+
+  @override
+  String get convertToNormalPlaylist => 'Convert to Normal Playlist';
+
+  @override
   String get copiedArtwork => 'நகலெடுக்கப்பட்ட கலைப்படைப்பு';
 
   @override
@@ -1832,6 +1838,9 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get notSupportedForNetworkFiles => 'பிணைய கோப்புகள் ஆதரிக்கப்படவில்லை';
+
+  @override
+  String get notSupportedForVideoFiles => 'Not Supported for Video Files';
 
   @override
   String get note => 'குறிப்பு';

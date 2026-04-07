@@ -359,6 +359,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get confirmRefresh => 'Confirm Refresh?';
 
   @override
+  String get convertToM3UPlaylist => 'Convert to M3U Playlist';
+
+  @override
+  String get convertToNormalPlaylist => 'Convert to Normal Playlist';
+
+  @override
   String get copiedArtwork => 'Обложка скопирована';
 
   @override
@@ -1859,6 +1865,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notSupportedForNetworkFiles => 'Не поддерживается для Сетевых Файлов';
+
+  @override
+  String get notSupportedForVideoFiles => 'Not Supported for Video Files';
 
   @override
   String get note => 'Примечание';

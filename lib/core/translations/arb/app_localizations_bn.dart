@@ -358,6 +358,12 @@ class AppLocalizationsBn extends AppLocalizations {
   String get confirmRefresh => 'আপনি কি রিফ্রেশ করতে চান?';
 
   @override
+  String get convertToM3UPlaylist => 'Convert to M3U Playlist';
+
+  @override
+  String get convertToNormalPlaylist => 'Convert to Normal Playlist';
+
+  @override
   String get copiedArtwork => 'আর্টওয়ার্ক সংরক্ষণ করা হয়েছে';
 
   @override
@@ -1840,6 +1846,9 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get notSupportedForNetworkFiles => 'নেটওয়ার্ক ফাইলের জন্য সমর্থিত নয়';
+
+  @override
+  String get notSupportedForVideoFiles => 'Not Supported for Video Files';
 
   @override
   String get note => 'দ্রষ্টব্য';

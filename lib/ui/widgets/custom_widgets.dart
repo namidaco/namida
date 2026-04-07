@@ -25,6 +25,7 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/class/track.dart';
@@ -55,7 +56,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/packages/smooth_scroll_controller.dart';
-import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
@@ -1577,15 +1578,78 @@ class _NamidaExpansionTileState extends State<NamidaExpansionTile> {
 class CreatePlaylistButton extends StatelessWidget {
   const CreatePlaylistButton({super.key});
 
+  Future<void> promptCreate() async {
+    final controller = TextEditingController();
+    final exportAsM3uRx = false.obs;
+    final formKey = GlobalKey<FormState>();
+
+    await NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        controller.dispose();
+        exportAsM3uRx.close();
+      },
+      dialog: Form(
+        key: formKey,
+        child: CustomBlurryDialog(
+          title: lang.createNewPlaylist,
+          actions: [
+            const CancelButton(),
+            NamidaButton(
+              text: lang.save,
+              onTap: () async {
+                if (formKey.currentState!.validate()) {
+                  final name = controller.text;
+                  final m3uPath = exportAsM3uRx.value ? FileParts.joinPath(AppDirs.M3UPlaylists, "$name.m3u") : null;
+
+                  final pl = await PlaylistController.inst.addNewPlaylist(name, m3uPath: m3uPath);
+                  if (m3uPath != null) {
+                    await PlaylistController.inst.exportPlaylistToM3UFile(pl, m3uPath);
+                    snackyy(
+                      message: "${lang.savedIn}: $m3uPath",
+                      leftBarIndicatorColor: CurrentColor.inst.color,
+                      altDesign: true,
+                      top: false,
+                    );
+                  }
+
+                  NamidaNavigator.inst.closeDialog();
+                }
+              },
+            ),
+          ],
+          child: Column(
+            mainAxisSize: .min,
+            children: [
+              ObxO(
+                rx: exportAsM3uRx,
+                builder: (context, exportAsM3u) => CustomSwitchListTile(
+                  icon: Broken.direct_send,
+                  title: lang.convertToM3UPlaylist,
+                  subtitle: AppDirs.M3UPlaylists,
+                  value: exportAsM3u,
+                  onChanged: (_) => exportAsM3uRx.toggle(),
+                ),
+              ),
+              const SizedBox(height: 12.0),
+              CustomTagTextField(
+                controller: controller,
+                hintText: lang.name,
+                labelText: '',
+                validator: (value) => PlaylistController.inst.validatePlaylistName(value),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return NamidaButton(
       icon: Broken.add,
       text: lang.create,
-      onTap: () => showSettingDialogWithTextField(
-        title: lang.createNewPlaylist,
-        addNewPlaylist: true,
-      ),
+      onTap: promptCreate,
     );
   }
 }

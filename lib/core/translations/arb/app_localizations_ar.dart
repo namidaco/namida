@@ -358,6 +358,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get confirmRefresh => 'هل تريد التحديث ؟';
 
   @override
+  String get convertToM3UPlaylist => 'Convert to M3U Playlist';
+
+  @override
+  String get convertToNormalPlaylist => 'Convert to Normal Playlist';
+
+  @override
   String get copiedArtwork => 'العمل الفني الذي تم نسخه';
 
   @override
@@ -1836,6 +1842,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notSupportedForNetworkFiles => 'غير مدعوم للملفات الشبكية';
+
+  @override
+  String get notSupportedForVideoFiles => 'Not Supported for Video Files';
 
   @override
   String get note => 'ملاحظة';

@@ -821,6 +821,18 @@ abstract class AppLocalizations {
   /// **'Confirm Refresh?'**
   String get confirmRefresh;
 
+  /// No description provided for @convertToM3UPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert to M3U Playlist'**
+  String get convertToM3UPlaylist;
+
+  /// No description provided for @convertToNormalPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert to Normal Playlist'**
+  String get convertToNormalPlaylist;
+
   /// No description provided for @copiedArtwork.
   ///
   /// In en, this message translates to:
@@ -3202,6 +3214,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not Supported for Network Files'**
   String get notSupportedForNetworkFiles;
+
+  /// No description provided for @notSupportedForVideoFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Supported for Video Files'**
+  String get notSupportedForVideoFiles;
 
   /// No description provided for @note.
   ///

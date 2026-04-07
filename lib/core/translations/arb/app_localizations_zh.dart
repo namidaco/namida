@@ -45,17 +45,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addLrcFile => '添加 LRC 文件';
 
   @override
-  String get addMoreFromThisAlbum => '将此专辑中的更多曲目添加到队列';
+  String get addMoreFromThisAlbum => '将此专辑中的更多曲目添加到待播列表';
 
   @override
-  String get addMoreFromThisArtist => '将此音乐人的更多曲目添加到队列';
+  String get addMoreFromThisArtist => '将此音乐人的更多曲目添加到待播列表';
 
   @override
-  String get addMoreFromThisFolder => '将此文件夹中的更多曲目添加到队列';
+  String get addMoreFromThisFolder => '将此文件夹中的更多曲目添加到待播列表';
 
   @override
   String addMoreFromToQueue({required String media}) {
-    return '将 $media 中的更多曲目添加到队列';
+    return '将 $media 中的更多曲目添加到待播列表';
   }
 
   @override
@@ -356,6 +356,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get confirmRefresh => '确认刷新？';
+
+  @override
+  String get convertToM3UPlaylist => '转换为 M3U 播放列表';
+
+  @override
+  String get convertToNormalPlaylist => '转换为普通播放列表';
 
   @override
   String get copiedArtwork => '已复制专辑封面';
@@ -729,8 +735,8 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '是否删除 $countString 个文件（占用 $totalSizeText）？',
-      one: '是否删除 $countString 个文件（占用 $totalSizeText）？',
+      other: '删除 $countString 个文件（占用 $totalSizeText）？',
+      one: '删除 $countString 个文件（占用 $totalSizeText）？',
     );
     return '$_temp0';
   }
@@ -1191,7 +1197,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get forceSquaredTrackThumbnail => '强制使用方形曲目缩略图';
 
   @override
-  String get forceStopColorPaletteGeneration => '是否强制停止提取调色板？您稍后仍可以继续此操作';
+  String get forceStopColorPaletteGeneration => '强制停止提取调色板？您稍后仍可以继续此操作';
 
   @override
   String get format => '格式';
@@ -1393,7 +1399,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get indexerSubtitle => '管理您的音乐库';
 
   @override
-  String get infinityQueueOnNextPrev => '无限上下曲队列';
+  String get infinityQueueOnNextPrev => '待播列表中无限上下曲';
 
   @override
   String get infinityQueueOnNextPrevSubtitle => '播放到最后一项时，点击下一曲将跳转到第一项，反之亦然';
@@ -1429,7 +1435,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get jumpToDay => '跳转至日期';
 
   @override
-  String get jumpToFirstTrackAfterQueueFinish => '队列播放完毕后跳转到第一首曲目';
+  String get jumpToFirstTrackAfterQueueFinish => '待播列表播放完毕后跳转到第一首曲目';
 
   @override
   String get keepCachedVersions => '保留已缓存版本';
@@ -1841,6 +1847,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get notSupportedForNetworkFiles => '不支持网络文件';
 
   @override
+  String get notSupportedForVideoFiles => '不支持视频文件';
+
+  @override
   String get note => '提示';
 
   @override
@@ -1871,7 +1880,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get oldestWatch => '最久的观看';
 
   @override
-  String get onDeviceConnect => 'On Device Connect';
+  String get onDeviceConnect => '设备连接时';
 
   @override
   String get onInterruption => '中断时';
@@ -1907,7 +1916,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get openMiniplayer => '打开迷你播放器';
 
   @override
-  String get openQueue => '打开播放队列';
+  String get openQueue => '打开待播列表';
 
   @override
   String get openYoutubeLink => '打开 YouTube 链接';
@@ -2097,10 +2106,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get public => '公开';
 
   @override
-  String get queue => '队列';
+  String get queue => '待播列表';
 
   @override
-  String get queues => '队列';
+  String get queues => '待播列表';
 
   @override
   String get random => '随机';
@@ -2130,7 +2139,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recentListens => '最近收听';
 
   @override
-  String get recentQueues => 'Recent Queues';
+  String get recentQueues => '最近待播列表';
 
   @override
   String get recentlyAdded => '最近添加';
@@ -2175,7 +2184,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get removeFromPlaylist => '从播放列表中移除';
 
   @override
-  String get removeQueue => '移除队列';
+  String get removeQueue => '移除待播列表';
 
   @override
   String get removeSourceFromHistory => '从历史记录中移除源';
@@ -2210,7 +2219,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get repeatMode => '重复模式';
 
   @override
-  String get repeatModeAll => '重复所有队列';
+  String get repeatModeAll => '重复所有待播列表';
 
   @override
   String get repeatModeNone => '播放完最后一首曲目后停止';
@@ -2267,7 +2276,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resumeIfWasInterrupted => '若受其他程序干扰暂停，则恢复播放';
 
   @override
-  String get resumeIfWasPausedByDeviceDisconnect => 'Resume if was paused by device disconnect';
+  String get resumeIfWasPausedByDeviceDisconnect => '如果因设备断开连接而暂停播放，则恢复播放';
 
   @override
   String get resumeIfWasPausedByVolume => '若因静音暂停，则恢复播放';
@@ -2376,7 +2385,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get setFileLastModifiedAsVideoUploadDate => '将文件上次修改日期设置为视频上传日期';
 
   @override
-  String get setMonoAudio => 'Set Mono Audio';
+  String get setMonoAudio => '设置单声道音频';
 
   @override
   String get setMoods => '设定情绪';
@@ -2776,16 +2785,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get underrated => '被低估';
 
   @override
-  String get undo => '撤消';
+  String get undo => '撤销';
 
   @override
-  String get undoChanges => '撤消更改？';
+  String get undoChanges => '撤销更改？';
 
   @override
-  String get undoChangesDeletedPlaylist => '撤消已删除的播放列表';
+  String get undoChangesDeletedPlaylist => '撤销已删除的播放列表';
 
   @override
-  String get undoChangesDeletedQueue => '撤消已删除的队列';
+  String get undoChangesDeletedQueue => '撤销已删除的待播列表';
 
   @override
   String get undoChangesDeletedTrack => '撤消已删除的曲目';
@@ -2920,10 +2929,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get week => '周';
 
   @override
-  String get wiredDevice => 'Wired Device';
+  String get wiredDevice => '有线设备';
 
   @override
-  String get wirelessDevice => 'Wireless Device';
+  String get wirelessDevice => '无线设备';
 
   @override
   String get year => '年';
@@ -2937,7 +2946,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get yourCustomOrderWillBeLost => '您的自定义排序将会丢失，是否确定？';
+  String get yourCustomOrderWillBeLost => '您的自定义排序将会丢失，确定吗？';
 
   @override
   String get youtube => 'YouTube';
