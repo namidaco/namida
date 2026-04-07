@@ -11,7 +11,6 @@ import 'package:flutter/services.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -730,21 +729,47 @@ class CustomBlurryDialog extends StatelessWidget {
                     if (actions != null)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                        child: SizedBox(
-                          width: context.width - horizontalInset,
-                          child: Wrap(
-                            runSpacing: 8.0,
-                            alignment: leftAction == null ? WrapAlignment.end : WrapAlignment.spaceBetween,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              if (leftAction != null) ...[
-                                const SizedBox(width: 6.0),
-                                leftAction!,
-                                const SizedBox(width: 6.0),
-                              ],
-                              ...actions!.addSeparators(separator: const SizedBox(width: 6.0)),
-                            ],
-                          ),
+                        child: LayoutWidthProvider(
+                          builder: (context, maxWidth) {
+                            final leftActionMaxWidth = leftAction == null ? 0.0 : maxWidth * 0.35;
+                            final actionsMaxWidth = (maxWidth - leftActionMaxWidth);
+                            return SizedBox(
+                              width: maxWidth,
+                              child: Row(
+                                mainAxisSize: .max,
+                                children: [
+                                  if (leftAction != null) ...[
+                                    ConstrainedBox(
+                                      constraints: BoxConstraints(maxWidth: leftActionMaxWidth),
+                                      child: FittedBox(
+                                        alignment: AlignmentDirectional.centerStart,
+                                        fit: BoxFit.scaleDown,
+                                        child: leftAction!,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6.0),
+                                  ],
+
+                                  Expanded(
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(maxWidth: actionsMaxWidth),
+                                      child: FittedBox(
+                                        alignment: AlignmentDirectional.centerEnd,
+                                        fit: BoxFit.scaleDown,
+                                        child: Row(
+                                          mainAxisSize: .max,
+                                          mainAxisAlignment: .end,
+                                          children: [
+                                            ...actions!.addSeparators(separator: const SizedBox(width: 6.0), skipFirst: 1),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                       ),
                   ],
@@ -6658,21 +6683,14 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
                     NamidaInkWell(
                       bgColor: theme.cardColor,
                       padding: EdgeInsets.all(8.0),
-                      child: Markdown(
-                        physics: const NeverScrollableScrollPhysics(),
+                      child: NamidaMarkdown(
+                        selectable: false,
+                        smallBodySize: false,
+                        smallerNestedtBullets: true,
                         data: info.body.replaceAll(RegExp(r'https:\/\/\S+'), ''),
+                        physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
                         padding: EdgeInsets.zero,
-                        styleSheet: MarkdownStyleSheet(
-                          a: textTheme.displayLarge,
-                          h1: textTheme.displayLarge,
-                          h2: textTheme.displayMedium,
-                          h3: textTheme.displayMedium,
-                          h4: textTheme.displayMedium,
-                          code: textTheme.displaySmall,
-                          p: textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                          listBullet: textTheme.displayMedium,
-                        ),
                       ),
                     ),
                     SizedBox(height: 12.0),

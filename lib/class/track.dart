@@ -1067,9 +1067,16 @@ extension TrackIterableUtils on Iterable<Track> {
   }
 }
 
-class PhysicalMedia extends Track {
-  PhysicalMedia.explicit(super.path) : super.explicit();
-  factory PhysicalMedia.fromTrack(Track tr) => PhysicalMedia.explicit(tr.path);
+mixin PhysicalMedia on Track {
+  static PhysicalMedia fromTrack(Track tr) => tr is Video ? PhysicalVideo._explicit(tr.path) : PhysicalTrack._explicit(tr.path);
+}
+
+class PhysicalTrack extends Track with PhysicalMedia {
+  PhysicalTrack._explicit(super.path) : super.explicit();
+}
+
+class PhysicalVideo extends Video with PhysicalMedia {
+  PhysicalVideo._explicit(super.path) : super.explicit();
 }
 
 void _showErrorForNetworkTracks([int? count, int? totalCount]) {

@@ -1352,7 +1352,13 @@ extension RouteUtils on NamidaRoute {
         route == RouteType.SUBPAGE_historyTracks ||
         route == RouteType.SUBPAGE_mostPlayedTracks;
 
-    final shouldShowSettingsIcon = !isInnerPage;
+    final shouldShowInitialActions =
+        route != RouteType.PAGE_stats &&
+        route != RouteType.SETTINGS_page &&
+        route != RouteType.SETTINGS_subpage &&
+        route != RouteType.YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE &&
+        route != RouteType.YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE;
+    final shouldShowSettingsIcon = !showMainMenu && !showPlaylistMenu && shouldShowInitialActions;
 
     return <Widget>[
       const SizedBox(width: 2.0),

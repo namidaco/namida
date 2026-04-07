@@ -14,7 +14,7 @@ while IFS= read -r line; do
   [ -z "$line" ] && continue
   HASH=$(echo "$line" | awk '{print $1}')
   MESSAGE=$(echo "$line" | cut -d' ' -f2-)
-  MESSAGE=$(echo "$MESSAGE" | sed 's/ - /\n   - /g')
+  MESSAGE=$(echo "$MESSAGE" | sed 's/ - /\n     - /g')
   CHANGELOG="${CHANGELOG}- ${REPO_URL}${HASH} ${MESSAGE}"$'\n'
 done <<< "$COMMITS"
 

@@ -207,7 +207,7 @@ class Video extends Track {
   VideoFolder get folder => VideoFolder.explicit(folderPath);
 
   @override
-  Track get track => this;
+  Video get track => this;
 
   Video.explicit(super.path) : super.explicit();
 

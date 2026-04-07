@@ -567,11 +567,11 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
           ),
         ],
       ),
+      leftAction: NamidaButton(
+        text: lang.search,
+        onTap: onSearchTrigger,
+      ),
       actions: [
-        NamidaButton(
-          text: lang.search,
-          onTap: onSearchTrigger,
-        ),
         Obx(
           (context) {
             final selected = selectedLyrics.valueR;

@@ -371,7 +371,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           title = '$title • Namida';
         }
         await [
-          WindowsTaskbar.setWindowTitle(title),
+          WindowsTaskbar.setWindowTitle(title).ignoreError(),
           if (currentItem.value != null) // idk it just breaks if set after disposing
             WindowsTaskbar.setThumbnailToolbar(
               [
@@ -2253,8 +2253,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     bool keepOldVideoSource = false,
   }) async {
     if (isVideoFile && videoOptions != null) {
-      final source = videoOptions.source;
-      if (source is UriSource) File.fromUri(source.uri).setLastAccessedTry(DateTime.now());
+      _setLastAccessedForSourceIfFileTry(videoOptions.source);
     }
     if (cachedAudioPath != null) {
       File(cachedAudioPath).setLastAccessedTry(DateTime.now());
@@ -2301,7 +2300,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // ------- video -------
 
   Future<void> setVideoSource({required AudioVideoSource source, bool loopingAnimation = false, bool isFile = false, bool videoOnly = false}) async {
-    if (isFile && source is UriSource) File.fromUri(source.uri).setLastAccessedTry(DateTime.now());
+    if (isFile) _setLastAccessedForSourceIfFileTry(source);
     final videoOptions = VideoSourceOptions(
       source: source,
       loop: loopingAnimation,
@@ -2309,6 +2308,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     );
     _latestVideoOptions = videoOptions;
     await super.setVideo(videoOptions);
+  }
+
+  Future<void> _setLastAccessedForSourceIfFileTry(AudioVideoSource source) async {
+    if (source is UriSource && source.uri.isScheme('file')) {
+      try {
+        final file = File.fromUri(source.uri);
+        await file.setLastAccessed(DateTime.now());
+      } catch (_) {}
+    }
   }
 
   @override

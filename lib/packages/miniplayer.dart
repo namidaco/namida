@@ -380,7 +380,11 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
             final videoTotalSize = currentVideo?.sizeInBytes ?? 0;
             final videoQuality = currentVideo?.resolution ?? 0;
             final videoFramerate = currentVideo?.framerateText(30);
-            final markText = VideoController.inst.currentVideoConfig.isNoVideosAvailable.valueR ? 'x' : '?';
+            late final markText = VideoController.inst.currentVideoConfig.isNoVideosAvailable.valueR
+                ? 'x'
+                : (currentItem as Selectable).track is Video
+                ? '✓'
+                : '?';
             final fallbackQualityLabel = currentVideo?.nameInCache?.splitLast('_');
             final qualityText = videoQuality == 0 ? fallbackQualityLabel ?? markText : '${videoQuality}p';
             final framerateText = videoFramerate ?? '';

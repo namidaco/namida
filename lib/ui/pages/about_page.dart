@@ -277,19 +277,6 @@ class _AboutPageState extends State<AboutPage> {
                           builder: (context, bottomPadding, maxWidth, maxHeight) => Markdown(
                             data: stringy.body,
                             selectable: true,
-                            styleSheetTheme: MarkdownStyleSheetBaseTheme.cupertino,
-                            builders: <String, MarkdownElementBuilder>{
-                              'li': _NamidaMarkdownElementBuilderCommitLink(),
-                              'h1': _NamidaMarkdownElementBuilderHeader(),
-                            },
-                            styleSheet: MarkdownStyleSheet(
-                              a: textTheme.displayLarge,
-                              h1: textTheme.displayLarge,
-                              h2: textTheme.displayMedium,
-                              h3: textTheme.displayMedium,
-                              p: textTheme.displaySmall,
-                              listBullet: textTheme.displayMedium,
-                            ),
                           ),
                         );
                       },
@@ -472,11 +459,67 @@ class _NamidaMarkdownElementBuilderHeader extends MarkdownElementBuilder {
   }
 }
 
+class NamidaMarkdown extends StatelessWidget {
+  final String data;
+  final bool selectable;
+  final bool smallBodySize;
+  final bool smallerNestedtBullets;
+  final EdgeInsets padding;
+  final ScrollPhysics? physics;
+  final bool shrinkWrap;
+
+  const NamidaMarkdown({
+    super.key,
+    required this.data,
+    required this.selectable,
+    this.smallBodySize = true,
+    this.smallerNestedtBullets = false,
+    this.padding = const EdgeInsets.all(16.0),
+    this.physics,
+    this.shrinkWrap = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.theme.textTheme;
+    return Markdown(
+      data: data,
+      selectable: selectable,
+      styleSheetTheme: MarkdownStyleSheetBaseTheme.cupertino,
+      physics: physics,
+      shrinkWrap: shrinkWrap,
+      padding: padding,
+      builders: <String, MarkdownElementBuilder>{
+        'li': _NamidaMarkdownElementBuilderCommitLink(smallerNestedtBullets: smallerNestedtBullets),
+        'h1': _NamidaMarkdownElementBuilderHeader(),
+      },
+      styleSheet: MarkdownStyleSheet(
+        a: textTheme.displayLarge,
+        h1: textTheme.displayLarge,
+        h2: textTheme.displayMedium,
+        h3: textTheme.displayMedium,
+        p: smallBodySize ? textTheme.displaySmall : textTheme.displayMedium?.copyWith(fontSize: 14.0),
+        listBullet: smallerNestedtBullets ? textTheme.displaySmall : textTheme.displayMedium,
+        code: textTheme.displaySmall,
+      ),
+    );
+  }
+}
+
 class _NamidaMarkdownElementBuilderCommitLink extends MarkdownElementBuilder {
+  final bool smallerNestedtBullets;
+  _NamidaMarkdownElementBuilderCommitLink({required this.smallerNestedtBullets});
+
   final regex = RegExp(r'([a-f0-9]{7}):', caseSensitive: false);
 
   @override
   Widget? visitText(md.Text text, TextStyle? preferredStyle) {
+    if (smallerNestedtBullets) {
+      // -- for some reason nested bullets don't start with space, unlike top level
+      if (!text.text.startsWith(' ')) {
+        return Text(text.text, style: preferredStyle?.copyWith(fontSize: 12.0));
+      }
+    }
     final res = regex.firstMatch(text.text);
     final shortHash = res?.group(1);
     final url = "${AppSocial.GITHUB}/commit/$shortHash";
@@ -521,10 +564,12 @@ class _CommitTapWidgetState extends State<_CommitTapWidget> {
         children: [
           TextSpan(
             text: widget.textWithoutCommit,
-            style: namida.textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.w400,
-              fontSize: 13.0,
-            ),
+            style: widget.commit == null
+                ? namida.textTheme.displayMedium
+                : namida.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    fontSize: 13.0,
+                  ),
           ),
         ],
       ),

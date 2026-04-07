@@ -8,6 +8,7 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 
+import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -292,26 +293,37 @@ class VideoController {
     configToUpdate.resetAll();
     if (track == null || track == kDummyTrack) return null;
     if (!settings.enableVideoPlayback.value) return null;
-    if (track is Video && track.isPhysical) {
-      NamidaVideo? nv = _videoPathsInfoMap[track.path];
-      if (nv == null) {
-        final stats = await File(track.path).stat();
-        nv = NamidaVideo(
-          path: track.path,
-          height: 0,
-          width: 0,
-          sizeInBytes: stats.size,
-          frameratePrecise: 0,
-          creationTimeMS: stats.creationDate.millisecondsSinceEpoch,
-          durationMS: 0,
-          bitrate: 0,
-        );
-      }
+    if (track is Video) {
+      configToUpdate.isNoVideosAvailable.value = false;
+      if (track.isPhysical) {
+        NamidaVideo? nv = _videoPathsInfoMap[track.path];
+        if (nv == null) {
+          final stats = await File(track.path).stat();
+          nv = NamidaVideo(
+            path: track.path,
+            height: 0,
+            width: 0,
+            sizeInBytes: stats.size,
+            frameratePrecise: 0,
+            creationTimeMS: stats.creationDate.millisecondsSinceEpoch,
+            durationMS: 0,
+            bitrate: 0,
+          );
+        }
 
-      configToUpdate.currentVideo.value = nv;
-      configToUpdate.currentPossibleLocalVideos.value = [nv];
-      await playVideoCurrent(video: nv, track: track);
-      return nv;
+        configToUpdate.currentVideo.value = nv;
+        configToUpdate.currentPossibleLocalVideos.value = [nv];
+        await playVideoCurrent(video: nv, track: track);
+        return nv;
+      } else {
+        // -- also re set it if network
+        await Player.inst.setVideo(
+          source: await track.toAudioSource(0, 0, null),
+          isFile: false,
+          videoOnly: true,
+        );
+        return null;
+      }
     }
 
     final trackYTID = track.youtubeID;

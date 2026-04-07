@@ -45,7 +45,20 @@ Future<void> showEditTracksTagsDialog(List<PhysicalMedia> tracks, Color? colorSc
   }
 }
 
-Future<void> showSetYTLinkCommentDialog(Track singleTrack, Color colorScheme, {bool autoOpenSearch = false}) async {
+Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme, {bool autoOpenSearch = false}) async {
+  // -- even tho we can modify the link in comment (app only), the next refresh would nuke it instantly, so better prevent it alltogether.
+  final singleTrack = singleTrackPre.asPhysicalOrError();
+  if (singleTrack == null) return;
+
+  if (singleTrack is Video) {
+    // -- video matching is currently skipped for video files
+    snackyy(
+      message: lang.notSupportedForVideoFiles,
+      isError: true,
+    );
+    return;
+  }
+
   final formKey = GlobalKey<FormState>();
   final controller = TextEditingController();
   final ytSearchController = TextEditingController();
@@ -140,7 +153,7 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrack, Color colorScheme, {b
         actions: [
           Obx(
             (context) => CancelButtonDisabledRaw(
-              disabled: canEditComment.valueR && _editingInProgress[singleTrack.path] != true,
+              disabled: _editingInProgress[singleTrack.path] == true,
             ),
           ),
           Obx(
@@ -431,7 +444,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
               actions: [
                 Obx(
                   (context) => CancelButtonDisabledRaw(
-                    disabled: canEditTags.valueR && _editingInProgress[track.path] != true,
+                    disabled: _editingInProgress[track.path] == true,
                   ),
                 ),
                 Obx(
