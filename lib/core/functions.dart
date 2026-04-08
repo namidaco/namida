@@ -2155,42 +2155,35 @@ class TracksAddOnTap {
               CustomListTile(
                 icon: Broken.sort,
                 title: lang.sortBy,
-                trailingRaw: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: 0, maxWidth: context.width * 0.34),
-                  child: FittedBox(
-                    child: PopupMenuButton<InsertionSortingType>(
-                      child: Obx(
-                        (context) => Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(sortBy.valueR.toIcon(), size: 18.0),
-                            const SizedBox(width: 8.0),
-                            Text(sortBy.valueR.toText()),
-                          ],
-                        ),
+                trailing: NamidaPopupWrapper(
+                  childrenDefault: () {
+                    final disabledOnes = disabledSorts != null ? disabledSorts() : null;
+                    final iterables = disabledOnes == null || disabledOnes.isEmpty
+                        ? InsertionSortingType.values
+                        : InsertionSortingType.values.where((element) => !disabledOnes.contains(element));
+                    return iterables
+                        .map(
+                          (e) => NamidaPopupItem(
+                            icon: e.toIcon(),
+                            title: e.toText(),
+                            onTap: () => sortBy.value = e,
+                          ),
+                        )
+                        .toList();
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        sortBy.valueR.toIcon(),
+                        size: 18.0,
                       ),
-                      itemBuilder: (context) {
-                        final disabledOnes = disabledSorts != null ? disabledSorts() : null;
-                        final iterables = disabledOnes == null || disabledOnes.isEmpty
-                            ? InsertionSortingType.values
-                            : InsertionSortingType.values.where((element) => !disabledOnes.contains(element));
-                        return iterables
-                            .map(
-                              (e) => PopupMenuItem(
-                                value: e,
-                                child: Row(
-                                  children: [
-                                    Icon(e.toIcon(), size: 20.0),
-                                    const SizedBox(width: 8.0),
-                                    Text(e.toText()),
-                                  ],
-                                ),
-                              ),
-                            )
-                            .toList();
-                      },
-                      onSelected: (value) => sortBy.value = value,
-                    ),
+                      const SizedBox(width: 8.0),
+                      Text(
+                        sortBy.valueR.toText(),
+                        style: context.textTheme.displayMedium,
+                      ),
+                    ],
                   ),
                 ),
               ),

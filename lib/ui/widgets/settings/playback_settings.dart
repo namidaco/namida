@@ -842,38 +842,27 @@ class PlaybackSettings extends SettingSubpageProvider {
                   icon: type.toIcon(),
                   title: type.toText(),
                   subtitle: type.toSubtitle(),
-                  trailing: PopupMenuButton<InterruptionAction>(
-                    child: Obx((context) {
-                      final actionInSetting = settings.player.onInterrupted[type] ?? InterruptionAction.pause;
-                      return Text(actionInSetting.toText());
-                    }),
-                    itemBuilder: (context) => <PopupMenuItem<InterruptionAction>>[
-                      ...InterruptionAction.values.map(
-                        (action) => PopupMenuItem(
-                          value: action,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Icon(action.toIcon(), size: 22.0),
-                              const SizedBox(width: 6.0),
-                              Text(action.toText()),
-                              const Spacer(),
-                              Obx(
-                                (context) {
-                                  final actionInSetting = settings.player.onInterrupted[type] ?? InterruptionAction.pause;
-                                  return NamidaCheckMark(
-                                    size: 16.0,
-                                    active: actionInSetting == action,
-                                  );
-                                },
-                              ),
-                              const SizedBox(width: 6.0),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                    onSelected: (action) => settings.player.updatePlayerInterruption(type, action),
+                  trailing: NamidaPopupWrapper(
+                    childrenDefault: () {
+                      return InterruptionAction.values
+                          .map(
+                            (action) => NamidaPopupItem(
+                              icon: action.toIcon(),
+                              title: action.toText(),
+                              onTap: () => settings.player.updatePlayerInterruption(type, action),
+                            ),
+                          )
+                          .toList();
+                    },
+                    child: Obx(
+                      (context) {
+                        final actionInSetting = settings.player.onInterrupted[type] ?? InterruptionAction.pause;
+                        return Text(
+                          actionInSetting.toText(),
+                          style: context.textTheme.displayMedium,
+                        );
+                      },
+                    ),
                   ),
                 );
               },
