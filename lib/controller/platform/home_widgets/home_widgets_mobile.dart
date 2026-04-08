@@ -28,7 +28,7 @@ class _HomeWidgetsMobile extends HomeWidgets {
     await Future.wait([
       HomeWidget.saveWidgetData<String>(_HomeWidgetKey.title.name, title),
       HomeWidget.saveWidgetData<String>(_HomeWidgetKey.message.name, message),
-      HomeWidget.saveWidgetData<String>(_HomeWidgetKey.image.name, imageFileUri?.toFilePath()),
+      HomeWidget.saveWidgetData<String>(_HomeWidgetKey.image.name, imageFileUri?.toString()),
       HomeWidget.saveWidgetData<bool>(_HomeWidgetKey.playing.name, isPlaying),
       HomeWidget.saveWidgetData<bool>(_HomeWidgetKey.favourite.name, isFavourite),
     ]);

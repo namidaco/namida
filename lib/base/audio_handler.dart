@@ -517,16 +517,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<void> onReorderItems(int currentIndex, Q itemDragged) async {
-    await super.onReorderItems(currentIndex, itemDragged);
-
-    refreshNotification();
-
+    super.onReorderItems(currentIndex, itemDragged);
     itemDragged.execute(
       selectable: (finalItem) => CurrentColor.inst.updatePlayerColorFromTrack(null, currentIndex, updateIndexOnly: true),
       youtubeID: (finalItem) {},
     );
-
-    await QueueController.inst.updateLatestQueue(currentQueue.value);
   }
 
   @override
@@ -2440,7 +2435,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
       album: tr.hasUnknownAlbum ? '' : tr.originalAlbum,
       genre: tr.originalGenre,
       duration: duration ?? Duration(milliseconds: tr.durationMS),
-      artUri: Uri.file(imagePathToUse ?? AppPaths.NAMIDA_LOGO_MONET),
+      artUri: _fileToContentUri(imagePathToUse ?? AppPaths.NAMIDA_LOGO_MONET),
     );
   }
 }
@@ -2477,9 +2472,24 @@ extension YoutubeIDToMediaItem on YoutubeID {
       displaySubtitle: videoChannelTitle,
       displayDescription: "${currentIndex + 1}/$queueLength",
       duration: videoDuration ?? Duration.zero,
-      artUri: Uri.file(imagePathToUse ?? AppPaths.NAMIDA_LOGO_MONET),
+      artUri: _fileToContentUri(imagePathToUse ?? AppPaths.NAMIDA_LOGO_MONET),
     );
   }
+}
+
+Uri _fileToContentUri(String filePath) {
+  if (Platform.isAndroid) {
+    try {
+      return Uri(
+        scheme: 'content',
+        host: 'com.msob7y.namida',
+        queryParameters: {'path': filePath},
+      );
+    } catch (_) {
+      // -- error in content uri means nothing more than android auto/etc not showing artworks
+    }
+  }
+  return Uri.file(filePath);
 }
 
 extension PlayableExecuter on Playable {

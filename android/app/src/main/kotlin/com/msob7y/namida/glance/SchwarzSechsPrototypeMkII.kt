@@ -86,11 +86,26 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
       ) {
         _currentImageProviderWrapper?.bitmap?.recycle()
         try {
-          val bitmap = BitmapFactory.decodeFile(imagePath)
-          val roundedBitmap = bitmap.toRoundedBitmap(imageCornerRadiusFloat)
-          // TODO: provide good color
-          _currentImageProviderWrapper = ImageProviderWrapper(roundedBitmap, null)
-          bitmap.recycle()
+          val bitmap = try {
+            if (imagePath.startsWith("content://")) {
+              val uri = Uri.parse(imagePath)
+              context.contentResolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it)
+              }
+            } else {
+              BitmapFactory.decodeFile(imagePath)
+            }
+          } catch (_: Exception) {
+            null
+          }
+          if (bitmap != null) {
+            val roundedBitmap = bitmap.toRoundedBitmap(imageCornerRadiusFloat)
+            // TODO: provide good color
+            _currentImageProviderWrapper = ImageProviderWrapper(roundedBitmap, null)
+            bitmap.recycle()
+          } else {
+            _currentImageProviderWrapper = null
+          }
         } catch (_: Exception) {
           _currentImageProviderWrapper = null
         }
