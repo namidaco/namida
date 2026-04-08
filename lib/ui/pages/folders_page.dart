@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'package:super_sliver_list/super_sliver_list.dart';
@@ -317,17 +320,11 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                             (context) => Positioned(
                               bottom: Dimensions.inst.globalBottomPaddingEffectiveR + 6.0,
                               right: (Dimensions.inst.shouldHideFABR ? 0.0 : kFABSize) + 12.0 + 8.0,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: theme.scaffoldBackgroundColor,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: _SmolIconFolderScroll(
-                                  foldersController: foldersController,
-                                  iconSize: scrollToIconSize,
-                                  controller: scrollController,
-                                  indexToScrollTo: indexToScrollTo,
-                                ),
+                              child: _SmolIconFolderScroll(
+                                foldersController: foldersController,
+                                iconSize: scrollToIconSize,
+                                controller: scrollController,
+                                indexToScrollTo: indexToScrollTo,
                               ),
                             ),
                           )
@@ -354,7 +351,10 @@ class _SmolIconFolderScroll extends StatefulWidget {
   State<_SmolIconFolderScroll> createState() => __SmolIconFolderScrollState();
 }
 
-class __SmolIconFolderScrollState extends State<_SmolIconFolderScroll> {
+class __SmolIconFolderScrollState extends State<_SmolIconFolderScroll> with TickerProviderStateMixin {
+  late AnimationController _danceController;
+  late Animation<double> _danceAnimation;
+
   double get _getScrollToPosition => Dimensions.inst.trackTileItemExtent * (widget.indexToScrollTo + widget.foldersController.currentFolderslist.value.length - 2);
 
   IconData _arrowIcon = Broken.cd;
@@ -381,32 +381,76 @@ class __SmolIconFolderScrollState extends State<_SmolIconFolderScroll> {
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _updateIconListener());
+    _danceController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _danceAnimation = Tween<double>(begin: 0.0, end: 2.0).animate(
+      CurvedAnimation(
+        parent: _danceController,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateIconListener();
+      _startDancing(delay: true);
+    });
     widget.controller.addListener(_updateIconListener);
     super.initState();
   }
 
   @override
+  void didUpdateWidget(covariant _SmolIconFolderScroll oldWidget) {
+    if (oldWidget.indexToScrollTo != widget.indexToScrollTo || oldWidget.foldersController != widget.foldersController) {
+      _startDancing(delay: true);
+    } else {
+      _startDancing();
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   void dispose() {
+    _danceController.dispose();
     widget.controller.removeListener(_updateIconListener);
     super.dispose();
   }
 
+  void _startDancing({bool delay = false}) async {
+    _danceController.reset();
+    if (delay) await Future.delayed(const Duration(milliseconds: 100));
+    _danceController.forward();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return NamidaIconButton(
-      padding: const EdgeInsets.all(8.0),
-      iconSize: widget.iconSize,
-      onPressed: () {
-        try {
-          widget.controller.animateToEff(
+    return AnimatedBuilder(
+      animation: _danceController,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: context.theme.scaffoldBackgroundColor,
+          shape: BoxShape.circle,
+        ),
+        child: NamidaIconButton(
+          padding: const EdgeInsets.all(8.0),
+          iconSize: widget.iconSize,
+          onPressed: () => widget.controller.animateToEff(
             _getScrollToPosition,
             duration: const Duration(milliseconds: 400),
             curve: Curves.fastEaseInToSlowEaseOut,
-          );
-        } catch (_) {}
+          ),
+          icon: _arrowIcon,
+        ),
+      ),
+      builder: (context, child) {
+        final offset = _arrowIcon == Broken.arrow_circle_up ? -4.0 * math.sin(_danceAnimation.value * 2 * math.pi) : 4.0 * math.sin(_danceAnimation.value * 2 * math.pi);
+        return Transform.translate(
+          offset: Offset(0, offset),
+          child: child,
+        );
       },
-      icon: _arrowIcon,
     );
   }
 }
