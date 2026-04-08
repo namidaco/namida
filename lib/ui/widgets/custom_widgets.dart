@@ -2293,6 +2293,19 @@ class NamidaRawLikeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+
+    late final enabledIconWidget = Icon(
+      key: const ValueKey('like_switcher_on'),
+      likedIcon,
+      color: enabledColor ?? theme.colorScheme.primary,
+      size: size,
+    );
+    late final normalIconWidget = Icon(
+      key: const ValueKey('like_switcher_off'),
+      normalIcon,
+      color: disabledColor ?? theme.colorScheme.secondary,
+      size: size,
+    );
     return NamidaMouseRegion(
       enabled: onTap != null,
       child: LikeButton(
@@ -2316,38 +2329,37 @@ class NamidaRawLikeButton extends StatelessWidget {
           return await onTap?.call(isLiked);
         },
         likeBuilder: (value) {
-          Widget iconWidget = value
-              ? Icon(
-                  likedIcon,
-                  color: enabledColor ?? theme.colorScheme.primary,
-                  size: size,
-                )
-              : Icon(
-                  normalIcon,
-                  color: disabledColor ?? theme.colorScheme.secondary,
-                  size: size,
-                );
-
-          if (enableGradient && value) {
-            iconWidget = ShaderMask(
-              blendMode: BlendMode.srcIn,
-              shaderCallback: (Rect bounds) => LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                stops: [
-                  0.2,
-                  0.9,
-                ],
-                colors: [
-                  theme.colorScheme.primary.withOpacityExt(0.75),
-                  Color.alphaBlend(theme.colorScheme.primary.withOpacityExt(0.25), CurrentColor.inst.color).withOpacityExt(0.75),
-                ],
-              ).createShader(bounds),
-              child: iconWidget,
+          if (enableGradient) {
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              reverseDuration: const Duration(milliseconds: 300),
+              child: value
+                  ? ShaderMask(
+                      key: const ValueKey('like_switcher_on'),
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (Rect bounds) => LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        stops: [
+                          0.2,
+                          0.9,
+                        ],
+                        colors: [
+                          theme.colorScheme.primary.withOpacityExt(0.75),
+                          Color.alphaBlend(theme.colorScheme.primary.withOpacityExt(0.25), CurrentColor.inst.color).withOpacityExt(0.75),
+                        ],
+                      ).createShader(bounds),
+                      child: enabledIconWidget,
+                    )
+                  : normalIconWidget,
+            );
+          } else {
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              reverseDuration: const Duration(milliseconds: 300),
+              child: value ? enabledIconWidget : normalIconWidget,
             );
           }
-
-          return iconWidget;
         },
       ),
     );
