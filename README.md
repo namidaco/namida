@@ -44,6 +44,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - [Screenshots](#screenshots)
 - [Usage Preview](#usage-preview)
 - [Installation](#installation)
+- [Companion Apps](#companion-apps)
 - [Permission Note](#permission-note)
 - [Special Thanks](#special-thanks)
 - [Translate](#translate)
@@ -362,6 +363,18 @@ sudo dnf install ./namida.rpm   # Fedora/RHEL (download .rpm from beta releases)
 # Available at: https://codeberg.org/iWisp360/namida-nix
 ```
 
+### Companion Apps:
+
+> [!TIP]
+> **Community-built tools for an enhanced namida experience**
+>
+> - 🔄 [Namida Sync](https://github.com/010101-sans/namida_sync), a tool for syncing namida backups & files across android, windows and linux
+>   - by [@010101-sans](https://github.com/010101-sans)
+> - 📊 [Namida History App](https://github.com/DiWu17/namida_history_app), a companion app that shows yearly, monthly & more listening stats with charts based on namida history
+>   - by [@DiWu17](https://github.com/DiWu17)
+> - 🎁 [Namida Wrapped](https://namida-wrapped.vercel.app), a local web ui for generating spotify wrapped-style stats
+>   - by [@bebrriko](https://github.com/bebrriko)
+
 ### Permission Note:
 
 #### The permissions namida uses and why:
@@ -391,7 +404,6 @@ sudo dnf install ./namida.rpm   # Fedora/RHEL (download .rpm from beta releases)
 ### Special Thanks:
 
 > - [@MSOB7YY](https://github.com/MSOB7YY) for their youtube client, which powers youtube section.
-> - [@010101-sans](https://github.com/010101-sans) for creating [namida_sync](https://github.com/010101-sans/namida_sync), which makes syncing namida backups/files between android/windows/linux easier.
 > - [@cameralis](https://github.com/cameralis) for their awesome miniplayer physics.
 > - [@alexmercerind](https://github.com/alexmercerind) for helping me out a lot.
 > - [@lusaxweb](https://github.com/lusaxweb) for their awesome Iconsax icon pack.
