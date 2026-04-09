@@ -210,7 +210,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   }
 
   void _updateHighlightedLine(int durMS, {bool force = false, bool forceAnimate = false, bool jump = false}) {
-    final lrcDur = lyrics.lastWhereEff((e) => e.timestamp.inMilliseconds <= durMS + 5 && !e.isBGLyrics) ?? lyrics.firstOrNull;
+    final lrcDur = lyrics.lastWhereEff((e) => e.timestamp <= Duration(milliseconds: durMS + 5) && !e.isBGLyrics) ?? lyrics.firstOrNull;
     final newLineDuration = lrcDur?.timestamp;
 
     // -- prefer index checks, cuz duration is used in ui directly to highlight
@@ -1184,7 +1184,7 @@ class _TextWithFadingProgress extends StatelessWidget {
                 final dimmedColor = normalColor.withValues(
                   alpha: 0.25,
                 );
-                final didReachTimeStampForPart = currentPosition > e.startTimestamp.inMilliseconds;
+                final didReachTimeStampForPart = Duration(milliseconds: currentPosition) > e.startTimestamp;
 
                 final child = RichText(
                   text: TextSpan(
@@ -1207,7 +1207,8 @@ class _TextWithFadingProgress extends StatelessWidget {
                 // double progress = (currentPosition - eStart) / total;
                 // progress = progress.clampDouble(0.0, 1.0);
 
-                final animationDuration = Duration(milliseconds: !playWhenReady ? 0 : e.endTimestamp.inMilliseconds - e.startTimestamp.inMilliseconds);
+                var animationDuration = !playWhenReady ? Duration.zero : e.endTimestamp - e.startTimestamp;
+                if (animationDuration <= Duration.zero) animationDuration = const Duration(milliseconds: 10);
                 return WidgetSpan(
                   child: TweenAnimationBuilder(
                     duration: animationDuration,

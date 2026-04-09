@@ -244,16 +244,18 @@ class NamidaFFMPEG {
       preferredMinSize ??= 0;
       canSafelyMoveBack = didSuccess && await cacheFile.exists() && await cacheFile.length() > preferredMinSize;
     } catch (_) {}
-    if (canSafelyMoveBack) {
-      // only move output file back in case of success.
-      await cacheFile.copy(originalFile.path);
 
-      if (originalStats != null) {
-        await setFileStats(originalFile, originalStats);
+    try {
+      if (canSafelyMoveBack) {
+        // -- only move output file back in case of success.
+        await cacheFile.copy(originalFile.path);
+        if (originalStats != null) {
+          await setFileStats(originalFile, originalStats);
+        }
       }
+    } finally {
+      cacheFile.tryDeleting();
     }
-
-    cacheFile.tryDeleting();
 
     return canSafelyMoveBack;
   }
