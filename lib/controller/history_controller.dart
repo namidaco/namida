@@ -31,12 +31,20 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
     return total;
   }
 
-  Future<void> replaceTracksDirectoryInHistory(String normalizedOldDir, String normalizedNewDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
+  Future<void> replaceTracksDirectoryInHistory(
+    String normalizedOldDir,
+    String normalizedNewDir, {
+    Iterable<String>? forThesePathsOnly,
+    bool ensureNewFileExists = false,
+  }) async {
     final pathsOnlySet = forThesePathsOnly?.toSet();
     final existenceCache = <String, bool>{};
+    final normalizedPathCache = <String, String>{};
+
     await replaceTheseTracksInHistory(
       (e) {
         final tr = e.track;
+        normalizedPathCache[tr.path] ??= replaceFunctionNormalizePath(tr.path);
         return replaceFunctionForUpdatedPaths(
           tr,
           normalizedOldDir,
@@ -46,11 +54,17 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
           existenceCache,
         );
       },
-      (old) => TrackWithDate(
-        dateAdded: old.dateAdded,
-        track: Track.fromTypeParameter(old.track.runtimeType, replaceFunctionGetNewPath(old.track.path, normalizedOldDir, normalizedNewDir)),
-        source: old.source,
-      ),
+      (old) {
+        final normalized = normalizedPathCache[old.track.path] ?? replaceFunctionNormalizePath(old.track.path);
+        return TrackWithDate(
+          dateAdded: old.dateAdded,
+          track: Track.fromTypeParameter(
+            old.track.runtimeType,
+            replaceFunctionGetNewPath(normalized, normalizedOldDir, normalizedNewDir),
+          ),
+          source: old.source,
+        );
+      },
     );
   }
 

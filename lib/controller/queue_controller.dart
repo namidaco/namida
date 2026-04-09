@@ -151,15 +151,22 @@ class QueueController {
   }
 
   /// Only use when updating missing track.
-  Future<void> replaceTracksDirectoryInQueues(String normalizedOldDir, String normalizedNewDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {
+  Future<void> replaceTracksDirectoryInQueues(
+    String normalizedOldDir,
+    String normalizedNewDir, {
+    Iterable<String>? forThesePathsOnly,
+    bool ensureNewFileExists = false,
+  }) async {
     final queuesToSave = <Queue>{};
     final pathsOnlySet = forThesePathsOnly?.toSet();
     final existenceCache = <String, bool>{};
-    for (final entry in queuesMap.value.entries) {
-      final q = entry.value;
+    final normalizedPathCache = <String, String>{};
+
+    for (final q in queuesMap.value.values) {
       q.tracks.replaceWhere(
         (e) {
           final tr = e.track;
+          normalizedPathCache[tr.path] ??= replaceFunctionNormalizePath(tr.path);
           return replaceFunctionForUpdatedPaths(
             tr,
             normalizedOldDir,
@@ -169,7 +176,13 @@ class QueueController {
             existenceCache,
           );
         },
-        (old) => Track.fromTypeParameter(old.runtimeType, replaceFunctionGetNewPath(old.path, normalizedOldDir, normalizedNewDir)),
+        (old) {
+          final normalized = normalizedPathCache[old.path] ?? replaceFunctionNormalizePath(old.path);
+          return Track.fromTypeParameter(
+            old.runtimeType,
+            replaceFunctionGetNewPath(normalized, normalizedOldDir, normalizedNewDir),
+          );
+        },
         onMatch: () => queuesToSave.add(q),
       );
     }
@@ -180,9 +193,8 @@ class QueueController {
   }
 
   Future<void> replaceTrackInAllQueues(Map<Track, Track> oldNewTrack) async {
-    final queuesToSave = <Queue>[];
-    for (final entry in queuesMap.value.entries) {
-      final q = entry.value;
+    final queuesToSave = <Queue>{};
+    for (final q in queuesMap.value.values) {
       for (final e in oldNewTrack.entries) {
         q.tracks.replaceItems(
           e.key,

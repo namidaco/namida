@@ -527,21 +527,17 @@ class Player {
     if (currentItem.value is Selectable) {
       final pathsOnlySet = forThesePathsOnly?.toSet();
       final existenceCache = <String, bool>{};
+      final normalizedPathCache = <String, String>{};
       await _audioHandler.replaceWhereInQueue(
         (e) {
           final tr = (e as Selectable).track;
-          return replaceFunctionForUpdatedPaths(
-            tr,
-            normalizedOldDir,
-            normalizedNewDir,
-            pathsOnlySet,
-            ensureNewFileExists,
-            existenceCache,
-          );
+          normalizedPathCache[tr.path] ??= replaceFunctionNormalizePath(tr.path);
+          return replaceFunctionForUpdatedPaths(tr, normalizedOldDir, normalizedNewDir, pathsOnlySet, ensureNewFileExists, existenceCache);
         },
         (old) {
           old as Selectable;
-          final newtr = Track.fromTypeParameter(old.track.runtimeType, replaceFunctionGetNewPath(old.track.path, normalizedOldDir, normalizedNewDir));
+          final normalized = normalizedPathCache[old.track.path] ?? replaceFunctionNormalizePath(old.track.path);
+          final newtr = Track.fromTypeParameter(old.track.runtimeType, replaceFunctionGetNewPath(normalized, normalizedOldDir, normalizedNewDir));
           if (old is TrackWithDate) {
             return TrackWithDate(
               dateAdded: old.dateAdded,
