@@ -956,6 +956,42 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     startCounterToAListen(pi);
   }
 
+  @override
+  FutureOr<void> ensureReplayGainVolumeUpdated(Playable? item, {VideoStreamsResult? streamsResult}) {
+    final replayGainType = settings.player.replayGainType.value;
+    if (replayGainType.isAnyEnabled) {
+      return item?.execute<FutureOr<void>>(
+        selectable: (finalItem) {
+          final gainData = finalItem.track.toTrackExt().gainData;
+          if (replayGainType.isLoudnessEnhancerEnabled) {
+            final gainToUse = gainData?.gainToUse;
+            if (gainToUse != null) return loudnessEnhancer.setTargetGainTrack(gainToUse);
+          } else if (replayGainType.isVolumeEnabled) {
+            final vol = gainData?.calculateGainAsVolume();
+            replayGainLinearVolume.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
+          }
+          return null;
+        },
+        youtubeID: (finalItem) async {
+          final replayGainType = settings.player.replayGainType.value;
+          if (replayGainType.isAnyEnabled) {
+            streamsResult ??= await YoutubeInfoController.video.fetchVideoStreamsCache(finalItem.id);
+            if (streamsResult != null) {
+              final loudnessDb = streamsResult?.loudnessDBData?.loudnessDb;
+
+              if (replayGainType.isLoudnessEnhancerEnabled) {
+                if (loudnessDb != null) return loudnessEnhancer.setTargetGainTrack(-loudnessDb.toDouble());
+              } else if (replayGainType.isVolumeEnabled) {
+                final vol = loudnessDb == null ? null : ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
+                replayGainLinearVolume.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
+              }
+            }
+          }
+        },
+      );
+    }
+  }
+
   Future<void> onItemPlayYoutubeIDSetQuality({
     required VideoStreamsResult? mainStreams,
     required VideoStream? stream,
@@ -1498,21 +1534,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     currentCachedAudio.value = playedFromCacheDetails.audio;
     currentCachedVideo.value = playedFromCacheDetails.video;
 
-    void setReplayGainIfRequired() {
-      final replayGainType = settings.player.replayGainType.value;
-      if (replayGainType.isAnyEnabled && streamsResult != null) {
-        final loudnessDb = streamsResult.loudnessDBData?.loudnessDb;
-
-        if (replayGainType.isLoudnessEnhancerEnabled) {
-          if (loudnessDb != null) loudnessEnhancer.setTargetGainTrack(-loudnessDb.toDouble());
-        } else if (replayGainType.isVolumeEnabled) {
-          final vol = loudnessDb == null ? null : ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
-          replayGainLinearVolume.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
-        }
-      }
-    }
-
-    setReplayGainIfRequired();
+    ensureReplayGainVolumeUpdated(item, streamsResult: streamsResult);
 
     generateWaveform();
 
@@ -1569,7 +1591,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             snackyy(message: 'Error getting streams: $e', top: false, isError: true);
             return null;
           });
-          setReplayGainIfRequired();
+          ensureReplayGainVolumeUpdated(item, streamsResult: streamsResult);
           markAsWatchedIfRequired();
 
           duration ??= streamsResult?.audioStreams.firstOrNull?.duration;
