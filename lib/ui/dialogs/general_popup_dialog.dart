@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'package:rhttp/rhttp.dart';
 
+import 'package:namida/class/file_matcher.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
@@ -14,7 +15,6 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/file_browser.dart';
-import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -437,14 +437,22 @@ Future<void> showGeneralPopupDialog(
       return;
     }
 
-    final paths = files.mapped((e) => e.path);
-    paths.sortBy((e) => e);
+    final pathsList = <String>[];
+    final pathsSet = <String>{};
+    for (final f in files) {
+      final p = f.path;
+      if (pathsSet.add(p)) {
+        pathsList.add(p);
+      }
+    }
+    pathsList.sortBy((p) => p);
 
-    final highMatchesFiles = NamidaGenerator.getHighMatcheFilesFromFilename(paths, tracks.first.path);
+    final fileMatcher = FileMatcher.init(allAudioFiles: pathsSet, buildIndex: false);
+    final highMatchesFiles = fileMatcher.getAllSuggestions(tracks.first.path);
 
     /// Searching
     final txtc = TextEditingController();
-    final filteredPaths = List<String>.from(paths).obso;
+    final filteredPaths = pathsList.obso;
     final shouldCleanUp = true.obso;
 
     await openDialog(
@@ -479,8 +487,10 @@ Future<void> showGeneralPopupDialog(
                       labelText: '',
                       onChanged: (value) {
                         final matches = value == ''
-                            ? paths
-                            : paths.where((element) => shouldCleanUp.value ? element.cleanUpForComparison.contains(value.cleanUpForComparison) : element.contains(value)).toList();
+                            ? pathsList
+                            : pathsList
+                                  .where((element) => shouldCleanUp.value ? element.cleanUpForComparison.contains(value.cleanUpForComparison) : element.contains(value))
+                                  .toList();
                         filteredPaths.value = matches;
                       },
                     ),
@@ -851,7 +861,8 @@ Future<void> showGeneralPopupDialog(
                                     }
 
                                     /// firstly checks if a file exists in current library
-                                    final firstHighMatchesFiles = NamidaGenerator.getHighMatcheFilesFromFilename(Indexer.inst.allAudioFiles.value, tracks.first.path);
+                                    final fileMatcher = FileMatcher.init(allAudioFiles: Indexer.inst.allAudioFiles.value, buildIndex: false);
+                                    final firstHighMatchesFiles = fileMatcher.getAllSuggestions(tracks.first.path);
                                     if (firstHighMatchesFiles.isNotEmpty) {
                                       await openDialog(
                                         (theme) => CustomBlurryDialog(

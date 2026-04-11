@@ -24,6 +24,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/pages/subpages/indexer_missing_tracks_subpage.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
@@ -1306,8 +1307,9 @@ class IndexerSettings extends SettingSubpageProvider {
               icon: Broken.location_cross,
               title: lang.missingTracks,
               trailing: const Icon(Broken.arrow_right_3),
-              onTap: () {
-                if (BackupController.inst.isCreatingBackup.value ||
+              onTap: () async {
+                if (Indexer.inst.isIndexing.value ||
+                    BackupController.inst.isCreatingBackup.value ||
                     BackupController.inst.isRestoringBackup.value ||
                     HistoryController.inst.isLoadingHistory ||
                     YoutubeHistoryController.inst.isLoadingHistory ||
@@ -1315,6 +1317,7 @@ class IndexerSettings extends SettingSubpageProvider {
                   snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
                   return;
                 }
+                if (!await requestManageStoragePermission()) return;
                 const IndexerMissingTracksSubpage().navigate();
               },
             ),

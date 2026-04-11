@@ -11,6 +11,7 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/file_matcher.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/library_group.dart';
 import 'package:namida/class/library_item_map.dart';
@@ -799,7 +800,7 @@ class Indexer<T extends Track> {
         final isTitleEmpty = finalTrackExtended.title == UnknownTags.TITLE;
         final isArtistEmpty = finalTrackExtended.originalArtist == UnknownTags.ARTIST;
         if (isTitleEmpty || isArtistEmpty) {
-          final extractedName = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
+          final extractedName = FileMatcher.getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
           final newTitle = isTitleEmpty ? extractedName.$1 : null;
           final newArtists = isArtistEmpty ? [extractedName.$2] : null;
           finalTrackExtended = finalTrackExtended.copyWith(
@@ -811,7 +812,7 @@ class Indexer<T extends Track> {
         }
       } else {
         // --- Adding dummy track with info extracted from filename.
-        final titleAndArtist = getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
+        final titleAndArtist = FileMatcher.getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
         final title = titleAndArtist.$1;
         final artist = titleAndArtist.$2;
         finalTrackExtended = initialTrack.copyWith(
@@ -1528,29 +1529,6 @@ class Indexer<T extends Track> {
       originalText,
       fallback: null,
     );
-  }
-
-  /// (title, artist)
-  static (String, String) getTitleAndArtistFromFilename(String filename) {
-    final filenameWOEx = filename.replaceAll('_', ' ');
-    List<String> titleAndArtist;
-
-    /// preferring to split by [' - '], since there are artists that has '-' in their name.
-    titleAndArtist = filenameWOEx.split(' - ');
-    if (titleAndArtist.length == 1) {
-      titleAndArtist = filenameWOEx.split('-');
-    }
-
-    /// in case splitting produced 2 entries or more, it means its high likely to be [artist - title]
-    /// otherwise [title] will be the [filename] and [artist] will be [Unknown]
-    final title = titleAndArtist.length >= 2 ? titleAndArtist[1].trimAll() : filenameWOEx;
-    final artist = titleAndArtist.length >= 2 ? titleAndArtist[0].trimAll() : UnknownTags.ARTIST;
-
-    // TODO: split by ( and ) too, but retain Remixes and feat.
-    final cleanedUpTitle = title.splitFirst('[').trimAll();
-    final cleanedUpArtist = artist.splitLast(']').trimAll();
-
-    return (cleanedUpTitle, cleanedUpArtist);
   }
 
   Iterable<String> _getPhysicalMedias() => tracksInfoList.value.where((tr) => tr.isPhysical).map((t) => t.path);

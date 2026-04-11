@@ -1,4 +1,5 @@
 import 'package:namida/base/generator_base.dart';
+import 'package:namida/class/file_matcher.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -9,7 +10,13 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
   static final NamidaGenerator inst = NamidaGenerator._internal();
   NamidaGenerator._internal() : super(HistoryController.inst);
 
-  static Iterable<String> getHighMatcheFilesFromFilename(Iterable<String> files, String filePathToMatch, {bool singleOnly = false}) {
+  static Iterable<String> getHighMatcheFilesFromFilenameOldd(
+    Iterable<String> files,
+    String filePathToMatch, {
+    Map<String, List<String>>? allFilesByName,
+    Map<String, List<String>>? allFilesByNameWOExt,
+    bool singleOnly = false,
+  }) {
     int? latestPriority;
     bool requiresSorting = false;
     final matches = <(String, int)>[];
@@ -30,8 +37,29 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
 
     final filenameToMatch = filePathToMatch.getFilename;
     final filenameWOExtToMatch = filePathToMatch.getFilenameWOExt;
+
+    if (allFilesByName != null) {
+      final fileSystemsFilename = allFilesByName[filePathToMatch] ?? [];
+      for (final e in fileSystemsFilename) {
+        if (filenameToMatch == e) {
+          if (singleOnly) return [e];
+          addMatch(e, 0);
+        }
+      }
+    }
+
+    if (allFilesByNameWOExt != null) {
+      final fileSystemsFilenameWOExt = allFilesByNameWOExt[filePathToMatch] ?? [];
+      for (final e in fileSystemsFilenameWOExt) {
+        if (filenameWOExtToMatch == e) {
+          if (singleOnly) return [e];
+          addMatch(e, 1);
+        }
+      }
+    }
+
     final filenameToMatchCleaned = filenameToMatch.cleanUpForComparison;
-    final l = Indexer.getTitleAndArtistFromFilename(filenameToMatch);
+    final l = FileMatcher.getTitleAndArtistFromFilename(filenameToMatch);
     final trackTitle = l.$1;
     final trackArtist = l.$2;
 

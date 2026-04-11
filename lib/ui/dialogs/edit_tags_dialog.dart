@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/file_matcher.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
@@ -573,7 +574,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                     NamidaInkWell(
                       borderRadius: 2.0,
                       onTap: () {
-                        final titleAndArtist = Indexer.getTitleAndArtistFromFilename(track.filenameWOExt);
+                        final titleAndArtist = FileMatcher.getTitleAndArtistFromFilename(track.filenameWOExt);
                         final title = titleAndArtist.$1;
                         final artist = titleAndArtist.$2;
 
