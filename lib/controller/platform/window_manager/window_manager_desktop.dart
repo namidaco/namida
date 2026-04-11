@@ -49,15 +49,16 @@ class _WindowManagerDesktop extends NamidaWindowManager {
   Future<void> ensurePositionRestored() async {
     // -- sometimes waitUntilReadyToShow is not enough for linux
 
+    await windowManager.show();
+    await windowManager.focus();
+
     final bounds = settings.extra.windowBounds;
-    if (bounds != null) {
+    if (bounds != null && !NamidaTrayManager.wasMaximized) {
       // -- making sure window is in bounds with the current screen/s max size
       // -- for example: after disconnecting a second screen
       final shiftedBounds = await _ensureBoundsWithinScreenSizeShift(bounds);
       await windowManager.setBounds(shiftedBounds);
     }
-    await windowManager.show();
-    await windowManager.focus();
   }
 
   Future<Rect> _ensureBoundsWithinScreenSizeShift(Rect bounds) async {
@@ -173,7 +174,7 @@ class _NamidaWindowListener with WindowListener {
       await Namida.disposeAllResourcesAndExit();
     } else {
       // -- minimize to tray instead
-      await windowManager.hide();
+      await NamidaTrayManager.hideWindow();
     }
   }
 }

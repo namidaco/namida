@@ -74,9 +74,9 @@ class AppSingleInstanceLinux extends AppSingleInstanceBase {
     if (bringToFront) _bringWindowToFront();
   }
 
-  void _bringWindowToFront() {
-    windowManager.show();
-    windowManager.focus();
+  void _bringWindowToFront() async {
+    await windowManager.show();
+    await windowManager.focus();
   }
 
   @override
