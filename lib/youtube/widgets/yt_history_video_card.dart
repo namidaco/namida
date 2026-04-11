@@ -98,10 +98,9 @@ class VideoTilePropertiesProvider extends StatelessWidget {
                     }
                   }
                   final currentPlayingVideo = Player.inst.currentVideoR;
+                  final pageColorScheme = CurrentColor.inst.currentColorScheme;
 
-                  final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
-                      ? CurrentColor.inst.miniplayerColor
-                      : CurrentColor.inst.currentColorScheme; // always follow track color
+                  final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR ? CurrentColor.inst.miniplayerColor : pageColorScheme; // always follow track color
 
                   final properties = VideoTileProperties(
                     threeLines: threeLines,
@@ -109,6 +108,7 @@ class VideoTilePropertiesProvider extends StatelessWidget {
                     itemsColor7: itemsColor7,
                     itemsColor6: itemsColor6,
                     itemsColor5: itemsColor5,
+                    pageColorScheme: pageColorScheme,
                     backgroundColorPlaying: backgroundColorPlaying,
                     backgroundColorNotPlaying: backgroundColorNotPlaying,
                     highlightColorLayer: highlightColorLayer,
@@ -169,6 +169,7 @@ class VideoTileProperties {
   final Color? itemsColor6;
   final Color? itemsColor5;
 
+  final Color pageColorScheme;
   final Color backgroundColorPlaying;
   final Color backgroundColorNotPlaying;
   final Color? highlightColorLayer;
@@ -190,6 +191,7 @@ class VideoTileProperties {
     required this.itemsColor7,
     required this.itemsColor6,
     required this.itemsColor5,
+    required this.pageColorScheme,
     required this.backgroundColorPlaying,
     required this.backgroundColorNotPlaying,
     required this.highlightColorLayer,
@@ -620,7 +622,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
       border = Border(
         right: BorderSide(
           width: 3.0,
-          color: properties.backgroundColorPlaying,
+          color: properties.pageColorScheme,
         ),
       );
       bgColor = Color.alphaBlend(

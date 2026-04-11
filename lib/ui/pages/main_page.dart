@@ -203,8 +203,10 @@ class MainPage extends StatelessWidget {
                         bottom: bottom,
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.fastEaseInToSlowEaseOut,
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
+                        child: AnimatedShow(
+                          isHorizontal: true,
+                          show: !shouldHide,
+                          duration: const Duration(milliseconds: 400),
                           child: shouldHide ? const SizedBox(key: Key('fab_dummy')) : fabChild,
                         ),
                       );
@@ -610,24 +612,24 @@ class NamidaSearchBar extends StatelessWidget {
           final alreadyPasted = clipboard == ClipboardController.inst.lastCopyUsed.valueR;
           final empty = ClipboardController.inst.textInControllerEmpty.valueR;
 
-          return AnimatedSwitcher(
+          return AnimatedShow(
+            isHorizontal: true,
+            show: clipboard.isNotEmpty && (empty || !alreadyPasted),
             duration: const Duration(milliseconds: 200),
-            child: clipboard != '' && (empty || !alreadyPasted)
-                ? NamidaIconButton(
-                    horizontalPadding: 2.0,
-                    verticalPadding: 8.0,
-                    icon: Broken.clipboard_tick,
-                    iconSize: 20.0,
-                    onPressed: () {
-                      ClipboardController.inst.setLastPasted(ClipboardController.inst.clipboardText.value);
-                      final c = ScrollSearchController.inst.searchTextEditingController;
-                      c.text = "${c.text} $clipboard";
-                      c.selection = TextSelection.fromPosition(TextPosition(offset: c.text.length));
-                      _onSubmitted(clipboard);
-                      ClipboardController.inst.updateTextInControllerEmpty(false);
-                    },
-                  )
-                : const SizedBox(),
+            child: NamidaIconButton(
+              horizontalPadding: 2.0,
+              verticalPadding: 8.0,
+              icon: Broken.clipboard_tick,
+              iconSize: 20.0,
+              onPressed: () {
+                ClipboardController.inst.setLastPasted(ClipboardController.inst.clipboardText.value);
+                final c = ScrollSearchController.inst.searchTextEditingController;
+                c.text = "${c.text} $clipboard";
+                c.selection = TextSelection.fromPosition(TextPosition(offset: c.text.length));
+                _onSubmitted(clipboard);
+                ClipboardController.inst.updateTextInControllerEmpty(false);
+              },
+            ),
           );
         },
       ),

@@ -263,7 +263,7 @@ class _PopupRoute extends PopupRoute<void> {
   final Curve animationCurve;
 
   static const double _margin = 10;
-  static final Rect _viewportRect = Rect.fromLTWH(
+  static Rect get _viewportRect => Rect.fromLTWH(
     _margin,
     Screen.statusBar + _margin,
     Screen.width - _margin * 2,

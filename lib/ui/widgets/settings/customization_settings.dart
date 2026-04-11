@@ -398,9 +398,11 @@ class CustomizationSettings extends SettingSubpageProvider {
                       size: 18.0,
                     ),
                     const SizedBox(width: 6.0),
-                    Text(
-                      e.toText(),
-                      style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                    Expanded(
+                      child: Text(
+                        e.toText(),
+                        style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                      ),
                     ),
                   ],
                 ),

@@ -110,9 +110,11 @@ class ArtworkWidget extends StatefulWidget {
 }
 
 class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMixin {
-  static const _imagePathInitialValue = ArtworkWidget.kImagePathInitialValue;
+  static final _latestInvalidImagePath = <String?, bool>{};
 
-  String? _imagePath = _imagePathInitialValue;
+  late final String? _imagePathInitialValue = _latestInvalidImagePath[widget.path] == true ? null : ArtworkWidget.kImagePathInitialValue;
+
+  String? _imagePath;
   late Uint8List? _bytes = widget.bytes ?? Indexer.inst.artworksBytesMap[widget.path];
   // late final bool _imageObtainedBefore = Indexer.inst.imageObtainedBefore(widget.path ?? '');
 
@@ -128,15 +130,23 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     if (_bytes?.isNotEmpty == true) {
       // -- skip
     } else {
-      _imagePath = widget.path; // to prevent flashing/etc
+      if (_imagePathInitialValue == ArtworkWidget.kImagePathInitialValue) {
+        _imagePath = widget.path; // to prevent flashing/etc (only if was not invalid before)
+      }
     }
 
     if (widget.extractInternally) {
-      _initValues();
+      _initValues().whenComplete(
+        () {
+          if (_imagePath == null) {
+            _latestInvalidImagePath[widget.path] = true;
+          }
+        },
+      );
     }
   }
 
-  void _initValues() async {
+  Future<void> _initValues() async {
     final wPath = widget.path;
     if (wPath != null && await File(wPath).exists()) {
       if (_imagePath != wPath) refreshState(() => _imagePath = wPath);
@@ -153,11 +163,11 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     if (widget.extractInternally) {
       if (_imagePath != _imagePathInitialValue) refreshState(() => _imagePath = _imagePathInitialValue);
-      Timer(Duration.zero, _extractArtwork);
+      await Future.delayed(Duration.zero, _extractArtwork);
     }
   }
 
-  void _extractArtwork() async {
+  Future<void> _extractArtwork() async {
     final wPath = widget.path;
     if (wPath != null && _imagePath == _imagePathInitialValue) {
       if (!await canStartLoadingItems()) return;
@@ -272,7 +282,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final isValidBytes = bytes is Uint8List ? bytes.isNotEmpty : false;
     final goodImagePath = _imagePath?.isNotEmpty == true;
     final canDisplayImage = goodImagePath || isValidBytes;
-    final thereMightBeImageSoon = (_imagePath == _imagePathInitialValue || (bytes != null && bytes.isEmpty)) && !widget.forceDummyArtwork;
+    final thereMightBeImageSoon = ((_imagePath != null && _imagePath == _imagePathInitialValue) || (bytes != null && bytes.isEmpty)) && !widget.forceDummyArtwork;
     final boxWidth = widget.width ?? widget.thumbnailSize;
     final boxHeight = widget.height ?? widget.thumbnailSize;
 

@@ -95,9 +95,10 @@ class TrackTilePropertiesProvider extends StatelessWidget {
                                       }
                                     }
 
+                                    final pageColorScheme = CurrentColor.inst.currentColorScheme;
                                     final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
                                         ? CurrentColor.inst.miniplayerColor
-                                        : CurrentColor.inst.currentColorScheme; // always follow track color
+                                        : pageColorScheme; // always follow track color
 
                                     Color? backgroundColorPlayingAlt;
 
@@ -107,6 +108,7 @@ class TrackTilePropertiesProvider extends StatelessWidget {
                                     }
 
                                     final properties = TrackTileProperties(
+                                      pageColorScheme: pageColorScheme,
                                       backgroundColorPlaying: backgroundColorPlaying,
                                       backgroundColorPlayingAlt: backgroundColorPlayingAlt,
                                       backgroundColorNotPlaying: backgroundColorNotPlaying,
@@ -174,6 +176,7 @@ class TrackTilePropertiesConfigs {
 
 class TrackTileProperties {
   final TrackTilePropertiesConfigs configs;
+  final Color pageColorScheme;
   final Color backgroundColorPlaying;
   final Color? backgroundColorPlayingAlt;
   final Color backgroundColorNotPlaying;
@@ -198,6 +201,7 @@ class TrackTileProperties {
 
   const TrackTileProperties({
     required this.configs,
+    required this.pageColorScheme,
     required this.backgroundColorPlaying,
     required this.backgroundColorPlayingAlt,
     required this.backgroundColorNotPlaying,
@@ -302,7 +306,7 @@ class TrackTile extends StatelessWidget {
     final currentHighlightedTrack = properties.currentHighlightedTrack;
     final bool isTrackHighlighted = currentHighlightedTrack != null && (trackWithDate == currentHighlightedTrack.trackWithDate || track == currentHighlightedTrack.track);
 
-    final textColor = isTrackCurrentlyPlaying && !isTrackSelected && !isTrackHighlighted ? Colors.white : null;
+    final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
 
     Color backgroundColor;
     Color? backgroundColorAlt;
@@ -325,7 +329,7 @@ class TrackTile extends StatelessWidget {
         border = Border(
           right: BorderSide(
             width: 3.0,
-            color: properties.backgroundColorPlaying,
+            color: properties.pageColorScheme,
           ),
         );
         backgroundColor = Color.alphaBlend(
@@ -428,6 +432,13 @@ class TrackTile extends StatelessWidget {
             color: textColor?.withAlpha(100) ?? textTheme.displaySmall?.color?.withAlpha(100),
           )
         : null;
+
+    late final iconColor = !isTrackCurrentlyPlaying
+        ? Color.alphaBlend(
+            properties.pageColorScheme.withOpacityExt(0.4),
+            (textColor ?? textTheme.displayMedium?.color?.withAlpha(140) ?? Colors.transparent).withOpacityExt(0.4),
+          )
+        : textColor?.withAlpha(140) ?? textTheme.displayMedium?.color?.withAlpha(140);
 
     Widget finalChild = Stack(
       alignment: Alignment.centerRight,
@@ -604,10 +615,17 @@ class TrackTile extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               if (properties.displayFavouriteIconInListTile)
-                                NamidaLocalLikeButton(
-                                  track: track,
-                                  size: 22.0,
-                                  color: textColor?.withAlpha(140) ?? textTheme.displayMedium?.color?.withAlpha(140),
+                                TweenAnimationBuilder<Color>(
+                                  tween: Tween<Color>(
+                                    begin: iconColor,
+                                    end: iconColor,
+                                  ),
+                                  duration: const Duration(milliseconds: 300),
+                                  builder: (context, color, child) => NamidaLocalLikeButton(
+                                    track: track,
+                                    size: 22.0,
+                                    color: color,
+                                  ),
                                 ),
                             ],
                           ),

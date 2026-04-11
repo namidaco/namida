@@ -241,7 +241,7 @@ class _AnimatedRotatingBorderPainter extends CustomPainter {
   final double borderWidth;
   final double borderRadius;
 
-  _AnimatedRotatingBorderPainter({
+  const _AnimatedRotatingBorderPainter({
     required this.progress,
     required this.colors,
     required this.borderWidth,
