@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:namida/class/file_parts.dart';
+import 'package:namida/class/search_matcher.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -764,6 +765,27 @@ class JsonToHistoryParser {
       });
     }
 
+    final reverseTitleMatcher = ReverseSearchMatcher<Map>();
+    final reverseArtistMatcher = ReverseSearchMatcher<Map>();
+    final reverseAlbumMatcher = ReverseSearchMatcher<Map>();
+    if (isMatchingTypeTitleAndArtist) {
+      allTracks.loop((trMap) {
+        final title = trMap['title'] as String;
+        final album = trMap['album'] as String;
+        final originalArtist = trMap['artist'] as String;
+        final artistsList = Indexer.splitArtist(
+          title: title,
+          originalArtist: originalArtist,
+          config: artistsSplitConfig,
+        );
+        reverseTitleMatcher.addItemWithTokens(trMap, title);
+        reverseAlbumMatcher.addItemWithTokens(trMap, album);
+        if (artistsList.isNotEmpty) {
+          reverseArtistMatcher.addItemWithTokens(trMap, artistsList.first);
+        }
+      });
+    }
+
     int jsonResponseTotal = 0;
     for (final file in files) {
       jsonResponseTotal += await JsonToHistoryParser._countJsonObjectsInList(file);
@@ -823,6 +845,9 @@ class JsonToHistoryParser {
             onMissingEntries: (e) => e.loop((e) => missingEntries.addForce(e, e.dateMSSE)),
             allTracks: allTracks,
             artistsSplitConfig: artistsSplitConfig,
+            reverseTitleMatcher: reverseTitleMatcher,
+            reverseArtistMatcher: reverseArtistMatcher,
+            reverseAlbumMatcher: reverseAlbumMatcher,
           );
           totalAdded += tracks.length;
           tracks.loop((item) {
@@ -929,6 +954,9 @@ class JsonToHistoryParser {
     required void Function(List<_MissingListenEntry> missingEntries) onMissingEntries,
     required ArtistsSplitConfig artistsSplitConfig,
     required List<Map> allTracks,
+    required ReverseSearchMatcher<Map> reverseTitleMatcher,
+    required ReverseSearchMatcher<Map> reverseArtistMatcher,
+    required ReverseSearchMatcher<Map> reverseAlbumMatcher,
   }) {
     Iterable<Track> tracks = <Track>[];
 
@@ -940,31 +968,29 @@ class JsonToHistoryParser {
     }
 
     if (tracks.isEmpty && matchByTitleAndArtistIfNotFoundInMap) {
-      tracks = allTracks
-          .firstWhereOrAllWhere(matchAll, (trMap) {
-            final title = trMap['title'] as String;
-            final album = trMap['album'] as String;
-            final originalArtist = trMap['artist'] as String;
-            final artistsList = Indexer.splitArtist(
-              title: title,
-              originalArtist: originalArtist,
-              config: artistsSplitConfig,
-            );
+      final titleCleaned = vh.title.cleanUpForComparison;
+      final channelCleaned = vh.channel.cleanUpForComparison;
 
-            /// matching has to meet 2 conditons:
-            /// 1. [json title] contains [track.title]
-            /// 2. - [json title] contains [track.artistsList.first]
-            ///     or
-            ///    - [json channel] contains [track.album]
-            ///    (useful for nightcore channels, album has to be the channel name)
-            ///     or
-            ///    - [json channel] contains [track.artistsList.first]
-            return vh.title.cleanUpForComparison.contains(title.cleanUpForComparison) &&
-                (vh.title.cleanUpForComparison.contains(artistsList.first.cleanUpForComparison) ||
-                    vh.channel.cleanUpForComparison.contains(album.cleanUpForComparison) ||
-                    vh.channel.cleanUpForComparison.contains(artistsList.first.cleanUpForComparison));
-          })
-          .map((e) => Track.decide(e['path'] ?? '', e['v']));
+      final titleMatches = reverseTitleMatcher.matchContainedIn(titleCleaned);
+      if (titleMatches.isNotEmpty) {
+        /// matching has to meet 2 conditons:
+        /// 1. [json title] contains [track.title]
+        /// 2. - [json title] contains [track.artistsList.first]
+        ///     or
+        ///    - [json channel] contains [track.album]
+        ///    (useful for nightcore channels, album has to be the channel name)
+        ///     or
+        ///    - [json channel] contains [track.artistsList.first]
+        final artistInTitle = reverseArtistMatcher.matchContainedIn(titleCleaned);
+        final albumInChannel = reverseAlbumMatcher.matchContainedIn(channelCleaned);
+        final artistInChannel = reverseArtistMatcher.matchContainedIn(channelCleaned);
+
+        final secondCondition = artistInTitle.union(albumInChannel).union(artistInChannel);
+        final matched = secondCondition.isEmpty ? titleMatches : titleMatches.intersection(secondCondition);
+
+        final result = matchAll ? matched : (matched.isEmpty ? <Map>{} : {matched.first});
+        tracks = result.map((e) => Track.decide(e['path'] ?? '', e['v']));
+      }
     }
 
     final tracksToAdd = <TrackWithDate>[];
@@ -1115,11 +1141,14 @@ class JsonToHistoryParser {
 
     final tracksLookupTitlesMap = <String, List<Map>>{};
     final tracksLookupArtistsMap = <String, List<Map>>{};
-    final tracksLookupArtistSplitsMap = <String, List<String>>{};
+
+    final reverseTitleMatcher = ReverseSearchMatcher<Map>();
+    final reverseArtistMatcher = ReverseSearchMatcher<Map>();
 
     for (final trMap in allTracks) {
       final title = trMap['title'] as String;
       tracksLookupTitlesMap.addForce(title.cleanUpForComparison, trMap);
+      reverseTitleMatcher.addItemWithTokens(trMap, title.splitFirst('(').splitFirst('['));
 
       final originalArtist = trMap['artist'] as String;
       final artistsList = Indexer.splitArtist(
@@ -1130,8 +1159,9 @@ class JsonToHistoryParser {
       for (final ar in artistsList) {
         tracksLookupArtistsMap.addForce(ar.cleanUpForComparison, trMap);
       }
-      final path = trMap['path'];
-      tracksLookupArtistSplitsMap[path] = artistsList;
+      if (artistsList.isNotEmpty) {
+        reverseArtistMatcher.addItemWithTokens(trMap, artistsList.first);
+      }
     }
 
     final missingEntries = <_MissingListenEntry, List<int>>{};
@@ -1160,7 +1190,7 @@ class JsonToHistoryParser {
           // this is used for cases where date couldn't be parsed, so it'll add the track with (date == lastDate - 30 seconds)
           int date = 0;
           try {
-            date = DateFormat('dd MMM yyyy HH:mm').parseLoose(pieces.last).millisecondsSinceEpoch;
+            date = DateFormat('dd MMM yyyy HH:mm').parseLoose(pieces.last, true).millisecondsSinceEpoch;
           } catch (e) {
             if (lastDate != null) {
               date = lastDate - 30000;
@@ -1195,29 +1225,14 @@ class JsonToHistoryParser {
             /// matching has to meet 2 conditons:
             /// [csv artist] contains [track.artistsList.first]
             /// [csv title] contains [track.title], anything after ( or [ is ignored.
-            tracks.addAll(
-              allTracks.firstWhereOrAllWhere(
-                matchAll,
-                (trMap) {
-                  final title = trMap['title'] as String;
-                  final matchingTitle = csvTitleCleaned.contains(title.splitFirst('(').splitFirst('[').cleanUpForComparison);
-                  if (!matchingTitle) return false;
-
-                  final originalArtist = trMap['artist'] as String;
-                  final artistsList =
-                      tracksLookupArtistSplitsMap[trMap['path']] ??
-                      Indexer.splitArtist(
-                        title: title,
-                        originalArtist: originalArtist,
-                        config: artistsSplitConfig,
-                      );
-                  final matchingArtist = artistsList.isNotEmpty && csvArtistCleaned.contains(artistsList.first.cleanUpForComparison);
-                  if (!matchingArtist) return false;
-
-                  return true;
-                },
-              ),
-            );
+            final titleMatches = reverseTitleMatcher.matchContainedIn(csvTitleCleaned);
+            final artistMatches = reverseArtistMatcher.matchContainedIn(csvArtistCleaned);
+            final matched = titleMatches.intersection(artistMatches);
+            if (matchAll) {
+              tracks.addAll(matched);
+            } else if (matched.isNotEmpty) {
+              tracks.add(matched.first);
+            }
           }
 
           totalAdded += tracks.length;
@@ -1395,21 +1410,6 @@ class JsonToHistoryParser {
       }
     }
     return count;
-  }
-}
-
-extension _FWORWHERE<E> on List<E> {
-  Iterable<E> firstWhereOrAllWhere(bool matchAll, bool Function(E e) test) {
-    if (matchAll) {
-      return where(test);
-    } else {
-      final item = firstWhereEff(test);
-      if (item != null) {
-        return [item];
-      } else {
-        return [];
-      }
-    }
   }
 }
 
