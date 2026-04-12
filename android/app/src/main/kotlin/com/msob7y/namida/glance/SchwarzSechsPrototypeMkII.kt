@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -25,12 +26,14 @@ import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.currentState
+import androidx.glance.LocalSize
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
@@ -38,6 +41,7 @@ import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxWidth
+import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
@@ -47,6 +51,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import androidx.lifecycle.Lifecycle
+import androidx.palette.graphics.Palette
 import com.msob7y.namida.NamidaConstants
 import com.msob7y.namida.NamidaMainActivity
 
@@ -63,6 +68,19 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
   private var _currentImageProviderWrapper: ImageProviderWrapper? = null
   private var _fallbackImageProvider: Bitmap? = null
 
+  override val sizeMode = SizeMode.Responsive(
+    setOf(
+      DpSize(180.dp, 80.dp),
+      DpSize(180.dp, 110.dp),
+      DpSize(270.dp, 80.dp),
+      DpSize(270.dp, 110.dp),
+      DpSize(360.dp, 80.dp),
+      DpSize(360.dp, 110.dp),
+      DpSize(400.dp, 80.dp),
+      DpSize(400.dp, 130.dp),
+    )
+  )
+
   @Composable
   private fun GlanceContent(context: Context, currentState: HomeWidgetGlanceState) {
 
@@ -74,8 +92,19 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
     val isFav = data.getBoolean("favourite", false)
     val imagePath = data.getString("image", null)
 
-    val imageSize = 84.dp
+    val size = LocalSize.current
+    val w = size.width
+    val h = size.height
+
     val imageCornerRadiusFloat = 64f
+    val buttonHeight = h * 0.35f
+    val buttonWidth = buttonHeight * 1.1f
+    val titleFontSize = (h.value * 0.20f).sp
+    val subtitleFontSize = (h.value * 0.18f).sp
+    val padding = w * 0.06f
+    val gapSmall = w * 0.018f
+    val imageSize = minOf(w, h) * 0.95f
+
 
     if (imagePath == null) {
       _currentImageProviderWrapper = null
@@ -94,8 +123,14 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
           }
           if (bitmap != null) {
             val roundedBitmap = bitmap.toRoundedBitmap(imageCornerRadiusFloat)
-            // TODO: provide good color
-            _currentImageProviderWrapper = ImageProviderWrapper(roundedBitmap, null)
+            val mainColor: Int = Palette.from(bitmap) 
+                  .maximumColorCount(8)
+                  .generate()
+                  .getMutedColor(0)
+            _currentImageProviderWrapper = ImageProviderWrapper(
+              roundedBitmap,
+              mainColor.takeIf { it != 0 }
+            )
             bitmap.recycle()
           } else {
             _currentImageProviderWrapper = null
@@ -139,13 +174,14 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
       modifier =
       GlanceModifier.cornerRadius(24.dp)
         .background(boxColor)
-        .fillMaxWidth()
-        .padding(12.dp)
+        .fillMaxSize()
         .clickable { _startCustomActivity<NamidaMainActivity>(context) }
     ) {
       Row(
         verticalAlignment = Alignment.Vertical.CenterVertically,
+        modifier = GlanceModifier.fillMaxWidth().height(h),
       ) {
+        HorizontalSpace(padding.value.toInt())
 
         Image(
           androidx.glance.ImageProvider(
@@ -155,18 +191,18 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
           modifier = GlanceModifier.fillMaxHeight().size(imageSize)
         )
 
-        HorizontalSpace(12)
+        HorizontalSpace((gapSmall * 2).value.toInt())
 
         Column(
           verticalAlignment = Alignment.Vertical.CenterVertically,
           horizontalAlignment = Alignment.Horizontal.Start,
+          modifier = GlanceModifier.fillMaxWidth().fillMaxHeight(),
         ) {
-          Spacer(GlanceModifier.height(4.dp))
+          Spacer(GlanceModifier.height(h * 0.04f))
           Text(
             title,
-            style =
-            TextStyle(
-              fontSize = 15.sp,
+            style = TextStyle(
+              fontSize = titleFontSize,
               fontWeight = FontWeight.Bold,
               color = ColorProvider(titleColor)
             ),
@@ -174,23 +210,21 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
           )
           Text(
             message,
-            style =
-            TextStyle(
-              fontSize = 14.sp,
+            style = TextStyle(
+              fontSize = subtitleFontSize,
               fontWeight = FontWeight.Medium,
               color = ColorProvider(subtitleColor)
             ),
             maxLines = 1,
           )
 
-          Spacer(GlanceModifier.height(4.dp))
+          Spacer(GlanceModifier.height(h * 0.04f))
           Row(
-            modifier = GlanceModifier.fillMaxWidth(),
             verticalAlignment = Alignment.Vertical.CenterVertically,
             horizontalAlignment = Alignment.Start,
           ) {
             val additionalModifier =
-              GlanceModifier.padding(6.dp).width(38.dp).height(33.dp)
+              GlanceModifier.padding(buttonHeight * 0.15f).width(buttonWidth).height(buttonHeight)
             if (isFav)
               MediaControlButton(
                 color = iconsColor,
@@ -208,7 +242,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
                 additionalModifier = additionalModifier
               )
 
-            HorizontalSpace(4)
+            HorizontalSpace(gapSmall.value.toInt())
             MediaControlButton(
               color = iconsColor,
               drawableRes = com.msob7y.namida.R.drawable.previous,
@@ -216,7 +250,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
               keyEvent = KeyEvent.KEYCODE_MEDIA_PREVIOUS,
               additionalModifier = additionalModifier
             )
-            HorizontalSpace(4)
+            HorizontalSpace(gapSmall.value.toInt())
             if (isPlaying)
               MediaControlButton(
                 color = iconsColor,
@@ -234,7 +268,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
                 keyEvent = KeyEvent.KEYCODE_MEDIA_PLAY,
                 additionalModifier = additionalModifier
               )
-            HorizontalSpace(4)
+            HorizontalSpace(gapSmall.value.toInt())
             MediaControlButton(
               color = iconsColor,
               drawableRes = com.msob7y.namida.R.drawable.next,
@@ -244,8 +278,10 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
             )
           }
 
-          Spacer(GlanceModifier.height(4.dp))
+          Spacer(GlanceModifier.height(h * 0.04f))
         }
+        
+        HorizontalSpace(padding.value.toInt())
       }
     }
 

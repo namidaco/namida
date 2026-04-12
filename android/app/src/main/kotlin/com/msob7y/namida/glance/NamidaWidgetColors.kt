@@ -56,24 +56,33 @@ sealed class NamidaWidgetColors(
 
   class BuildLightColors(mainColor: Int) :
     NamidaWidgetColors(
-      Color.getPlainColor(mixColors(mainColor, light.boxColor.toArgb(), 0.8f), 255),
-      Color.getPlainColor(mixColors(mainColor, light.imageColor.toArgb(), 0.8f)),
-      Color.getPlainColor(mixColors(mainColor, light.titleColor.toArgb()), 180),
-      Color.getPlainColor(mixColors(mainColor, light.subtitleColor.toArgb()), 160),
-      Color.getPlainColor(mixColors(mainColor, light.iconsColor.toArgb()), 160),
+      Color.getArgbColor(mixColors(mainColor, light.boxColor.toArgb(), 0.7f), 255),
+      Color.getArgbColor(mixColors(mainColor, light.imageColor.toArgb(), 0.7f)),
+      Color.getArgbColor(mixColors(mainColor, light.titleColor.toArgb(), 0.8f), 180),
+      Color.getArgbColor(mixColors(mainColor, light.subtitleColor.toArgb(), 0.8f), 160),
+      Color.getArgbColor(mixColors(mainColor, light.iconsColor.toArgb(), 0.8f), 160),
     )
 
   class BuildDarkColors(mainColor: Int) :
     NamidaWidgetColors(
-      Color.getPlainColor(mixColors(mainColor, dark.boxColor.toArgb(), 0.8f), 255),
-      Color.getPlainColor(mixColors(mainColor, dark.imageColor.toArgb(), 0.8f)),
-      Color.getPlainColor(mixColors(mainColor, dark.titleColor.toArgb())),
-      Color.getPlainColor(mixColors(mainColor, dark.subtitleColor.toArgb())),
-      Color.getPlainColor(mixColors(mainColor, dark.iconsColor.toArgb())),
+      Color.getArgbColor(mixColors(mainColor, dark.boxColor.toArgb(), 0.8f), 255),
+      Color.getArgbColor(mixColors(mainColor, dark.imageColor.toArgb(), 0.8f)),
+      Color.getArgbColor(mixColors(mainColor, dark.titleColor.toArgb(), 0.8f)),
+      Color.getArgbColor(mixColors(mainColor, dark.subtitleColor.toArgb(), 0.8f)),
+      Color.getArgbColor(mixColors(mainColor, dark.iconsColor.toArgb(), 0.8f)),
     )
 
 }
 
 private fun Color.Companion.getPlainColor(channelValue: Int, alpha: Int = channelValue): Color {
   return Color(channelValue, channelValue, channelValue, alpha);
+}
+
+private fun Color.Companion.getArgbColor(argbValue: Int, alpha: Int = 255): Color {
+  return Color(
+    red = android.graphics.Color.red(argbValue),
+    green = android.graphics.Color.green(argbValue),
+    blue = android.graphics.Color.blue(argbValue),
+    alpha = alpha
+  )
 }

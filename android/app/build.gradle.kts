@@ -142,6 +142,7 @@ dependencies {
     implementation("androidx.glance:glance-appwidget:1.1.1")
     implementation("androidx.compose.ui:ui:1.5.4")
     implementation("androidx.compose.foundation:foundation:1.5.4")
+    implementation("androidx.palette:palette-ktx:1.0.0")
     implementation("com.android.support:support-v4:28.0.0")
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs_nio:2.1.4")
