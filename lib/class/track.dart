@@ -666,7 +666,7 @@ extension TrackExtUtils on TrackExtended {
     }
     var filename = this.filename;
     if (filename.isNotEmpty) {
-      var id = RegExp(r'(?:v|id)=([\w-]{11})').firstMatch(filename)?.group(1);
+      var id = NamidaLinkRegex.youtubeIdInFilenameRegex.firstMatch(filename)?.group(1);
       if (id != null) return 'youtu.be/$id';
     }
     return '';

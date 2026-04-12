@@ -139,6 +139,11 @@ abstract class NamidaLinkRegex {
     caseSensitive: false,
   );
 
+  static final youtubeIdInFilenameRegex = RegExp(
+    r'(?:v|id)=([\w-]{11})',
+    caseSensitive: false,
+  );
+
   static final youtubePlaylistsLinkRegex = RegExp(
     r'\b(?:https?://)?(?:www\.)?(?:youtube\.com/playlist\?list=)([\w\-]+)(?:\S+)?',
     caseSensitive: false,

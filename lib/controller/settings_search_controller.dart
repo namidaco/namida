@@ -107,7 +107,7 @@ class SettingsSearchController {
   SettingsSearchController._internal();
 
   final _map = <SettingSubpageEnum, Map<int, GlobalKey>>{};
-  var _allWidgets = <(SettingSubpageProvider, Map<SettingKeysBase, List<String>>)>[];
+  final _allWidgets = <(SettingSubpageProvider, Map<SettingKeysBase, List<String>>)>[];
   final searchResults = <SettingSubpageEnum, List<SettingSearchResultItem>>{}.obs;
   final subpagesDetails = <SettingSubpageEnum, CustomCollapsedListTile?>{};
 
@@ -116,6 +116,7 @@ class SettingsSearchController {
 
   void closeSearch() {
     _allWidgets.clear();
+    subpagesDetails.clear();
     searchResults.clear();
     _canShowSearch.value = false;
   }
@@ -131,27 +132,21 @@ class SettingsSearchController {
 
   void onSearchTap({required bool isOpen}) {
     if (isOpen) {
-      const theme = ThemeSetting();
-      const indexer = IndexerSettings();
-      const playback = PlaybackSettings();
-      const customization = CustomizationSettings();
-      const youtube = YoutubeSettings();
-      const extras = ExtrasSettings();
-      const backupAndRestore = BackupAndRestore();
-      const advanced = AdvancedSettings();
-      _allWidgets = [
-        (theme, theme.lookupMap),
-        (indexer, indexer.lookupMap),
-        (playback, playback.lookupMap),
-        (customization, customization.lookupMap),
-        (youtube, youtube.lookupMap),
-        (extras, extras.lookupMap),
-        (backupAndRestore, backupAndRestore.lookupMap),
-        (advanced, advanced.lookupMap),
+      _allWidgets.clear();
+      final settingsWidgets = [
+        ThemeSetting(),
+        IndexerSettings(),
+        PlaybackSettings(),
+        CustomizationSettings(),
+        YoutubeSettings(),
+        ExtrasSettings(),
+        BackupAndRestore(),
+        AdvancedSettings(),
       ];
-      for (int i = 0; i < _allWidgets.length; i++) {
-        var p = _allWidgets[i];
-        subpagesDetails[p.$1.settingPage] = p.$1.settingPage.toSettingSubPageDetails();
+      for (int i = 0; i < settingsWidgets.length; i++) {
+        var p = settingsWidgets[i];
+        subpagesDetails[p.settingPage] = p.settingPage.toSettingSubPageDetails();
+        _allWidgets.add((p, p.lookupMap));
       }
       _canShowSearch.value = true;
     } else {
@@ -161,7 +156,7 @@ class SettingsSearchController {
 
   void onSearchChanged(String val) {
     final res = <SettingSubpageEnum, List<SettingSearchResultItem>>{};
-    _allWidgets.loop((widget) {
+    for (final widget in _allWidgets) {
       for (final e in widget.$2.entries) {
         final match = e.value.any((element) => element.cleanUpForComparison.contains(val.cleanUpForComparison));
         if (match) {
@@ -176,7 +171,7 @@ class SettingsSearchController {
           );
         }
       }
-    });
+    }
     searchResults.value = res;
   }
 

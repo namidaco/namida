@@ -10,6 +10,7 @@ import 'package:youtipie/class/streams/video_streams_result.dart';
 
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/media_info.dart';
+import 'package:namida/class/search_matcher.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/connectivity.dart';
@@ -194,6 +195,8 @@ class VideoController {
   var _videoCacheIDMap = <String, List<NamidaVideo>>{};
 
   final videosPriorityManager = VideosPriorityManager();
+
+  FilePathMatcher? _videoFilesSearchMatcher;
 
   late final _videoCacheIDMapDB = DBWrapper.openFromInfo(
     fileInfo: AppPaths.VIDEOS_CACHE_DB_INFO,
@@ -576,84 +579,64 @@ class VideoController {
   }
 
   List<String> _getPossibleVideosPathsFromAudioFile(String path) {
-    final possibleLocal = <String>[];
     final trExt = Track.explicit(path).toTrackExt();
 
     final valInSett = settings.localVideoMatchingType.value;
     final shouldCheckSameDir = settings.localVideoMatchingCheckSameDir.value;
 
     final pathDirectoryPath = path.getDirectoryPath;
-    final trExtFilenameWithoutExt = path.getFilenameWOExt;
-    final trExtFilenameWithoutExtCleaned = trExtFilenameWithoutExt.cleanUpForComparison;
-    final trExtTitleCleaned = trExt.title.cleanUpForComparison;
-    final trExtArtistCleaned = trExt.artistsList.firstOrNull?.cleanUpForComparison;
-    final trExtGenreCleaned = trExt.genresList.firstOrNull?.cleanUpForComparison;
-    final trExtYTID = trExt.youtubeID;
+    final filenameWOExt = path.getFilenameWOExt;
+    final filenameCleaned = filenameWOExt.cleanUpForComparison;
+    final titleCleaned = trExt.title.cleanUpForComparison;
+    final artistCleaned = trExt.artistsList.firstOrNull?.cleanUpForComparison;
+    final genreCleaned = trExt.genresList.firstOrNull?.cleanUpForComparison;
+    final ytID = trExt.youtubeID;
+    final goodId = ytID.isNotEmpty && ytID.length == 11;
 
-    void matchFileName(String videoName, String vpath, bool ensureSameDir) {
-      if (ensureSameDir) {
-        if (vpath.getDirectoryPath != pathDirectoryPath) return;
+    final videoSearchMatcher = _videoFilesSearchMatcher ??= FilePathMatcher.init(_allVideoPaths);
+
+    final matched = <String>{};
+
+    void matchFilename() => matched.addAll(videoSearchMatcher.matchText(filenameCleaned));
+
+    void matchTitleAndArtist() {
+      if (titleCleaned.isEmpty) return;
+      final titleMatches = videoSearchMatcher.matchText(titleCleaned);
+      if (titleMatches.isEmpty) return;
+      if (artistCleaned != null && artistCleaned.isNotEmpty) {
+        matched.addAll(titleMatches.intersection(videoSearchMatcher.matchText(artistCleaned)));
       }
-
-      final videoNameContainsMusicFileName = _checkFileNameAudioVideo(videoName, trExtFilenameWithoutExt, trExtFilenameWithoutExtCleaned);
-      if (videoNameContainsMusicFileName) possibleLocal.add(vpath);
-    }
-
-    void matchTitleAndArtist(String videoName, String vpath, bool ensureSameDir) {
-      if (ensureSameDir) {
-        if (vpath.getDirectoryPath != pathDirectoryPath) return;
-      }
-      final videoContainsTitle = videoName.contains(trExtTitleCleaned);
-      final videoNameContainsTitleAndArtist = videoContainsTitle && trExt.artistsList.isNotEmpty && (trExtArtistCleaned != null && videoName.contains(trExtArtistCleaned));
       // useful for [Nightcore - title]
       // track must contain Nightcore as the first Genre
-      final videoNameContainsTitleAndGenre = videoContainsTitle && trExt.genresList.isNotEmpty && (trExtGenreCleaned != null && videoName.contains(trExtGenreCleaned));
-      if (videoNameContainsTitleAndArtist || videoNameContainsTitleAndGenre) possibleLocal.add(vpath);
+      if (genreCleaned != null && genreCleaned.isNotEmpty) {
+        matched.addAll(titleMatches.intersection(videoSearchMatcher.matchText(genreCleaned)));
+      }
     }
 
-    final goodId = trExtYTID.isNotEmpty && trExtYTID.length == 11;
-
-    void matchYTID(String videoName, String vpath, bool ensureSameDir) {
-      if (ensureSameDir) {
-        if (vpath.getDirectoryPath != pathDirectoryPath) return;
-      }
-      final videoContainsYTID = videoName.contains(trExtYTID);
-      if (videoContainsYTID) possibleLocal.add(vpath);
+    void matchYTID() {
+      if (!goodId) return;
+      final videosByYTID = videoSearchMatcher.videosGroupedByYTID[ytID];
+      if (videosByYTID != null) matched.addAll(videosByYTID);
     }
 
     switch (valInSett) {
       case LocalVideoMatchingType.auto:
-        for (final vp in _allVideoPaths) {
-          final videoName = vp.getFilenameWOExt;
-          matchFileName(videoName, vp, shouldCheckSameDir);
-          matchTitleAndArtist(videoName, vp, shouldCheckSameDir);
-          if (goodId) matchYTID(videoName, vp, shouldCheckSameDir);
-        }
-        break;
-
+        matchFilename();
+        matchTitleAndArtist();
+        matchYTID();
       case LocalVideoMatchingType.filename:
-        for (final vp in _allVideoPaths) {
-          final videoName = vp.getFilenameWOExt;
-          matchFileName(videoName, vp, shouldCheckSameDir);
-        }
-
-        break;
+        matchFilename();
       case LocalVideoMatchingType.titleAndArtist:
-        for (final vp in _allVideoPaths) {
-          final videoName = vp.getFilenameWOExt;
-          matchTitleAndArtist(videoName, vp, shouldCheckSameDir);
-        }
-        break;
+        matchTitleAndArtist();
       case LocalVideoMatchingType.youtubeID:
-        if (goodId) {
-          for (final vp in _allVideoPaths) {
-            final videoName = vp.getFilenameWOExt;
-            matchYTID(videoName, vp, shouldCheckSameDir);
-          }
-        }
-        break;
+        matchYTID();
     }
-    return possibleLocal;
+
+    if (matched.isNotEmpty && shouldCheckSameDir) {
+      return matched.where((vp) => vp.getDirectoryPath == pathDirectoryPath).toList();
+    } else {
+      return matched.toList();
+    }
   }
 
   Future<List<NamidaVideo>> _getPossibleVideosFromTrack(Track track) async {
@@ -689,10 +672,6 @@ class VideoController {
     return [...possibleCached, ...possibleLocal];
   }
 
-  bool _checkFileNameAudioVideo(String videoFileName, String audioFileName, String audioFileNameCleaned) {
-    return videoFileName.cleanUpForComparison.contains(audioFileNameCleaned) || videoFileName.contains(audioFileName);
-  }
-
   Future<void> initialize() async {
     await [
       _fetchAndCheckCacheVideos(), // --> should think about a way to flank around scanning lots of cache videos if info not found (ex: after backup)
@@ -706,6 +685,7 @@ class VideoController {
     localVideoExtractCurrent.value = 0;
     final videos = await _fetchVideoPathsFromStorage(strictNoMedia: strictNoMedia);
     _allVideoPaths = videos;
+    _videoFilesSearchMatcher = null;
     localVideoExtractCurrent.value = null;
   }
 
