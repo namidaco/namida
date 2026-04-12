@@ -86,15 +86,9 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
       ) {
         _currentImageProviderWrapper?.bitmap?.recycle()
         try {
+          val targetPx = imageSize.toPxInt(context) * 2
           val bitmap = try {
-            if (imagePath.startsWith("content://")) {
-              val uri = Uri.parse(imagePath)
-              context.contentResolver.openInputStream(uri)?.use {
-                BitmapFactory.decodeStream(it)
-              }
-            } else {
-              BitmapFactory.decodeFile(imagePath)
-            }
+            decodeSampledBitmap(context, imagePath, targetPx)
           } catch (_: Exception) {
             null
           }
@@ -356,4 +350,42 @@ private fun Dp.toPxInt(context: Context): Int {
 private fun isDarkModeEnabled(context: Context): Boolean {
   return context.resources.configuration.uiMode and
       Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+}
+
+
+private fun decodeSampledBitmap(context: Context, imagePath: String, maxPx: Int): Bitmap? {
+  val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+  if (imagePath.startsWith("content://")) {
+    val uri = Uri.parse(imagePath)
+    context.contentResolver.openInputStream(uri)?.use {
+      BitmapFactory.decodeStream(it, null, opts)
+    }
+  } else {
+    BitmapFactory.decodeFile(imagePath, opts)
+  }
+
+  opts.inSampleSize = calculateInSampleSize(opts, maxPx, maxPx)
+  opts.inJustDecodeBounds = false
+
+  return if (imagePath.startsWith("content://")) {
+    val uri = Uri.parse(imagePath)
+    context.contentResolver.openInputStream(uri)?.use {
+      BitmapFactory.decodeStream(it, null, opts)
+    }
+  } else {
+    BitmapFactory.decodeFile(imagePath, opts)
+  }
+}
+
+private fun calculateInSampleSize(opts: BitmapFactory.Options, reqW: Int, reqH: Int): Int {
+  val (h, w) = opts.outHeight to opts.outWidth
+  var inSampleSize = 1
+  if (h > reqH || w > reqW) {
+    val halfH = h / 2
+    val halfW = w / 2
+    while (halfH / inSampleSize >= reqH && halfW / inSampleSize >= reqW) {
+      inSampleSize *= 2
+    }
+  }
+  return inSampleSize
 }
