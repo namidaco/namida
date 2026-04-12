@@ -117,6 +117,8 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     final textTheme = theme.textTheme;
     final maxWidth = context.width; // use context as dimensions might not be initialized yet
 
+    Dimensions.inst.availableAppContentWidth = maxWidth;
+
     const indexer = IndexerSettings(isInFirstConfigScreen: true);
     final useMediaStore = indexer.getMediaStoreWidget();
     final includeVideosWidget = indexer.getIncludeVideosWidget();

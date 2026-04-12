@@ -82,6 +82,21 @@
 
         <activity-alias
             android:enabled="false"
+            android:name="com.msob7y.namida.PastelIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_pastel"
+            android:roundIcon="@mipmap/ic_launcher_pastel"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:enabled="false"
             android:name="com.msob7y.namida.MonetIcon"
             android:targetActivity=".NamidaMainActivity"
             android:icon="@mipmap/ic_launcher_monet"
@@ -112,10 +127,25 @@
 
         <activity-alias
             android:enabled="false"
-            android:name="com.msob7y.namida.ShadeIcon"
+            android:name="com.msob7y.namida.RetroIcon"
             android:targetActivity=".NamidaMainActivity"
-            android:icon="@mipmap/ic_launcher_shade"
-            android:roundIcon="@mipmap/ic_launcher_shade"
+            android:icon="@mipmap/ic_launcher_retro"
+            android:roundIcon="@mipmap/ic_launcher_retro"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.OokamiIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_ookami"
+            android:roundIcon="@mipmap/ic_launcher_ookami"
             android:exported="true">
 
             <intent-filter>

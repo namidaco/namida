@@ -273,6 +273,13 @@ final _appIcons = [
     ],
   ),
   _IconDetails.create(
+    'pastel',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('cui', null, _AuthorPlatform.discord, _AuthorAIModel.gemini),
+    ],
+  ),
+  _IconDetails.create(
     'monet',
     ext: _ImgExtension.png,
     authorInfos: [
@@ -287,10 +294,17 @@ final _appIcons = [
     ],
   ),
   _IconDetails.create(
-    'shade',
+    'retro',
     ext: _ImgExtension.png,
     authorInfos: [
-      _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
+      _AuthorInfo('sgfreak', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+  _IconDetails.create(
+    'ookami',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('神 ᴛᴀᴋᴜᴍɪ', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
     ],
   ),
   _IconDetails.create(

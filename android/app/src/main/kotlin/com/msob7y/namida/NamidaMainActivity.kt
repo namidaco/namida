@@ -161,9 +161,11 @@ class NamidaMainActivity : FlutterActivity() {
             "namida" -> LauncherIcon.DEFAULT
             "enhanced" -> LauncherIcon.ENHANCED
             "hollow" -> LauncherIcon.HOLLOW
+            "pastel" -> LauncherIcon.PASTEL
             "monet" -> LauncherIcon.MONET
             "glowy" -> LauncherIcon.GLOWY
-            "shade" -> LauncherIcon.SHADE
+            "retro" -> LauncherIcon.RETRO
+            "ookami" -> LauncherIcon.OOKAMI
             "mini" -> LauncherIcon.MINI
             "spooky" -> LauncherIcon.SPOOKY
             "namiween" -> LauncherIcon.NAMIWEEN
@@ -188,9 +190,11 @@ class NamidaMainActivity : FlutterActivity() {
             "namida" -> LauncherIcon.DEFAULT
             "enhanced" -> LauncherIcon.ENHANCED
             "hollow" -> LauncherIcon.HOLLOW
+            "pastel" -> LauncherIcon.PASTEL
             "monet" -> LauncherIcon.MONET
             "glowy" -> LauncherIcon.GLOWY
-            "shade" -> LauncherIcon.SHADE
+            "retro" -> LauncherIcon.RETRO
+            "ookami" -> LauncherIcon.OOKAMI
             "mini" -> LauncherIcon.MINI
             "spooky" -> LauncherIcon.SPOOKY
             "namiween" -> LauncherIcon.NAMIWEEN

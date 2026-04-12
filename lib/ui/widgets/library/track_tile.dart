@@ -615,8 +615,8 @@ class TrackTile extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               if (properties.displayFavouriteIconInListTile)
-                                TweenAnimationBuilder<Color>(
-                                  tween: Tween<Color>(
+                                TweenAnimationBuilder<Color?>(
+                                  tween: ColorTween(
                                     begin: iconColor,
                                     end: iconColor,
                                   ),
