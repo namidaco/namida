@@ -228,7 +228,7 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
       animateToState(true);
     } else {
       if (_alternativePercentage) {
-        final didDragDownwards = _startedDragAtHeight != null && _startedDragAtHeight! > _dragheight;
+        final didDragDownwards = _startedDragAtHeight != null && (_startedDragAtHeight! - _dragheight) > 32.0;
         if (didDragDownwards) widget.onAlternativePercentageExecute?.call();
         animateToState(_wasExpanded);
       } else {

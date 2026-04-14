@@ -251,7 +251,6 @@ Future<bool> _mainAppInitialization() async {
 
     await [
       if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(startupBoost: true).whenComplete(Player.inst.refreshNotification),
-      Player.inst.initializePlayer().whenComplete(prepareLatestQueue),
       PlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
       YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
       YoutubeSubscriptionsController.inst.loadSubscriptionsFileAsync(),
@@ -268,6 +267,13 @@ Future<bool> _mainAppInitialization() async {
       NamidaFFMPEG.configure(),
       ytInfoInitSyncItemsCompleter.future,
     ].executeAllAndSilentReportErrors();
+
+    // -- best to initialize last, so that tracks are prepared (for info/colors) and rhttp is initialized (for network), etc.
+    try {
+      await Player.inst.initializePlayer().whenComplete(prepareLatestQueue);
+    } catch (e, st) {
+      logger.error('', e: e, st: st);
+    }
 
     if (SMTCController.instance != null) {
       Player.inst.refreshNotification();

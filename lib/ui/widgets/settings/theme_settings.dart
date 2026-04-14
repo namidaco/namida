@@ -398,7 +398,7 @@ class ThemeSetting extends SettingSubpageProvider {
   }
 }
 
-class ToggleThemeModeContainer extends StatelessWidget {
+class ToggleThemeModeContainer extends StatefulWidget {
   final double maxWidth;
   final double blurRadius;
   const ToggleThemeModeContainer({super.key, required this.maxWidth, this.blurRadius = 6.0});
@@ -408,6 +408,21 @@ class ToggleThemeModeContainer extends StatelessWidget {
     await Future.delayed(const Duration(milliseconds: kThemeAnimationDurationMS));
     CurrentColor.inst.updateColorAfterThemeModeChange();
     YoutubeMiniplayerUiController.inst.startDimTimer();
+  }
+
+  @override
+  State<ToggleThemeModeContainer> createState() => _ToggleThemeModeContainerState();
+}
+
+class _ToggleThemeModeContainerState extends State<ToggleThemeModeContainer> {
+  Widget? _cachedWidget;
+
+  @override
+  void didUpdateWidget(ToggleThemeModeContainer old) {
+    super.didUpdateWidget(old);
+    if (old.maxWidth != widget.maxWidth) {
+      _cachedWidget = null;
+    }
   }
 
   Alignment _themeModeToAlignment(ThemeMode theme) {
@@ -420,65 +435,73 @@ class ToggleThemeModeContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
+    // -- better fully isolate this widget, so that animations work smoothly outside theme animation hell
+    if (_cachedWidget != null) return _cachedWidget!;
     const brConst = 8.0;
     const horizontalPaddingConst = 8.0;
     final itemsCount = ThemeMode.values.length;
-    final bgSlideWidth = (maxWidth / itemsCount) - horizontalPaddingConst;
-    return ObxO(
-      rx: settings.themeMode,
-      builder: (context, currentTheme) => Container(
-        decoration: BoxDecoration(
-          color: Color.alphaBlend(theme.listTileTheme.textColor!.withAlpha(200), Colors.white.withAlpha(160)),
-          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-          boxShadow: [
-            BoxShadow(color: theme.listTileTheme.iconColor!.withAlpha(80), spreadRadius: 1.0, blurRadius: blurRadius, offset: const Offset(0, 2)),
-          ],
-        ),
-        width: maxWidth,
-        padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: horizontalPaddingConst),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: AnimatedAlign(
-                duration: const Duration(milliseconds: 400),
-                curve: Curves.fastLinearToSlowEaseIn,
-                alignment: _themeModeToAlignment(currentTheme),
-                child: Container(
-                  width: bgSlideWidth,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface.withAlpha(180),
-                    borderRadius: BorderRadius.circular(brConst.multipliedRadius),
-                    // boxShadow: [
-                    //   BoxShadow(color: Colors.black.withAlpha(100), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),
-                    // ],
-                  ),
-                ),
+    final bgSlideWidth = (widget.maxWidth / itemsCount) - horizontalPaddingConst;
+    return _cachedWidget = RepaintBoundary(
+      child: ObxO(
+        rx: settings.themeMode,
+        builder: (context, currentTheme) => Obx(
+          (context) {
+            final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.color, !context.isDarkMode);
+            return Container(
+              decoration: BoxDecoration(
+                color: Color.alphaBlend(theme.listTileTheme.textColor!.withAlpha(200), Colors.white.withAlpha(160)),
+                borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                boxShadow: [
+                  BoxShadow(color: theme.listTileTheme.iconColor!.withAlpha(80), spreadRadius: 1.0, blurRadius: widget.blurRadius, offset: const Offset(0, 2)),
+                ],
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+              width: widget.maxWidth,
+              padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: horizontalPaddingConst),
+              child: Stack(
                 children: [
-                  ...ThemeMode.values.map(
-                    (e) => SizedBox(
-                      width: bgSlideWidth,
-                      child: NamidaInkWell(
-                        borderRadius: brConst,
-                        padding: const EdgeInsets.symmetric(vertical: 2.0),
-                        onTap: () => onThemeChangeTap(e),
-                        child: Icon(
-                          e.toIcon(),
-                          color: currentTheme == e ? theme.listTileTheme.iconColor : theme.colorScheme.surface.withAlpha(180),
+                  Positioned.fill(
+                    child: AnimatedAlign(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.fastLinearToSlowEaseIn,
+                      alignment: _themeModeToAlignment(currentTheme),
+                      child: Container(
+                        width: bgSlideWidth,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface.withAlpha(180),
+                          borderRadius: BorderRadius.circular(brConst.multipliedRadius),
+                          // boxShadow: [
+                          //   BoxShadow(color: Colors.black.withAlpha(100), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),
+                          // ],
                         ),
                       ),
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        ...ThemeMode.values.map(
+                          (e) => SizedBox(
+                            width: bgSlideWidth,
+                            child: NamidaInkWell(
+                              borderRadius: brConst,
+                              padding: const EdgeInsets.symmetric(vertical: 2.0),
+                              onTap: () => ToggleThemeModeContainer.onThemeChangeTap(e),
+                              child: Icon(
+                                e.toIcon(),
+                                color: currentTheme == e ? theme.listTileTheme.iconColor : theme.colorScheme.surface.withAlpha(180),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
