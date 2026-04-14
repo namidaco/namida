@@ -429,9 +429,12 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
     // final backgroundColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor, Colors.white.withOpacityExt(0.25));
     final backgroundColor = appBarTheme.backgroundColor ?? colorscheme.surface;
     final surfaceTintColor = appBarTheme.surfaceTintColor ?? colorscheme.surfaceTint;
-    final logoImg = NamidaChannel.defaultIconForPlatform;
+    final logoImgPath = NamidaChannel.defaultLayerIconForPlatform;
     final logoBgColor = context.isDarkMode ? const Color(0x40262729) : const Color(0x063c3f46);
-    final logoTextColor = context.isDarkMode ? Color.alphaBlend(logoBgColor.withAlpha(100), Colors.white) : const Color.fromARGB(180, 44, 44, 44);
+    final logoColor = context.isDarkMode
+        ? Color.alphaBlend(theme.colorScheme.secondary.withOpacityExt(0.5), const Color.fromARGB(240, 230, 230, 230))
+        : Color.alphaBlend(theme.colorScheme.secondary.withOpacityExt(0.5), const Color.fromARGB(220, 16, 16, 16));
+    final logoTextColor = logoColor.withOpacityExt(0.7);
 
     final buttonsRow = Platform.isWindows
         ? Row(
@@ -586,11 +589,12 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                                 children: [
                                   const SizedBox(width: 6.0),
                                   Image.asset(
-                                    logoImg.assetPath,
+                                    logoImgPath,
                                     width: 22.0,
                                     height: 22.0,
                                     cacheHeight: 240,
                                     cacheWidth: 240,
+                                    color: logoColor,
                                     alignment: Alignment.center,
                                   ),
                                   const SizedBox(width: 4.0),

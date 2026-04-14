@@ -99,8 +99,8 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
     val imageCornerRadiusFloat = 64f
     val buttonHeight = h * 0.35f
     val buttonWidth = buttonHeight * 1.1f
-    val titleFontSize = (h.value * 0.20f).sp
-    val subtitleFontSize = (h.value * 0.18f).sp
+    val titleFontSize = (h.value * 0.20f).coerceIn(12f, 22f).sp
+    val subtitleFontSize = (h.value * 0.18f).coerceIn(10f, 18f).sp
     val padding = w * 0.06f
     val gapSmall = w * 0.018f
     val imageSize = minOf(w, h) * 0.95f

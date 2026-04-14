@@ -442,6 +442,7 @@ class ToggleThemeModeContainer extends StatelessWidget {
             Positioned.fill(
               child: AnimatedAlign(
                 duration: const Duration(milliseconds: 400),
+                curve: Curves.fastLinearToSlowEaseIn,
                 alignment: _themeModeToAlignment(currentTheme),
                 child: Container(
                   width: bgSlideWidth,

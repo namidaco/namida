@@ -257,7 +257,59 @@ const _kPrefixComment = 'SPLASH_AUTO_GENERATED START';
 const _kSuffixComment = 'SPLASH_AUTO_GENERATED END';
 
 final _appIcons = [
-  _IconDetails.defaultIcon,
+  _IconDetails.defaultIconNew,
+  _IconDetails.create(
+    'cutsie',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('smilez', null, _AuthorPlatform.discord, _AuthorAIModel.gpt4),
+    ],
+  ),
+  _IconDetails.create(
+    'eddy',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo(':𝟛𝓗𝓪𝓹𝓹𝔂', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+  _IconDetails.create(
+    'namichin',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('Scarecloud', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+
+  _IconDetails.create(
+    'space',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo(':𝟛𝓗𝓪𝓹𝓹𝔂', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+  _IconDetails.create(
+    'retro',
+    ext: _ImgExtension.png,
+    authorInfos: [
+      _AuthorInfo('sgfreak', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+  _IconDetails.create(
+    'ookami',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('神 ᴛᴀᴋᴜᴍɪ', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
+    ],
+  ),
+  _IconDetails.create(
+    'mini',
+    ext: _ImgExtension.png,
+    authorInfos: [
+      _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+
+  _IconDetails.defaultIconOld,
   _IconDetails.create(
     'enhanced',
     ext: _ImgExtension.webp,
@@ -294,27 +346,6 @@ final _appIcons = [
     ],
   ),
   _IconDetails.create(
-    'retro',
-    ext: _ImgExtension.png,
-    authorInfos: [
-      _AuthorInfo('sgfreak', null, _AuthorPlatform.discord, null),
-    ],
-  ),
-  _IconDetails.create(
-    'ookami',
-    ext: _ImgExtension.webp,
-    authorInfos: [
-      _AuthorInfo('神 ᴛᴀᴋᴜᴍɪ', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
-    ],
-  ),
-  _IconDetails.create(
-    'mini',
-    ext: _ImgExtension.png,
-    authorInfos: [
-      _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
-    ],
-  ),
-  _IconDetails.create(
     'spooky',
     ext: _ImgExtension.webp,
     authorInfos: [
@@ -329,38 +360,10 @@ final _appIcons = [
     ],
   ),
   _IconDetails.create(
-    'space',
-    ext: _ImgExtension.webp,
-    authorInfos: [
-      _AuthorInfo(':𝟛𝓗𝓪𝓹𝓹𝔂', null, _AuthorPlatform.discord, null),
-    ],
-  ),
-  _IconDetails.create(
     'tired',
     ext: _ImgExtension.webp,
     authorInfos: [
       _AuthorInfo('Zephyr', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
-    ],
-  ),
-  _IconDetails.create(
-    'eddy',
-    ext: _ImgExtension.webp,
-    authorInfos: [
-      _AuthorInfo(':𝟛𝓗𝓪𝓹𝓹𝔂', null, _AuthorPlatform.discord, null),
-    ],
-  ),
-  _IconDetails.create(
-    'namichin',
-    ext: _ImgExtension.webp,
-    authorInfos: [
-      _AuthorInfo('Scarecloud', null, _AuthorPlatform.discord, null),
-    ],
-  ),
-  _IconDetails.create(
-    'cutsie',
-    ext: _ImgExtension.webp,
-    authorInfos: [
-      _AuthorInfo('smilez', null, _AuthorPlatform.discord, _AuthorAIModel.gpt4),
     ],
   ),
 ];
@@ -386,19 +389,25 @@ class _IconDetails {
     return word;
   }
 
-  static const defaultIcon = _IconDetails(
+  static const defaultIconNew = _IconDetails(
     kotlinName: 'DEFAULT',
     manifestName: 'DefaultIcon',
     mipmapName: 'ic_launcher',
     dartName: 'namida',
-    assetPath: 'assets/namida_icon.webp',
+    assetPath: 'assets/namida_icon.png',
     authorInfos: [
-      _AuthorInfo(
-        'MSOB7YY',
-        'MSOB7YY',
-        _AuthorPlatform.github,
-        _AuthorAIModel.midjourney,
-      ),
+      _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
+      _AuthorInfo('MSOB7YY', 'MSOB7YY', _AuthorPlatform.github, null),
+    ],
+  );
+  static const defaultIconOld = _IconDetails(
+    kotlinName: 'ORIGINAL',
+    manifestName: 'OriginalIcon',
+    mipmapName: 'ic_launcher_original',
+    dartName: 'original',
+    assetPath: 'assets/namida_icon_original.webp',
+    authorInfos: [
+      _AuthorInfo('MSOB7YY', 'MSOB7YY', _AuthorPlatform.github, _AuthorAIModel.midjourney),
     ],
   );
 

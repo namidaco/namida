@@ -126,10 +126,6 @@ if [ -f "share/metainfo/namida.metainfo.xml" ]; then
 fi
 
 # Install icons
-if [ -f "share/icons/namida.png" ]; then
-  install -Dm644 "share/icons/namida.png" \
-    "/usr/share/icons/hicolor/1024x1024/apps/namida.png"
-fi
 
 if [ -f "share/icons/namida_512.png" ]; then
   install -Dm644 "share/icons/namida_512.png" \

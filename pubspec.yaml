@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 5.9.6-beta+260409111
+version: 6.0.0-beta+260413184
 
 environment:
   sdk: ">=3.11.0 <4.0.0"
@@ -212,15 +212,15 @@ dev_dependencies:
       url: https://github.com/MSOB7YY/inno_bundle
 
 flutter_native_splash:
-  image: assets/disposables/namida_icon.png
-  color: "#dfc6a7"
-  color_dark: "#121212"
+  image: assets/namida_icon.png
+  color: "#fff5eb"
+  color_dark: "#161212"
   android: true
   ios: false
   web: false
   android_12:
-    color: "#dfc6a7"
-    color_dark: "#121212"
+    color: "#fff5eb"
+    color_dark: "#161212"
 
 flutter:
   generate: true

@@ -159,21 +159,22 @@ class NamidaMainActivity : FlutterActivity() {
           val key = call.argument<String>("key")
           val nativeIcon = when (key) {
             "namida" -> LauncherIcon.DEFAULT
+            "cutsie" -> LauncherIcon.CUTSIE
+            "eddy" -> LauncherIcon.EDDY
+            "namichin" -> LauncherIcon.NAMICHIN
+            "space" -> LauncherIcon.SPACE
+            "retro" -> LauncherIcon.RETRO
+            "ookami" -> LauncherIcon.OOKAMI
+            "mini" -> LauncherIcon.MINI
+            "original" -> LauncherIcon.ORIGINAL
             "enhanced" -> LauncherIcon.ENHANCED
             "hollow" -> LauncherIcon.HOLLOW
             "pastel" -> LauncherIcon.PASTEL
             "monet" -> LauncherIcon.MONET
             "glowy" -> LauncherIcon.GLOWY
-            "retro" -> LauncherIcon.RETRO
-            "ookami" -> LauncherIcon.OOKAMI
-            "mini" -> LauncherIcon.MINI
             "spooky" -> LauncherIcon.SPOOKY
             "namiween" -> LauncherIcon.NAMIWEEN
-            "space" -> LauncherIcon.SPACE
             "tired" -> LauncherIcon.TIRED
-            "eddy" -> LauncherIcon.EDDY
-            "namichin" -> LauncherIcon.NAMICHIN
-            "cutsie" -> LauncherIcon.CUTSIE
             else -> null
           }
 
@@ -188,21 +189,22 @@ class NamidaMainActivity : FlutterActivity() {
           val key = call.argument<String>("key")
           val nativeIcon = when (key) {
             "namida" -> LauncherIcon.DEFAULT
+            "cutsie" -> LauncherIcon.CUTSIE
+            "eddy" -> LauncherIcon.EDDY
+            "namichin" -> LauncherIcon.NAMICHIN
+            "space" -> LauncherIcon.SPACE
+            "retro" -> LauncherIcon.RETRO
+            "ookami" -> LauncherIcon.OOKAMI
+            "mini" -> LauncherIcon.MINI
+            "original" -> LauncherIcon.ORIGINAL
             "enhanced" -> LauncherIcon.ENHANCED
             "hollow" -> LauncherIcon.HOLLOW
             "pastel" -> LauncherIcon.PASTEL
             "monet" -> LauncherIcon.MONET
             "glowy" -> LauncherIcon.GLOWY
-            "retro" -> LauncherIcon.RETRO
-            "ookami" -> LauncherIcon.OOKAMI
-            "mini" -> LauncherIcon.MINI
             "spooky" -> LauncherIcon.SPOOKY
             "namiween" -> LauncherIcon.NAMIWEEN
-            "space" -> LauncherIcon.SPACE
             "tired" -> LauncherIcon.TIRED
-            "eddy" -> LauncherIcon.EDDY
-            "namichin" -> LauncherIcon.NAMICHIN
-            "cutsie" -> LauncherIcon.CUTSIE
             else -> null
           }
 

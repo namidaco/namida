@@ -43,7 +43,7 @@ class NotificationManager {
           appName: 'Namida',
           appUserModelId: 'namidaco.namida.notification',
           guid: '51435cfe-f7be-4a73-82c1-50d53a8e7ae6',
-          iconPath: AppPaths.NAMIDA_LOGO_MONET,
+          iconPath: AppPaths.NAMIDA_LOGO_LAYER,
         ),
         linux: LinuxInitializationSettings(
           defaultActionName: 'namidaco.namida.notification',

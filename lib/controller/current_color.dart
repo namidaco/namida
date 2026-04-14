@@ -30,8 +30,16 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 Color get playerStaticColor => namida.isDarkMode ? playerStaticColorDark : playerStaticColorLight;
-Color get playerStaticColorLight => Color(settings.staticColor.valueR);
-Color get playerStaticColorDark => Color(settings.staticColorDark.valueR);
+
+Color get playerStaticColorLight {
+  final cInt = settings.staticColor.valueR;
+  return cInt != null ? Color(cInt) : kMainColorLight;
+}
+
+Color get playerStaticColorDark {
+  final cInt = settings.staticColorDark.valueR;
+  return cInt != null ? Color(cInt) : kMainColorDark;
+}
 
 class CurrentColor {
   static CurrentColor get inst => _instance;
@@ -71,7 +79,7 @@ class CurrentColor {
   final allColorPalettesGeneratingProgress = 0.obs;
   final allColorPalettesGeneratingTotal = 0.obs;
 
-  void refreshhh() {
+  void _refreshColorsRx() {
     _namidaColor.refresh();
     _namidaColorMiniplayer.refresh();
   }
@@ -128,12 +136,13 @@ class CurrentColor {
       final nc = playerStaticColor.lighter;
       _namidaColor.set(NamidaColor.single(nc));
     }
-    _namidaColor.refresh();
+    _refreshColorsRx();
   }
 
   void updatePlayerColorFromColor(Color color, [bool customAlpha = true]) async {
     final colorWithAlpha = customAlpha ? color.withAlpha(colorAlpha) : color;
-    _namidaColor.value = NamidaColor.single(colorWithAlpha);
+    _namidaColor.set(NamidaColor.single(colorWithAlpha));
+    _refreshColorsRx();
   }
 
   Future<void> refreshColorsAfterResumeApp() async {
@@ -141,7 +150,7 @@ class CurrentColor {
       final namidaColor = await getPlayerColorFromDeviceWallpaper(forceCheck: true);
       if (namidaColor != null) {
         _namidaColor.set(namidaColor);
-        _namidaColor.refresh();
+        _refreshColorsRx();
         _updateCurrentPaletteHalfs(namidaColor);
       }
     }

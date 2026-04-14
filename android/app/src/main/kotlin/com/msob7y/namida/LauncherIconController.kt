@@ -53,21 +53,22 @@ enum class LauncherIcon(
     val foreground: Int
 ) {
   DEFAULT("DefaultIcon", R.mipmap.ic_launcher),
+  CUTSIE("CutsieIcon", R.mipmap.ic_launcher_cutsie),
+  EDDY("EddyIcon", R.mipmap.ic_launcher_eddy),
+  NAMICHIN("NamichinIcon", R.mipmap.ic_launcher_namichin),
+  SPACE("SpaceIcon", R.mipmap.ic_launcher_space),
+  RETRO("RetroIcon", R.mipmap.ic_launcher_retro),
+  OOKAMI("OokamiIcon", R.mipmap.ic_launcher_ookami),
+  MINI("MiniIcon", R.mipmap.ic_launcher_mini),
+  ORIGINAL("OriginalIcon", R.mipmap.ic_launcher_original),
   ENHANCED("EnhancedIcon", R.mipmap.ic_launcher_enhanced),
   HOLLOW("HollowIcon", R.mipmap.ic_launcher_hollow),
   PASTEL("PastelIcon", R.mipmap.ic_launcher_pastel),
   MONET("MonetIcon", R.mipmap.ic_launcher_monet),
   GLOWY("GlowyIcon", R.mipmap.ic_launcher_glowy),
-  RETRO("RetroIcon", R.mipmap.ic_launcher_retro),
-  OOKAMI("OokamiIcon", R.mipmap.ic_launcher_ookami),
-  MINI("MiniIcon", R.mipmap.ic_launcher_mini),
   SPOOKY("SpookyIcon", R.mipmap.ic_launcher_spooky),
   NAMIWEEN("NamiweenIcon", R.mipmap.ic_launcher_namiween),
-  SPACE("SpaceIcon", R.mipmap.ic_launcher_space),
-  TIRED("TiredIcon", R.mipmap.ic_launcher_tired),
-  EDDY("EddyIcon", R.mipmap.ic_launcher_eddy),
-  NAMICHIN("NamichinIcon", R.mipmap.ic_launcher_namichin),
-  CUTSIE("CutsieIcon", R.mipmap.ic_launcher_cutsie);
+  TIRED("TiredIcon", R.mipmap.ic_launcher_tired);
 
     private var componentName: ComponentName? = null
 

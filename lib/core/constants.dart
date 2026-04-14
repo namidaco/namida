@@ -116,9 +116,12 @@ class NamidaDeviceInfo {
 
 final kStoragePaths = <String>[];
 
-/// Main Color
-const Color kMainColorLight = Color(0xFF9c99c1);
-const Color kMainColorDark = Color(0xFF4e4c72);
+/// Main Colors
+const Color kMainColorLight = Color(0xFFB89D7D);
+const Color kMainColorDark = Color(0xFF43362B);
+
+final kMainColorLightOldValue = const Color(0xFF9c99c1).intValue;
+final kMainColorDarkOldValue = const Color(0xFF4e4c72).intValue;
 
 const isKuru = bool.fromEnvironment('IS_KURU_BUILD');
 
@@ -709,7 +712,7 @@ class AppPaths {
   static final TOTAL_LISTEN_TIME = _join(_USER_DATA, 'total_listen.txt');
   static final FAVOURITES_PLAYLIST = _join(_USER_DATA, 'favs.json');
   static final NAMIDA_LOGO = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';
-  static final NAMIDA_LOGO_MONET = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK_MONET.PNG';
+  static final NAMIDA_LOGO_LAYER = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK_LAYER.PNG';
 
   // ================= Youtube =================
   static final YT_LIKES_PLAYLIST = _join(AppDirs.YOUTUBE_MAIN_DIRECTORY, 'yt_likes.json');

@@ -3091,8 +3091,13 @@ class NamidaLogoContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
-    final bgColor = context.isDarkMode ? const Color(0xd2262729) : const Color(0xd83c3f46);
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final isDarkMode = context.isDarkMode;
+    final colorScheme = CurrentColor.inst.color;
+    final scaffoldBgColor = Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.5), isDarkMode ? Colors.black : Colors.white);
+    const foregroundColorOpacity = 0.8;
+    final foregroundColor = Color.alphaBlend(colorScheme.withOpacityExt(0.1), theme.colorScheme.onSurface).withOpacityExt(foregroundColorOpacity);
     return NamidaInkWell(
       onTap: () {
         if (NamidaNavigator.inst.currentRoute?.route != RouteType.PAGE_about) {
@@ -3106,20 +3111,29 @@ class NamidaLogoContainer extends StatelessWidget {
       width: width,
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(top: 16.0, bottom: 8.0)),
       padding: padding ?? const EdgeInsets.symmetric(vertical: 2.0, horizontal: 8.0),
-      bgColor: bgColor,
       decoration: BoxDecoration(
-        color: bgColor,
         borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+        border: Border.all(
+          color: colorScheme.withOpacityExt(0.5),
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.90), colorScheme).withOpacityExt(1.0),
+            Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.65), colorScheme).withOpacityExt(1.0),
+          ],
+        ),
         boxShadow: [
           lighterShadow
               ? BoxShadow(
-                  color: bgColor.withAlpha(context.isDarkMode ? 30 : 80),
+                  color: colorScheme.withAlpha(isDarkMode ? 20 : 60),
                   spreadRadius: 0.1,
                   blurRadius: 6.0,
                   offset: const Offset(0.0, 2.0),
                 )
               : BoxShadow(
-                  color: bgColor.withAlpha(context.isDarkMode ? 40 : 100),
+                  color: colorScheme.withAlpha(isDarkMode ? 30 : 80),
                   spreadRadius: 0.2,
                   blurRadius: 8.0,
                   offset: const Offset(0.0, 4.0),
@@ -3130,21 +3144,23 @@ class NamidaLogoContainer extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (displayText) const SizedBox(width: 4.0),
           Image.asset(
-            NamidaChannel.defaultIconForPlatform.assetPath,
+            NamidaChannel.defaultLayerIconForPlatform,
             width: iconSize,
             height: iconSize,
             cacheHeight: 240,
             cacheWidth: 240,
             alignment: Alignment.center,
+            color: foregroundColor,
           ),
           if (displayText) ...[
-            const SizedBox(width: 8.0),
+            const SizedBox(width: 10.0),
             Expanded(
               child: Text(
                 'Namida',
                 style: textTheme.displayLarge?.copyWith(
-                  color: Color.alphaBlend(bgColor.withAlpha(50), Colors.white),
+                  color: foregroundColor.withOpacityExt(foregroundColorOpacity * 0.9),
                   fontSize: 17.5,
                 ),
                 overflow: TextOverflow.fade,

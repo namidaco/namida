@@ -11,11 +11,12 @@ abstract class NamidaChannel {
     );
   }
 
-  static final defaultIconForPlatform = NamidaPlatformBuilder.init(
+  static final defaultAppIconForPlatform = NamidaPlatformBuilder.init(
     android: () => NamidaAppIcons.namida,
-    windows: () => NamidaAppIcons.mini,
-    linux: () => NamidaAppIcons.mini,
+    windows: () => NamidaAppIcons.namida,
+    linux: () => NamidaAppIcons.namida,
   );
+  static final defaultLayerIconForPlatform = 'assets/namida.png';
 
   final isInPip = false.obs;
 
@@ -87,22 +88,23 @@ abstract class NamidaChannel {
 
 // SPLASH_AUTO_GENERATED START
 enum NamidaAppIcons {
-  namida("assets/namida_icon.webp", [AuthorInfo("MSOB7YY", "MSOB7YY", AuthorPlatform.github, AuthorAIModel.midjourney)]),
+  namida("assets/namida_icon.png", [AuthorInfo("شاكور", null, AuthorPlatform.discord, null), AuthorInfo("MSOB7YY", "MSOB7YY", AuthorPlatform.github, null)]),
+  cutsie("assets/namida_icon_cutsie.webp", [AuthorInfo("smilez", null, AuthorPlatform.discord, AuthorAIModel.gpt4)]),
+  eddy("assets/namida_icon_eddy.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
+  namichin("assets/namida_icon_namichin.webp", [AuthorInfo("Scarecloud", null, AuthorPlatform.discord, null)]),
+  space("assets/namida_icon_space.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
+  retro("assets/namida_icon_retro.png", [AuthorInfo("sgfreak", null, AuthorPlatform.discord, null)]),
+  ookami("assets/namida_icon_ookami.webp", [AuthorInfo("神 ᴛᴀᴋᴜᴍɪ", null, AuthorPlatform.discord, AuthorAIModel.unknown)]),
+  mini("assets/namida_icon_mini.png", [AuthorInfo("شاكور", null, AuthorPlatform.discord, null)]),
+  original("assets/namida_icon_original.webp", [AuthorInfo("MSOB7YY", "MSOB7YY", AuthorPlatform.github, AuthorAIModel.midjourney)]),
   enhanced("assets/namida_icon_enhanced.webp", [AuthorInfo("im_mehu", null, AuthorPlatform.discord, null)]),
   hollow("assets/namida_icon_hollow.png", [AuthorInfo("wispy", null, AuthorPlatform.discord, null)]),
   pastel("assets/namida_icon_pastel.webp", [AuthorInfo("cui", null, AuthorPlatform.discord, AuthorAIModel.gemini)]),
   monet("assets/namida_icon_monet.png", [AuthorInfo("Sujal", null, AuthorPlatform.telegram, null)]),
   glowy("assets/namida_icon_glowy.webp", [AuthorInfo("Sujal", null, AuthorPlatform.telegram, null)]),
-  retro("assets/namida_icon_retro.png", [AuthorInfo("sgfreak", null, AuthorPlatform.discord, null)]),
-  ookami("assets/namida_icon_ookami.webp", [AuthorInfo("神 ᴛᴀᴋᴜᴍɪ", null, AuthorPlatform.discord, AuthorAIModel.unknown)]),
-  mini("assets/namida_icon_mini.png", [AuthorInfo("شاكور", null, AuthorPlatform.discord, null)]),
   spooky("assets/namida_icon_spooky.webp", [AuthorInfo("Miguquis", null, AuthorPlatform.discord, AuthorAIModel.gemini)]),
   namiween("assets/namida_icon_namiween.webp", [AuthorInfo("𐔌 . ⋮ Reggie .ᐟ ֹ ₊ ꒱", null, AuthorPlatform.discord, AuthorAIModel.unknown)]),
-  space("assets/namida_icon_space.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
   tired("assets/namida_icon_tired.webp", [AuthorInfo("Zephyr", null, AuthorPlatform.discord, AuthorAIModel.unknown)]),
-  eddy("assets/namida_icon_eddy.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
-  namichin("assets/namida_icon_namichin.webp", [AuthorInfo("Scarecloud", null, AuthorPlatform.discord, null)]),
-  cutsie("assets/namida_icon_cutsie.webp", [AuthorInfo("smilez", null, AuthorPlatform.discord, AuthorAIModel.gpt4)]),
   ;
 
   final String assetPath;

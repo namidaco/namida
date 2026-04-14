@@ -24,6 +24,7 @@ import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -1760,9 +1761,9 @@ class Indexer<T extends Track> {
   }
 
   Future<void> _createDefaultNamidaArtworkIfRequired() async {
-    if (!await File(AppPaths.NAMIDA_LOGO_MONET).exists()) {
-      final byteData = await rootBundle.load('assets/namida_icon_monet.png');
-      final file = await File(AppPaths.NAMIDA_LOGO_MONET).create(recursive: true);
+    if (!await File(AppPaths.NAMIDA_LOGO_LAYER).exists()) {
+      final byteData = await rootBundle.load(NamidaChannel.defaultLayerIconForPlatform);
+      final file = await File(AppPaths.NAMIDA_LOGO_LAYER).create(recursive: true);
       await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
     }
   }

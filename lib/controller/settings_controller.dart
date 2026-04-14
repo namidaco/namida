@@ -60,8 +60,8 @@ class _SettingsController with SettingsFileWriter {
   final pitchBlack = false.obs;
   final autoColor = true.obs;
   final animatedTheme = true.obs;
-  final staticColor = kMainColorLight.intValue.obs;
-  final staticColorDark = kMainColorDark.intValue.obs;
+  final staticColor = Rxn<int>();
+  final staticColorDark = Rxn<int>();
   final RxList<LibraryTab> libraryTabs = [
     LibraryTab.home,
     LibraryTab.tracks,
@@ -458,8 +458,18 @@ class _SettingsController with SettingsFileWriter {
       pitchBlack.value = json['pitchBlack'] ?? pitchBlack.value;
       autoColor.value = json['autoColor'] ?? autoColor.value;
       animatedTheme.value = json['animatedTheme'] ?? animatedTheme.value;
-      staticColor.value = json['staticColor'] ?? staticColor.value;
-      staticColorDark.value = json['staticColorDark'] ?? staticColorDark.value;
+
+      if (json['staticColor'] == kMainColorLightOldValue) {
+        // -- old was default value, leave null for the new one
+      } else {
+        staticColor.value = json['staticColor_v2'] ?? json['staticColor'] ?? staticColor.value;
+      }
+      if (json['staticColorDark'] == kMainColorDarkOldValue) {
+        // -- old was default value, leave null for the new one
+      } else {
+        staticColorDark.value = json['staticColorDark_v2'] ?? json['staticColorDark'] ?? staticColorDark.value;
+      }
+
       final libraryListFromStorage = json['libraryTabs'];
       if (libraryListFromStorage is List) libraryTabs.value = libraryListFromStorage.map((e) => LibraryTab.values.getEnum(e)).toListy();
 
@@ -757,8 +767,8 @@ class _SettingsController with SettingsFileWriter {
     'pitchBlack': pitchBlack.value,
     'autoColor': autoColor.value,
     'animatedTheme': animatedTheme.value,
-    'staticColor': staticColor.value,
-    'staticColorDark': staticColorDark.value,
+    'staticColor_v2': staticColor.value,
+    'staticColorDark_v2': staticColorDark.value,
     'libraryTabs': libraryTabs.mapped((element) => element.name),
     'homePageItems': homePageItems.mapped((element) => element.name),
     'activeArtistType': activeArtistType.value.name,
