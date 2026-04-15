@@ -59,7 +59,7 @@ jobs:
             "${{ steps.set_vars.outputs.target_repo }}" \
             "${{ inputs.is_beta }}" \
             > downloads_table.md
-          cat downloads_table.md beta_changelog.md > combined.md
+          cat beta_changelog.md downloads_table.md > combined.md
           mv combined.md beta_changelog.md
 
       - name: Create Release with Changelog

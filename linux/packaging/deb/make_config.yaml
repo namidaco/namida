@@ -17,7 +17,7 @@ dependencies:
 
 essential: false
 
-icon: linux/icons/namida.png
+icon: linux/icons/namida_512.png
 
 postuninstall_scripts:
   - echo "Sorry to see you go."
