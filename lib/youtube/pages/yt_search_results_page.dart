@@ -6,6 +6,7 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/channels/channel_info.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/search_result.dart';
+import 'package:youtipie/class/search_suggestion_info.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
@@ -31,6 +32,7 @@ import 'package:namida/youtube/pages/yt_local_search_results.dart';
 import 'package:namida/youtube/widgets/yt_channel_card.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_playlist_card.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 
 class YoutubeSearchResultsPage extends StatefulWidget {
@@ -45,6 +47,7 @@ class YoutubeSearchResultsPage extends StatefulWidget {
 class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
   String? get currentSearchText => widget.searchTextCallback?.call() ?? _latestSearched;
   static String? _latestSearched;
+  List<SearchSuggestionInfo>? _suggestions;
 
   static YoutiPieSearchResult? _searchResult;
   final _isFetchingMoreResults = false.obs;
@@ -60,15 +63,44 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
     // -- must be asap and before [fetchSearch], will execute once internal initialization ends
     YTLocalSearchController.inst.search(currentSearchText ?? '');
     fetchSearch();
+    _onTextFieldChanged();
+    ScrollSearchController.inst.searchTextEditingController.addListener(_onTextFieldChanged);
   }
 
   @override
   void dispose() {
     _isFetchingMoreResults.close();
+    ScrollSearchController.inst.searchTextEditingController.removeListener(_onTextFieldChanged);
+    _debouncerTimer?.cancel();
     super.dispose();
   }
 
+  Timer? _debouncerTimer;
+  bool get shouldFetchOrDisplaySuggestions => _loadingFirstResults == null || (_loadingFirstResults == false && _searchResult == null);
+  void _onTextFieldChanged() async {
+    _debouncerTimer?.cancel();
+    if (ScrollSearchController.inst.searchTextEditingController.text.isNotEmpty && shouldFetchOrDisplaySuggestions && ConnectivityController.inst.hasConnection) {
+      _debouncerTimer = Timer(const Duration(milliseconds: 400), () async {
+        final query = ScrollSearchController.inst.searchTextEditingController.text;
+        final suggestions = query.isEmpty ? null : await YoutubeInfoController.search.getSuggestions(query, details: ExecuteDetails.forceRequest());
+        if (mounted) {
+          if (suggestions != null && suggestions.isNotEmpty && shouldFetchOrDisplaySuggestions) {
+            setState(() => _suggestions = suggestions);
+          } else {
+            setState(() => _suggestions = null);
+          }
+        }
+      });
+    } else {
+      if (_suggestions != null) {
+        setState(() => _suggestions = null);
+      }
+    }
+  }
+
   Future<void> fetchSearch({String customText = ''}) async {
+    _debouncerTimer?.cancel();
+
     final newSearch = customText == '' ? widget.searchTextCallback?.call() ?? ScrollSearchController.inst.searchTextEditingController.text : customText;
     if (_latestSearched == newSearch && _searchResult != null) {
       YTLocalSearchController.inst.search(newSearch); // has its own latest search checks
@@ -138,6 +170,8 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
 
     final searchResult = _searchResult;
     const maxLocalSeachHorizontalCount = 40;
+
+    final suggestions = _suggestions;
 
     return BackgroundWrapper(
       child: NamidaNavigatorWidget(
@@ -324,7 +358,97 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                       ),
 
                     // -- yt (items list)
-                    _loadingFirstResults == null
+                    suggestions != null && shouldFetchOrDisplaySuggestions
+                        ? SliverList.builder(
+                            itemCount: suggestions.length,
+                            itemBuilder: (context, index) {
+                              final suggestionInfo = suggestions[index];
+                              final fullText = suggestionInfo.fullText;
+                              final typed = suggestionInfo.typedAndCompletion?.$1;
+                              final completion = suggestionInfo.typedAndCompletion?.$2;
+                              final subtitle = suggestionInfo.subtitle ?? suggestionInfo.displayName ?? suggestionInfo.entityId;
+                              final thumbnailUrl = suggestionInfo.thumbnailUrl;
+                              final isChannel = suggestionInfo.isChannel;
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 3.0),
+                                child: NamidaInkWell(
+                                  borderRadius: 10.0,
+                                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                  bgColor: theme.cardColor,
+                                  onTap: () {
+                                    ScrollSearchController.inst.searchTextEditingController.text = fullText;
+                                    fetchSearch(customText: fullText);
+                                  },
+                                  child: Row(
+                                    mainAxisSize: .min,
+                                    children: [
+                                      const SizedBox(width: 12.0),
+                                      const Icon(
+                                        Broken.magicpen,
+                                        size: 18.0,
+                                      ),
+                                      const SizedBox(width: 8.0),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: .start,
+                                          mainAxisAlignment: .start,
+                                          children: [
+                                            Text.rich(
+                                              TextSpan(
+                                                text: typed ?? fullText,
+                                                style: textTheme.displaySmall?.copyWith(fontSize: 13.5, fontWeight: FontWeight.w700),
+                                                children: completion == null
+                                                    ? null
+                                                    : [
+                                                        TextSpan(
+                                                          text: completion,
+                                                          style: textTheme.displaySmall?.copyWith(fontSize: 13.5, fontWeight: FontWeight.w300),
+                                                        ),
+                                                      ],
+                                              ),
+                                            ),
+                                            if (subtitle != null && subtitle.isNotEmpty)
+                                              Text(
+                                                subtitle,
+                                                style: textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w200),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (thumbnailUrl != null && thumbnailUrl.isNotEmpty) ...[
+                                        const SizedBox(width: 12.0),
+                                        YoutubeThumbnail(
+                                          type: isChannel ? ThumbnailType.channel : ThumbnailType.other,
+                                          key: Key(thumbnailUrl),
+                                          width: 24.0,
+                                          height: 24.0,
+                                          borderRadius: 4.0,
+                                          forceSquared: true,
+                                          isImportantInCache: true,
+                                          customUrl: thumbnailUrl,
+                                          isCircle: isChannel,
+                                        ),
+                                      ],
+                                      const SizedBox(width: 4.0),
+                                      Transform.flip(
+                                        flipX: true,
+                                        child: NamidaIconButton(
+                                          horizontalPadding: 8.0,
+                                          icon: Broken.export_1,
+                                          iconSize: 18.0,
+                                          onPressed: () {
+                                            ScrollSearchController.inst.searchTextEditingController.text = fullText;
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4.0),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : _loadingFirstResults == null
                         ? const SliverToBoxAdapter()
                         : _loadingFirstResults == true
                         ? SliverToBoxAdapter(

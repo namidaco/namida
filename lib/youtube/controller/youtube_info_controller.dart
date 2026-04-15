@@ -16,6 +16,7 @@ import 'package:youtipie/class/result_wrapper/comment_result.dart';
 import 'package:youtipie/class/result_wrapper/history_result.dart';
 import 'package:youtipie/class/result_wrapper/related_videos_result.dart';
 import 'package:youtipie/class/result_wrapper/search_result.dart';
+import 'package:youtipie/class/search_suggestion_info.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';

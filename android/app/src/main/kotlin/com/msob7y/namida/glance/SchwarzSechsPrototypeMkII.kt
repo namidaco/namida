@@ -98,7 +98,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
 
     val imageCornerRadiusFloat = 64f
     val buttonHeight = h * 0.35f
-    val buttonWidth = buttonHeight * 1.1f
+    val buttonWidth = buttonHeight * 1.25f
     val titleFontSize = (h.value * 0.20f).coerceIn(12f, 22f).sp
     val subtitleFontSize = (h.value * 0.18f).coerceIn(10f, 18f).sp
     val padding = w * 0.06f
@@ -191,12 +191,12 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
           modifier = GlanceModifier.fillMaxHeight().size(imageSize)
         )
 
-        HorizontalSpace((gapSmall * 2).value.toInt())
+        HorizontalSpace(padding.value.toInt())
 
         Column(
           verticalAlignment = Alignment.Vertical.CenterVertically,
           horizontalAlignment = Alignment.Horizontal.Start,
-          modifier = GlanceModifier.fillMaxWidth().fillMaxHeight(),
+          modifier = GlanceModifier.fillMaxWidth(),
         ) {
           Spacer(GlanceModifier.height(h * 0.04f))
           Text(
