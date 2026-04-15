@@ -52,6 +52,16 @@ jobs:
           bash scripts/gen_beta_changelog.sh ${{ steps.set_vars.outputs.target_repo }}
           cat ./beta_changelog.md
 
+      - name: Generate Downloads Table
+        run: |
+          bash scripts/gen_downloads_table.sh \
+            "${{ steps.extract_version.outputs.version }}" \
+            "${{ steps.set_vars.outputs.target_repo }}" \
+            "${{ inputs.is_beta }}" \
+            > downloads_table.md
+          cat downloads_table.md beta_changelog.md > combined.md
+          mv combined.md beta_changelog.md
+
       - name: Create Release with Changelog
         uses: softprops/action-gh-release@v2
         with:
