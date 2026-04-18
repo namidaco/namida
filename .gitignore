@@ -247,3 +247,5 @@ pubspec_overrides.yaml
 
 dist/
 scripts/bundle_output*
+
+lib/core/translations/arb/*
