@@ -40,14 +40,20 @@ class YoutubeAccountController {
     YoutiPieOperation.addVideoToHistory: false,
     YoutiPieOperation.fetchUserPlaylists: false,
     YoutiPieOperation.fetchUserPlaylistsNext: false,
+    YoutiPieOperation.fetchUserPlaylistsSort: false,
     YoutiPieOperation.fetchUserChannels: false,
     YoutiPieOperation.fetchUserChannelsNext: false,
+    YoutiPieOperation.fetchUserChannelsSort: false,
     YoutiPieOperation.fetchUserChannelsAllVideos: false,
     YoutiPieOperation.fetchUserChannelsAllVideosNext: false,
     YoutiPieOperation.getPlaylistsForVideo: false,
     YoutiPieOperation.getPlaylistEditInfo: false,
     YoutiPieOperation.addRemoveVideosPlaylist: false,
     YoutiPieOperation.createPlaylist: false,
+    YoutiPieOperation.sendVoteReturnYoutubeDislike: false,
+    YoutiPieOperation.fetchNotifications: false,
+    YoutiPieOperation.fetchNotificationsNext: false,
+    YoutiPieOperation.markNotificationRead: false,
   };
 
   static const _operationHasErrorPage = <YoutiPieOperation, bool>{
