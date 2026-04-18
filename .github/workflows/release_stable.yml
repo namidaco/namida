@@ -3,6 +3,9 @@ name: release_stable
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   release:
     uses: ./.github/workflows/release_beta.yml

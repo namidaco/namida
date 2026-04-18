@@ -17,6 +17,9 @@ on:
         type: boolean
         default: true
 
+permissions:
+  contents: write
+
 jobs:
   create_release:
     runs-on: ubuntu-latest
@@ -70,7 +73,7 @@ jobs:
           draft: true
           tag_name: ${{ steps.extract_version.outputs.version }}
           body_path: ./beta_changelog.md
-          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || '' }}
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   build_android:
     needs: create_release
@@ -185,7 +188,7 @@ jobs:
           draft: ${{ !inputs.is_beta }}
           tag_name: ${{ needs.create_release.outputs.version }}
           files: build_final/*
-          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || '' }}
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   build_windows:
     needs: create_release
@@ -259,7 +262,7 @@ jobs:
           tag_name: ${{ needs.create_release.outputs.version }}
           files: |
             build_final/*
-          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || '' }}
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   build_linux:
     if: ${{ inputs.is_beta }}
@@ -349,7 +352,7 @@ jobs:
           tag_name: ${{ needs.create_release.outputs.version }}
           files: |
             build_final/*
-          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || '' }}
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
       - name: Install SSH key for AUR
         uses: shimataro/ssh-key-action@v2
