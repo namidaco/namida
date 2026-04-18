@@ -79,6 +79,7 @@ jobs:
     needs: create_release
     runs-on: ubuntu-22.04
     continue-on-error: ${{ matrix.is_clone }}
+    if: ${{ !matrix.is_clone || inputs.is_beta }}
     strategy:
       fail-fast: false
       matrix:

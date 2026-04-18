@@ -7,7 +7,7 @@ REPO="$2"
 IS_BETA="${3:-false}"
 
 TAG_NO_V="${TAG#v}"
-VERSION="${TAG_NO_V%%-*}"
+VERSION="${TAG_NO_V%%+*}"
 SUFFIX=$([ "$IS_BETA" = "true" ] && echo "-beta" || echo "")
 PREFIXRAW="${VERSION}${SUFFIX}"
 PREFIX="v${PREFIXRAW}"

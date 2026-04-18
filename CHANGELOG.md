@@ -1,36 +1,194 @@
 # Namida Changelog
 
+## 17/04/2026
+# v6.0.0-beta
+
+### 🎉 New Features:
+   - 4164972: basic open subsonic support (navidrome, airsonic, gonic, etc). ref #91, #153
+   - c738932: webdav support and few fixes. ref #153 #832
+   - 60d0d19: jellyfin support
+   - 39a2f55: samba (smb v2/v3) support
+   - f21a992: resume where left off, for playlists/queues/albums/artists/etc - mark last played track in each list - scroll to currently playing track - queues now have the source name - refreshed design for floating action buttons. closes #325 #435 #443 #444 #678
+   - b09fbe0: resume on connect (headset/etc) & button to toggle mono audio - (currently acts as a shortcut for accessibility settings). closes #243, #641
+   - 8310f96: change audio track for local videos - and fix some video-only related issue
+   - 99ab918: swipe to seek & long press for 2x speed in video player
+   - deb1c7b: 2 new mixes in homepage (lost partners & discover) and related tweaks/fixes
+   - e5f15ab: allow changing pitch by semitones. closes #462
+   - 695b423: new repeat mode (shuffle all) when queue ends, replays the queue shuffled. ref #396 #851
+   - 53c7ac3: long press play next/last/after to move item instead of copying (if done from player queue)
+   - 1fa1189: option to convert playlist to/from m3u - and show the option while creating a playlist
+   - 82fa09d: cleanup yt search results
+   - 7bb4fe1: option to disable artwork caching. ref #699, #825
+   - de54e0a: option to exclude file extensions. ref #415 #879
+   - 1a93820: search suggestions for yt. closes #931
+
+### 🛠️ Bug fixes & Improvements:
+
+- core:
+   - d55f63e: basic linux support - up to 10x faster indexing speed for desktop (using cpu threads) - prevent settings writing on first start - add `.ogx` support. ref #650 #743 #14
+   - 9b708ea: change app icon
+   - 0664bd3: recheck some essentials each 24hr
+   - 4429a3f: better support for android auto/wearables/etc. ref #351
+   - 71781e3: support multiple albums per track. closes #916
+   - abd4412: m3u playlist output is now resolved against m3u file directory, not common path closes https//github.com/namidaco/namida-snapshots/issues/48
+   - c8e12c2: migrate translations to arb to fix plurals - redesign index refresh prompt dialog - organize some files
+   - 6d5f962: webdav now streams directly without downloading
+   - e8032de: fallback to system ffmpeg instead of preferring it
+   - 20a0165: better lyrics set logic and device files detection - changing lyrics in dialog now applies only after closing dialog - add `.ttml` to possible device files, reorder priority & make them lazy
+
+- perf:
+   - 8ef3737: faster files listing
+   - 529535a: faster track dialog showing - no longer waits for yt databases to get channel id
+   - 585cc3a: searching for missing tracks is now almost instant - from 15min to <10 seconds (90x improvement) - achieved by simply building and index with tokens upfront - the loading page is now useless :<
+   - bf61e64: optimizations for replace tracks functions
+   - 2f66a8d: improve local video files matching performance
+   - 4fa9ccb: improve title & artist matching for lastfm and yt history import
+   - f8973ff: improve total listen timer logic
+
+- chore:
+   - 8d7caa2: add more app icons
+   - deeed93: make popup menus beautiful
+   - f346f63: refreshed buttons design with better loading indicators - and some ui fixes
+   - a9323f8: redesign set moods/tags/rating dialog for easier usage. closes #653
+   - 3afa6d1: allow fetching yt notifications without membership
+   - cb8d638: animate arrow icon when going to track's folder
+   - a470809: fade out animation for unlike/unfav
+   - a9d9d82: better android home widget ui
+   - 64c2f96: highlight last visited folder
+   - 7357ee2: show duration difference for each synced lyrics in lrc dialog. ref #810
+   - 0a7f3bb: show bit depth & lossless info in player
+   - cfde2b6: show all repeat modes on long press
+   - 904e4c4: add more library tabs (queues/favs/history/most played)
+   - ee631d2: kurukuru double tap app icon in about page to initiate the kurukuru, but dont do it much otherwise the kurukuru might get dizzy
+   - df1aa07: show greyed out prev/next buttons in video player instead of hiding when its the head/tail of queue
+   - 41e88b2: add header for yt queue in local player. ref #542
+   - eec31b1: add queue header for local player too
+   - 26ea2e9: put artist's albums and singles in a card
+   - 63014a3: move stats to a button in home page
+   - 52fb8a0: move folder hierarchy option from extra settings to sort dialog in each folder page
+   - eee21fd: move seek text to center for local player
+   - 82b106e: show recent playlists/queues in home page
+   - 9afce24: flag option to show "yt style player" button switcher directly in players ui. closes #861
+   - 3fb4fc8: flag option to set preferred search tab. closes #521
+   - 192e162: add search filter chip to toggle tracks/videos
+   - 27c993e: ui tweaks - refreshed tonal icons - fullscreen lyrics align to center if width too wide - fullscreen lyrics more dimmed background
+   - e5f4df6: allow changing days for top recents in home page
+   - 09b87f4: dynamically show jump button in lyrics fullscreen
+   - 23cb3af: improve ui/ux of custom sort chip in most played page - can now tap each date to modify it separetely
+   - c6094c2: improve after indexing message - if library empty, prompts to add folders - if library empty, shows button in tracks page to add folders - prevent prompting to refresh on first start
+   - 594c157: add delete option for track swipe actions
+   - 164a9b4: improve history import matching for lastfm
+   - 02ad54e: ui and logic tweaks for folders view
+   - 65b062e: minor tweaks - artist albums now inlcude direct albums only. if featured, it appears in extras card (not albums or singles) - album tracks disc sections are also applied if sorted by track number - add empty line for word synced lyrics when necessary, to allow hiding lyrics view dynamically - underrated mix now ignores listens in last 14 days (instead of 2 days)
+   - 459f20a: animate arrow for expandable tiles
+   - dc69764: some tweaks and fixes - no longer include wal file for db in backup, and instead ensure checkpointed - albums with no date missing play button - possible empty line in bit info popup - allow reordering fav playlists
+   - bdffc27: "dont ask again" option for refresh prompt
+   - 6ca9469: show main artist when album artist tag is missing. ref #877
+   - 620e255: support `albumsort`, `artistsort`, etc tags - and some refactoring for tags to ensure consistency - add icons for all sort options. ref #424
+   - dc5d1aa: show slight blur for seekbar left side indicating the magnet area
+   - 6a14119: improve folders scroll position restoration
+   - cdca28b: improve banner animation in channel subpage - and also animate for widescreen
+   - e491b01: enhance confirmation dialogs text
+   - 6a2f46d: small rework for "generate from moods" dialog
+   - abea541: add new sorts (path for tracks/date added for groups). ref #907
+   - 45319fe: lyrics tweaks - fullscreen blurred bg - instant fetch on track switching. closes #906
+   - fa62fcb: improve lyrics view in fullscreen - align to left - smaller subtext for multilingual lyrics - multilingual lines are now closer
+   - 9ad6866: combine reorderable configration lists into 1 list (homepage/tag fields to edit/library tabs)
+   - 5026bd7: put playback settings button in qualities menu for local player
+   - 10da408: improve lrc search matching for yt section
+   - 17efc47: fetch lrc files for webdav. closes #925
+   - 566e91c: add permissions info to logs when sharing
+   - d205289: dismissible miniplayer by default & change default waveform count to 80
+   - 442f5cc: support utf16 encoded lrc files. ref #823
+   - dfd7925: improve year display in info dialogs
+   - 98b7f9a: ignore "group artworks by album" for the empty/unknown album
+   - ae6bfb7: show format in upper case. ref #835
+   - 9caed85: ui and logic adjustments. closes #912 #921
+   - 1f882cd: various fixes and tweaks
+   - b7aea49: various improvements
+   - 1edc99f: various tweaks and fixes
+   - 9a393f5: minor tweaks
+   - a6bd1f9: minor ui fixes
+   - 9facd37: minor ui tweaks
+   - 90d78b3: minor ui fixes
+   - c54b2f4: tweaks & fixes
+   - 3e8300c: ui improvements
+   - 690de15: small ui tweaks
+   - 3eb5224: some ui tweaks
+   - 12e778a: ui tweaks
+   - 4d28cc4: some adjustments
+   - 559b53c: final final adjustments
+
+- fix:
+   - 64e61c4: home widget reversed fav status
+   - 5ef3f0b: opening file with external launchers by improving real path extraction mechanism. ref #638
+   - 0ddec58: improve hitbox of more icon in cards
+   - 7ff646e: alac/etc waveform extraction for android. ref #813
+   - 0b78f25: low res artworks not scaling up. ref #524
+   - 24db665: minor fixes - out of memory in rare case while indexing - remove borders in some expansion tiles in settings - ensure portrait is reapplied after exiting fullscreen - create backup button not being active the first time - generating random tracks for queue when set to unlimited count. ref #818
+   - cadaad1: yt comment notifications not showing thumbnails
+   - 0df8a9d: showing "require membership" for front channel page
+   - e330494: wrong download folder for initial indexer folders
+   - 2135ed2: small fixes
+   - 02dc856: black/transparent player bg on first startup - caused by creating animation twice
+   - 0ee798a: tag extraction failing for opus/etc when indexing large library. ref #455 https//github.com/namidaco/namida-snapshots/issues/42
+   - 9d2eacb: tag extraction for files containing giant base64 artworks
+   - 35cc1ff: incorrent progress number for advanced reindexing
+   - f8f778b: prefer high res artist image when choosing custom network image
+   - 7de1eda: folder fallback cover not showing
+   - a5971e3: not playing live stream that has ended
+   - d6fd9bb: fixes for video player ui - disable left magnet when dragging to seek on video - reduce left magnet for desktop - volume/brightness sliders not properly triggering sometimes - swap volume/brightness bars for easier visibility. ref #856
+   - 38126a2: 0b file after tag editing failure in rare cases
+   - f9c6c5a: gapless issues. ref #789 #884
+   - 63a4bac: m3u path resolving closes https//github.com/namidaco/namida-snapshots/issues/51
+   - 0d0df04: ultimate fixes - add album sort, etc to tracks sort options - tapping track tile again would't resume - lyrics view fixes and add gradient - min size for side info in widescreen - format folder path - offline yt search skipping requested text after preparing - preferred search tab conflicting with "search youtube" action - linux mpris - workflow fixes - build date offset in android - others
+   - 547d87a: long images being cropped closes https//github.com/namidaco/namida-snapshots/issues/54
+   - 4d0eeb4: ui fix
+   - 05165a5: last played position not restoring sometimes
+   - dc3ee52: changing album color palette not applying
+   - ec8dabe: improve artwork display quality - and unify track and album card size in homepage
+   - 67d7b7e: "update directory path" when transferring across platforms
+   - 3ebb41e: m3u files not detected in some cases - if folder has `.nomedia` - if had duplicate names closes https//github.com/namidaco/namida-snapshots/issues/60
+   - b9f4ff2: queues clear icon not working in queues page closes https//github.com/namidaco/namida-snapshots/issues/63
+   - 3c3b755: core fixes and improvements
+   - e8f3612: some previously live videos not playing
+   - f0ee031: player minimizing while holding scrollbar. closes #934
+   - fd06fa2: various fixes - some video files set logic - prevent setting yt link for network and video files - show "âœ“" instead of "x" when playing network video files
+   - 28f9ef8: minor fix
+   - d1f8b72: replay gain not applying sometimes
+   - 080c22c: android home widget breaking with very large artworks closes https//github.com/namidaco/namida-snapshots/issues/68
+
 ## 01/01/2026
 # v5.6.1
 
 ### 🎉 New Features:
    - 1105757: option to change app icon
-   - 018a6a0: word synced lyrics view ref #551
-   - c3befe4: sponsorblock ref #2
+   - 018a6a0: word synced lyrics view. ref #551
+   - c3befe4: sponsorblock. ref #2
    - 749c2ba: return youtube dislike
    - c80463c: gapless playback (experimental)
-   - 6742ba5: artwork gestures (tap & long press) - much related code refactor ref #81, #764
-   - adc8669: search tracks in playlists/albums/artists/genres ref #639 #705
-   - 4a4eb66: reorderable playlists ref #654
-   - 4c4a96c: range selection for local library ref #730
-   - e351efd: option to show lrc view in yt player ref #662
+   - 6742ba5: artwork gestures (tap & long press) - much related code refactor. ref #81, #764
+   - adc8669: search tracks in playlists/albums/artists/genres. ref #639 #705
+   - 4a4eb66: reorderable playlists. ref #654
+   - 4c4a96c: range selection for local library. ref #730
+   - e351efd: option to show lrc view in yt player. ref #662
    - d64a832: new sort option for yt local search (sort by first listen)
    - 3a18eb6: new mix (recommended), contains crafted tracks based on various parameters
    - 1b3c1e7: add "underrated" mix in home page
    - 320f40f: allow matching local videos by having the track yt id in the video filename
    - 22535f1: option to display actual position instead of difference while seeking
    - f15fd3a: add more app icons and optimize apk size
-   - a31df49: add "432Hz" button while setting pitch ref #717
-   - 392fed7: option to link speed with pitch ref #755
+   - a31df49: add "432Hz" button while setting pitch. ref #717
+   - 392fed7: option to link speed with pitch. ref #755
    - 31d84df: option to enable unique artworks hash (to fix duplicated artworks)
-   - 4bb968f: separate options for thumbnail animation intensity while lyrics are active and while miniplayer is minimized ref #69 #81
-   - dd80114: segments for yt videos ref #75 #535
-   - 23244e6: heatmap for yt videos ref #227
+   - 4bb968f: separate options for thumbnail animation intensity while lyrics are active and while miniplayer is minimized. ref #69 #81
+   - dd80114: segments for yt videos. ref #75 #535
+   - 23244e6: heatmap for yt videos. ref #227
    - 5e774e4: floating artwork effect (flag in extra settings)
    - 848e348: wave haptic feedback (flag in extra settings)
-   - 86e1517: yt  channels subscriptions page when signed in ref #227
-   - 793865c: simple lyrics editing ref #222
-   - 5eff12a: add filter to search tracks by lyrics ref #510
+   - 86e1517: yt  channels subscriptions page when signed in. ref #227
+   - 793865c: simple lyrics editing. ref #222
+   - 5eff12a: add filter to search tracks by lyrics. ref #510
 
 ### 🛠️ Bug fixes & Improvements:
 
@@ -39,30 +197,30 @@
    - d5b0096: improve track filename matching suggestions (when updating track path/etc)
    - 2fd0945: improve range selection for local library
    - ab4e4d5: api to change internal player (option hidden for now)
-   - c859dcd: more support for flac, ogg and other formats og https//github.com/ryanheise/just_audio/commit/ab240a48ae91618800d309a809f8342763513b90 & https//github.com/ryanheise/just_audio/commit/32ede74db921b43e15d3b06b8b38cff9e2b5e4aa ref #346 #555 #687 #698 #732 #715 #736
-   - 9838d78: target android 13, fixes notification & update permissions requests - in app file browser now displays permission warning - request post notification permission when importing history or downloading ref #496 #769
+   - c859dcd: more support for flac, ogg and other formats og https//github.com/ryanheise/just_audio/commit/ab240a48ae91618800d309a809f8342763513b90 & https//github.com/ryanheise/just_audio/commit/32ede74db921b43e15d3b06b8b38cff9e2b5e4aa. ref #346 #555 #687 #698 #732 #715 #736
+   - 9838d78: target android 13, fixes notification & update permissions requests - in app file browser now displays permission warning - request post notification permission when importing history or downloading. ref #496 #769
    - af0cc61: target sdk 36 & fix notification actions not showing for some devices
 
 - chore:
    - 9147bd5: gradient tiles and cards
    - 62647da: use filled favourite icon
    - b9566c7: confirm before unfavouriting track/video/queue
-   - 08b11fa: improvements for set lyrics dialog ref #662 #801
+   - 08b11fa: improvements for set lyrics dialog. ref #662 #801
    - 656c27f: show swipe action behind track tiles and video cards
    - 2335cde: display cover.jpg etc as folder thumbnail in folders page
-   - 0576b71: separate albums & singles in artist page ref #345
-   - 72dc623: improve scrollbar and add flag to enable tap scrolling ref #776
+   - 0576b71: separate albums & singles in artist page. ref #345
+   - 72dc623: improve scrollbar and add flag to enable tap scrolling. ref #776
    - 4576905: improve playlists ux - while adding tracks to playlist, show playlists having the tracks at first - disable sorting while adding to playlist - add border to easily spot playlists having the tracks - add "create" button for yt playlists view
    - f9da710: improve popup menu visuals across app
    - 87df1f7: show data saver button in qualities menu (for local & yt player)
    - 29181a8: more actions for yt queue - add tracks button (for minimized queue) - configure button (for expanded queue)
    - 2f80c67: show "favourites" tile in drawer instead of "search"
-   - a28d61e: local miniplayer progress bar can now be seeked directly ref #618
+   - a28d61e: local miniplayer progress bar can now be seeked directly. ref #618
    - 72ae112: tapping artist/album image will open in fullscreen (long press to save)
    - 8000914: improve fullscreen artwork viewer
    - 7b3b939: refresh media store after downloading/deleting a track
    - e956d8e: open grid options on single tap if auto grid is on
-   - c7ad1d1: remove 1000 tracks limit when playing from tracks page bye bye performance ref #765
+   - c7ad1d1: remove 1000 tracks limit when playing from tracks page bye bye performance. ref #765
    - 8c7f256: import yt history now supports selecting single zip file
    - 0b5ccf8: put "check for more" and "search" for fullscreen player quality menu as well - previously they were only for local player bottom left menu
    - c7e45d2: show release date in total listens dialog
@@ -76,14 +234,14 @@
    - d053610: redesign download options to make filename output option more obvious
    - ae12582: display stop button in notification option
    - 1c8200e: hide delete button in empty favourites playlist
-   - 031e658: don't seek if seek option is set to 0 ref #585
+   - 031e658: don't seek if seek option is set to 0. ref #585
    - ea4b1c6: underrated mix now uses latest listen as a factor
-   - 20e5694: improve year tag extraction ref #767
+   - 20e5694: improve year tag extraction. ref #767
    - a88c8b5: settings card now has cute lil ⤷
    - 6e90d08: more settings for yt queue configure button
    - a165259: show sponsorblock skip button for local player (while playing yt content)
    - 1c275ab: minor tweaks - tapping comment author pfp opens their channel - increase default value for sponsorblock hide button to 4 seconds - faster sheet blur animation - minor fix
-   - 561c18b: improve settings search for displaying unavailable settings ref #778
+   - 561c18b: improve settings search for displaying unavailable settings. ref #778
    - 0803937: yt flag to enable gif thumbnails
    - f394abb: use xml for android drawable icons
    - 7ae4748: ryd now sends votes as well
@@ -92,19 +250,19 @@
    - 71cd297: refresh button in yt player also refreshes sponsorblock segments
    - a11c007: video segments are now displayed in description as well
    - 4a5dcdf: yt flag to disable video segments in seekbar
-   - 204c63c: yt flag to prefer opus format ref #490
+   - 204c63c: yt flag to prefer opus format. ref #490
    - 1a1ba4e: yt flag to limit video page cache duration (to auto refresh view count/likes/etc)
-   - a549b54: final adjustments ref #535 #784
+   - a549b54: final adjustments. ref #535 #784
    - 0ec9ea4, 7677fc4, c4ce0a7, 74f37bc, 129d863, 1af725a, f61c365, 5b257f0, f98ef17, 2688ed6, 273ee71, 99b07dd, afde223: many tweaks
 
 - fix:
-   - ad78442: stuck on splash screen for some devices (especially after reboot) ref #534 #619 #756
-   - 567ec43: indexing stuck sometimes ref #657 #723
+   - ad78442: stuck on splash screen for some devices (especially after reboot). ref #534 #619 #756
+   - 567ec43: indexing stuck sometimes. ref #657 #723
    - baaf304: m3u playlist paths resolving
    - 3e20e22: playing wrong queue while in widescreen
    - 6f03ffa: missing playlist info when downloading from yt local playlist
-   - 2dcd00f: lyrics offset displaying wrong centiseconds ref #694
-   - 8a4e2f2: dont create root `Namida` folder until actually really needed ref #713
+   - 2dcd00f: lyrics offset displaying wrong centiseconds. ref #694
+   - 8a4e2f2: dont create root `Namida` folder until actually really needed. ref #713
    - 3585d5a: ocasional crash while playing alac files
    - cedc2c4: yt favourites playlist not refreshing
    - b57a8e4: empty page after closing first run configuration page
@@ -125,21 +283,21 @@
    - af8188a: main floating action button not refreshing sometimes
    - 3593d77: null protection for `_getPossibleVideosPathsFromAudioFile` when empty artists/genres
    - fa10265: adding random tracks to queue could be the same each time in some cases
-   - 4a45c55: add scrollbar to local queue ref #765
+   - 4a45c55: add scrollbar to local queue. ref #765
    - 209f80e: improve history imports - duplicated listens - option to remove duplicates while removing source - improve performance - prevent possible memory leak on windows - file progress shows actual file count instead of percentage
-   - 7c20e87: channel about links sometimes broken ref #768
+   - 7c20e87: channel about links sometimes broken. ref #768
    - 983efa5: sheet blur
    - 508a22b: like button always animating
    - ff70be5: alignment and artifacts for word synced lyrics
    - 0bb10a5: pixelated artwork when miniplayer is minimized - and minor padding fix
-   - 76d6cff: year tag extraction caused by 20e5694 ref #767
+   - 76d6cff: year tag extraction caused by 20e5694. ref #767
    - 58d9290: album/artist info in home page not refreshing after start
    - e6427a0: waveform extraction for windows not falling back - and improve performance
-   - 80224d2: pages not having bottom padding in rare cases ref #777
+   - 80224d2: pages not having bottom padding in rare cases. ref #777
    - 9250427: local tracks without yt id showing all available videos
    - c421d7c: some fixes for playlists sort and tracks filtering not refreshing after certain actions
-   - 5cfab2c: ensure navbar color is updated after resuming app ref #763
-   - 50778a6: editing opus tags not working ref #695
+   - 5cfab2c: ensure navbar color is updated after resuming app. ref #763
+   - 50778a6: editing opus tags not working. ref #695
    - ed2bd4b: lyrics view fixes
    - 0d6a729, da384f2, 42f210c, c57cc2b, 3eb059e, 2cc6acd: many fixes and improvements
 
@@ -158,18 +316,18 @@
 # v5.3.9
 
 ### 🎉 New Features:
-   - 63140e8: fetch album/artist images from network + option to decide source + ability to set custom image manually + ability to choose network image ref #5
+   - 63140e8: fetch album/artist images from network + option to decide source + ability to set custom image manually + ability to choose network image. ref #5
    - 48cc658: option to show/hide albums and singles in albums page
-   - 0d02ab3: option to ignore common prefixes like (A/An/The/etc) while sorting, for customizable media types (title/artist/album/folder/etc) ref #603
+   - 0d02ab3: option to ignore common prefixes like (A/An/The/etc) while sorting, for customizable media types (title/artist/album/folder/etc). ref #603
    - 42a611f: 2 new add track options (similar dicover date & similar time range)
    - dfe2478: display "liked music" playlist in user yt hosted playlists section
-   - e3cfd1a: option to add tracks at the beginning for playlists ref #628
-   - c5f3ade: option to disable "stretch lyrics duration" (stretching allows normal lyrics to fit perfectly on spedup/slowed/nightcore versions) ref #675
+   - e3cfd1a: option to add tracks at the beginning for playlists. ref #628
+   - c5f3ade: option to disable "stretch lyrics duration" (stretching allows normal lyrics to fit perfectly on spedup/slowed/nightcore versions). ref #675
 
 ### 🛠️ Bug fixes & Improvements:
 
 - core:
-   - 6079b36: integrate with `namida_sync` (https//github.com/010101-sans/namida_sync) thanks @010101-sans ref #621
+   - 6079b36: integrate with `namida_sync` (https//github.com/010101-sans/namida_sync) thanks @010101-sans. ref #621
    - 92d966e: improve downloading especially for unavailable videos - when downloading an unavailable video -> use cached versions if available, write info file to download location, set cache priority to `VIP` & show descriptive error message - fix/reduce lag when adding downloaded track to local library - fix ocasional tripled download tasks - improve info obtaining by merging all possible infos available
 
 - perf:
@@ -190,12 +348,12 @@
    - 4f2f9ee: display proper empty list messages in home page
    - 9818ac9: add button in auto backup error snack, to request needed permission
    - 7855d05: always display album artist in album card, regardless of sort mode
-   - 0f543c7: display total duration in playlist page ref #682
+   - 0f543c7: display total duration in playlist page. ref #682
    - fb6807a: avoid ui jumps for album staggered view
-   - bf403f5: remember sort mode in file browser ref #684
+   - bf403f5: remember sort mode in file browser. ref #684
    - e862ace: improve m3u line path extraction
    - 525659b: improve file extensions support
-   - 7087f6f: improve wheel slider ref #642
+   - 7087f6f: improve wheel slider. ref #642
    - e9ca9a5: improve how sleep timer is started
    - 50642b9: add error logging in more places
    - 35fef07: few fixes n tweaks
@@ -235,17 +393,17 @@
    - 77f0429: a button to select cached files that has a copy in local library - while choosing cached audios/videos to delete
    - 87de5e6: auto count per row based on screen size for grid layouts
    - 4385f6f: glow/ambient behind video option in fullscreen
-   - 62cc47e: support EXTALBUMARTURL in m3u playlists ref #536
+   - 62cc47e: support EXTALBUMARTURL in m3u playlists. ref #536
    - aa3dfd3: vibration modes (none, vibration, haptic feedback)
 
 ### 🛠️ Bug fixes & Improvements:
 
 - fix:
    - 96c1652: empty queue view in miniplayer
-   - abf1f6a: media session be tweaking since v4.9.8 ref #351, #531
+   - abf1f6a: media session be tweaking since v4.9.8. ref #351, #531
    - 7146f15: not removing duplicates when playing yt history day
    - ea711a3: slight fade when restructuring queue (playing same item in another queue)
-   - 860afe8: shorts not being hidden properly ref #548
+   - 860afe8: shorts not being hidden properly. ref #548
    - acddf58: settings search not hiding after pressing a library tab
    - 5ca7bbb: ensure thumbnail file has no illegal characters
    - a59aab5: bottom search icon causing search menu and search bar not syncing
@@ -255,7 +413,7 @@
    - ad0204c: player sometimes not stopping while switching yt/local queues
    - 764c6a3: sorting in file browser now ignores letter case
    - 1cb2974: downloaded audio+video containing audio only
-   - 238cf59: cool fixes ref #604
+   - 238cf59: cool fixes. ref #604
    - 46b9f45: smol fixes
    - 97f7cfb: smol fixes
 
@@ -296,7 +454,7 @@
    - bd531a5: album card design tweak (smaller font size & transparent button based on size)
    - 129a4ba: ui updates & optimize blur performance
    - 0444ed0: play live videos
-   - 127bf19: dont limit speed in volume control page ref #605
+   - 127bf19: dont limit speed in volume control page. ref #605
    - 4b41293: display title/artist in lyrics fullscreen page
    - f89c4b5: allow editing multiple color palettes at once
    - faaadaf: detect takeouts inside zip files when importing history
@@ -311,14 +469,14 @@
    - 788c07f: improve stuff in fullscreen video (adjust image size/safe area/consistent padding/hide system volume/etc)
    - 84fb7bf: improve miniplayer items dimensions
    - 0d8d116: improve lrc view logic and boost its blur performance
-   - 7721d19: improve account login ref #504, #559
+   - 7721d19: improve account login. ref #504, #559
    - 7ffd3ef: improve channel info resolving
    - 86384a6: improve yt link and id matching - now catches any smell yt related woof woof
    - 80b14fd: some ui updates/fixes
    - 38edc19: ui fixes/updates
    - 7fc6a4a: more adjusments & fixes
    - be1323e: small ui fixes
-   - d35bb93: small tweaks ref #512
+   - d35bb93: small tweaks. ref #512
    - 13e30b4: minor tweaks
    - 801e846: some fixes and tweaks
    - d05b37e: minor fixes/changes 
@@ -350,12 +508,12 @@
 
 ### 🎉 New Features:
    - c92a8a3: headset buttons (single/double/triple)
-   - 667e15a: notifications for windows with option to control download notifications ref #14
+   - 667e15a: notifications for windows with option to control download notifications. ref #14
    - f1cbec6: show/hide keybaord when dragging upwards/downwards on search floating action button
    - ddd53e9: setting dim duration to 0 will keep miniplayer always dimmed
-   - bb2b07a: system level brightness in fullscreen video player ref #155
+   - bb2b07a: system level brightness in fullscreen video player. ref #155
    - cd432d1: simple data saver mode (wifi & mobile) - with icons to indicate why a video was not fetched (blocked by cache/no connection/data saver)
-   - 934e438: basic home screen widget & quick settings tile ref #168, #243, #438, #468
+   - 934e438: basic home screen widget & quick settings tile. ref #168, #243, #438, #468
    - 515f71d: gentle play, adds item next and play instead of assigning new queue - currently applied for yt section videos, mostly when pressing single video like in search/home/etc
    - 0fdf533: display years in history page that navigate to the same day in that year
 
@@ -368,11 +526,11 @@
    - d53f42a: dont copy info if not available (?)
    - 384b582: attempt fix filename of specific thumbnail types
    - 2b7240b: copied to clipboard design tweak (now uses rounded design with margin like others, instead of squared sticky)
-   - ed933cc: attempt broadcast queue info ref #351, #157
+   - ed933cc: attempt broadcast queue info. ref #351, #157
    - 4794247: update app bar icons animation
    - 47664ce: smol refactor
    - 4b59e74: improve shimmer in yt miniplayer & download sheet
-   - b6e722c: improve search matching ref #465
+   - b6e722c: improve search matching. ref #465
    - 6319418: allow content provider paths in extension filter (while picking files)
    - b131b1c: supress account/membership errors and display in pages instead if possible
    - c99232b: refactor lrc view & scale it bigger to avoid thin border effect again
@@ -386,14 +544,14 @@
    - d07e426: refactor vibration methods
    - 6ef27b8: live format info in edit tags dialog
    - b0c1d0e: few tweaks - rely on "play when ready" instead of "is playing", results in more stability when skipping next/prev - remove refresh button in video widget -refactor snackbar duration & less duration for "added to queue" snackbar - use package to show time difference in about page
-   - 7249a94: apply on swipe actions for yt cards as well - this took shitload of refactor, but improved perf so yey - ref #333
-   - 58c4568: improve tags extraction and fallback ref #480
+   - 7249a94: apply on swipe actions for yt cards as well - this took shitload of refactor, but improved perf so yey -. ref #333
+   - 58c4568: improve tags extraction and fallback. ref #480
    - 84cf942: add "open info" as track tile swipe action
    - 9da9709: change default on swipe actions
    - a4522ca: fully rely on "play when ready" instead of "is playing"
    - 048895e: move android files
    - e59b6a3: assign low res thumbnail to notification until full res is fetched
-   - 3e291e5: ensure yt player doesnt play old media while fetching info of new media ref #234
+   - 3e291e5: ensure yt player doesnt play old media while fetching info of new media. ref #234
    - a90aeee: ensure play when ready is not modified after switching queues
    - cf6d474: ensure resuming after queue is restructured (playing same item in another playlist/etc)
    - 93b47aa: pause and play icons for qs tile
@@ -403,7 +561,7 @@
    - 7c3424f: allow monochrome colors
    - 5d786d2: improve theme colors
    - 497413b: limit home widget code to android & ios
-   - be09f3e: remove lyrics fullscreen button & add a note on how to enter fullscreen ref #499
+   - be09f3e: remove lyrics fullscreen button & add a note on how to enter fullscreen. ref #499
    - 38cc211: add note to indexer folders while media store is enabled
    - a0ec475: auto skip item only if "play when ready" is enabled
    - ea972d4: ignore wakelock errors
@@ -425,10 +583,10 @@
    - a80bfb4: error message when stopping downloads
    - 3494baf: keyboard focus/unfocus when swiping up/down search fab
    - fe20b79: double pressing app bar icons
-   - ac56f8d: allow returning faulty info when extracting instead of dismissing all of it ref #469
-   - 5d737d8: audio/video thumbnails not extracting/showing properly ref #461 #474
+   - ac56f8d: allow returning faulty info when extracting instead of dismissing all of it. ref #469
+   - 5d737d8: audio/video thumbnails not extracting/showing properly. ref #461 #474
    - 73ca3eb: blocked play/pause touches when buffering in video player screen
-   - 14bfc7e: non-persistent scroll offset for comments page ref #491
+   - 14bfc7e: non-persistent scroll offset for comments page. ref #491
    - a48f1a4: play when ready related stuff
    - eec799f: not showing minus sign in lrc offset dialog
    - 8f9ec31: showing old error when reading tags in edit tags dialog
@@ -447,7 +605,7 @@
 - core:
    - 78d00cd: upgrade to flutter v3.27.1 & dart v3.6.0
    - 627115a: disable impeller rendering engine
-   - 1dcdf32: lrc positive offset now means lyrics will appear sooner ref #467
+   - 1dcdf32: lrc positive offset now means lyrics will appear sooner. ref #467
    - a6739fd: some changes - better support for remote controlling (android auto/etc) - fix duplicate shorts in home page & related videos - fix displaying artwork for albums with  in name in notification
    - f6861eb: support archiving for windows (for backup & restore)
 
@@ -466,9 +624,9 @@
 # v4.8.6
 
 ### 🎉 New Features:
-   - 719ead3: set artwork for playlists ref #324
+   - 719ead3: set artwork for playlists. ref #324
    - 062378b: sort playlist tracks for local & yt playlists
-   - 3f3ffda: fetch square thumbnail for topic channel videos - when downloading or when fixing thumbnails ref #212
+   - 3f3ffda: fetch square thumbnail for topic channel videos - when downloading or when fixing thumbnails. ref #212
    - db4da91: cache videos priority system - this is mainly for the upcoming missing videos info retrieval, where it make sures cached stuff of deleted/privated videos are not automatically deleted
    - 9e45bee: retrieve and display info & thumbnails of deleted/privated videos
    - a0a0586: allow setting cache priority for videos/tracks with yt id - can also be used to disable track video fetching
@@ -533,7 +691,7 @@
    - 55a197a: long pressing yt artwork wasnt actually saving it
 
 - core:
-   - e24898b: allow unlimited queue using any button except when pressing track tile - and remove duplicates when playing history ref #31, #245, #404
+   - e24898b: allow unlimited queue using any button except when pressing track tile - and remove duplicates when playing history. ref #31, #245, #404
    - 4f69ed3: upgrade to `packageyoutipie` v4.2.0 - fixes playback issues and other stuff
 
 - perf:
@@ -552,12 +710,12 @@
 ### 🎉 New Features:
    - dfaf5f5: local video library & playback this also includes - refactor for track duration to use as milliseconds not seconds - refactor for many indexing functions - rewrite of latest queue & other similar parts logic - use global `lastPlayedIndex` - improvements for home page loading - faster loading for latest queue (by disabling maximumItems check) - fix most played chips not being properly rebuilt - fix default color tiles not enabled/disabled properly - fix downloaded file not being added to library properly
    - 0280611: replay gain (normalize volume)
-   - c0ace94: left & right swipe actions for track tile, ref #333
+   - c0ace94: left & right swipe actions for track tile. ref #333
    - e210ece: use search floating button as submit beside closing search page (switches dynamically)
    - fe96401: option to disable personalized related videos
-   - 7c6607c: show video endcards option, ref #227
-   - 408a4ef: listen count & latest listen date in track tile info, ref #323
-   - ff4632d: channel about page, ref #227
+   - 7c6607c: show video endcards option. ref #227
+   - 408a4ef: listen count & latest listen date in track tile info. ref #323
+   - ff4632d: channel about page. ref #227
    - dec830f: recommended sorting when clearing video/audio cache files - follows a simple algorithm to sort based on both last access time and total listens
    - 8496541: yt downloads filename builder
    - 035a9e0: allow info builders for metadata tags too as well as filenames as earlier - added more parameters
@@ -573,13 +731,13 @@
    - d8f9b9f: folder tiles can display text if `.info.txt` file exists in the folder i made this one for myself >
    - 233da90: importing takeout playlists now supports whole directory with multiple takeouts, duplicated playlists are merged by default - also fix date extraction in playlists csv
    - 640bb62: yt channel tabs
-   - 99eaea8: sort yt playlists, ref #227
-   - 30521bf: add/edit/delete comments & replies, ref #227
+   - 99eaea8: sort yt playlists. ref #227
+   - 30521bf: add/edit/delete comments & replies. ref #227
   
 ### 🛠️ Bug fixes & Improvements:
 - chore:
    - 1a34bbc: final cleanup
-   - c1b3ad7: show original genre for track tile, ref #316
+   - c1b3ad7: show original genre for track tile. ref #316
    - 85293ff: dont refetch pages after signing out
    - 580a36a: long press yt copy button to copy url with timestamp normal tap will copy url only
    - a2f2007: use monet icon for fallback notification & sidebar
@@ -599,11 +757,11 @@
    - 591581d: refactor views & subscribers to extensions
    - 3bf7c23: refactor settings related stuff to improve performance, now things that change frequently automatically are saved to separate file - fix 'dont show again' for battery optimization request - increase default video max cache to 8gb & audio to 4gb
    - 38ee6ac: few fixes
-   - ec97084: allow precise speed/pitch/volume etc, ref #271
+   - ec97084: allow precise speed/pitch/volume etc. ref #271
    - 4a71dd4: display multi language lyrics properly
    - ba5698f: big salsa - improve detection of short videos - recheck cached videos in quality menu after clearing cache - perf improve scrolling yt videos scrolling by not filtering existing files from cache map - fix reset _nextSeekSetVideoCache when needed - impeller disabled by default for now - improve stuff related to after deleting tracks - remove tags/rating/moods from ffmpeg tag editing while downloading - snackbar padding when there is a button - allow refreshing patreon/coupon & sign out & properly notify about expired token - add star history in readme
    - 0decad9: allow android auto to detect app * not tested
-   - 9ee8f27: improve icons touch area, ref #192
+   - 9ee8f27: improve icons touch area. ref #192
    - 14f1bc1: fixes and cleanup
    - 1389d46: tracks generated by date range are now sorted by listen count in that range
    - 18279e6: allow opening info dialog for non-existing tracks
@@ -676,23 +834,23 @@
    - 2831fe6: include assets
    - 6204670: tapping album in go_to_album section
    - 84f561b: playback decisions with `_playWhenReady`
-   - 6ca25fd: track tile `playCount` & `latestListenDate` not refreshing properly, ref #323
+   - 6ca25fd: track tile `playCount` & `latestListenDate` not refreshing properly. ref #323
    - bfc574e: theme not refreshing after toggling pitch black setting
    - b6ec9a4: playing on next/prev when enabled
    - da6e3b3: keyboard showing after closing popup menus
    - 31b18b0: channel subpage overflow when displayed as fallback of video tab
    - 2040ae1: picking videos when source is specified
-   - 8a756ee: track tile playcount not being refreshed, ref #323
+   - 8a756ee: track tile playcount not being refreshed. ref #323
    - d642e5e: allow opening external links on android 12+ - the universal wildcard is not accepted
    - 2acd505: history empty space when shorts are hidden - `package:youtipie` internal fix of shorts not extracting in some cases
    - 1d38cd0: broken js player code extraction in `package:youtipie`
-   - 361963b: fallback artworks from the same folder they are now also more restricted, only known cover names will be picked instead of fuzzy matching, ref #338
+   - 361963b: fallback artworks from the same folder they are now also more restricted, only known cover names will be picked instead of fuzzy matching. ref #338
    - 5263714: smol bugs
    - 889e9ff: displaying total duration on cards
    - 4cbc579: picking files with specific extensions using native file picker
    - e757eaf: description tag extraction fallback
    - b148aa6: not using dark color when auto coloring is off
-   - 156742a: parsing relative paths in m3u playlist, ref #342
+   - 156742a: parsing relative paths in m3u playlist. ref #342
    - b4f6e86: pasting video id in yt offline search now brings the video
    - 365e68d: bottom padding in yt downloads page
    - ac434e6: albums in artist page are now sorted like the albums page
@@ -722,7 +880,7 @@
    - 23d742d: channels suggestion in a channel homepage not showing
    - 8b29e7a: deleting history day/multiple tracks in a day
    - 0508392: attempt fix for thumbnail downloading partial data and saving if connection lost
-   - 0089b43: yt sign in, ref #321
+   - 0089b43: yt sign in. ref #321
    - bc0074a: silly mistakes >.<
    - 13a9f5c: duplicate playlists dialog showing on startup when m3u playlists are being added
 
@@ -730,10 +888,10 @@
    - e155c4c: prefer using hardware decoders for efficient power usage this is a tweak for ffmpeg rendering introduced since v3.7.0
    - d597b02: rewrite yt playback behavior
    - 0222ad4: improve tags extraction, ref $294
-   - f7cc288: properly extract & use embedded rating/moods along with app-specific rating/moods and allow editing - editing app-related stats now edits the tags too. and vice versa, ref #294
+   - f7cc288: properly extract & use embedded rating/moods along with app-specific rating/moods and allow editing - editing app-related stats now edits the tags too. and vice versa. ref #294
    - 55594fa: save video thumbnails to their folder
    - 1ec99ac: change how yt videos are matched from filename now only requires `v=video_id` or `id=video_id` in order to get matched
-   - a0fc75e: various fixes & tweaks, ref #342, #343
+   - a0fc75e: various fixes & tweaks. ref #342, #343
    - 25a229f: add `animatedTheme` setting, editable by performance mode - with other smol perf boost
    - 5dcd5cf: allow mixed player queue * this does NOT address - unified ui tile for both local and yt item - mixed selections - mixed playlists - mixed history - mixed cross-session saved queues
    - 240d00a: refactor search related stuff - running search is managed by a single `int` - slight improve search page checks
@@ -784,7 +942,7 @@
 
 - build:
    - bc03ee3: upgrade to flutter v3.24.0
-   - d592e7a: depend on package `lrc` fork, ref #294
+   - d592e7a: depend on package `lrc` fork. ref #294
    - 1a088c5: add windows directory
    - 49e98d6: bump version (v4.7.2)
 
@@ -798,34 +956,34 @@
    - 8c450fd: custom dialog on pressing performance mode which also allows changing artwork cache multiplier
    - 31af954: lyrics for youtube (only when youtube-style miniplayer disabled)
    - a5badc2: sort folders ending with numbers manually this allows folders like `Music 2` and `Music 12` to be sorted properly based on number not text
-   - 0647e83: long press favourites button to add to playlist in miniplayer, ref #223
+   - 0647e83: long press favourites button to add to playlist in miniplayer. ref #223
    - dda4ca6: "go to channel" icon in track dialog when track has youtube id and channel id
    - 995eba0: add "mark_video_watched" as a flag in youtube settings
    - eb651ef: expose innertube client as a flag in yt settings
    - d1cdc2e: flag to enable white bg for videos
    - 6812f61: flag to disable dim in light mode
    - 4a1027a: support play alac/ac3/eac3/dca and other formats ffmpeg is now used to play (vorbis opus flac alac pcm_mulaw pcm_alaw mp3 aac ac3 eac3 dca mlp truehd)
-   - 4006adb: allow importing m3u playlist as normal playlists - and expose auto importing of m3u playlists - this involves redesign of playlists page header closes #217
-   - 9f521e9: delete tracks permanently from track advanced dialog, ref #66
+   - 4006adb: allow importing m3u playlist as normal playlists - and expose auto importing of m3u playlists - this involves redesign of playlists page header. closes #217
+   - 9f521e9: delete tracks permanently from track advanced dialog. ref #66
    - 51f4f6a: always expanded searchbar option
    - 268ec9b: auto start radio when enabled, adds a mix playlist automatically when playing a single track
    - dfb5dc5: add mix playlist button in add_videos dialog in yt queue. this introduced new InsertionSortingType.none
 - feat(yt):
    - e82f32a: comments sort (top, newest) this required redesign for comments header, which required Widget implementation for PullToRefresh
    - 938af52: description and comments native style
-   - 098a604: youtube login support comes with subscription and fixed feed, ref #227
-   - c3adcd1: user notifications, ref #227
+   - 098a604: youtube login support comes with subscription and fixed feed. ref #227
+   - c3adcd1: user notifications. ref #227
    - 02c9d8a: display red line under video thumbnails with user watch percentage
-   - f462bce: list user playlists, ref #227
-   - 3391ac2: comments like/dislike, ref #227
-   - 5fd9a90: comment replies, ref #227
+   - f462bce: list user playlists. ref #227
+   - 3391ac2: comments like/dislike. ref #227
+   - 5fd9a90: comment replies. ref #227
    - c3b6742: video like/dislike - this forced yt local favourite button to be moved to video menu as "favourites" button & favourites playlist tile inside add-to-playlists bottom sheet - also "Liked" Playlist name is reverted to "Favourites"
-   - 34a10fe: channel subscribe & notifications this comes with across-pages safety, hitting the button in a place temoprarely disables other active buttons so damn cool oh ye and a sneaky lil fix, ref #227
-   - 0addb27: list user history (horizontal list in playlists page & dedicated vertical page) this includes improvements for lazy list & changes for main fetcher page, ref #227
+   - 34a10fe: channel subscribe & notifications this comes with across-pages safety, hitting the button in a place temoprarely disables other active buttons so damn cool oh ye and a sneaky lil fix. ref #227
+   - 0addb27: list user history (horizontal list in playlists page & dedicated vertical page) this includes improvements for lazy list & changes for main fetcher page. ref #227
    - 2d12b32: mark video as watched works flawlessly with connection issues & accounts switching
    - dfeb7d4: control showing of shorts and mixes in relative places
    - f8c09f6: add/remove in youtube playlists - supports bulk videos too hehe - a promt while adding bulk (add all & remove old ones, add everything) - create playlist while adding - getPlaylistsForVideo allowed without membership
-   - f017377: show channel watermark in fullscreen (optional), ref #227
+   - f017377: show channel watermark in fullscreen (optional). ref #227
    - 51a818d: allow saving yt playlists to online library
    - a632fd4: edit yt playlists comes with rework of many yt playlist-related parts
 
@@ -916,10 +1074,10 @@
    - e4abf82: few fixes/tweaks
    - a937419: improve ffmpeg info parsing
    - 895fc4c: shortcut detect non-existing tracks when playing and some playback fixes
-   - cc66282: migrate to youtipie, ref #227
+   - cc66282: migrate to youtipie. ref #227
    - 7d1c8bd: disable clean logs
    - e486433: hot sauce - notification artist fall back to channel name or 'unknown artist' - remembered to load yt settings lmoa - improved perf of translatePlaylistName() - hide app bar stuff in acc & membership subpages - app bar reorder icon for playlist not refreshing due to ghosts - finally properly refresh yt download reactive maps when needed - juust lil top padding for yt top comments card - feed will no longer automatically refresh. and refresh icon is shown after n seconds passed without refreshing - notification read status update properly on refresh - comment likes count increase if liked - channel subpage stuff not refreshing - hide shorts from horizontal youtube (cuz they are not really ordered and they look ugly)
-   - 0d15636: no more slow video loading done by upgrading youtipie decipher & including throttling parameter & using same implementation of audio caching for the video this means excess video cache cleanup is managed manually now, ref #252
+   - 0d15636: no more slow video loading done by upgrading youtipie decipher & including throttling parameter & using same implementation of audio caching for the video this means excess video cache cleanup is managed manually now. ref #252
    - 402d358: refine track dialog, ref 262
    - 44b767e: manage queue reoder/remove lock mechanism internally & optimize reordering & shuffling all queue by using List.move() instead of removeAt() & insert() & shuffle ranged instead of removing current item, shuffle, put current item
 
@@ -943,15 +1101,15 @@
    - a58231b: show loading circle while searching local tracks
    - 931c82d: play next/after/last when opening external yt link
    - 8426584: dynamic lyrics view, hides lyrics temprarily for empty lines
-   - bb1dc7d: long press lyrics to enter fullscreen, ref #171
+   - bb1dc7d: long press lyrics to enter fullscreen. ref #171
    - c838173: allow adding not found tracks as dummy tracks after importing lastfm/yt history
 
 ### 🛠️ Bug fixes & Improvements:
 - chore:
-   - db055a4: various fixes, tweaks & ui changes, ref #158 #176 #134 #132
+   - db055a4: various fixes, tweaks & ui changes. ref #158 #176 #134 #132
    - 9a22c6f: home screen pull to refresh
-   - 409d464: dynamic folders tile height, ref #152
-   - 2010c46: allow plain text lyrics to open in fullscreen, ref #175
+   - 409d464: dynamic folders tile height. ref #152
+   - 2010c46: allow plain text lyrics to open in fullscreen. ref #175
    - d7afa9a: separate lrc font size for miniplayer & fullscreen
    - c71ac05: various tweaks + close keyboard on long pressing (selecting) track tile (useful in search) + fix multi tags dialog keyboard padding + ui size-animating particles based on sound peaks + code miniplayer AnimtedTheme() -> Theme() + ui display `x` beside speed in video screen + ui fix empty lrc screen when lrc enabled but not available
    - 7b811ed: buttons for sound control sliders (pitch/speed/volume)
@@ -960,11 +1118,11 @@
    - 116a093: ui improvements & fixes + empty tile while removing current track from queue and next is the same track + app bar redundant rebuilds + yt miniplayer sometimes stuck
    - 32a5c3a: improvements for yt offline search ui
    - ae6c2c3: stop saving history thumbnails to cache
-   - bb27bf3: lyrics search improvements, ref #174
+   - bb27bf3: lyrics search improvements. ref #174
    - bf11761: various ui improvements + slightly bigger go_to_artist buttons + buffer color for yt seek bar + keyboard show/hide loop when yt miniplayer is active & trying to edit text field + other smol fixes
    - 502bda8: ui tweaks + pull to refresh + buffer bar color + smol refactor
-   - 9eecbcb: few various fixes, ref #184
-   - d3de40b: increase touch area of prev/next button, ref #81
+   - 9eecbcb: few various fixes. ref #184
+   - d3de40b: increase touch area of prev/next button. ref #81
    - 6861861: add indexing percentage in app bar
    - 3070cbc: yt download minor improvements
    - cadde11: general ui tweaks
@@ -988,20 +1146,20 @@
    - 67f11e5: revert 1fbea99 & use clients was too unstable and same client couldnt be used again
    - 22f2e7e: improvements for playback execution limit
    - 1f63d95: playback improvements for crossfade
-   - a8932c0: folders logic rewrite + deep directories extraction is now dropped, more convenient + pressing folder menu will show dialog with direct tracks only + long pressing folder tile or menu will show dialog with recursive tracks, ref #151
+   - a8932c0: folders logic rewrite + deep directories extraction is now dropped, more convenient + pressing folder menu will show dialog with direct tracks only + long pressing folder tile or menu will show dialog with recursive tracks. ref #151
 
 - fix:
    - 56b1471: selecting duplicated tracks in playlists, history, queues, etc
-   - 4af9640: unknown font glyph boxes by setting global and per-style fallback closes #183
+   - 4af9640: unknown font glyph boxes by setting global and per-style fallback. closes #183
    - 196cd59: duplicated tracks after advanced reindex
    - ff64248: displaying track added date as 1970
    - b51c302: mismatch between search menu & search bar after going to a page while search bar is opened
-   - 47c2351: lyrics decoding for non-latin chars, ref #188
+   - 47c2351: lyrics decoding for non-latin chars. ref #188
    - 060ccef: lyrics view silliness
    - f59f23f: lyrics empty screen in some cases due to plain text recognized as synced
    - ca68161: resorting media tracks after history is prepared
-   - 0b00181: fallback for faulty sd card path, ref #199
-   - 87c59b0: queue related activity, ref #163
+   - 0b00181: fallback for faulty sd card path. ref #199
+   - 87c59b0: queue related activity. ref #163
 
 - perf:
    - 2fcfd1e: run auto-fetching-video download in isolate the video fetched for local tracks
@@ -1019,20 +1177,20 @@
 ### 🎉 New Features:
    - 752c3b4: clear audio cache in advanced settings
    - a3b2b58: allow deleting temp cache files
-   - 044f010: pinch in/out to scale lrc font size, ref #128
+   - 044f010: pinch in/out to scale lrc font size. ref #128
    - a669ad4: use local track as a fallback youtube audio cache
    - 966818d: parse yt comments duration text
-   - 15ec081: play youtube videos in local miniplayer option, closes #19
+   - 15ec081: play youtube videos in local miniplayer option,. closes #19
    - 81929ab: toggle artwork on lockscreen
-   - d8d2a0f: broadcast session id for equalizer apps, closes #60
+   - d8d2a0f: broadcast session id for equalizer apps,. closes #60
    - 4c4104e: queues cleaner
-   - 00bd918: missing tracks page, closes #117
+   - 00bd918: missing tracks page,. closes #117
    - 7555298: new yt miniplayer gesture, drag down from right side to enter fullscreen
    - 39ec392: new in-app file picker with external picker logic rewrite
-   - 92ba4cd: diacritic support, improves search by normalizing accent characters, closes #73
+   - 92ba4cd: diacritic support, improves search by normalizing accent characters,. closes #73
    - 9964839: lyrics source
    - 0efb32e: custom speeds
-   - 9b8d27f: album artists & composers, closes #21
+   - 9b8d27f: album artists & composers,. closes #21
 
 ### 🛠️ Bug fixes & Improvements:
 - core:
@@ -1054,9 +1212,9 @@
    - 7a8135a: pull to refresh in tracks page when no many tracks (no scroll notification)
    - ef9fdc6: show video grey bar in fullscreen
    - 250fb05: short loudness when preset is enabled
-   - bae60f8: white dialog when no track artists, closes #126
-   - 15de106: lrc controls overlapping in fullscreen, closes #128
-   - a81763d: prevent editing tags again while editing, this prevents corrupted audio file if user pressed save multiple times, closes #129
+   - bae60f8: white dialog when no track artists,. closes #126
+   - 15de106: lrc controls overlapping in fullscreen,. closes #128
+   - a81763d: prevent editing tags again while editing, this prevents corrupted audio file if user pressed save multiple times,. closes #129
    - 168d653: search matching for non-lowercase artists & genres
    - 9a9b25c: tagger stuck in some scenarios & other tagger fixes
    - 060dcb8: yt playlists/channels thumbnail not showing
@@ -1087,10 +1245,10 @@
    - 828ce5f: many performance & ui tweaks
    - 49a1aeb: pressing download item will open menu instead of playing
    - 63515d4: yt miniplayer bottom empty space when app bottom nav bar is disabled
-   - 914e989: delete old auto backups (max 10 files) and fix empty auto backup file, ref #69
+   - 914e989: delete old auto backups (max 10 files) and fix empty auto backup file. ref #69
    - af841de: refactor & tweaks
    - b2c71ee: confirm before removing from yt playlist
-   - 267e1a3: various tweaks & fixes, ref #142
+   - 267e1a3: various tweaks & fixes. ref #142
    - a2dca2e: selectable video description
    - 0a83e58: expandable extracting paths in indexer page
    - 7d898e7: minor tweaks
@@ -1113,16 +1271,16 @@
 - feat:
    - 09e8c11162582814bea765687c981b211fa11f84: Equalizer
    - 2bc89dcca989c47faaec9859788dc9e373e00080: new seekbar with functional ux + tap to seek + always ready to seek (yt miniplayer) + drag up to cancel + more buttons for video (copy url, repeat mode)
-   - 241dcfaf46cb5e6d93eea86be69da30bb94c57a8: auto backups, ref #69
-   - 62263d57d2fd889e494133010490d7495db165fd: fallback to folder cover, closes #122
-   - fab509da9f10dc84f1ff6ac22ad490b964956df6: set music as ringtone, notification or alarm, closes #4
+   - 241dcfaf46cb5e6d93eea86be69da30bb94c57a8: auto backups. ref #69
+   - 62263d57d2fd889e494133010490d7495db165fd: fallback to folder cover,. closes #122
+   - fab509da9f10dc84f1ff6ac22ad490b964956df6: set music as ringtone, notification or alarm,. closes #4
    - 18d4892a0daac72cc1c8adc11ed2355a91e80972: youtube queue generators and some redesign
-   - b67fa6f9834f7869f5eb93da844dba0ccfa2e56f: previous button replays option, closes #112
+   - b67fa6f9834f7869f5eb93da844dba0ccfa2e56f: previous button replays option,. closes #112
    - c3338fab2082577f59c8f459c978bb7779f21c7d: resume playback if was paused for < specific duration + for interruption + for volume 0 pause & fix play button in notification not triggering in A14, fixes #102
    - 715b75b9021bf8db3e0b23836a738e32eb2ac106: copy lyrics to clipboard
-   - 42285da53409082d3293f10cfc189b41a2665a73: refresh library on startup option, ref #111, #119
-   - 5c832b02bde7f9250f3e4c5f7b1c84f37514ff4f: action when adding duplicated tracks to playlist + undo button, closes #120
-   - 19bbf117ced7b4272ee2bee0fcf2c8082eafa5fc: pull to refresh m3u playlists for main playlists page and m3u playlist subpage, ref #125
+   - 42285da53409082d3293f10cfc189b41a2665a73: refresh library on startup option. ref #111, #119
+   - 5c832b02bde7f9250f3e4c5f7b1c84f37514ff4f: action when adding duplicated tracks to playlist + undo button,. closes #120
+   - 19bbf117ced7b4272ee2bee0fcf2c8082eafa5fc: pull to refresh m3u playlists for main playlists page and m3u playlist subpage. ref #125
    - a6e767ebd24908035699537f3c264fdc37bbc4a6: clear audio/video cache for playing yt item
 
 ### 🛠️ Bug fixes & Improvements:
@@ -1142,7 +1300,7 @@
    - 7380108604faa702b7baef6d83d221737d105e22: yt local search ui tweaks
    - 1c2bb1741a10ba6da982844ee2c7e0dad8b2232e: monitor clipboard only when search is active
    - 298082798b07010d1bce192b55f3fef564ca1c1f: semi transparent system nav bars when tapping video in fullscreen
-   - 030f40b802c0df34fc25e5ac8b41759b301183d4: refactor miniplayer bottom row this allows for more icons without overlapping with text, closes #50
+   - 030f40b802c0df34fc25e5ac8b41759b301183d4: refactor miniplayer bottom row this allows for more icons without overlapping with text,. closes #50
    - 1b889efaa17607806156dc76fe70ab48725bbc9b: various tweaks & fixes
    - 20610805419de99cc91cb3a11dfadcdcf7224f55: miniplayer dimensions tweaks
    - 889061c1a910d6555bf4af23f615371304d4e2af: ui thingys
@@ -1162,19 +1320,19 @@
    - 3aa0956efc6e2da44b1ce1dbf685390c687e5705: equalizer toggle tap to update button
 
 - core:
-   - 16aa9f5dee1661e404f74d75ea1c26941bff8818: video library rewrite + video playback is now properly a/v synced (ref #1) + pip mode is now stable
-   - 4c4471eb9a5b62e72d602ddfb2ea14e5d2e9e07d: exclude webm & hidden files, ref #108
+   - 16aa9f5dee1661e404f74d75ea1c26941bff8818: video library rewrite + video playback is now properly a/v synced (. ref #1) + pip mode is now stable
+   - 4c4471eb9a5b62e72d602ddfb2ea14e5d2e9e07d: exclude webm & hidden files. ref #108
    - d7bb2bf2fdfd3a017eea691825e60bf6a0823e8a: wakelock logic rewrite
    - c7ad8832ca3b7232aaaaf6aff0dd66c383753a9e: allow audio only playback from cache when no internet
 
 - fix:
-   - 54aeac5ab8389f0f57bb7c00069ef407f69fc80d: default library tab name in settings, closes #104
-   - 3c12410d677e7452ffb45b3a6d689bba7856998a: auto brightness always dark, closes #105
+   - 54aeac5ab8389f0f57bb7c00069ef407f69fc80d: default library tab name in settings,. closes #104
+   - 3c12410d677e7452ffb45b3a6d689bba7856998a: auto brightness always dark,. closes #105
    - 1889ca850acb77c87accb7f980303ad90ba2e2ab: home screen items not playing
    - 6dc31fb17435fd7c5a9c1ebfd7dd853e82bcf365: tracks page grey screen due to animation controller not being reinitialized properly
    - 3700df07afad911cd1e8133e0f96766d2a7dbefe: yt miniplayer getting stuck after coming back from pip
    - 14ec3ed36cdb35ae2f7e492aa9b8bc80e576f601: yt miniplayer physics broken after pip
-   - ed02698744de808e09ca1c8ef2b8d3750e90cf30: min track dur to restore pos not saving properly, ref #112
+   - ed02698744de808e09ca1c8ef2b8d3750e90cf30: min track dur to restore pos not saving properly. ref #112
    - b675fc846e4e533954d6a56c8b1de1e1fcc7aa39: lyrics parsing in some cases this brings more advanced lrc parsing as a fallback
    - 52d485523f9c3e177b63e69ae5f218efa2bbbfb1: laggy tracks page scrolling this came after pull-to-refresh feat
    - 1f10167b40ff0bccd44b8a64fab84b9095059726: empty top history items on startup when set to specific period
@@ -1192,7 +1350,7 @@
 # v1.9.3
 ### 🛠️ Bug fixes & Improvements:
 - fix:
-   - 962a1d8dda5829950f2b50e64f2acb826901407c: doubled tracks after refresh, closes #98
+   - 962a1d8dda5829950f2b50e64f2acb826901407c: doubled tracks after refresh,. closes #98
    - 0fbb759bb6cbf0a23d47637f035947be3dac52c8: stuck on startup due to latest queue casted as Map
 
 - chore:
@@ -1214,14 +1372,14 @@
    - cc682302ac497173aa1a1515663a3e26c2b2dcf5: seamless transitioning when playing same item in another queue
    - 1528947573bf497f2fd8802eff0df9a7f90b3448: color palette for albums when groupArtworksByAlbum enabled
    - 7a4f21e743fb7ca1f56ec321d44d3a66b074ac43: sort yt playlists and smol fix while importing
-   - 30fb059071717d0d21c44259862bdeaab80f5cfe: sort by most played and recently played, closes #90
+   - 30fb059071717d0d21c44259862bdeaab80f5cfe: sort by most played and recently played,. closes #90
    - ec57c1738b8e53a026b6d4824e50b9fc7d24512a: swipe down to refresh library #78
    - db22eaa70fbcb87e221ce1aa0e5b95479634f3e3: channel subpage view #1
    - 386c83126b197c5a285d737d9402beb86ccbeda0: sort hosted yt playlist videos + button to load all
-   - 45c16d5976e1a41a80483aa9596467c24783b117: remove playlist duplicates, closes #87
+   - 45c16d5976e1a41a80483aa9596467c24783b117: remove playlist duplicates,. closes #87
    - 8b4c39524129bde1e2c6249e4d5e5701091285f7: restore latest yt queue on startup
-   - 31486500a3c06d04f95543d1db88205528e7fe5e: yt queue chip, ref #1
-   - ef7ab43ee1384519ae021e21a8b76927f3f841e4: reorderable youtube playlist videos, closes #97
+   - 31486500a3c06d04f95543d1db88205528e7fe5e: yt queue chip. ref #1
+   - ef7ab43ee1384519ae021e21a8b76927f3f841e4: reorderable youtube playlist videos,. closes #97
    - 5bcf95525da32b9fe31a3c5d4afe17e720631d57: watch later yt playlist #1
 
 ### 🛠️ Bug fixes & Improvements:
@@ -1244,7 +1402,7 @@
    - 2c67645729806098325dd40571a8da4e6f2f501c: run all searches on isolate #61
    - 0aaba54c2b69664510819d1195894e6ac8b42837: save yt videos & channel videos in memory
    - e10ee0fa66d942bddc1bf3a8f73bc8b53b7cd0f3: faster video assigning at startup by attempting to assign one before checking for deleted/new videos in cache
-   - a71db57b6f279dd44b4f47a123c0871ea2f9f7c5: home page & ytplaylistview improvements, closes #56
+   - a71db57b6f279dd44b4f47a123c0871ea2f9f7c5: home page & ytplaylistview improvements,. closes #56
 
 - chore:
    - f19e123f97b1179906699a057d743adca15ea9d7: always ask when opening external yt playlist
@@ -1274,7 +1432,7 @@
    - b1c9287163d3e28d3779496d324518090ecc0b73: allow separate listen time local tracks, youtube, local videos
    - 68a13953ff44506d1eae3265f4857f784ffaf726: restore yt active tab on startup
    - 12a6106b7f61cd0681613948985f4b26ccf44f73: go to channel button for video cards
-   - 53d8d03efd2a6ca2bb44d4ef47096f2f86077fdc: expose yt download location, closes #93
+   - 53d8d03efd2a6ca2bb44d4ef47096f2f86077fdc: expose yt download location,. closes #93
    - 3731eeedc1d1feb161390e0af529f412b33518d3: stuff & stuff
    - 1431c81af7cef89baaa3bc438589159b2ef52b85: more stuff
    - 68fdade6f8e9246b427b221b7c7de783f57b25f7: av sync improvements
@@ -1300,8 +1458,8 @@
    - 17d917d7da881002dc07fe64427134eece7bc950: properly stop after sleep timer stops playback and kill notification, allows android to kill namida if needed
    - 5dd1b5d3dc804ab17994b4ac22cf924aff366c12: save track info file after updating duration
    - de3ee38f938bd318e5397b857d2af0063c132005: hero animation for history tracks while opening dialog
-   - cc61d731fb781c1d6d85ee165441944ba5e9d4cf: possible fix for fake error message, closes #86
-   - 9247543c6e455b039792738d6a410fcade102703: playback issues especially when failed to play files + properly kill service when stopping, closes #71, ref #92
+   - cc61d731fb781c1d6d85ee165441944ba5e9d4cf: possible fix for fake error message,. closes #86
+   - 9247543c6e455b039792738d6a410fcade102703: playback issues especially when failed to play files + properly kill service when stopping,. closes #71. ref #92
    - 9c9136191aae2c6dcb8e468600d038006ead8ebc: stopping player on queue emptied
    - 717de50aab1e2150d7f629db4643f6f2e586123c: minSdk 21 (Android 5.0) & fix desguaring issues desugaring disabled was causing crash in retrieving channel videos methods
 
@@ -1328,7 +1486,7 @@
    - 0caecd7fab757314bb21b0233d3ac466475c8a00: subpages sorting reverse order
    - 493800c28acf396a4ee557237e0fc3f648ade872: most played page for youtube
    - 73f9a24897699c31b0b4222f439d13f1991a2514: yt playlists support (normal, likes, most played, history)
-   - a3a5d310b333aa1c6dbee0cbc7634e257ccd7f5c: dismissible youtube miniplayer, closes #52
+   - a3a5d310b333aa1c6dbee0cbc7634e257ccd7f5c: dismissible youtube miniplayer,. closes #52
    - 20ad7561a05e3fdb4426fda67249fb0e21bf9699: load language json dynamically
    - 01fbaaa2f669361e45dc288a0ff1e1d4f3f14a84: creation date for files (simulation)
    - 0c3e148ddcd6ab350550d9d64ecbceeb0c08e759: removeable yt videos from playlists
