@@ -354,7 +354,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get confirm => 'Potwierdź';
 
   @override
-  String get confirmRefresh => 'Confirm Refresh?';
+  String get confirmRefresh => 'Potwierdź odświeżenie?';
 
   @override
   String get convertToM3UPlaylist => 'Convert to M3U Playlist';
@@ -675,7 +675,7 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
-  String get dataSaver => 'Data Saver';
+  String get dataSaver => 'Oszczędzanie danych';
 
   @override
   String get dataSaverMode => 'Tryb oszczędzania danych';
@@ -756,7 +756,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get description => 'Opis';
 
   @override
-  String get developer => 'Developer';
+  String get developer => 'Deweloper';
 
   @override
   String get development => 'Development';
@@ -811,7 +811,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get dismissibleMiniplayer => 'Odrzucanie miniodtwarzacza';
 
   @override
-  String get displayActualPositionInsteadOfDifferenceWhileSeeking => 'Display actual position instead of difference while seeking';
+  String get displayActualPositionInsteadOfDifferenceWhileSeeking => 'Podświetl prawdziwą pozycję zamiast różnicy w trakcie przewijania';
 
   @override
   String get displayAlbumCardTopRightDate => 'Data karty albumu w prawym górnym rogu';
@@ -859,10 +859,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get doNothing => 'Nic nie rób';
 
   @override
-  String get donate => 'Donate';
+  String get donate => 'Podaruj';
 
   @override
-  String get donateSubtitle => 'If you think it deserves';
+  String get donateSubtitle => 'Jak myślisz że zasłuża';
 
   @override
   String get done => 'Gotowe';

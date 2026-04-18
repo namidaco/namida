@@ -59,7 +59,6 @@ enum class LauncherIcon(
   SPACE("SpaceIcon", R.mipmap.ic_launcher_space),
   RETRO("RetroIcon", R.mipmap.ic_launcher_retro),
   OOKAMI("OokamiIcon", R.mipmap.ic_launcher_ookami),
-  MINI("MiniIcon", R.mipmap.ic_launcher_mini),
   ORIGINAL("OriginalIcon", R.mipmap.ic_launcher_original),
   ENHANCED("EnhancedIcon", R.mipmap.ic_launcher_enhanced),
   HOLLOW("HollowIcon", R.mipmap.ic_launcher_hollow),

@@ -11,8 +11,8 @@ abstract class NamidaTrayManager {
       android: () => null,
       ios: () => null,
       windows: () => _TrayManagerDesktop(TrayIcons.windows.appIcon),
-      linux: () => _TrayManagerLinuxDBus(NamidaAppIcons.mini.assetPath),
-      macos: () => _TrayManagerDesktop(NamidaAppIcons.mini.assetPath),
+      linux: () => _TrayManagerLinuxDBus(),
+      macos: () => _TrayManagerDesktop(''),
     );
   }
 

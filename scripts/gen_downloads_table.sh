@@ -9,14 +9,16 @@ IS_BETA="${3:-false}"
 TAG_NO_V="${TAG#v}"
 VERSION="${TAG_NO_V%%-*}"
 SUFFIX=$([ "$IS_BETA" = "true" ] && echo "-beta" || echo "")
-PREFIX="v${VERSION}${SUFFIX}"
+PREFIXRAW="${VERSION}${SUFFIX}"
+PREFIX="v${PREFIXRAW}"
 
-BASE_URL="https://github.com/${REPO}/releases/download/${TAG}"
+ENCODED_TAG="${TAG//+/%2B}"
+BASE_URL="https://github.com/${REPO}/releases/download/${ENCODED_TAG}"
 
 link() {
   local label="$1"
   local filename="$2"
-  printf '<a href="%s/%s"><b><code>%s</code></b></a>' "$BASE_URL" "$filename" "$filename"
+  printf '<a href="%s/%s"><b><code>%s</code></b></a>' "$BASE_URL" "$filename" "$label"
 }
 
 bullets() {
@@ -48,28 +50,28 @@ cat << EOF
   <th>Downloads</th>
 </tr>
 $(row "Android" \
-  "arm64-v8a|${PREFIX}-arm64-v8a.apk" \
-  "armeabi-v7a|${PREFIX}-armeabi-v7a.apk")
+  "${PREFIX}-arm64-v8a.apk|namida-${PREFIX}-arm64-v8a.apk" \
+  "${PREFIX}-armeabi-v7a.apk|namida-${PREFIX}-armeabi-v7a.apk")
 EOF
 
 if [ "$IS_BETA" = "true" ]; then
   row "Android (Clone)" \
-    "arm64-v8a|${PREFIX}-clone-arm64-v8a.apk" \
-    "armeabi-v7a|${PREFIX}-clone-armeabi-v7a.apk"
+    "${PREFIX}-clone-arm64-v8a.apk|namida-${PREFIX}-clone-arm64-v8a.apk" \
+    "${PREFIX}-clone-armeabi-v7a.apk|namida-${PREFIX}-clone-armeabi-v7a.apk"
 fi
 
 row "Windows" \
-  "Installer|${PREFIX}-x86_64-Installer.exe"
+  "${PREFIX}-Installer-x86_64.exe|Namida-x86_64-${PREFIXRAW}-Installer.exe"
 
 if [ "$IS_BETA" = "true" ]; then
   row "Linux" \
-    ".tar.gz|${PREFIX}.linux.tar.gz" \
-    ".deb|${PREFIX}.linux.deb" \
-    ".rpm|${PREFIX}.linux.rpm"
+    "${PREFIX}.linux.tar.gz|namida-${PREFIX}.linux.tar.gz" \
+    "${PREFIX}.linux.deb|namida-${PREFIX}.linux.deb" \
+    "${PREFIX}.linux.rpm|namida-${PREFIX}.linux.rpm"
   row "Linux (Login)" \
-    ".tar.gz|${PREFIX}_login.linux.tar.gz" \
-    ".deb|${PREFIX}_login.linux.deb" \
-    ".rpm|${PREFIX}_login.linux.rpm"
+    "${PREFIX}_login.linux.tar.gz|namida-${PREFIX}_login.linux.tar.gz" \
+    "${PREFIX}_login.linux.deb|namida-${PREFIX}_login.linux.deb" \
+    "${PREFIX}_login.linux.rpm|namida-${PREFIX}_login.linux.rpm"
 fi
 
 cat << EOF

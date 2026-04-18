@@ -30,7 +30,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get addAsANewPlaylist => 'একটি নতুন প্লেলিস্ট হিসেবে যোগ করুন';
 
   @override
-  String get addAudioToLocalLibrary => 'লোকাল লাইব্রেরিতে অডিও যোগ করুন';
+  String get addAudioToLocalLibrary => 'স্থানীয় লাইব্রেরিতে অডিও যোগ করুন';
 
   @override
   String get addFolder => 'ফোল্ডার যোগ করুন';
@@ -68,7 +68,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get addToPlaylist => 'প্লেলিস্টে যোগ করুন';
 
   @override
-  String get addTracksAtTheBeginning => 'ট্র্যাকের শুরুতে যোগ করুন';
+  String get addTracksAtTheBeginning => 'তালিকার শুরুতে যোগ করুন';
 
   @override
   String get added => 'যোগ করা হয়েছে';
@@ -161,7 +161,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get artwork => 'আর্টওয়ার্ক';
 
   @override
-  String get artworkGestures => 'আর্টওয়ার্ক জেসচার';
+  String get artworkGestures => 'আর্টওয়ার্ক নিয়ন্ত্রণ';
 
   @override
   String get artworks => 'আর্টওয়ার্ক';
@@ -358,10 +358,10 @@ class AppLocalizationsBn extends AppLocalizations {
   String get confirmRefresh => 'আপনি কি রিফ্রেশ করতে চান?';
 
   @override
-  String get convertToM3UPlaylist => 'Convert to M3U Playlist';
+  String get convertToM3UPlaylist => 'M3U প্লেলিস্টে রূপান্তর করুন';
 
   @override
-  String get convertToNormalPlaylist => 'Convert to Normal Playlist';
+  String get convertToNormalPlaylist => 'সাধারণ প্লেলিস্টে রূপান্তর করুন';
 
   @override
   String get copiedArtwork => 'আর্টওয়ার্ক সংরক্ষণ করা হয়েছে';
@@ -376,7 +376,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get corruptedFile => 'ফাইল পার্স করা যায়নি, এটি নষ্ট হতে পারে';
 
   @override
-  String get couldntOpen => 'খোলা যায়নি :(';
+  String get couldntOpen => 'খোলা যায়নি';
 
   @override
   String get couldntOpenYtLink => 'এই ট্র্যাকের জন্য কোন ইউটিউব লিঙ্ক পাওয়া যায়নি';
@@ -716,7 +716,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get defaultColorSubtitle => 'প্লেয়ারে ব্যবহৃত হওয়ার জন্য একটি রঙ নির্ধারণ করুন';
 
   @override
-  String get defaultDownloadLocation => 'ডিফল্ট ডাউনলোড এর অবস্থান';
+  String get defaultDownloadLocation => 'ডিফল্ট ডাউনলোডের অবস্থান';
 
   @override
   String get defaultLabel => 'ডিফল্ট';
@@ -833,19 +833,19 @@ class AppLocalizationsBn extends AppLocalizations {
   String get displayAudioInfoInMiniplayer => 'অডিওর তথ্য প্রদর্শন করুন';
 
   @override
-  String get displayFavButtonInNotification => 'নোটিফিকেশনে \'লাইক\' বাটন দেখান';
+  String get displayFavButtonInNotification => 'নোটিফিকেশনে ‘লাইক’ বাটন দেখান';
 
   @override
   String get displayFavButtonInNotificationSubtitle => 'থাম্বনেইল স্থানচ্যুত হতে পারে।';
 
   @override
-  String get displayFavouriteIconInTrackTile => '\'লাইক\' বাটন দেখান';
+  String get displayFavouriteIconInTrackTile => '‘লাইক’ বাটন দেখান';
 
   @override
   String get displayRemainingDurationInsteadOfTotal => 'মোট সময়ের পরিবর্তে অবশিষ্ট সময় প্রদর্শন করুন';
 
   @override
-  String get displayStopButtonInNotification => 'নোটিফিকেশনে \'স্টপ\' বাটন দেখান';
+  String get displayStopButtonInNotification => 'নোটিফিকেশনে ‘স্টপ’ বাটন দেখান';
 
   @override
   String get displayThirdItemInRowInTrackTile => 'প্রতিটি সারিতে তৃতীয় আইটেম প্রদর্শন করুন';
@@ -890,7 +890,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get download => 'ডাউনলোড';
 
   @override
-  String get downloadingWillOverrideIt => 'ডাউনলোড করলে এটি ওভাররাইড করবে';
+  String get downloadingWillOverrideIt => 'ডাউনলোড করলে এটি ওভাররাইড করা হবে';
 
   @override
   String get downloads => 'ডাউনলোড';
@@ -974,15 +974,15 @@ class AppLocalizationsBn extends AppLocalizations {
   String get enableM3uSync => 'M3U সিঙ্ক সক্রিয় করুন';
 
   @override
-  String get enableM3uSyncNote1 => 'M3U সিঙ্ক প্লেলিস্টের পরিবর্তন মূল M3U ফাইলে সংরক্ষণ করতে দেয়';
+  String get enableM3uSyncNote1 => 'M3U সিঙ্ক প্লেলিস্টের পরিবর্তনগুলো মূল M3U ফাইলে সরাসরি সংরক্ষণ করে';
 
   @override
   String enableM3uSyncNote2({required String playlistsBackupPath}) {
-    return 'কিছু ভুল হলে, এই প্লেলিস্টের একটি ব্যাকআপ ফাইল $playlistsBackupPath এ পাওয়া যাবে';
+    return 'কোন ভুল হলে, এই প্লেলিস্টের একটি ব্যাকআপ ফাইল $playlistsBackupPath এ পাওয়া যাবে';
   }
 
   @override
-  String get enableM3uSyncSubtitle => 'যদি অস্বীকার করা হয়, এই প্লেলিস্টে করা সমস্ত পরিবর্তন পুনরায় চালু করার সময় হারিয়ে যাবে';
+  String get enableM3uSyncSubtitle => 'অস্বীকার করা হলে, এই প্লেলিস্টে করা সমস্ত পরিবর্তন পুনরায় চালু করার সময় হারিয়ে যাবে';
 
   @override
   String get enableMiniplayerParticles => 'উড়ন্ত কণা সক্রিয় করুন';
@@ -1009,7 +1009,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get enableSearchCleanup => 'সার্চ ক্লিনআপ সক্রিয় করুন';
 
   @override
-  String get enableSearchCleanupSubtitle => 'সমস্ত চিহ্ন এবং স্পেস উপেক্ষা করা হবে';
+  String get enableSearchCleanupSubtitle => 'সব চিহ্ন এবং স্পেস উপেক্ষা করা হবে';
 
   @override
   String get enableSponsorblock => 'স্পন্সরব্লক সক্রিয় করুন';
@@ -1045,7 +1045,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get expandedMiniplayer => 'প্রসারিত মিনিপ্লেয়ার';
 
   @override
-  String get exportAsM3u => 'M3U হিসাবে এক্সপোর্ট করুন';
+  String get exportAsM3u => 'M3U হিসেবে এক্সপোর্ট করুন';
 
   @override
   String get extension => 'এক্সটেনশন';
@@ -1074,7 +1074,7 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
-  String get extractFeatArtist => 'শিরোনাম থেকে শিল্পী বের করুন';
+  String get extractFeatArtist => 'শিরোনাম থেকে ফিচারিং শিল্পী বের করুন';
 
   @override
   String get extractFeatArtistSubtitle => '(feat. X) এবং (ft. X) শিল্পীগুলোকে একটি নতুন শিল্পী এন্ট্রি হিসেবে বের করে।';
@@ -1117,7 +1117,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get fileBasedServerWarning =>
-      'ইনডেক্সিং (Indexing) করার জন্য ফাইলগুলো সাময়িকভাবে ডাউনলোড করা হবে।\nনিশ্চিত করুন আপনার ইন্টারনেট সংযোগ স্থিতিশীল আছে। অতিরিক্ত ডেটা খরচ এড়াতে ওয়াই-ফাই (Wi-Fi) ব্যবহার করুন।';
+      'ইনডেক্সিং (Indexing) করার জন্য ফাইলগুলো সাময়িকভাবে ডাউনলোড করা হবে।\nনিশ্চিত করুন যে, আপনার ইন্টারনেট সংযোগ স্থিতিশীল আছে। অতিরিক্ত ডেটা খরচ এড়াতে ওয়াই-ফাই (Wi-Fi) ব্যবহার করুন।';
 
   @override
   String get fileName => 'ফাইলের নাম';
@@ -1150,7 +1150,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get filterTracks => 'ট্র্যাক ফিল্টার করুন';
 
   @override
-  String get filterTracksBy => 'অনুসন্ধান তালিকায় ট্র্যাক ফিল্টার করুন';
+  String get filterTracksBy => 'সার্চ তালিকায় ট্র্যাক ফিল্টার করুন';
 
   @override
   String get filtered => 'ফিল্টার করা হয়েছে';
@@ -1186,7 +1186,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get fontScale => 'ফন্ট স্কেল';
 
   @override
-  String get forceMiniplayerFollowTrackColors => 'মিনিপ্লেয়ারকে ট্র্যাকের রঙ অনুসরণ করতে বাধ্য করুন';
+  String get forceMiniplayerFollowTrackColors => 'মিনিপ্লেয়ারে ট্র্যাকের রঙ প্রয়োগ করুন';
 
   @override
   String get forceSquaredAlbumThumbnail => 'সকল অ্যালবাম থাম্বনেইল বর্গাকার করুন';
@@ -1264,7 +1264,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get heightOfTrackTile => 'ট্র্যাক টাইলের উচ্চতা';
 
   @override
-  String get hideSkipButtonAfter => 'এরপর \'স্কিপ\' বাটন লুকান';
+  String get hideSkipButtonAfter => '‘স্কিপ’ বাটন লুকানোর সময়কাল';
 
   @override
   String get highMatches => 'সর্বোচ্চ মিল';
@@ -1341,7 +1341,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get importAll => 'সব ইম্পোর্ট করুন';
 
   @override
-  String get importLastFmHistory => 'LastFm ইতিহাস ইম্পোর্ট করুন';
+  String get importLastFmHistory => 'Last.fm ইতিহাস ইম্পোর্ট করুন';
 
   @override
   String importLastFmHistoryGuide({required String lastfmCsvLink}) {
@@ -1397,13 +1397,13 @@ class AppLocalizationsBn extends AppLocalizations {
   String get indexerNote => 'দ্রষ্টব্য: ‘অসম্পূর্ণ সংখ্যক আর্টওয়ার্ক’ বলতে ডুপ্লিকেট এবং খুঁজে না পাওয়া আর্টওয়ার্কগুলোকে বোঝায়';
 
   @override
-  String get indexerSubtitle => 'আপনার সঙ্গীত লাইব্রেরি নিয়ন্ত্রন করুন';
+  String get indexerSubtitle => 'আপনার মিউজিক লাইব্রেরি নিয়ন্ত্রণ করুন';
 
   @override
   String get infinityQueueOnNextPrev => 'পরবর্তী/পূর্ববর্তীতে ইনফিনিটি কিউ';
 
   @override
-  String get infinityQueueOnNextPrevSubtitle => 'শেষ ট্র্যাক চালানোর সময় \'পরবর্তী\' বাটন চাপলে প্রথম ট্র্যাকে চলে যাবে, এবং তদ্বিপরীত';
+  String get infinityQueueOnNextPrevSubtitle => 'শেষ ট্র্যাক চালানোর সময় ‘পরবর্তী’ বাটন চাপলে প্রথম ট্র্যাকে চলে যাবে, এবং তদ্বিপরীত';
 
   @override
   String get info => 'তথ্য';
@@ -1448,7 +1448,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get keepScreenAwakeMiniplayerExpanded => 'যখন মিনিপ্লেয়ার প্রসারিত থাকবে';
 
   @override
-  String get keepScreenAwakeMiniplayerExpandedAndVideo => 'যখন মিনিপ্লেয়ার প্রসারিত থাকবে এবং ভিডিও চালাবে';
+  String get keepScreenAwakeMiniplayerExpandedAndVideo => 'যখন মিনিপ্লেয়ার প্রসারিত থাকবে এবং ভিডিও চলবে';
 
   @override
   String get keepScreenAwakeNone => 'স্ক্রিন চালু রাখবেন না';
@@ -1552,7 +1552,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get m3uPlaylist => 'M3U প্লেলিস্ট';
 
   @override
-  String get makeYourFirstListen => 'আপনার প্রথম শ্রবণ এ পরিণত করুন!';
+  String get makeYourFirstListen => 'আপনার প্রথম শ্রবণে পরিণত করুন!';
 
   @override
   String get manage => 'পরিচালনা করুন';
@@ -1567,25 +1567,25 @@ class AppLocalizationsBn extends AppLocalizations {
   String get manualBackupSubtitle => 'একটি নির্দিষ্ট ফাইল নির্বাচন করুন';
 
   @override
-  String get markAsRead => 'পড়া হয়েছে হিসাবে চিহ্নিত করুন';
+  String get markAsRead => 'পড়া হয়েছে হিসেবে চিহ্নিত করুন';
 
   @override
-  String get matchAllTracks => 'সমস্ত ট্র্যাক ম্যাচ করুন';
+  String get matchAllTracks => 'সবগুলো ট্র্যাক ম্যাচ করুন';
 
   @override
-  String get matchAllTracksNote => 'এটি ম্যাচিং গতিতে প্রভাব ফেলতে পারে, কারণ এটি আপনার লাইব্রেরির সমস্ত ট্র্যাক চেক করবে';
+  String get matchAllTracksNote => 'এটি ম্যাচিং গতিতে প্রভাব ফেলতে পারে, কারণ এটি আপনার লাইব্রেরির সব ট্র্যাক চেক করবে';
 
   @override
   String get matchingType => 'ম্যাচিং এর ধরন';
 
   @override
-  String get maxAudioCacheSize => 'সর্বোচ্চ অডিওর ক্যাশ';
+  String get maxAudioCacheSize => 'অডিওর ক্যাশ সীমা';
 
   @override
-  String get maxImageCacheSize => 'সর্বোচ্চ ছবির ক্যাশ';
+  String get maxImageCacheSize => 'ছবির ক্যাশ সীমা';
 
   @override
-  String get maxVideoCacheSize => 'সর্বোচ্চ ভিডিওর ক্যাশ';
+  String get maxVideoCacheSize => 'ভিডিওর ক্যাশ সীমা';
 
   @override
   String get maximum => 'সর্বোচ্চ';
@@ -1653,10 +1653,10 @@ class AppLocalizationsBn extends AppLocalizations {
   String get minValueCantBeMoreThanMax => 'সর্বনিম্ন মান সর্বোচ্চ মানের চেয়ে বেশি হতে পারে না';
 
   @override
-  String get minValueToCountTrackListen => 'কতটুকু শোনা হলে শ্রবণ হিসেবে গণনা করা হবে ';
+  String get minValueToCountTrackListen => 'কতটুকু শুনলে শ্রবণ হিসেবে গণনা করা হবে: ';
 
   @override
-  String get minimizedMiniplayer => 'সঙ্কুচিত মিনিপ্লেয়ার';
+  String get minimizedMiniplayer => 'সংকুচিত মিনিপ্লেয়ার';
 
   @override
   String get minimum => 'সর্বনিম্ন';
@@ -1848,7 +1848,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get notSupportedForNetworkFiles => 'নেটওয়ার্ক ফাইলের জন্য সমর্থিত নয়';
 
   @override
-  String get notSupportedForVideoFiles => 'Not Supported for Video Files';
+  String get notSupportedForVideoFiles => 'ভিডিও ফাইলের জন্য সমর্থিত নয়';
 
   @override
   String get note => 'দ্রষ্টব্য';
@@ -1866,7 +1866,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get ofLabel => 'এর';
 
   @override
-  String get offlineSearch => 'অফলাইন অনুসন্ধান';
+  String get offlineSearch => 'অফলাইন সার্চ';
 
   @override
   String get offset => 'অফসেট';
@@ -1887,7 +1887,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get onInterruption => 'প্লেব্যাক বিঘ্নিত হলে করণীয়';
 
   @override
-  String get onNotificationTap => 'নোটিফিকেশনে ট্যাপ করালে';
+  String get onNotificationTap => 'নোটিফিকেশনে ট্যাপ করলে';
 
   @override
   String get onOpeningYoutubeLink => 'ইউটিউব লিঙ্ক খোলার সময়';
@@ -1896,7 +1896,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get onSwiping => 'সোয়াইপ করার সময়';
 
   @override
-  String get onVolumeZero => 'ভলিউম ০ হওয়ার সময়';
+  String get onVolumeZero => 'ভলিউম 0 হলে করনীয়';
 
   @override
   String get ongoing => 'চলমান';
@@ -2014,31 +2014,31 @@ class AppLocalizationsBn extends AppLocalizations {
   String get plain => 'সাধারণ';
 
   @override
-  String get play => 'চালান';
+  String get play => 'প্লে করুন';
 
   @override
   String get playAfter => 'এর পরে চালান';
 
   @override
-  String get playAfterNextPrev => 'পরবর্তী/পূর্ববর্তীতে স্বয়ংক্রিয় চালান';
+  String get playAfterNextPrev => 'পরবর্তী/পূর্ববর্তীতে স্বয়ংক্রিয়ভাবে প্লে করুন';
 
   @override
-  String get playAll => 'সব চালান';
+  String get playAll => 'সবগুলো প্লে করুন';
 
   @override
   String get playFadeDuration => 'প্লে ফেড এর সময়কাল';
 
   @override
-  String get playLast => 'শেষটি চালান';
+  String get playLast => 'শেষে শুনুন';
 
   @override
-  String get playNext => 'পরবর্তীটি চালান';
+  String get playNext => 'পরে শুনুন';
 
   @override
   String get playbackSetting => 'প্লেব্যাক';
 
   @override
-  String get playbackSettingSubtitle => '\'অডিও\' বাটনে লং-প্রেস করে সরাসরি এই সেটিংস অ্যাক্সেস করুন';
+  String get playbackSettingSubtitle => '‘অডিও’ বাটনে লং-প্রেস করে সরাসরি এই সেটিংস অ্যাক্সেস করুন';
 
   @override
   String get playlist => 'প্লেলিস্ট';
@@ -2057,7 +2057,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get playlistsImportM3uSyncedAutoImport => 'স্বয়ংক্রিয়ভাবে M3U প্লেলিস্ট ইম্পোর্ট করুন';
 
   @override
-  String get pleaseEnterADifferentName => 'এই নামটি ইতিমধ্যে বিদ্যমান :(\nদয়া করে অন্য একটি নাম চেষ্টা করুন';
+  String get pleaseEnterADifferentName => 'এই নামটি ইতিমধ্যে বিদ্যমান\nদয়া করে অন্য একটি নাম চেষ্টা করুন';
 
   @override
   String get pleaseEnterALink => 'দয়া করে একটি লিঙ্ক দিন';
@@ -2084,7 +2084,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get previous => 'পূর্ববর্তী';
 
   @override
-  String get previousButtonReplays => '\'পূর্ববর্তী\' বাটন দ্বারা পুনঃচালনা করুন';
+  String get previousButtonReplays => '‘পূর্ববর্তী’ বাটন দ্বারা পুনঃচালনা করুন';
 
   @override
   String get previousButtonReplaysSubtitle => 'যখন বর্তমান অবস্থান সিক সময়কালের চেয়ে বেশি থাকবে';
@@ -2130,7 +2130,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get reIndexWarning =>
-      'এই প্রক্রিয়াটি সম্পন্ন হতে কিছুটা সময় নিতে পারে, যা আপনার লাইব্রেরির আকারের ওপর নির্ভর করবে।\n\nযতক্ষণ আর্টওয়ার্ক বিদ্যমান ততক্ষণ সেগুলো পুনঃইনডেক্স করা হবে না';
+      'এই প্রক্রিয়াটি সম্পন্ন হতে কিছুটা সময় নিতে পারে, যা আপনার লাইব্রেরির আকারের উপর নির্ভর করবে।\n\nযতক্ষণ আর্টওয়ার্ক বিদ্যমান ততক্ষণ সেগুলো পুনঃইনডেক্স করা হবে না';
 
   @override
   String get recentAlbums => 'সাম্প্রতিক অ্যালবাম';
@@ -2142,7 +2142,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get recentListens => 'সাম্প্রতিক শোনা';
 
   @override
-  String get recentQueues => 'Recent Queues';
+  String get recentQueues => 'সাম্প্রতিক কিউ';
 
   @override
   String get recentlyAdded => 'সাম্প্রতিক সংযোজন';
@@ -2157,7 +2157,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get refreshLibrary => 'লাইব্রেরি রিফ্রেশ করুন';
 
   @override
-  String get refreshLibrarySubtitle => 'নতুন যোগকৃত বা ডিলিট করা সঙ্গীতের জন্য চেক করুন';
+  String get refreshLibrarySubtitle => 'নতুন যোগকৃত বা ডিলিট করা ট্র্যাকের জন্য চেক করুন';
 
   @override
   String get refreshOnStartup => 'অ্যাপ চালু করার সময় রিফ্রেশ করুন';
@@ -2231,7 +2231,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get repeatModeOne => 'বর্তমান ট্র্যাক পুনরাবৃত্তি করুন';
 
   @override
-  String get replaceAllListensWithAnotherTrack => 'সমস্ত শ্রবণ অন্য ট্র্যাক দিয়ে প্রতিস্থাপন করুন';
+  String get replaceAllListensWithAnotherTrack => 'সব প্লে-হিস্ট্রি অন্য ট্র্যাক দিয়ে বদলে ফেলুন';
 
   @override
   String get replies => 'রিপ্লাই';
@@ -2332,10 +2332,10 @@ class AppLocalizationsBn extends AppLocalizations {
   String get scaleMultiplier => 'আর্টওয়ার্ক সাইজ';
 
   @override
-  String get search => 'অনুসন্ধান করুন';
+  String get search => 'সার্চ করুন';
 
   @override
-  String get searchYoutube => 'ইউটিউবে অনুসন্ধান করুন';
+  String get searchYoutube => 'ইউটিউবে সার্চ করুন';
 
   @override
   String get seconds => 'সেকেন্ড';
@@ -2358,7 +2358,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get selectAll => 'সব নির্বাচন করুন';
 
   @override
-  String get selectFilesAlreadyInLocalLibrary => 'স্থানীয় লাইব্রেরিতে থাকা ফাইল নির্বাচন করুন';
+  String get selectFilesAlreadyInLocalLibrary => 'স্থানীয় লাইব্রেরিতে থাকা ফাইল';
 
   @override
   String get selectedTracks => 'নির্বাচিত ট্র্যাক';
@@ -2379,13 +2379,13 @@ class AppLocalizationsBn extends AppLocalizations {
   String get serverAddress => 'সার্ভার ঠিকানা';
 
   @override
-  String get setAs => 'হিসাবে সেট করুন';
+  String get setAs => 'হিসেবে সেট করুন';
 
   @override
-  String get setAsDefault => 'ডিফল্ট হিসাবে সেট করুন';
+  String get setAsDefault => 'ডিফল্ট হিসেবে সেট করুন';
 
   @override
-  String get setFileLastModifiedAsVideoUploadDate => 'ফাইলের সর্বশেষ পরিবর্তনকে ভিডিও আপলোডের তারিখ হিসাবে সেট করুন';
+  String get setFileLastModifiedAsVideoUploadDate => 'ফাইলের সর্বশেষ পরিবর্তনকে ভিডিও আপলোডের তারিখ হিসেবে সেট করুন';
 
   @override
   String get setMonoAudio => 'মোনো অডিও সেট করুন';
@@ -2457,7 +2457,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get showShortVideosIn => 'শর্টগুলোতে দেখান';
 
   @override
-  String get showSkipButton => '\'স্কিপ\' বাটন দেখান';
+  String get showSkipButton => '‘স্কিপ’ বাটন দেখান';
 
   @override
   String get showVideoEndcards => 'ভিডিও এন্ডকার্ড দেখান';
@@ -2601,7 +2601,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get storagePermissionDeniedSubtitle => 'এই ক্রিয়া সম্পাদন করতে দয়া করে অ্যাক্সেস অনুমতি দিন';
 
   @override
-  String get stretchLyricsDuration => 'লিরিক্স এর সময়কাল প্রসারিত করুন';
+  String get stretchLyricsDuration => 'লিরিক্সের সময়কাল প্রসারিত করুন';
 
   @override
   String get subdirectory => 'সাবডিরেক্টরি';
@@ -2623,7 +2623,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String suggestionSubtitle({required String site}) {
-    return 'কোনো সমস্যা বা পরামর্শ থাকলে $site-এ আমাদের জানানতে পারেন';
+    return 'কোনো সমস্যা বা পরামর্শ থাকলে $site-এ আমাদের জানাতে পারেন';
   }
 
   @override
@@ -2684,7 +2684,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get thisPlaylistHasActiveSortersDisableThemBeforeReordering => 'এই প্লেলিস্টে সক্রিয় সর্টার রয়েছে, পুনর্বিন্যাস করার আগে দয়া করে সেগুলো নিষ্ক্রিয় করুন।';
 
   @override
-  String get thisVideoIsLikelyDeletedOrSetToPrivate => 'এই ভিডিওটি সম্ভবত ডিলিট করা হয়েছে বা ব্যক্তিগত হিসাবে সেট করা হয়েছে।';
+  String get thisVideoIsLikelyDeletedOrSetToPrivate => 'এই ভিডিওটি সম্ভবত ডিলিট করা হয়েছে বা ব্যক্তিগত হিসেবে সেট করা হয়েছে।';
 
   @override
   String get thumbnails => 'থাম্বনেইল';
@@ -2741,7 +2741,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get trackNumber => 'ট্র্যাক নম্বর';
 
   @override
-  String get trackNumberTotal => 'ট্র্যাক মোট';
+  String get trackNumberTotal => 'মোট ট্র্যাক';
 
   @override
   String trackPathOldNew({required String newName, required String oldName}) {
@@ -2749,10 +2749,10 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
-  String get trackPlayMode => 'চালানোর মোড';
+  String get trackPlayMode => 'প্লে-মোড';
 
   @override
-  String get trackPlayModeSearchResults => 'অনুসন্ধানকৃত ফলাফল';
+  String get trackPlayModeSearchResults => 'সার্চের ফলাফল';
 
   @override
   String get trackPlayModeSelectedOnly => 'শুধুমাত্র নির্বাচিত ট্র্যাক';
@@ -2830,20 +2830,20 @@ class AppLocalizationsBn extends AppLocalizations {
   String get updating => 'আপডেট করা হচ্ছে';
 
   @override
-  String get useCollapsedSettingTiles => 'সঙ্কুচিত সেটিংস টাইল ব্যবহার করুন';
+  String get useCollapsedSettingTiles => 'সংকুচিত সেটিংস টাইল ব্যবহার করুন';
 
   @override
   String get useMediaStore => 'মিডিয়া স্টোর ব্যবহার করুন';
 
   @override
   String get useMediaStoreSubtitle =>
-      '✓ তাত্ক্ষণিক ইনডেক্সিং\nx .nomedia মানা হবে\nx কিছু মেটাডেটা ট্যাগ অনুপস্থিত থাকবে\nx স্থানীয় লাইব্রেরির জন্য ইউটিউব ইন্টিগ্রেশন কাজ করবে না';
+      '✓ তাৎক্ষণিক ইনডেক্সিং\nx .nomedia মানা হবে\nx কিছু মেটাডেটা ট্যাগ অনুপস্থিত থাকবে\nx স্থানীয় লাইব্রেরির জন্য ইউটিউব ইন্টিগ্রেশন কাজ করবে না';
 
   @override
   String get usePitchBlack => 'পিচ ব্ল্যাক মোড';
 
   @override
-  String get usePitchBlackSubtitle => 'AMOLED স্ক্রিনের জন্য উপযোগী.. এবং দেখতে আরও আকর্ষণীয়';
+  String get usePitchBlackSubtitle => 'AMOLED স্ক্রিনের জন্য উপযোগী এবং দেখতে আরও আকর্ষণীয়';
 
   @override
   String get used => 'ব্যবহৃত';
@@ -2894,7 +2894,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get videoPlaybackSourceYoutube => 'ইউটিউব থেকে';
 
   @override
-  String get videoPlaybackSourceYoutubeSubtitle => 'এটি ট্রাকের নাম এবং কমেন্টের মাঝে মিল আছে এমন ইউটিউব লিঙ্ক চেক করে, ভিডিওগুলো পরবর্তী ব্যবহারের জন্য সংরক্ষণ করা হয়।';
+  String get videoPlaybackSourceYoutubeSubtitle => 'এটি ট্র্যাকের নাম এবং কমেন্টের মাঝে মিল আছে এমন ইউটিউব লিঙ্ক চেক করে, ভিডিওগুলো পরবর্তীতে ব্যবহারের জন্য সংরক্ষণ করা হয়।';
 
   @override
   String get videoQuality => 'ভিডিও কোয়ালিটি';
@@ -2968,5 +2968,5 @@ class AppLocalizationsBn extends AppLocalizations {
   String get ytPreferNewComments => 'নতুন কমেন্ট অগ্রাধিকার দিন';
 
   @override
-  String get ytPreferNewCommentsSubtitle => 'ক্যাশ সংস্করণ শুধুমাত্র তখনই ব্যবহৃত হবে যখন কোন সংযোগ থাকবে না';
+  String get ytPreferNewCommentsSubtitle => 'ইন্টারনেট সংযোগ না থাকলে ক্যাশ সংস্করণ ব্যবহার করা হবে';
 }

@@ -301,13 +301,6 @@ final _appIcons = [
       _AuthorInfo('神 ᴛᴀᴋᴜᴍɪ', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
     ],
   ),
-  _IconDetails.create(
-    'mini',
-    ext: _ImgExtension.png,
-    authorInfos: [
-      _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
-    ],
-  ),
 
   _IconDetails.defaultIconOld,
   _IconDetails.create(

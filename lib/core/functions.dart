@@ -175,10 +175,7 @@ class NamidaOnTaps {
   }
 
   Future<void> onFolderTapNavigate(Folder folder, FoldersController? controller, {Track? trackToScrollTo}) async {
-    if (controller == null) {
-      final isVideo = folder is VideoFolder;
-      controller = isVideo ? FoldersController.videos : FoldersController.tracks;
-    }
+    controller ??= FoldersController.tracksAndVideos;
     ScrollSearchController.inst.animatePageController(controller.libraryTab);
     controller.stepIn(folder, trackToScrollTo: trackToScrollTo);
   }
@@ -2171,19 +2168,22 @@ class TracksAddOnTap {
                         )
                         .toList();
                   },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        sortBy.valueR.toIcon(),
-                        size: 18.0,
-                      ),
-                      const SizedBox(width: 8.0),
-                      Text(
-                        sortBy.valueR.toText(),
-                        style: context.textTheme.displayMedium,
-                      ),
-                    ],
+                  child: ObxO(
+                    rx: sortBy,
+                    builder: (context, sort) => Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          sort.toIcon(),
+                          size: 18.0,
+                        ),
+                        const SizedBox(width: 8.0),
+                        Text(
+                          sort.toText(),
+                          style: context.textTheme.displayMedium,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

@@ -1,16 +1,18 @@
 part of 'tray_manager.dart';
 
 class _TrayManagerLinuxDBus extends NamidaTrayManager {
-  _TrayManagerLinuxDBus(super.iconPath);
+  _TrayManagerLinuxDBus() : super('');
 
   Future<StatusNotifierItemClient>? _clientFuture;
 
-  static const _iconName = 'namida';
+  static var _iconName = 'namida';
 
   @override
   Future<void> init() async {}
 
   Future<StatusNotifierItemClient> _createClient(DBusMenuItem menu, String playingItemTitle) async {
+    _iconName = await Indexer.createDefaultNamidaArtworkIfRequired();
+
     final c = StatusNotifierItemClient(
       id: 'com.msob7y.namida',
       iconName: _iconName,

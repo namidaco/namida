@@ -129,6 +129,10 @@ class MiniPlayerController {
       // -- its widescreen, so immersive mode is always on
       setImmersiveMode(settings.hideStatusBarInExpandedMiniplayer.value, isWidescreen: isWidescreen);
     } else if (!isWidescreen && Dimensions.inst.miniplayerIsWideScreen) {
+      // -- if a menu was opened in widescreen, then now player is expanded in portrait
+      // -- so pop them to avoid getting stuck
+      NamidaNavigator.inst.popAllMenus();
+
       // -- to fix various issues (_offset and animation mismatch)
       WidgetsBinding.instance.addPostFrameCallback(
         (_) {
@@ -291,7 +295,7 @@ class MiniPlayerController {
     if (_offset <= maxOffset) return;
 
     if (!isKuru) {
-      if (isScrollbarThumbDragging) {
+      if (isScrollbarThumbDragging && isInQueue) {
         return;
       }
     }

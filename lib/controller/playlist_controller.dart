@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -11,6 +12,7 @@ import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/http_manager.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -108,6 +110,22 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       }
     }
     return res;
+  }
+
+  @override
+  Future<bool> setArtworkForPlaylist(String playlistName, {required File? artworkFile, required Uint8List? artworkBytes}) async {
+    final didSet = await super.setArtworkForPlaylist(
+      playlistName,
+      artworkFile: artworkFile,
+      artworkBytes: artworkBytes,
+    );
+    if (didSet) {
+      try {
+        final imgPath = getArtworkFileForPlaylist(playlistName).path;
+        await CurrentColor.inst.deletePaletteForImage(imgPath, paletteSaveDirectory: Directory(AppDirs.PALETTES));
+      } catch (_) {}
+    }
+    return didSet;
   }
 
   Future<void> replaceTracksDirectory(String normalizedOldDir, String normalizedNewDir, {Iterable<String>? forThesePathsOnly, bool ensureNewFileExists = false}) async {

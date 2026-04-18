@@ -238,6 +238,10 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
 
   @override
   Widget build(BuildContext context) {
+    // -- otherwise can appear cropped
+    // -- the image needs to be already squared or has wider width, otherwise will appear contained
+    // -- that's why this check is done only for yt avatar thumbnails since they are usually squared
+    final fit = widget.isCircle ? BoxFit.fitHeight : widget.fit;
     return Padding(
       padding: widget.margin ?? EdgeInsets.zero,
       child: ArtworkWidget(
@@ -272,7 +276,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
             ),
         ],
         displayIcon: true,
-        fit: widget.fit,
+        fit: fit,
         alignment: widget.alignment,
         extractInternally: false,
         allowFloating: widget.allowFloating,

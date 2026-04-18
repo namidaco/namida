@@ -72,7 +72,7 @@ class _SettingsController with SettingsFileWriter {
   ].obs;
 
   final borderRadiusMultiplier = 1.0.obs;
-  final fontScaleFactor = 0.9.obs;
+  final fontScaleFactor = 0.85.obs;
   final artworkCacheHeightMultiplier = 0.9.obs;
   final trackThumbnailSizeinList = 70.0.obs;
   final trackListTileHeight = 70.0.obs;

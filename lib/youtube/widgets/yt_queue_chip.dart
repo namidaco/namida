@@ -25,6 +25,7 @@ import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
+import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
@@ -566,6 +567,19 @@ class QueueChipHeaderRow extends StatelessWidget {
         icon: Broken.setting_3,
         title: lang.configure,
         normalTitleStyle: true,
+        trailingWidgets: [
+          NamidaIconButton(
+            icon: Broken.export_1,
+            tooltip: () => lang.playbackSetting,
+            iconSize: 20.0,
+            onPressed: () {
+              SettingsSubPage(
+                title: () => lang.playbackSetting,
+                child: const PlaybackSettings(),
+              ).navigate();
+            },
+          ),
+        ],
         actions: [
           NamidaButton(
             text: lang.done,

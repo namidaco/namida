@@ -128,7 +128,6 @@ Future<bool> _mainAppInitialization() async {
 
     await [
       WindowController.instance?.init(),
-      TrayController.instance?.init(),
       SMTCController.instance?.init(),
       HomeWidgetController.instance?.init(),
     ].executeAllAndSilentReportErrors();
@@ -228,6 +227,7 @@ Future<bool> _mainAppInitialization() async {
 
   try {
     WindowController.instance?.restorePosition(); // -- requires settings
+    TrayController.instance?.init(); // -- requires paths
 
     args = Zone.current['args'] as List<String>? ?? [];
 
@@ -720,8 +720,8 @@ class _HttpCacheCustomCacheConfig extends GlobalCacheConfig {
   _HttpCacheCustomCacheConfig._(RhttpCompatibleClient client)
     : super(
         cacheDirectory: Directory(''),
-        maxBufferSize: 5 * 1024 * 1024,
-        rangeRequestSplitThreshold: (0.5 * 1024 * 1024).round(),
+        maxBufferSize: 25 * 1024 * 1024, // 25MB
+        rangeRequestSplitThreshold: 512 * 1024, // 512KB
         customHttpClient: client,
       );
 }

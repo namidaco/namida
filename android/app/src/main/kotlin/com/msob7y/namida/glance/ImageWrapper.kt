@@ -26,12 +26,14 @@ class ImageWrapper {
   }
 }
 
-fun Bitmap.toRoundedBitmap(cornerRadius: Float): Bitmap {
+fun Bitmap.toRoundedBitmap(cornerRadiusFraction: Float = 0.08f): Bitmap {
   // -- ensure the bitmap is square
   val size = if (width < height) width else height
   val xOffset = (width - size) / 2
   val yOffset = (height - size) / 2
   val squareBitmap = Bitmap.createBitmap(this, xOffset, yOffset, size, size)
+
+  val cornerRadius = size * cornerRadiusFraction
 
   val output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
   val canvas = Canvas(output)

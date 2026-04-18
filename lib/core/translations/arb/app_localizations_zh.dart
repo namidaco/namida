@@ -2987,13 +2987,13 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get addAll => '新增全部';
 
   @override
-  String get addAllAndRemoveOldOnes => '全部加入並移除舊曲目';
+  String get addAllAndRemoveOldOnes => '添加全部並移除舊曲目';
 
   @override
   String get addAsANewPlaylist => '新增為新的播放清單';
 
   @override
-  String get addAudioToLocalLibrary => '將音訊新增至媒體庫';
+  String get addAudioToLocalLibrary => '將音訊添加至媒體庫';
 
   @override
   String get addFolder => '新增資料夾';
@@ -3002,10 +3002,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get addLanguage => '新增語言';
 
   @override
-  String get addLanguageSubtitle => '協助將 Namida 翻譯成您的語言';
+  String get addLanguageSubtitle => '協助 Namida 翻譯成您的語言';
 
   @override
-  String get addLrcFile => '新增 LRC 文件';
+  String get addLrcFile => '新增 LRC 檔案';
 
   @override
   String get addMoreFromThisAlbum => '將此專輯中的更多內容新增至待播清單中';

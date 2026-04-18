@@ -85,7 +85,7 @@ void main(List<String> argumentsPre) async {
     final parts = line.split(':');
     final firstPart = parts.first.toLowerCase().trim().split(' ');
     final key = firstPart.last;
-    if (!prettyMapNeededKeys.contains(key)) continue;
+    if (!prettyMapNeededKeys.contains(key.split('(').first)) continue;
     final val = parts.skip(1).join('').trim();
     final valTrimmed = regexCloseIssue.firstMatch(val)?[0] ?? regexRefIssue.firstMatch(val)?[0] ?? val;
     if (prettyMap[key] == null) {

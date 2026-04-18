@@ -434,6 +434,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       isFavourite ??= currentItem.value?.execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: (finalItem) => finalItem.isFavourite);
 
       String title = mediaItem.value?.displayTitle ?? mediaItem.value?.title ?? 'Chilling...';
+      if (title.length > 48) {
+        title = '${title.substring(0, 48)}...';
+      }
       final menu = TrayMenu(
         items: [
           TrayMenuItem(

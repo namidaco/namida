@@ -55,6 +55,11 @@ import androidx.palette.graphics.Palette
 import com.msob7y.namida.NamidaConstants
 import com.msob7y.namida.NamidaMainActivity
 
+
+private var _latestImagePath: String? = null
+private var _currentImageProviderWrapper: ImageProviderWrapper? = null
+private var _fallbackImageProvider: Bitmap? = null
+
 class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
 
   /** Needed for Updating */
@@ -64,22 +69,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
     provideContent { GlanceContent(context, currentState()) }
   }
 
-  private var _latestImagePath: String? = null
-  private var _currentImageProviderWrapper: ImageProviderWrapper? = null
-  private var _fallbackImageProvider: Bitmap? = null
-
-  override val sizeMode = SizeMode.Responsive(
-    setOf(
-      DpSize(180.dp, 80.dp),
-      DpSize(180.dp, 110.dp),
-      DpSize(270.dp, 80.dp),
-      DpSize(270.dp, 110.dp),
-      DpSize(360.dp, 80.dp),
-      DpSize(360.dp, 110.dp),
-      DpSize(400.dp, 80.dp),
-      DpSize(400.dp, 130.dp),
-    )
-  )
+  override val sizeMode = SizeMode.Exact
 
   @Composable
   private fun GlanceContent(context: Context, currentState: HomeWidgetGlanceState) {
@@ -96,15 +86,18 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
     val w = size.width
     val h = size.height
 
-    val imageCornerRadiusFloat = 64f
-    val buttonHeight = h * 0.35f
-    val buttonWidth = buttonHeight * 1.25f
-    val titleFontSize = (h.value * 0.20f).coerceIn(12f, 22f).sp
-    val subtitleFontSize = (h.value * 0.18f).coerceIn(10f, 18f).sp
-    val padding = w * 0.06f
-    val gapSmall = w * 0.018f
-    val imageSize = minOf(w, h) * 0.95f
-
+    val imageCornerRadiusFractionFloat = 0.08f
+    val titleFontSize = (h.value * 0.14f).coerceIn(6f, 16f).sp
+    val subtitleFontSize = (h.value * 0.12f).coerceIn(4f, 14f).sp
+    val verticalPadding = minOf(h * 0.03f, 8.0.dp)
+    val horizontalPadding = minOf(w * 0.04f, h * 0.12f, 24.0.dp)
+    val gapSmall = minOf(w * 0.05f, h * 0.12f, 16.0.dp)
+    val imageSize = minOf(w * 0.35f, h - verticalPadding * 2)
+    val buttonsCount = 4
+    val availableWidthForButtons = minOf(w - imageSize - horizontalPadding * 2, w * 0.5f)
+    val maxButtonWidth = (48.0.coerceIn(0.0, h.value * 0.3)).dp
+    val buttonWidth = minOf(availableWidthForButtons / buttonsCount, maxButtonWidth)
+    val buttonHeight = buttonWidth * 0.8f
 
     if (imagePath == null) {
       _currentImageProviderWrapper = null
@@ -122,7 +115,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
             null
           }
           if (bitmap != null) {
-            val roundedBitmap = bitmap.toRoundedBitmap(imageCornerRadiusFloat)
+            val roundedBitmap = bitmap.toRoundedBitmap(imageCornerRadiusFractionFloat)
             val mainColor: Int = Palette.from(bitmap) 
                   .maximumColorCount(8)
                   .generate()
@@ -154,18 +147,23 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
     if (_currentImageProviderWrapper == null) {
       if (_fallbackImageProvider == null) {
         val imageSizeInt = imageSize.toPxInt(context)
-        val bitmap =
-          ImageWrapper.createRoundedBitmap(
-            imageSizeInt * 2,
-            imageSizeInt * 2,
-            imageCornerRadiusFloat,
-            imageColor.toArgb()
-          )
-        _fallbackImageProvider = bitmap
+        val fallbackBitmap: Bitmap? = remember(imageSize) {
+          try {
+            val imageSizeInt = imageSize.toPxInt(context)
+            ImageWrapper.createRoundedBitmap(
+              imageSizeInt * 2,
+              imageSizeInt * 2,
+              imageCornerRadiusFractionFloat,
+              imageColor.toArgb()
+            )
+          } catch (_: Exception) { null }
+        }
+        _fallbackImageProvider = fallbackBitmap
       }
     }
 
-    val finalBitmap = _currentImageProviderWrapper?.bitmap ?: _fallbackImageProvider!!
+    val finalBitmap: Bitmap? = _currentImageProviderWrapper?.bitmap ?: _fallbackImageProvider
+    if (finalBitmap == null) return
     _latestImagePath = imagePath
 
 
@@ -175,23 +173,24 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
       GlanceModifier.cornerRadius(24.dp)
         .background(boxColor)
         .fillMaxSize()
+        .padding(vertical = verticalPadding)
         .clickable { _startCustomActivity<NamidaMainActivity>(context) }
     ) {
       Row(
         verticalAlignment = Alignment.Vertical.CenterVertically,
         modifier = GlanceModifier.fillMaxWidth().height(h),
       ) {
-        HorizontalSpace(padding.value.toInt())
+        HorizontalSpace(horizontalPadding.value.toInt())
 
         Image(
           androidx.glance.ImageProvider(
             finalBitmap
           ),
           null,
-          modifier = GlanceModifier.fillMaxHeight().size(imageSize)
+          modifier = GlanceModifier.size(imageSize)
         )
 
-        HorizontalSpace(padding.value.toInt())
+        HorizontalSpace(horizontalPadding.value.toInt())
 
         Column(
           verticalAlignment = Alignment.Vertical.CenterVertically,
@@ -218,20 +217,23 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
             maxLines = 1,
           )
 
-          Spacer(GlanceModifier.height(h * 0.04f))
+          Spacer(GlanceModifier.height(imageSize * 0.1f))
+
           Row(
             verticalAlignment = Alignment.Vertical.CenterVertically,
             horizontalAlignment = Alignment.Start,
           ) {
             val additionalModifier =
-              GlanceModifier.padding(buttonHeight * 0.15f).width(buttonWidth).height(buttonHeight)
+              GlanceModifier.width(buttonWidth).height(buttonHeight).padding(horizontal = gapSmall / 2)
+            val additionalModifierHeartButtons =
+              GlanceModifier.width(buttonWidth * 0.95f).height(buttonHeight * 0.95f).padding(horizontal = gapSmall / 2)
             if (isFav)
               MediaControlButton(
                 color = iconsColor,
                 drawableRes = com.msob7y.namida.R.drawable.unheart,
                 contentDescription = "Unfavourite",
                 keyEvent = KeyEvent.KEYCODE_MEDIA_FAST_FORWARD,
-                additionalModifier = additionalModifier
+                additionalModifier = additionalModifierHeartButtons
               )
             else
               MediaControlButton(
@@ -239,10 +241,9 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
                 drawableRes = com.msob7y.namida.R.drawable.heart,
                 contentDescription = "Set Favourite",
                 keyEvent = KeyEvent.KEYCODE_MEDIA_REWIND,
-                additionalModifier = additionalModifier
+                additionalModifier = additionalModifierHeartButtons
               )
 
-            HorizontalSpace(gapSmall.value.toInt())
             MediaControlButton(
               color = iconsColor,
               drawableRes = com.msob7y.namida.R.drawable.previous,
@@ -250,7 +251,6 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
               keyEvent = KeyEvent.KEYCODE_MEDIA_PREVIOUS,
               additionalModifier = additionalModifier
             )
-            HorizontalSpace(gapSmall.value.toInt())
             if (isPlaying)
               MediaControlButton(
                 color = iconsColor,
@@ -268,7 +268,6 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
                 keyEvent = KeyEvent.KEYCODE_MEDIA_PLAY,
                 additionalModifier = additionalModifier
               )
-            HorizontalSpace(gapSmall.value.toInt())
             MediaControlButton(
               color = iconsColor,
               drawableRes = com.msob7y.namida.R.drawable.next,
@@ -281,7 +280,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
           Spacer(GlanceModifier.height(h * 0.04f))
         }
         
-        HorizontalSpace(padding.value.toInt())
+        HorizontalSpace(horizontalPadding.value.toInt())
       }
     }
 
@@ -340,7 +339,7 @@ fun MediaControlButton(
     provider = androidx.glance.ImageProvider(drawableRes),
     colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(color)),
     contentDescription = contentDescription,
-    modifier = ModifierClick.mediaClick(keyEvent).then(additionalModifier)
+    modifier = additionalModifier.then(ModifierClick.mediaClick(keyEvent)) 
   )
 }
 

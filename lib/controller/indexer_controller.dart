@@ -1303,7 +1303,7 @@ class Indexer<T extends Track> {
     printy("FINAL: ${tracksInfoList.length}");
 
     _sortAndRefreshTracks();
-    _createDefaultNamidaArtworkIfRequired();
+    Indexer.createDefaultNamidaArtworkIfRequired();
     TrackTileManager.onTrackItemPropChange();
     SearchSortController.inst.refreshPortsIfNecessary();
   }
@@ -1756,16 +1756,17 @@ class Indexer<T extends Track> {
   Future<void> clearImageCache() async {
     await Directory(AppDirs.ARTWORKS).delete(recursive: true);
     await Directory(AppDirs.ARTWORKS).create();
-    _createDefaultNamidaArtworkIfRequired();
+    Indexer.createDefaultNamidaArtworkIfRequired();
     calculateAllImageSizesInStorage();
   }
 
-  Future<void> _createDefaultNamidaArtworkIfRequired() async {
+  static Future<String> createDefaultNamidaArtworkIfRequired() async {
     if (!await File(AppPaths.NAMIDA_LOGO_LAYER).exists()) {
       final byteData = await rootBundle.load(NamidaChannel.defaultLayerIconForPlatform);
       final file = await File(AppPaths.NAMIDA_LOGO_LAYER).create(recursive: true);
-      await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+      await file.writeAsBytes(byteData.buffer.asUint8List());
     }
+    return AppPaths.NAMIDA_LOGO_LAYER;
   }
 
   static SplitArtistGenreConfigsWrapper _createSplitConfig() {

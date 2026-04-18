@@ -428,6 +428,15 @@ class CurrentColor {
     return pcolors.isEmpty ? null : nc;
   }
 
+  Future<void> deletePaletteForImage(
+    String imagePath, {
+    Directory? paletteSaveDirectory,
+  }) async {
+    final filename = imagePath.getFilenameWOExt;
+    final paletteFile = _getPaletteFile(filename, paletteSaveDirectory: paletteSaveDirectory);
+    await paletteFile.tryDeleting();
+  }
+
   final _colorGenerationTasks = qs.Queue(parallel: 1);
 
   Future<void> reExtractTrackColorPalette({required Track track, required NamidaColor? newNC, required String? imagePath, bool useIsolate = true}) async {

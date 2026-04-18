@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/controller/folders_controller.dart';
-import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -49,16 +48,13 @@ class QueueCard extends StatelessWidget {
           f = VideoFolder.explicit(nameOrPath);
           tracks = f.tracksDedicated();
         }
-        ScrollSearchController.inst.animatePageController(LibraryTab.folders);
-        FoldersController.tracksAndVideos.stepIn(f);
+        NamidaOnTaps.inst.onFolderTapNavigate(f, FoldersController.tracksAndVideos);
       case QueueSourceEnum.folderMusic:
         final f = Folder.explicit(nameOrPath);
-        ScrollSearchController.inst.animatePageController(LibraryTab.folders);
-        FoldersController.tracks.stepIn(f);
+        NamidaOnTaps.inst.onFolderTapNavigate(f, FoldersController.tracks);
       case QueueSourceEnum.folderVideos:
         final f = VideoFolder.explicit(nameOrPath);
-        ScrollSearchController.inst.animatePageController(LibraryTab.folders);
-        FoldersController.videos.stepIn(f);
+        NamidaOnTaps.inst.onFolderTapNavigate(f, FoldersController.videos);
       default:
         handled = false;
     }

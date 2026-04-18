@@ -95,7 +95,6 @@ enum NamidaAppIcons {
   space("assets/namida_icon_space.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
   retro("assets/namida_icon_retro.png", [AuthorInfo("sgfreak", null, AuthorPlatform.discord, null)]),
   ookami("assets/namida_icon_ookami.webp", [AuthorInfo("神 ᴛᴀᴋᴜᴍɪ", null, AuthorPlatform.discord, AuthorAIModel.unknown)]),
-  mini("assets/namida_icon_mini.png", [AuthorInfo("شاكور", null, AuthorPlatform.discord, null)]),
   original("assets/namida_icon_original.webp", [AuthorInfo("MSOB7YY", "MSOB7YY", AuthorPlatform.github, AuthorAIModel.midjourney)]),
   enhanced("assets/namida_icon_enhanced.webp", [AuthorInfo("im_mehu", null, AuthorPlatform.discord, null)]),
   hollow("assets/namida_icon_hollow.png", [AuthorInfo("wispy", null, AuthorPlatform.discord, null)]),

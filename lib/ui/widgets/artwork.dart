@@ -330,7 +330,6 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     final borderR = widget.isCircle || settings.borderRadiusMultiplier.value == 0 ? null : BorderRadius.circular(widget.borderRadius.multipliedRadius);
     final shape = widget.isCircle ? BoxShape.circle : BoxShape.rectangle;
-    final fit = widget.isCircle ? BoxFit.fitHeight : widget.fit; // -- otherwise can appear cropped
     final theme = context.theme;
     Widget artwork = SizedBox(
       key: key,
@@ -369,7 +368,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                             (goodImagePath ? FileImage(File(_imagePath!)) : MemoryImage(bytes!)) as ImageProvider,
                           ),
                           gaplessPlayback: true,
-                          fit: fit,
+                          fit: widget.fit,
                           alignment: widget.alignment,
                           // -- low and high, both cause pixelated image lmao
                           // -- but medium also causes delayed rendering especially while animating

@@ -159,9 +159,7 @@ class Player {
   StreamSubscription? _notificationClickedSub;
 
   Future<void> initializePlayer() async {
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      _audioHandler = NamidaAudioVideoHandler();
-    } else {
+    if (Platform.isAndroid || Platform.isIOS) {
       _audioHandler = await AudioService.init(
         builder: () => NamidaAudioVideoHandler(),
         config: const AudioServiceConfig(
@@ -173,6 +171,8 @@ class Player {
           androidStopForegroundOnPause: false,
         ),
       );
+    } else {
+      _audioHandler = NamidaAudioVideoHandler();
     }
 
     void videoInfoListener() {

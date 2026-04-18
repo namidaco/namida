@@ -165,7 +165,6 @@ class NamidaMainActivity : FlutterActivity() {
             "space" -> LauncherIcon.SPACE
             "retro" -> LauncherIcon.RETRO
             "ookami" -> LauncherIcon.OOKAMI
-            "mini" -> LauncherIcon.MINI
             "original" -> LauncherIcon.ORIGINAL
             "enhanced" -> LauncherIcon.ENHANCED
             "hollow" -> LauncherIcon.HOLLOW
@@ -195,7 +194,6 @@ class NamidaMainActivity : FlutterActivity() {
             "space" -> LauncherIcon.SPACE
             "retro" -> LauncherIcon.RETRO
             "ookami" -> LauncherIcon.OOKAMI
-            "mini" -> LauncherIcon.MINI
             "original" -> LauncherIcon.ORIGINAL
             "enhanced" -> LauncherIcon.ENHANCED
             "hollow" -> LauncherIcon.HOLLOW

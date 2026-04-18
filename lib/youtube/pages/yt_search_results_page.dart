@@ -396,13 +396,13 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                                             Text.rich(
                                               TextSpan(
                                                 text: typed ?? fullText,
-                                                style: textTheme.displaySmall?.copyWith(fontSize: 13.5, fontWeight: FontWeight.w700),
+                                                style: textTheme.displaySmall?.copyWith(fontSize: 14.0, fontWeight: FontWeight.w700),
                                                 children: completion == null
                                                     ? null
                                                     : [
                                                         TextSpan(
                                                           text: completion,
-                                                          style: textTheme.displaySmall?.copyWith(fontSize: 13.5, fontWeight: FontWeight.w300),
+                                                          style: textTheme.displaySmall?.copyWith(fontSize: 14.0, fontWeight: FontWeight.w400),
                                                         ),
                                                       ],
                                               ),
