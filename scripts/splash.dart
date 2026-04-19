@@ -105,7 +105,7 @@ void _replaceInManifest() {
   final suffixComment = '<!-- $_kSuffixComment -->';
   const indent = '        ';
 
-  final String manifestCode = _appIcons
+  String manifestCode = _appIcons
       .map(
         (icon) =>
             '''<activity-alias
@@ -124,6 +124,31 @@ void _replaceInManifest() {
         </activity-alias>''',
       )
       .join('\n\n$indent');
+
+  if (_appIconsRemoved.isNotEmpty) {
+    final removedPrefixComment = '<!-- $_kRemovedPrefixComment -->';
+    final removedSuffixComment = '<!-- $_kRemovedSuffixComment -->';
+    final removedManifestCode = _appIconsRemoved
+        .map(
+          (icon) =>
+              '''<activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.${icon.manifestName}"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/${_appIcons[0].mipmapName}"
+            android:roundIcon="@mipmap/${_appIcons[0].mipmapName}"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>''',
+        )
+        .join('\n\n$indent');
+    manifestCode += '\n\n$indent$removedPrefixComment\n$indent$removedManifestCode\n$indent$removedSuffixComment\n';
+  }
 
   _replaceAllInFile(
     _FilePaths.android_manifest,
@@ -256,6 +281,9 @@ File _renameFileAdv(File file, String Function(String old) newFileNameBuilder) {
 const _kPrefixComment = 'SPLASH_AUTO_GENERATED START';
 const _kSuffixComment = 'SPLASH_AUTO_GENERATED END';
 
+const _kRemovedPrefixComment = 'SPLASH_AUTO_GENERATED REMOVED ICONS START';
+const _kRemovedSuffixComment = 'SPLASH_AUTO_GENERATED REMOVED ICONS END';
+
 final _appIcons = [
   _IconDetails.defaultIconNew,
   _IconDetails.create(
@@ -357,6 +385,22 @@ final _appIcons = [
     ext: _ImgExtension.webp,
     authorInfos: [
       _AuthorInfo('Zephyr', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
+    ],
+  ),
+];
+final _appIconsRemoved = [
+  _IconDetails.create(
+    'shade',
+    ext: _ImgExtension.png,
+    authorInfos: [
+      _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
+    ],
+  ),
+  _IconDetails.create(
+    'mini',
+    ext: _ImgExtension.png,
+    authorInfos: [
+      _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
     ],
   ),
 ];
