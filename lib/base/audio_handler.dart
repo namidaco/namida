@@ -514,7 +514,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       ].execute();
     } else {
       refreshNotification(currentItem.value);
-      await QueueController.inst.updateLatestQueue(currentQueue.value);
+      await QueueController.inst.updateLatestQueue(currentQueue.value, source: null);
     }
   }
 

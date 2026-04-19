@@ -747,24 +747,11 @@ class Player {
       onIndexAndQueueSame: togglePlayPauseExclusive,
       onQueueDifferent: (finalizedQueue) {
         if (updateQueue) {
-          int? queueDate;
-          if (source.s == QueueSourceEnum.queuePage) {
-            // -- allow skip adding as a new queue (if same as latest queue)
-            final dateText = source.title;
-            if (dateText != null) {
-              queueDate = int.tryParse(dateText);
-            }
-          }
-          if (queue.firstOrNull is Selectable) {
-            try {
-              final trs = finalizedQueue.cast<Selectable>().tracks.toList();
-              QueueController.inst.addNewQueue(source: source, dateComparison: queueDate, homePageItem: homePageItem, tracks: trs);
-            } catch (_) {
-              // -- is mixed queue
-            }
-          }
-
-          QueueController.inst.updateLatestQueue(finalizedQueue);
+          QueueController.inst.updateLatestQueue(
+            finalizedQueue,
+            source: source,
+            homePageItem: homePageItem,
+          );
         }
       },
       onQueueEmpty: togglePlayPauseExclusive,

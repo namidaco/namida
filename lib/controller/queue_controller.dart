@@ -32,6 +32,18 @@ class QueueController {
   /// faster way to access latest queue
   int _latestAddedQueueDate = 0;
 
+  Future<bool> _allowSavingQueue(int count) async {
+    // -- if there are more than 2000 tracks.
+    if (count > 2000) {
+      printy("UWAH QUEUE DEKKA", isError: true);
+      return false;
+    }
+
+    await _queuesLoad.future;
+
+    return true;
+  }
+
   /// doesnt save queues with more than 2000 tracks.
   Future<void> addNewQueue({
     required QueueSourceBase source,
@@ -40,20 +52,9 @@ class QueueController {
     int? dateComparison,
     List<Track> tracks = const <Track>[],
   }) async {
-    /// If there are more than 2000 tracks.
-    if (tracks.length > 2000) {
-      printy("UWAH QUEUE DEKKA", isError: true);
-      return;
-    }
-
     date ??= currentTimeMS;
 
-    if (!isQueuesLoaded) {
-      // after queues full load, [addNewQueue] will be called to add Queues inside [_queuesToAddAfterAllQueuesLoad].
-      _queuesToAddAfterAllQueuesLoad.add(Queue(source: source, homePageItem: homePageItem, date: date, isFav: false, tracks: tracks));
-      printy("Queue adding suspended until queues full load");
-      return;
-    }
+    if (!await _allowSavingQueue(tracks.length)) return;
 
     // -- Prevents saving [allTracks] source over and over.
     final latestQueue = _latestQueueInMap;
@@ -117,7 +118,7 @@ class QueueController {
     await _saveQueueToStorage(newQueue);
   }
 
-  Future<void> updateLatestQueue(List<Playable> items) async {
+  Future<void> updateLatestQueue(List<Playable> items, {required QueueSourceBase? source, HomePageItems? homePageItem}) async {
     await Future.wait([
       _saveLatestQueueToStorage(items),
       () async {
@@ -125,10 +126,36 @@ class QueueController {
         try {
           final firstItem = items.firstOrNull;
           if (firstItem is Selectable) {
-            final latestQueueInsideMap = _latestQueueInMap;
+            int? queueDate;
+            if (source != null && source.s == QueueSourceEnum.queuePage) {
+              // -- allow skip adding as a new queue (if same as latest queue)
+              final dateText = source.title;
+              if (dateText != null) {
+                queueDate = int.tryParse(dateText);
+              }
+            }
+
             final tracks = items.cast<Selectable>().tracks.toList();
-            if (latestQueueInsideMap != null) {
-              await updateQueue(latestQueueInsideMap, latestQueueInsideMap.copyWith(tracks: tracks));
+            final latestQueueInsideMap = _latestQueueInMap;
+            final shouldUpdateLatestQueueInsteadOfAdding = latestQueueInsideMap != null && (source == null || latestQueueInsideMap.source == source);
+            if (shouldUpdateLatestQueueInsteadOfAdding) {
+              await updateQueue(
+                latestQueueInsideMap,
+                latestQueueInsideMap.copyWith(
+                  tracks: tracks,
+                  source: source is QueueSource ? source : null,
+                  homePageItem: homePageItem,
+                ),
+              );
+            } else {
+              if (source != null) {
+                await this.addNewQueue(
+                  source: source,
+                  dateComparison: queueDate,
+                  homePageItem: homePageItem,
+                  tracks: tracks,
+                );
+              }
             }
           }
         } catch (_) {
@@ -209,20 +236,11 @@ class QueueController {
     }
   }
 
-  ///
   Future<void> prepareAllQueuesFile() async {
     final mapAndLatest = await _readQueueFilesCompute.thready(AppDirs.QUEUES);
     queuesMap.value = mapAndLatest.$1;
     _latestAddedQueueDate = mapAndLatest.$2;
     _queuesLoad.completeIfWasnt(true);
-    // Adding queues that were rejected by [addNewQueue] since Queues wasn't fully loaded.
-    if (_queuesToAddAfterAllQueuesLoad.isNotEmpty) {
-      for (final q in _queuesToAddAfterAllQueuesLoad) {
-        await addNewQueue(source: q.source, homePageItem: q.homePageItem, date: q.date, tracks: q.tracks);
-      }
-      printy("Added ${_queuesToAddAfterAllQueuesLoad.length} queue that were suspended");
-      _queuesToAddAfterAllQueuesLoad.clear();
-    }
   }
 
   static (SplayTreeMap<int, Queue>, int) _readQueueFilesCompute(String path) {
@@ -334,8 +352,6 @@ class QueueController {
     });
   }
 
-  /// Used to add Queues that were rejected by [addNewQueue] after full loading of queues.
-  final List<Queue> _queuesToAddAfterAllQueuesLoad = <Queue>[];
   final _queuesLoad = Completer<bool>();
   Future<bool> get waitForQueuesLoad => _queuesLoad.future;
   bool get isQueuesLoaded => _queuesLoad.isCompleted;
