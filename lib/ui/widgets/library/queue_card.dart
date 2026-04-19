@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/controller/folders_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -116,6 +119,14 @@ class QueueCard extends StatelessWidget {
     final textTheme = theme.textTheme;
     final queue = this.queue;
     final sourceText = queue?.toSourceText();
+    File? artworkFile;
+    if (queue?.source.s == QueueSourceEnum.playlist) {
+      final plName = queue?.source.title;
+      if (plName != null && plName.isNotEmpty) {
+        artworkFile = PlaylistController.inst.getArtworkFileForPlaylist(plName);
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
       child: BorderRadiusClip(
@@ -165,7 +176,7 @@ class QueueCard extends StatelessWidget {
                       heroTag: hero,
                       borderRadius: 12.0,
                       thumbnailSize: imageSize,
-                      artworkFile: null,
+                      artworkFile: artworkFile,
                       tracks: queue?.tracks.toImageTracks() ?? [],
                       reduceQuality: true,
                     ),
