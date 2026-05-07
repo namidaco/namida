@@ -1916,10 +1916,13 @@ void showSetTrackStatsDialog({
                   rx: selectedRatingRx,
                   builder: (context, rating) => NamidaWheelSlider(
                     key: ValueKey(fixedrating), // rebuild on selecting fixed rating
+                    min: -1,
                     max: 100,
-                    initValue: rating,
-                    text: '$rating',
-                    onValueChanged: (val) => selectedRatingRx.value = val,
+                    initValue: rating == 0 ? -1 : 100 - rating,
+                    text: rating == 0 ? '' : '$rating',
+                    onValueChanged: (val) {
+                      selectedRatingRx.value = val == -1 ? 0 : (100 - val);
+                    },
                   ),
                 ),
               ),
@@ -1931,7 +1934,7 @@ void showSetTrackStatsDialog({
               child: ObxO(
                 rx: selectedRatingRx,
                 builder: (context, selectedRating) => Row(
-                  children: const [50, 60, 70, 75, 80, 85, 90, 95, 100].map(
+                  children: const [100, 95, 90, 85, 80, 75, 70, 60, 50].map(
                     (e) {
                       final isSelected = e == selectedRating;
                       return Padding(
