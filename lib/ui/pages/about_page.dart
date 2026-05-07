@@ -2,6 +2,7 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:flutter_mailer/flutter_mailer.dart';
@@ -405,13 +406,17 @@ class _AboutPageState extends State<AboutPage> {
                       tooltip: () => AppSocial.EMAIL,
                       onPressed: () async {
                         final attachments = await AppPaths.getAllExistingLogsAndSettingsAsZip();
-                        final mailOptions = MailOptions(
-                          body: 'pls look at this report im beggin u pls solve my issue pls i wa-',
-                          subject: 'Namida Logs Report',
-                          recipients: [AppSocial.EMAIL],
-                          attachments: attachments,
-                        );
-                        await FlutterMailer.send(mailOptions);
+                        try {
+                          final mailOptions = MailOptions(
+                            body: 'pls look at this report im beggin u pls solve my issue pls i wa-',
+                            subject: 'Namida Logs Report',
+                            recipients: [AppSocial.EMAIL],
+                            attachments: attachments,
+                          );
+                          await FlutterMailer.send(mailOptions);
+                        } on MissingPluginException catch (_) {
+                          NamidaUtils.shareFiles(attachments);
+                        }
                       },
                     ),
                     onTap: () async {

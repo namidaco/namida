@@ -150,7 +150,7 @@ class _WebDAVServer extends MusicWebServer {
     final lrcFiles = <(webdav.File, bool)>[];
     final lrcFilesInfoToExtractLater = <String, TrackExtended>{};
     final artworksToExtractLater = <String, List<_ExtractInfo>>{};
-    const subBatchSize = 20;
+    const subBatchSize = 10;
     for (var i = 0; i < files.length; i += subBatchSize) {
       final batch = files.skip(i).take(subBatchSize);
       final subfiles = <webdav.File>[];
@@ -236,17 +236,21 @@ class _WebDAVServer extends MusicWebServer {
       for (final dir in subdirectories) {
         final p = dir.path;
         if (p != null) {
-          final subfiles = await api.readDir(p);
-          yield* _fetchSongsForFilesBatch(
-            api: api,
-            server: server,
-            serverUriParsed: serverUriParsed,
-            files: subfiles,
-            splittersConfigs: splittersConfigs,
-            identifiersSet: identifiersSet,
-            minDur: minDur,
-            minSize: minSize,
-          );
+          try {
+            final subfiles = await api.readDir(p);
+            yield* _fetchSongsForFilesBatch(
+              api: api,
+              server: server,
+              serverUriParsed: serverUriParsed,
+              files: subfiles,
+              splittersConfigs: splittersConfigs,
+              identifiersSet: identifiersSet,
+              minDur: minDur,
+              minSize: minSize,
+            );
+          } catch (_) {
+            continue;
+          }
         }
       }
     }

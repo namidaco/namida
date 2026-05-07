@@ -198,7 +198,7 @@ class _MediaStoreArtworkExtractStrategy extends _ArtworkExtractStrategy {
       id,
       ArtworkType.AUDIO,
       format: ArtworkFormat.JPEG,
-      quality: null,
+      quality: 60,
       size: size?.clampInt(48, 360) ?? 360,
     );
 
@@ -225,11 +225,18 @@ class _MediaStoreArtworkExtractStrategy extends _ArtworkExtractStrategy {
     var file = res.file;
 
     if (file == null) {
-      final artwork = await parent._audioQuery.queryArtwork(
+      var artwork = await parent._audioQuery.queryArtwork(
         info.$2,
         ArtworkType.AUDIO,
         format: ArtworkFormat.PNG,
-        quality: null,
+        quality: 100,
+        size: 720,
+      );
+      artwork ??= await parent._audioQuery.queryArtwork(
+        info.$2,
+        ArtworkType.AUDIO,
+        format: ArtworkFormat.PNG,
+        quality: 100,
         size: null,
       );
 

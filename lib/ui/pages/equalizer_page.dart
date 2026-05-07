@@ -562,11 +562,13 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: NamidaInkWell(
+              borderRadius: 8.0,
               onTap: () {
                 settings.player.save(isPerTrackAudioConfigOverriden: !settings.player.isPerTrackAudioConfigOverriden.value);
                 Player.inst.refreshCurrentItemPlayerConfig();
               },
               child: NamidaCoolBox(
+                borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                 colorScheme: theme.colorScheme.secondary,
                 builder: (context) => Row(
                   mainAxisSize: .min,
