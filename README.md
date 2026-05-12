@@ -458,6 +458,10 @@ Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LI
 - Redistributing the program as a whole under different name or license without permission is not allowed.
 ```
 
+---
+
+<a href="https://trendshift.io/repositories/9581" target="_blank"><img src="https://trendshift.io/api/badge/repositories/9581" alt="namidaco%2Fnamida | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+
 <a href="https://star-history.com/#namidaco/namida&Date">
  <picture>
    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=namidaco/namida&type=Date&theme=dark" />
