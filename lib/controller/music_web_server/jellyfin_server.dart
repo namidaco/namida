@@ -177,6 +177,7 @@ class _JellyfinServer extends MusicWebServer {
       format: format,
       channels: '',
       discNo: item.parentIndexNumber ?? 0,
+      discTo: 0,
       language: '',
       lyrics: '',
       label: '',

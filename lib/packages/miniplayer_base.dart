@@ -1084,6 +1084,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                             NamidaNavigator.inst.navigateDialog(
                                               dialog: CustomBlurryDialog(
                                                 title: lang.configure,
+                                                horizontalInset: 38.0,
                                                 contentPadding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 12.0),
                                                 actions: [
                                                   NamidaIconButton(

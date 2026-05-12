@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:rhttp/rhttp.dart';
 
 import 'package:namida/class/file_matcher.dart';
-import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/route.dart';
@@ -23,6 +22,7 @@ import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -38,6 +38,7 @@ import 'package:namida/main.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/create_smart_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
@@ -75,6 +76,7 @@ Future<void> showGeneralPopupDialog(
   IconData? trailingIcon,
   bool comingFromPlaylistMenu = false,
   bool showPlayAllReverse = false,
+  SmartPlaylist? smartPlaylist,
 }) async {
   final isSingle = tracks.length == 1;
   forceSingleArtwork ??= isSingle;
@@ -214,17 +216,10 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  void setPlaylistMoods() async {
-    // function button won't be visible if playlistName == null.
-    if (!shoulShowPlaylistUtils()) return;
-    cancelSkipTimer();
+  void setPlaylistMoods(List<String>? initialMoods, void Function(List<String> newMoods) onChanged) async {
+    final initialMoodsJoined = initialMoods?.join(', ') ?? '';
 
-    final pl = PlaylistController.inst.getPlaylist(playlistName!);
-    if (pl == null) return;
-
-    final initialMoods = pl.moods.join(', ');
-
-    final playlistMoodsController = TextEditingController(text: initialMoods);
+    final playlistMoodsController = TextEditingController(text: initialMoodsJoined);
     await openDialog(
       onDisposing: () {
         playlistMoodsController.dispose();
@@ -237,7 +232,7 @@ Future<void> showGeneralPopupDialog(
             text: lang.save,
             onTap: () async {
               final newMoods = Indexer.splitByCommaList(playlistMoodsController.text);
-              PlaylistController.inst.updatePropertyInPlaylist(playlistName, moods: newMoods);
+              onChanged(newMoods);
               NamidaNavigator.inst.closeDialog();
             },
           ),
@@ -248,7 +243,7 @@ Future<void> showGeneralPopupDialog(
             const SizedBox(height: 12.0),
             CustomTagTextField(
               controller: playlistMoodsController,
-              hintText: initialMoods,
+              hintText: initialMoodsJoined,
               labelText: lang.setMoods,
             ),
             const SizedBox(height: 8.0),
@@ -285,7 +280,7 @@ Future<void> showGeneralPopupDialog(
                 if (formKey.currentState!.validate()) {
                   final didRename = await PlaylistController.inst.renamePlaylist(playlistName!, controller.text);
                   if (didRename) {
-                    NamidaNavigator.inst.closeDialog();
+                    NamidaNavigator.inst.closeAllDialogs();
                   } else {
                     snackyy(title: lang.error, message: lang.couldntRenamePlaylist);
                   }
@@ -313,10 +308,6 @@ Future<void> showGeneralPopupDialog(
   }
 
   Future<void> deletePlaylist({bool deleteM3uFileOnly = false}) async {
-    // function button won't be visible if playlistName == null.
-    if (!shoulShowPlaylistUtils()) return;
-    cancelSkipTimer();
-
     NamidaNavigator.inst.closeDialog();
 
     final pl = PlaylistController.inst.getPlaylist(playlistName!);
@@ -357,7 +348,7 @@ Future<void> showGeneralPopupDialog(
 
     if (!await requestManageStoragePermission()) return;
 
-    final savePath = FileParts.joinPath(AppDirs.M3UPlaylists, "${pl.name}.m3u");
+    final savePath = PlaylistController.getUnusedM3uFilePathInStorage(pl.name);
     await PlaylistController.inst.exportPlaylistToM3UFile(pl, savePath);
     snackyy(
       message: "${lang.savedIn}: $savePath",
@@ -366,6 +357,54 @@ Future<void> showGeneralPopupDialog(
       top: false,
     );
     await PlaylistController.inst.updatePropertyInPlaylist(playlistName, m3uPath: savePath);
+  }
+
+  Future<void> exportSmartPlaylist({required bool asM3u}) async {
+    NamidaNavigator.inst.closeDialog();
+    final smpl = smartPlaylist;
+    if (smpl == null) return;
+
+    String m3uPath = '';
+
+    if (asM3u) {
+      if (await requestManageStoragePermission()) {
+        m3uPath = PlaylistController.getUnusedM3uFilePathInStorage(smpl.name);
+      }
+    } else {
+      final oldM3uPath = PlaylistController.getUnusedM3uFilePathInStorage(smpl.name);
+      File(oldM3uPath).tryDeleting();
+    }
+
+    LocalPlaylist finalPlaylist;
+    final plExisting = PlaylistController.inst.getPlaylist(smpl.name);
+    if (plExisting != null) {
+      await PlaylistController.inst.updatePropertyInPlaylist(
+        smpl.name,
+        tracksRaw: tracks,
+        convertItem: (e, dateAdded) => TrackWithDate(
+          dateAdded: dateAdded,
+          track: e,
+        ),
+        m3uPath: m3uPath,
+      );
+      finalPlaylist = plExisting;
+    } else {
+      finalPlaylist = await PlaylistController.inst.addNewPlaylist(
+        smpl.name,
+        tracks: tracks,
+        m3uPath: m3uPath,
+      );
+    }
+
+    if (m3uPath.isNotEmpty) {
+      await PlaylistController.inst.exportPlaylistToM3UFile(finalPlaylist, m3uPath);
+      snackyy(
+        message: "${lang.savedIn}: $m3uPath",
+        leftBarIndicatorColor: colorDelightened.value,
+        altDesign: true,
+        top: false,
+      );
+    }
   }
 
   void updatePathDialog(String newPath) async {
@@ -590,7 +629,19 @@ Future<void> showGeneralPopupDialog(
           child: Row(
             children: [
               const SizedBox(width: 24.0),
-              Expanded(child: bigIcon(Broken.smileys, () => lang.setMoods, setPlaylistMoods)),
+              Expanded(
+                child: bigIcon(
+                  Broken.smileys,
+                  () => lang.setMoods,
+                  () {
+                    if (playlistName == null) return;
+                    setPlaylistMoods(
+                      PlaylistController.inst.getPlaylist(playlistName)?.moods,
+                      (newMoods) => PlaylistController.inst.updatePropertyInPlaylist(playlistName, moods: newMoods),
+                    );
+                  },
+                ),
+              ),
               const SizedBox(width: 8.0),
               Expanded(child: bigIcon(Broken.edit_2, () => lang.renamePlaylist, renamePlaylist)),
               const SizedBox(width: 8.0),
@@ -620,6 +671,58 @@ Future<void> showGeneralPopupDialog(
                 Expanded(
                   child: bigIcon(Broken.directbox_send, () => lang.convertToM3UPlaylist, convertPlaylistToM3u),
                 ),
+              const SizedBox(width: 8.0),
+
+              const SizedBox(width: 24.0),
+            ],
+          ),
+        )
+      : null;
+
+  final Widget? smartPlaylistUtilsRow = smartPlaylist != null
+      ? SizedBox(
+          height: 48.0,
+          child: Row(
+            children: [
+              const SizedBox(width: 24.0),
+              Expanded(
+                child: bigIcon(
+                  Broken.smileys,
+                  () => lang.setMoods,
+                  () {
+                    setPlaylistMoods(
+                      smartPlaylist.moods,
+                      (newMoods) => SmartPlaylistsController.inst.edit(smartPlaylist, smartPlaylist.copyWith(moods: newMoods)),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: bigIcon(Broken.edit_2, () => lang.edit, () {
+                  NamidaNavigator.inst.closeDialog();
+                  NamidaNavigator.inst.navigateDialog(
+                    dialog: CreateSmartPlaylistDialog(
+                      initialSmartPlaylist: smartPlaylist,
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: bigIcon(
+                  Broken.trash,
+                  () => lang.deletePlaylist,
+                  () => CreateSmartPlaylistDialog.promptDeletePlaylist(smartPlaylist),
+                ),
+              ),
+              Expanded(
+                child: bigIcon(Broken.driver_2, () => lang.convertToNormalPlaylist, () => exportSmartPlaylist(asM3u: false)),
+              ),
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: bigIcon(Broken.directbox_send, () => lang.convertToM3UPlaylist, () => exportSmartPlaylist(asM3u: true)),
+              ),
               const SizedBox(width: 8.0),
 
               const SizedBox(width: 24.0),
@@ -912,6 +1015,7 @@ Future<void> showGeneralPopupDialog(
                               ?openInYtViewWidget,
                               ?removeFromPlaylistListTile,
                               ?playlistUtilsRow,
+                              ?smartPlaylistUtilsRow,
                               ?removeQueueTile,
                               ?advancedStuffListTile,
                               const SizedBox(height: 8.0),
@@ -1259,9 +1363,11 @@ Future<void> showGeneralPopupDialog(
 
                               ?playlistUtilsRow,
 
+                              ?smartPlaylistUtilsRow,
+
                               /// Track Utils
                               /// TODO: support for multiple tracks editing
-                              if (isSingle && playlistUtilsRow == null)
+                              if (isSingle && playlistUtilsRow == null && smartPlaylistUtilsRow == null)
                                 Row(
                                   children: [
                                     const SizedBox(width: 24.0),

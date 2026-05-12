@@ -1154,6 +1154,7 @@ class SoundControlPageState extends State<SoundControlPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     verticalInBetweenPadding,
+                    verticalInBetweenPadding,
                     Row(
                       children: [
                         const SizedBox(width: 6.0),

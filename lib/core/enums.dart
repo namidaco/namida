@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 // ignore_for_file: constant_identifier_names
 
 import 'dart:convert';
@@ -317,6 +316,7 @@ enum QueueSourceEnum {
   externalFile(false),
   homePageItem(false),
   recentlyAdded(false),
+  smartPlaylist(false),
   moods(false),
   tags(false),
   rating(false),
@@ -406,6 +406,7 @@ class QueueSource extends QueueSourceBase<QueueSourceEnum> {
   static const externalFile = QueueSource._(QueueSourceEnum.externalFile);
   static const homePageItem = QueueSource._(QueueSourceEnum.homePageItem);
   static const recentlyAdded = QueueSource._(QueueSourceEnum.recentlyAdded);
+  static QueueSource smartPlaylist(String? key) => QueueSource._(QueueSourceEnum.smartPlaylist, title: key);
   static QueueSource moods(String? name) => QueueSource._(QueueSourceEnum.moods, title: name);
   static QueueSource tags(String? name) => QueueSource._(QueueSourceEnum.tags, title: name);
   static QueueSource rating(String? name) => QueueSource._(QueueSourceEnum.rating, title: name);
@@ -590,6 +591,7 @@ enum RouteType {
 
   // ----- Subpages -----
   SUBPAGE_recentlyAddedTracks,
+  SUBPAGE_smartPlaylistTracks,
   SUBPAGE_moodsTracks,
   SUBPAGE_tagsTracks,
   SUBPAGE_ratingTracks,

@@ -241,6 +241,7 @@ class _SubsonicWebServer extends MusicWebServer {
       format: media.suffix ?? media.contentType ?? '',
       channels: '',
       discNo: media.discNumber ?? 0,
+      discTo: 0,
       language: '',
       lyrics: '',
       label: '',

@@ -37,6 +37,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/version_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
@@ -1218,6 +1219,7 @@ extension RouteUtils on NamidaRoute {
           RouteType.SUBPAGE_tagsTracks => Indexer.inst.getTracksForTag(name),
           RouteType.SUBPAGE_ratingTracks => Indexer.inst.getTracksForRating(name),
           RouteType.SUBPAGE_queueTracks => name?.getQueue()?.tracks,
+          RouteType.SUBPAGE_smartPlaylistTracks => SmartPlaylistsController.inst.smartPlaylistsMap.value[name]?.resolve(),
           RouteType.SUBPAGE_playlistTracks => name == null ? null : PlaylistController.inst.getPlaylist(name!)?.tracks,
           RouteType.SUBPAGE_favPlaylistTracks => name == null ? null : PlaylistController.inst.favouritesPlaylist.value.tracks,
           RouteType.SUBPAGE_historyTracks => HistoryController.inst.historyTracks,
@@ -1279,6 +1281,10 @@ extension RouteUtils on NamidaRoute {
             },
           ),
           RouteType.SUBPAGE_queueTracks => _registerAndReturn(name?.getQueue()?.tracks, () => QueueController.inst.queuesMap.valueR),
+          RouteType.SUBPAGE_smartPlaylistTracks => _registerAndReturn(
+            SmartPlaylistsController.inst.smartPlaylistsMap.value[name]?.resolve(),
+            () => SmartPlaylistsController.inst.smartPlaylistsMap.valueR,
+          ),
           RouteType.SUBPAGE_playlistTracks =>
             name == null ? null : _registerAndReturn(PlaylistController.inst.getPlaylist(name!)?.tracks, () => PlaylistController.inst.playlistsMap.valueR),
           RouteType.SUBPAGE_favPlaylistTracks =>
@@ -1405,7 +1411,8 @@ extension RouteUtils on NamidaRoute {
         route == RouteType.SUBPAGE_moodsTracks ||
         route == RouteType.SUBPAGE_tagsTracks ||
         route == RouteType.SUBPAGE_ratingTracks ||
-        route == RouteType.SUBPAGE_queueTracks;
+        route == RouteType.SUBPAGE_queueTracks ||
+        route == RouteType.SUBPAGE_smartPlaylistTracks;
 
     final showPlaylistMenu =
         route == RouteType.SUBPAGE_playlistTracks ||
@@ -1567,6 +1574,9 @@ extension RouteUtils on NamidaRoute {
               break;
             case RouteType.SUBPAGE_queueTracks:
               NamidaDialogs.inst.showQueueDialog(int.parse(name));
+              break;
+            case RouteType.SUBPAGE_smartPlaylistTracks:
+              NamidaDialogs.inst.showSmartPlaylistDialog(SmartPlaylistsController.inst.getPlaylistForKey(name));
               break;
 
             default:
@@ -1999,6 +2009,7 @@ extension QueueSourceL10n on QueueSourceEnum {
     QueueSourceEnum.selectedTracks => lang.selectedTracks,
     QueueSourceEnum.externalFile => lang.externalFiles,
     QueueSourceEnum.recentlyAdded => lang.recentlyAdded,
+    QueueSourceEnum.smartPlaylist => lang.smartPlaylist,
     QueueSourceEnum.moods => lang.moods,
     QueueSourceEnum.tags => lang.tags,
     QueueSourceEnum.rating => lang.rating,

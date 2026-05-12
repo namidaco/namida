@@ -10,6 +10,7 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -314,6 +315,26 @@ class NamidaDialogs {
       queue: queue,
       forceSquared: true,
       heroTag: 'queue_${queue.date}',
+    );
+  }
+
+  Future<void> showSmartPlaylistDialog(SmartPlaylist? smpl) async {
+    if (smpl == null) return;
+    final tracks = smpl.resolve();
+
+    await showGeneralPopupDialog(
+      tracks,
+      smpl.creationDate.dateFormatted,
+      smpl.creationDate.clockFormatted,
+      QueueSource.smartPlaylist(smpl.key),
+      thirdLineText: [
+        tracks.displayTrackKeyword,
+        tracks.totalDurationFormatted,
+      ].join(' - '),
+      extractColor: false,
+      forceSquared: true,
+      smartPlaylist: smpl,
+      customArtworkManager: CustomArtworkManager.smartPlaylist(smpl),
     );
   }
 

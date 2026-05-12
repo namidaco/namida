@@ -304,6 +304,7 @@ enum AppPathsBackupEnum {
   TRACKS_STATS_DB_INFO,
   LATEST_PLAYED_FOR_SOURCE,
   AUDIO_CONFIGS,
+  SMART_PLAYLISTS,
   VIDEOS_LOCAL_DB_INFO,
   VIDEOS_CACHE_DB_INFO,
   LATEST_QUEUE,
@@ -330,6 +331,7 @@ enum AppPathsBackupEnum {
   HISTORY_PLAYLIST(true),
   PLAYLISTS(true),
   PLAYLISTS_ARTWORKS(true),
+  SMART_PLAYLISTS_ARTWORKS(true),
   PLAYLISTS_METADATA(true),
   QUEUES(true),
   ARTWORKS(true),
@@ -375,6 +377,7 @@ enum AppPathsBackupEnum {
       AppPathsBackupEnum.TRACKS_STATS_DB_INFO => AppPaths.TRACKS_STATS_DB_INFO.file.path,
       AppPathsBackupEnum.LATEST_PLAYED_FOR_SOURCE => AppPaths.LATEST_PLAYED_FOR_SOURCE.file.path,
       AppPathsBackupEnum.AUDIO_CONFIGS => AppPaths.AUDIO_CONFIGS.file.path,
+      AppPathsBackupEnum.SMART_PLAYLISTS => AppPaths.SMART_PLAYLISTS.file.path,
       AppPathsBackupEnum.VIDEOS_LOCAL_DB_INFO => AppPaths.VIDEOS_LOCAL_DB_INFO.file.path,
       AppPathsBackupEnum.VIDEOS_CACHE_DB_INFO => AppPaths.VIDEOS_CACHE_DB_INFO.file.path,
       AppPathsBackupEnum.LATEST_QUEUE => AppPaths.LATEST_QUEUE,
@@ -392,6 +395,7 @@ enum AppPathsBackupEnum {
       AppPathsBackupEnum.HISTORY_PLAYLIST => AppDirs.HISTORY_PLAYLIST,
       AppPathsBackupEnum.PLAYLISTS => AppDirs.PLAYLISTS,
       AppPathsBackupEnum.PLAYLISTS_ARTWORKS => AppDirs.PLAYLISTS_ARTWORKS,
+      AppPathsBackupEnum.SMART_PLAYLISTS_ARTWORKS => AppDirs.SMART_PLAYLISTS_ARTWORKS,
       AppPathsBackupEnum.PLAYLISTS_METADATA => AppDirs.PLAYLISTS_METADATA,
       AppPathsBackupEnum.QUEUES => AppDirs.QUEUES,
       AppPathsBackupEnum.ARTWORKS => AppDirs.ARTWORKS,
@@ -457,6 +461,8 @@ class AppPathsBackupEnumCategories {
 
   static List<AppPathsBackupEnum> playlists = [
     AppPathsBackupEnum.PLAYLISTS,
+    AppPathsBackupEnum.SMART_PLAYLISTS,
+    AppPathsBackupEnum.SMART_PLAYLISTS_ARTWORKS,
     AppPathsBackupEnum.PLAYLISTS_ARTWORKS,
     AppPathsBackupEnum.PLAYLISTS_METADATA,
     AppPathsBackupEnum.FAVOURITES_PLAYLIST,
@@ -549,6 +555,7 @@ class AppPaths {
   static final TRACKS_STATS_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'tracks_stats');
   static final LATEST_PLAYED_FOR_SOURCE = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'latest_played');
   static final AUDIO_CONFIGS = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'audio_configs');
+  static final SMART_PLAYLISTS = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'smart_playlists');
   static final VIDEOS_LOCAL_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'local_videos');
   static final VIDEOS_CACHE_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'cache_videos');
   static final LATEST_QUEUE = _join(_USER_DATA, 'latest_queue.json');
@@ -743,6 +750,7 @@ class AppDirs {
   static final HISTORY_PLAYLIST = _join(USER_DATA, 'History');
   static final PLAYLISTS = _join(USER_DATA, 'Playlists');
   static final PLAYLISTS_ARTWORKS = _join(USER_DATA, 'Playlists Artworks');
+  static final SMART_PLAYLISTS_ARTWORKS = _join(USER_DATA, 'Smart Playlists Artworks');
   static final PLAYLISTS_METADATA = _join(USER_DATA, 'Playlists Metadata');
   static final QUEUES = _join(USER_DATA, 'Queues');
   static final ARTWORKS = _join(USER_DATA, 'Artworks'); // extracted audio artworks
@@ -791,6 +799,7 @@ class AppDirs {
     HISTORY_PLAYLIST,
     PLAYLISTS,
     PLAYLISTS_ARTWORKS,
+    SMART_PLAYLISTS_ARTWORKS,
     QUEUES,
     ARTWORKS,
     ARTWORKS_ARTISTS,
@@ -968,6 +977,7 @@ const kDummyExtendedTrack = TrackExtended(
   format: "",
   channels: "",
   discNo: 0,
+  discTo: 0,
   language: "",
   lyrics: "",
   label: "",
@@ -1084,6 +1094,7 @@ class NamidaFeaturesVisibility {
   static final onAudioQueryAvailable = _isAndroid;
   static final recieveSharingIntents = _isAndroid;
   static final changeApplicationBrightness = _isAndroid;
+  static final skipSilenceAvailable = _isAndroid;
   static final equalizerAvailable = PlayerConfig.isEqualizerSupported;
   static final loudnessEnhancerAvailable = PlayerConfig.isLoudnessEnhancerSupported;
 

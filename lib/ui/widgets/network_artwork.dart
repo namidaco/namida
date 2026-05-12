@@ -15,6 +15,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -40,6 +41,14 @@ class CustomArtworkManager {
     return CustomArtworkManager(
       getArtworkFile: () => PlaylistController.inst.getArtworkFileForPlaylist(playlistName),
       setArtworkFile: (file, bytes) => PlaylistController.inst.setArtworkForPlaylist(playlistName, artworkFile: file, artworkBytes: bytes),
+      fetchPossibleArtworks: null,
+    );
+  }
+
+  static CustomArtworkManager smartPlaylist(SmartPlaylist smartPlaylist) {
+    return CustomArtworkManager(
+      getArtworkFile: () => SmartPlaylistsController.inst.getArtworkFileForPlaylist(smartPlaylist),
+      setArtworkFile: (file, bytes) => SmartPlaylistsController.inst.setArtworkForPlaylist(smartPlaylist, artworkFile: file, artworkBytes: bytes),
       fetchPossibleArtworks: null,
     );
   }

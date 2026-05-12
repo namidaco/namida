@@ -17,6 +17,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -27,8 +28,11 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/create_smart_playlist_dialog.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
+import 'package:namida/ui/pages/subpages/smart_playlist_tracks_subpage.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
@@ -161,6 +165,17 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
               onTap: () {
                 _closeDialog();
                 CreatePlaylistButton().promptCreate();
+              },
+            ),
+            CustomListTile(
+              icon: Broken.magicpen,
+              title: lang.create,
+              subtitle: lang.createNewSmartPlaylist,
+              onTap: () {
+                _closeDialog();
+                NamidaNavigator.inst.navigateDialog(
+                  dialog: const CreateSmartPlaylistDialog(),
+                );
               },
             ),
           ],
@@ -477,6 +492,68 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                             ),
                           ),
                         ),
+                      if (!isInsideDialog) ...[
+                        const SliverPadding(padding: EdgeInsets.only(top: 10.0)),
+                        SliverToBoxAdapter(
+                          child: ObxO(
+                            rx: SmartPlaylistsController.inst.smartPlaylistsMap,
+                            builder: (context, smartPlaylistsMap) {
+                              final smartPlaylists = smartPlaylistsMap.values.toList();
+                              return SizedBox(
+                                height: 48.0,
+                                child: SuperSmoothListView.builder(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: smartPlaylists.length,
+                                  itemBuilder: (context, index) {
+                                    final smpl = smartPlaylists[index];
+                                    final imgFile = SmartPlaylistsController.inst.getArtworkFileForPlaylist(smpl);
+                                    return ConstrainedBox(
+                                      constraints: BoxConstraints(maxWidth: context.width * 0.75),
+                                      child: NamidaInkWell(
+                                        margin: const EdgeInsets.symmetric(horizontal: 2.0),
+                                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                                        onTap: () {
+                                          SmartPlaylistTracksPage(
+                                            smartPlaylist: smpl,
+                                          ).navigate();
+                                        },
+                                        onLongPress: () => NamidaDialogs.inst.showSmartPlaylistDialog(smpl),
+                                        borderRadius: 8.0,
+                                        bgColor: context.theme.colorScheme.secondary.withOpacityExt(0.12),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const SizedBox(width: 4.0),
+                                            ArtworkWidget(
+                                              key: ValueKey(imgFile),
+                                              track: null,
+                                              thumbnailSize: 48.0,
+                                              path: imgFile.path,
+                                              forceSquared: true,
+                                              icon: Broken.magicpen,
+                                            ),
+                                            const SizedBox(width: 6.0),
+                                            Flexible(
+                                              child: Text(
+                                                smpl.name,
+                                                softWrap: false,
+                                                overflow: TextOverflow.fade,
+                                                style: textTheme.displayMedium,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12.0),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                       const SliverPadding(padding: EdgeInsets.only(top: 10.0)),
                       if (isInsideDialog)
                         SliverToBoxAdapter(

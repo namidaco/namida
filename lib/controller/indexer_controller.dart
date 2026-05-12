@@ -699,6 +699,7 @@ class Indexer<T extends Track> {
         format: '',
         channels: '',
         discNo: 0,
+        discTo: 0,
         language: '',
         lyrics: '',
         label: '',
@@ -791,6 +792,7 @@ class Indexer<T extends Track> {
           format: trackInfo.format,
           channels: trackInfo.channels,
           discNo: discNoParsed?.$1,
+          discTo: discNoParsed?.$2,
           language: tags.language,
           lyrics: tags.lyrics,
           label: tags.recordLabel,
@@ -1816,6 +1818,8 @@ class Indexer<T extends Track> {
             );
       final bitrate = map['bitrate'] as int?;
       final disc = map['disc_number'] as int?;
+      final discTo = map['disc_total'] as int?;
+      final trackTo = map['track_total'] as int?;
       final yearString = map['year'] as String?;
       final path = e.data;
       final trext = TrackExtended(
@@ -1831,7 +1835,7 @@ class Indexer<T extends Track> {
         moodList: moods,
         composer: e.composer ?? '',
         trackNo: e.track ?? 0,
-        trackTo: 0,
+        trackTo: trackTo ?? 0,
         durationMS: e.duration ?? 0, // `e.duration` => milliseconds
         year: TrackExtended.enforceYearFormat(yearString) ?? 0,
         yearText: yearString ?? '',
@@ -1849,6 +1853,7 @@ class Indexer<T extends Track> {
         format: '',
         channels: '',
         discNo: disc ?? 0,
+        discTo: discTo ?? 0,
         language: '',
         lyrics: '',
         label: '',

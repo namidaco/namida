@@ -317,6 +317,7 @@ class TrackExtended {
   final String format;
   final String channels;
   final int discNo;
+  final int discTo;
   final String language;
   final String lyrics;
   final String label;
@@ -364,6 +365,7 @@ class TrackExtended {
     required this.format,
     required this.channels,
     required this.discNo,
+    required this.discTo,
     required this.language,
     required this.lyrics,
     required this.label,
@@ -551,6 +553,7 @@ class TrackExtended {
       format: json['format'] ?? '',
       channels: json['channels'] ?? '',
       discNo: json['discNo'] ?? 0,
+      discTo: json['discTo'] ?? 0,
       language: json['language'] ?? '',
       lyrics: json['lyrics'] ?? '',
       label: json['label'] ?? '',
@@ -596,6 +599,7 @@ class TrackExtended {
       if (format.isNotEmpty) 'format': format,
       if (channels.isNotEmpty) 'channels': channels,
       if (discNo > 0) 'discNo': discNo,
+      if (discTo > 0) 'discTo': discTo,
       if (language.isNotEmpty) 'language': language,
       if (lyrics.isNotEmpty) 'lyrics': lyrics,
       if (label.isNotEmpty) 'label': label,
@@ -832,6 +836,7 @@ extension TrackExtUtils on TrackExtended {
       description: tag.description ?? description,
       synopsis: tag.synopsis ?? synopsis,
       discNo: discNoParsed?.$1 ?? discNo,
+      discTo: discNoParsed?.$2 ?? discTo,
       language: tag.language ?? language,
       lyrics: tag.lyrics ?? lyrics,
       label: tag.recordLabel ?? label,
@@ -895,6 +900,7 @@ extension TrackExtUtils on TrackExtended {
     String? format,
     String? channels,
     int? discNo,
+    int? discTo,
     String? language,
     String? lyrics,
     String? label,
@@ -941,6 +947,7 @@ extension TrackExtUtils on TrackExtended {
       format: format ?? this.format,
       channels: channels ?? this.channels,
       discNo: discNo ?? this.discNo,
+      discTo: discTo ?? this.discTo,
       language: language ?? this.language,
       lyrics: lyrics ?? this.lyrics,
       label: label ?? this.label,
@@ -1002,6 +1009,7 @@ extension TrackUtils on Track {
   String get format => toTrackExt().format;
   String get channels => toTrackExt().channels;
   int get discNo => toTrackExt().discNo;
+  int get discTo => toTrackExt().discTo;
   String get language => toTrackExt().language;
   String get lyrics => toTrackExt().lyrics;
   String get label => toTrackExt().label;

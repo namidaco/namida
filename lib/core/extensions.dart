@@ -420,27 +420,36 @@ extension DisplayKeywords on int {
   String get displaySubscribersKeywordShort => lang.countSubscribersShort(count: this);
 }
 
-extension YearDateFormatted on int {
+extension DateTimeFormattersInt on int {
   String get secondsFormatted => getSecondsFormatted(hourChar: 'h', minutesChar: 'min', separator: ' ');
+  String get yearFormatted => DateTime.fromMillisecondsSinceEpoch(this).yearFormatted;
+  String get dateFormatted => DateTime.fromMillisecondsSinceEpoch(this).dateFormatted;
+  String get dateFormattedOriginal => DateTime.fromMillisecondsSinceEpoch(this).dateFormattedOriginal;
+  String dateFormattedOriginalNoYears(DateTime diffDate) => DateTimeFormatters(DateTime.fromMillisecondsSinceEpoch(this)).dateFormattedOriginalNoYears(diffDate);
+  String get clockFormatted => DateTime.fromMillisecondsSinceEpoch(this).clockFormatted;
+  String get dateAndClockFormattedOriginal => DateTime.fromMillisecondsSinceEpoch(this).dateAndClockFormattedOriginal;
+  String get dateAndClockFormatted => DateTime.fromMillisecondsSinceEpoch(this).dateAndClockFormatted;
+}
 
+extension DateTimeFormatters on DateTime {
   String get yearFormatted => getYearFormatted(settings.dateTimeFormat.value); // non reactive
 
-  String get dateFormatted => formatTimeFromMSSE(settings.dateTimeFormat.value); // non reactive
+  String get dateFormatted => formatTimeFromDate(settings.dateTimeFormat.value); // non reactive
 
   String get dateFormattedOriginal {
     final valInSetting = settings.dateTimeFormat.value;
-    return getDateFormatted(format: valInSetting.contains('d') ? settings.dateTimeFormat.value : 'dd MMM yyyy');
+    return getDateFormatted(valInSetting.contains('d') ? settings.dateTimeFormat.value : 'dd MMM yyyy');
   }
 
   String dateFormattedOriginalNoYears(DateTime diffDate) {
     final valInSettingMain = settings.dateTimeFormat.value;
     String valInSettingNew = valInSettingMain.contains('d') ? valInSettingMain : 'dd MMM yyyy';
 
-    final thisDate = DateTime.fromMillisecondsSinceEpoch(this);
+    final thisDate = this;
     if (thisDate.year == diffDate.year && thisDate.year == DateTime.now().year) {
       valInSettingNew = valInSettingNew.replaceAll('y', '').replaceAll('Y', '');
     }
-    return getDateFormatted(format: valInSettingNew);
+    return getDateFormatted(valInSettingNew);
   }
 
   String get clockFormatted => getClockFormatted(settings.hourFormat12.value);

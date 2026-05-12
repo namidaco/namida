@@ -10,6 +10,7 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/http_manager.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -19,6 +20,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -215,6 +217,17 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     // -- which will be seen if the m3u file got deleted/renamed
     await prepareM3UPlaylists();
     if (!_m3uPlaylistsCompleter.isCompleted) _m3uPlaylistsCompleter.complete(true);
+  }
+
+  static String getUnusedM3uFilePathInStorage(String name) {
+    var savePath = FileParts.joinPath(AppDirs.M3UPlaylists, '$name.m3u');
+    // -- can cause mismatch on next refresh
+    // var counter = 1;
+    // while (File(savePath).existsSync()) {
+    //   savePath = FileParts.joinPath(AppDirs.M3UPlaylists, '$name ($counter).m3u');
+    //   counter++;
+    // }
+    return savePath;
   }
 
   Future<List<Track>> readM3UFiles(Set<String> filesPaths) async {
@@ -759,6 +772,14 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   @override
   Future<Map<String, LocalPlaylist>> prepareAllPlaylistsFunction() async {
     return await _readPlaylistFilesCompute.thready(playlistsDirectory);
+  }
+
+  @override
+  Future<void> prepareDefaultPlaylistsFileAsync() async {
+    await [
+      super.prepareDefaultPlaylistsFileAsync(),
+      SmartPlaylistsController.inst.prepareAll(),
+    ].executeAllAndSilentReportErrors();
   }
 
   @override

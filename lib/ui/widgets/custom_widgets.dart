@@ -27,7 +27,6 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/faudiomodel.dart';
-import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/class/track.dart';
@@ -1605,7 +1604,7 @@ class CreatePlaylistButton extends StatelessWidget {
               onTap: () async {
                 if (formKey.currentState!.validate()) {
                   final name = controller.text;
-                  final m3uPath = exportAsM3uRx.value ? FileParts.joinPath(AppDirs.M3UPlaylists, "$name.m3u") : null;
+                  final m3uPath = exportAsM3uRx.value ? PlaylistController.getUnusedM3uFilePathInStorage(name) : null;
 
                   final pl = await PlaylistController.inst.addNewPlaylist(name, m3uPath: m3uPath);
                   if (m3uPath != null) {
@@ -7549,6 +7548,9 @@ class NamidaCoolBox extends StatelessWidget {
   final Widget Function(BuildContext context)? builder;
   final bool extraVPadding;
   final bool extraBorder;
+  final bool reducedColors;
+  final BorderRadius? borderRadius;
+  final double hPadding;
 
   const NamidaCoolBox({
     super.key,
@@ -7557,6 +7559,9 @@ class NamidaCoolBox extends StatelessWidget {
     this.builder,
     this.extraVPadding = false,
     this.extraBorder = false,
+    this.reducedColors = false,
+    this.borderRadius,
+    this.hPadding = 12.0,
   });
 
   @override
@@ -7565,15 +7570,15 @@ class NamidaCoolBox extends StatelessWidget {
     if (extraVPadding) vPadding += 4.0;
     return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-        color: colorScheme.withOpacityExt(0.08),
+        borderRadius: borderRadius ?? BorderRadius.circular(8.0.multipliedRadius),
+        color: colorScheme.withOpacityExt(reducedColors ? 0.06 : 0.08),
         border: Border.all(
           width: extraBorder ? 2.0 : 1.0,
-          color: colorScheme.withOpacityExt(0.4),
+          color: colorScheme.withOpacityExt(reducedColors ? 0.3 : 0.4),
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: vPadding),
+        padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
         child:
             builder?.call(context) ??
             Text(
