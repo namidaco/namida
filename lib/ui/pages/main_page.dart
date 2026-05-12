@@ -198,7 +198,6 @@ class MainPage extends StatelessWidget {
                       final shouldHide = Dimensions.inst.shouldHideFABR;
                       final bottom = fabBottomOffset.withMinimum(isMiniplayerAlwaysVisible ? 12.0 : Dimensions.inst.globalBottomPaddingEffectiveR);
                       return AnimatedPositioned(
-                        key: const Key('fab_active'),
                         right: 12.0,
                         bottom: bottom,
                         duration: const Duration(milliseconds: 300),
@@ -207,7 +206,7 @@ class MainPage extends StatelessWidget {
                           isHorizontal: true,
                           show: !shouldHide,
                           duration: const Duration(milliseconds: 400),
-                          child: shouldHide ? const SizedBox(key: Key('fab_dummy')) : fabChild,
+                          child: fabChild,
                         ),
                       );
                     },

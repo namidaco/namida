@@ -307,7 +307,7 @@ class ThemeSetting extends SettingSubpageProvider {
                     child: Obx(
                       (context) => CircleAvatar(
                         minRadius: 12,
-                        backgroundColor: playerStaticColorLight,
+                        backgroundColor: playerStaticColorLightR,
                       ),
                     ),
                   ),
@@ -351,7 +351,7 @@ class ThemeSetting extends SettingSubpageProvider {
                     child: Obx(
                       (context) => CircleAvatar(
                         minRadius: 12,
-                        backgroundColor: playerStaticColorDark,
+                        backgroundColor: playerStaticColorDarkR,
                       ),
                     ),
                   ),

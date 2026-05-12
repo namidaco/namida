@@ -32,11 +32,23 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 Color get playerStaticColor => namida.isDarkMode ? playerStaticColorDark : playerStaticColorLight;
 
 Color get playerStaticColorLight {
-  final cInt = settings.staticColor.valueR;
+  final cInt = settings.staticColor.value;
   return cInt != null ? Color(cInt) : kMainColorLight;
 }
 
 Color get playerStaticColorDark {
+  final cInt = settings.staticColorDark.value;
+  return cInt != null ? Color(cInt) : kMainColorDark;
+}
+
+Color get playerStaticColorR => namida.isDarkMode ? playerStaticColorDark : playerStaticColorLight;
+
+Color get playerStaticColorLightR {
+  final cInt = settings.staticColor.valueR;
+  return cInt != null ? Color(cInt) : kMainColorLight;
+}
+
+Color get playerStaticColorDarkR {
   final cInt = settings.staticColorDark.valueR;
   return cInt != null ? Color(cInt) : kMainColorDark;
 }
@@ -61,7 +73,7 @@ class CurrentColor {
 
   final _namidaColor = Rxn<NamidaColor>();
 
-  NamidaColor get _defaultNamidaColor => NamidaColor.single(playerStaticColor);
+  NamidaColor get _defaultNamidaColor => NamidaColor.single(playerStaticColorR);
 
   final _colorSchemeOfSubPages = Rxn<Color>();
 
@@ -82,6 +94,7 @@ class CurrentColor {
   void _refreshColorsRx() {
     _namidaColor.refresh();
     _namidaColorMiniplayer.refresh();
+    _colorSchemeOfSubPages.refresh();
   }
 
   final _colorsMap = <String, NamidaColor>{};
@@ -115,10 +128,10 @@ class CurrentColor {
   }
 
   void initialize() {
-    if (_canAutoUpdateColor) return;
+    // if (_canAutoUpdateColor) return;
     final mode = settings.themeMode.value;
     final isDarkMode = mode == ThemeMode.dark || (mode == ThemeMode.system && SchedulerBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
-    updatePlayerColorFromColor(isDarkMode ? playerStaticColorDark : playerStaticColorLight);
+    if (_namidaColor.value == null) updatePlayerColorFromColor(isDarkMode ? playerStaticColorDark : playerStaticColorLight);
   }
 
   void updateColorAfterThemeModeChange() {

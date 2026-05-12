@@ -616,42 +616,45 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
             child: Column(
               mainAxisSize: .min,
               children: [
-                ObxO(
-                  rx: widget.updateConfig.skipSilenceEnabledRx,
-                  builder: (context, skipSilence) => Padding(
-                    padding: const EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0),
-                    child: NamidaInkWell(
-                      borderRadius: 12.0,
-                      padding: const EdgeInsetsGeometry.symmetric(vertical: 10.0),
-                      onTap: () => _setSkipSilence(!skipSilence),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                        child: Row(
-                          children: [
-                            NamidaIconButton(
-                              horizontalPadding: 6.0,
-                              icon: Broken.forward,
-                            ),
-                            const SizedBox(width: 6.0),
-                            Expanded(
-                              child: Text(
-                                lang.skipSilence,
-                                style: textTheme.displayLarge?.copyWith(fontSize: 16.0),
+                if (NamidaFeaturesVisibility.skipSilenceAvailable) ...[
+                  ObxO(
+                    rx: widget.updateConfig.skipSilenceEnabledRx,
+                    builder: (context, skipSilence) => Padding(
+                      padding: const EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0),
+                      child: NamidaInkWell(
+                        borderRadius: 12.0,
+                        padding: const EdgeInsetsGeometry.symmetric(vertical: 10.0),
+                        onTap: () => _setSkipSilence(!skipSilence),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: Row(
+                            children: [
+                              NamidaIconButton(
+                                horizontalPadding: 6.0,
+                                icon: Broken.forward,
                               ),
-                            ),
-                            const SizedBox(width: 8.0),
-                            CustomSwitch(
-                              active: skipSilence,
-                            ),
-                            const SizedBox(width: 8.0),
-                            const SizedBox(width: 6.0),
-                          ],
+                              const SizedBox(width: 6.0),
+                              Expanded(
+                                child: Text(
+                                  lang.skipSilence,
+                                  style: textTheme.displayLarge?.copyWith(fontSize: 16.0),
+                                ),
+                              ),
+                              const SizedBox(width: 8.0),
+                              CustomSwitch(
+                                active: skipSilence,
+                              ),
+                              const SizedBox(width: 8.0),
+                              const SizedBox(width: 6.0),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                verticalPadding,
+                  verticalPadding,
+                ],
+
                 ObxO(
                   rx: settings.player.useSemitones,
                   builder: (context, isSemitones) => ObxO(

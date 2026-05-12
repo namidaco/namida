@@ -32,9 +32,11 @@ class QueueController {
   /// faster way to access latest queue
   int _latestAddedQueueDate = 0;
 
+  static const kMaxQueueTracksCountToSave = 2000;
+
   Future<bool> _allowSavingQueue(int count) async {
     // -- if there are more than 2000 tracks.
-    if (count > 2000) {
+    if (count > kMaxQueueTracksCountToSave) {
       printy("UWAH QUEUE DEKKA", isError: true);
       return false;
     }
@@ -122,46 +124,52 @@ class QueueController {
   Future<void> updateLatestQueue(List<Playable> items, {required QueueSourceBase<Enum> source, HomePageItems? homePageItem}) async {
     await Future.wait([
       _saveLatestQueueToStorage(items),
-      () async {
-        // updating last queue inside queuesMap.
-        try {
-          final firstItem = items.firstOrNull;
-          if (firstItem is Selectable) {
-            int? queueDate;
-            if (source.s == QueueSourceEnum.queuePage) {
-              // -- allow skip adding as a new queue (if same as latest queue)
-              final dateText = source.title;
-              if (dateText != null) {
-                queueDate = int.tryParse(dateText);
-              }
-            }
-
-            final tracks = items.cast<Selectable>().tracks.toList();
-            final latestQueueInsideMap = _latestQueueInMap;
-            final shouldUpdateLatestQueueInsteadOfAdding = latestQueueInsideMap != null && latestQueueInsideMap.source == source;
-            if (shouldUpdateLatestQueueInsteadOfAdding) {
-              await updateQueue(
-                latestQueueInsideMap,
-                latestQueueInsideMap.copyWith(
-                  tracks: tracks,
-                  source: source is QueueSource ? source : null,
-                  homePageItem: homePageItem,
-                ),
-              );
-            } else {
-              await this.addNewQueue(
-                source: source,
-                dateComparison: queueDate,
-                homePageItem: homePageItem,
-                tracks: tracks,
-              );
-            }
-          }
-        } catch (_) {
-          // -- is mixed queue
-        }
-      }(),
+      if (await _allowSavingQueue(items.length))
+        _updateLatestQueueInsideMap(
+          items,
+          source: source,
+          homePageItem: homePageItem,
+        ),
     ]);
+  }
+
+  Future<void> _updateLatestQueueInsideMap(List<Playable> items, {required QueueSourceBase<Enum> source, HomePageItems? homePageItem}) async {
+    try {
+      final firstItem = items.firstOrNull;
+      if (firstItem is Selectable) {
+        int? queueDate;
+        if (source.s == QueueSourceEnum.queuePage) {
+          // -- allow skip adding as a new queue (if same as latest queue)
+          final dateText = source.title;
+          if (dateText != null) {
+            queueDate = int.tryParse(dateText);
+          }
+        }
+
+        final tracks = items.map((e) => (e as Selectable).track).toList();
+        final latestQueueInsideMap = _latestQueueInMap;
+        final shouldUpdateLatestQueueInsteadOfAdding = latestQueueInsideMap != null && latestQueueInsideMap.source == source;
+        if (shouldUpdateLatestQueueInsteadOfAdding) {
+          await this.updateQueue(
+            latestQueueInsideMap,
+            latestQueueInsideMap.copyWith(
+              tracks: tracks,
+              source: source is QueueSource ? source : null,
+              homePageItem: homePageItem,
+            ),
+          );
+        } else {
+          await this.addNewQueue(
+            source: source,
+            dateComparison: queueDate,
+            homePageItem: homePageItem,
+            tracks: tracks,
+          );
+        }
+      }
+    } catch (_) {
+      // -- is mixed queue
+    }
   }
 
   Future<void> insertTracksQueue(Queue queue, List<Track> tracks, int index) async {

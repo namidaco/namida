@@ -434,6 +434,7 @@ class __SmolIconFolderScrollState extends State<_SmolIconFolderScroll> with Tick
           shape: BoxShape.circle,
         ),
         child: NamidaIconButton(
+          tooltip: () => lang.jump,
           padding: const EdgeInsets.all(8.0),
           iconSize: widget.iconSize,
           onPressed: () => widget.controller.animateToEff(

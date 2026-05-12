@@ -316,7 +316,7 @@ Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
 
     QueueController.inst.prepareAllQueuesFile().catchError(logger.report);
 
-    // CurrentColor.inst.initialize(); // --> !can block?
+    CurrentColor.inst.initialize(); // --> !can block?
 
     if (!shouldShowOnBoarding) await BackupController.inst.checkForAutoBackup(); // --> !can block
     const StorageCacheManager().trimExtraFiles();

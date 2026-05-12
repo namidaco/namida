@@ -588,7 +588,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       TrackExecuteActions.editTags => Broken.edit,
       TrackExecuteActions.setRating => Broken.grammerly,
       TrackExecuteActions.openListens => Broken.math,
-      TrackExecuteActions.focus => Broken.cd,
+      TrackExecuteActions.focus => Broken.music_square_search,
       TrackExecuteActions.goToTrack => Broken.music_square,
       TrackExecuteActions.goToAlbum => Broken.music_dashboard,
       TrackExecuteActions.goToArtist => Broken.profile_2user,
@@ -1256,6 +1256,28 @@ extension RouteUtils on NamidaRoute {
           RouteType.SUBPAGE_albumArtistTracks => _registerAndReturn(name?.getAlbumArtistTracks(), () => Indexer.inst.mainMapAlbumArtists.valueR),
           RouteType.SUBPAGE_composerTracks => _registerAndReturn(name?.getComposerTracks(), () => Indexer.inst.mainMapComposer.valueR),
           RouteType.SUBPAGE_genreTracks => _registerAndReturn(name?.getGenresTracks(), () => Indexer.inst.mainMapGenres.valueR),
+
+          RouteType.SUBPAGE_moodsTracks => _registerAndReturn(
+            Indexer.inst.getTracksForMood(name),
+            () {
+              Indexer.inst.tracksInfoList.valueR;
+              Indexer.inst.trackStatsMap.valueR;
+            },
+          ),
+          RouteType.SUBPAGE_tagsTracks => _registerAndReturn(
+            Indexer.inst.getTracksForTag(name),
+            () {
+              Indexer.inst.tracksInfoList.valueR;
+              Indexer.inst.trackStatsMap.valueR;
+            },
+          ),
+          RouteType.SUBPAGE_ratingTracks => _registerAndReturn(
+            Indexer.inst.getTracksForRating(name),
+            () {
+              Indexer.inst.tracksInfoList.valueR;
+              Indexer.inst.trackStatsMap.valueR;
+            },
+          ),
           RouteType.SUBPAGE_queueTracks => _registerAndReturn(name?.getQueue()?.tracks, () => QueueController.inst.queuesMap.valueR),
           RouteType.SUBPAGE_playlistTracks =>
             name == null ? null : _registerAndReturn(PlaylistController.inst.getPlaylist(name!)?.tracks, () => PlaylistController.inst.playlistsMap.valueR),
@@ -1929,7 +1951,7 @@ extension TrackTileItemL10n on TrackTileItem {
     TrackTileItem.composer => Broken.profile_2user,
     TrackTileItem.year => Broken.calendar,
     TrackTileItem.bitrate => Broken.voice_cricle,
-    TrackTileItem.channels => Broken.voice_cricle,
+    TrackTileItem.channels => Broken.airpods,
     TrackTileItem.comment => Broken.message_text,
     TrackTileItem.dateAdded => Broken.calendar_add,
     TrackTileItem.dateModified => Broken.calendar_edit,
@@ -1942,7 +1964,7 @@ extension TrackTileItemL10n on TrackTileItem {
     TrackTileItem.fileNameWOExt => Broken.quote_up_circle,
     TrackTileItem.extension => Broken.document,
     TrackTileItem.folder => Broken.folder,
-    TrackTileItem.format => Broken.format_circle,
+    TrackTileItem.format => Broken.voice_cricle,
     TrackTileItem.path => Broken.location,
     TrackTileItem.sampleRate => Broken.voice_cricle,
     TrackTileItem.size => Broken.size,

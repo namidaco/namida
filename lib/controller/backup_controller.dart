@@ -93,50 +93,49 @@ class BackupController {
     if (backupDirectoryPath == null) return;
 
     final latestBackupDate = await _getLatestBackupFileDateSync.thready(backupDirectoryPath);
-    if (latestBackupDate != null) {
-      final diff = DateTime.now().difference(latestBackupDate).abs().inDays;
-      if (diff > interval) {
-        final itemsToBackup = [
-          AppPaths.TRACKS_OLD,
-          AppPaths.TRACKS_DB_INFO.file.path,
-          AppPaths.TRACKS_STATS_OLD,
-          AppPaths.TRACKS_STATS_DB_INFO.file.path,
-          AppPaths.LATEST_PLAYED_FOR_SOURCE.file.path,
-          AppPaths.AUDIO_CONFIGS.file.path,
-          AppPaths.TOTAL_LISTEN_TIME,
-          AppPaths.VIDEOS_CACHE_OLD,
-          AppPaths.VIDEOS_CACHE_DB_INFO.file.path,
-          AppPaths.VIDEOS_LOCAL_OLD,
-          AppPaths.VIDEOS_LOCAL_DB_INFO.file.path,
-          AppPaths.FAVOURITES_PLAYLIST,
-          AppPaths.SETTINGS,
-          AppPaths.SETTINGS_EQUALIZER,
-          AppPaths.SETTINGS_PLAYER,
-          AppPaths.SETTINGS_YOUTUBE,
-          AppPaths.SETTINGS_EXTRA,
-          AppPaths.SETTINGS_TUTORIAL,
-          AppPaths.SETTINGS_SHORTCUTS,
-          AppPaths.LATEST_QUEUE,
-          AppPaths.YT_LIKES_PLAYLIST,
-          AppPaths.YT_SUBSCRIPTIONS,
-          AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL,
-          AppPaths.VIDEO_ID_STATS_DB_INFO.file.path,
-          AppPaths.CACHE_VIDEOS_PRIORITY.file.path,
-          AppDirs.PLAYLISTS,
-          AppDirs.PLAYLISTS_ARTWORKS,
-          AppDirs.PLAYLISTS_METADATA,
-          AppDirs.HISTORY_PLAYLIST,
-          AppDirs.QUEUES,
-          AppDirs.YT_DOWNLOAD_TASKS,
-          AppDirs.YT_STATS,
-          AppDirs.YT_PLAYLISTS,
-          AppDirs.YT_PLAYLISTS_ARTWORKS,
-          AppDirs.YT_PLAYLISTS_METADATA,
-          AppDirs.YT_HISTORY_PLAYLIST,
-        ];
-        await createBackupFile(itemsToBackup, fileSuffix: " - auto");
-        _trimExtraBackupFiles.thready(backupDirectoryPath);
-      }
+    final diff = DateTime.now().difference(latestBackupDate).abs();
+    final intervalDays = Duration(days: interval);
+    if (diff >= intervalDays) {
+      final itemsToBackup = [
+        AppPaths.TRACKS_OLD,
+        AppPaths.TRACKS_DB_INFO.file.path,
+        AppPaths.TRACKS_STATS_OLD,
+        AppPaths.TRACKS_STATS_DB_INFO.file.path,
+        AppPaths.LATEST_PLAYED_FOR_SOURCE.file.path,
+        AppPaths.AUDIO_CONFIGS.file.path,
+        AppPaths.TOTAL_LISTEN_TIME,
+        AppPaths.VIDEOS_CACHE_OLD,
+        AppPaths.VIDEOS_CACHE_DB_INFO.file.path,
+        AppPaths.VIDEOS_LOCAL_OLD,
+        AppPaths.VIDEOS_LOCAL_DB_INFO.file.path,
+        AppPaths.FAVOURITES_PLAYLIST,
+        AppPaths.SETTINGS,
+        AppPaths.SETTINGS_EQUALIZER,
+        AppPaths.SETTINGS_PLAYER,
+        AppPaths.SETTINGS_YOUTUBE,
+        AppPaths.SETTINGS_EXTRA,
+        AppPaths.SETTINGS_TUTORIAL,
+        AppPaths.SETTINGS_SHORTCUTS,
+        AppPaths.LATEST_QUEUE,
+        AppPaths.YT_LIKES_PLAYLIST,
+        AppPaths.YT_SUBSCRIPTIONS,
+        AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL,
+        AppPaths.VIDEO_ID_STATS_DB_INFO.file.path,
+        AppPaths.CACHE_VIDEOS_PRIORITY.file.path,
+        AppDirs.PLAYLISTS,
+        AppDirs.PLAYLISTS_ARTWORKS,
+        AppDirs.PLAYLISTS_METADATA,
+        AppDirs.HISTORY_PLAYLIST,
+        AppDirs.QUEUES,
+        AppDirs.YT_DOWNLOAD_TASKS,
+        AppDirs.YT_STATS,
+        AppDirs.YT_PLAYLISTS,
+        AppDirs.YT_PLAYLISTS_ARTWORKS,
+        AppDirs.YT_PLAYLISTS_METADATA,
+        AppDirs.YT_HISTORY_PLAYLIST,
+      ];
+      await createBackupFile(itemsToBackup, fileSuffix: " - auto");
+      _trimExtraBackupFiles.thready(backupDirectoryPath);
     }
   }
 
@@ -294,7 +293,7 @@ class BackupController {
     return matchingBackups;
   }
 
-  static DateTime? _getLatestBackupFileDateSync(String dirPath) {
+  static DateTime _getLatestBackupFileDateSync(String dirPath) {
     DateTime latestDate = DateTime(0);
     final dir = Directory(dirPath);
     final possibleFiles = dir.listSyncSafe();

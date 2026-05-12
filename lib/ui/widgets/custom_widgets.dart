@@ -7667,6 +7667,7 @@ class CustomIconButtonTonal extends StatelessWidget {
   final double? iconSize;
   final String? tooltip;
   final bool dense;
+  final Color? colorScheme;
   final void Function()? onTap;
 
   const CustomIconButtonTonal({
@@ -7675,6 +7676,7 @@ class CustomIconButtonTonal extends StatelessWidget {
     this.iconSize,
     this.tooltip,
     this.dense = true,
+    this.colorScheme,
     required this.onTap,
   });
 
@@ -7685,13 +7687,13 @@ class CustomIconButtonTonal extends StatelessWidget {
       style: ButtonStyle(
         tapTargetSize: dense ? MaterialTapTargetSize.shrinkWrap : null,
         visualDensity: dense ? VisualDensity.compact : null,
-        backgroundColor: WidgetStatePropertyAll(context.theme.colorScheme.secondary.withOpacityExt(0.18)),
+        backgroundColor: WidgetStatePropertyAll((colorScheme ?? context.theme.colorScheme.secondary).withOpacityExt(0.18)),
       ),
       onPressed: onTap,
       icon: Icon(
         icon,
         size: iconSize,
-        color: context.theme.iconTheme.color?.withOpacityExt(0.7) ?? context.defaultIconColor().withOpacityExt(0.75),
+        color: context.theme.iconTheme.color?.withOpacityExt(0.7) ?? context.defaultIconColor(colorScheme).withOpacityExt(0.75),
       ),
       tooltip: tooltip,
     );
