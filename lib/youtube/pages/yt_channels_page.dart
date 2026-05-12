@@ -140,7 +140,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   void _showNetworkError() {
     Timer(Duration.zero, () {
       snackyy(
-        title: lang.error,
+        title: "${lang.error} (${lang.channel})",
         message: lang.noNetworkAvailableToFetchData,
         isError: true,
         top: false,

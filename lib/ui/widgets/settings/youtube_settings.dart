@@ -816,7 +816,7 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
     super.initState();
   }
 
-  List<NamidaPopupItem> get _innertubeChildren => [
+  List<NamidaPopupItem> _innertubeChildren() => [
     NamidaPopupItem(
       icon: Broken.video_horizontal,
       title: lang.defaultLabel,
@@ -897,13 +897,16 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
               ),
               NamidaPopupWrapper(
                 child: NamidaPopupWrapper(
-                  childrenDefault: () => _innertubeChildren,
+                  childrenDefault: _innertubeChildren,
                   child: CustomListTile(
                     icon: Broken.cpu,
                     title: 'innertube_client'.toUpperCase(),
                     trailing: NamidaPopupWrapper(
-                      childrenDefault: () => _innertubeChildren,
-                      child: Text(settings.youtube.innertubeClient?.name ?? lang.defaultLabel),
+                      childrenDefault: _innertubeChildren,
+                      child: Text(
+                        settings.youtube.innertubeClient?.name ?? lang.defaultLabel,
+                        style: context.textTheme.displayMedium,
+                      ),
                     ),
                   ),
                 ),

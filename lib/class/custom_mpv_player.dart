@@ -206,6 +206,8 @@ class CustomMPVPlayer implements AVPlayer {
   UriSource? get audioSource => _audioSource;
   @override
   bool get isDisposed => _disposed;
+  @override
+  bool get hasVideoOptions => _videoOptions != null;
 
   @override
   Future<Duration?> setSource<T>(ItemPrepareConfig<T, UriSource> config) async {
@@ -464,7 +466,7 @@ class CustomMPVPlayer implements AVPlayer {
   }
 
   @override
-  Future<void> addMediaNext<T>(ItemPrepareConfig<T, UriSource> config) async {
+  Future<bool> addMediaNext<T>(ItemPrepareConfig<T, UriSource> config) async {
     final pl = _player;
     final currentIndex = pl.state.playlist.index;
     final insertIndex = currentIndex + 1;
@@ -495,6 +497,7 @@ class CustomMPVPlayer implements AVPlayer {
         await pl.remove(i);
       }
     }
+    return true;
   }
 
   @override

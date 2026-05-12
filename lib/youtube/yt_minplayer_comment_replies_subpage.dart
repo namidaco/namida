@@ -88,7 +88,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
   void _showNetworkError() {
     Timer(Duration.zero, () {
       snackyy(
-        title: lang.error,
+        title: "${lang.error} (${lang.comments})",
         message: lang.noNetworkAvailableToFetchData,
         isError: true,
         top: false,

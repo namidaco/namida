@@ -70,13 +70,14 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
 
   void _onConfigureTap(BuildContext context) async {
     final initialVisitorData = YoutubeInfoController.potoken.getVisitorData();
-    final initialPoToken = YoutubeInfoController.potoken.getPoToken();
     final controllerVisitorData = TextEditingController(text: initialVisitorData);
-    final controllerPoToken = TextEditingController(text: initialPoToken);
+    final controllerPlayerRequestPoToken = TextEditingController();
+    final controllerStreamingPoToken = TextEditingController();
     await NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
         controllerVisitorData.dispose();
-        controllerPoToken.dispose();
+        controllerPlayerRequestPoToken.dispose();
+        controllerStreamingPoToken.dispose();
       },
       dialog: CustomBlurryDialog(
         normalTitleStyle: true,
@@ -88,7 +89,8 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
             onTap: () {
               YoutubeInfoController.potoken.updateInfo(
                 visitorData: controllerVisitorData.text,
-                poToken: controllerPoToken.text,
+                playerRequestPoToken: controllerPlayerRequestPoToken.text,
+                streamingPoToken: controllerStreamingPoToken.text,
               );
 
               NamidaNavigator.inst.closeDialog();
@@ -108,12 +110,21 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                 controller: controllerVisitorData,
                 labelText: 'Visitor Data',
                 hintText: initialVisitorData ?? '',
+                maxLines: 3,
               ),
               SizedBox(height: 12.0),
               CustomTagTextField(
-                controller: controllerPoToken,
-                labelText: 'PoToken',
-                hintText: initialPoToken ?? '',
+                controller: controllerPlayerRequestPoToken,
+                labelText: 'PoToken (Player Request)',
+                hintText: '',
+                maxLines: 3,
+              ),
+              SizedBox(height: 12.0),
+              CustomTagTextField(
+                controller: controllerStreamingPoToken,
+                labelText: 'PoToken (Streaming)',
+                hintText: '',
+                maxLines: 3,
               ),
             ],
           ),

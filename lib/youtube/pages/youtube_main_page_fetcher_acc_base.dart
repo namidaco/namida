@@ -126,7 +126,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   void _showNetworkError() {
     Timer(Duration.zero, () {
       snackyy(
-        title: lang.error,
+        title: "${lang.error} (${lang.videos})",
         message: lang.noNetworkAvailableToFetchData,
         isError: true,
         top: false,

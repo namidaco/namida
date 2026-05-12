@@ -126,7 +126,7 @@ class _YoutubeCurrentInfoController {
   Future<void> updateVideoPage(String videoId, {required bool requestPage, required bool requestComments, CommentsSortType? commentsSort}) async {
     if (!ConnectivityController.inst.hasConnection) {
       snackyy(
-        title: lang.error,
+        title: "${lang.error} (${lang.video})",
         message: lang.noNetworkAvailableToFetchData,
         isError: true,
         top: false,

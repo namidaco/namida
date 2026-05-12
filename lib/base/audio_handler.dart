@@ -711,8 +711,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         return _itemToPrepareConfigSelectable(item, finalItem, index, null);
       },
       youtubeID: (finalItem) async {
-        // TODO: gapless for yt ?
-        return null;
+        return _itemToPrepareConfigYoutubeID(item, finalItem, index);
       },
     );
   }
@@ -734,7 +733,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               }
             }
 
-            await onItemPlaySelectable(item, finalItem, index, skipItem, preparedItemInfo);
+            await onItemPlaySelectable(item, finalItem, index, skipItem, preparedItemInfo: preparedItemInfo);
           },
           youtubeID: (finalItem) async {
             final qs = finalItem.queueSource;
@@ -742,7 +741,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               QueueController.latestPlayedForSourceManager.update(qs, finalItem);
             }
 
-            await onItemPlayYoutubeID(item, finalItem, index, skipItem);
+            await onItemPlayYoutubeID(item, finalItem, index, skipItem, preparedItemInfo: preparedItemInfo);
             tryAddingMixPlaylist(finalItem.id);
           },
         );
@@ -809,7 +808,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     );
   }
 
-  Future<void> onItemPlaySelectable(Q pi, Selectable item, int index, Function skipItem, ItemPreparedPlayerInfo<Q>? preparedItemInfo) async {
+  Future<void> onItemPlaySelectable(
+    Q pi,
+    Selectable item,
+    int index,
+    Function skipItem, {
+    required ItemPreparedPlayerInfo<Q>? preparedItemInfo,
+  }) async {
     final tr = item.track;
     videoPlayerInfo.value = null;
     Lyrics.inst.resetLyrics();
@@ -1339,6 +1344,311 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
   }
 
+  void _markWatchedIfStreamsValid(String videoId, VideoStreamsResult? streamsResult) {
+    if (streamsResult != null && (streamsResult.audioStreams.isNotEmpty || streamsResult.mixedStreams.isNotEmpty)) {
+      YoutubeInfoController.history.markVideoWatched(videoId: videoId, streamResult: streamsResult).then(_onVideoMarkWatchResultError);
+    }
+  }
+
+  /// Resolves final network audio/video sources from streams.
+  /// Returns null when: streams are broken, no upgrade is needed (cache already best), or source URLs fail.
+  /// [showErrors] controls whether snackbars are shown on failure (suppress for upgrade path).
+  Future<_YTNetworkSourceResult?> _resolveYTNetworkSources({
+    required YoutubeID item,
+    required VideoStreamsResult? streamsResult,
+    required AudioCacheDetails? cachedAudio,
+    required NamidaVideo? cachedVideo,
+    bool showErrors = true,
+  }) async {
+    final forceRequest = streamsResult == null || streamsResult.hasExpired();
+    if (forceRequest) {
+      streamsResult = await YoutubeInfoController.video.fetchVideoStreams(item.id).catchError((e) {
+        if (showErrors) snackyy(message: 'Error getting streams: $e', top: false, isError: true);
+        return null;
+      });
+    }
+
+    if (streamsResult == null) return null;
+
+    final audiostreams = streamsResult.audioStreams;
+    final videoStreams = streamsResult.videoStreams;
+    final mixedStreams = streamsResult.mixedStreams;
+
+    UriSource? finalAudioSource;
+    VideoSourceOptions? videoSourceOptions;
+    AudioStream? audioStream;
+    VideoStream? videoStream;
+    bool isAudioFromCache = false;
+    AudioVideoSource? finalVideoSource;
+
+    bool useMixedStream = false;
+    if (audiostreams.isEmpty) {
+      if (mixedStreams.isEmpty) {
+        // -- live videos has only mixedStreams
+        if (showErrors) {
+          final playabilty = streamsResult.playability;
+          final extraReasons = [playabilty.reason, ...?playabilty.messages].whereType<String>();
+          final extraReasonsText = extraReasons.isEmpty ? '' : ' | ${extraReasons.join(' | ')}';
+          snackyy(title: lang.error, message: 'Empty audio streams. playabilty: `${playabilty.status.name}`$extraReasonsText', top: false, isError: true);
+        }
+        return null;
+      } else {
+        useMixedStream = true;
+      }
+    }
+
+    if (useMixedStream) {
+      UriSource? finalMixedSource;
+      final prefferedMixedStream = YoutubeController.getPreferredStreamQuality(mixedStreams, preferIncludeWebm: false);
+      videoStream = prefferedMixedStream;
+      if (prefferedMixedStream != null) {
+        final mixedUri = prefferedMixedStream.buildUrl();
+        if (mixedUri != null) {
+          finalMixedSource = AudioVideoSource.uri(mixedUri); // -- this is not an hls nor dash
+        }
+      }
+      if (finalMixedSource != null) {
+        finalAudioSource = AudioVideoSource.file('');
+        videoSourceOptions = VideoSourceOptions(source: finalMixedSource, loop: false, videoOnly: true);
+      } else {
+        if (showErrors) snackyy(title: lang.error, message: 'Failed to get mixed source', top: false, isError: true);
+        return null;
+      }
+    } else if (streamsResult.info?.isLive == true) {
+      UriSource? finalLiveSource;
+      if (streamsResult.hlsManifestUrl != null) {
+        finalLiveSource = HlsSource(Uri.parse(streamsResult.hlsManifestUrl!));
+      } else if (streamsResult.dashManifestUrl != null) {
+        finalLiveSource = DashSource(Uri.parse(streamsResult.dashManifestUrl!));
+      }
+      if (finalLiveSource == null) {
+        // -- fallback to mixed streams for when live stream has already ended
+        final prefferedMixedStream = YoutubeController.getPreferredStreamQuality(mixedStreams, preferIncludeWebm: false);
+        videoStream = prefferedMixedStream;
+        if (prefferedMixedStream != null) {
+          final mixedUri = prefferedMixedStream.buildUrl();
+          if (mixedUri != null) {
+            finalLiveSource = AudioVideoSource.uri(mixedUri); // -- this is not an hls nor dash
+          }
+        }
+      }
+      if (finalLiveSource != null) {
+        finalAudioSource = AudioVideoSource.file('');
+        videoSourceOptions = VideoSourceOptions(source: finalLiveSource, loop: false, videoOnly: true);
+      } else {
+        if (showErrors) snackyy(title: lang.error, message: 'Failed to set hls or dash source for live stream', top: false, isError: true);
+        return null;
+      }
+    } else {
+      isAudioFromCache = cachedAudio != null;
+
+      // -- setting audio
+      final prefferedAudioStream = YoutubeController.getPreferredAudioStream(audiostreams);
+      bool isAudioStreamRequiredBetterThanCachedSet = cachedAudio == null
+          ? true
+          : prefferedAudioStream == null
+          ? false
+          : _allowSwitchingVideoStreamIfCachedPlaying
+          ? prefferedAudioStream.bitrate > prefferedAudioStream.bitrate
+          : false;
+      if (isAudioStreamRequiredBetterThanCachedSet) {
+        audioStream = prefferedAudioStream;
+        if (prefferedAudioStream != null) {
+          final audioUri = prefferedAudioStream.buildUrl();
+          if (audioUri != null) {
+            finalAudioSource = _buildLockCachingAudioSource(
+              audioUri,
+              stream: prefferedAudioStream,
+              videoId: item.id,
+              streamsResult: streamsResult,
+            );
+          }
+        }
+      }
+
+      // -- setting video
+      if (!_isAudioOnlyPlayback &&
+          videoStreams.isNotEmpty &&
+          ConnectivityController.inst.dataSaverMode.canFetchNetworkVideoStreamShortContent(await YoutubeInfoController.utils.isShortContent(item.id))) {
+        if (cachedVideo != null ? _allowSwitchingVideoStreamIfCachedPlaying : true) {
+          final prefferedVideoStream = YoutubeController.getPreferredStreamQuality(videoStreams, preferIncludeWebm: false);
+          bool isVideoStreamRequiredBetterThanCachedSet = cachedVideo == null
+              ? true
+              : prefferedVideoStream == null
+              ? false
+              : _allowSwitchingVideoStreamIfCachedPlaying
+              ? prefferedVideoStream.width > cachedVideo.width
+              : false;
+          if (isVideoStreamRequiredBetterThanCachedSet) {
+            videoStream = prefferedVideoStream;
+            if (prefferedVideoStream != null) {
+              final videoUri = prefferedVideoStream.buildUrl();
+              if (videoUri != null) {
+                finalVideoSource = _buildLockCachingVideoSource(
+                  videoUri,
+                  stream: prefferedVideoStream,
+                  videoId: item.id,
+                  streamsResult: streamsResult,
+                );
+              }
+            }
+          }
+        }
+      }
+
+      if (finalAudioSource == null && finalVideoSource == null) {
+        // cache is already best quality, no upgrade needed
+        return null;
+      }
+
+      finalAudioSource ??= cachedAudio != null ? AudioVideoSource.file(cachedAudio.file.path) : null;
+      finalVideoSource ??= cachedVideo != null && !_isAudioOnlyPlayback ? AudioVideoSource.file(cachedVideo.path) : null;
+
+      if (finalVideoSource != null) {
+        videoSourceOptions = VideoSourceOptions(source: finalVideoSource, loop: false, videoOnly: false);
+      }
+    }
+
+    if (finalAudioSource == null) {
+      if (showErrors) snackyy(title: lang.error, message: 'Failed to get audio source', top: false, isError: true);
+      return null;
+    }
+
+    return _YTNetworkSourceResult(
+      finalAudioSource: finalAudioSource,
+      videoSourceOptions: videoSourceOptions,
+      audioStream: audioStream,
+      videoStream: videoStream,
+      streamsResult: streamsResult,
+      updatedInfo: streamsResult.info,
+      isAudioFromCache: isAudioFromCache,
+    );
+  }
+
+  Future<_ItemPrepareConfigYoutubeID<Q, UriSource>?> _itemToPrepareConfigYoutubeID(
+    Q pi,
+    YoutubeID item,
+    int index, {
+    bool canPlayAudioOnlyFromCache = true,
+  }) async {
+    if (item.id == '' || item.id == 'null') return null;
+
+    VideoStreamsResult? streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(item.id);
+
+    Duration? duration = streamsResult?.audioStreams.firstOrNull?.duration;
+    VideoStreamInfo? ytNotificationVideoInfo = streamsResult?.info;
+    File? ytNotificationVideoThumbnail = await item.getThumbnail(temp: false);
+
+    final allCachedVideos = await VideoController.inst.getNVFromIDSorted(item.id);
+    final cachedVideo = await allCachedVideos.firstWhereEffAsync((e) => File(e.path).exists());
+    final cachedAudioRaw = await AudioCacheController.inst.getCachedAudioForId(item.id);
+
+    AudioCacheDetails? cachedAudioDetails;
+    if (cachedAudioRaw != null) {
+      cachedAudioDetails = AudioCacheDetails(
+        youtubeId: item.id,
+        bitrate: cachedAudioRaw.bitrate,
+        langaugeCode: cachedAudioRaw.langaugeCode,
+        langaugeName: cachedAudioRaw.langaugeName,
+        file: cachedAudioRaw.file,
+      );
+    }
+
+    bool okaySetFromCache() => cachedAudioDetails != null && (canPlayAudioOnlyFromCache || cachedVideo != null);
+
+    UriSource? finalAudioSource;
+    VideoSourceOptions? videoSourceOptions;
+    AudioStream? audioStream;
+    VideoStream? videoStream;
+    bool isAudioFromCache = false;
+    bool isVideoFile = false;
+    String? cachedAudioPath;
+    Completer<_YTNetworkSourceResult?>? upgradeCompleter;
+
+    bool buildCacheSource() {
+      if (cachedAudioRaw != null && cachedVideo != null && !_isAudioOnlyPlayback) {
+        finalAudioSource = AudioVideoSource.file(cachedAudioRaw.file.path);
+        videoSourceOptions = VideoSourceOptions(source: AudioVideoSource.file(cachedVideo.path), loop: false, videoOnly: false);
+        isAudioFromCache = true;
+        isVideoFile = true;
+        cachedAudioPath = cachedAudioRaw.file.path;
+        return true;
+      } else if (cachedAudioRaw != null && canPlayAudioOnlyFromCache) {
+        finalAudioSource = AudioVideoSource.file(cachedAudioRaw.file.path);
+        isAudioFromCache = true;
+        isVideoFile = true;
+        cachedAudioPath = cachedAudioRaw.file.path;
+        return true;
+      }
+      return false;
+    }
+
+    Duration? initialPosition = await _getItemInitialPosition(pi, duration);
+
+    _ItemPrepareConfigYoutubeID<Q, UriSource> buildConfig() => _ItemPrepareConfigYoutubeID(
+      finalAudioSource!,
+      index: index,
+      initialPosition: initialPosition,
+      audioTrackId: null,
+      videoOptions: videoSourceOptions,
+      audioStream: audioStream,
+      videoStream: videoStream,
+      cachedAudio: cachedAudioDetails,
+      cachedVideo: cachedVideo,
+      allCachedVideos: allCachedVideos,
+      isAudioFromCache: isAudioFromCache,
+      streamsResult: streamsResult,
+      ytNotificationVideoInfo: ytNotificationVideoInfo,
+      ytNotificationVideoThumbnail: ytNotificationVideoThumbnail,
+      resolvedDuration: duration,
+      upgradeCompleter: upgradeCompleter,
+      item: pi,
+      isVideoFile: isVideoFile,
+      cachedAudioPath: cachedAudioPath,
+    );
+
+    if (ConnectivityController.inst.hasConnection && okaySetFromCache()) {
+      // -- play cache, and also fetch streams in background for potential upgrade
+      buildCacheSource();
+      upgradeCompleter = Completer<_YTNetworkSourceResult?>();
+      _resolveYTNetworkSources(
+        item: item,
+        streamsResult: streamsResult,
+        cachedAudio: cachedAudioDetails,
+        cachedVideo: cachedVideo,
+        showErrors: false, // already playing from cache
+      ).then(upgradeCompleter.complete).catchError((_) => upgradeCompleter!.complete(null));
+      return buildConfig();
+    }
+
+    if (ConnectivityController.inst.hasConnection) {
+      // -- no cache available, wait for network fetch
+      final resolved = await _resolveYTNetworkSources(
+        item: item,
+        streamsResult: streamsResult,
+        cachedAudio: cachedAudioDetails,
+        cachedVideo: cachedVideo,
+        showErrors: true,
+      );
+      if (resolved == null) return null;
+      finalAudioSource = resolved.finalAudioSource;
+      videoSourceOptions = resolved.videoSourceOptions;
+      audioStream = resolved.audioStream;
+      videoStream = resolved.videoStream;
+      isAudioFromCache = resolved.isAudioFromCache;
+      streamsResult = resolved.streamsResult;
+      if (resolved.updatedInfo != null) ytNotificationVideoInfo = resolved.updatedInfo;
+      duration ??= resolved.streamsResult.audioStreams.firstOrNull?.duration;
+      initialPosition = await _getItemInitialPosition(pi, duration) ?? initialPosition;
+      return buildConfig();
+    }
+
+    // -- no connection. last option is cache
+    if (!buildCacheSource()) return null;
+
+    return buildConfig();
+  }
+
   Future<void> tryAddingMixPlaylist(String videoId) async {
     if (!settings.youtube.autoStartRadio.value) return;
 
@@ -1374,6 +1684,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     YoutubeID item,
     int index,
     Function skipItem, {
+    required ItemPreparedPlayerInfo<Q>? preparedItemInfo,
     bool canPlayAudioOnlyFromCache = true, // dont link this to other stuff, if video is needed it will be taken care of.
   }) async {
     WaveformController.inst.resetWaveform();
@@ -1395,15 +1706,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       return;
     }
 
-    VideoStreamsResult? streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(item.id);
-
-    YoutubeInfoController.current.currentYTStreams.value = streamsResult;
-    final hadCachedVideoPageCompleter = Completer<bool>()..complete(YoutubeInfoController.current.updateVideoPageCache(item.id));
-    final hadCachedCommentsCompleter = Completer<bool>()..complete(YoutubeInfoController.current.updateCurrentCommentsCache(item.id));
-
-    Duration? duration = streamsResult?.audioStreams.firstOrNull?.duration;
-    _ytNotificationVideoInfo = streamsResult?.info;
-    _ytNotificationVideoThumbnail = await item.getThumbnail(temp: false);
+    Duration? duration;
 
     bool checkInterrupted({bool refreshNoti = true}) {
       final curr = currentItem.value;
@@ -1421,25 +1724,36 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       }
     }
 
-    Future<void> fetchFullVideoPage() async {
-      final hadCachedVideoPage = await hadCachedVideoPageCompleter.future;
-      final hadCachedComments = await hadCachedCommentsCompleter.future;
-      if (checkInterrupted(refreshNoti: false)) return;
-      final requestPage = !hadCachedVideoPage;
-      final requestComments = settings.youtube.preferNewComments.value ? true : !hadCachedComments;
-      await YoutubeInfoController.current.updateVideoPage(
-        item.id,
-        requestPage: requestPage,
-        requestComments: requestComments,
-      );
-    }
-
     void onInfoOrThumbObtained({VideoStreamInfo? info, File? thumbnail}) {
       if (checkInterrupted(refreshNoti: false)) return;
       if (info != null) _ytNotificationVideoInfo = info; // we assign cuz later some functions can depend on this
       if (thumbnail != null) _ytNotificationVideoThumbnail = thumbnail;
       refreshNotification(pi, (index, ql) => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, ql, duration));
     }
+
+    ItemPrepareConfig<Q, UriSource>? preparedConfig = preparedItemInfo?.config;
+
+    if (preparedConfig is! _ItemPrepareConfigYoutubeID<Q, UriSource> || preparedConfig.item != pi || (preparedConfig.streamsResult?.hasExpired() == true)) {
+      isFetchingInfo.value = true;
+      preparedConfig = await _itemToPrepareConfigYoutubeID(pi, item, index, canPlayAudioOnlyFromCache: canPlayAudioOnlyFromCache);
+    }
+
+    if (checkInterrupted()) return;
+
+    if (preparedConfig == null) {
+      isFetchingInfo.value = false;
+      if (_willPlayWhenReady && currentQueue.value.length > 1) skipItem();
+      return;
+    }
+
+    final config = preparedConfig as _ItemPrepareConfigYoutubeID<Q, UriSource>;
+
+    // streams already resolved eagerly (no-cache path); upgrade path keeps isFetchingInfo=true until completer resolves
+    if (config.upgradeCompleter == null) isFetchingInfo.value = false;
+
+    duration = config.resolvedDuration;
+    _ytNotificationVideoInfo = config.ytNotificationVideoInfo;
+    _ytNotificationVideoThumbnail = config.ytNotificationVideoThumbnail;
 
     // -- we no longer check if any of these 2 is not null, cuz info like index & queue length needs to be updated asap
     onInfoOrThumbObtained(info: _ytNotificationVideoInfo, thumbnail: _ytNotificationVideoThumbnail);
@@ -1455,51 +1769,26 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       });
     }
 
-    bool heyIhandledPlaying = false;
-    Future<void> plsplsplsPlay({required bool wasPlayingFromCache}) async {
-      playWhenReady.value ? onPlayRaw(attemptFixVolume: false) : onPauseRaw();
-      heyIhandledPlaying = true;
-
-      if (!wasPlayingFromCache) {
-        startCounterToAListen(pi);
-        if (settings.youtube.sponsorBlockSettings.value.enabled) {
-          SponsorBlockController.inst.updateSegments(item.id);
-        }
-      }
-    }
-
-    Completer<bool>? playerStoppingSeikoo; // to prevent accidental stopping if getAvailableStreams was faster than fade effect
-    if (enableCrossFade) {
-      // -- do nothing
-    } else {
-      playerStoppingSeikoo = Completer<bool>();
-      if (isPlaying.value && currentQueue.value.isNotEmpty) {
-        // wait for pausing only if playing.
-        pauseWithFadeEffect(
-          enableFade: true,
-          pauseFadeMillis: 100,
-        ).then(
-          (_) async {
-            _freePlayerTemporarily(); // prevents playing previous item
-            playerStoppingSeikoo?.complete(true);
-          },
-        );
-      } else {
-        _freePlayerTemporarily();
-        playerStoppingSeikoo.complete(true);
-      }
-    }
-
     videoPlayerInfo.value = null;
 
-    ({AudioCacheDetails? audio, NamidaVideo? video, Duration? duration}) playedFromCacheDetails = (audio: null, video: null, duration: null);
-    bool okaySetFromCache() => playedFromCacheDetails.audio != null && (canPlayAudioOnlyFromCache || playedFromCacheDetails.video != null);
+    // -- apply state from config (deferred from prepare phase)
+    YoutubeInfoController.current.currentYTStreams.value = config.streamsResult;
+    YoutubeInfoController.current.currentCachedQualities.value = config.allCachedVideos;
+    currentAudioStream.value = config.audioStream;
+    currentVideoStream.value = config.videoStream;
+    currentCachedAudio.value = config.cachedAudio;
+    currentCachedVideo.value = config.cachedVideo;
+    _isCurrentAudioFromCache = config.isAudioFromCache;
+
+    ensureReplayGainVolumeUpdated(item, streamsResult: config.streamsResult);
+
+    final bool okaySetFromCache = config.cachedAudio != null && (canPlayAudioOnlyFromCache || config.cachedVideo != null);
 
     bool generatedWaveform = false;
     void generateWaveform() {
       if (!generatedWaveform && !settings.youtube.youtubeStyleMiniplayer.value) {
-        final audioDetails = playedFromCacheDetails.audio;
-        final dur = playedFromCacheDetails.duration;
+        final audioDetails = config.cachedAudio;
+        final dur = config.resolvedDuration;
         if (audioDetails != null && dur != null) {
           generatedWaveform = true;
           WaveformController.inst.generateWaveform(
@@ -1515,340 +1804,141 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
 
     Lyrics.inst.updateLyrics(item).ignoreError();
-
-    Duration? initialPosition = await _getItemInitialPosition(pi, duration);
-
-    /// try playing cache always for faster playback initialization, if the quality should be
-    /// different then it will be set later after fetching.
-    playedFromCacheDetails = await _trySetYTVideoWithoutConnection(
-      item: item,
-      // mediaItemFn: () => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
-      checkInterrupted: checkInterrupted,
-      index: index,
-      canPlayAudioOnly: canPlayAudioOnlyFromCache,
-      disableVideo: _isAudioOnlyPlayback,
-      whatToAwait: playerStoppingSeikoo?.future,
-      positionToRestore: initialPosition,
-      initialPositionFallback: (duration) async => initialPosition = await _getItemInitialPosition(pi, duration),
-    );
-
-    duration ??= playedFromCacheDetails.duration;
-    if (checkInterrupted()) return; // this also refreshes currentDuration
-
-    if (!ConnectivityController.inst.hasConnection && playedFromCacheDetails.audio == null) {
-      // -- if no connection and couldnt play from cache, we skip
-      if (_willPlayWhenReady && currentQueue.value.length > 1) skipItem();
-      return;
-    }
-
-    currentCachedAudio.value = playedFromCacheDetails.audio;
-    currentCachedVideo.value = playedFromCacheDetails.video;
-
-    ensureReplayGainVolumeUpdated(item, streamsResult: streamsResult);
-
     generateWaveform();
 
-    if (okaySetFromCache()) {
+    Future<void> fetchFullVideoPage(bool hadCachedVideoPage, bool hadCachedComments) async {
+      if (checkInterrupted(refreshNoti: false)) return;
+      final requestPage = !hadCachedVideoPage;
+      final requestComments = settings.youtube.preferNewComments.value ? true : !hadCachedComments;
+      await YoutubeInfoController.current.updateVideoPage(
+        item.id,
+        requestPage: requestPage,
+        requestComments: requestComments,
+      );
+    }
+
+    bool heyIhandledPlaying = false;
+    Future<void> plsplsplsPlay({required bool wasPlayingFromCache}) async {
+      playWhenReady.value ? onPlayRaw(attemptFixVolume: false) : onPauseRaw();
+      heyIhandledPlaying = true;
+
+      if (!wasPlayingFromCache) {
+        startCounterToAListen(pi);
+        if (settings.youtube.sponsorBlockSettings.value.enabled) {
+          SponsorBlockController.inst.updateSegments(item.id);
+        }
+      }
+    }
+
+    if (checkInterrupted()) return;
+
+    if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
+    if (checkInterrupted()) return;
+
+    try {
+      duration = await setSource(
+        config.source,
+        item: pi,
+        index: index,
+        initialPosition: config.initialPosition,
+        initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
+        videoOptions: config.videoOptions,
+        keepOldVideoSource: false,
+        isVideoFile: config.isVideoFile,
+        cachedAudioPath: config.cachedAudioPath,
+      );
+      if (checkInterrupted()) return;
+
       await plsplsplsPlay(wasPlayingFromCache: false);
-    }
 
-    if (checkInterrupted()) return;
+      final hadCachedVideoPage = await YoutubeInfoController.current.updateVideoPageCache(item.id);
+      final hadCachedComments = await YoutubeInfoController.current.updateCurrentCommentsCache(item.id);
 
-    Duration? positionToRestore = heyIhandledPlaying && playedFromCacheDetails.audio != null ? currentPositionMS.value.milliseconds : initialPosition;
-
-    Completer<YTMarkVideoWatchedResult>? markedAsWatched;
-
-    void markAsWatchedIfRequired() {
-      if (streamsResult != null && (streamsResult.audioStreams.isNotEmpty || streamsResult.mixedStreams.isNotEmpty)) {
-        // only when video has actual streams. otherwise its deleted/privated/etc
-        if (markedAsWatched != null) {
-          // -- older request was initiated, wait to see the value.
-          markedAsWatched.future.then(
-            (marked) {
-              if ((marked == YTMarkVideoWatchedResult.noAccount || marked == YTMarkVideoWatchedResult.userDenied) && streamsResult != null) {
-                YoutubeInfoController.history.markVideoWatched(videoId: item.id, streamResult: streamsResult).then(_onVideoMarkWatchResultError);
-              }
-            },
-          );
-        } else {
-          // -- no old requests, force mark
-          YoutubeInfoController.history.markVideoWatched(videoId: item.id, streamResult: streamsResult).then(_onVideoMarkWatchResultError);
-        }
-      }
-    }
-
-    // only if was playing
-    if (okaySetFromCache() && ((streamsResult != null && !streamsResult.hasExpired()) || !ConnectivityController.inst.hasConnection)) {
-      // -- allow when no connection bcz this function won't try again with no connection,
-      // -- so we force call here and let `markVideoWatched` do the job when there is proper connection.
-      markedAsWatched = Completer<YTMarkVideoWatchedResult>();
-      markedAsWatched.complete(YoutubeInfoController.history.markVideoWatched(videoId: item.id, streamResult: streamsResult));
-    }
-
-    if (ConnectivityController.inst.hasConnection) {
-      try {
-        isFetchingInfo.value = true;
-
-        bool forceRequest = false;
-        if (streamsResult == null) {
-          forceRequest = true;
-        } else {
-          forceRequest = streamsResult.hasExpired();
-        }
-
-        if (forceRequest) {
-          streamsResult = await YoutubeInfoController.video.fetchVideoStreams(item.id).catchError((e) {
-            snackyy(message: 'Error getting streams: $e', top: false, isError: true);
-            return null;
-          });
-          ensureReplayGainVolumeUpdated(item, streamsResult: streamsResult);
-          markAsWatchedIfRequired();
-
-          duration ??= streamsResult?.audioStreams.firstOrNull?.duration;
-          onInfoOrThumbObtained(info: streamsResult?.info);
-          if (checkInterrupted(refreshNoti: false)) return; // -- onInfoOrThumbObtained refreshes notification.
-          YoutubeInfoController.current.currentYTStreams.value = streamsResult;
-        } else {
-          YoutubeInfoController.current.currentYTStreams.value = streamsResult;
-          markAsWatchedIfRequired();
-        }
-
-        if (checkInterrupted()) return;
+      if (config.upgradeCompleter != null) {
+        final upgrade = await config.upgradeCompleter!.future;
         isFetchingInfo.value = false;
+        if (checkInterrupted()) return;
 
-        fetchFullVideoPage();
+        if (upgrade != null) {
+          onInfoOrThumbObtained(info: upgrade.updatedInfo);
+          YoutubeInfoController.current.currentYTStreams.value = upgrade.streamsResult;
+          currentAudioStream.value = upgrade.audioStream;
+          currentVideoStream.value = upgrade.videoStream;
+          _isCurrentAudioFromCache = upgrade.isAudioFromCache;
+          ensureReplayGainVolumeUpdated(item, streamsResult: upgrade.streamsResult);
 
-        if (streamsResult == null) {
-          if (!okaySetFromCache()) snackyy(title: lang.error, message: 'Failed to fetch streams', top: false, isError: true);
-          return;
-        }
+          if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
+          if (checkInterrupted()) return;
 
-        final audiostreams = streamsResult.audioStreams;
-        final videoStreams = streamsResult.videoStreams;
-        final mixedStreams = streamsResult.mixedStreams;
-
-        bool useMixedStream = false;
-
-        if (audiostreams.isEmpty) {
-          if (mixedStreams.isEmpty) {
-            // -- live videos has only mixedStreams
-            if (!okaySetFromCache()) {
-              final playabilty = streamsResult.playability;
-              final extraReasons = [playabilty.reason, ...?playabilty.messages].whereType<String>();
-              final extraReasonsText = extraReasons.isEmpty ? '' : ' | ${extraReasons.join(' | ')}';
-              snackyy(title: lang.error, message: 'Empty audio streams. playabilty: `${playabilty.status.name}`$extraReasonsText', top: false, isError: true);
-              if (_willPlayWhenReady) skipItem();
-            }
-            return;
-          } else {
-            useMixedStream = true;
-          }
-        }
-
-        // -----------------------
-        UriSource? finalAudioSource;
-        VideoSourceOptions? videoSourceOptions;
-
-        if (useMixedStream) {
-          UriSource? finalMixedSource;
-          final prefferedMixedStream = YoutubeController.getPreferredStreamQuality(mixedStreams, preferIncludeWebm: false);
-
-          currentVideoStream.value = prefferedMixedStream;
-          if (prefferedMixedStream != null) {
-            final mixedUri = prefferedMixedStream.buildUrl();
-            if (mixedUri != null) {
-              finalMixedSource = AudioVideoSource.uri(mixedUri); // -- this is not an hls nor dash
-            }
-          }
-          if (finalMixedSource != null) {
-            finalAudioSource = AudioVideoSource.file('');
-            videoSourceOptions = VideoSourceOptions(
-              source: finalMixedSource,
-              loop: false,
-              videoOnly: true,
-            );
-          } else {
-            if (!okaySetFromCache()) snackyy(title: lang.error, message: 'Failed to get mixed source', top: false, isError: true);
-            return;
-          }
-        } else if (streamsResult.info?.isLive == true) {
-          UriSource? finalLiveSource;
-          if (streamsResult.hlsManifestUrl != null) {
-            finalLiveSource = HlsSource(Uri.parse(streamsResult.hlsManifestUrl!));
-          } else if (streamsResult.dashManifestUrl != null) {
-            finalLiveSource = DashSource(Uri.parse(streamsResult.dashManifestUrl!));
-          }
-
-          if (finalLiveSource == null) {
-            // -- fallback to mixed streams for when live stream has already ended
-            final prefferedMixedStream = YoutubeController.getPreferredStreamQuality(mixedStreams, preferIncludeWebm: false);
-            currentVideoStream.value = prefferedMixedStream;
-            if (prefferedMixedStream != null) {
-              final mixedUri = prefferedMixedStream.buildUrl();
-              if (mixedUri != null) {
-                finalLiveSource = AudioVideoSource.uri(mixedUri); // -- this is not an hls nor dash
-              }
-            }
-          }
-
-          if (finalLiveSource != null) {
-            finalAudioSource = AudioVideoSource.file('');
-            videoSourceOptions = VideoSourceOptions(
-              source: finalLiveSource,
-              loop: false,
-              videoOnly: true,
-            );
-          } else {
-            if (!okaySetFromCache()) snackyy(title: lang.error, message: 'Failed to set hls or dash source for live stream', top: false, isError: true);
-          }
-        } else {
-          AudioVideoSource? finalVideoSource;
-
-          final cachedAudioSet = playedFromCacheDetails.audio;
-          final cachedVideoSet = playedFromCacheDetails.video;
-
-          _isCurrentAudioFromCache = cachedAudioSet != null;
-
-          // -- setting audio
-          final prefferedAudioStream = YoutubeController.getPreferredAudioStream(audiostreams);
-          bool isAudioStreamRequiredBetterThanCachedSet = cachedAudioSet == null
-              ? true
-              : prefferedAudioStream == null
-              ? false
-              : _allowSwitchingVideoStreamIfCachedPlaying
-              ? prefferedAudioStream.bitrate > prefferedAudioStream.bitrate
-              : false;
-          if (isAudioStreamRequiredBetterThanCachedSet) {
-            currentAudioStream.value = prefferedAudioStream;
-            if (prefferedAudioStream != null) {
-              final audioUri = prefferedAudioStream.buildUrl();
-              if (audioUri != null) {
-                finalAudioSource = _buildLockCachingAudioSource(
-                  audioUri,
-                  stream: prefferedAudioStream,
-                  videoId: item.id,
-                  streamsResult: streamsResult,
-                );
-              }
-            }
-          }
-
-          // -- setting video
-          if (!_isAudioOnlyPlayback &&
-              videoStreams.isNotEmpty &&
-              ConnectivityController.inst.dataSaverMode.canFetchNetworkVideoStreamShortContent(await YoutubeInfoController.utils.isShortContent(item.id))) {
-            if (cachedVideoSet != null ? _allowSwitchingVideoStreamIfCachedPlaying : true) {
-              final prefferedVideoStream = YoutubeController.getPreferredStreamQuality(videoStreams, preferIncludeWebm: false);
-              bool isVideoStreamRequiredBetterThanCachedSet = cachedVideoSet == null
-                  ? true
-                  : prefferedVideoStream == null
-                  ? false
-                  : _allowSwitchingVideoStreamIfCachedPlaying
-                  ? prefferedVideoStream.width > cachedVideoSet.width
-                  : false;
-
-              if (isVideoStreamRequiredBetterThanCachedSet) {
-                currentVideoStream.value = prefferedVideoStream;
-                if (prefferedVideoStream != null) {
-                  final videoUri = prefferedVideoStream.buildUrl();
-                  if (videoUri != null) {
-                    finalVideoSource = _buildLockCachingVideoSource(
-                      videoUri,
-                      stream: prefferedVideoStream,
-                      videoId: item.id,
-                      streamsResult: streamsResult,
-                    );
-                  }
-                }
-              }
-            }
-          }
-
-          if (finalAudioSource == null && finalVideoSource == null) {
-            if (!okaySetFromCache()) snackyy(title: lang.error, message: 'Failed to get audio/video source', top: false, isError: true);
-            return;
-          }
-
-          if (finalAudioSource != null || finalVideoSource != null) {
+          try {
             heyIhandledPlaying = false;
-
-            finalAudioSource ??= cachedAudioSet != null ? AudioVideoSource.file(cachedAudioSet.file.path) : null;
-            finalVideoSource ??= cachedVideoSet != null && !_isAudioOnlyPlayback ? AudioVideoSource.file(cachedVideoSet.path) : null;
-
-            if (finalVideoSource != null) {
-              videoSourceOptions = VideoSourceOptions(
-                source: finalVideoSource,
-                loop: false,
-                videoOnly: false,
-              );
-            }
+            duration = await setSource(
+              upgrade.finalAudioSource,
+              item: pi,
+              index: index,
+              initialPosition: currentPositionMS.value.milliseconds,
+              initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
+              videoOptions: upgrade.videoSourceOptions,
+              keepOldVideoSource: false,
+              isVideoFile: false,
+            );
+            if (checkInterrupted()) return;
+          } catch (e, st) {
+            heyIhandledPlaying = true; // keep cache playback going, upgrade failed
+            logger.error('Error upgrading YT stream, keeping cache playback', e: e, st: st);
+          }
+          _markWatchedIfStreamsValid(item.id, upgrade.streamsResult);
+        } else {
+          _markWatchedIfStreamsValid(item.id, config.streamsResult);
+        }
+        fetchFullVideoPage(hadCachedVideoPage, hadCachedComments);
+      } else {
+        _markWatchedIfStreamsValid(item.id, config.streamsResult);
+        if (ConnectivityController.inst.hasConnection) fetchFullVideoPage(hadCachedVideoPage, hadCachedComments);
+      }
+    } catch (e, st) {
+      isFetchingInfo.value = false;
+      if (checkInterrupted()) return;
+      if (!okaySetFromCache) {
+        void showSnackError(String nextAction) {
+          if (item == currentItem.value) {
+            snackyy(title: lang.error, message: 'Error playing video, $nextAction: $e', top: false, isError: true);
+            logger.error('Error playing video, $nextAction', e: e, st: st);
           }
         }
 
-        if (finalAudioSource == null) {
-          if (!okaySetFromCache()) snackyy(title: lang.error, message: 'Failed to get audio source', top: false, isError: true);
-          return;
-        }
+        showSnackError('trying again');
+        printy(e, isError: true);
 
-        await playerStoppingSeikoo?.future;
-        if (checkInterrupted()) return;
-        if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
-        if (checkInterrupted()) return;
-
-        duration = await setSource(
-          finalAudioSource,
-          item: pi,
+        final playedFromCacheDetails = await _trySetYTVideoWithoutConnection(
+          item: item,
+          checkInterrupted: checkInterrupted,
           index: index,
-          initialPosition: positionToRestore,
+          canPlayAudioOnly: canPlayAudioOnlyFromCache,
+          disableVideo: _isAudioOnlyPlayback,
+          whatToAwait: null,
+          // whatToAwait: playerStoppingSeikoo?.future,
+          positionToRestore: config.initialPosition,
           initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
-          videoOptions: videoSourceOptions,
-          keepOldVideoSource: false,
-          isVideoFile: false,
         );
-        if (checkInterrupted()) return;
-
-        // -----------------------
-      } catch (e, st) {
-        if (checkInterrupted()) return;
-        if (!okaySetFromCache()) {
-          void showSnackError(String nextAction) {
-            if (item == currentItem.value) {
-              snackyy(title: lang.error, message: 'Error playing video, $nextAction: $e', top: false, isError: true);
-              logger.error('Error playing video, $nextAction', e: e, st: st);
-            }
-          }
-
-          showSnackError('trying again');
-
-          printy(e, isError: true);
-          playedFromCacheDetails = await _trySetYTVideoWithoutConnection(
-            item: item,
-            // mediaItemFn: () => item.toMediaItem(item.id, _ytNotificationVideoInfo, _ytNotificationVideoThumbnail, index, currentQueue.value.length, duration),
-            checkInterrupted: checkInterrupted,
-            index: index,
-            canPlayAudioOnly: canPlayAudioOnlyFromCache,
-            disableVideo: _isAudioOnlyPlayback,
-            whatToAwait: playerStoppingSeikoo?.future,
-            positionToRestore: positionToRestore,
-            initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
-          );
-          _isCurrentAudioFromCache = playedFromCacheDetails.audio != null;
-          duration ??= playedFromCacheDetails.duration;
-          if (checkInterrupted()) return; // this also refreshes currentDuration
-          generateWaveform();
-          if (!okaySetFromCache()) {
-            showSnackError('skipping');
-            if (_willPlayWhenReady) skipItem();
-          }
+        _isCurrentAudioFromCache = playedFromCacheDetails.audio != null;
+        duration ??= playedFromCacheDetails.duration;
+        if (checkInterrupted()) return; // this also refreshes currentDuration
+        currentCachedAudio.value = playedFromCacheDetails.audio;
+        currentCachedVideo.value = playedFromCacheDetails.video;
+        generateWaveform();
+        if (playedFromCacheDetails.audio == null) {
+          showSnackError('skipping');
+          if (_willPlayWhenReady) skipItem();
+          return;
         }
       }
     }
 
     if (checkInterrupted()) return;
-
     if (!heyIhandledPlaying) {
-      final didplayfromcache = okaySetFromCache();
-      await plsplsplsPlay(wasPlayingFromCache: didplayfromcache);
+      // -- possible after: cache-retry success, or upgrade setSource success
+      await plsplsplsPlay(wasPlayingFromCache: config.upgradeCompleter != null);
     }
   }
 
@@ -2053,10 +2143,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   final replayGainLinearVolumeMultiplierRx = 1.0.obs;
 
   @override
-  bool get enableCrossFade => settings.player.enableCrossFade.value && currentItem.value is! YoutubeID;
+  bool get enableCrossFade => settings.player.enableCrossFade.value;
 
   @override
-  bool get defaultGaplessEnabled => settings.player.enableGaplessPlayback.value && currentItem.value is! YoutubeID;
+  bool get defaultGaplessEnabled => settings.player.enableGaplessPlayback.value;
 
   @override
   int get defaultCrossFadeMilliseconds => settings.player.crossFadeDurationMS.value;
@@ -2374,6 +2464,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   UriSource _buildAVSource(
     Uri uriDDL, {
+    required int? size,
     required File cacheFile,
     required String videoId,
     required VideoStreamsResult? streamsResult,
@@ -2392,6 +2483,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     // }
     return _buildCacheableAVSource(
       uriDDL,
+      size: size,
       cacheFile: cacheFile,
       onFirstCacheDone: onFirstCacheDone,
       onFetched: (cachedFile) {},
@@ -2401,6 +2493,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   UriSource _buildLockCachingAudioSource(Uri uriDDL, {required AudioStream stream, required String videoId, required VideoStreamsResult? streamsResult}) {
     return _buildAVSource(
       uriDDL,
+      size: stream.sizeInBytes,
       cacheFile: File(stream.cachePath(videoId)),
       videoId: videoId,
       streamsResult: streamsResult,
@@ -2411,6 +2504,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   UriSource _buildLockCachingVideoSource(Uri uriDDL, {required VideoStream stream, required String videoId, required VideoStreamsResult? streamsResult}) {
     return _buildAVSource(
       uriDDL,
+      size: stream.sizeInBytes,
       cacheFile: File(stream.cachePath(videoId)),
       videoId: videoId,
       streamsResult: streamsResult,
@@ -2595,20 +2689,24 @@ class _NextSeekCachedFileData {
 
 UriSource _buildCacheableAVSource(
   Uri uriDDL, {
+  required int? size,
   Map<String, String>? headers,
   required File cacheFile,
   required void Function(File cachedFile) onFirstCacheDone,
   required void Function(File cachedFile) onFetched,
 }) {
   final cacheConfig = HttpCacheManager.instance.createStreamConfig();
-
+  if (size != null && size > 0) {
+    // -- usually required for yt new urls that enforces chunk streaming
+    cacheConfig.requestHeaders['Range'] = 'bytes=0-${size - 1}';
+  }
   cacheConfig.onCacheDone = onFirstCacheDone;
   final cacheStream = HttpCacheManager.instance.createStream(
     uriDDL,
     file: cacheFile,
     config: cacheConfig,
   );
-  cacheStream.download().then(onFetched);
+  cacheStream.download().then(onFetched).ignoreError();
   final cacheUrl = cacheStream.cacheUrl;
   void disposeStream() => cacheStream.dispose(force: true);
   return AudioVideoSource.uri(
@@ -2665,6 +2763,7 @@ Future<UriSource> _buildTrackNetworkAudioSource({required Track tr}) async {
 
   return _buildCacheableAVSource(
     uriDDLInfo.uri,
+    size: null,
     headers: uriDDLInfo.headers,
     cacheFile: cacheFile,
     onFirstCacheDone: (cachedFile) {},
@@ -2681,6 +2780,68 @@ class ItemPrepareConfigSelectable<Q, S extends UriSource> extends ItemPrepareCon
     required super.videoOptions,
     required super.audioTrackId,
     required this.videoUpdateConfig,
+    super.item,
+    super.itemExists,
+    super.keepOldVideoSource = false,
+  });
+}
+
+class _YTNetworkSourceResult {
+  final UriSource finalAudioSource;
+  final VideoSourceOptions? videoSourceOptions;
+  final AudioStream? audioStream;
+  final VideoStream? videoStream;
+  final VideoStreamsResult streamsResult;
+  final VideoStreamInfo? updatedInfo;
+  final bool isAudioFromCache;
+
+  const _YTNetworkSourceResult({
+    required this.finalAudioSource,
+    required this.videoSourceOptions,
+    required this.audioStream,
+    required this.videoStream,
+    required this.streamsResult,
+    required this.updatedInfo,
+    required this.isAudioFromCache,
+  });
+}
+
+class _ItemPrepareConfigYoutubeID<Q, S extends UriSource> extends ItemPrepareConfig<Q, S> {
+  final AudioStream? audioStream;
+  final VideoStream? videoStream;
+  final AudioCacheDetails? cachedAudio;
+  final NamidaVideo? cachedVideo;
+  final List<NamidaVideo> allCachedVideos;
+  final bool isAudioFromCache;
+  final VideoStreamsResult? streamsResult;
+  final VideoStreamInfo? ytNotificationVideoInfo;
+  final File? ytNotificationVideoThumbnail;
+  final Duration? resolvedDuration;
+
+  /// used to upgrade streams when cached items are already assigned
+  final Completer<_YTNetworkSourceResult?>? upgradeCompleter;
+  final bool isVideoFile;
+  final String? cachedAudioPath;
+
+  const _ItemPrepareConfigYoutubeID(
+    super.source, {
+    required super.index,
+    required super.initialPosition,
+    required super.videoOptions,
+    required super.audioTrackId,
+    required this.audioStream,
+    required this.videoStream,
+    required this.cachedAudio,
+    required this.cachedVideo,
+    required this.allCachedVideos,
+    required this.isAudioFromCache,
+    required this.streamsResult,
+    required this.ytNotificationVideoInfo,
+    required this.ytNotificationVideoThumbnail,
+    required this.resolvedDuration,
+    required this.upgradeCompleter,
+    required this.isVideoFile,
+    required this.cachedAudioPath,
     super.item,
     super.itemExists,
     super.keepOldVideoSource = false,
