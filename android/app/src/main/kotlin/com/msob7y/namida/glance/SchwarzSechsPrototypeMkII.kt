@@ -94,8 +94,8 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
     val gapSmall = minOf(w * 0.05f, h * 0.12f, 16.0.dp)
     val imageSize = minOf(w * 0.35f, h - verticalPadding * 2)
     val buttonsCount = 4
-    val availableWidthForButtons = minOf(w - imageSize - horizontalPadding * 2, w * 0.5f)
-    val maxButtonWidth = minOf(48.0.dp, h * 0.3f)
+    val availableWidthForButtons = minOf(w - imageSize - horizontalPadding * 2, w * 0.75f)
+    val maxButtonWidth = minOf(48.0.dp, h * 0.32f)
     val buttonWidth = minOf(availableWidthForButtons / buttonsCount, maxButtonWidth)
     val buttonHeight = buttonWidth * 0.8f
 

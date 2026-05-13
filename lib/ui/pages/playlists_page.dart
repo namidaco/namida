@@ -499,6 +499,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                             rx: SmartPlaylistsController.inst.smartPlaylistsMap,
                             builder: (context, smartPlaylistsMap) {
                               final smartPlaylists = smartPlaylistsMap.values.toList();
+                              if (smartPlaylists.isEmpty) return const SizedBox();
                               return SizedBox(
                                 height: 48.0,
                                 child: SuperSmoothListView.builder(

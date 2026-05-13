@@ -535,7 +535,7 @@ extension PlayerRepeatModeUtils on PlayerRepeatMode {
     PlayerRepeatMode.none => lang.repeatModeNone,
     PlayerRepeatMode.one => lang.repeatModeOne,
     PlayerRepeatMode.all => lang.repeatModeAll,
-    PlayerRepeatMode.allShuffle => lang.shuffleAll,
+    PlayerRepeatMode.allShuffle => "${lang.repeatModeAll} (${lang.shuffle})",
     PlayerRepeatMode.forNtimes => lang.repeatForNTimes(number: Player.inst.numberOfRepeats.value),
   };
 }
@@ -2447,12 +2447,20 @@ extension DownloadNotificationsL10n on DownloadNotifications {
 }
 
 extension PlayerRepeatModeL10n on PlayerRepeatMode {
-  IconData toIcon() => switch (this) {
+  IconData toMainIcon() => switch (this) {
     PlayerRepeatMode.none => Broken.repeate_music,
     PlayerRepeatMode.one => Broken.repeate_one,
     PlayerRepeatMode.all => Broken.repeat,
-    PlayerRepeatMode.allShuffle => Broken.shuffle,
+    PlayerRepeatMode.allShuffle => Broken.repeat,
     PlayerRepeatMode.forNtimes => Broken.status,
+  };
+
+  IconData? toSecondaryIcon() => switch (this) {
+    PlayerRepeatMode.none => null,
+    PlayerRepeatMode.one => null,
+    PlayerRepeatMode.all => null,
+    PlayerRepeatMode.allShuffle => Broken.shuffle,
+    PlayerRepeatMode.forNtimes => null,
   };
 }
 

@@ -392,10 +392,11 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
   final volumeKey = GlobalKey<_CuteSliderState>();
 
   Future<void> updateFromConfig(_SoundControlMainSlidersColumnUpdateConfig config) async {
+    await _setSpeed(config.speedRx.value);
     if (settings.player.linkSpeedPitch.value) {
-      await _setSpeed(config.speedRx.value);
+      // -- apply speed to pitch if they were linked
+      await _setPitch(config.speedRx.value);
     } else {
-      await _setSpeed(config.speedRx.value);
       await _setPitch(config.pitchRx.value);
     }
     await _setVolume(config.volumeRx.value);
@@ -809,11 +810,11 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                 _CuteSlider(
                   key: speedKey,
                   valueListenable: widget.updateConfig.speedRx,
-                  onChanged: (value) {
-                    widget.updateConfig.setSpeed(value);
+                  onChanged: (value) async {
+                    await widget.updateConfig.setSpeed(value);
 
                     if (settings.player.linkSpeedPitch.value) {
-                      widget.updateConfig.setPitch(value);
+                      await widget.updateConfig.setPitch(value);
                     }
                   },
                   tapToUpdate: widget.tapToUpdate,

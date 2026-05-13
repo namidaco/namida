@@ -1730,6 +1730,7 @@ class StackedIcon extends StatelessWidget {
     this.delightenColors = false,
     this.margin = -2.0,
   });
+
   Color? _getColory(BuildContext context, Color? c) {
     return disableColor
         ? null
@@ -5715,10 +5716,16 @@ class RepeatModeIconButton extends StatelessWidget {
     this.builder,
   });
 
-  void _switchMode() {
-    final e = settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values);
-    settings.player.save(repeatMode: e);
+  void _onPressed(BuildContext context) {
+    NamidaPopupWrapper(
+      children: () => _popupChildren(context),
+    ).showPopupMenu(context);
   }
+
+  // void _switchMode() {
+  //   final e = settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values);
+  //   settings.player.save(repeatMode: e);
+  // }
 
   // String _buildTooltip() {
   //   final repeat = settings.player.repeatMode.value;
@@ -5728,8 +5735,12 @@ class RepeatModeIconButton extends StatelessWidget {
   List<Widget> _popupChildren(BuildContext context) {
     return [
       ...PlayerRepeatMode.values.map(
-        (e) {
-          final enabled = e == settings.player.repeatMode.value;
+        (repeatMode) {
+          final enabled = repeatMode == settings.player.repeatMode.value;
+          final mainIcon = repeatMode.toMainIcon();
+          final secondaryIcon = repeatMode.toSecondaryIcon();
+          const iconSize = 22.0;
+          final iconColor = context.defaultIconColor();
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
             child: NamidaInkWell(
@@ -5737,21 +5748,44 @@ class RepeatModeIconButton extends StatelessWidget {
               borderRadius: 12.0,
               bgColor: enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null,
               onTap: () {
-                settings.player.save(repeatMode: e);
+                settings.player.save(repeatMode: repeatMode);
                 NamidaNavigator.inst.popMenu();
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    e.toIcon(),
-                    size: 22.0,
-                    color: context.defaultIconColor(),
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      secondaryIcon != null
+                          ? StackedIcon(
+                              baseIcon: mainIcon,
+                              secondaryIcon: secondaryIcon,
+                              baseIconColor: iconColor,
+                              secondaryIconColor: iconColor,
+                              iconSize: iconSize,
+                              secondaryIconSize: iconSize * 0.6,
+                            )
+                          : Icon(
+                              mainIcon,
+                              size: iconSize,
+                              color: iconColor,
+                            ),
+
+                      if (repeatMode == PlayerRepeatMode.forNtimes)
+                        ObxO(
+                          rx: Player.inst.numberOfRepeats,
+                          builder: (context, numberOfRepeats) => Text(
+                            '$numberOfRepeats',
+                            style: context.textTheme.displaySmall?.copyWith(color: iconColor),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(width: 8.0),
                   Expanded(
                     child: Text(
-                      e.buildText(),
+                      repeatMode.buildText(),
                       style: context.textTheme.displayMedium,
                     ),
                   ),
@@ -5773,16 +5807,26 @@ class RepeatModeIconButton extends StatelessWidget {
     final rawWidget = ObxO(
       rx: settings.player.repeatMode,
       builder: (context, repeatMode) {
-        final icon = repeatMode.toIcon();
+        final mainIcon = repeatMode.toMainIcon();
+        final secondaryIcon = repeatMode.toSecondaryIcon();
 
         final child = Stack(
           alignment: Alignment.center,
           children: [
-            Icon(
-              icon,
-              size: iconSize,
-              color: iconColor,
-            ),
+            secondaryIcon != null
+                ? StackedIcon(
+                    baseIcon: mainIcon,
+                    secondaryIcon: secondaryIcon,
+                    baseIconColor: iconColor,
+                    secondaryIconColor: iconColor,
+                    iconSize: iconSize,
+                    secondaryIconSize: iconSize * 0.6,
+                  )
+                : Icon(
+                    mainIcon,
+                    size: iconSize,
+                    color: iconColor,
+                  ),
             if (repeatMode == PlayerRepeatMode.forNtimes)
               ObxO(
                 rx: Player.inst.numberOfRepeats,
@@ -5799,7 +5843,7 @@ class RepeatModeIconButton extends StatelessWidget {
             null,
             () {
               onPressed?.call();
-              _switchMode();
+              _onPressed(context);
             },
           );
         }
@@ -5813,7 +5857,7 @@ class RepeatModeIconButton extends StatelessWidget {
                 iconSize: iconSize,
                 onPressed: () {
                   onPressed?.call();
-                  _switchMode();
+                  _onPressed(context);
                 },
                 child: child,
               )
@@ -5823,13 +5867,15 @@ class RepeatModeIconButton extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
                 onPressed: () {
                   onPressed?.call();
-                  _switchMode();
+                  _onPressed(context);
                 },
                 icon: child,
               );
       },
     );
     return NamidaPopupWrapper(
+      openOnTap: true,
+      openOnLongPress: true,
       children: () => _popupChildren(context),
       child: rawWidget,
     );

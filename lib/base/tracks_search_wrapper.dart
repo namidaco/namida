@@ -278,12 +278,12 @@ class TracksSearchWrapper {
       void scoreProperty(_Property? property, {int multiplier = 1}) {
         if (property == null) return;
 
-        if (score >= 500) return;
+        if (score >= 1000) return;
 
         final propertyJoined = property.joined;
 
         if (propertyJoined == lctext) {
-          score += 200 * multiplier;
+          score += 300 * multiplier;
           return;
         }
 
@@ -311,8 +311,8 @@ class TracksSearchWrapper {
         }
       }
 
-      scoreProperty(trExt.splitTitle, multiplier: 3);
-      scoreProperty(trExt.splitFilename, multiplier: 2);
+      scoreProperty(trExt.splitTitle, multiplier: 4);
+      scoreProperty(trExt.splitFilename, multiplier: 3);
       scoreProperty(trExt.splitArtist, multiplier: 2);
       scoreProperty(trExt.splitAlbum, multiplier: 2);
       scoreProperty(trExt.splitFolder);

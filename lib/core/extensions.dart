@@ -422,7 +422,7 @@ extension DisplayKeywords on int {
 
 extension DateTimeFormattersInt on int {
   String get secondsFormatted => getSecondsFormatted(hourChar: 'h', minutesChar: 'min', separator: ' ');
-  String get yearFormatted => DateTime.fromMillisecondsSinceEpoch(this).yearFormatted;
+  String get yearFormatted => getYearFormatted(settings.dateTimeFormat.value);
   String get dateFormatted => DateTime.fromMillisecondsSinceEpoch(this).dateFormatted;
   String get dateFormattedOriginal => DateTime.fromMillisecondsSinceEpoch(this).dateFormattedOriginal;
   String dateFormattedOriginalNoYears(DateTime diffDate) => DateTimeFormatters(DateTime.fromMillisecondsSinceEpoch(this)).dateFormattedOriginalNoYears(diffDate);
