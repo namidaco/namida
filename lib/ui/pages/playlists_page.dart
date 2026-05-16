@@ -507,8 +507,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                   scrollDirection: Axis.horizontal,
                                   itemCount: smartPlaylists.length,
                                   itemBuilder: (context, index) {
-                                    final smpl = smartPlaylists[index];
-                                    final imgFile = SmartPlaylistsController.inst.getArtworkFileForPlaylist(smpl);
+                                    final smplWrapper = smartPlaylists[index];
+                                    final imgFile = SmartPlaylistsController.inst.getArtworkFileForPlaylist(smplWrapper.value);
                                     return ConstrainedBox(
                                       constraints: BoxConstraints(maxWidth: context.width * 0.75),
                                       child: NamidaInkWell(
@@ -516,10 +516,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                         padding: const EdgeInsets.symmetric(vertical: 2.0),
                                         onTap: () {
                                           SmartPlaylistTracksPage(
-                                            smartPlaylist: smpl,
+                                            smartPlaylistWrapper: smplWrapper,
                                           ).navigate();
                                         },
-                                        onLongPress: () => NamidaDialogs.inst.showSmartPlaylistDialog(smpl),
+                                        onLongPress: () => NamidaDialogs.inst.showSmartPlaylistDialog(smplWrapper),
                                         borderRadius: 8.0,
                                         bgColor: context.theme.colorScheme.secondary.withOpacityExt(0.12),
                                         child: Row(
@@ -537,7 +537,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                             const SizedBox(width: 6.0),
                                             Flexible(
                                               child: Text(
-                                                smpl.name,
+                                                smplWrapper.value.name,
                                                 softWrap: false,
                                                 overflow: TextOverflow.fade,
                                                 style: textTheme.displayMedium,

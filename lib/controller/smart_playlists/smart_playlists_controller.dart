@@ -12,7 +12,6 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -33,9 +32,9 @@ class SmartPlaylistsController {
   static final inst = SmartPlaylistsController._();
   SmartPlaylistsController._();
 
-  final smartPlaylistsMap = <SmartPlaylistKey, SmartPlaylist>{}.obs;
+  final smartPlaylistsMap = <SmartPlaylistKey, SmartPlaylistWrapper>{}.obs;
 
-  SmartPlaylist? getPlaylistForKey(SmartPlaylistKey? key) => key == null ? null : smartPlaylistsMap.value[key];
+  SmartPlaylistWrapper? getPlaylistForKey(SmartPlaylistKey? key) => key == null ? null : smartPlaylistsMap.value[key];
 
   late final _dBManager = DBWrapper.openFromInfo(
     fileInfo: AppPaths.SMART_PLAYLISTS,
@@ -47,7 +46,7 @@ class SmartPlaylistsController {
     for (final entry in res.entries) {
       try {
         final config = SmartPlaylist.fromMap(entry.value);
-        smartPlaylistsMap.value[entry.key] ??= config;
+        smartPlaylistsMap.value[entry.key] ??= SmartPlaylistWrapper(config);
       } catch (_) {}
     }
     smartPlaylistsMap.refresh();
@@ -55,13 +54,27 @@ class SmartPlaylistsController {
 
   Future<void> create(SmartPlaylist smartPlaylist) async {
     final key = smartPlaylist.key;
-    smartPlaylistsMap[key] = smartPlaylist;
+    final alreadyExisting = smartPlaylistsMap.value[key];
+    if (alreadyExisting != null) {
+      alreadyExisting.value = smartPlaylist;
+    } else {
+      smartPlaylistsMap.value[key] = SmartPlaylistWrapper(smartPlaylist);
+    }
+    smartPlaylistsMap.refresh();
     await saveToStorage(key);
   }
 
   Future<void> edit(SmartPlaylist oldSmartPlaylist, SmartPlaylist smartPlaylist) async {
-    if (oldSmartPlaylist.key != smartPlaylist.key) await delete(oldSmartPlaylist.key);
-    await create(smartPlaylist);
+    if (oldSmartPlaylist.key == smartPlaylist.key) {
+      await create(smartPlaylist);
+    } else {
+      final alreadyExisting = smartPlaylistsMap.value[oldSmartPlaylist.key];
+      alreadyExisting?.value = smartPlaylist;
+      smartPlaylistsMap.value[smartPlaylist.key] = alreadyExisting ?? SmartPlaylistWrapper(smartPlaylist);
+      smartPlaylistsMap.refresh();
+      await delete(oldSmartPlaylist.key);
+      await saveToStorage(smartPlaylist.key);
+    }
   }
 
   Future<void> delete(SmartPlaylistKey key) async {
@@ -71,18 +84,19 @@ class SmartPlaylistsController {
   }
 
   void _popPageIfCurrent(SmartPlaylistKey key) {
-    final lastPage = NamidaNavigator.inst.currentRoute;
-    if (lastPage?.route == RouteType.SUBPAGE_smartPlaylistTracks) {
-      if (lastPage?.name == key) {
-        NamidaNavigator.inst.popPage();
-      }
-    }
+    // -- we currently update playlist in real time
+    // final lastPage = NamidaNavigator.inst.currentRoute;
+    // if (lastPage?.route == RouteType.SUBPAGE_smartPlaylistTracks) {
+    //   if (lastPage?.name == key) {
+    //     NamidaNavigator.inst.popPage();
+    //   }
+    // }
   }
 
   Future<void> saveToStorage(SmartPlaylistKey key) async {
     final pl = smartPlaylistsMap.value[key];
     smartPlaylistsMap.refresh();
-    await _dBManager.put(key, pl?.toMap());
+    await _dBManager.put(key, pl?.value.toMap());
   }
 
   String? validatePlaylistName(String? value, {required SmartPlaylistKey? oldKey}) {

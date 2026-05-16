@@ -4255,6 +4255,7 @@ class NamidaTracksList extends StatelessWidget {
   final Widget Function(BuildContext context, int i)? itemBuilder;
   final fr.ItemExtentBuilder? itemExtentBuilder;
   final Widget? header;
+  final Widget? stickyHeader;
   final Widget Function(double maxWidth)? infoBox;
   final Widget? footer;
   final List<Widget>? widgetsInColumn;
@@ -4275,6 +4276,7 @@ class NamidaTracksList extends StatelessWidget {
     this.itemBuilder,
     this.itemExtentBuilder,
     this.header,
+    this.stickyHeader,
     required this.infoBox,
     this.footer,
     this.widgetsInColumn,
@@ -4298,6 +4300,7 @@ class NamidaTracksList extends StatelessWidget {
         child: NamidaListView(
           infoBox: infoBox,
           header: header,
+          stickyHeader: stickyHeader,
           widgetsInColumn: widgetsInColumn,
           scrollController: scrollController,
           itemCount: queueLength,
@@ -4323,6 +4326,7 @@ class NamidaTracksList extends StatelessWidget {
             return NamidaListView(
               infoBox: infoBox,
               header: header,
+              stickyHeader: stickyHeader,
               widgetsInColumn: widgetsInColumn,
               scrollController: scrollController,
               itemCount: queueLength,

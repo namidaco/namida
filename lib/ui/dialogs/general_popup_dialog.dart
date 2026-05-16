@@ -76,7 +76,7 @@ Future<void> showGeneralPopupDialog(
   IconData? trailingIcon,
   bool comingFromPlaylistMenu = false,
   bool showPlayAllReverse = false,
-  SmartPlaylist? smartPlaylist,
+  SmartPlaylistWrapper? smartPlaylistWrapper,
 }) async {
   final isSingle = tracks.length == 1;
   forceSingleArtwork ??= isSingle;
@@ -361,25 +361,25 @@ Future<void> showGeneralPopupDialog(
 
   Future<void> exportSmartPlaylist({required bool asM3u}) async {
     NamidaNavigator.inst.closeDialog();
-    final smpl = smartPlaylist;
-    if (smpl == null) return;
+    final smplWrapper = smartPlaylistWrapper;
+    if (smplWrapper == null) return;
 
     String m3uPath = '';
 
     if (asM3u) {
       if (await requestManageStoragePermission()) {
-        m3uPath = PlaylistController.getUnusedM3uFilePathInStorage(smpl.name);
+        m3uPath = PlaylistController.getUnusedM3uFilePathInStorage(smplWrapper.value.name);
       }
     } else {
-      final oldM3uPath = PlaylistController.getUnusedM3uFilePathInStorage(smpl.name);
+      final oldM3uPath = PlaylistController.getUnusedM3uFilePathInStorage(smplWrapper.value.name);
       File(oldM3uPath).tryDeleting();
     }
 
     LocalPlaylist finalPlaylist;
-    final plExisting = PlaylistController.inst.getPlaylist(smpl.name);
+    final plExisting = PlaylistController.inst.getPlaylist(smplWrapper.value.name);
     if (plExisting != null) {
       await PlaylistController.inst.updatePropertyInPlaylist(
-        smpl.name,
+        smplWrapper.value.name,
         tracksRaw: tracks,
         convertItem: (e, dateAdded) => TrackWithDate(
           dateAdded: dateAdded,
@@ -390,7 +390,7 @@ Future<void> showGeneralPopupDialog(
       finalPlaylist = plExisting;
     } else {
       finalPlaylist = await PlaylistController.inst.addNewPlaylist(
-        smpl.name,
+        smplWrapper.value.name,
         tracks: tracks,
         m3uPath: m3uPath,
       );
@@ -679,7 +679,7 @@ Future<void> showGeneralPopupDialog(
         )
       : null;
 
-  final Widget? smartPlaylistUtilsRow = smartPlaylist != null
+  final Widget? smartPlaylistUtilsRow = smartPlaylistWrapper != null
       ? SizedBox(
           height: 48.0,
           child: Row(
@@ -691,8 +691,8 @@ Future<void> showGeneralPopupDialog(
                   () => lang.setMoods,
                   () {
                     setPlaylistMoods(
-                      smartPlaylist.moods,
-                      (newMoods) => SmartPlaylistsController.inst.edit(smartPlaylist, smartPlaylist.copyWith(moods: newMoods)),
+                      smartPlaylistWrapper.value.moods,
+                      (newMoods) => SmartPlaylistsController.inst.edit(smartPlaylistWrapper.value, smartPlaylistWrapper.value.copyWith(moods: newMoods)),
                     );
                   },
                 ),
@@ -703,7 +703,7 @@ Future<void> showGeneralPopupDialog(
                   NamidaNavigator.inst.closeDialog();
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CreateSmartPlaylistDialog(
-                      initialSmartPlaylist: smartPlaylist,
+                      initialSmartPlaylistWrapper: smartPlaylistWrapper,
                     ),
                   );
                 }),
@@ -713,7 +713,7 @@ Future<void> showGeneralPopupDialog(
                 child: bigIcon(
                   Broken.trash,
                   () => lang.deletePlaylist,
-                  () => CreateSmartPlaylistDialog.promptDeletePlaylist(smartPlaylist),
+                  () => CreateSmartPlaylistDialog.promptDeletePlaylist(smartPlaylistWrapper.value),
                 ),
               ),
               Expanded(

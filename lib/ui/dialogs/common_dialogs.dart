@@ -318,23 +318,24 @@ class NamidaDialogs {
     );
   }
 
-  Future<void> showSmartPlaylistDialog(SmartPlaylist? smpl) async {
-    if (smpl == null) return;
-    final tracks = smpl.resolve();
+  Future<void> showSmartPlaylistDialog(SmartPlaylistWrapper? smartPlaylistWrapper) async {
+    if (smartPlaylistWrapper == null) return;
+    final tracks = smartPlaylistWrapper.resolve();
 
+    final smartPlaylist = smartPlaylistWrapper.value;
     await showGeneralPopupDialog(
       tracks,
-      smpl.creationDate.dateFormatted,
-      smpl.creationDate.clockFormatted,
-      QueueSource.smartPlaylist(smpl.key),
+      smartPlaylist.creationDate.dateFormatted,
+      smartPlaylist.creationDate.clockFormatted,
+      QueueSource.smartPlaylist(smartPlaylist.key),
       thirdLineText: [
         tracks.displayTrackKeyword,
         tracks.totalDurationFormatted,
       ].join(' - '),
       extractColor: false,
       forceSquared: true,
-      smartPlaylist: smpl,
-      customArtworkManager: CustomArtworkManager.smartPlaylist(smpl),
+      smartPlaylistWrapper: smartPlaylistWrapper,
+      customArtworkManager: CustomArtworkManager.smartPlaylist(smartPlaylistWrapper),
     );
   }
 

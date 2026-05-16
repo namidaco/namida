@@ -587,8 +587,8 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                     (sort) => sort.toText(),
                     (sort) => sort.toIcon(),
                   ),
-                  onReverseIconTap: (newSortReserve) {
-                    PlaylistController.inst.updatePropertyInPlaylist(playlist.name, itemsSortReverse: newSortReserve);
+                  onReverseIconTap: (newSortReverse) {
+                    PlaylistController.inst.updatePropertyInPlaylist(playlist.name, itemsSortReverse: newSortReverse);
                     PlaylistController.inst.resetCanReorder();
                   },
                 ),

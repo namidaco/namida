@@ -45,10 +45,10 @@ class CustomArtworkManager {
     );
   }
 
-  static CustomArtworkManager smartPlaylist(SmartPlaylist smartPlaylist) {
+  static CustomArtworkManager smartPlaylist(SmartPlaylistWrapper smartPlaylistWrapper) {
     return CustomArtworkManager(
-      getArtworkFile: () => SmartPlaylistsController.inst.getArtworkFileForPlaylist(smartPlaylist),
-      setArtworkFile: (file, bytes) => SmartPlaylistsController.inst.setArtworkForPlaylist(smartPlaylist, artworkFile: file, artworkBytes: bytes),
+      getArtworkFile: () => SmartPlaylistsController.inst.getArtworkFileForPlaylist(smartPlaylistWrapper.value),
+      setArtworkFile: (file, bytes) => SmartPlaylistsController.inst.setArtworkForPlaylist(smartPlaylistWrapper.value, artworkFile: file, artworkBytes: bytes),
       fetchPossibleArtworks: null,
     );
   }

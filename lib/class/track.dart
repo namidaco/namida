@@ -595,7 +595,7 @@ class TrackExtended {
       if (bitrate > 0) 'bitrate': bitrate,
       if (sampleRate > 0) 'sampleRate': sampleRate,
       if (bits > 0) 'bits': bits,
-      if (isLossless == true) 'isLossless': isLossless,
+      if (isLossless != null) 'isLossless': isLossless,
       if (format.isNotEmpty) 'format': format,
       if (channels.isNotEmpty) 'channels': channels,
       if (discNo > 0) 'discNo': discNo,

@@ -164,8 +164,8 @@ class TracksSearchWidgetBox extends StatelessWidget {
               sortReverse: sortIsReverse,
               sort: sort,
               onSortTap: () => NamidaOnTaps.inst.onSubPageTracksSortIconTap(type),
-              onReverseIconTap: (newSortReserve) {
-                settings.updateMediaItemsTrackSortingReverse(type, newSortReserve);
+              onReverseIconTap: (newSortReverse) {
+                settings.updateMediaItemsTrackSortingReverse(type, newSortReverse);
                 Indexer.inst.sortMediaTracksSubLists([type]);
               },
             );
@@ -182,7 +182,7 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
   final SortType? sort;
   final bool sortReverse;
   final void Function() onSortTap;
-  final void Function(bool newSortReserve) onReverseIconTap;
+  final void Function(bool newSortReverse) onReverseIconTap;
 
   const TracksSearchWidgetBoxBase({
     super.key,

@@ -52,6 +52,7 @@ final class SmartPlaylistRuleBoolean extends SmartPlaylistRuleBase<Null, Null, S
   late final bool Function(bool? trackBoolean) _booleanFn = switch (filter) {
     SmartPlaylistRuleFilterBoolean.isTrue => (trackBoolean) => trackBoolean == true,
     SmartPlaylistRuleFilterBoolean.isFalse => (trackBoolean) => trackBoolean == false,
+    SmartPlaylistRuleFilterBoolean.isUnknown => (trackBoolean) => trackBoolean == null,
   };
 
   @override
@@ -85,6 +86,7 @@ final class SmartPlaylistRuleBoolean extends SmartPlaylistRuleBase<Null, Null, S
 enum SmartPlaylistRuleFilterBoolean with SmartPlaylistRuleFilter {
   isTrue,
   isFalse,
+  isUnknown,
   ;
 
   @override
@@ -102,12 +104,14 @@ enum SmartPlaylistRuleFilterBoolean with SmartPlaylistRuleFilter {
   String toText() => switch (this) {
     SmartPlaylistRuleFilterBoolean.isTrue => lang.isTrue,
     SmartPlaylistRuleFilterBoolean.isFalse => lang.isFalse,
+    SmartPlaylistRuleFilterBoolean.isUnknown => lang.isUnknown,
   };
 
   @override
   IconData? toIcon() => switch (this) {
     SmartPlaylistRuleFilterBoolean.isTrue => Broken.tick_circle,
     SmartPlaylistRuleFilterBoolean.isFalse => Broken.close_circle,
+    SmartPlaylistRuleFilterBoolean.isUnknown => Broken.message_question,
   };
 
   @override

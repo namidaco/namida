@@ -2,6 +2,12 @@ part of 'smart_playlists_controller.dart';
 
 typedef SmartPlaylistKey = String;
 
+class SmartPlaylistWrapper extends Rx<SmartPlaylist> {
+  SmartPlaylistWrapper(super.value);
+
+  List<Track> resolve() => value.resolve();
+}
+
 class SmartPlaylist {
   SmartPlaylistKey get key => name;
 
@@ -129,6 +135,11 @@ class SmartPlaylistRuleGroup {
   }) => SmartPlaylistRuleGroup(
     joiner: joiner,
     rules: rules ?? [],
+  );
+
+  SmartPlaylistRuleGroup copy() => SmartPlaylistRuleGroup(
+    joiner: joiner,
+    rules: rules.toList(),
   );
 
   bool isMatch(Track track) {

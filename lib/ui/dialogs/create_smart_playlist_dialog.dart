@@ -17,8 +17,8 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 
 class CreateSmartPlaylistDialog extends StatefulWidget {
-  final SmartPlaylist? initialSmartPlaylist;
-  const CreateSmartPlaylistDialog({super.key, this.initialSmartPlaylist});
+  final SmartPlaylistWrapper? initialSmartPlaylistWrapper;
+  const CreateSmartPlaylistDialog({super.key, this.initialSmartPlaylistWrapper});
 
   @override
   State<CreateSmartPlaylistDialog> createState() => _CreateSmartPlaylistDialogState();
@@ -43,6 +43,60 @@ class CreateSmartPlaylistDialog extends StatefulWidget {
       ),
     );
   }
+
+  static void openSortMenu({
+    required BuildContext context,
+    required SortType? activeSort,
+    required bool activeSortReverse,
+    required void Function(SortType? newSort) setSort,
+    required void Function(bool newSortReverse) setSortReverse,
+    required bool popMenuOnSortReverse,
+  }) {
+    final popupMenu = NamidaPopupWrapper(
+      children: () => SortByMenuCustom(
+        childrenCallback: (context) {
+          return [
+            Padding(
+              padding: const EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
+              child: ListTileWithCheckMark(
+                borderRadius: 10.0,
+                active: activeSortReverse,
+                onTap: () {
+                  setSortReverse(!activeSortReverse);
+                  if (popMenuOnSortReverse) NamidaNavigator.inst.popMenu();
+                },
+              ),
+            ),
+            ...SortType.values.map(
+              (sort) => SmallListTile(
+                borderRadius: 12.0,
+                compact: true,
+                visualDensity: VisualDensity(horizontal: -4.0, vertical: -4.0),
+                trailing: Padding(
+                  padding: const EdgeInsets.only(right: 4.0),
+                  child: Icon(
+                    sort.toIcon(),
+                    size: 18.0,
+                  ),
+                ),
+                title: sort.toText(),
+                active: activeSort == sort,
+                onTap: () {
+                  if (activeSort == sort) {
+                    setSort(null);
+                  } else {
+                    setSort(sort);
+                  }
+                  NamidaNavigator.inst.popMenu();
+                },
+              ),
+            ),
+          ];
+        },
+      ).children(context),
+    );
+    popupMenu.showPopupMenu(context);
+  }
 }
 
 class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
@@ -54,25 +108,27 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
   SmartJoiner _joiner = SmartJoiner.defaultForGroups;
   SortType? _sort;
   bool _sortReverse = false;
-  var _moods = <String>[];
-  var _ruleGroups = <SmartPlaylistRuleGroup>[];
+  final _moods = <String>[];
+  final _ruleGroups = <SmartPlaylistRuleGroup>[];
 
   @override
   void initState() {
-    final sp = widget.initialSmartPlaylist;
+    final sp = widget.initialSmartPlaylistWrapper?.value;
     if (sp != null) {
       _nameController.text = sp.name;
       _joiner = sp.joiner;
       _sort = sp.sort;
       _sortReverse = sp.sortReverse;
-      _moods = List<String>.from(sp.moods);
-      _ruleGroups = List<SmartPlaylistRuleGroup>.from(sp.ruleGroups); // copy
+      _moods.addAll(sp.moods);
+      _ruleGroups.addAll(sp.ruleGroups.map((e) => e.copy()));
     }
     if (_ruleGroups.isEmpty) {
       _ruleGroups.add(
         SmartPlaylistRuleGroup.create(),
       );
     }
+
+    _resolvedTracksCountForCurrentSmartPlaylist = _buildResolvedTracksCount();
     super.initState();
   }
 
@@ -107,8 +163,8 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
 
       _ruleGroups.removeWhere((g) => g.rules.isEmpty);
       final smartPlaylist = _buildSmartPlaylistFromCurrentParams();
-      if (widget.initialSmartPlaylist != null) {
-        await SmartPlaylistsController.inst.edit(widget.initialSmartPlaylist!, smartPlaylist);
+      if (widget.initialSmartPlaylistWrapper != null) {
+        await SmartPlaylistsController.inst.edit(widget.initialSmartPlaylistWrapper!.value, smartPlaylist);
       } else {
         await SmartPlaylistsController.inst.create(smartPlaylist);
       }
@@ -249,7 +305,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
     return Form(
       key: _formKey,
       child: SizedBox(
-        height: context.height * 0.7,
+        // height: context.height * 0.7,
         child: CustomBlurryDialog(
           normalTitleStyle: true,
           icon: Broken.magicpen,
@@ -290,49 +346,14 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                     text: _sort?.toText() ?? lang.auto,
                     fontSizeMultiplier: 0.95,
                     onTap: () {
-                      final popupMenu = NamidaPopupWrapper(
-                        children: () => SortByMenuCustom(
-                          childrenCallback: (context) {
-                            return [
-                              Padding(
-                                padding: const EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
-                                child: ListTileWithCheckMark(
-                                  borderRadius: 10.0,
-                                  active: _sortReverse,
-                                  onTap: () {
-                                    _setSortReverse(!_sortReverse);
-                                  },
-                                ),
-                              ),
-                              ...SortType.values.map(
-                                (sort) => SmallListTile(
-                                  borderRadius: 12.0,
-                                  compact: true,
-                                  visualDensity: VisualDensity(horizontal: -4.0, vertical: -4.0),
-                                  trailing: Padding(
-                                    padding: const EdgeInsets.only(right: 4.0),
-                                    child: Icon(
-                                      sort.toIcon(),
-                                      size: 18.0,
-                                    ),
-                                  ),
-                                  title: sort.toText(),
-                                  active: _sort == sort,
-                                  onTap: () {
-                                    if (_sort == sort) {
-                                      _setSort(null);
-                                    } else {
-                                      _setSort(sort);
-                                    }
-                                    NamidaNavigator.inst.popMenu();
-                                  },
-                                ),
-                              ),
-                            ];
-                          },
-                        ).children(context),
+                      CreateSmartPlaylistDialog.openSortMenu(
+                        context: context,
+                        activeSort: _sort,
+                        activeSortReverse: _sortReverse,
+                        setSort: _setSort,
+                        setSortReverse: _setSortReverse,
+                        popMenuOnSortReverse: false,
                       );
-                      popupMenu.showPopupMenu(context);
                     },
                   ),
                   NamidaIconButton(
@@ -350,7 +371,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
             NamidaButton(
               enabled: _ruleGroups.isNotEmpty && _ruleGroups.any((g) => g.rules.isNotEmpty),
               onTap: _createOrEdit,
-              text: widget.initialSmartPlaylist != null ? lang.edit : lang.create,
+              text: widget.initialSmartPlaylistWrapper != null ? lang.edit : lang.create,
             ),
           ],
           child: Column(
@@ -521,7 +542,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                                                       child: NamidaInkWell(
                                                         borderRadius: 6.0,
                                                         bgColor: context.theme.colorScheme.secondary.withOpacityExt(0.1),
-                                                        padding: const EdgeInsetsGeometry.symmetric(horizontal: 8.0, vertical: 6.0),
+                                                        padding: const EdgeInsetsGeometry.symmetric(horizontal: 8.0, vertical: 8.0),
                                                         onTap: () => _addEditRule(group, null),
                                                         child: Row(
                                                           mainAxisSize: .min,
@@ -621,7 +642,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                 controller: _nameController,
                 hintText: lang.name,
                 labelText: lang.name,
-                validator: (value) => SmartPlaylistsController.inst.validatePlaylistName(value, oldKey: widget.initialSmartPlaylist?.key),
+                validator: (value) => SmartPlaylistsController.inst.validatePlaylistName(value, oldKey: widget.initialSmartPlaylistWrapper?.value.key),
               ),
             ],
           ),
@@ -705,8 +726,10 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
 
     final selectedRule = _selectedRule;
     if (selectedRule != null) {
-      _dataController.text = selectedRule.dataToText(selectedRule.data) ?? '';
-      _data2Controller.text = selectedRule.data2ToText(selectedRule.data2) ?? '';
+      if (selectedRule is! SmartPlaylistRuleText) {
+        _dataController.text = selectedRule.dataToText(selectedRule.data) ?? '';
+        _data2Controller.text = selectedRule.data2ToText(selectedRule.data2) ?? '';
+      }
     } else {
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => _selectFilterSource(),
@@ -725,20 +748,30 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
     if (_formKey.currentState?.validate() == true) {
       var selectedRule = _selectedRule;
       if (selectedRule == null) return;
-      selectedRule = _selectedRule = selectedRule.copyWith(
-        datas: (
-          selectedRule.filter.requiresDataField
-              ? selectedRule.textToData(
-                  _dataController.text,
-                )
-              : null,
-          selectedRule.filter.requiresData2Field
-              ? selectedRule.textToData2(
-                  _data2Controller.text,
-                )
-              : null,
-        ),
-      );
+      if (selectedRule is SmartPlaylistRuleText) {
+        // -- auto add literal text if field had data
+        final pending = _dataController.text;
+        if (pending.isNotEmpty) {
+          final newTokens = [...?selectedRule.data, SmartPlaylistTextDataTokenLiteral(pending)];
+          selectedRule = _selectedRule = selectedRule.copyWith(datas: (newTokens, null));
+          _dataController.clear();
+        }
+      } else {
+        selectedRule = _selectedRule = selectedRule.copyWith(
+          datas: (
+            selectedRule.filter.requiresDataField
+                ? selectedRule.textToData(
+                    _dataController.text,
+                  )
+                : null,
+            selectedRule.filter.requiresData2Field
+                ? selectedRule.textToData2(
+                    _data2Controller.text,
+                  )
+                : null,
+          ),
+        );
+      }
       final error = selectedRule.validate();
       if (error != null) {
         snackyy(message: error, isError: true);
@@ -749,95 +782,107 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
     }
   }
 
-  void _selectFilterSource() async {
-    final selectedSourceRx = Rxn<SmartPlaylistRuleFilterSource>(_selectedRule?.source);
-    Widget buildFiltersSection(SmartPlaylistFilterType type) {
-      return SizedBox(
-        width: context.width,
-        child: NamidaCoolBox(
-          extraVPadding: true,
-          reducedColors: true,
-          colorScheme: context.theme.colorScheme.secondary,
-          builder: (context) => Column(
-            crossAxisAlignment: .start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    type.toIcon(),
-                    size: 19.0,
+  static Widget _buildFiltersSourceSection(
+    BuildContext context,
+    SmartPlaylistFilterType type, {
+    Rxn<SmartPlaylistRuleFilterSource>? selectedSourceRx,
+    required void Function(SmartPlaylistRuleFilterSource source) onSelect,
+  }) {
+    return SizedBox(
+      width: context.width,
+      child: NamidaCoolBox(
+        extraVPadding: true,
+        reducedColors: true,
+        colorScheme: context.theme.colorScheme.secondary,
+        builder: (context) => Column(
+          crossAxisAlignment: .start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  type.toIcon(),
+                  size: 19.0,
+                ),
+                const SizedBox(width: 6.0),
+                Expanded(
+                  child: Text(
+                    type.toText(),
+                    style: context.textTheme.displayMedium,
                   ),
-                  const SizedBox(width: 6.0),
-                  Expanded(
-                    child: Text(
-                      type.toText(),
-                      style: context.textTheme.displayMedium,
-                    ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12.0),
+            ObxOrNull(
+              rx: selectedSourceRx,
+              builder: (context, selectedFilter) => Wrap(
+                alignment: WrapAlignment.start,
+                runAlignment: WrapAlignment.start,
+                crossAxisAlignment: WrapCrossAlignment.start,
+                runSpacing: 6.0,
+                children: [
+                  ...type.getRuleSources(withoutCustomSource: true).map(
+                    (s) {
+                      final isSelected = s == selectedFilter;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                        child: NamidaInkWellButton(
+                          borderRadius: 99.0,
+                          sizeMultiplier: 0.95,
+                          paddingMultiplier: 0.9,
+                          icon: s.toIcon(),
+                          iconSize: 18.0,
+                          trailing:
+                              Icon(
+                                Broken.tick_circle,
+                                size: 16.0,
+                              ).animateEntrance(
+                                showWhen: isSelected,
+                                allCurves: Curves.fastLinearToSlowEaseIn,
+                                durationMS: 200,
+                              ),
+                          text: s.toText(),
+                          bgColor: isSelected ? context.theme.colorScheme.secondaryContainer.withOpacityExt(0.4) : context.theme.colorScheme.secondaryContainer.withOpacityExt(0.2),
+                          onTap: () => onSelect(s),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
-              const SizedBox(height: 12.0),
-              ObxO(
-                rx: selectedSourceRx,
-                builder: (context, selectedFilter) => Wrap(
-                  alignment: WrapAlignment.start,
-                  runAlignment: WrapAlignment.start,
-                  crossAxisAlignment: WrapCrossAlignment.start,
-                  runSpacing: 6.0,
-                  children: [
-                    ...type.getRuleSources(withoutCustomSource: true).map(
-                      (s) {
-                        final isSelected = s == selectedFilter;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                          child: NamidaInkWellButton(
-                            borderRadius: 99.0,
-                            sizeMultiplier: 0.95,
-                            paddingMultiplier: 0.9,
-                            icon: s.toIcon(),
-                            iconSize: 18.0,
-                            trailing:
-                                Icon(
-                                  Broken.tick_circle,
-                                  size: 16.0,
-                                ).animateEntrance(
-                                  showWhen: isSelected,
-                                  allCurves: Curves.fastLinearToSlowEaseIn,
-                                  durationMS: 200,
-                                ),
-                            text: s.toText(),
-                            bgColor: isSelected
-                                ? context.theme.colorScheme.secondaryContainer.withOpacityExt(0.4)
-                                : context.theme.colorScheme.secondaryContainer.withOpacityExt(0.2),
-                            onTap: () {
-                              if (selectedSourceRx.value != s) {
-                                selectedSourceRx.value = s;
-                                final previousFilter = _tempFilterForTypeMap[s.type];
-                                setState(() {
-                                  _selectedRule = null; // avoid subtype errors
-                                  _selectedRule = SmartPlaylistRuleBase.buildFrom(
-                                    type: s.type,
-                                    filter: previousFilter ?? s.recommendedFilter,
-                                    source: s,
-                                    enableCleanup: s.supportsCleanup,
-                                    clockOnly: false,
-                                    relativeDuration: null,
-                                  );
-                                });
-                              }
-
-                              NamidaNavigator.inst.closeDialog();
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  void _selectFilterSource() async {
+    final selectedSourceRx = Rxn<SmartPlaylistRuleFilterSource>(_selectedRule?.source);
+
+    Widget buildFiltersSection(SmartPlaylistFilterType type) {
+      return _buildFiltersSourceSection(
+        context,
+        type,
+        onSelect: (s) {
+          if (selectedSourceRx.value != s) {
+            selectedSourceRx.value = s;
+            final previousFilter = _tempFilterForTypeMap[s.type];
+            setState(() {
+              _selectedRule = null; // avoid subtype errors
+              _selectedRule = SmartPlaylistRuleBase.buildFrom(
+                type: s.type,
+                filter: previousFilter ?? s.recommendedFilter,
+                source: s,
+                enableCleanup: s.supportsCleanup,
+                clockOnly: false,
+                relativeDuration: null,
+              );
+            });
+          }
+
+          NamidaNavigator.inst.closeDialog();
+        },
       );
     }
 
@@ -987,39 +1032,46 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
 
             if (selectedRule != null && selectedRule.filter.requiresDataField) ...[
               const SizedBox(height: 12.0),
-              Row(
-                children: [
-                  Expanded(
-                    child: CustomTagTextField(
-                      controller: _dataController,
-                      hintText: selectedRule.toHintText() ?? lang.value,
-                      labelText: lang.value,
-                      validator: selectedRule.dataValidator,
-                    ),
-                  ),
-                  ?switch (selectedRule) {
-                    SmartPlaylistRuleDateTime() => Padding(
-                      padding: const EdgeInsetsGeometry.only(left: 8.0),
-                      child: _CalendarPickerIconWidget(
-                        clockOnly: selectedRule.clockOnly,
-                        onSelect: (date) {
-                          _dataController.text = selectedRule.dataToText(date) ?? '';
-                        },
-                      ),
-                    ),
-                    SmartPlaylistRuleNumber() => Padding(
-                      padding: const EdgeInsetsGeometry.only(left: 8.0),
-                      child: _NumberSliderWidget(
-                        key: ValueKey(selectedRule.source),
-                        rule: selectedRule,
+              if (selectedRule is SmartPlaylistRuleText)
+                _TextDataTokensEditor(
+                  rule: selectedRule,
+                  controller: _dataController,
+                  onChanged: (newRule) => setState(() => _selectedRule = newRule),
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      child: CustomTagTextField(
                         controller: _dataController,
+                        hintText: selectedRule.toHintText() ?? lang.value,
+                        labelText: lang.value,
+                        validator: selectedRule.dataValidator,
                       ),
                     ),
-                    SmartPlaylistRuleText() => null,
-                    SmartPlaylistRuleBoolean() => null,
-                  },
-                ],
-              ),
+                    ?switch (selectedRule) {
+                      SmartPlaylistRuleDateTime() => Padding(
+                        padding: const EdgeInsetsGeometry.only(left: 8.0),
+                        child: _CalendarPickerIconWidget(
+                          clockOnly: selectedRule.clockOnly,
+                          onSelect: (date) {
+                            _dataController.text = selectedRule.dataToText(date) ?? '';
+                          },
+                        ),
+                      ),
+                      SmartPlaylistRuleNumber() => Padding(
+                        padding: const EdgeInsetsGeometry.only(left: 8.0),
+                        child: _NumberSliderWidget(
+                          key: ValueKey(selectedRule.source),
+                          rule: selectedRule,
+                          controller: _dataController,
+                        ),
+                      ),
+                      SmartPlaylistRuleText() => null,
+                      SmartPlaylistRuleBoolean() => null,
+                    },
+                  ],
+                ),
             ],
 
             if (selectedRule != null && selectedRule.filter.requiresData2Field) ...[
@@ -1470,5 +1522,214 @@ class _TextSliderSyncController {
     textController.removeListener(_onTextChanged);
     sliderValue.dispose();
     sliderText.dispose();
+  }
+}
+
+class _TextDataTokensEditor extends StatefulWidget {
+  final SmartPlaylistRuleText rule;
+  final TextEditingController controller;
+  final void Function(SmartPlaylistRuleText newRule) onChanged;
+
+  const _TextDataTokensEditor({
+    required this.rule,
+    required this.controller,
+    required this.onChanged,
+  });
+
+  @override
+  State<_TextDataTokensEditor> createState() => _TextDataTokensEditorState();
+}
+
+class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
+  late final _tokensCopy = List<SmartPlaylistTextDataToken>.from(widget.rule.data ?? <SmartPlaylistTextDataToken>[]);
+
+  void _refreshTokens() {
+    widget.onChanged(
+      widget.rule.copyWith(datas: (_tokensCopy.isEmpty ? null : _tokensCopy, null)),
+    );
+  }
+
+  void _addLiteralFromField() {
+    final text = widget.controller.text;
+    if (text.isEmpty) return;
+    _tokensCopy.add(SmartPlaylistTextDataTokenLiteral(text));
+    _refreshTokens();
+    widget.controller.clear();
+  }
+
+  void _removeAt(int index) {
+    _tokensCopy.removeAt(index);
+    _refreshTokens();
+  }
+
+  void _editLiteral(int index, SmartPlaylistTextDataTokenLiteral token) {
+    widget.controller.text = token.text;
+    // _removeAt(index);
+  }
+
+  Future<void> _pickSource({int? replaceIndex}) async {
+    await NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        horizontalInset: 42.0,
+        title: lang.source,
+        actions: [const CancelButton()],
+        child: SizedBox(
+          height: context.height * 0.55,
+          width: context.width,
+          child: NamidaScrollbarWithController(
+            showOnStart: true,
+            child: (c) => SmoothSingleChildScrollView(
+              controller: c,
+              child: Padding(
+                padding: const EdgeInsets.all(6.0),
+                child: Wrap(
+                  alignment: WrapAlignment.start,
+                  runAlignment: WrapAlignment.start,
+                  crossAxisAlignment: WrapCrossAlignment.start,
+                  runSpacing: 6.0,
+                  children: [
+                    _AddEditRuleDialogState._buildFiltersSourceSection(
+                      context,
+                      SmartPlaylistFilterType.text,
+                      onSelect: (source) {
+                        source as SmartPlaylistRuleFilterTextSource;
+                        final tokenSource = SmartPlaylistTextDataTokenSource(source);
+                        if (replaceIndex != null) {
+                          _tokensCopy[replaceIndex] = tokenSource;
+                        } else {
+                          _tokensCopy.add(tokenSource);
+                        }
+                        _refreshTokens();
+
+                        NamidaNavigator.inst.closeDialog();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = _tokensCopy;
+    final filter = widget.rule.filter;
+    final isRegex = filter.isRegex();
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+        border: Border.all(color: context.theme.dividerColor.withOpacityExt(0.4)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (tokens.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
+                child: Text(
+                  lang.emptyValue,
+                  style: context.textTheme.displaySmall,
+                ),
+              )
+            else
+              Wrap(
+                spacing: 6.0,
+                runSpacing: 6.0,
+                children: [
+                  ...tokens.mapIndexed(
+                    (token, index) {
+                      final (IconData? icon, String label, Color bgColor, VoidCallback onTap) = switch (token) {
+                        SmartPlaylistTextDataTokenSource() => (
+                          token.source.toIcon(),
+                          token.displayText(),
+                          context.theme.colorScheme.secondaryContainer.withOpacityExt(0.4),
+                          () => _pickSource(replaceIndex: index),
+                        ),
+                        SmartPlaylistTextDataTokenLiteral() => (
+                          null,
+                          '"${token.text}"',
+                          context.theme.cardColor,
+                          () => _editLiteral(index, token),
+                        ),
+                      };
+                      return NamidaInkWell(
+                        borderRadius: 99.0,
+                        bgColor: bgColor,
+                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 6.0),
+                        onTap: onTap,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(width: 4.0),
+                            if (icon != null) ...[
+                              Icon(
+                                icon,
+                                size: 14.0,
+                              ),
+                              const SizedBox(width: 4.0),
+                            ],
+                            Flexible(
+                              child: Text(
+                                label,
+                                style: context.textTheme.displaySmall,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 2.0),
+                            NamidaIconButton(
+                              horizontalPadding: 4.0,
+                              icon: Broken.close_circle,
+                              iconSize: 14.0,
+                              onPressed: () => _removeAt(index),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            const SizedBox(height: 12.0),
+            Row(
+              children: [
+                Expanded(
+                  child: CustomTagTextField(
+                    controller: widget.controller,
+                    hintText: isRegex ? '.*' : lang.value,
+                    labelText: lang.value,
+                    onFieldSubmitted: (_) => _addLiteralFromField(),
+                  ),
+                ),
+                const SizedBox(width: 6.0),
+                ValueListenableBuilder(
+                  valueListenable: widget.controller,
+                  builder: (context, value, child) {
+                    final text = value.text;
+                    return text.isEmpty
+                        ? NamidaIconButton(
+                            tooltip: () => lang.source,
+                            icon: Broken.main_component,
+                            onPressed: _pickSource,
+                          )
+                        : NamidaIconButton(
+                            tooltip: () => lang.add,
+                            icon: Broken.add_square,
+                            onPressed: _addLiteralFromField,
+                          );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
