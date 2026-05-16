@@ -1368,7 +1368,7 @@ extension RouteUtils on NamidaRoute {
         null;
     }
 
-    return AnimatedSwitcher(
+    return CustomAnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
       child:
           displaySettingSearch //

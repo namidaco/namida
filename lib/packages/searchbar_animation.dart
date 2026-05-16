@@ -298,7 +298,7 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                 right: smallButtonTotalPadding,
                 child: Align(
                   alignment: widget.isSearchBoxOnRightSide ? Alignment.centerRight : Alignment.centerLeft,
-                  child: AnimatedSwitcher(
+                  child: CustomAnimatedSwitcher(
                     duration: const Duration(milliseconds: _SBDimensions.t200),
                     child: AnimatedOpacity(
                       opacity: (!_switcher) ? _SBDimensions.d0 : _SBDimensions.d1,

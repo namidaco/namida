@@ -208,7 +208,7 @@ class SearchPage extends StatelessWidget {
               ),
               Expanded(
                 child: Obx(
-                  (context) => AnimatedSwitcher(
+                  (context) => CustomAnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     child: !SearchSortController.inst.isSearching
                         ? Container(

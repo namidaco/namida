@@ -359,7 +359,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                 ),
                               ),
                               const SizedBox(height: 4.0),
-                              AnimatedSwitcher(
+                              CustomAnimatedSwitcher(
                                 duration: const Duration(milliseconds: 200),
                                 child: commentContent == null
                                     ? Column(
@@ -645,7 +645,7 @@ class YTCommentCardCompact extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2.0),
-                  AnimatedSwitcher(
+                  CustomAnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
                     child: commentTextParsed == null
                         ? Column(

@@ -45,7 +45,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
       builder: (properties) => ObxO(
         rx: SelectedTracksController.inst.selectedTracks,
         builder: (context, selectedTracks) {
-          return AnimatedSwitcher(
+          return CustomAnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             switchInCurve: Curves.easeOut,
             switchOutCurve: Curves.easeIn,

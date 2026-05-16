@@ -93,6 +93,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
           isEmbedded: false,
         ),
       );
+      // only pick first file, since uppercase variants may also appear duplicated
+      // and usually one doesn't have more than 1 lrc file for a track
+      break;
     }
   }
 

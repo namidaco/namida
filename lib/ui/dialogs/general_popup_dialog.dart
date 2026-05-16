@@ -1708,7 +1708,7 @@ class _ArtworkManager extends StatelessWidget {
                                         future: Rhttp.getBytes(url),
                                         builder: (context, snapshot) {
                                           final bytes = snapshot.data?.body;
-                                          return AnimatedSwitcher(
+                                          return CustomAnimatedSwitcher(
                                             layoutBuilder: (currentChild, previousChildren) {
                                               return Stack(
                                                 alignment: Alignment.center,

@@ -62,7 +62,7 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
     return Stack(
       alignment: Alignment.centerLeft,
       children: [
-        AnimatedSwitcher(
+        CustomAnimatedSwitcher(
           duration: const Duration(milliseconds: animationMs),
           child: canShowClosedChild && widget.closedChild != null ? widget.closedChild! : null,
         ),

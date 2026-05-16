@@ -616,7 +616,7 @@ void showTrackAdvancedDialog({
                 passedColor: colorScheme,
                 title: lang.colorPalette,
                 icon: Broken.color_swatch,
-                trailingRaw: AnimatedSwitcher(
+                trailingRaw: CustomAnimatedSwitcher(
                   duration: Duration(milliseconds: 200),
                   child: trackColors == null
                       ? SizedBox(

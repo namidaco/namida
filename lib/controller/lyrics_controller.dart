@@ -178,8 +178,6 @@ class Lyrics {
       final syncedInCache = lrcUtils.cachedLRCFile;
       if (await syncedInCache.existsAndValid()) {
         lrcContent = await syncedInCache.readLrcString();
-      } else if (trackLyrics != '') {
-        lrcContent = trackLyrics;
       }
 
       if (lrcContent == null) {
@@ -192,6 +190,9 @@ class Lyrics {
             break;
           }
         }
+      }
+      if (lrcContent == null && trackLyrics != '') {
+        lrcContent = trackLyrics;
       }
       // -- this should be prioritized before searching network again
       // -- if txt is in cache, then either the user has chosen a file or lrc wasn't found

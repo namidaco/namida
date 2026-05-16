@@ -1443,7 +1443,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                     Positioned(
                       bottom: 12.0,
                       right: 12.0,
-                      child: AnimatedSwitcher(
+                      child: CustomAnimatedSwitcher(
                         duration: const Duration(milliseconds: 200),
                         child: T == File && _selectedFiles.isNotEmpty
                             ? NamidaFABButton(

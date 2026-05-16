@@ -7,6 +7,12 @@ class NamidaScrollController {
   static ScrollController? get latestAddedScrollController => _latestAddedScrollControllers.lastOrNull;
   static final _latestAddedScrollControllers = <ScrollController>[];
 
+  static T? executeOnLatestController<T>(T Function(ScrollController c) callback) {
+    final latest = _latestAddedScrollControllers.lastOrNull;
+    if (latest == null) return null;
+    return callback(latest);
+  }
+
   static ScrollController create({
     double initialScrollOffset = 0.0,
     bool keepScrollOffset = true,
@@ -56,6 +62,18 @@ class __SmoothScrollControllerBuilderState extends State<_SmoothScrollController
     super.initState();
     _controller = widget.controller ?? NamidaScrollController.create();
     NamidaScrollController._latestAddedScrollControllers.add(_controller);
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    NamidaScrollController._latestAddedScrollControllers.add(_controller);
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    NamidaScrollController._latestAddedScrollControllers.remove(_controller);
   }
 
   @override

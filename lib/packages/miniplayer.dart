@@ -86,7 +86,7 @@ class MiniPlayerParent extends StatelessWidget {
                         builder: (context, currentItem) => currentItem is YoutubeID
                             ? ObxO(
                                 rx: settings.youtube.youtubeStyleMiniplayer,
-                                builder: (context, youtubeStyleMiniplayer) => AnimatedSwitcher(
+                                builder: (context, youtubeStyleMiniplayer) => CustomAnimatedSwitcher(
                                   duration: const Duration(milliseconds: 300),
                                   child: youtubeStyleMiniplayer
                                       ? YoutubeMiniPlayer(key: YoutubeMiniplayerUiController.inst.ytMiniplayerKey) //
@@ -863,7 +863,7 @@ class _AnimatingThumnailWidget extends StatelessWidget {
             return ObxO(
               rx: settings.enableLyrics,
               builder: (context, shoulShowLyricsView) {
-                final animatedScaleChild = AnimatedSwitcher(
+                final animatedScaleChild = CustomAnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   child: shoulShowLyricsView
                       ? LyricsLRCParsedView(

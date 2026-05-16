@@ -30,9 +30,9 @@ class _WebDAVServer extends MusicWebServer {
     _serverUri = Uri.parse(authDetails.dir.sourceRaw);
 
     if (_authInfo.username.isNotEmpty) {
-      final userInfo = '${_authInfo.username}:${_authInfo.password}';
+      final userInfoEncoded = '${Uri.encodeComponent(_authInfo.username)}:${Uri.encodeComponent(_authInfo.password)}';
       final credentials = base64Encode(utf8.encode('${_authInfo.username}:${_authInfo.password}'));
-      _serverUri = _serverUri.replace(userInfo: userInfo);
+      _serverUri = _serverUri.replace(userInfo: userInfoEncoded);
       _serverAuthHeaders = {
         "Authorization": "Basic $credentials",
       };

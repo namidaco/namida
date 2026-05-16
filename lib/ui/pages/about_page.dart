@@ -304,7 +304,7 @@ class _AboutPageState extends State<AboutPage> {
                     Expanded(
                       child: InkWell(
                         onTap: () => NamidaLinkUtils.openLink(AppSocial.DONATE_KOFI),
-                        child: AnimatedSwitcher(
+                        child: CustomAnimatedSwitcher(
                           duration: const Duration(milliseconds: kThemeAnimationDurationMS),
                           child: context.isDarkMode
                               ? Image.asset(

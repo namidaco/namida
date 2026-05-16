@@ -1526,7 +1526,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                                                 padding: EdgeInsets.all(iconButtonExtraPadding),
                                                                 child: ObxO(
                                                                   rx: Player.inst.playWhenReady,
-                                                                  builder: (context, playWhenReady) => AnimatedSwitcher(
+                                                                  builder: (context, playWhenReady) => CustomAnimatedSwitcher(
                                                                     duration: const Duration(milliseconds: 200),
                                                                     child: playWhenReady
                                                                         ? Icon(

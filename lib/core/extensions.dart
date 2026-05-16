@@ -221,7 +221,13 @@ extension TracksUtils on List<Track> {
             }
           }
         } else {
-          cumulativeArtists.retainWhere(currentArtists.contains);
+          try {
+            cumulativeArtists.retainWhere(currentArtists.contains);
+          } on UnsupportedError catch (_) {
+            // -- usually was const dummy track, not very common but can happen
+            cumulativeArtists = List<String>.from(cumulativeArtists, growable: true);
+            cumulativeArtists.retainWhere(currentArtists.contains);
+          }
           if (cumulativeArtists.isEmpty) {
             cumulativeArtists = null;
           }

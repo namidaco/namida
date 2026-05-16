@@ -200,7 +200,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
       key: const Key('dimmie'),
       child: ObxO(
         rx: _canDimMiniplayer,
-        builder: (context, canDimMiniplayer) => AnimatedSwitcher(
+        builder: (context, canDimMiniplayer) => CustomAnimatedSwitcher(
           duration: const Duration(milliseconds: 600),
           reverseDuration: const Duration(milliseconds: 200),
           child: canDimMiniplayer
@@ -366,7 +366,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                   alignment: Alignment.bottomCenter, // bottom alignment is for touch absorber
                                   children: [
                                     // opacity: (percentage * 4 - 3).withMinimum(0),
-                                    AnimatedSwitcher(
+                                    CustomAnimatedSwitcher(
                                       duration: const Duration(milliseconds: 300),
                                       child: showLyrics
                                           ? LongPressDetector(
@@ -540,7 +540,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                         horizontalPadding: 4.0,
                                         onPressed: Player.inst.togglePlayPause,
                                         icon: null,
-                                        child: AnimatedSwitcher(
+                                        child: CustomAnimatedSwitcher(
                                           duration: const Duration(milliseconds: 200),
                                           child: playWhenReady
                                               ? Icon(
@@ -1597,7 +1597,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                 rx: _shouldShowGlowUnderVideo,
                 builder: (context, shouldShowGlowUnderVideo) {
                   const containerHeight = 12.0;
-                  return AnimatedSwitcher(
+                  return CustomAnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     child: shouldShowGlowUnderVideo
                         ? Stack(

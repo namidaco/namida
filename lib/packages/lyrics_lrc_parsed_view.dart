@@ -422,7 +422,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           ),
                         ),
                         Padding(
-                          padding: EdgeInsetsGeometry.symmetric(horizontal: 48.0),
+                          padding: EdgeInsetsGeometry.symmetric(horizontal: 48.0 + 8.0),
                           child: textData == null
                               ? Text(
                                   lang.lyrics,
@@ -639,7 +639,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                             );
                           }
 
-                          return AnimatedSwitcher(
+                          return CustomAnimatedSwitcher(
                             duration: const Duration(milliseconds: 1200),
                             switchInCurve: Curves.easeInOutQuart,
                             switchOutCurve: Curves.easeInOutQuart,
@@ -690,7 +690,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
               ],
             ),
           )
-        : AnimatedSwitcher(
+        : CustomAnimatedSwitcher(
             duration: const Duration(milliseconds: _lrcOpacityDurationMS),
             child: _isCurrentLineEmpty
                 ? KeyedSubtree(
@@ -784,7 +784,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                       builder: (context, selectedInfo) {
                         final selectedIndex = selectedInfo?.$2;
                         final selectedLineTimestamp = selectedInfo?.$1;
-                        return AnimatedSwitcher(
+                        return CustomAnimatedSwitcher(
                           duration: const Duration(milliseconds: 600),
                           switchInCurve: Curves.easeInOutQuart,
                           switchOutCurve: Curves.easeInOutQuart,

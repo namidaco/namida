@@ -110,7 +110,7 @@ class MainPage extends StatelessWidget {
               /// Search Box
               Positioned.fill(
                 child: Obx(
-                  (context) => AnimatedSwitcher(
+                  (context) => CustomAnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     child: ScrollSearchController.inst.isGlobalSearchMenuShown.valueR ? const SearchPage() : null,
                   ),
@@ -121,7 +121,7 @@ class MainPage extends StatelessWidget {
               Positioned.fill(
                 child: ObxO(
                   rx: SettingsSearchController.inst.canShowSearch,
-                  builder: (context, canShowSearch) => AnimatedSwitcher(
+                  builder: (context, canShowSearch) => CustomAnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
                     child: canShowSearch ? const SettingsSearchPage() : null,
                   ),
@@ -219,7 +219,7 @@ class MainPage extends StatelessWidget {
                 Obx(
                   (context) {
                     final currentItem = Player.inst.currentItem.valueR;
-                    return AnimatedSwitcher(
+                    return CustomAnimatedSwitcher(
                       duration: const Duration(milliseconds: 600),
                       child: currentItem is Selectable || (currentItem is YoutubeID && !settings.youtube.youtubeStyleMiniplayer.valueR)
                           ? SizedBox(
@@ -532,15 +532,21 @@ class MainPageFABResumeButton extends StatelessWidget {
             };
       var offset = topOffset + ((index - 2) * itemExtent);
 
-      final controllerPosition = NamidaScrollController.latestAddedScrollController?.positions.lastOrNull;
-      final maxOffset = controllerPosition?.maxScrollExtent;
-      if (maxOffset != null && offset > maxOffset) {
-        offset = maxOffset + 32.0;
-      }
-      await controllerPosition?.animateToEff(
-        offset,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.fastLinearToSlowEaseIn,
+      await NamidaScrollController.executeOnLatestController(
+        (c) async {
+          final controllerPositions = c.positions;
+          for (final controllerPosition in controllerPositions) {
+            final maxOffset = controllerPosition.maxScrollExtent;
+            if (offset > maxOffset) {
+              offset = maxOffset + 32.0;
+            }
+            await controllerPosition.animateToEff(
+              offset,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.fastLinearToSlowEaseIn,
+            );
+          }
+        },
       );
     } catch (_) {}
   }

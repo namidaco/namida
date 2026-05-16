@@ -573,7 +573,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   Widget _getVerticalSliderWidget(String key, double? perc, IconData icon, ui.FlutterView view, {double max = 1.0}) {
     final textTheme = context.textTheme;
     final totalHeight = view.physicalSize.shortestSide / view.devicePixelRatio * 0.75;
-    return AnimatedSwitcher(
+    return CustomAnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
       child: perc == null || _isDraggingSeekBar
           ? SizedBox(key: Key('$key.hidden'))
@@ -1168,7 +1168,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   // ==== Reset Brightness ====
                                   ObxO(
                                     rx: _currentBrigthnessDim,
-                                    builder: (context, brigthnessDim) => AnimatedSwitcher(
+                                    builder: (context, brigthnessDim) => CustomAnimatedSwitcher(
                                       duration: const Duration(milliseconds: 200),
                                       child: brigthnessDim < 1.0
                                           ? NamidaIconButton(
@@ -2061,7 +2061,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     },
                                     child: ObxO(
                                       rx: Player.inst.playWhenReady,
-                                      builder: (context, playWhenReady) => AnimatedSwitcher(
+                                      builder: (context, playWhenReady) => CustomAnimatedSwitcher(
                                         duration: const Duration(milliseconds: 200),
                                         child: playWhenReady
                                             ? Icon(
@@ -2226,7 +2226,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                         top: 0,
                         child: ObxO(
                           rx: _isLongPressActive,
-                          builder: (context, isLongPress) => AnimatedSwitcher(
+                          builder: (context, isLongPress) => CustomAnimatedSwitcher(
                             duration: const Duration(milliseconds: 100),
                             child: isLongPress
                                 ? Padding(
@@ -2698,7 +2698,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
     final currentEndcards = _currentEndcards;
     if (currentEndcards == null || currentEndcards.isEmpty) return const SizedBox.shrink();
 
-    return AnimatedSwitcher(
+    return CustomAnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
       child: !(_canShowAnyEndcard && widget.visible)
           ? null
@@ -2825,7 +2825,7 @@ class _DropShadowWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        AnimatedSwitcher(
+        CustomAnimatedSwitcher(
           duration: Duration(milliseconds: 800),
           reverseDuration: Duration(milliseconds: 500),
           child: enabled

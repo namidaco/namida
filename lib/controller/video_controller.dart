@@ -355,13 +355,16 @@ class VideoController {
 
     NamidaVideo? erabaretaVideo;
     if (possibleVideos.isNotEmpty) {
-      possibleVideos.sortByReverseAlt(
-        (e) {
-          if (e.resolution != 0) return e.resolution;
-          if (e.height != 0) return e.height;
-          return 0;
-        },
-        (e) => e.frameratePrecise,
+      possibleVideos.sortByReverseAlts(
+        [
+          (e) => e.ytID != null ? 1 : 0, // prefer cached videos
+          (e) {
+            if (e.resolution != 0) return e.resolution;
+            if (e.height != 0) return e.height;
+            return 0;
+          },
+          (e) => e.frameratePrecise,
+        ],
       );
       erabaretaVideo = await possibleVideos.firstWhereEffAsync((element) => File(element.path).exists());
     }

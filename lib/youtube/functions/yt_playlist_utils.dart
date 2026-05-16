@@ -306,7 +306,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
                           Obx(
                             (context) {
                               final totalC = totalCount.valueR;
-                              return AnimatedSwitcher(
+                              return CustomAnimatedSwitcher(
                                 key: const Key('circle_switch'),
                                 duration: switchAnimationDurHalf,
                                 child: totalC == null || currentCount.valueR < totalC

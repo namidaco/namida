@@ -96,7 +96,7 @@ class __SkipSponsorButtonState extends State<SkipSponsorButton> {
     final config = segment == null ? null : SponsorBlockController.inst.getConfigForSegment(segment.category);
     final textTheme = context.textTheme;
     final itemsColor = widget.itemsColor;
-    return AnimatedSwitcher(
+    return CustomAnimatedSwitcher(
       duration: const Duration(milliseconds: 150),
       reverseDuration: const Duration(milliseconds: 200),
       child: segment == null || config == null || config.action == SponsorBlockAction.disabled

@@ -2336,7 +2336,7 @@ class NamidaRawLikeButton extends StatelessWidget {
         },
         likeBuilder: (value) {
           if (enableGradient) {
-            return AnimatedSwitcher(
+            return CustomAnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               reverseDuration: const Duration(milliseconds: 300),
               child: value
@@ -2360,7 +2360,7 @@ class NamidaRawLikeButton extends StatelessWidget {
                   : normalIconWidget,
             );
           } else {
-            return AnimatedSwitcher(
+            return CustomAnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               reverseDuration: const Duration(milliseconds: 300),
               child: value ? enabledIconWidget : normalIconWidget,
@@ -2631,7 +2631,7 @@ class SubpageInfoContainer extends StatelessWidget {
     Iterable<Playable> getTracksWithLimit() {
       var all = tracksFn();
       final requiredCount = countRx.value;
-      if (requiredCount > 1 && requiredCount < all.length) {
+      if (requiredCount > 0 && requiredCount < all.length) {
         all = all.getRandomSample(requiredCount);
       }
       return all;
@@ -4857,6 +4857,7 @@ class NamidaAnimatedSwitcher extends StatelessWidget {
   final Curve? secondCurve;
   final Curve? sizeCurve;
   final Curve? allCurves;
+
   const NamidaAnimatedSwitcher({
     super.key,
     required this.firstChild,
@@ -4903,6 +4904,43 @@ class NamidaAnimatedSwitcher extends StatelessWidget {
   }
 }
 
+class CustomAnimatedSwitcher extends StatelessWidget {
+  final Duration duration;
+  final Duration? reverseDuration;
+  final Curve switchInCurve;
+  final Curve switchOutCurve;
+  final AnimatedSwitcherLayoutBuilder layoutBuilder;
+  final Widget? child;
+
+  const CustomAnimatedSwitcher({
+    super.key,
+    this.child,
+    required this.duration,
+    this.reverseDuration,
+    this.switchInCurve = Curves.linear,
+    this.switchOutCurve = Curves.linear,
+    this.layoutBuilder = AnimatedSwitcher.defaultLayoutBuilder,
+  });
+
+  static Widget defaultTransitionBuilder(Widget child, Animation<double> animation) {
+    return FadeTransition(
+      key: ValueKey(animation),
+      opacity: animation,
+      child: child,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      layoutBuilder: layoutBuilder,
+      transitionBuilder: CustomAnimatedSwitcher.defaultTransitionBuilder,
+      child: child,
+    );
+  }
+}
+
 class ShimmerWrapper extends StatelessWidget {
   final bool shimmerEnabled;
   final Widget child;
@@ -4924,7 +4962,7 @@ class ShimmerWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = transparent ? Colors.transparent : context.theme.cardColor.withAlpha(120);
-    return AnimatedSwitcher(
+    return CustomAnimatedSwitcher(
       duration: fadeDurationMS.ms,
       child: shimmerEnabled
           ? Animate(
