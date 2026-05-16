@@ -91,9 +91,7 @@ class SearchSortController extends SearchPortsProvider {
 
     searchTracks(text, temp: true);
 
-    final int length = enabledSearches.length;
-    for (int i = 0; i < length; i++) {
-      var es = enabledSearches[i];
+    for (final es in enabledSearches.value) {
       if (es == MediaType.track) {
         // -- we always search
       } else if (es == MediaType.album) {
@@ -625,8 +623,7 @@ class SearchSortController extends SearchPortsProvider {
             String dateModifiedFormatted,
           })
         >[];
-    for (int i = 0; i < playlistsMap.length; i++) {
-      var plMap = playlistsMap[i];
+    for (final plMap in playlistsMap) {
       final pl = LocalPlaylist.fromJson(plMap, (itemJson) => TrackWithDate.fromJson(itemJson), PlaylistController.sortFromJson);
       final trName = textCleanedForSearch(translatePlName(pl.name));
       final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(pl.creationDate));
@@ -1159,8 +1156,10 @@ class SearchSortController extends SearchPortsProvider {
         break;
       case GroupSortType.custom:
         final indices = <String, int>{};
-        for (int i = 0; i < customIndicesOrder!.length; i++) {
-          indices[customIndicesOrder[i]] = i;
+        int index = 0;
+        for (final item in customIndicesOrder!) {
+          indices[item] = index;
+          index++;
         }
         sortThis((p) => indices[p.key] ?? (playlistList.length - 1));
         break;
@@ -1194,8 +1193,7 @@ class SearchSortController extends SearchPortsProvider {
     final albumKeysCleaned = <String>[];
     final albumKeysNonCleaned = textNonCleanedForSearch == null ? null : <String>[];
 
-    for (int i = 0; i < keys.length; i++) {
-      var kd = keys[i];
+    for (final kd in keys) {
       final albumName = kd.displayAlbumName;
       final albumArtistName = kd.albumArtist;
       String cleanedText = textCleanedForSearch(albumName);
@@ -1239,10 +1237,12 @@ class SearchSortController extends SearchPortsProvider {
       }
 
       final results = <AlbumIdentifierWrapper>[];
-      for (int i = 0; i < keys.length; i++) {
-        if (isMatch(i)) {
-          results.add(keys[i]);
+      int index = 0;
+      for (final key in keys) {
+        if (isMatch(index)) {
+          results.add(key);
         }
+        index++;
       }
       sendPort.send((results, temp, text));
     });
@@ -1266,8 +1266,7 @@ class SearchSortController extends SearchPortsProvider {
     final keysCleaned = <String>[];
     final keysNonCleaned = textNonCleanedForSearch == null ? null : <String>[];
     if (keyIsPath) {
-      for (int i = 0; i < keys.length; i++) {
-        var path = keys[i];
+      for (final path in keys) {
         final folder = Folder.explicit(path);
         final folderName = folder.folderNameRaw;
         keysCleaned.add(textCleanedForSearch(folderName)); // if adding failed we are cooked
@@ -1276,8 +1275,7 @@ class SearchSortController extends SearchPortsProvider {
         }
       }
     } else {
-      for (int i = 0; i < keys.length; i++) {
-        var kd = keys[i];
+      for (final kd in keys) {
         keysCleaned.add(textCleanedForSearch(kd));
         if (keysNonCleaned != null) {
           keysNonCleaned.add(textNonCleanedForSearch!(kd));
@@ -1312,10 +1310,12 @@ class SearchSortController extends SearchPortsProvider {
       }
 
       final results = <String>[];
-      for (int i = 0; i < keys.length; i++) {
-        if (isMatch(i)) {
-          results.add(keys[i]);
+      int index = 0;
+      for (final key in keys) {
+        if (isMatch(index)) {
+          results.add(key);
         }
+        index++;
       }
       sendPort.send((results, temp, text));
     });

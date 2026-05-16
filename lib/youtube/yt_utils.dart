@@ -866,9 +866,7 @@ class YTUtils {
     int videosSize = 0;
     int audiosSize = 0;
 
-    final int length = audiosCached.length;
-    for (int i = 0; i < length; i++) {
-      final e = audiosCached[i];
+    for (final e in audiosCached) {
       final s = await e.file.fileSize() ?? 0;
       audiosSize += s;
       fileSizeLookup[e.file.path] = s;

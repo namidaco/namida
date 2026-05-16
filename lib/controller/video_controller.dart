@@ -649,8 +649,7 @@ class VideoController {
     final possibleCached = await getNVFromIDSorted(id);
     final local = _getPossibleVideosPathsFromAudioFile(track.path);
     final possibleLocal = <NamidaVideo>[];
-    for (int i = 0; i < local.length; i++) {
-      var l = local[i];
+    for (final l in local) {
       if (_videoPathsInfoMap[l] == null) {
         try {
           final v = await NamidaFFMPEG.inst.ffmpegExtractMetadata(l);
@@ -707,9 +706,10 @@ class VideoController {
       return _videoCacheIDMapDB.delete(id);
     }
     final map = <String, Map<String, dynamic>>{};
-    for (int i = 0; i < videos.length; i++) {
-      var item = videos[i];
-      map['$i'] = item.toJson();
+    int index = 0;
+    for (final item in videos) {
+      map['$index'] = item.toJson();
+      index++;
     }
     return _videoCacheIDMapDB.put(id, map);
   }
@@ -974,8 +974,7 @@ class _VideoControllerIsolateFunctions {
     final newIdsMap = <String, List<(FileStat, String)>>{};
 
     final dirFiles = dir.listSyncSafe();
-    for (int i = 0; i < dirFiles.length; i++) {
-      var df = dirFiles[i];
+    for (final df in dirFiles) {
       if (df is File) {
         final filename = df.path.getFilename;
         if (filename.endsWith('.part')) continue; // first thing first

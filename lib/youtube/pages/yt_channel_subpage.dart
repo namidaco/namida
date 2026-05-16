@@ -114,19 +114,19 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
   int? _setTabsData(YoutiPieChannelPageResult res) {
     _tabsGlobalKeys.clear();
 
-    final length = res.tabs.length;
     int? initiallySelected;
     int? videoTabIndex;
-    for (int i = 0; i < length; i++) {
-      final tab = res.tabs[i];
-      if (tab.initiallySelected) initiallySelected = i;
+    int index = 0;
+    for (final tab in res.tabs) {
+      if (tab.initiallySelected) initiallySelected = index;
 
       if (videoTabIndex == null && tab.isVideosTab()) {
-        videoTabIndex = i;
-        _tabsGlobalKeys[i] = _videosPageKey;
+        videoTabIndex = index;
+        _tabsGlobalKeys[index] = _videosPageKey;
       } else {
-        _tabsGlobalKeys[i] = _createPageKey(tab);
+        _tabsGlobalKeys[index] = _createPageKey(tab);
       }
+      index++;
     }
 
     return initiallySelected ?? videoTabIndex;

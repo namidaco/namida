@@ -254,9 +254,7 @@ class QueueController {
     int newestQueueDate = 0;
     final map = SplayTreeMap<int, Queue>((date1, date2) => date1.compareTo(date2));
     final files = Directory(path).listSyncSafe();
-    final filesL = files.length;
-    for (int i = 0; i < filesL; i++) {
-      var f = files[i];
+    for (final f in files) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync(ensureExists: false);

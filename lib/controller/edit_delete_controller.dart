@@ -246,8 +246,7 @@ extension HasCachedFiles on List<Selectable> {
   Future<bool> get hasLRCLyricsCached => _doesAnyPathExist(AppDirs.LYRICS, 'lrc', EditDeleteController._cacheKeyBuilder);
 
   bool get hasVideoCached {
-    for (int i = 0; i < length; i++) {
-      final tr = this[i];
+    for (final tr in this) {
       if (VideoController.inst.doesVideoExistsInCache(tr.track.youtubeID)) {
         return true;
       }
@@ -256,8 +255,7 @@ extension HasCachedFiles on List<Selectable> {
   }
 
   bool get hasAudioCached {
-    for (int i = 0; i < length; i++) {
-      final tr = this[i];
+    for (final tr in this) {
       var vidId = tr.track.youtubeID;
       if (vidId.isNotEmpty) {
         final cachedAudios = AudioCacheController.inst.audioCacheMap[vidId];
@@ -270,8 +268,7 @@ extension HasCachedFiles on List<Selectable> {
   Future<bool> get hasAnythingCached async => await hasArtworkCached || await hasTXTLyricsCached || await hasLRCLyricsCached /* || await hasColorCached */;
 
   Future<bool> _doesAnyPathExist(String directory, String extension, String Function(Selectable e) cacheKeyBuilder, {String Function(Selectable tr)? fullPath}) async {
-    for (int i = 0; i < length; i++) {
-      final track = this[i];
+    for (final track in this) {
       if (await File(fullPath != null ? fullPath(track) : "$directory${cacheKeyBuilder(track)}.$extension").exists()) {
         return true;
       }

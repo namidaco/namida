@@ -86,9 +86,7 @@ extension YoutubeIDSUtils on List<YoutubeID> {
 
   int getTotalListenCount() {
     int total = 0;
-    final int length = this.length;
-    for (int i = 0; i < length; i++) {
-      final video = this[i];
+    for (final video in this) {
       final e = video.id;
       final c = YoutubeHistoryController.inst.topTracksMapListens.value[e]?.length ?? 0;
       total += c;
@@ -98,9 +96,7 @@ extension YoutubeIDSUtils on List<YoutubeID> {
 
   int? getFirstListen() {
     int? generalFirstListen;
-    final int length = this.length;
-    for (int i = 0; i < length; i++) {
-      final video = this[i];
+    for (final video in this) {
       final e = video.id;
       final firstListen = YoutubeHistoryController.inst.topTracksMapListens.value[e]?.firstOrNull;
       if (firstListen != null && (generalFirstListen == null || firstListen < generalFirstListen)) {
@@ -112,9 +108,7 @@ extension YoutubeIDSUtils on List<YoutubeID> {
 
   int? getLatestListen() {
     int? generalLastListen;
-    final int length = this.length;
-    for (int i = 0; i < length; i++) {
-      final video = this[i];
+    for (final video in this) {
       final e = video.id;
       final lastListen = YoutubeHistoryController.inst.topTracksMapListens.value[e]?.lastOrNull;
       if (lastListen != null && (generalLastListen == null || lastListen > generalLastListen)) {

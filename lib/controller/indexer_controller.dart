@@ -215,8 +215,7 @@ class Indexer<T extends Track> {
   void rebuildTracksAfterSplitConfigChanges() async {
     final splitConfig = _createSplitConfig();
     final keysList = allTracksMappedByPath.keys.toList();
-    for (int i = 0; i < keysList.length; i++) {
-      var trPath = keysList[i];
+    for (final trPath in keysList) {
       final oldtr = allTracksMappedByPath[trPath]!;
       allTracksMappedByPath[trPath] = oldtr.copyWith(
         artistsList: Indexer.splitArtist(
@@ -246,8 +245,7 @@ class Indexer<T extends Track> {
   void rebuildTracksAfterExtractFeatArtistChanges() async {
     final artistsSplitConfig = ArtistsSplitConfig.settings();
     final keysList = allTracksMappedByPath.keys.toList();
-    for (int i = 0; i < keysList.length; i++) {
-      var trPath = keysList[i];
+    for (final trPath in keysList) {
       final oldtr = allTracksMappedByPath[trPath]!;
       allTracksMappedByPath[trPath] = oldtr.copyWith(
         artistsList: Indexer.splitArtist(
@@ -1774,10 +1772,7 @@ class Indexer<T extends Track> {
 
     final splitConfig = SplitArtistGenreConfigsWrapper.settings();
 
-    final int length = allMusic.length;
-    for (int i = 0; i < length; i++) {
-      var e = allMusic[i];
-
+    for (final e in allMusic) {
       final map = e.getMap;
       final album = e.album;
       final albums = album == null
@@ -2005,9 +2000,8 @@ class _IndexerIsolateExecuter {
       if (statsJsonFile.existsSync()) {
         final list = statsJsonFile.readAsJsonSync() as List?;
         if (list != null) {
-          for (int i = 0; i < list.length; i++) {
+          for (final item in list) {
             try {
-              final item = list[i];
               final trst = TrackStats.fromJson(item);
               if (trackStatsMap[trst.track] == null) {
                 final jsonDetails = trst.toJsonWithoutTrack();
@@ -2068,9 +2062,8 @@ class _IndexerIsolateExecuter {
       if (tracksJsonFile.existsSync()) {
         final list = tracksJsonFile.readAsJsonSync() as List?;
         if (list != null) {
-          for (int i = 0; i < list.length; i++) {
+          for (final item in list) {
             try {
-              final item = list[i];
               final trExt = TrackExtended.fromJson(
                 item['path'] ?? '',
                 item,

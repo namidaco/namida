@@ -164,8 +164,10 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
         break;
       case GroupSortType.custom:
         final indices = <String, int>{};
-        for (int i = 0; i < customIndicesOrder!.length; i++) {
-          indices[customIndicesOrder[i]] = i;
+        int index = 0;
+        for (final item in customIndicesOrder!) {
+          indices[item] = index;
+          index++;
         }
         sortThis((p) => indices[p.key] ?? (playlistList.length - 1));
         break;
@@ -273,9 +275,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   static Map<String, YoutubePlaylist> _readPlaylistFilesCompute(_ReadPlaylistFilesParams params) {
     final entries = <MapEntry<String, YoutubePlaylist>>[];
     final files = Directory(params.path).listSyncSafe();
-    final filesL = files.length;
-    for (int i = 0; i < filesL; i++) {
-      var f = files[i];
+    for (final f in files) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync(ensureExists: false);

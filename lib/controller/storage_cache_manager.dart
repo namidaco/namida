@@ -797,8 +797,7 @@ class _ImageTrimmer {
 
     final images = <File>[];
 
-    for (int i = 0; i < imagesPre.length; i++) {
-      var e = imagesPre[i];
+    for (final e in imagesPre) {
       if (e.path.endsWith('.temp')) {
         try {
           e.deleteSync();
@@ -813,8 +812,7 @@ class _ImageTrimmer {
 
     _Trimmer._sortFiles(images, priorityMap);
 
-    for (int i = 0; i < excess; i++) {
-      final element = images[i];
+    for (final element in images.take(excess)) {
       try {
         element.deleteSync();
       } catch (_) {}
@@ -838,8 +836,7 @@ class _Trimmer {
     if (priorityMap != null && priorityMap.isNotEmpty) {
       final videoIdsLookup = <String, String?>{};
       final finalFiles = <FileSystemEntity>[];
-      for (int i = 0; i < files.length; i++) {
-        var f = files[i];
+      for (final f in files) {
         try {
           final videoId = videoIdsLookup[f.path] = f.path.getFilename.substring(0, 11);
           if (priorityMap[videoId] != CacheVideoPriority.VIP) {
@@ -874,8 +871,7 @@ class _Trimmer {
         totalBytes += size;
       }
     });
-    for (int i = 0; i < files.length; i++) {
-      var file = files[i];
+    for (final file in files) {
       if (totalBytes <= maxBytes) break; // better than checking with each loop
       if (file is File) {
         final deletedSize = sizesMap[file.path] ?? file.fileSizeSync() ?? 0;

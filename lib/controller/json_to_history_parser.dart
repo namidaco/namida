@@ -803,10 +803,9 @@ class JsonToHistoryParser {
       List? list = jsonDecode(file.readAsStringSync()) as List?;
       if (list == null) continue;
 
-      for (int i = 0; i < list.length; i++) {
+      for (final p in list) {
         totalParsed++;
         try {
-          final p = list[i];
           final link = utf8.decode((p['titleUrl']).toString().codeUnits);
           final id = link.length >= 11 ? link.substring(link.length - 11) : link;
           final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
@@ -1174,11 +1173,8 @@ class JsonToHistoryParser {
     int? lastDate;
     for (final file in files) {
       final lines = file.readAsLinesSync();
-      final linesLength = lines.length;
 
-      for (int i = 0; i < linesLength; i++) {
-        final line = lines[i];
-
+      for (final line in lines) {
         totalParsed++;
 
         /// artist, album, title, (dd MMM yyyy HH:mm);

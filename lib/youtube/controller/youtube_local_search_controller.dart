@@ -204,30 +204,26 @@ class YTLocalSearchController with PortsProvider<Map> {
 
       // -----------------------------------
       final list2 = lookupListStreamInfoMap;
-      final l2 = list2.length;
-      for (int i = 0; i < l2; i++) {
-        addToResultsIfMatch(list2[i]);
+      for (final item in list2) {
+        addToResultsIfMatch(item);
       }
 
       // -----------------------------------
       final list3 = lookupListVideoStreamsMap;
-      final l3 = list3.length;
-      for (int i = 0; i < l3; i++) {
-        addToResultsIfMatch(list3[i]);
+      for (final item in list3) {
+        addToResultsIfMatch(item);
       }
 
       // -----------------------------------
       final list4 = lookupListVideoMissingInfo;
-      final l4 = list4.length;
-      for (int i = 0; i < l4; i++) {
-        addToResultsIfMatch(list4[i]);
+      for (final item in list4) {
+        addToResultsIfMatch(item);
       }
 
       // -----------------------------------
       final list5 = lookupListYTVH;
-      final l5 = list5.length;
-      for (int i = 0; i < l5; i++) {
-        addToResultsIfMatch(list5[i]);
+      for (final item in list5) {
+        addToResultsIfMatch(item);
       }
 
       sendPort.send(searchResults);

@@ -472,9 +472,10 @@ enum _ImgExtension {
 
 extension _IterablieListieUtils<E> on List<E> {
   Iterable<T> mapIndexed<T>(T Function(E e, int index) toElement) sync* {
-    final length = this.length;
-    for (int i = 0; i < length; i++) {
-      yield toElement(this[i], i);
+    int index = 0;
+    for (final item in this) {
+      yield toElement(item, index);
+      index++;
     }
   }
 }

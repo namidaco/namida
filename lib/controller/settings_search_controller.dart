@@ -143,8 +143,7 @@ class SettingsSearchController {
         BackupAndRestore(),
         AdvancedSettings(),
       ];
-      for (int i = 0; i < settingsWidgets.length; i++) {
-        var p = settingsWidgets[i];
+      for (final p in settingsWidgets) {
         subpagesDetails[p.settingPage] = p.settingPage.toSettingSubPageDetails();
         _allWidgets.add((p, p.lookupMap));
       }

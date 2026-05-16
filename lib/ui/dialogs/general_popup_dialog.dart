@@ -84,9 +84,7 @@ Future<void> showGeneralPopupDialog(
   final tracksExisting = <Track>[];
   if (isSingle || errorPlayingTrack != null) {
     // -- fill using real-time checks if there was an error.
-    final int length = tracks.length;
-    for (int i = 0; i < length; i++) {
-      final t = tracks[i];
+    for (final t in tracks) {
       if (t.existsSync()) tracksExisting.add(t);
     }
   } else {

@@ -62,8 +62,7 @@ class _NamidaStorageAndroid extends NamidaStorage {
       final filesPaths = res?.cast<String>() ?? <String>[];
 
       if (allowedExtensions != null && allowedExtensions.isNotEmpty) {
-        for (int i = 0; i < filesPaths.length; i++) {
-          var fp = filesPaths[i];
+        for (final fp in filesPaths) {
           if (fp.isNotEmpty && !allowedExtensions.any((wrapper) => wrapper.isPathValid(fp))) {
             if (!fp.contains(':')) {
               // : means its content provider type file

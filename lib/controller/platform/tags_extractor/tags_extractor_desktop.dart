@@ -96,8 +96,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
     final executer = FFMPEGExecuter.platform();
     await executer.init();
 
-    for (int i = 0; i < paths.length; i++) {
-      var path = paths[i];
+    for (final path in paths) {
       currentPathsBeingExtracted[key] = path;
       final isVideo = path.isVideo();
       final artworkDirectory = isVideo ? videoArtworkDirectory : audioArtworkDirectory;

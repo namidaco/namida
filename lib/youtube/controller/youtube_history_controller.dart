@@ -56,9 +56,7 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
     final tempMapTopItems = <String, List<int>>{};
     int totalCount = 0;
     final files = Directory(path).listSyncSafe();
-    final filesL = files.length;
-    for (int i = 0; i < filesL; i++) {
-      var f = files[i];
+    for (final f in files) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync(ensureExists: false) as List?;
@@ -66,8 +64,8 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
 
           final listVideos = <YoutubeID>[];
           if (response != null) {
-            for (int i = 0; i < response.length; i++) {
-              var vid = YoutubeID.fromJson(response[i]);
+            for (final item in response) {
+              var vid = YoutubeID.fromJson(item);
               listVideos.add(vid);
               tempMapTopItems.addForce(vid.id, vid.dateAddedMS);
             }

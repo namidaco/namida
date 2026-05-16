@@ -28,8 +28,7 @@ class HttpMultiRequestManager {
   int _getEffectiveIndex() {
     int minimum = _runningRequestsCount[0];
 
-    for (int i = 0; i < _runningRequestsCount.length; i++) {
-      final e = _runningRequestsCount[i];
+    for (final e in _runningRequestsCount) {
       if (e < minimum) minimum = e;
     }
 

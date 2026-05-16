@@ -68,9 +68,7 @@ extension TracksWithDatesUtilsIterable on Iterable<Selectable> {
 extension TracksWithDatesUtils on List<Selectable> {
   int getTotalListenCount() {
     int total = 0;
-    final int length = this.length;
-    for (int i = 0; i < length; i++) {
-      final twd = this[i];
+    for (final twd in this) {
       final e = twd.track;
       final c = HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0;
       total += c;
@@ -80,9 +78,7 @@ extension TracksWithDatesUtils on List<Selectable> {
 
   int? getFirstListen() {
     int? generalFirstListen;
-    final int length = this.length;
-    for (int i = 0; i < length; i++) {
-      final twd = this[i];
+    for (final twd in this) {
       final e = twd.track;
       final firstListen = HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull;
       if (firstListen != null && (generalFirstListen == null || firstListen < generalFirstListen)) {
@@ -94,9 +90,7 @@ extension TracksWithDatesUtils on List<Selectable> {
 
   int? getLatestListen() {
     int? generalLastListen;
-    final int length = this.length;
-    for (int i = 0; i < length; i++) {
-      final twd = this[i];
+    for (final twd in this) {
       final e = twd.track;
       final lastListen = HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull;
       if (lastListen != null && (generalLastListen == null || lastListen > generalLastListen)) {
@@ -392,18 +386,10 @@ extension IterableFutureUtils<T> on Iterable<T> {
 
 extension IterablieListieUtils<E> on List<E> {
   Iterable<T> mapIndexed<T>(T Function(E e, int index) toElement) sync* {
-    final length = this.length;
-    for (int i = 0; i < length; i++) {
-      yield toElement(this[i], i);
-    }
-  }
-}
-
-extension IterablieUtils<E> on Iterable<E> {
-  Iterable<T> mapIndexed<T>(T Function(E e, int index) toElement) sync* {
     int index = 0;
     for (final item in this) {
       yield toElement(item, index);
+      index++;
     }
   }
 }
@@ -1086,8 +1072,8 @@ extension StringPathUtils on String {
   String toFastHashKey() {
     final s = this;
     int hash = 0;
-    for (int i = 0; i < s.length; i++) {
-      hash += s.codeUnitAt(i);
+    for (final c in s.codeUnits) {
+      hash += c;
       hash += (hash << 10);
       hash ^= (hash >> 6);
     }

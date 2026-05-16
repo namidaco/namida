@@ -1229,15 +1229,17 @@ class _QuarterCirclePainter extends CustomPainter {
 
     final Rect arcRect = Rect.fromCircle(center: center, radius: radius);
 
-    for (int i = 0; i < segments; i++) {
-      paint.color = colors[i];
+    int index = 0;
+    for (final color in colors) {
+      paint.color = color;
       canvas.drawArc(
         arcRect,
-        startAngle + i * sweep,
+        startAngle + index * sweep,
         sweep,
         true,
         paint,
       );
+      index++;
     }
   }
 

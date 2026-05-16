@@ -183,9 +183,10 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     final executeDetails = forceRequest ? ExecuteDetails.forceRequest() : null;
 
     int pageFetchErrors = 0;
-    for (int i = 0; i < idsLength; i++) {
-      final channelID = ids[i];
-      _allChannelsStreamsProgress.value = i / idsLength;
+    int index = -1;
+    for (final channelID in ids) {
+      index++;
+      _allChannelsStreamsProgress.value = index / idsLength;
       final channelPage = await YoutubeInfoController.channel.fetchChannelInfo(channelId: channelID, details: null);
       if (channelPage == null) {
         if (!_hasConnection) {
@@ -221,7 +222,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
         final didFetch = await videosPage.fetchNext();
         if (!didFetch) break;
       }
-      printy('p: $i / $idsLength = ${_allChannelsStreamsProgress.value} =>> ${videosPage.length} videos');
+      printy('p: $index / $idsLength = ${_allChannelsStreamsProgress.value} =>> ${videosPage.length} videos');
       if (channel != null) {
         break;
       }

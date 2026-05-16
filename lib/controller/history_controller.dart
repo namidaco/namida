@@ -120,9 +120,7 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
     final tempMapTopItems = <Track, List<int>>{};
     int totalCount = 0;
     final files = Directory(path).listSyncSafe();
-    final filesL = files.length;
-    for (int i = 0; i < filesL; i++) {
-      var f = files[i];
+    for (final f in files) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync(ensureExists: false) as List?;

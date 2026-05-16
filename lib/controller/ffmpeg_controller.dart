@@ -316,8 +316,7 @@ class NamidaFFMPEG {
     int currentProgress = 0;
     int currentFailed = 0;
 
-    for (int i = 0; i < totalFiles; i++) {
-      var f = dirFiles[i];
+    for (final f in dirFiles) {
       final didUpdate = await compressImage(
         path: f.path,
         saveDir: dir.path,
@@ -359,8 +358,7 @@ class NamidaFFMPEG {
 
     currentOperations[OperationType.ytdlpThumbnailFix]!.value = OperationProgress(); // resetting
 
-    for (int i = 0; i < totalFilesLength; i++) {
-      var filee = allFiles[i];
+    for (final filee in allFiles) {
       currentProgress++;
       if (filee is File) {
         final tr =

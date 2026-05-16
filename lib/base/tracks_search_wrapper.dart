@@ -97,8 +97,7 @@ class TracksSearchWrapper {
     }
 
     final tracksExtended = <_CustomTrackExtended>[];
-    for (int i = 0; i < tracks.length; i++) {
-      var trMap = tracks[i];
+    for (final trMap in tracks) {
       final path = trMap['path'] as String;
       final title = trMap['title'] as String;
       final isVideo = trMap['v'] == true;
@@ -229,8 +228,8 @@ class TracksSearchWrapper {
     final allParts = <String>[];
     allParts.addAll(splitted.map((e) => textCleanedForSearch(e)).where((e) => e.isNotEmpty));
     if (textNonCleanedForSearch != null) {
-      for (int i = 0; i < splitted.length; i++) {
-        var s = textNonCleanedForSearch(splitted[i]);
+      for (final item in splitted) {
+        var s = textNonCleanedForSearch(item);
         if (s.isEmpty) continue;
         if (!allParts.contains(s)) {
           allParts.add(s);

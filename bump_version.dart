@@ -20,8 +20,8 @@ void main(List<String> argsFixed) async {
   final forceBump = args.remove('-y');
   final buildApk = args.remove('-b');
   final buildApkV = args.remove('-v');
-  for (int i = 0; i < pubspecLines.length; i++) {
-    final line = pubspecLines[i];
+  int lineIndex = 0;
+  for (final line in pubspecLines) {
     if (line.startsWith(versionLinePrefix)) {
       final currentName = line.split(versionLinePrefix).last.split('+').first;
       final currentVersion = currentName.split('-').first; // stripping `-beta`
@@ -53,7 +53,7 @@ void main(List<String> argsFixed) async {
 
       final newLine = '$versionLinePrefix$newVersionName+$newBuildNumber';
       print("old $line");
-      pubspecLines[i] = newLine;
+      pubspecLines[lineIndex] = newLine;
       print("new $newLine");
       didBump = true;
       pubspec.writeAsStringSync("""${pubspecLines.join('\n')}
@@ -65,6 +65,7 @@ void main(List<String> argsFixed) async {
       }
       break;
     }
+    lineIndex++;
   }
   if (!didAddToGit) print('couldn\'t add to git stage');
   if (!didBump) {

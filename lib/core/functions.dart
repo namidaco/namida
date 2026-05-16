@@ -1062,8 +1062,11 @@ double checkIfListsSimilar<E>(List<E> q1, List<E> q2, {bool fullyFunctional = fa
     }
     final finallength = q1.length > q2.length ? q2.length : q1.length;
     int trueconditions = 0;
-    for (int i = 0; i < finallength; i++) {
-      if (q1[i] == q2[i]) trueconditions++;
+    int index = 0;
+    for (final item in q1) {
+      if (index >= finallength) break;
+      if (item == q2[index]) trueconditions++;
+      index++;
     }
     return trueconditions / finallength;
   } else {

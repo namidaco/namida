@@ -79,9 +79,8 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       ),
     );
   }
-  final int length = localLRCFiles.length;
-  for (int i = 0; i < length; i++) {
-    var localLRC = localLRCFiles[i]();
+  for (final lrcGetter in localLRCFiles) {
+    var localLRC = lrcGetter();
     if (await localLRC.exists()) {
       availableLyrics.add(
         LyricsModel(

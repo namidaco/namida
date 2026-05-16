@@ -578,8 +578,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       sink.writeln('# this file should be put in `$commonParent` or a folder with similar structure');
       sink.writeln();
     }
-    for (int i = 0; i < tracks.length; i++) {
-      var trwd = tracks[i];
+    for (final trwd in tracks) {
       final tr = trwd.track;
       final trext = tr.track.toTrackExt();
       final infoLine = infoMap[tr.path] ?? '#EXTINF:${trext.durationMS / 1000},${trext.originalArtist} - ${trext.title}';
@@ -798,9 +797,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   static Map<String, LocalPlaylist> _readPlaylistFilesCompute(String path) {
     final map = <String, LocalPlaylist>{};
     final files = Directory(path).listSyncSafe();
-    final filesL = files.length;
-    for (int i = 0; i < filesL; i++) {
-      var f = files[i];
+    for (final f in files) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync(ensureExists: false);

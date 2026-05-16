@@ -1077,8 +1077,9 @@ class SmoothLinePainter extends CustomPainter {
     // -- control points at segment midpoints
     final controlPoints = <Offset>[];
 
-    for (int i = 0; i < heatMap.length; i++) {
-      final segment = heatMap[i];
+    int index = 0;
+    final lastIndex = heatMap.length - 1;
+    for (final segment in heatMap) {
       final segmentEndMS = segment.startMS + segment.durationMS;
 
       // -- X position (time based)
@@ -1093,12 +1094,13 @@ class SmoothLinePainter extends CustomPainter {
       controlPoints.add(Offset(xMid, yValue));
 
       // -- start and end points for first and last segments
-      if (i == 0) {
+      if (index == 0) {
         path.moveTo(xStart, size.height);
         controlPoints.insert(0, Offset(xStart, size.height));
-      } else if (i == heatMap.length - 1) {
+      } else if (index == lastIndex) {
         controlPoints.add(Offset(xEnd, size.height));
       }
+      index++;
     }
 
     final blurredPoints = _applyGaussianBlur(controlPoints, 1).toList();

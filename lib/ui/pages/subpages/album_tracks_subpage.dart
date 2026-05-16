@@ -161,8 +161,8 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                           slivers: [
                             if (tracksMappedWithDisc != null && tracksMappedWithDisc.keys.any((n) => n > 1))
                               ...tracksMappedWithDisc.entries
-                                  .mapIndexed(
-                                    (discEntry, discSectionIndex) {
+                                  .map(
+                                    (discEntry) {
                                       final indicesToIncrement = tracksIndicesIncrement?[discEntry.key] ?? 0;
                                       return SliverMainAxisGroup(
                                         slivers: [

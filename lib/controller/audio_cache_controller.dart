@@ -71,9 +71,7 @@ class AudioCacheController {
     final newFiles = <AudioCacheDetails>[];
 
     final allFiles = Directory(dirPath).listSyncSafe();
-    final allLength = allFiles.length;
-    for (int i = 0; i < allLength; i++) {
-      final fe = allFiles[i];
+    for (final fe in allFiles) {
       final filename = fe.path.getFilename;
       final goodID = filename.startsWith(id);
       final isGood = fe is File && goodID && !filename.endsWith('.part') && !filename.endsWith('.mime') && !filename.endsWith('.metadata');
@@ -93,9 +91,7 @@ class AudioCacheController {
     final newFiles = <String, List<AudioCacheDetails>>{};
 
     final files = Directory(dirPath).listSyncSafe();
-    final filesL = files.length;
-    for (int i = 0; i < filesL; i++) {
-      var fe = files[i];
+    for (final fe in files) {
       final filename = fe.path.getFilename;
       final isGood = fe is File && !filename.endsWith('.part') && !filename.endsWith('.mime') && !filename.endsWith('.metadata');
 

@@ -90,13 +90,10 @@ class DownloadTaskGroupName {
   static String _sanitize(String name) {
     int charsToRemove = 0;
     // -- remove all starting dots ..
-    for (int i = 0; i < name.length; i++) {
-      var c = name[i];
-      if (c == '.') {
-        charsToRemove++;
-      } else {
-        break;
-      }
+    const dotCode = 0x2E;
+    for (final code in name.codeUnits) {
+      if (code != dotCode) break;
+      charsToRemove++;
     }
     String finalName = name;
     if (charsToRemove > 0) {

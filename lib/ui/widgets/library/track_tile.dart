@@ -793,9 +793,7 @@ class TrackTileManager {
     bool needsSeparator = false;
     bool shouldNotCache = false;
 
-    final length = positions.length;
-    for (int i = 0; i < length; i++) {
-      final itemPosition = positions[i];
+    for (final itemPosition in positions) {
       final trackItem = settings.trackItem.value[itemPosition];
       if (trackItem == TrackTileItem.latestListenDate || trackItem == TrackTileItem.listenCount) shouldNotCache = true;
 

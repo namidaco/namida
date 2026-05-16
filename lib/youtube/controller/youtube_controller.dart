@@ -201,8 +201,7 @@ class YoutubeController {
 
     final preferredQualities = (qualities.isNotEmpty ? qualities : settings.youtubeVideoQualities.value);
     VideoStream? plsLoop(bool webm, bool experimentalCodecs) {
-      for (int i = 0; i < streams.length; i++) {
-        final q = streams[i];
+      for (final q in streams) {
         if (!webm && q.isWebm) continue;
         if (!experimentalCodecs && q.codecInfo.isExperimentalCodec()) continue;
         if (preferredQualities.any((e) => e.settingLabeltoVideoLabel() == q.qualityLabel.splitFirst('p'))) {
@@ -535,8 +534,7 @@ class YoutubeController {
       final itemsToCancel = allInGroupName
           ? youtubeDownloadTasksMap.value[groupName]!.values.toList()
           : List<YoutubeItemDownloadConfig>.from(itemsConfig); // copy bcz we can remove if from original list
-      for (int i = 0; i < itemsToCancel.length; i++) {
-        var c = itemsToCancel[i];
+      for (final c in itemsToCancel) {
         _downloadManager.stopDownload(file: _downloadClientsMap[groupName]?[c.filename]);
         _downloadClientsMap[groupName]?.remove(c.filename);
         _breakRetrievingInfoRequest(c);
@@ -548,9 +546,7 @@ class YoutubeController {
           YTOnGoingFinishedDownloads.inst.youtubeDownloadTasksTempList.remove((groupName, c));
         }
         if (delete) {
-          try {
-            await FileParts.join(directory.path, c.filename.filename).delete();
-          } catch (_) {}
+          FileParts.join(directory.path, c.filename.filename).tryDeleting();
         }
         downloadedFilesMap[groupName]?[c.filename] = null;
       }
@@ -1501,8 +1497,8 @@ class _YTDownloadManager with PortsProvider<SendPort> {
         if (stop == true) {
           final files = p['files'] as List<File>?;
           if (files != null) {
-            for (int i = 0; i < files.length; i++) {
-              var path = files[i].path;
+            for (final file in files) {
+              var path = file.path;
               cancelTokensMap[path]?.cancel();
               cancelTokensMap[path] = null;
             }

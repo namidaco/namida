@@ -344,9 +344,9 @@ class BackupController {
     final extra = remainingBackups.length - maxAutoBackups;
     if (extra > 0) {
       remainingBackups.sortBy((e) => e.lastModifiedSync()); // sorting by oldest
-      for (int i = 0; i < extra; i++) {
+      for (final item in remainingBackups.take(extra)) {
         try {
-          remainingBackups[i].deleteSync();
+          item.deleteSync();
         } catch (_) {}
       }
     }
