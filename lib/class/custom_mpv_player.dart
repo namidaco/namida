@@ -501,7 +501,17 @@ class CustomMPVPlayer implements AVPlayer {
   }
 
   @override
-  Future<void> removeAllMediaNext() async {}
+  Future<void> removeAllMediaNext() async {
+    final pl = _player;
+    final length = pl.state.playlist.medias.length;
+
+    // -- only remove items strictly after the currently playing one,
+    // -- otherwise we'd nuke playback if the player has already advanced to the queued next item.
+    final removeFrom = pl.state.playlist.index + 1;
+    for (int i = length - 1; i >= removeFrom; i--) {
+      await pl.remove(i);
+    }
+  }
 
   // Features missing: skip silence, looping animations, equalizer, equalizer presets, loudness enhancer
   // quick settings tile, picture in picture
