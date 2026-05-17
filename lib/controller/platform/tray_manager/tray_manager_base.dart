@@ -24,19 +24,16 @@ abstract class NamidaTrayManager {
     }
   }
 
-  static bool wasMaximized = false;
-
   static Future<void> showWindow() async {
     if (Platform.isLinux) {
       // trigger refresh, otherwise won't show mostly
       await windowManager.hide();
     }
 
-    WindowController.instance?.ensurePositionRestored();
+    WindowController.instance?.ensurePositionRestored(isStartup: false);
   }
 
   static Future<void> hideWindow() async {
-    wasMaximized = await windowManager.isMaximized();
     await windowManager.hide();
   }
 

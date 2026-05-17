@@ -32,6 +32,7 @@ class _ExtraSettings with SettingsFileWriter {
   int? ytChannelsPageIndex;
   int? audioConfigPageIndex;
 
+  bool windowMaximized = false;
   Rect? windowBounds;
 
   void save({
@@ -55,6 +56,7 @@ class _ExtraSettings with SettingsFileWriter {
     int? ytChannelsPageIndex,
     int? audioConfigPageIndex,
     Rect? windowBounds,
+    bool? windowMaximized,
   }) {
     if (selectedLibraryTab != null) this.selectedLibraryTab.value = selectedLibraryTab;
     if (staticLibraryTab != null) this.staticLibraryTab.value = staticLibraryTab;
@@ -76,6 +78,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (ytChannelsPageIndex != null) this.ytChannelsPageIndex = ytChannelsPageIndex;
     if (audioConfigPageIndex != null) this.audioConfigPageIndex = audioConfigPageIndex;
     if (windowBounds != null) this.windowBounds = windowBounds;
+    if (windowMaximized != null) this.windowMaximized = windowMaximized;
     _writeToStorage();
   }
 
@@ -123,6 +126,7 @@ class _ExtraSettings with SettingsFileWriter {
           windowBoundsJson['b'],
         );
       }
+      windowMaximized = json['windowMaximized'] ?? windowMaximized;
     } catch (e, st) {
       printy(e, isError: true);
       logger.report(e, st);
@@ -157,6 +161,7 @@ class _ExtraSettings with SettingsFileWriter {
         'r': windowBounds!.right,
         'b': windowBounds!.bottom,
       },
+    'windowMaximized': windowMaximized,
   };
 
   Future<void> _writeToStorage() async => await writeToStorage();

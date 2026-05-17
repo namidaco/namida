@@ -22,5 +22,5 @@ abstract class NamidaWindowManager {
 
   Future<void> init();
   Future<void> restorePosition();
-  Future<void> ensurePositionRestored();
+  Future<void> ensurePositionRestored({bool isStartup = true});
 }

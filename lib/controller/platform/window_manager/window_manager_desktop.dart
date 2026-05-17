@@ -46,19 +46,30 @@ class _WindowManagerDesktop extends NamidaWindowManager {
   }
 
   @override
-  Future<void> ensurePositionRestored() async {
+  Future<void> ensurePositionRestored({bool isStartup = true}) async {
     // -- sometimes waitUntilReadyToShow is not enough for linux
+
+    if (isStartup) {
+      final bounds = settings.extra.windowBounds;
+      if (bounds != null) {
+        // -- making sure window is in bounds with the current screen/s max size
+        // -- for example: after disconnecting a second screen
+        final shiftedBounds = await _ensureBoundsWithinScreenSizeShift(bounds);
+        await windowManager.setBounds(shiftedBounds);
+      }
+    }
+
+    final isMaximized = await windowManager.isMaximized();
+    if (settings.extra.windowMaximized && !isMaximized) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      await windowManager.maximize();
+    } else if (!settings.extra.windowMaximized && isMaximized) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      await windowManager.unmaximize();
+    }
 
     await windowManager.show();
     await windowManager.focus();
-
-    final bounds = settings.extra.windowBounds;
-    if (bounds != null && !NamidaTrayManager.wasMaximized) {
-      // -- making sure window is in bounds with the current screen/s max size
-      // -- for example: after disconnecting a second screen
-      final shiftedBounds = await _ensureBoundsWithinScreenSizeShift(bounds);
-      await windowManager.setBounds(shiftedBounds);
-    }
   }
 
   Future<Rect> _ensureBoundsWithinScreenSizeShift(Rect bounds) async {
@@ -152,6 +163,12 @@ class _NamidaWindowListener with WindowListener {
     }
   }
 
+  void _saveMaximized({required bool isNowMaximized}) {
+    if (isNowMaximized != settings.extra.windowMaximized) {
+      settings.extra.save(windowMaximized: isNowMaximized);
+    }
+  }
+
   @override
   void onWindowResize() async {
     ArtworkWidget.isResizingAppWindow = true;
@@ -166,6 +183,16 @@ class _NamidaWindowListener with WindowListener {
   @override
   void onWindowMoved() async {
     await _saveBounds();
+  }
+
+  @override
+  void onWindowMaximize() {
+    _saveMaximized(isNowMaximized: true);
+  }
+
+  @override
+  void onWindowUnmaximize() {
+    _saveMaximized(isNowMaximized: false);
   }
 
   @override
