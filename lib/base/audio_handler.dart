@@ -845,7 +845,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
     Lyrics.inst.updateLyrics(tr).ignoreError();
 
-    Duration? duration;
+    Duration? duration = tr.durationMS.milliseconds;
     bool checkInterrupted() {
       if (item != currentItem.value) {
         return true;
@@ -856,6 +856,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
 
     if (tr.path.startsWith('/namida_dummy/')) return;
+    if (checkInterrupted()) return; // -- refresh duration
 
     // -- generating artwork in case it wasnt, to be displayed in notification
     File(tr.pathToImage).exists().then((exists) {
