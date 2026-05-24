@@ -371,7 +371,7 @@ class Indexer<T extends Track> {
   Future<void> _afterIndexing() async {
     final mediaSorters = {for (final e in MediaType.values) e: SearchSortController.inst.getMediaTracksSortingComparables(e)};
     this.mainMapsGroup.fillAll(tracksInfoList.value, (tr) => tr.toTrackExt(), settings.albumIdentifiers.value);
-    await this.mainMapsGroup.sortAll(mediaSorters, settings.mediaItemsTrackSortingReverse.value, tracksInfoList.value);
+    this.mainMapsGroup.sortAllSync(mediaSorters, settings.mediaItemsTrackSortingReverse.value, tracksInfoList.value);
     this.mainMapsGroup.refreshAll();
     FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos.value);
     FoldersController.tracks.onMapChanged(mainMapFoldersTracks.value);
@@ -384,7 +384,7 @@ class Indexer<T extends Track> {
   Future<void> sortMediaTracksSubLists(List<MediaType> medias) async {
     final sorters = {for (final e in medias) e: SearchSortController.inst.getMediaTracksSortingComparables(e)};
     final mediaItemsTrackSortingReverse = settings.mediaItemsTrackSortingReverse.value;
-    await this.mainMapsGroup.sortAll(sorters, mediaItemsTrackSortingReverse, tracksInfoList.value);
+    this.mainMapsGroup.sortAllSync(sorters, mediaItemsTrackSortingReverse, tracksInfoList.value);
     _refreshMediaTracksSubListsAfterSort(sorters.keys); // -- vip vro
     this.mainMapsGroup.refreshAll(); // to refresh sublists as well
   }

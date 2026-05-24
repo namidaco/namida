@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/library_item_map.dart';
 import 'package:namida/class/track.dart';
@@ -34,23 +32,14 @@ class LibraryGroup<T extends Track> {
   final mainMapFoldersVideos = <VideoFolder, List<Video>>{}.obs;
 
   void fillAll(List<T> allTracks, TrackExtended Function(T tr) trackToExtended, List<AlbumIdentifier> albumIdentifier) {
-    final mainMapAlbums = this.mainMapAlbums.value;
-    final mainMapArtists = this.mainMapArtists.value;
-    final mainMapAlbumArtists = this.mainMapAlbumArtists.value;
-    final mainMapComposer = this.mainMapComposer.value;
-    final mainMapGenres = this.mainMapGenres.value;
-    final mainMapFoldersTracksAndVideos = this.mainMapFoldersTracksAndVideos.value;
-    final mainMapFoldersTracks = this.mainMapFoldersTracks.value;
-    final mainMapFoldersVideos = this.mainMapFoldersVideos.value;
-
-    mainMapAlbums.clear();
-    mainMapArtists.clear();
-    mainMapAlbumArtists.clear();
-    mainMapComposer.clear();
-    mainMapGenres.clear();
-    mainMapFoldersTracksAndVideos.clear();
-    mainMapFoldersTracks.clear();
-    mainMapFoldersVideos.clear();
+    final mainMapAlbums = this.mainMapAlbums.value..clear();
+    final mainMapArtists = this.mainMapArtists.value..clear();
+    final mainMapAlbumArtists = this.mainMapAlbumArtists.value..clear();
+    final mainMapComposer = this.mainMapComposer.value..clear();
+    final mainMapGenres = this.mainMapGenres.value..clear();
+    final mainMapFoldersTracksAndVideos = this.mainMapFoldersTracksAndVideos.value..clear();
+    final mainMapFoldersTracks = this.mainMapFoldersTracks.value..clear();
+    final mainMapFoldersVideos = this.mainMapFoldersVideos.value..clear();
 
     allTracks.loop(
       (tr) {
@@ -79,8 +68,15 @@ class LibraryGroup<T extends Track> {
         });
 
         // -- Assigning Folders
-        tr is Video ? mainMapFoldersVideos.addForce(tr.folder, tr) : mainMapFoldersTracks.addForce(tr.folder, tr);
-        mainMapFoldersTracksAndVideos.addForce(tr.folder, tr);
+        if (tr is Video) {
+          final folder = tr.folder;
+          mainMapFoldersVideos.addForce(folder, tr);
+          mainMapFoldersTracksAndVideos.addForce(folder, tr);
+        } else {
+          final folder = tr.folder;
+          mainMapFoldersTracks.addForce(folder, tr);
+          mainMapFoldersTracksAndVideos.addForce(folder, tr);
+        }
       },
     );
 
@@ -98,59 +94,68 @@ class LibraryGroup<T extends Track> {
     this.mainMapFoldersVideos.refresh();
   }
 
-  Future<void> sortAll(
-    Map<MediaType, List<Comparable<dynamic> Function(Track)>> mediasWithSorts,
-    Map<MediaType, bool> mediaItemsTrackSortingReverse,
-    List<T> allTracks,
-  ) async {
-    for (final entry in mediasWithSorts.entries) {
-      final e = entry.key;
-      final sorters = entry.value;
-      void sortPls(Iterable<List<T>> trs, MediaType type) {
-        final reverse = mediaItemsTrackSortingReverse[type] ?? false;
-        if (reverse) {
-          for (final e in trs) {
-            e.sortByReverseAlts(sorters);
-          }
-        } else {
-          for (final e in trs) {
-            e.sortByAlts(sorters);
-          }
-        }
-      }
-
-      final listsToSort = _mediaTypeToLists(e, allTracks);
-      if (listsToSort != null) {
-        sortPls(listsToSort, e);
-        await Future.delayed(Duration.zero);
-      }
-    }
-  }
-
   void sortAllSync(
     Map<MediaType, List<Comparable<dynamic> Function(Track)>> mediasWithSorts,
     Map<MediaType, bool> mediaItemsTrackSortingReverse,
     List<T> allTracks,
-  ) async {
+  ) {
+    final allTracksSorter = mediasWithSorts[MediaType.track];
+    if (allTracksSorter != null) {
+      final reverse = mediaItemsTrackSortingReverse[MediaType.track] ?? false;
+      reverse ? allTracks.sortByReverseAlts(allTracksSorter) : allTracks.sortByAlts(allTracksSorter);
+    }
+
+    final allTracksLength = allTracks.length;
+    final trackIndex = <T, int>{};
+    for (int i = 0; i < allTracksLength; i++) {
+      trackIndex[allTracks[i]] = i;
+    }
+
     for (final entry in mediasWithSorts.entries) {
-      final e = entry.key;
+      final type = entry.key;
       final sorters = entry.value;
-      void sortPls(Iterable<List<T>> trs, MediaType type) {
-        final reverse = mediaItemsTrackSortingReverse[type] ?? false;
-        if (reverse) {
-          for (final e in trs) {
-            e.sortByReverseAlts(sorters);
-          }
-        } else {
-          for (final e in trs) {
-            e.sortByAlts(sorters);
-          }
-        }
+      final reverse = mediaItemsTrackSortingReverse[type] ?? false;
+
+      if (type == MediaType.track) {
+        // -- already sorted early
+        continue;
       }
 
-      final listsToSort = _mediaTypeToLists(e, allTracks);
-      if (listsToSort != null) {
-        sortPls(listsToSort, e);
+      final lists = _mediaTypeToLists(type, allTracks);
+      if (lists == null) continue;
+
+      final precomputedKeys = List.generate(
+        sorters.length,
+        (sorterIndex) => List.generate(
+          allTracksLength,
+          (trackIndex) => sorters[sorterIndex](allTracks[trackIndex]),
+          growable: false,
+        ),
+        growable: false,
+      );
+
+      for (final list in lists) {
+        if (reverse) {
+          list.sort((a, b) {
+            final aIndex = trackIndex[a]!;
+            final bIndex = trackIndex[b]!;
+            for (final key in precomputedKeys) {
+              final cmp = key[bIndex].compareTo(key[aIndex]);
+              if (cmp != 0) return cmp;
+            }
+            return 0;
+          });
+        } else {
+          list.sort((a, b) {
+            final aIndex = trackIndex[a]!;
+            final bIndex = trackIndex[b]!;
+            for (final key in precomputedKeys) {
+              final cmp = key[aIndex].compareTo(key[bIndex]);
+              if (cmp != 0) return cmp;
+            }
+            return 0;
+          });
+        }
       }
     }
   }
