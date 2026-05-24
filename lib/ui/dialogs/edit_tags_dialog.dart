@@ -12,8 +12,10 @@ import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -68,6 +70,42 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme,
   controller.text = ytlink;
 
   final canEditComment = false.obs;
+
+  Future<void> confirmEdit() async {
+    if (formKey.currentState!.validate()) {
+      _editingInProgress[singleTrack.path] = true;
+      if (singleTrack.isPhysical) {
+        await NamidaTaggerController.inst
+            .updateTracksMetadata(
+              tracks: [singleTrack],
+              editedTags: {},
+              commentToInsert: controller.text,
+              trimWhiteSpaces: false,
+            )
+            .ignoreError();
+      } else {
+        final trExt = singleTrack.toTrackExt();
+        final oldComment = trExt.comment;
+        final commentToInsert = controller.text;
+        await Indexer.inst.updateTrackMetadata(
+          tracksMap: {
+            singleTrack: trExt.copyWith(
+              comment: oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
+              generatePathHash: false,
+            ),
+          },
+        );
+      }
+
+      _editingInProgress[singleTrack.path] = false;
+      NamidaNavigator.inst.closeDialog();
+
+      final currentItem = Player.inst.currentItem.value;
+      if (currentItem is Selectable && singleTrackPre == currentItem.track) {
+        VideoController.inst.updateCurrentVideo(singleTrackPre);
+      }
+    }
+  }
 
   void openSearchDialog() {
     final trExt = singleTrack.toTrackExt();
@@ -124,6 +162,9 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme,
                       leftBarIndicatorColor: colorScheme,
                       animationDurationMS: 500,
                     );
+
+                    // -- auto edit once a video is chosen
+                    confirmEdit();
                   },
                 ),
               ),
@@ -162,36 +203,7 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme,
               enabled: canEditComment.valueR && _editingInProgress[singleTrack.path] != true,
               text: lang.save,
               isLoading: _editingInProgress[singleTrack.path] == true,
-              onTap: () async {
-                if (formKey.currentState!.validate()) {
-                  _editingInProgress[singleTrack.path] = true;
-                  if (singleTrack.isPhysical) {
-                    await NamidaTaggerController.inst
-                        .updateTracksMetadata(
-                          tracks: [singleTrack],
-                          editedTags: {},
-                          commentToInsert: controller.text,
-                          trimWhiteSpaces: false,
-                        )
-                        .ignoreError();
-                  } else {
-                    final trExt = singleTrack.toTrackExt();
-                    final oldComment = trExt.comment;
-                    final commentToInsert = controller.text;
-                    await Indexer.inst.updateTrackMetadata(
-                      tracksMap: {
-                        singleTrack: trExt.copyWith(
-                          comment: oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
-                          generatePathHash: false,
-                        ),
-                      },
-                    );
-                  }
-
-                  _editingInProgress[singleTrack.path] = false;
-                  NamidaNavigator.inst.closeDialog();
-                }
-              },
+              onTap: confirmEdit,
             ),
           ),
         ],
