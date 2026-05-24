@@ -5,6 +5,7 @@ import 'package:lrc/lrc.dart';
 
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -49,6 +50,7 @@ class TracksSearchWrapper {
               if (addTags) 'tags': e.effectiveTags,
               'path': e.path,
               'v': e.isVideo,
+              'lc': HistoryController.inst.topTracksMapListens.value[e.asTrack()]?.length,
             },
           )
           .toList(),
@@ -101,6 +103,7 @@ class TracksSearchWrapper {
       final path = trMap['path'] as String;
       final title = trMap['title'] as String;
       final isVideo = trMap['v'] == true;
+      final year = trMap['year'] as int?;
       final track = Track.decide(path, isVideo);
 
       tracksExtended.add(
@@ -143,15 +146,17 @@ class TracksSearchWrapper {
               : null,
           splitComposer: splitThis(trMap['composer'], scomposer),
           splitComment: splitThis(trMap['comment'], scomment),
-          description: !sdescription ? null : trMap['description'],
+          description: !sdescription ? null : _PropertySimple.orNull(trMap['description'] as String?),
           splitMoods: smoods ? _Property.fromListNull(trMap['moods'] as List<String>?) : null,
           splitTags: stags ? _Property.fromListNull(trMap['tags'] as List<String>?) : null,
-          year: !syear
+          year: !syear || year == null || year == 0
               ? null
-              : _mapListCleanedAndNonCleaned(
-                  [trMap['year'].toString()],
-                  textCleanedForSearch,
-                  textNonCleanedForSearch,
+              : _PropertySimple.orNull(
+                  _mapListCleanedAndNonCleaned(
+                    [year.toString()],
+                    textCleanedForSearch,
+                    textNonCleanedForSearch,
+                  )?.joined,
                 ),
           lyrics: !slyrics
               ? null
@@ -160,6 +165,7 @@ class TracksSearchWrapper {
                   trMap['lyrics'] as String? ?? '',
                   lyricsCacheDirectory,
                 ),
+          listensCount: trMap['lc'] as int?,
         ),
       );
     }
@@ -171,7 +177,7 @@ class TracksSearchWrapper {
     );
   }
 
-  static String? _fillAllAvailableLyrics(Track track, String embedded, String lyricsCacheDirectory) {
+  static _PropertySimple? _fillAllAvailableLyrics(Track track, String embedded, String lyricsCacheDirectory) {
     final lyricsBuffer = StringBuffer();
 
     final lrcUtils = LrcSearchUtilsSelectableIsolate(
@@ -216,7 +222,9 @@ class TracksSearchWrapper {
         }
       }
     }
-    return lyricsBuffer.toString();
+    return _PropertySimple._(
+      joined: lyricsBuffer.toString(),
+    );
   }
 
   static _Property? _splitTextCleanedAndNonCleaned(String text, String Function(String) textCleanedForSearch, String Function(String)? textNonCleanedForSearch) {
@@ -226,16 +234,23 @@ class TracksSearchWrapper {
 
   static _Property? _mapListCleanedAndNonCleaned(List<String> splitted, String Function(String) textCleanedForSearch, String Function(String)? textNonCleanedForSearch) {
     final allParts = <String>[];
-    allParts.addAll(splitted.map((e) => textCleanedForSearch(e)).where((e) => e.isNotEmpty));
-    if (textNonCleanedForSearch != null) {
-      for (final item in splitted) {
-        var s = textNonCleanedForSearch(item);
-        if (s.isEmpty) continue;
-        if (!allParts.contains(s)) {
-          allParts.add(s);
+
+    for (final item in splitted) {
+      var cleaned = textCleanedForSearch(item);
+      if (cleaned.isNotEmpty) {
+        allParts.add(cleaned);
+      }
+
+      var nonCleaned = textNonCleanedForSearch?.call(item);
+      if (nonCleaned != null) {
+        if (nonCleaned.isNotEmpty) {
+          if (!allParts.contains(nonCleaned)) {
+            allParts.add(nonCleaned);
+          }
         }
       }
     }
+
     return _Property.fromList(allParts);
   }
 
@@ -245,7 +260,7 @@ class TracksSearchWrapper {
     return result;
   }
 
-  List<int> filterIndices(String text) {
+  List<int> filterIndicesAsList(String text) {
     final result = <int>[];
     _filter(text, (_, index) => result.add(index));
     return result;
@@ -266,10 +281,10 @@ class TracksSearchWrapper {
     int matchScore(_CustomTrackExtended trExt) {
       int score = 0;
 
-      void scorePropertySimple(String? propertyString, {int multiplier = 1}) {
+      void scorePropertySimple(_PropertySimple? propertyString, {int multiplier = 1}) {
         if (propertyString == null) return;
 
-        if (propertyString.contains(lctext)) {
+        if (propertyString.joined.contains(lctext)) {
           score += 20 * multiplier;
         }
       }
@@ -322,7 +337,7 @@ class TracksSearchWrapper {
       scorePropertySimple(trExt.description);
       scoreProperty(trExt.splitMoods);
       scoreProperty(trExt.splitTags);
-      scoreProperty(trExt.year);
+      scorePropertySimple(trExt.year);
       scorePropertySimple(trExt.lyrics);
 
       return score;
@@ -338,8 +353,11 @@ class TracksSearchWrapper {
     }
 
     final sortedKeys = scored.keys.toList()..sort((a, b) => b.compareTo(a));
+    final sortForScoreAbove = sortedKeys.length < 5 ? 0 : 100;
     for (final key in sortedKeys) {
-      for (final (trExt, i) in scored[key]!) {
+      final innerList = scored[key]!;
+      if (innerList.length > 1 && key > sortForScoreAbove) innerList.sortByReverse((e) => e.$1.listensCount ?? 0);
+      for (final (trExt, i) in innerList) {
         onMatch(trExt, i);
       }
     }
@@ -361,11 +379,12 @@ class _CustomTrackExtended {
   final _Property? splitGenre;
   final _Property? splitComposer;
   final _Property? splitComment;
-  final String? description;
+  final _PropertySimple? description;
   final _Property? splitMoods;
   final _Property? splitTags;
-  final _Property? year;
-  final String? lyrics;
+  final _PropertySimple? year;
+  final _PropertySimple? lyrics;
+  final int? listensCount;
 
   const _CustomTrackExtended({
     required this.track,
@@ -383,6 +402,7 @@ class _CustomTrackExtended {
     required this.splitTags,
     required this.year,
     required this.lyrics,
+    required this.listensCount,
   });
 }
 
@@ -403,5 +423,18 @@ class _Property {
   static _Property? fromList(List<String> list) {
     if (list.isEmpty) return null;
     return _Property._(splits: list, joined: list.join(' '));
+  }
+}
+
+class _PropertySimple {
+  final String joined;
+
+  const _PropertySimple._({
+    required this.joined,
+  });
+
+  static _PropertySimple? orNull(String? joined) {
+    if (joined == null) return null;
+    return _PropertySimple._(joined: joined);
   }
 }
