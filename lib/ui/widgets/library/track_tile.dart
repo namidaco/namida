@@ -559,15 +559,17 @@ class TrackTile extends StatelessWidget {
                                         Positioned(
                                           bottom: 0,
                                           right: 0,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(2.0),
+                                          child: DecoratedBox(
                                             decoration: BoxDecoration(
                                               color: theme.colorScheme.surface.withAlpha(160),
                                               borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                                             ),
-                                            child: const Icon(
-                                              Broken.timer_1,
-                                              size: 16.0,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(3.0),
+                                              child: const Icon(
+                                                Broken.timer_1,
+                                                size: 15.0,
+                                              ),
                                             ),
                                           ),
                                         ),

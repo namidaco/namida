@@ -109,7 +109,7 @@ class NamidaPlatformBuilder {
     try {
       final res = Process.runSync(path, ['-protocols']);
       final output = res.stdout as String;
-      return FFMPEGExecuter.testSMBProtocol(output) || FFMPEGExecuter.testWebDAVProtocol(output);
+      return FFMPEGExecuter.testWebDAVProtocol(output) || FFMPEGExecuter.testSMBProtocol(output);
     } catch (_) {
       return false;
     }

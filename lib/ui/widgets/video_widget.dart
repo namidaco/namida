@@ -347,7 +347,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   }
 
   void _endLongPressAction() {
-    Player.inst.setSpeed(settings.player.speed.value);
+    final currentConfig = Player.audioConfigs.map.value[Player.inst.currentItem.value?.key ?? ''];
+    final originalSpeed = currentConfig?.speed ?? settings.player.speed.value;
+    Player.inst.setSpeed(originalSpeed);
     _isLongPressActive.value = false;
   }
 

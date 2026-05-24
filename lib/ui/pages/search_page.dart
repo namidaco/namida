@@ -201,6 +201,7 @@ class SearchPage extends StatelessWidget {
           Column(
             children: [
               SmoothSingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: filterChipsChildren,

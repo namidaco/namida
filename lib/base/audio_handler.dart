@@ -484,6 +484,15 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   // ================================== QueueManager Overriden ====================================
 
   @override
+  Object identifyBy(Q element) {
+    return element.execute(
+          selectable: (finalItem) => finalItem.track.path,
+          youtubeID: (finalItem) => finalItem.id,
+        ) ??
+        '';
+  }
+
+  @override
   void onIndexChanged(int newIndex, Q newItem) {
     refreshNotification(newItem);
     settings.extra.save(lastPlayedIndex: newIndex);

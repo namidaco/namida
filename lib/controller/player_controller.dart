@@ -288,7 +288,7 @@ class Player {
   }
 
   double volumeUp() {
-    final val = Player.inst.userPlayerVolumeForItem;
+    final val = settings.player.volume.value;
     final newVal = (val + 0.05).withMaximum(1.0);
     setVolume(newVal);
     settings.player.save(volume: newVal);
@@ -296,7 +296,7 @@ class Player {
   }
 
   double volumeDown() {
-    final val = Player.inst.userPlayerVolumeForItem;
+    final val = settings.player.volume.value;
     final newVal = (val - 0.05).withMinimum(0.0);
     setVolume(newVal);
     settings.player.save(volume: newVal);
@@ -363,15 +363,7 @@ class Player {
 
   FutureOr<void> shuffleTracks(bool allTracks) async {
     if (allTracks) {
-      currentItem.value?.execute(
-        selectable: (_) {
-          return _audioHandler.shuffleAllItems((element) => (element as Selectable).track);
-        },
-        youtubeID: (_) {
-          return _audioHandler.shuffleAllItems((element) => (element as YoutubeID).id);
-        },
-      );
-
+      _audioHandler.shuffleAllItems();
       MiniPlayerController.inst.animateQueueToCurrentTrack(jump: true, minZero: true);
     } else {
       await _audioHandler.shuffleNextItems();
@@ -379,15 +371,7 @@ class Player {
   }
 
   int removeDuplicatesFromQueue() {
-    return currentItem.value?.execute<int>(
-          selectable: (_) {
-            return _audioHandler.removeDuplicatesFromQueue((element) => (element as Selectable).track);
-          },
-          youtubeID: (_) {
-            return _audioHandler.removeDuplicatesFromQueue((element) => (element as YoutubeID).id);
-          },
-        ) ??
-        0;
+    return _audioHandler.removeDuplicatesFromQueue();
   }
 
   /// returns true if tracks aren't empty.

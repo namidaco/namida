@@ -104,8 +104,19 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
   FutureOr<List<NamidaPopupItem>> getMenuItems() {
     final mainList = widget.mainList();
     final videoId = widget.notification.id;
-    if (videoId.isEmpty) return [];
-    if (widget.notification.isComment) return [];
+    final moreMenuChildren = _isNowRead.value == true
+        ? null
+        : [
+            NamidaPopupItem(
+              icon: Broken.notification_status,
+              title: lang.markAsRead,
+              onTap: () => _markAsRead(mainList),
+            ),
+          ];
+    if (videoId.isEmpty || widget.notification.isComment) {
+      return moreMenuChildren ?? [];
+    }
+
     return YTUtils.getVideoCardMenuItems(
       queueSource: QueueSourceYoutubeID.ytNotificationsHosted,
       downloadIndex: null,
@@ -114,15 +125,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
       videoId: videoId,
       channelID: null,
       playlistID: widget.playlistID,
-      moreMenuChildren: _isNowRead.value == true
-          ? null
-          : [
-              NamidaPopupItem(
-                icon: Broken.notification_status,
-                title: lang.markAsRead,
-                onTap: () => _markAsRead(mainList),
-              ),
-            ],
+      moreMenuChildren: moreMenuChildren,
       idsNamesLookup: {videoId: widget.notification.shortText},
     );
   }
@@ -220,7 +223,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
           height: thumbnailHeight,
           shimmerEnabled: shimmerEnabled,
           child: YoutubeThumbnail(
-            type: ThumbnailType.video,
+            type: widget.notification.isComment ? ThumbnailType.comment : ThumbnailType.video,
             key: ValueKey(videoThumbnail),
             isImportantInCache: false,
             customUrl: videoThumbnail,

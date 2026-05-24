@@ -51,7 +51,7 @@ class _YoutubeSettings with SettingsFileWriter {
   bool allowExperimentalCodecs = false;
   bool preferOpusFormat = false;
   bool enableGifThumbnails = false;
-  int maxPageCacheDurationMin = kDefaultMaxDaysForPageCacheDuration;
+  int maxPageCacheDurationMin = kDefaultMinutesInMaxDaysForPageCache;
 
   final sponsorBlockSettings = SponsorBlockSettings().obs;
   final ryd = ReturnYoutubeDislikeSettings().obs;
@@ -210,7 +210,7 @@ class _YoutubeSettings with SettingsFileWriter {
       allowExperimentalCodecs = json['allowExperimentalCodecs'] ?? allowExperimentalCodecs;
       preferOpusFormat = json['preferOpusFormat'] ?? preferOpusFormat;
       enableGifThumbnails = json['enableGifThumbnails'] ?? enableGifThumbnails;
-      maxPageCacheDurationMin = json['maxPageCacheDurationMin'] ?? maxPageCacheDurationMin;
+      maxPageCacheDurationMin = json['maxPageCacheDurationMin_v2'] ?? maxPageCacheDurationMin;
     } catch (e, st) {
       printy(e, isError: true);
       logger.report(e, st);
@@ -255,7 +255,7 @@ class _YoutubeSettings with SettingsFileWriter {
     'allowExperimentalCodecs': allowExperimentalCodecs,
     'preferOpusFormat': preferOpusFormat,
     'enableGifThumbnails': enableGifThumbnails,
-    'maxPageCacheDurationMin': maxPageCacheDurationMin,
+    'maxPageCacheDurationMin_v2': maxPageCacheDurationMin,
   };
 
   Future<void> _writeToStorage() => writeToStorage();

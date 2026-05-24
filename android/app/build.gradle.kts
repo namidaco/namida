@@ -139,9 +139,15 @@ repositories {
 dependencies {
     implementation("net.jthink:jaudiotagger:3.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9")
-    implementation("androidx.glance:glance-appwidget:1.1.1")
-    implementation("androidx.compose.ui:ui:1.5.4")
-    implementation("androidx.compose.foundation:foundation:1.5.4")
+    implementation("androidx.glance:glance-appwidget") {
+        version { strictly("1.1.1") }
+    }
+    implementation("androidx.compose.ui:ui") {
+        version { strictly("1.5.4") }
+    }
+    implementation("androidx.compose.foundation:foundation") {
+        version { strictly("1.5.4") }
+    }
     implementation("androidx.palette:palette-ktx:1.0.0")
     implementation("com.android.support:support-v4:28.0.0")
 

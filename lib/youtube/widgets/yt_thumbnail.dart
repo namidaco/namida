@@ -20,6 +20,7 @@ enum ThumbnailType {
   video(Broken.video),
   playlist(Broken.music_library_2),
   channel(Broken.user),
+  comment(Broken.document),
   other(null)
   ;
 

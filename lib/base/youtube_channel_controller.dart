@@ -18,7 +18,7 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
   String? get channelID;
 
   @override
-  List<StreamInfoItem>? get streamsList => channelVideoTab?.items.cast();
+  List<StreamInfoItem>? get streamsList => channelVideoTab?.items.cast<StreamInfoItem>();
 
   @override
   YoutiPieChannelTabResult? get listWrapper => channelVideoTab;

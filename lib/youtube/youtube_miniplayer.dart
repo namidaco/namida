@@ -1424,7 +1424,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                     itemExtentBuilder: (index, dimensions) {
                                       if (isShortsVisible) {
                                         if (currentRelatedVideos.shortsSection.relatedItemsShortsData[index] != null) {
-                                          return 64.0 * 3 + 24.0 * 2;
+                                          return 64.0 * 3;
                                         } else if (currentRelatedVideos.shortsSection.shortsIndicesLookup[index] == true) {
                                           return 0;
                                         }

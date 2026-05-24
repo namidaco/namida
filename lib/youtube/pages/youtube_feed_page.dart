@@ -59,7 +59,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
                     itemExtentBuilder: (index, dimensions) {
                       if (isShortsVisible) {
                         if (feed.shortsSection.relatedItemsShortsData[index] != null) {
-                          return 64.0 * 3 + 24.0 * 2;
+                          return 64.0 * 3;
                         } else if (feed.shortsSection.shortsIndicesLookup[index] == true) {
                           return 0;
                         }

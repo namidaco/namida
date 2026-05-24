@@ -32,6 +32,10 @@ class _FFMPEGExecuterDesktop extends FFMPEGExecuter {
     final output = await ffprobeExecute(
       [
         "-hide_banner",
+        "-probesize",
+        "2M",
+        "-analyzeduration",
+        "2M",
         "-print_format",
         "json",
         "-show_format",
