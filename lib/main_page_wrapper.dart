@@ -145,13 +145,16 @@ class NamidaDrawer extends StatelessWidget {
 
   static void openSleepTimerDialog(BuildContext context) {
     final textTheme = context.textTheme;
-    final sleepConfig = Player.inst.sleepTimerConfig.value;
-    final minutes = sleepConfig.sleepAfterMin.obs;
-    final tracks = sleepConfig.sleepAfterItems.obs;
+
+    final initialSleepConfig = Player.inst.sleepTimerConfig.value;
+    final minutesRx = initialSleepConfig.sleepAfterMin.obs;
+    final tracksRx = initialSleepConfig.sleepAfterItems.obs;
+    final hasInitialValues = initialSleepConfig.sleepAfterMin > 0 || initialSleepConfig.sleepAfterItems > 0;
+
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
-        minutes.close();
-        tracks.close();
+        minutesRx.close();
+        tracksRx.close();
       },
       dialog: CustomBlurryDialog(
         title: lang.sleepAfter,
@@ -159,33 +162,42 @@ class NamidaDrawer extends StatelessWidget {
         normalTitleStyle: true,
         actions: [
           const CancelButton(),
+          if (hasInitialValues)
+            ObxO(
+              rx: Player.inst.sleepTimerConfig,
+              builder: (context, currentConfig) {
+                return NamidaButton(
+                  enabled: currentConfig.enableSleepAfterMins || currentConfig.enableSleepAfterItems,
+                  icon: Broken.timer_pause,
+                  text: lang.stop,
+                  onTap: () {
+                    Player.inst.resetSleepAfterTimer();
+                    NamidaNavigator.inst.closeDialog();
+                  },
+                );
+              },
+            ),
           ObxO(
             rx: Player.inst.sleepTimerConfig,
             builder: (context, currentConfig) {
-              return currentConfig.enableSleepAfterMins || currentConfig.enableSleepAfterItems
-                  ? NamidaButton(
-                      icon: Broken.timer_pause,
-                      text: lang.stop,
-                      onTap: () {
-                        Player.inst.resetSleepAfterTimer();
-                        NamidaNavigator.inst.closeDialog();
-                      },
-                    )
-                  : NamidaButton(
-                      icon: Broken.timer_start,
-                      text: lang.start,
-                      onTap: () {
-                        if (minutes.value > 0 || tracks.value > 0) {
-                          Player.inst.updateSleepTimerValues(
-                            enableSleepAfterMins: minutes.value > 0,
-                            enableSleepAfterItems: tracks.value > 0,
-                            sleepAfterMin: minutes.value,
-                            sleepAfterItems: tracks.value,
-                          );
-                        }
-                        NamidaNavigator.inst.closeDialog();
-                      },
-                    );
+              return Obx(
+                (context) => NamidaButton(
+                  enabled: (minutesRx.valueR > 0 || tracksRx.valueR > 0) && (currentConfig.sleepAfterItems != tracksRx.value || currentConfig.sleepAfterMin != minutesRx.value),
+                  icon: Broken.timer_start,
+                  text: hasInitialValues ? lang.update : lang.start,
+                  onTap: () {
+                    if (minutesRx.value > 0 || tracksRx.value > 0) {
+                      Player.inst.updateSleepTimerValues(
+                        enableSleepAfterMins: minutesRx.value > 0,
+                        enableSleepAfterItems: tracksRx.value > 0,
+                        sleepAfterMin: minutesRx.value,
+                        sleepAfterItems: tracksRx.value,
+                      );
+                    }
+                    NamidaNavigator.inst.closeDialog();
+                  },
+                ),
+              );
             },
           ),
         ],
@@ -197,13 +209,12 @@ class NamidaDrawer extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // minutes
                 Obx(
                   (context) => NamidaWheelSlider(
                     max: 180,
-                    initValue: minutes.valueR,
-                    onValueChanged: (val) => minutes.value = val,
-                    text: "${minutes.valueR}m",
+                    initValue: minutesRx.valueR,
+                    onValueChanged: (val) => minutesRx.value = val,
+                    text: "${minutesRx.valueR}m",
                     topText: lang.minutes.capitalizeFirst(),
                     textPadding: 8.0,
                   ),
@@ -212,13 +223,12 @@ class NamidaDrawer extends StatelessWidget {
                   lang.or,
                   style: textTheme.displayMedium,
                 ),
-                // tracks
                 ObxO(
-                  rx: tracks,
+                  rx: tracksRx,
                   builder: (context, trs) => NamidaWheelSlider(
                     max: kMaximumSleepTimerTracks,
                     initValue: trs,
-                    onValueChanged: (val) => tracks.value = val,
+                    onValueChanged: (val) => tracksRx.value = val,
                     text: lang.countTracks(count: trs),
                     topText: lang.tracks,
                     textPadding: 8.0,
