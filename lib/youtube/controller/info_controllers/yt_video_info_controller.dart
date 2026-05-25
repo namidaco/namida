@@ -42,9 +42,20 @@ class _VideoInfoController {
     return res;
   }
 
-  Future<YoutiPieRelatedVideosResult?> fetchRelatedVideos(String videoId, bool userPersonalized, {ExecuteDetails? details}) async {
+  Future<YoutiPieRelatedVideosResult?> fetchRelatedVideos(
+    String videoId, {
+    required bool userPersonalized,
+    required bool? preferMix,
+    ExecuteDetails? details,
+  }) async {
     final relatedVideosParams = YoutubeInfoController.current._relatedVideosParams;
-    final res = await YoutiPie.video.fetchRelatedVideos(videoId: videoId, userPersonalized: userPersonalized, relatedVideosParams: relatedVideosParams, details: details);
+    final res = await YoutiPie.video.fetchRelatedVideos(
+      videoId: videoId,
+      userPersonalized: userPersonalized,
+      preferMix: preferMix,
+      relatedVideosParams: relatedVideosParams,
+      details: details,
+    );
     return res;
   }
 

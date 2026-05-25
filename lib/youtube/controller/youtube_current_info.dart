@@ -60,15 +60,24 @@ class _YoutubeCurrentInfoController {
     _isCurrentCommentsFromCache.value = null;
   }
 
-  Future<void> onPersonalizedRelatedVideosChanged(bool personalized) async {
+  Future<void> onPersonalizedRelatedVideosChanged({required bool? personalized, required bool? preferMix}) async {
+    final didChangePreferMix = preferMix != null;
+    personalized ??= settings.youtube.personalizedRelatedVideos.value;
+    preferMix ??= settings.youtube.preferMixRelatedVideos.value;
+
     YoutiPieRelatedVideosResult? relatedResult;
     if (personalized) {
       relatedResult = _currentVideoPage.value?.relatedVideosResult;
     }
-    if (relatedResult == null) {
+    if (relatedResult == null || didChangePreferMix) {
       final videoId = Player.inst.currentVideo?.id ?? _currentVideoPage.value?.videoId;
       if (videoId != null) {
-        final relatedRes = await YoutubeInfoController.video.fetchRelatedVideos(videoId, personalized, details: ExecuteDetails.normal());
+        final relatedRes = await YoutubeInfoController.video.fetchRelatedVideos(
+          videoId,
+          userPersonalized: personalized,
+          preferMix: preferMix,
+          details: didChangePreferMix ? ExecuteDetails.forceRequest() : ExecuteDetails.normal(),
+        );
         if (_canSafelyModifyMetadata(videoId)) {
           relatedResult = relatedRes;
         }
@@ -157,7 +166,7 @@ class _YoutubeCurrentInfoController {
     }
 
     if (!requestPage && !requestComments) {
-      if (!_personzaliedRelatedVideos) _fetchAndUpdateRelatedVideos(videoId);
+      if (!_personzaliedRelatedVideos) _fetchAndUpdateNonPersonalizedRelatedVideos(videoId);
       if (_dislikeCountEnabled) fetchAndUpdateDislikeCount(videoId);
       return;
     }
@@ -205,7 +214,7 @@ class _YoutubeCurrentInfoController {
       if (_personzaliedRelatedVideos) {
         _currentRelatedVideos.value = page?.relatedVideosResult;
       } else {
-        _fetchAndUpdateRelatedVideos(videoId);
+        _fetchAndUpdateNonPersonalizedRelatedVideos(videoId);
       }
 
       if (requestComments) {
@@ -230,9 +239,14 @@ class _YoutubeCurrentInfoController {
     }
   }
 
-  Future<void> _fetchAndUpdateRelatedVideos(String videoId, {bool forceRequest = false}) async {
+  Future<void> _fetchAndUpdateNonPersonalizedRelatedVideos(String videoId, {bool forceRequest = false}) async {
     if (forceRequest == false && _currentRelatedVideos.value != null) return; // already fetched
-    final relatedVideos = await YoutubeInfoController.video.fetchRelatedVideos(videoId, false, details: ExecuteDetails.forceRequest());
+    final relatedVideos = await YoutubeInfoController.video.fetchRelatedVideos(
+      videoId,
+      userPersonalized: false,
+      preferMix: settings.youtube.preferMixRelatedVideos.value,
+      details: ExecuteDetails.forceRequest(),
+    );
     if (_canSafelyModifyMetadata(videoId)) {
       _currentRelatedVideos.value = relatedVideos;
     }

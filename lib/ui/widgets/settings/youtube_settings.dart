@@ -391,7 +391,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 ),
                 value: personalizedRelatedVideos,
                 onChanged: (isTrue) {
-                  YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(!isTrue);
+                  YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: !isTrue, preferMix: null);
                   settings.youtube.save(personalizedRelatedVideos: !isTrue);
                 },
                 title: lang.personalizedRelatedVideos,
@@ -971,6 +971,22 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                   value: enableHeatMap,
                   onChanged: (isTrue) => settings.youtube.save(enableHeatMap: !isTrue),
                   title: 'enable_seek_heatmap'.toUpperCase(),
+                ),
+              ),
+              ObxO(
+                rx: settings.youtube.preferMixRelatedVideos,
+                builder: (context, preferMixRelatedVideos) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.video_square,
+                    secondaryIcon: Broken.music_playlist,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: preferMixRelatedVideos ?? false,
+                  onChanged: (isTrue) {
+                    YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: null, preferMix: !isTrue);
+                    settings.youtube.save(preferMixRelatedVideos: !isTrue);
+                  },
+                  title: 'prefer_mix_related_videos'.toUpperCase(),
                 ),
               ),
               ObxO(

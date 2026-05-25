@@ -19,6 +19,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final showVideoEndcards = true.obs;
   final autoStartRadio = false.obs;
   final personalizedRelatedVideos = true.obs;
+  final preferMixRelatedVideos = Rxn<bool>();
   final searchCleanup = true.obs;
 
   final ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
@@ -61,6 +62,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? showVideoEndcards,
     bool? autoStartRadio,
     bool? personalizedRelatedVideos,
+    bool? preferMixRelatedVideos,
     bool? searchCleanup,
     String? ytDownloadLocation,
     int? ytMiniplayerDimAfterSeconds,
@@ -97,6 +99,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (showVideoEndcards != null) this.showVideoEndcards.value = showVideoEndcards;
     if (autoStartRadio != null) this.autoStartRadio.value = autoStartRadio;
     if (personalizedRelatedVideos != null) this.personalizedRelatedVideos.value = personalizedRelatedVideos;
+    if (preferMixRelatedVideos != null) this.preferMixRelatedVideos.value = preferMixRelatedVideos;
     if (searchCleanup != null) this.searchCleanup.value = searchCleanup;
 
     if (ytDownloadLocation != null) this.ytDownloadLocation.value = ytDownloadLocation;
@@ -151,6 +154,7 @@ class _YoutubeSettings with SettingsFileWriter {
       YTVisibleShortPlaces.search: false,
     };
     personalizedRelatedVideos.value = false;
+    preferMixRelatedVideos.value = true;
     ytMiniplayerDimAfterSeconds.value = 0;
     ytMiniplayerDimOpacity.value = 0.6;
     fallbackExtractInfoDescription.value = false;
@@ -169,6 +173,7 @@ class _YoutubeSettings with SettingsFileWriter {
       showVideoEndcards.value = json['showVideoEndcards'] ?? showVideoEndcards.value;
       autoStartRadio.value = json['autoStartRadio'] ?? autoStartRadio.value;
       personalizedRelatedVideos.value = json['personalizedRelatedVideos'] ?? personalizedRelatedVideos.value;
+      preferMixRelatedVideos.value = json['preferMixRelatedVideos'] ?? preferMixRelatedVideos.value;
       searchCleanup.value = json['searchCleanup'] ?? searchCleanup.value;
 
       ytDownloadLocation.value = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
@@ -223,6 +228,7 @@ class _YoutubeSettings with SettingsFileWriter {
     'showVideoEndcards': showVideoEndcards.value,
     'autoStartRadio': autoStartRadio.value,
     'personalizedRelatedVideos': personalizedRelatedVideos.value,
+    'preferMixRelatedVideos': ?preferMixRelatedVideos.value,
     'searchCleanup': searchCleanup.value,
     'ytDownloadLocation': ytDownloadLocation.value,
     'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
