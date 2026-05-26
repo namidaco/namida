@@ -42,6 +42,7 @@ enum _YoutubeSettingKeys with SettingKeysBase {
   showVideoEndcards,
   autoStartRadio,
   personalizedRelatedVideos,
+  personalizedMixPlaylists,
   searchCleanup,
   dimMiniplayerAfter,
   dimIntensity,
@@ -85,6 +86,7 @@ class YoutubeSettings extends SettingSubpageProvider {
     _YoutubeSettingKeys.showVideoEndcards: [lang.showVideoEndcards],
     _YoutubeSettingKeys.autoStartRadio: [lang.autoStartRadio, lang.autoStartRadioSubtitle],
     _YoutubeSettingKeys.personalizedRelatedVideos: [lang.personalizedRelatedVideos, lang.personalizedRelatedVideosSubtitle],
+    _YoutubeSettingKeys.personalizedMixPlaylists: [lang.personalizedMixPlaylists],
     _YoutubeSettingKeys.searchCleanup: [lang.enableSearchCleanup],
     _YoutubeSettingKeys.dimMiniplayerAfter: [lang.dimMiniplayerAfterSeconds(seconds: 0)],
     _YoutubeSettingKeys.dimIntensity: [lang.dimIntensity],
@@ -391,11 +393,35 @@ class YoutubeSettings extends SettingSubpageProvider {
                 ),
                 value: personalizedRelatedVideos,
                 onChanged: (isTrue) {
-                  YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: !isTrue, preferMix: null);
                   settings.youtube.save(personalizedRelatedVideos: !isTrue);
+                  if (settings.youtube.preferMixRelatedVideos.value != true) {
+                    YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: !isTrue, preferMix: null);
+                  }
                 },
                 title: lang.personalizedRelatedVideos,
                 subtitle: lang.personalizedRelatedVideosSubtitle,
+              ),
+            ),
+          ),
+          getItemWrapper(
+            key: _YoutubeSettingKeys.personalizedMixPlaylists,
+            child: ObxOF(
+              rx: settings.youtube.personalizedMixPlaylists,
+              builder: (context, personalizedMixPlaylists, fallback) => CustomSwitchListTile(
+                bgColor: getBgColor(_YoutubeSettingKeys.personalizedMixPlaylists),
+                leading: const StackedIcon(
+                  baseIcon: Broken.video_square,
+                  secondaryIcon: Broken.music_playlist,
+                  secondaryIconSize: 12.0,
+                ),
+                value: personalizedMixPlaylists ?? fallback,
+                onChanged: (isTrue) {
+                  settings.youtube.save(personalizedMixPlaylists: !isTrue);
+                  if (settings.youtube.preferMixRelatedVideos.value == true) {
+                    YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: !isTrue, preferMix: null);
+                  }
+                },
+                title: lang.personalizedMixPlaylists,
               ),
             ),
           ),
@@ -983,10 +1009,10 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                   ),
                   value: preferMixRelatedVideos ?? false,
                   onChanged: (isTrue) {
-                    YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: null, preferMix: !isTrue);
                     settings.youtube.save(preferMixRelatedVideos: !isTrue);
+                    YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: null, preferMix: !isTrue);
                   },
-                  title: 'prefer_mix_related_videos'.toUpperCase(),
+                  title: 'prefer_mix_playlist_as_related_videos'.toUpperCase(),
                 ),
               ),
               ObxO(

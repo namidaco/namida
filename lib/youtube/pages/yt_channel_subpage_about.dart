@@ -36,7 +36,7 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
 
     final aboutResult = await YoutubeInfoController.channel.fetchChannelAbout(
       channel: channelInfo,
-      details: forceRequest ? ExecuteDetails.forceRequest() : null,
+      details: forceRequest ? ExecuteDetails.kForceRequest : null,
     );
 
     if (aboutResult != null) widget.onSuccessFetch();

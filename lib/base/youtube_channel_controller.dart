@@ -101,7 +101,7 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
     final channelID = channelPage.id;
 
     if (tab != null) {
-      final details = forceRequest ? ExecuteDetails.forceRequest() : null;
+      final details = forceRequest ? ExecuteDetails.kForceRequest : null;
       newResult = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelID, tab: tab, details: details);
       if (newResult != null) {
         // -- would have prevented re-assigning if first video was the same, it would help check any deleted videos too

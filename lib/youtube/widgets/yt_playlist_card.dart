@@ -12,6 +12,7 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -59,12 +60,14 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
   final _isFetching = Rxn<bool>();
 
   Future<YoutiPiePlaylistResultBase?> _fetchFunction({required bool forceRequest}) async {
-    final executeDetails = forceRequest ? ExecuteDetails.forceRequest() : ExecuteDetails.cache(CacheDecision.cacheOnly);
+    final executeDetails = forceRequest ? ExecuteDetails.kForceRequest : ExecuteDetails.cache(CacheDecision.cacheOnly);
     if (widget.isMixPlaylist) {
       final videoId = widget.firstVideoID ?? widget.playlist.id.substring(2);
       if (videoId.isEmpty) return null;
       return YoutubeInfoController.playlist.getMixPlaylist(
         videoId: videoId,
+        includeFirstVideo: true,
+        userPersonalized: settings.youtube.personalizedMixPlaylists.valueF,
         details: executeDetails,
       );
     } else {

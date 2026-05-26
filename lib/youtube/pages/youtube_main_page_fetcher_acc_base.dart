@@ -216,7 +216,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     _refreshButtonShown.value = false;
     _isLoadingCurrentFeed.value = true;
     if (!YoutubeInfoController.didInit) await YoutubeInfoController.waitForInit;
-    final val = await widget.networkFetcher(ExecuteDetails.forceRequest());
+    final val = await widget.networkFetcher(ExecuteDetails.kForceRequest);
     _resultsFetchTime[_getFetchTimeMapKey] = DateTime.now();
     _isLoadingCurrentFeed.value = false;
     if (val != null) {
@@ -231,7 +231,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     if (!_hasConnection) return _showNetworkError();
 
     if (!YoutubeInfoController.didInit) await YoutubeInfoController.waitForInit;
-    final val = await widget.networkFetcher(ExecuteDetails.forceRequest());
+    final val = await widget.networkFetcher(ExecuteDetails.kForceRequest);
     _resultsFetchTime[_getFetchTimeMapKey] = DateTime.now();
     if (val != null) {
       _currentFeed.value = val;
@@ -284,7 +284,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                             _isLoadingCurrentFeed.value = true;
                             currentSort.value = s;
 
-                            final didFetch = await listItems.fetchWithNewSort(sort: s, details: ExecuteDetails.forceRequest());
+                            final didFetch = await listItems.fetchWithNewSort(sort: s, details: ExecuteDetails.kForceRequest);
                             if (currentSort.value?.title != s.title) return; // if interrupted
 
                             _isLoadingCurrentFeed.value = false;

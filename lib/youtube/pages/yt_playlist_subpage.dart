@@ -535,7 +535,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
           newPlaylist = await YoutubeInfoController.playlist.getMixPlaylist(
             videoId: mixVideoId,
             mixId: mixId,
-            details: ExecuteDetails.forceRequest(),
+            includeFirstVideo: true,
+            userPersonalized: settings.youtube.personalizedMixPlaylists.valueF,
+            details: ExecuteDetails.kForceRequest,
           );
         } else {
           String? plId;
@@ -543,7 +545,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
           plId ??= currentPlaylist.basicInfo.id;
           newPlaylist = await YoutubeInfoController.playlist.fetchPlaylist(
             playlistId: plId,
-            details: ExecuteDetails.forceRequest(),
+            details: ExecuteDetails.kForceRequest,
           );
         }
         if (newPlaylist != null) {

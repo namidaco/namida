@@ -1861,7 +1861,9 @@ class TracksAddOnTap {
                   isLoadingMixPlaylist.value = true;
                   final mixPlaylist = await YoutubeInfoController.playlist.getMixPlaylist(
                     videoId: currentVideoId,
-                    details: ExecuteDetails.forceRequest(),
+                    includeFirstVideo: false,
+                    userPersonalized: settings.youtube.personalizedMixPlaylists.valueF,
+                    details: ExecuteDetails.kForceRequest,
                   );
                   isLoadingMixPlaylist.value = false;
 

@@ -76,7 +76,7 @@ class _YoutubeCurrentInfoController {
           videoId,
           userPersonalized: personalized,
           preferMix: preferMix,
-          details: didChangePreferMix ? ExecuteDetails.forceRequest() : ExecuteDetails.normal(),
+          details: ExecuteDetails.normal(),
         );
         if (_canSafelyModifyMetadata(videoId)) {
           relatedResult = relatedRes;
@@ -187,13 +187,13 @@ class _YoutubeCurrentInfoController {
     commentsSort ??= YoutubeMiniplayerUiController.inst.currentCommentSort.value;
 
     if (resetCurrentInfoOnFetch) _isLoadingVideoPage.value = true;
-    final page = await YoutubeInfoController.video.fetchVideoPage(videoId, details: ExecuteDetails.forceRequest());
+    final page = await YoutubeInfoController.video.fetchVideoPage(videoId, details: ExecuteDetails.kForceRequest);
     if (resetCurrentInfoOnFetch) _isLoadingVideoPage.value = false;
 
     if (page != null) {
       final chId = page.channelInfo?.id ?? await YoutubeInfoController.utils.getVideoChannelID(videoId);
       if (chId != null) {
-        YoutubeInfoController.channel.fetchChannelInfo(channelId: page.channelInfo?.id, details: ExecuteDetails.forceRequest()).then(
+        YoutubeInfoController.channel.fetchChannelInfo(channelId: page.channelInfo?.id, details: ExecuteDetails.kForceRequest).then(
           (chPage) {
             if (_canSafelyModifyMetadata(videoId)) {
               _currentChannelPage.value = chPage;
@@ -224,7 +224,7 @@ class _YoutubeCurrentInfoController {
           final comm = await YoutubeInfoController.comment.fetchComments(
             videoId: videoId,
             continuationToken: commentsContinuation,
-            details: ExecuteDetails.forceRequest(),
+            details: ExecuteDetails.kForceRequest,
           );
           if (_canSafelyModifyMetadata(videoId)) {
             _isLoadingInitialComments.value = false;
@@ -245,7 +245,7 @@ class _YoutubeCurrentInfoController {
       videoId,
       userPersonalized: false,
       preferMix: settings.youtube.preferMixRelatedVideos.value,
-      details: ExecuteDetails.forceRequest(),
+      details: ExecuteDetails.kForceRequest,
     );
     if (_canSafelyModifyMetadata(videoId)) {
       _currentRelatedVideos.value = relatedVideos;
@@ -284,7 +284,7 @@ class _YoutubeCurrentInfoController {
         final newRes = await YoutubeInfoController.comment.fetchComments(
           videoId: videoId,
           continuationToken: initialContinuation,
-          details: ExecuteDetails.forceRequest(),
+          details: ExecuteDetails.kForceRequest,
         );
         if (newRes != null && _canSafelyModifyMetadata(videoId)) {
           fetchedSuccessfully = true;

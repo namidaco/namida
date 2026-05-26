@@ -44,7 +44,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
       channelId: widget.channelId,
       tab: widget.tab,
       sort: sort,
-      details: forceRequest ? ExecuteDetails.forceRequest() : null,
+      details: forceRequest ? ExecuteDetails.kForceRequest : null,
     );
 
     if (tabResult != null) widget.onSuccessFetch();
@@ -145,7 +145,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                         _currentSort = s;
                         _isLoadingInitial = true;
                       });
-                      final didFetch = await tabResult.fetchWithNewSort(sort: s, details: ExecuteDetails.forceRequest());
+                      final didFetch = await tabResult.fetchWithNewSort(sort: s, details: ExecuteDetails.kForceRequest);
                       if (_currentSort?.title != s.title) return; // if interrupted
                       if (mounted) {
                         setState(() {

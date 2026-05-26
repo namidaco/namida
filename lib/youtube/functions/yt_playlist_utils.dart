@@ -375,7 +375,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     required YoutiPiePlaylistResultBase playlistToFetch,
   }) async {
     final playlist = this;
-    final fetchRes = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch, executeDetails: ExecuteDetails.forceRequest());
+    final fetchRes = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch, executeDetails: ExecuteDetails.kForceRequest);
 
     switch (fetchRes) {
       case YoutiPieFetchAllResType.success || YoutiPieFetchAllResType.alreadyDone:

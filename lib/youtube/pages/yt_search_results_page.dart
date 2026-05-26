@@ -82,7 +82,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
     if (ScrollSearchController.inst.searchTextEditingController.text.isNotEmpty && shouldFetchOrDisplaySuggestions && ConnectivityController.inst.hasConnection) {
       _debouncerTimer = Timer(const Duration(milliseconds: 400), () async {
         final query = ScrollSearchController.inst.searchTextEditingController.text;
-        final suggestions = query.isEmpty ? null : await YoutubeInfoController.search.getSuggestions(query, details: ExecuteDetails.forceRequest());
+        final suggestions = query.isEmpty ? null : await YoutubeInfoController.search.getSuggestions(query, details: ExecuteDetails.kForceRequest);
         if (mounted) {
           if (suggestions != null && suggestions.isNotEmpty && shouldFetchOrDisplaySuggestions) {
             setState(() => _suggestions = suggestions);
@@ -117,7 +117,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
 
     YoutiPieSearchResult? result;
     if (ConnectivityController.inst.hasConnection) {
-      result = await YoutubeInfoController.search.search(newSearch, details: ExecuteDetails.forceRequest());
+      result = await YoutubeInfoController.search.search(newSearch, details: ExecuteDetails.kForceRequest);
       _cachedSearchResults = false;
     } else {
       result = await YoutubeInfoController.search.search(newSearch);

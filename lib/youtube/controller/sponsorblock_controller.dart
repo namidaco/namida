@@ -75,7 +75,7 @@ class SponsorBlockController {
       videoId,
       categories: categoriesNames,
       serverAddress: settings.youtube.sponsorBlockSettings.value.serverAddress,
-      details: forceRequest ? ExecuteDetails.forceRequest() : null,
+      details: forceRequest ? ExecuteDetails.kForceRequest : null,
     );
 
     currentSegments.value = newSegments;

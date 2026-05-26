@@ -102,7 +102,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
     _lastFetchWasCached.value = false;
     final val = await YoutubeInfoController.comment.fetchCommentReplies(
       mainComment: _currentMainComment.value,
-      details: ExecuteDetails.forceRequest(),
+      details: ExecuteDetails.kForceRequest,
     );
     if (val != null) {
       _currentReplies.value = val;

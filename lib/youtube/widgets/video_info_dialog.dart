@@ -161,7 +161,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
 
   Future<void> _refreshPageInfoViewsLikesForce() async {
     _videoPageInfoLoading.value = true;
-    YoutubeInfoController.video.fetchVideoPage(videoId, details: ExecuteDetails.forceRequest()).catchError((_) => null).then((page) async {
+    YoutubeInfoController.video.fetchVideoPage(videoId, details: ExecuteDetails.kForceRequest).catchError((_) => null).then((page) async {
       page ??= await YoutubeInfoController.video.fetchVideoPageCache(videoId);
 
       _videoPageInfoLoading.value = false;

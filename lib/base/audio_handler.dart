@@ -1676,7 +1676,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
       final mixPlaylist = await YoutubeInfoController.playlist.getMixPlaylist(
         videoId: videoId,
-        details: ExecuteDetails.forceRequest(),
+        includeFirstVideo: true,
+        userPersonalized: settings.youtube.personalizedMixPlaylists.valueF,
+        details: ExecuteDetails.kForceRequest,
       );
 
       if (checkInterrupted()) return;

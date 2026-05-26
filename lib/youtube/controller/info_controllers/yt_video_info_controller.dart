@@ -48,11 +48,31 @@ class _VideoInfoController {
     required bool? preferMix,
     ExecuteDetails? details,
   }) async {
+    if (preferMix == true) {
+      final mixRes = await YoutiPie.playlist.getMixPlaylist(
+        videoId: videoId,
+        userPersonalized: userPersonalized,
+        includeFirstVideo: false,
+        details: details,
+      );
+      if (mixRes != null) {
+        final items = mixRes.items;
+        if (items.isNotEmpty) {
+          return YoutiPieRelatedVideosResult(
+            cacheKey: mixRes.cacheKey,
+            items: items,
+            continuation: mixRes.continuation,
+            videoId: videoId,
+            isPersonalized: userPersonalized,
+          );
+        }
+      }
+    }
     final relatedVideosParams = YoutubeInfoController.current._relatedVideosParams;
     final res = await YoutiPie.video.fetchRelatedVideos(
       videoId: videoId,
       userPersonalized: userPersonalized,
-      preferMix: preferMix,
+      preferMix: false, // -- we manually do the job here
       relatedVideosParams: relatedVideosParams,
       details: details,
     );
@@ -80,7 +100,7 @@ class _VideoInfoController {
     }
     final res = await YoutiPie.video.fetchVideoStreams(
       id: videoId,
-      details: forceRequest ? ExecuteDetails.forceRequest() : null,
+      details: forceRequest ? ExecuteDetails.kForceRequest : null,
       client: _usedClient,
     );
     if (res != null && res.playability.status != VideoPlayabiltyStatus.ok) {

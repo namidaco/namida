@@ -118,7 +118,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
       _updateChannelInfoCache(sub.channelID);
       final channelInfo = await YoutubeInfoController.channel.fetchChannelInfo(
         channelId: sub.channelID,
-        // details: forceRequest ? ExecuteDetails.forceRequest() : null, // -- info is not force requested
+        // details: forceRequest ? ExecuteDetails.kForceRequest : null, // -- info is not force requested
       );
 
       refreshState(() => currentChannelInfo = channelInfo);
@@ -180,7 +180,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
     void reportError(String msg) => snackyy(message: msg, isError: true, title: lang.error);
 
-    final executeDetails = forceRequest ? ExecuteDetails.forceRequest() : null;
+    final executeDetails = forceRequest ? ExecuteDetails.kForceRequest : null;
 
     int pageFetchErrors = 0;
     int index = -1;
@@ -605,7 +605,7 @@ class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> w
   }
 
   Future<void> _fetchNewInfo() async {
-    final userChannelsResult = await YoutubeInfoController.userchannel.fetchUserChannels(details: ExecuteDetails.forceRequest());
+    final userChannelsResult = await YoutubeInfoController.userchannel.fetchUserChannels(details: ExecuteDetails.kForceRequest);
     if (!mounted) return;
     setState(() {
       _userChannelsResult = userChannelsResult;

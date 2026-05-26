@@ -202,7 +202,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
     );
 
     // -- always get new info.
-    YoutubeInfoController.channel.fetchChannelInfo(channelId: ch.channelID, details: ExecuteDetails.forceRequest()).then(
+    YoutubeInfoController.channel.fetchChannelInfo(channelId: ch.channelID, details: ExecuteDetails.kForceRequest).then(
       (valueNull) {
         final value = valueNull ?? channelInfoCache;
 
