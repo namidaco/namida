@@ -424,9 +424,6 @@ class YoutubeController {
       onMatch: (groupName, config) {
         downloadYoutubeVideos(
           useCachedVersionsIfAvailable: true,
-          autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
-          keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
-          downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
           itemsConfig: [config],
           groupName: groupName,
         );
@@ -446,9 +443,6 @@ class YoutubeController {
     if (finalItems.isNotEmpty) {
       await downloadYoutubeVideos(
         useCachedVersionsIfAvailable: true,
-        autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
-        keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
-        downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
         itemsConfig: finalItems,
         groupName: groupName,
       );
@@ -583,12 +577,6 @@ class YoutubeController {
     DownloadTaskGroupName groupName = const DownloadTaskGroupName.defaulty(),
     int parallelDownloads = 1,
     required bool useCachedVersionsIfAvailable,
-    required bool downloadFilesWriteUploadDate,
-    required bool keepCachedVersionsIfDownloaded,
-    required bool autoExtractTitleAndArtist,
-    bool deleteOldFile = true,
-    bool addAudioToLocalLibrary = true,
-    bool audioOnly = false,
     List<String> preferredQualities = const [],
     Future<void> Function(File? downloadedFile)? onOldFileDeleted,
     Future<void> Function(File? deletedFile)? onFileDownloaded,
@@ -599,6 +587,12 @@ class YoutubeController {
     YoutubeParallelDownloadsHandler.inst.setMaxParalellDownloads(parallelDownloads);
 
     Future<void> downloady(YoutubeItemDownloadConfig config) async {
+      final addAudioToLocalLibrary = config.addAudioToLocalLibrary ?? settings.downloadAddAudioToLocalLibrary.value;
+      final autoExtractTitleAndArtist = config.autoExtractTitleAndArtist ?? settings.youtube.autoExtractVideoTagsFromInfo.value;
+      final keepCachedVersionsIfDownloaded = config.keepCachedVersionsIfDownloaded ?? settings.downloadFilesKeepCachedVersions.value;
+      final downloadFilesWriteUploadDate = config.downloadFilesWriteUploadDate ?? settings.downloadFilesWriteUploadDate.value;
+      final deleteOldFile = config.deleteOldFile ?? settings.downloadOverrideOldFiles.value;
+
       final videoID = config.id;
 
       final completerInMap = _completersVAI[config];
@@ -627,7 +621,7 @@ class YoutubeController {
         if (streams == null) throw Exception('null streams result');
 
         // -- video
-        if (audioOnly == false && config.fetchMissingVideo == true) {
+        if (config.fetchMissingVideo == true) {
           final videos = streams.videoStreams;
 
           if (config.videoStream != null) {

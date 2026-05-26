@@ -10,7 +10,6 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -103,10 +102,6 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
   void _onResumeDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig, BuildContext context) {
     YoutubeController.inst.downloadYoutubeVideos(
       useCachedVersionsIfAvailable: true,
-      addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
-      autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
-      keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
-      downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
       itemsConfig: itemsConfig,
       groupName: widget.groupName,
       onFileDownloaded: (downloadedFile) async {

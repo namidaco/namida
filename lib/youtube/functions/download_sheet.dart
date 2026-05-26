@@ -823,6 +823,11 @@ Future<void> showDownloadVideoBottomSheet({
                                                     fetchMissingAudio: selectedAudioOnlyStream.value != null,
                                                     fetchMissingVideo: selectedVideoOnlyStream.value != null,
                                                     addedAt: DateTime.now(),
+                                                    addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
+                                                    autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
+                                                    keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
+                                                    downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
+                                                    deleteOldFile: settings.downloadOverrideOldFiles.value,
                                                   );
                                                   if (onConfirmButtonTap != null) {
                                                     final accept = onConfirmButtonTap(groupName, itemConfig);
@@ -833,10 +838,6 @@ Future<void> showDownloadVideoBottomSheet({
                                                     if (context.mounted) context.safePop();
                                                     YoutubeController.inst.downloadYoutubeVideos(
                                                       useCachedVersionsIfAvailable: true,
-                                                      autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
-                                                      keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
-                                                      downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
-                                                      addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
                                                       groupName: group,
                                                       itemsConfig: [itemConfig],
                                                     );

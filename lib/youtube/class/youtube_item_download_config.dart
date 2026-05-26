@@ -31,6 +31,12 @@ class YoutubeItemDownloadConfig {
   final PlaylistBasicInfo? playlistInfo;
   final DateTime? addedAt;
 
+  final bool? addAudioToLocalLibrary;
+  final bool? autoExtractTitleAndArtist;
+  final bool? keepCachedVersionsIfDownloaded;
+  final bool? downloadFilesWriteUploadDate;
+  final bool? deleteOldFile;
+
   YoutubeItemDownloadConfig({
     required this.id,
     required this.groupName,
@@ -49,6 +55,11 @@ class YoutubeItemDownloadConfig {
     required this.playlistId,
     required this.playlistInfo,
     required DateTime? addedAt,
+    required this.addAudioToLocalLibrary,
+    required this.autoExtractTitleAndArtist,
+    required this.keepCachedVersionsIfDownloaded,
+    required this.downloadFilesWriteUploadDate,
+    required this.deleteOldFile,
   }) : _filename = filename.obs,
        this.addedAt = addedAt ?? DateTime.now();
 
@@ -91,6 +102,11 @@ class YoutubeItemDownloadConfig {
       playlistId: map['playlistId'],
       playlistInfo: map['playlistInfo'] == null ? null : PlaylistBasicInfo.fromMap(map['playlistInfo']),
       addedAt: map['addedAt'] is int ? DateTime.fromMicrosecondsSinceEpoch(map['addedAt'] as int) : null,
+      addAudioToLocalLibrary: map['addAudioToLocalLibrary'] as bool?,
+      autoExtractTitleAndArtist: map['autoExtractTitleAndArtist'] as bool?,
+      keepCachedVersionsIfDownloaded: map['keepCachedVersionsIfDownloaded'] as bool?,
+      downloadFilesWriteUploadDate: map['downloadFilesWriteUploadDate'] as bool?,
+      deleteOldFile: map['deleteOldFile'] as bool?,
     );
   }
 
@@ -113,6 +129,11 @@ class YoutubeItemDownloadConfig {
       'playlistId': playlistId,
       'playlistInfo': playlistInfo?.toMap(),
       'addedAt': addedAt?.microsecondsSinceEpoch,
+      'addAudioToLocalLibrary': ?addAudioToLocalLibrary,
+      'autoExtractTitleAndArtist': ?autoExtractTitleAndArtist,
+      'keepCachedVersionsIfDownloaded': ?keepCachedVersionsIfDownloaded,
+      'downloadFilesWriteUploadDate': ?downloadFilesWriteUploadDate,
+      'deleteOldFile': ?deleteOldFile,
     };
   }
 
@@ -148,6 +169,11 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
     String? playlistId,
     PlaylistBasicInfo? playlistInfo,
     DateTime? addedAt,
+    bool? addAudioToLocalLibrary,
+    bool? autoExtractTitleAndArtist,
+    bool? keepCachedVersionsIfDownloaded,
+    bool? downloadFilesWriteUploadDate,
+    bool? deleteOldFile,
   }) {
     return YoutubeItemDownloadConfig(
       id: id ?? this.id,
@@ -167,6 +193,11 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
       playlistId: playlistId ?? this.playlistId,
       playlistInfo: playlistInfo ?? this.playlistInfo,
       addedAt: addedAt ?? this.addedAt,
+      addAudioToLocalLibrary: addAudioToLocalLibrary ?? this.addAudioToLocalLibrary,
+      autoExtractTitleAndArtist: autoExtractTitleAndArtist ?? this.autoExtractTitleAndArtist,
+      keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded ?? this.keepCachedVersionsIfDownloaded,
+      downloadFilesWriteUploadDate: downloadFilesWriteUploadDate ?? this.downloadFilesWriteUploadDate,
+      deleteOldFile: deleteOldFile ?? this.deleteOldFile,
     );
   }
 }

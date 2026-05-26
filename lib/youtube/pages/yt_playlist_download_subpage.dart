@@ -128,6 +128,11 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       fetchMissingAudio: true,
       fetchMissingVideo: !settings.downloadAudioOnly.value,
       addedAt: timeNow,
+      addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
+      autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
+      keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
+      downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
+      deleteOldFile: settings.downloadOverrideOldFiles.value,
     );
   }
 
@@ -154,7 +159,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       initialGroupName: widget.playlistName.emptyIfHasDefaultPlaylistName(),
       showSpecificFileOptionsInEditTagDialog: false,
       videoId: id,
-      initialItemConfig: _configMap[id],
+      initialItemConfig: _configMap.value[id],
       confirmButtonText: lang.confirm,
       onConfirmButtonTap: (groupName, config) {
         _configMap.value[id] = config;
@@ -593,7 +598,14 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         final itemsConfig = _selectedList.value
                             .map(
                               (id) =>
-                                  _configMap.value[id] ??
+                                  _configMap.value[id]?.copyWith(
+                                    // -- in case they were changed
+                                    addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
+                                    autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
+                                    keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
+                                    downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
+                                    deleteOldFile: settings.downloadOverrideOldFiles.value,
+                                  ) ??
                                   // -- this is not really used since initState() calls onRenameAllTasks() which fills _configMap
                                   _getDummyDownloadConfig(
                                     id,
@@ -608,12 +620,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           groupName: group,
                           itemsConfig: itemsConfig,
                           useCachedVersionsIfAvailable: useCachedVersionsIfAvailable,
-                          autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
-                          keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
-                          downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
-                          addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
-                          deleteOldFile: settings.downloadOverrideOldFiles.value,
-                          audioOnly: settings.downloadAudioOnly.value,
                           preferredQualities: () {
                             final list = <String>[];
                             for (final q in kStockVideoQualities) {
