@@ -247,7 +247,7 @@ enum SmartPlaylistRuleFilterNumberSource with SmartPlaylistRuleFilterSource {
     SmartPlaylistRuleFilterNumberSource.sizeB => lang.size,
     SmartPlaylistRuleFilterNumberSource.bitrate => lang.bitrate,
     SmartPlaylistRuleFilterNumberSource.sampleRate => lang.sampleRate,
-    SmartPlaylistRuleFilterNumberSource.bits => lang.bits,
+    SmartPlaylistRuleFilterNumberSource.bits => lang.bitDepth,
     SmartPlaylistRuleFilterNumberSource.trackNumber => lang.trackNumber,
     SmartPlaylistRuleFilterNumberSource.trackTotal => lang.trackNumberTotal,
     SmartPlaylistRuleFilterNumberSource.discNumber => lang.discNumber,

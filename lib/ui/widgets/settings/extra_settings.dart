@@ -1249,10 +1249,10 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   title: 'preferred_search_tab'.toUpperCase(),
                   trailing: NamidaPopupWrapper(
                     childrenDefault: _getSearchTypeChildren,
-                    child: ObxO(
+                    child: ObxOF(
                       rx: settings.extra.preferredSearchType,
-                      builder: (context, type) => Text(
-                        (type ?? SearchType.auto).name,
+                      builder: (context, type, fallback) => Text(
+                        (type ?? fallback).name,
                         style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
                         textAlign: TextAlign.end,
                       ),

@@ -42,7 +42,7 @@ void showAddToPlaylistSheet({
   NamidaNavigator.inst.showSheet(
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    heightPercentage: 0.72,
+    heightPercentage: 0.7,
     decoration: (context) => BoxDecoration(
       borderRadius: BorderRadius.circular(24.0.multipliedRadius),
       color: context.theme.scaffoldBackgroundColor,

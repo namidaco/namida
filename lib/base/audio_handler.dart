@@ -728,7 +728,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   Future<void> onItemPlay(Q item, int index, Function skipItem, ItemPreparedPlayerInfo<Q>? preparedItemInfo) {
     _currentItemDuration.value = null;
-    currentState.value = null;
+    if (!defaultGaplessEnabled) {
+      // -- this was added to prevent multiple skips when spamming play/pause at the end of playback
+      // -- but it's not needed for gapless, otherwise the state will stay stuck at this value
+      currentState.value = null;
+    }
+
     // -- should be done here so that if info fetching takes time, crossfade out still works.
     // -- otherwise the previous item would keep playing indefinetly.
     beginEarlyCrossFadeOutIfRequired();

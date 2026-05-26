@@ -263,8 +263,6 @@ class BackupAndRestore extends SettingSubpageProvider {
       icon: Broken.refresh_circle,
       child: Column(
         children: [
-          // TODO(feat): option inside namida to move track in android.
-
           // -- Create Backup
           getItemWrapper(
             key: _BackupAndRestoreKeys.create,

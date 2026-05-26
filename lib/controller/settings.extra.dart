@@ -13,7 +13,7 @@ class _ExtraSettings with SettingsFileWriter {
   final staticLibraryTab = LibraryTab.tracks.obs;
   final autoLibraryTab = true.obs;
   final ytInitialHomePage = YTHomePages.playlists.obs;
-  final preferredSearchType = Rxn<SearchType>();
+  final preferredSearchType = RxnF<SearchType>(fallback: SearchType.auto);
 
   bool? tapToScroll;
   bool? enhancedDragToScroll;
