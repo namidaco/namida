@@ -1,10 +1,22 @@
 class DownloadTaskFilename {
   static final RegExp cleanupFilenameRegex = RegExp(r'[*#\$|/\\!^:"\?%<>\u2F38\u2044\u29F8]', caseSensitive: false);
-  static String cleanupFilename(String filename, {int maxLength = 100}) {
+  static String cleanupFilename(String filename, {int maxLength = 200, String? dirPath}) {
     final cleaned = filename.replaceAll(cleanupFilenameRegex, '_');
-    if (cleaned.length <= maxLength) return cleaned;
+
+    // Calculate max safe length considering full path on Windows/Linux (256 char limit)
+    int finalMaxLength = maxLength;
+    if (dirPath != null && dirPath.isNotEmpty) {
+      final pathSeparator = dirPath.contains('\\') ? '\\' : '/';
+      final fullPathPrefix = dirPath.endsWith(pathSeparator) ? dirPath : '$dirPath$pathSeparator';
+      final availableForFilename = 256 - fullPathPrefix.length;
+      if (availableForFilename > 0 && availableForFilename < finalMaxLength) {
+        finalMaxLength = availableForFilename;
+      }
+    }
+
+    if (cleaned.length <= finalMaxLength) return cleaned;
     final ext = cleaned.contains('.') ? '.${cleaned.split('.').last}' : '';
-    return '${cleaned.substring(0, maxLength - ext.length)}$ext';
+    return '${cleaned.substring(0, finalMaxLength - ext.length)}$ext';
   }
 
   static int _numberKey = 0;

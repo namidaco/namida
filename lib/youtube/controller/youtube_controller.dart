@@ -916,7 +916,8 @@ class YoutubeController {
       requiresRenaming = true;
     }
 
-    final filenameCleanTemp = DownloadTaskFilename.cleanupFilename(finalFilenameTemp);
+    final saveDirPath = saveDirectory?.path ?? FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.toString());
+    final filenameCleanTemp = DownloadTaskFilename.cleanupFilename(finalFilenameTemp, dirPath: saveDirPath);
     if (filenameCleanTemp != finalFilenameTemp) {
       finalFilenameTemp = filenameCleanTemp;
       requiresRenaming = true;
