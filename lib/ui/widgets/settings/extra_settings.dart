@@ -944,7 +944,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                   rxList: settings.libraryTabs,
                   toText: (item) => item.toText(),
                   toIcon: (item) => item.toIcon(),
-                  minimumItems: 3,
+                  minimumItems: 2,
                   onItemRemoved: (i, activeItems) {
                     settings.extra.save(selectedLibraryTab: activeItems.first);
                   },
