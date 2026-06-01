@@ -254,9 +254,281 @@ class BackupAndRestore extends SettingSubpageProvider {
     }
   }
 
+  void promptCreateBackup(BuildContext context) {
+    final textTheme = context.textTheme;
+    if (!_canCreateRestoreBackup()) return;
+
+    final sizesMap = <AppPathsBackupEnum, int>{}.obs;
+
+    void fillAllItemsSize() async {
+      for (final item in AppPathsBackupEnum.values) {
+        if (item.isDir) {
+          sizesMap[item] = await Directory(item.resolve()).getTotalSize() ?? 0;
+        } else {
+          sizesMap[item] = await File(item.resolve()).fileSize() ?? 0;
+        }
+      }
+    }
+
+    fillAllItemsSize();
+
+    (int, bool) getItemsSize(List<AppPathsBackupEnum> items, Map<AppPathsBackupEnum, int> map) {
+      int s = 0;
+      bool hasUnknown = false;
+      items.loop((e) {
+        if (map[e] == null) {
+          hasUnknown = true;
+        } else {
+          s += map[e]!;
+        }
+      });
+      return (s, hasUnknown);
+    }
+
+    Widget getItemWidget({
+      required String title,
+      required IconData icon,
+      required List<AppPathsBackupEnum> items,
+      required bool youtubeAvailable,
+      bool youtubeForceFollowItems = false,
+      required List<AppPathsBackupEnum> youtubeItems,
+    }) {
+      _ensureNewBackupItemsIncluded(items);
+      _ensureNewBackupItemsIncluded(youtubeItems);
+      return Obx(
+        (context) {
+          final localRes = getItemsSize(items, sizesMap.valueR);
+          final ytRes = getItemsSize(youtubeItems, sizesMap.valueR);
+          final localSize = localRes.$1;
+          final ytSize = ytRes.$1;
+          final localUnknown = localRes.$2;
+          final ytUnknown = ytRes.$2;
+          return ObxO(
+            rx: settings.backupItemslist,
+            builder: (context, backupItemslist) {
+              backupItemslist ??= AppPathsBackupEnumCategories.everything;
+
+              bool isActive(List<AppPathsBackupEnum> items) => items.any((element) => backupItemslist!.contains(element));
+
+              void onItemTap(List<AppPathsBackupEnum> items) {
+                if (isActive(items)) {
+                  settings.removeFromList(backupItemslistAll: items);
+                } else {
+                  settings.save(backupItemslist: items);
+                }
+              }
+
+              final isLocalIconChecked = isActive(items);
+              final isYoutubeIconChecked = youtubeForceFollowItems
+                  ? isActive(items)
+                  : !youtubeAvailable
+                  ? false
+                  : youtubeItems.isEmpty
+                  ? false
+                  : isActive(youtubeItems);
+              return Row(
+                children: [
+                  Expanded(
+                    child: ListTileWithCheckMark(
+                      active: isLocalIconChecked,
+                      titleWidget: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: textTheme.displayMedium,
+                          ),
+                          FittedBox(
+                            fit: BoxFit.fitWidth,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 200),
+                                  opacity: isLocalIconChecked ? 1.0 : 0.5,
+                                  child: Text(
+                                    "(${localSize.fileSizeFormatted})${localUnknown ? '?' : ''}",
+                                    style: textTheme.displaySmall,
+                                  ),
+                                ),
+                                if (ytSize > 0 || ytUnknown)
+                                  AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 200),
+                                    opacity: isYoutubeIconChecked ? 1.0 : 0.5,
+                                    child: Text(
+                                      " + (${ytSize.fileSizeFormatted})${ytUnknown ? '?' : ''}",
+                                      style: textTheme.displaySmall,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      icon: icon,
+                      onTap: () => onItemTap(items),
+                    ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: youtubeAvailable ? 1.0 : 0.1,
+                    child: NamidaIconButton(
+                      tooltip: () => lang.youtube,
+                      horizontalPadding: 0.0,
+                      icon: null,
+                      onPressed: () {
+                        if (youtubeAvailable) {
+                          onItemTap(youtubeForceFollowItems ? items : youtubeItems);
+                        }
+                      },
+                      child: StackedIcon(
+                        iconSize: 28.0,
+                        baseIcon: Broken.video_square,
+                        smallChild: NamidaCheckMark(
+                          size: 12.0,
+                          active: isYoutubeIconChecked,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8.0),
+                ],
+              );
+            },
+          );
+        },
+      );
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.createBackup,
+        actions: [
+          const CancelButton(),
+          ObxO(
+            rx: settings.backupItemslist,
+            builder: (context, backupItemslist) {
+              backupItemslist ??= AppPathsBackupEnumCategories.everything;
+              return NamidaButton(
+                enabled: backupItemslist.isNotEmpty,
+                text: lang.createBackup,
+                onTap: () {
+                  final items = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
+                  if (items.isNotEmpty) {
+                    NamidaNavigator.inst.closeDialog();
+                    final rawPaths = items.map((e) => e.resolve()).toList();
+                    BackupController.inst.createBackupFile(rawPaths);
+                  }
+                },
+              );
+            },
+          ),
+        ],
+        child: SizedBox(
+          height: namida.height / 2,
+          child: SmoothSingleChildScrollView(
+            child: Column(
+              children: [
+                getItemWidget(
+                  title: lang.database,
+                  icon: Broken.box_1,
+                  items: AppPathsBackupEnumCategories.database,
+                  youtubeAvailable: true,
+                  youtubeItems: AppPathsBackupEnumCategories.database_yt,
+                ),
+                getItemWidget(
+                  title: lang.playlists,
+                  icon: Broken.music_library_2,
+                  items: AppPathsBackupEnumCategories.playlists,
+                  youtubeAvailable: true,
+                  youtubeItems: AppPathsBackupEnumCategories.playlists_yt,
+                ),
+                getItemWidget(
+                  title: lang.history,
+                  icon: Broken.refresh,
+                  items: AppPathsBackupEnumCategories.history,
+                  youtubeAvailable: true,
+                  youtubeItems: AppPathsBackupEnumCategories.history_yt,
+                ),
+                getItemWidget(
+                  title: lang.settings,
+                  icon: Broken.setting,
+                  items: AppPathsBackupEnumCategories.settings,
+                  youtubeAvailable: false,
+                  youtubeItems: [],
+                ),
+                getItemWidget(
+                  title: lang.lyrics,
+                  icon: Broken.document,
+                  items: AppPathsBackupEnumCategories.lyrics,
+                  youtubeAvailable: false,
+                  youtubeItems: [],
+                ),
+                getItemWidget(
+                  title: lang.queues,
+                  icon: Broken.driver,
+                  items: AppPathsBackupEnumCategories.queues,
+                  youtubeAvailable: false,
+                  youtubeItems: [],
+                ),
+                getItemWidget(
+                  title: lang.colorPalettes,
+                  icon: Broken.colorfilter,
+                  items: AppPathsBackupEnumCategories.palette,
+                  youtubeAvailable: true,
+                  youtubeForceFollowItems: false,
+                  youtubeItems: AppPathsBackupEnumCategories.palette_yt,
+                ),
+                getItemWidget(
+                  title: lang.videoCache,
+                  icon: Broken.video,
+                  items: AppPathsBackupEnumCategories.videos_cache,
+                  youtubeAvailable: false,
+                  youtubeForceFollowItems: true,
+                  youtubeItems: [],
+                ),
+                getItemWidget(
+                  title: lang.audioCache,
+                  icon: Broken.audio_square,
+                  items: AppPathsBackupEnumCategories.audios_cache,
+                  youtubeAvailable: false,
+                  youtubeForceFollowItems: true,
+                  youtubeItems: [],
+                ),
+                getItemWidget(
+                  title: lang.artworks,
+                  icon: Broken.image,
+                  items: AppPathsBackupEnumCategories.artworks,
+                  youtubeAvailable: false,
+                  youtubeItems: [],
+                ),
+                getItemWidget(
+                  title: lang.thumbnails,
+                  icon: Broken.image,
+                  items: AppPathsBackupEnumCategories.thumbnails,
+                  youtubeAvailable: true,
+                  youtubeItems: AppPathsBackupEnumCategories.thumbnails_yt,
+                ),
+                getItemWidget(
+                  title: lang.metadataCache,
+                  icon: Broken.message_text,
+                  items: AppPathsBackupEnumCategories.youtipie_cache,
+                  youtubeAvailable: true,
+                  youtubeForceFollowItems: true,
+                  youtubeItems: [],
+                ),
+              ].addSeparators(separator: const SizedBox(height: 8.0)).toList(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return SettingsCard(
       title: lang.backupAndRestore,
       subtitle: lang.backupAndRestoreSubtitle,
@@ -274,277 +546,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                 showIf: BackupController.inst.isCreatingBackup,
                 child: const LoadingIndicator(),
               ),
-              onTap: () {
-                if (!_canCreateRestoreBackup()) return;
-
-                final sizesMap = <AppPathsBackupEnum, int>{}.obs;
-
-                void fillAllItemsSize() async {
-                  for (final item in AppPathsBackupEnum.values) {
-                    if (item.isDir) {
-                      sizesMap[item] = await Directory(item.resolve()).getTotalSize() ?? 0;
-                    } else {
-                      sizesMap[item] = await File(item.resolve()).fileSize() ?? 0;
-                    }
-                  }
-                }
-
-                fillAllItemsSize();
-
-                (int, bool) getItemsSize(List<AppPathsBackupEnum> items, Map<AppPathsBackupEnum, int> map) {
-                  int s = 0;
-                  bool hasUnknown = false;
-                  items.loop((e) {
-                    if (map[e] == null) {
-                      hasUnknown = true;
-                    } else {
-                      s += map[e]!;
-                    }
-                  });
-                  return (s, hasUnknown);
-                }
-
-                Widget getItemWidget({
-                  required String title,
-                  required IconData icon,
-                  required List<AppPathsBackupEnum> items,
-                  required bool youtubeAvailable,
-                  bool youtubeForceFollowItems = false,
-                  required List<AppPathsBackupEnum> youtubeItems,
-                }) {
-                  _ensureNewBackupItemsIncluded(items);
-                  _ensureNewBackupItemsIncluded(youtubeItems);
-                  return Obx(
-                    (context) {
-                      final localRes = getItemsSize(items, sizesMap.valueR);
-                      final ytRes = getItemsSize(youtubeItems, sizesMap.valueR);
-                      final localSize = localRes.$1;
-                      final ytSize = ytRes.$1;
-                      final localUnknown = localRes.$2;
-                      final ytUnknown = ytRes.$2;
-                      return ObxO(
-                        rx: settings.backupItemslist,
-                        builder: (context, backupItemslist) {
-                          backupItemslist ??= AppPathsBackupEnumCategories.everything;
-
-                          bool isActive(List<AppPathsBackupEnum> items) => items.any((element) => backupItemslist!.contains(element));
-
-                          void onItemTap(List<AppPathsBackupEnum> items) {
-                            if (isActive(items)) {
-                              settings.removeFromList(backupItemslistAll: items);
-                            } else {
-                              settings.save(backupItemslist: items);
-                            }
-                          }
-
-                          final isLocalIconChecked = isActive(items);
-                          final isYoutubeIconChecked = youtubeForceFollowItems
-                              ? isActive(items)
-                              : !youtubeAvailable
-                              ? false
-                              : youtubeItems.isEmpty
-                              ? false
-                              : isActive(youtubeItems);
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: ListTileWithCheckMark(
-                                  active: isLocalIconChecked,
-                                  titleWidget: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        title,
-                                        style: textTheme.displayMedium,
-                                      ),
-                                      FittedBox(
-                                        fit: BoxFit.fitWidth,
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            AnimatedOpacity(
-                                              duration: const Duration(milliseconds: 200),
-                                              opacity: isLocalIconChecked ? 1.0 : 0.5,
-                                              child: Text(
-                                                "(${localSize.fileSizeFormatted})${localUnknown ? '?' : ''}",
-                                                style: textTheme.displaySmall,
-                                              ),
-                                            ),
-                                            if (ytSize > 0 || ytUnknown)
-                                              AnimatedOpacity(
-                                                duration: const Duration(milliseconds: 200),
-                                                opacity: isYoutubeIconChecked ? 1.0 : 0.5,
-                                                child: Text(
-                                                  " + (${ytSize.fileSizeFormatted})${ytUnknown ? '?' : ''}",
-                                                  style: textTheme.displaySmall,
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  icon: icon,
-                                  onTap: () => onItemTap(items),
-                                ),
-                              ),
-                              const SizedBox(width: 8.0),
-                              AnimatedOpacity(
-                                duration: const Duration(milliseconds: 300),
-                                opacity: youtubeAvailable ? 1.0 : 0.1,
-                                child: NamidaIconButton(
-                                  tooltip: () => lang.youtube,
-                                  horizontalPadding: 0.0,
-                                  icon: null,
-                                  onPressed: () {
-                                    if (youtubeAvailable) {
-                                      onItemTap(youtubeForceFollowItems ? items : youtubeItems);
-                                    }
-                                  },
-                                  child: StackedIcon(
-                                    iconSize: 28.0,
-                                    baseIcon: Broken.video_square,
-                                    smallChild: NamidaCheckMark(
-                                      size: 12.0,
-                                      active: isYoutubeIconChecked,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8.0),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  );
-                }
-
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    title: lang.createBackup,
-                    actions: [
-                      const CancelButton(),
-                      ObxO(
-                        rx: settings.backupItemslist,
-                        builder: (context, backupItemslist) {
-                          backupItemslist ??= AppPathsBackupEnumCategories.everything;
-                          return NamidaButton(
-                            enabled: backupItemslist.isNotEmpty,
-                            text: lang.createBackup,
-                            onTap: () {
-                              final items = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
-                              if (items.isNotEmpty) {
-                                NamidaNavigator.inst.closeDialog();
-                                final rawPaths = items.map((e) => e.resolve()).toList();
-                                BackupController.inst.createBackupFile(rawPaths);
-                              }
-                            },
-                          );
-                        },
-                      ),
-                    ],
-                    child: SizedBox(
-                      height: namida.height / 2,
-                      child: SmoothSingleChildScrollView(
-                        child: Column(
-                          children: [
-                            getItemWidget(
-                              title: lang.database,
-                              icon: Broken.box_1,
-                              items: AppPathsBackupEnumCategories.database,
-                              youtubeAvailable: true,
-                              youtubeItems: AppPathsBackupEnumCategories.database_yt,
-                            ),
-                            getItemWidget(
-                              title: lang.playlists,
-                              icon: Broken.music_library_2,
-                              items: AppPathsBackupEnumCategories.playlists,
-                              youtubeAvailable: true,
-                              youtubeItems: AppPathsBackupEnumCategories.playlists_yt,
-                            ),
-                            getItemWidget(
-                              title: lang.history,
-                              icon: Broken.refresh,
-                              items: AppPathsBackupEnumCategories.history,
-                              youtubeAvailable: true,
-                              youtubeItems: AppPathsBackupEnumCategories.history_yt,
-                            ),
-                            getItemWidget(
-                              title: lang.settings,
-                              icon: Broken.setting,
-                              items: AppPathsBackupEnumCategories.settings,
-                              youtubeAvailable: false,
-                              youtubeItems: [],
-                            ),
-                            getItemWidget(
-                              title: lang.lyrics,
-                              icon: Broken.document,
-                              items: AppPathsBackupEnumCategories.lyrics,
-                              youtubeAvailable: false,
-                              youtubeItems: [],
-                            ),
-                            getItemWidget(
-                              title: lang.queues,
-                              icon: Broken.driver,
-                              items: AppPathsBackupEnumCategories.queues,
-                              youtubeAvailable: false,
-                              youtubeItems: [],
-                            ),
-                            getItemWidget(
-                              title: lang.colorPalettes,
-                              icon: Broken.colorfilter,
-                              items: AppPathsBackupEnumCategories.palette,
-                              youtubeAvailable: true,
-                              youtubeForceFollowItems: false,
-                              youtubeItems: AppPathsBackupEnumCategories.palette_yt,
-                            ),
-                            getItemWidget(
-                              title: lang.videoCache,
-                              icon: Broken.video,
-                              items: AppPathsBackupEnumCategories.videos_cache,
-                              youtubeAvailable: false,
-                              youtubeForceFollowItems: true,
-                              youtubeItems: [],
-                            ),
-                            getItemWidget(
-                              title: lang.audioCache,
-                              icon: Broken.audio_square,
-                              items: AppPathsBackupEnumCategories.audios_cache,
-                              youtubeAvailable: false,
-                              youtubeForceFollowItems: true,
-                              youtubeItems: [],
-                            ),
-                            getItemWidget(
-                              title: lang.artworks,
-                              icon: Broken.image,
-                              items: AppPathsBackupEnumCategories.artworks,
-                              youtubeAvailable: false,
-                              youtubeItems: [],
-                            ),
-                            getItemWidget(
-                              title: lang.thumbnails,
-                              icon: Broken.image,
-                              items: AppPathsBackupEnumCategories.thumbnails,
-                              youtubeAvailable: true,
-                              youtubeItems: AppPathsBackupEnumCategories.thumbnails_yt,
-                            ),
-                            getItemWidget(
-                              title: lang.metadataCache,
-                              icon: Broken.message_text,
-                              items: AppPathsBackupEnumCategories.youtipie_cache,
-                              youtubeAvailable: true,
-                              youtubeForceFollowItems: true,
-                              youtubeItems: [],
-                            ),
-                          ].addSeparators(separator: const SizedBox(height: 8.0)).toList(),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+              onTap: () => promptCreateBackup(context),
             ),
           ),
 
