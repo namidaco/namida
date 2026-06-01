@@ -13,7 +13,7 @@ import 'package:playlist_manager/class/favourite_playlist.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/core/enum.dart';
-import 'package:youtipie/core/extensions.dart';
+import 'package:youtipie/core/extensions.dart' show StreamFilterVideoUtils, CodecInfoUtils;
 
 import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/track.dart';

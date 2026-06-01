@@ -137,6 +137,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
     required FTags newTags,
     required String? commentToInsert,
     required String? oldComment,
+    required bool displayFFmpegFallbackWarning,
   }) async {
     final ffmpegTagsMap = commentToInsert != null && commentToInsert.isNotEmpty
         ? <String, String?>{
@@ -154,11 +155,13 @@ class _TagsExtractorDesktop extends TagsExtractor {
       await ffmpegController.editAudioThumbnail(audioPath: path, thumbnailPath: imageFile.path);
     }
 
-    snackyy(
-      title: lang.warning,
-      message: 'FFMPEG was used. Some tags might not have been updated',
-      isError: true,
-    );
+    if (displayFFmpegFallbackWarning) {
+      snackyy(
+        title: lang.warning,
+        message: 'FFMPEG was used. Some tags might not have been updated',
+        isError: true,
+      );
+    }
 
     return didUpdate;
   }

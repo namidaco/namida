@@ -7149,6 +7149,8 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
                 String title = e.key;
                 if (title == lang.libraryTabs) {
                   shortcutsTexts = ['Ctrl + 1..9'];
+                } else if (title == lang.setRating) {
+                  shortcutsTexts = ['Ctrl + alt + 1..9'];
                 } else {
                   shortcutsTexts = e.value.map((e) {
                     return ShortcutKeyData.fromShortcutKeyActivator(e).buildKeyLabel();

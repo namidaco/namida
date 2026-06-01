@@ -5,16 +5,20 @@ import 'package:flutter/services.dart';
 
 import 'package:window_manager/window_manager.dart';
 
+import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/shortcut_data.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -24,6 +28,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 
 part 'shortcuts_manager_base.dart';

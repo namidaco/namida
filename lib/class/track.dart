@@ -707,7 +707,7 @@ extension TrackExtUtils on TrackExtended {
     return parsed;
   }
 
-  TrackStats? get statsRaw => Indexer.inst.trackStatsMap[asTrack()];
+  TrackStats? get statsRaw => Indexer.inst.trackStatsMap.value[asTrack()];
   int get effectiveRating {
     int? r = statsRaw?.rating;
     if (r != null && r > 0) return r;
@@ -1015,7 +1015,7 @@ extension TrackUtils on Track {
   String get label => toTrackExt().label;
 
   int? get lastPlayedPositionInMs => statsRaw?.lastPositionInMs;
-  TrackStats? get statsRaw => Indexer.inst.trackStatsMap[this];
+  TrackStats? get statsRaw => Indexer.inst.trackStatsMap.value[this];
   int get effectiveRating {
     int? r = statsRaw?.rating;
     if (r != null && r > 0) return r;

@@ -65,6 +65,38 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
 
     // -------------------
     ShortcutKeyActivator(
+      key: LogicalKeyboardKey.keyH,
+      control: true,
+      callback: () {
+        final currentItem = Player.inst.currentItem.value;
+        final bool? newIsFav = currentItem?.execute(
+          selectable: (finalItem) => PlaylistController.inst.favouriteButtonOnPressed(
+            finalItem.track,
+            refreshNotification: false,
+          ),
+          youtubeID: (finalItem) => YoutubePlaylistController.inst.favouriteButtonOnPressed(
+            finalItem.id,
+            refreshNotification: false,
+          ),
+        );
+        if (newIsFav != null) {
+          Player.inst.refreshNotification();
+          newIsFav == true
+              ? snackyy(
+                  message: "${lang.favourites}: ${lang.added}",
+                  icon: Broken.heart_filled,
+                  leftBarIndicatorColor: Colors.green,
+                )
+              : snackyy(
+                  message: "${lang.favourites}: ${lang.removed}",
+                  icon: Broken.heart_slash,
+                  leftBarIndicatorColor: Colors.red,
+                );
+        }
+      },
+      title: () => "${lang.favourites}: ${lang.add}/${lang.remove}",
+    ),
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyF,
       control: true,
       callback: () {
@@ -182,6 +214,44 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       },
       title: () => lang.repeatMode,
     ),
+    // -----------------
+    for (int i = 1; i <= 9; i++)
+      ShortcutKeyActivator(
+        key: LogicalKeyboardKey(0x00000000030 + i),
+        control: true,
+        alt: true,
+        callback: () async {
+          final currentItem = Player.inst.currentItem.value;
+          if (currentItem is Selectable) {
+            final newRating = i * 10;
+            snackyy(title: lang.rating, message: '$newRating%');
+
+            try {
+              final track = currentItem.track;
+              await NamidaTaggerController.inst.updateTracksMetadata(
+                tracks: [track],
+                editedTags: {
+                  TagField.rating: newRating.toString(),
+                },
+                onStatsEdit: null,
+                onEdit: (didUpdate, error, _) {
+                  if (!didUpdate) {
+                    var msg = lang.metadataEditFailed;
+                    if (error != null) msg += '\n$error';
+                    snackyy(title: lang.warning, message: msg, isError: true);
+                  }
+                },
+                keepFileDates: true,
+                trimWhiteSpaces: true,
+                displayFFmpegFallbackWarning: false,
+              );
+            } catch (e) {
+              snackyy(title: lang.warning, message: e.toString(), isError: true);
+            }
+          }
+        },
+        title: () => lang.setRating,
+      ),
     // -----------------
     for (int i = 1; i <= 9; i++)
       ShortcutKeyActivator(

@@ -93,6 +93,7 @@ class NamidaTaggerController {
     void Function()? onUpdatingTracksStart,
     bool? keepFileDates,
     void Function(TrackStats newStats)? onStatsEdit,
+    bool displayFFmpegFallbackWarning = true,
   }) async {
     if (trimWhiteSpaces) {
       editedTags.updateAll((key, value) => value.trimAll());
@@ -169,8 +170,7 @@ class NamidaTaggerController {
 
     final splittersConfigs = SplitArtistGenreConfigsWrapper.settings();
     final tracksMap = <Track, TrackExtended>{};
-    for (int i = 0; i < tracks.length; i++) {
-      var track = tracks[i];
+    for (final track in tracks) {
       String? error;
 
       if (shouldEditStats && track.isNetwork) {
@@ -214,6 +214,7 @@ class NamidaTaggerController {
               newTags: newTags,
               commentToInsert: commentToInsert,
               oldComment: oldComment,
+              displayFFmpegFallbackWarning: displayFFmpegFallbackWarning,
             );
 
             if (didUpdate) {

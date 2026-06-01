@@ -1946,10 +1946,11 @@ void showSetTrackStatsDialog({
                     },
                     keepFileDates: true,
                     trimWhiteSpaces: false, // we did here
+                    displayFFmpegFallbackWarning: false,
                   )
                   .ignoreError();
               isEditing.value = false;
-              NamidaNavigator.inst.closeDialog();
+              NamidaNavigator.inst.closeAllDialogs();
             },
           ),
         ),
@@ -2011,64 +2012,9 @@ void showSetTrackStatsDialog({
             ),
 
             const SizedBox(height: 6.0),
-            CustomListTile(
-              icon: Broken.grammerly,
-              title: lang.setRating,
-              trailing: ObxO(
-                rx: selectedFixedRatingRx,
-                builder: (context, fixedrating) => ObxO(
-                  rx: selectedRatingRx,
-                  builder: (context, rating) => NamidaWheelSlider(
-                    key: ValueKey(fixedrating), // rebuild on selecting fixed rating
-                    min: -1,
-                    max: 100,
-                    initValue: rating == 0 ? -1 : 100 - rating,
-                    text: rating == 0 ? '' : '$rating',
-                    onValueChanged: (val) {
-                      selectedRatingRx.value = val == -1 ? 0 : (100 - val);
-                    },
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 6.0),
-            SmoothSingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: ObxO(
-                rx: selectedRatingRx,
-                builder: (context, selectedRating) => Row(
-                  children: const [100, 95, 90, 85, 80, 75, 70, 60, 50].map(
-                    (e) {
-                      final isSelected = e == selectedRating;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                        child: NamidaInkWellButton(
-                          borderRadius: 99.0,
-                          sizeMultiplier: 0.85,
-                          paddingMultiplier: 0.6,
-                          icon: null,
-                          leading:
-                              Icon(
-                                Broken.tick_circle,
-                                size: 12.0,
-                              ).animateEntrance(
-                                showWhen: isSelected,
-                                allCurves: Curves.fastLinearToSlowEaseIn,
-                                durationMS: 200,
-                              ),
-                          text: '$e',
-                          bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.2),
-                          onTap: () {
-                            selectedRatingRx.value = e;
-                            selectedFixedRatingRx.value = e;
-                          },
-                        ),
-                      );
-                    },
-                  ).toList(),
-                ),
-              ),
+            TrackRatingRowWidget(
+              selectedRatingRx: selectedRatingRx,
+              selectedFixedRatingRx: selectedFixedRatingRx,
             ),
             const SizedBox(height: 12.0),
           ],
@@ -2076,6 +2022,136 @@ void showSetTrackStatsDialog({
       ),
     ),
   );
+}
+
+void showSetTrackStatsDialogSimple({
+  required Track track,
+  required TrackStats? stats,
+}) {
+  final selectedRatingRx = (stats?.rating ?? 0).obs;
+  final selectedFixedRatingRx = (stats?.rating ?? 0).obs;
+  Future<void> onSave() async {
+    NamidaNavigator.inst.closeAllDialogs();
+    await NamidaTaggerController.inst
+        .updateTracksMetadata(
+          tracks: [track],
+          editedTags: {
+            TagField.rating: selectedRatingRx.value.toString(),
+          },
+          onEdit: (didUpdate, error, _) {
+            if (!didUpdate) {
+              var msg = lang.metadataEditFailed;
+              if (error != null) msg += '\n$error';
+              snackyy(title: lang.warning, message: msg, isError: true);
+            }
+          },
+          keepFileDates: true,
+          trimWhiteSpaces: false,
+          displayFFmpegFallbackWarning: false,
+        )
+        .ignoreError();
+  }
+
+  selectedFixedRatingRx.addListener(onSave); // auto save on clicking fixed percentage
+
+  NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      selectedRatingRx.close();
+      selectedFixedRatingRx.close();
+    },
+    dialog: CustomBlurryDialog(
+      title: lang.rating,
+      actions: [
+        const CancelButton(),
+        NamidaButton(
+          text: lang.save,
+          onTap: onSave,
+        ),
+      ],
+      child: TrackRatingRowWidget(
+        selectedRatingRx: selectedRatingRx,
+        selectedFixedRatingRx: selectedFixedRatingRx,
+      ),
+    ),
+  );
+}
+
+class TrackRatingRowWidget extends StatelessWidget {
+  final Rx<int> selectedRatingRx;
+  final Rx<int> selectedFixedRatingRx;
+
+  const TrackRatingRowWidget({
+    super.key,
+    required this.selectedRatingRx,
+    required this.selectedFixedRatingRx,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        CustomListTile(
+          icon: Broken.grammerly,
+          title: lang.setRating,
+          trailing: ObxO(
+            rx: selectedFixedRatingRx,
+            builder: (context, fixedrating) => ObxO(
+              rx: selectedRatingRx,
+              builder: (context, rating) => NamidaWheelSlider(
+                key: ValueKey(fixedrating), // rebuild on selecting fixed rating
+                min: -1,
+                max: 100,
+                initValue: rating == 0 ? -1 : 100 - rating,
+                text: rating == 0 ? '' : '$rating',
+                onValueChanged: (val) {
+                  selectedRatingRx.value = val == -1 ? 0 : (100 - val);
+                },
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6.0),
+        SmoothSingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: ObxO(
+            rx: selectedRatingRx,
+            builder: (context, selectedRating) => Row(
+              children: const [100, 95, 90, 85, 80, 75, 70, 60, 50].map(
+                (e) {
+                  final isSelected = e == selectedRating;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                    child: NamidaInkWellButton(
+                      borderRadius: 99.0,
+                      sizeMultiplier: 0.85,
+                      paddingMultiplier: 0.6,
+                      icon: null,
+                      leading:
+                          Icon(
+                            Broken.tick_circle,
+                            size: 12.0,
+                          ).animateEntrance(
+                            showWhen: isSelected,
+                            allCurves: Curves.fastLinearToSlowEaseIn,
+                            durationMS: 200,
+                          ),
+                      text: '$e',
+                      bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.2),
+                      onTap: () {
+                        selectedRatingRx.value = e; // -- must be first
+                        selectedFixedRatingRx.value = e;
+                      },
+                    ),
+                  );
+                },
+              ).toList(),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _SetMoodsTagsRows extends StatelessWidget {

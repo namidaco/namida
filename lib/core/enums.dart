@@ -848,6 +848,7 @@ enum TrackExecuteActions {
   saveArtwork,
   editTags,
   setRating,
+  setRatingAdv,
   openListens,
   focus,
   goToTrack,

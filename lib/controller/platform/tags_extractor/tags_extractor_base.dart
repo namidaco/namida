@@ -50,6 +50,7 @@ abstract class TagsExtractor {
     required FTags newTags,
     required String? commentToInsert,
     required String? oldComment,
+    required bool displayFFmpegFallbackWarning,
   });
 
   static Future<File?> extractThumbnailCustom({

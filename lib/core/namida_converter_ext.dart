@@ -562,6 +562,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
     TrackExecuteActions.saveArtwork => "${lang.artwork} (${lang.save})",
     TrackExecuteActions.editTags => lang.editTags,
     TrackExecuteActions.setRating => lang.setRating,
+    TrackExecuteActions.setRatingAdv => "${lang.rating}/${lang.moods}/${lang.tags}",
     TrackExecuteActions.openListens => lang.totalListens,
     TrackExecuteActions.focus => lang.focus,
     TrackExecuteActions.goToTrack => lang.goToTrack,
@@ -589,6 +590,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       TrackExecuteActions.saveArtwork => Broken.gallery_import,
       TrackExecuteActions.editTags => Broken.edit,
       TrackExecuteActions.setRating => Broken.grammerly,
+      TrackExecuteActions.setRatingAdv => Broken.smileys,
       TrackExecuteActions.openListens => Broken.math,
       TrackExecuteActions.focus => Broken.music_square_search,
       TrackExecuteActions.goToTrack => Broken.music_square,
@@ -729,6 +731,18 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
         );
 
       case TrackExecuteActions.setRating:
+        item.execute(
+          selectable: (finalItem) {
+            final track = finalItem.track;
+            showSetTrackStatsDialogSimple(
+              track: track,
+              stats: track.statsRaw,
+            );
+          },
+          youtubeID: (finalItem) {},
+        );
+
+      case TrackExecuteActions.setRatingAdv:
         item.execute(
           selectable: (finalItem) {
             showSetTrackStatsDialog(

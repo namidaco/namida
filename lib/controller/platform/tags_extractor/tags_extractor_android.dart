@@ -295,6 +295,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
     required FTags newTags,
     required String? commentToInsert,
     required String? oldComment,
+    required bool displayFFmpegFallbackWarning,
   }) async {
     // -- 1. try tagger
     String? error = await _writeTagsInternal(
@@ -320,11 +321,13 @@ class _TagsExtractorAndroid extends TagsExtractor {
       if (imageFile != null) {
         await ffmpegController.editAudioThumbnail(audioPath: path, thumbnailPath: imageFile.path);
       }
-      snackyy(
-        title: lang.warning,
-        message: 'FFMPEG was used. Some tags might not have been updated',
-        isError: true,
-      );
+      if (displayFFmpegFallbackWarning) {
+        snackyy(
+          title: lang.warning,
+          message: 'FFMPEG was used. Some tags might not have been updated',
+          isError: true,
+        );
+      }
     }
     return didUpdate;
   }
