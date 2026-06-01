@@ -225,7 +225,7 @@ class AdvancedSettings extends SettingSubpageProvider {
           rx: settings.performanceMode,
           builder: (context, performanceMode) => Text(
             performanceMode.toText(),
-            style: textTheme.displaySmall?.copyWith(color: theme.colorScheme.onSurface.withAlpha(200)),
+            style: textTheme.displayMedium,
             textAlign: TextAlign.end,
           ),
         ),

@@ -30,9 +30,16 @@ class FArtwork {
 
   factory FArtwork.fromMap(Map<String, dynamic> map) {
     final art = map["artwork"];
+    File? file;
+    Uint8List? bytes;
+    if (art is String) {
+      file = File(art);
+    } else if (art is Uint8List) {
+      bytes = art;
+    }
     return FArtwork(
-      file: art is String ? File(art) : null,
-      bytes: art is Uint8List ? art : null,
+      file: file,
+      bytes: bytes,
       size: map["artworkLength"],
     );
   }

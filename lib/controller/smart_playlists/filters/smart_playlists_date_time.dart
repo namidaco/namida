@@ -158,12 +158,14 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
       return (_startDate != null && trackDate.isBefore(_startDate)) || trackDate.isAfter(_endDate ?? DateTime.now());
     },
     SmartPlaylistRuleFilterDateTime.isWithinLast => (trackDate) {
+      if (trackDate == null) return false; // -- never listened, definetly not here
       final boundary = relativeDuration?.getBoundary();
-      return boundary != null && trackDate?.isAfter(boundary) == true;
+      return boundary != null && trackDate.isAfter(boundary) == true;
     },
     SmartPlaylistRuleFilterDateTime.isNotWithinLast => (trackDate) {
+      if (trackDate == null) return true; // -- never listened, ofc not within any range
       final boundary = relativeDuration?.getBoundary();
-      return boundary != null && trackDate?.isBefore(boundary) == true;
+      return boundary != null && trackDate.isBefore(boundary) == true;
     },
     SmartPlaylistRuleFilterDateTime.exists => (trackDate) => trackDate != null,
     SmartPlaylistRuleFilterDateTime.missing => (trackDate) => trackDate == null,

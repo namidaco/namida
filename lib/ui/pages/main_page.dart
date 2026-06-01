@@ -130,7 +130,12 @@ class MainPage extends StatelessWidget {
 
               Builder(
                 builder: (context) {
-                  final fabBottomOffset = MediaQuery.viewInsetsOf(context).bottom - MediaQuery.viewPaddingOf(context).bottom - kBottomNavigationBarHeight + 8.0;
+                  final fabBottomOffset =
+                      MediaQuery.viewInsetsOf(context).bottom -
+                      MediaQuery.viewPaddingOf(context).bottom -
+                      MediaQuery.systemGestureInsetsOf(context).bottom -
+                      kBottomNavigationBarHeight +
+                      8.0;
                   return Obx(
                     (context) {
                       final currentRoute = NamidaNavigator.inst.currentRouteR;
@@ -192,7 +197,12 @@ class MainPage extends StatelessWidget {
               ),
               Builder(
                 builder: (context) {
-                  final fabBottomOffset = MediaQuery.viewInsetsOf(context).bottom - MediaQuery.viewPaddingOf(context).bottom - kBottomNavigationBarHeight + 8.0;
+                  final fabBottomOffset =
+                      MediaQuery.viewInsetsOf(context).bottom -
+                      MediaQuery.viewPaddingOf(context).bottom -
+                      MediaQuery.systemGestureInsetsOf(context).bottom -
+                      kBottomNavigationBarHeight +
+                      8.0;
                   return Obx(
                     (context) {
                       final shouldHide = Dimensions.inst.shouldHideFABR;

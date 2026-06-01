@@ -50,27 +50,30 @@ class SettingsPage extends StatelessWidget with NamidaRouteWidget {
               gradient: _bgLinearGradient(context),
             ),
           ),
-          settings.useSettingCollapsedTiles.value
-              ? const CollapsedSettingTiles()
-              : SuperSmoothListView(
-                  padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.getSettingsHorizontalMargin(context)),
-                  children: [
-                    const _QuickSuggestionsForSettings(),
-                    const ThemeSetting(),
-                    const IndexerSettings(),
-                    const PlaybackSettings(),
-                    const CustomizationSettings(),
-                    const YoutubeSettings(),
-                    const ExtrasSettings(),
-                    const BackupAndRestore(),
-                    const AdvancedSettings(),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12.0),
-                      child: AboutPageTileWidget(),
-                    ),
-                    kBottomPaddingWidget,
-                  ],
-                ),
+          ObxO(
+            rx: settings.useSettingCollapsedTiles,
+            builder: (context, collapsed) => collapsed
+                ? const CollapsedSettingTiles()
+                : SuperSmoothListView(
+                    padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.getSettingsHorizontalMargin(context)),
+                    children: [
+                      const _QuickSuggestionsForSettings(),
+                      const ThemeSetting(),
+                      const IndexerSettings(),
+                      const PlaybackSettings(),
+                      const CustomizationSettings(),
+                      const YoutubeSettings(),
+                      const ExtrasSettings(),
+                      const BackupAndRestore(),
+                      const AdvancedSettings(),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12.0),
+                        child: AboutPageTileWidget(),
+                      ),
+                      kBottomPaddingWidget,
+                    ],
+                  ),
+          ),
         ],
       ),
     );

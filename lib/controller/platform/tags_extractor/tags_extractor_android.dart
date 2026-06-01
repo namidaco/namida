@@ -27,10 +27,20 @@ class _TagsExtractorAndroid extends TagsExtractor {
     });
   }
 
-  FAudioModel _getFallbackFAudioModel(String path, Map? info) {
-    // since normal artworks require data to build a filename, we here fallback to filename of original path.
-    final possibleFile = FileParts.join(AppDirs.ARTWORKS, '${path.getFilename}.png');
-    final artwork = FArtwork(file: possibleFile, bytes: info?['artwork'] as Uint8List?);
+  FAudioModel _getFallbackFAudioModel(String path, Map<String, dynamic>? info) {
+    FArtwork? artwork;
+    if (info != null) {
+      artwork = FArtwork.fromMap(info);
+    }
+
+    if (artwork == null || !artwork.hasArtwork) {
+      // since normal artworks require data to build a filename, we here fallback to filename of original path.
+      final possibleFile = FileParts.join(AppDirs.ARTWORKS, '${path.getFilename}.png');
+      final bytesValue = info?['artwork'];
+      final bytes = bytesValue is Uint8List ? bytesValue : null;
+      artwork = FArtwork(file: possibleFile, bytes: bytes);
+    }
+
     return FAudioModel.dummy(info?["path"] as String? ?? path, artwork);
   }
 
@@ -51,7 +61,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
     try {
       return FAudioModel.fromMap(map!.cast());
     } catch (e) {
-      return _getFallbackFAudioModel(path, map);
+      return _getFallbackFAudioModel(path, map?.cast());
     }
   }
 
