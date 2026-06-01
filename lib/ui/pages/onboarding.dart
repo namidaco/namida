@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:namida/controller/backup_controller.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/permission_manager/permission_manager.dart';
@@ -15,7 +14,6 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main_page_wrapper.dart';
-import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
 import 'package:namida/ui/widgets/settings/backup_restore_settings.dart';
@@ -35,34 +33,10 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
   bool didGrantStoragePermission = false;
   bool didDenyStoragePermission = false;
 
-  late final ScrollController c;
-
-  final _shouldShowGlow = false.obs;
-
-  void _scrollListener() {
-    if (c.hasClients) {
-      if (c.position.extentAfter > 0) {
-        _shouldShowGlow.value = true;
-      } else {
-        _shouldShowGlow.value = false;
-      }
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    c = NamidaScrollController.create()..addListener(_scrollListener);
-    Timer(Duration.zero, _scrollListener);
-
     _requestPermission(request: false); // just to set it to true only if granted.
-  }
-
-  @override
-  void dispose() {
-    c.dispose();
-    _shouldShowGlow.close();
-    super.dispose();
   }
 
   Future<void> _requestPermission({bool request = true}) async {
@@ -122,8 +96,9 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     const indexer = IndexerSettings(isInFirstConfigScreen: true);
     final useMediaStore = indexer.getMediaStoreWidget();
     final includeVideosWidget = indexer.getIncludeVideosWidget();
-    final foldersToScan = indexer.getFoldersToScanWidget(context: context, initiallyExpanded: true);
-    final foldersToExclude = indexer.getFoldersToExcludeWidget(context: context, initiallyExpanded: true);
+    final addFolderWidget = indexer.getAddFolderWidget();
+    final foldersToScan = indexer.getFoldersToScanWidget(context: context, initiallyExpanded: false);
+    final foldersToExclude = indexer.getFoldersToExcludeWidget(context: context, initiallyExpanded: false);
     final artworkCacheWidget = indexer.getArtworkCacheWidget(context);
 
     const themeSettings = ThemeSetting();
@@ -141,7 +116,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
         alignment: Alignment.center,
         children: [
           SizedBox(
-            height: context.height * 0.7,
+            height: context.height * 0.78,
             width: context.width,
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.getSettingsHorizontalMargin(context)),
@@ -169,43 +144,24 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                     child: Column(
                       children: [
                         Expanded(
-                          child: Stack(
-                            alignment: Alignment.bottomCenter,
-                            children: [
-                              SuperSmoothListView(
-                                controller: c,
-                                padding: EdgeInsets.zero,
-                                children: [
-                                  themeTile,
-                                  languageTile,
-                                  performanceTile,
-                                  libraryTabsTile,
-                                  useMediaStore,
-                                  includeVideosWidget,
-                                  artworkCacheWidget,
-                                  foldersToScan,
-                                  foldersToExclude,
-                                ],
-                              ),
-                              Obx(
-                                (context) => SizedBox(
-                                  height: 12.0,
-                                  width: context.width,
-                                  child: AnimatedDecoration(
-                                    duration: const Duration(milliseconds: 200),
-                                    decoration: BoxDecoration(
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: _shouldShowGlow.valueR ? CurrentColor.inst.color.withOpacityExt(0.5) : Colors.transparent,
-                                          blurRadius: 12.0,
-                                          spreadRadius: 2.0,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          child: NamidaScrollbarWithController(
+                            showOnStart: true,
+                            child: (c) => SuperSmoothListView(
+                              controller: c,
+                              padding: EdgeInsets.zero,
+                              children: [
+                                themeTile,
+                                languageTile,
+                                performanceTile,
+                                libraryTabsTile,
+                                includeVideosWidget,
+                                addFolderWidget,
+                                foldersToScan,
+                                foldersToExclude,
+                                useMediaStore,
+                                artworkCacheWidget,
+                              ],
+                            ),
                           ),
                         ),
                         Container(

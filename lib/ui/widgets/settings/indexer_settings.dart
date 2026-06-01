@@ -37,6 +37,7 @@ class IndexerSettingsKeysGlobal {
   const IndexerSettingsKeysGlobal._();
 
   static const foldersToScan = _IndexerSettingsKeys.foldersToScan;
+  static const addFolder = _IndexerSettingsKeys.addFolder;
 }
 
 enum _IndexerSettingsKeys with SettingKeysBase {
@@ -58,6 +59,7 @@ enum _IndexerSettingsKeys with SettingKeysBase {
   missingTracks,
   reindex,
   refreshLibrary,
+  addFolder,
   foldersToScan,
   foldersToExclude,
   ;
@@ -98,9 +100,21 @@ class IndexerSettings extends SettingSubpageProvider {
     _IndexerSettingsKeys.missingTracks: [lang.missingTracks],
     _IndexerSettingsKeys.reindex: [lang.reIndex, lang.reIndexSubtitle],
     _IndexerSettingsKeys.refreshLibrary: [lang.refreshLibrary, lang.refreshLibrarySubtitle],
-    _IndexerSettingsKeys.foldersToScan: [lang.listOfFolders],
+    _IndexerSettingsKeys.addFolder: [lang.addFolder, ...getAddFolderSubtitleKeys(includeAllInfo: true)],
+    _IndexerSettingsKeys.foldersToScan: [lang.listOfFolders, ...getAddFolderSubtitleKeys(includeAllInfo: true)],
     _IndexerSettingsKeys.foldersToExclude: [lang.excludedFodlers],
   };
+
+  Iterable<String> getAddFolderSubtitleKeys({required bool includeAllInfo}) sync* {
+    for (final d in DirectoryIndexType.values) {
+      if (d == DirectoryIndexType.unknown) continue;
+      yield d.toText();
+      if (includeAllInfo) {
+        final subtitle = d.toSubtitle();
+        if (subtitle != null) yield subtitle;
+      }
+    }
+  }
 
   void _maybeShowRefreshPromptDialog(bool didModifyFolder) {
     if (!isInFirstConfigScreen) showRefreshPromptDialog(didModifyFolder);
@@ -573,6 +587,12 @@ class IndexerSettings extends SettingSubpageProvider {
     );
   }
 
+  void promptAddFolderType() {
+    _promptAddFolderType((dirsPath) {
+      settings.save(directoriesToScan: dirsPath);
+    });
+  }
+
   void _promptAddFolderType(void Function(List<DirectoryIndex> dirsPath) onSuccessChoose) {
     final types = List<DirectoryIndexType>.from(DirectoryIndexType.values);
     types.remove(DirectoryIndexType.unknown);
@@ -778,6 +798,19 @@ class IndexerSettings extends SettingSubpageProvider {
     );
   }
 
+  Widget getAddFolderWidget() {
+    return getItemWrapper(
+      key: _IndexerSettingsKeys.addFolder,
+      child: CustomListTile(
+        bgColor: getBgColor(_IndexerSettingsKeys.addFolder),
+        icon: Broken.folder_add,
+        title: lang.addFolder,
+        subtitle: getAddFolderSubtitleKeys(includeAllInfo: false).join(', '),
+        onTap: promptAddFolderType,
+      ),
+    );
+  }
+
   Widget getFoldersToScanWidget({
     required BuildContext context,
     bool initiallyExpanded = false,
@@ -804,11 +837,7 @@ class IndexerSettings extends SettingSubpageProvider {
                   icon: Broken.folder_add,
                   text: lang.add,
                   opaqueBG: true,
-                  onTap: () {
-                    _promptAddFolderType((dirsPath) {
-                      settings.save(directoriesToScan: dirsPath);
-                    });
-                  },
+                  onTap: promptAddFolderType,
                 ),
                 iconWidget,
               ],
@@ -1396,6 +1425,7 @@ class IndexerSettings extends SettingSubpageProvider {
               onTap: () => showRefreshPromptDialog(false, allowBypassing: true),
             ),
           ),
+          getAddFolderWidget(),
           getFoldersToScanWidget(context: context),
           getFoldersToExcludeWidget(context: context),
         ],

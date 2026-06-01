@@ -319,10 +319,11 @@ class Indexer<T extends Track> {
               SettingsSearchController.inst
                   .onResultTap(
                     settingPage: SettingSubpageEnum.indexer,
-                    key: IndexerSettingsKeysGlobal.foldersToScan,
+                    key: IndexerSettingsKeysGlobal.addFolder,
                     context: namida.context!,
                   )
                   .ignoreError();
+              const IndexerSettings().promptAddFolderType();
             },
           ),
         );

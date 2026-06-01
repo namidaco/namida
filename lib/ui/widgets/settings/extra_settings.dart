@@ -923,12 +923,14 @@ class ExtrasSettings extends SettingSubpageProvider {
   Widget getLibraryTabsTile(BuildContext context) {
     return getItemWrapper(
       key: _ExtraSettingsKeys.libraryTabs,
-      child: Obx(
-        (context) => CustomListTile(
+      child: ObxO(
+        rx: settings.libraryTabs,
+        builder: (context, libraryTabs) => CustomListTile(
           bgColor: getBgColor(_ExtraSettingsKeys.libraryTabs),
           icon: Broken.color_swatch,
           title: lang.libraryTabs,
-          trailingText: "${settings.libraryTabs.length}",
+          subtitle: libraryTabs.map((e) => e.toText()).join(', '),
+          trailingText: "${libraryTabs.length}",
           onTap: () => NamidaNavigator.inst.navigateDialog(
             scale: 1.0,
             dialog: CustomBlurryDialog(
