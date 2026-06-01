@@ -200,7 +200,17 @@ jobs:
 
   build_windows:
     needs: create_release
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-latest
+            arch: x64
+            artifact_arch: x86_64
+          - runner: windows-11-arm
+            arch: arm64
+            artifact_arch: arm64
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - uses: actions/checkout@v4
@@ -233,7 +243,7 @@ jobs:
 
       - name: Fix ISS script languages
         run: |
-          $issPath = "./build/windows/x64/installer/Release/inno-script.iss"
+          $issPath = "./build/windows/${{ matrix.arch }}/installer/Release/inno-script.iss"
           $content = Get-Content $issPath -Raw
           # Remove any language line whose .isl file doesn't exist on disk
           $lines = Get-Content $issPath
@@ -253,13 +263,13 @@ jobs:
       - name: Build installer
         uses: C0rn3j/Inno-Setup-Action@v1.2.8
         with:
-          path: ./build/windows/x64/installer/Release/inno-script.iss
+          path: ./build/windows/${{ matrix.arch }}/installer/Release/inno-script.iss
 
       - name: Move Windows installer
         run: |
           mkdir -p build_final
-          $installer = Get-ChildItem "./build/windows/x64/installer/Release/" -Filter "*.exe" | Select-Object -First 1
-          Move-Item $installer.FullName "build_final/Namida-x86_64-${{ needs.create_release.outputs.version_name }}-Installer.exe"
+          $installer = Get-ChildItem "./build/windows/${{ matrix.arch }}/installer/Release/" -Filter "*.exe" | Select-Object -First 1
+          Move-Item $installer.FullName "build_final/Namida-${{ matrix.artifact_arch }}-${{ needs.create_release.outputs.version_name }}-Installer.exe"
 
       - name: Upload installer to Snapshot Release
         uses: softprops/action-gh-release@v2
