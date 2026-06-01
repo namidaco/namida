@@ -2174,25 +2174,55 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
   }
 }
 
-class NamidaLoadingController {
-  final void Function() startLoading;
-  final void Function() stopLoading;
-  bool isLoading;
+class NamidaLoadingControllerProvider extends StatefulWidget {
+  final Widget Function(NamidaLoadingController loadingController) builder;
+  const NamidaLoadingControllerProvider({super.key, required this.builder});
 
-  NamidaLoadingController({
-    required this.startLoading,
-    required this.stopLoading,
-    required this.isLoading,
-  });
+  @override
+  State<NamidaLoadingControllerProvider> createState() => _NamidaLoadingControllerProviderState();
+}
+
+class _NamidaLoadingControllerProviderState extends State<NamidaLoadingControllerProvider> {
+  final _loadingController = NamidaLoadingController();
+
+  @override
+  void dispose() {
+    _loadingController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(_loadingController);
+  }
+}
+
+class NamidaLoadingController {
+  NamidaLoadingController();
+
+  void startLoading() => _startLoadingFn?.call();
+  void stopLoading() => _stopLoadingFn?.call();
+  bool get isLoading => _isLoading;
+
+  void Function()? _startLoadingFn;
+  void Function()? _stopLoadingFn;
+  bool _isLoading = false;
+
+  void dispose() {
+    _startLoadingFn = null;
+    _stopLoadingFn = null;
+  }
 }
 
 class NamidaLoadingSwitcher extends StatefulWidget {
+  final NamidaLoadingController? controller;
   final Widget Function(NamidaLoadingController loadingController) builder;
   final double? size;
   final bool showLoading;
 
   const NamidaLoadingSwitcher({
     super.key,
+    this.controller,
     required this.builder,
     this.size,
     this.showLoading = true,
@@ -2203,18 +2233,29 @@ class NamidaLoadingSwitcher extends StatefulWidget {
 }
 
 class _NamidaLoadingSwitcherState extends State<NamidaLoadingSwitcher> {
-  late final loadingController = NamidaLoadingController(
-    startLoading: _startLoading,
-    stopLoading: _stopLoading,
-    isLoading: false,
-  );
+  late final NamidaLoadingController loadingController;
+
+  @override
+  void initState() {
+    loadingController = widget.controller ?? NamidaLoadingController();
+    loadingController._startLoadingFn = _startLoading;
+    loadingController._stopLoadingFn = _stopLoading;
+    loadingController._isLoading = false;
+    super.initState();
+  }
 
   void _startLoading() {
-    if (mounted) setState(() => loadingController.isLoading = true);
+    if (mounted) setState(() => loadingController._isLoading = true);
   }
 
   void _stopLoading() {
-    if (mounted) setState(() => loadingController.isLoading = false);
+    if (mounted) setState(() => loadingController._isLoading = false);
+  }
+
+  @override
+  void dispose() {
+    if (widget.controller == null) loadingController.dispose();
+    super.dispose();
   }
 
   @override

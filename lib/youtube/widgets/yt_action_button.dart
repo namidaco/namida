@@ -36,40 +36,45 @@ class SmallYTActionButton extends StatelessWidget {
         onLongPress: onLongPress,
         enableSecondaryTap: true,
         borderRadius: 12.0,
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 2.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child:
-                  iconWidget ??
-                  smallIconWidget ??
-                  Icon(
-                    icon,
-                    size: 25.0,
+        child: NamidaMouseRegion(
+          enabled: onPressed != null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 2.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child:
+                      iconWidget ??
+                      smallIconWidget ??
+                      Icon(
+                        icon,
+                        size: 25.0,
+                      ),
+                ),
+                SizedBox(height: 6.0),
+                NamidaDummyContainer(
+                  width: 24.0,
+                  height: 8.0,
+                  borderRadius: 4.0,
+                  shimmerEnabled: title == null,
+                  child: ShimmerWrapper(
+                    shimmerEnabled: title == null,
+                    fadeDurationMS: titleWidget == null ? 600 : 100,
+                    child:
+                        titleWidget ??
+                        Text(
+                          title ?? '',
+                          style: textTheme.displaySmall,
+                          softWrap: false,
+                          overflow: TextOverflow.fade,
+                        ),
                   ),
+                ),
+              ],
             ),
-            SizedBox(height: 6.0),
-            NamidaDummyContainer(
-              width: 24.0,
-              height: 8.0,
-              borderRadius: 4.0,
-              shimmerEnabled: title == null,
-              child: ShimmerWrapper(
-                shimmerEnabled: title == null,
-                fadeDurationMS: titleWidget == null ? 600 : 100,
-                child:
-                    titleWidget ??
-                    Text(
-                      title ?? '',
-                      style: textTheme.displaySmall,
-                      softWrap: false,
-                      overflow: TextOverflow.fade,
-                    ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

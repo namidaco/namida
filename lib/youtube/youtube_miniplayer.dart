@@ -809,6 +809,34 @@ class _YTPlayerInnerPage extends StatelessWidget {
        _videoLikeManager = videoLikeManager,
        _shouldShowGlowUnderVideo = shouldShowGlowUnderVideo;
 
+  Future<bool> _onLikeTap({
+    required bool isLiked,
+    required NamidaLoadingController loadingController,
+  }) {
+    return _videoLikeManager.onLikeClicked(
+      YTVideoLikeParamters(
+        isActive: isLiked,
+        action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
+        onStart: loadingController.startLoading,
+        onEnd: loadingController.stopLoading,
+      ),
+    );
+  }
+
+  Future<bool> _onDislikeTap({
+    required bool isDisLiked,
+    required NamidaLoadingController loadingController,
+  }) {
+    return _videoLikeManager.onDisLikeClicked(
+      YTVideoLikeParamters(
+        isActive: isDisLiked,
+        action: isDisLiked ? LikeAction.removeDislike : LikeAction.addDislike,
+        onStart: loadingController.startLoading,
+        onEnd: loadingController.stopLoading,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final videoViewCount = this.videoViewCount;
@@ -971,86 +999,87 @@ class _YTPlayerInnerPage extends StatelessWidget {
                             Flexible(
                               flex: 4,
                               fit: FlexFit.tight, // -- imp
-                              child: ObxO(
-                                rx: _videoLikeManager.currentVideoLikeStatus,
-                                builder: (context, currentLikeStatus) {
-                                  final isUserLiked = currentLikeStatus == LikeStatus.liked;
-                                  final videoLikeCount = (isUserLiked ? 1 : 0) + (videoInfo?.engagement?.likesCount ?? 0);
-                                  return ObxO(
-                                    rx: _isTitleExpanded,
-                                    builder: (context, isTitleExpanded) => SmallYTActionButton(
-                                      title: shimmerEnabled
-                                          ? null
-                                          : videoLikeCount < 1
-                                          ? lang.like
-                                          : videoLikeCount.formatDecimalShort(isTitleExpanded),
-                                      icon: Broken.like_1,
-                                      smallIconWidget: NamidaLoadingSwitcher(
-                                        size: 24.0,
-                                        builder: (loadingController) => NamidaRawLikeButton(
-                                          isLiked: isUserLiked,
-                                          likedIcon: Broken.like_filled,
-                                          normalIcon: Broken.like_1,
-                                          disabledColor: mainTheme.iconTheme.color,
+                              child: NamidaLoadingControllerProvider(
+                                builder: (likeLoadingController) => ObxO(
+                                  rx: _videoLikeManager.currentVideoLikeStatus,
+                                  builder: (context, currentLikeStatus) {
+                                    final isUserLiked = currentLikeStatus == LikeStatus.liked;
+                                    final videoLikeCount = (isUserLiked ? 1 : 0) + (videoInfo?.engagement?.likesCount ?? 0);
+                                    return ObxO(
+                                      rx: _isTitleExpanded,
+                                      builder: (context, isTitleExpanded) => SmallYTActionButton(
+                                        title: shimmerEnabled
+                                            ? null
+                                            : videoLikeCount < 1
+                                            ? lang.like
+                                            : videoLikeCount.formatDecimalShort(isTitleExpanded),
+                                        icon: Broken.like_1,
+                                        smallIconWidget: NamidaLoadingSwitcher(
                                           size: 24.0,
-                                          removeConfirmationAction: null, // manually managed
-                                          onTap: (isLiked) {
-                                            return _videoLikeManager.onLikeClicked(
-                                              YTVideoLikeParamters(
-                                                isActive: isLiked,
-                                                action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
-                                                onStart: loadingController.startLoading,
-                                                onEnd: loadingController.stopLoading,
-                                              ),
-                                            );
-                                          },
+                                          controller: likeLoadingController,
+                                          builder: (likeLoadingController) => NamidaRawLikeButton(
+                                            isLiked: isUserLiked,
+                                            likedIcon: Broken.like_filled,
+                                            normalIcon: Broken.like_1,
+                                            disabledColor: mainTheme.iconTheme.color,
+                                            size: 24.0,
+                                            removeConfirmationAction: null, // manually managed
+                                            onTap: (isLiked) => _onLikeTap(
+                                              isLiked: isLiked,
+                                              loadingController: likeLoadingController,
+                                            ),
+                                          ),
+                                        ),
+                                        onPressed: () => _onLikeTap(
+                                          isLiked: isUserLiked,
+                                          loadingController: likeLoadingController,
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                             const SizedBox(width: 2.0),
                             Flexible(
                               flex: 4,
                               fit: FlexFit.tight,
-                              child: ObxO(
-                                rx: YoutubeInfoController.current.currentDislikeCount,
-                                builder: (context, videoDislikeCount) => ObxO(
-                                  rx: _videoLikeManager.currentVideoLikeStatus,
-                                  builder: (context, currentLikeStatus) {
-                                    final isUserDisLiked = currentLikeStatus == LikeStatus.disliked;
-                                    return ObxO(
-                                      rx: _isTitleExpanded,
-                                      builder: (context, isTitleExpanded) => SmallYTActionButton(
-                                        title: (videoDislikeCount ?? 0) < 1 ? lang.dislike : videoDislikeCount?.formatDecimalShort(isTitleExpanded) ?? '?',
-                                        icon: Broken.dislike,
-                                        smallIconWidget: NamidaLoadingSwitcher(
-                                          size: 24.0,
-                                          builder: (loadingController) => NamidaRawLikeButton(
-                                            isLiked: isUserDisLiked,
-                                            likedIcon: Broken.dislike_filled,
-                                            normalIcon: Broken.dislike,
-                                            disabledColor: mainTheme.iconTheme.color,
+                              child: NamidaLoadingControllerProvider(
+                                builder: (dislikeLoadingController) => ObxO(
+                                  rx: YoutubeInfoController.current.currentDislikeCount,
+                                  builder: (context, videoDislikeCount) => ObxO(
+                                    rx: _videoLikeManager.currentVideoLikeStatus,
+                                    builder: (context, currentLikeStatus) {
+                                      final isUserDisLiked = currentLikeStatus == LikeStatus.disliked;
+                                      return ObxO(
+                                        rx: _isTitleExpanded,
+                                        builder: (context, isTitleExpanded) => SmallYTActionButton(
+                                          title: (videoDislikeCount ?? 0) < 1 ? lang.dislike : videoDislikeCount?.formatDecimalShort(isTitleExpanded) ?? '?',
+                                          icon: Broken.dislike,
+                                          smallIconWidget: NamidaLoadingSwitcher(
                                             size: 24.0,
-                                            removeConfirmationAction: null, // manually managed
-                                            onTap: (isDisLiked) async {
-                                              return _videoLikeManager.onDisLikeClicked(
-                                                YTVideoLikeParamters(
-                                                  isActive: isDisLiked,
-                                                  action: isDisLiked ? LikeAction.removeDislike : LikeAction.addDislike,
-                                                  onStart: loadingController.startLoading,
-                                                  onEnd: loadingController.stopLoading,
-                                                ),
-                                              );
-                                            },
+                                            controller: dislikeLoadingController,
+                                            builder: (dislikeLoadingController) => NamidaRawLikeButton(
+                                              isLiked: isUserDisLiked,
+                                              likedIcon: Broken.dislike_filled,
+                                              normalIcon: Broken.dislike,
+                                              disabledColor: mainTheme.iconTheme.color,
+                                              size: 24.0,
+                                              removeConfirmationAction: null, // manually managed
+                                              onTap: (isDisLiked) => _onDislikeTap(
+                                                isDisLiked: isDisLiked,
+                                                loadingController: dislikeLoadingController,
+                                              ),
+                                            ),
+                                          ),
+                                          onPressed: () => _onDislikeTap(
+                                            isDisLiked: isUserDisLiked,
+                                            loadingController: dislikeLoadingController,
                                           ),
                                         ),
-                                        onPressed: () {},
-                                      ),
-                                    );
-                                  },
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
                             ),
