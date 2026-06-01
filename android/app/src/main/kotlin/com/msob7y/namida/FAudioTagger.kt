@@ -297,13 +297,29 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
           val year = tag.getFirst(FieldKey.YEAR)
           val album = tag.getFirst(FieldKey.ALBUM)
           val albumArtist = tag.getFirst(FieldKey.ALBUM_ARTIST)
+          val ratingRaw = tag.getFirst(FieldKey.RATING)
+          metadata["bpm"] = tag.getFirst(FieldKey.BPM)
           metadata["country"] = tag.getAll(FieldKey.COUNTRY)
           metadata["recordLabel"] = tag.getAll(FieldKey.RECORD_LABEL)
           metadata["language"] = tag.getAll(FieldKey.LANGUAGE)
           metadata["tempo"] = tag.getAll(FieldKey.TEMPO)
           metadata["tags"] = tag.getAll(FieldKey.TAGS)
           metadata["remixer"] = tag.getAll(FieldKey.REMIXER)
-          metadata["rating"] = tag.getFirst(FieldKey.RATING)
+          metadata["rating"] = when {
+              tag is VorbisCommentTag || tag is FlacTag -> ratingRaw  // 0-5 or 0-100
+              else -> {
+                  // 0-255, convert to 0-100
+                  val v = ratingRaw.toIntOrNull()
+                  when {
+                      v == null || v == 0 -> ""
+                      v < 32 -> "20"
+                      v < 96 -> "40"
+                      v < 160 -> "60"
+                      v < 224 -> "80"
+                      else -> "100"
+                  }
+              }
+          }
           metadata["mood"] = tag.getAll(FieldKey.MOOD)
           metadata["mixer"] = tag.getAll(FieldKey.MIXER)
           metadata["djmixer"] = tag.getAll(FieldKey.DJMIXER)
@@ -350,7 +366,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
             // -- for extra goofy fields
             tag.getFields().forEach {
               if (metadata[it.id] == null) {
-                metadata[it.id] =  it.toString()
+                metadata[it.id] = it.toString()
               }
             }
           } catch (_: Exception) {}
@@ -465,8 +481,9 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
       setFieldIfExist(newTag, FieldKey.TAGS, map, "tags")
       setFieldIfExist(newTag, FieldKey.TEMPO, map, "tempo")
       setFieldIfExist(newTag, FieldKey.LANGUAGE, map, "language")
-      setFieldIfExist(newTag, FieldKey.COUNTRY, map, "country")
       setFieldIfExist(newTag, FieldKey.RECORD_LABEL, map, "recordLabel")
+      setFieldIfExist(newTag, FieldKey.COUNTRY, map, "country")
+      setFieldIfExist(newTag, FieldKey.BPM, map, "bpm")
       
       val sortInfoMap = map["sortInfo"] as? Map<*, *>
       if (sortInfoMap != null && sortInfoMap.isNotEmpty()) {
@@ -570,7 +587,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
     eventChannels.clear()
   }
 
-  private val cleanupFilenameRegex = Regex("""[*#\$|/\\!^:"\?%]""", RegexOption.IGNORE_CASE)
+  private val cleanupFilenameRegex = Regex("""[*#\$|/\\!^:"\?%<>\u2F38\u2044\u29F8]""", RegexOption.IGNORE_CASE)
   private fun cleanupFilename(filename: String): String {
     return filename.replace(cleanupFilenameRegex, "_")
   }

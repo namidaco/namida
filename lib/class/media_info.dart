@@ -9,8 +9,8 @@ class MediaInfo {
 
   const MediaInfo({
     required this.path,
-    this.streams,
-    this.format,
+    required this.streams,
+    required this.format,
   });
 
   MIStream? getAudioStream() => streams?.firstWhereEff((e) => e.streamType == StreamType.audio) ?? streams?.firstOrNull;
@@ -29,6 +29,18 @@ class MediaInfo {
         return null;
       }
     }
+    return null;
+  }
+
+  static int? extractInt(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  static num? extractNum(dynamic value) {
+    if (value is num) return value;
+    if (value is String) return num.tryParse(value);
     return null;
   }
 
@@ -60,16 +72,16 @@ class MIFormat {
   final MIFormatTags? tags;
 
   const MIFormat({
-    this.duration,
-    this.startTime,
-    this.bitRate,
-    this.filename,
-    this.size,
-    this.probeScore,
-    this.nbPrograms,
-    this.nbStreams,
-    this.formatName,
-    this.tags,
+    required this.duration,
+    required this.startTime,
+    required this.bitRate,
+    required this.filename,
+    required this.size,
+    required this.probeScore,
+    required this.nbPrograms,
+    required this.nbStreams,
+    required this.formatName,
+    required this.tags,
   });
 
   factory MIFormat.fromMap(Map<String, dynamic> map) {
@@ -105,6 +117,8 @@ class MIFormat {
 
 class MIFormatTags {
   final String? date;
+  final int? bpm;
+  final double? rating;
   final String? language;
   final String? artist;
   final String? album;
@@ -133,67 +147,76 @@ class MIFormatTags {
   final FTagsSortInfo? sortInfo;
 
   const MIFormatTags({
-    this.date,
-    this.language,
-    this.artist,
-    this.album,
-    this.composer,
-    this.majorBrand,
-    this.description,
-    this.remixer,
-    this.synopsis,
-    this.title,
-    this.encoder,
-    this.minorVersion,
-    this.albumArtist,
-    this.genre,
-    this.country,
-    this.label,
-    this.comment,
-    this.disc,
-    this.track,
-    this.trackTotal,
-    this.discTotal,
-    this.lyrics,
-    this.lyricist,
-    this.compatibleBrands,
-    this.mood,
-    this.gainData,
-    this.sortInfo,
+    required this.date,
+    required this.bpm,
+    required this.rating,
+    required this.language,
+    required this.artist,
+    required this.album,
+    required this.composer,
+    required this.majorBrand,
+    required this.description,
+    required this.remixer,
+    required this.synopsis,
+    required this.title,
+    required this.encoder,
+    required this.minorVersion,
+    required this.albumArtist,
+    required this.genre,
+    required this.country,
+    required this.label,
+    required this.comment,
+    required this.disc,
+    required this.track,
+    required this.trackTotal,
+    required this.discTotal,
+    required this.lyrics,
+    required this.lyricist,
+    required this.compatibleBrands,
+    required this.mood,
+    required this.gainData,
+    required this.sortInfo,
   });
 
-  factory MIFormatTags.fromMap(Map<String, dynamic> map) => MIFormatTags(
-    date: map.getOrUpperCase("date"),
-    language: map.getOrLowerCase("LANGUAGE"),
-    artist: map.getOrUpperCase("artist"),
-    album: map.getOrUpperCase("album"),
-    composer: map.getOrUpperCase("composer"),
-    majorBrand: map.getOrUpperCase("major_brand"),
-    description: map.getOrUpperCase("description"),
-    remixer: map.getOrLowerCase("REMIXER"),
-    synopsis: map.getOrUpperCase("synopsis"),
-    title: map.getOrUpperCase("title"),
-    encoder: map.getOrUpperCase("encoder"),
-    minorVersion: map.getOrUpperCase("minor_version"),
-    albumArtist: map.getOrUpperCase("album_artist"),
-    genre: map.getOrUpperCase("genre"),
-    country: map.getOrUpperCase("Country"),
-    label: map.getOrLowerCase("LABEL"),
-    comment: map.getOrUpperCase("comment"),
-    disc: map.getOrUpperCase("disc"),
-    track: map.getOrUpperCase("track"),
-    trackTotal: map.getOrLowerCase("TRACKTOTAL"),
-    discTotal: map.getOrLowerCase("DISCTOTAL"),
-    lyrics: map.getOrUpperCase("lyrics") ?? map.getOrUpperCase("lyrics-XXX") ?? map.filterStartsWith('lyrics') ?? map.filterStartsWith('LYRICS'),
-    lyricist: map.getOrLowerCase("LYRICIST"),
-    compatibleBrands: map.getOrUpperCase("compatible_brands"),
-    mood: map.getOrUpperCase("mood"),
-    gainData: ReplayGainData.fromAndroidMap(map),
-    sortInfo: FTagsSortInfo.fromFFmpegMap(map),
-  );
+  factory MIFormatTags.fromMap(Map<String, dynamic> map) {
+    final ratingRaw = MediaInfo.extractNum(map.getOrUpperCase("rating")); // 0-5
+    return MIFormatTags(
+      date: map.getOrUpperCase("date") ?? map["Date"],
+      bpm: MediaInfo.extractInt(map.getOrLowerCase("BPM")) ?? MediaInfo.extractInt(map.getOrLowerCase("TBPM")),
+      rating: ratingRaw == null ? null : ratingRaw / 5.0,
+      language: map.getOrLowerCase("LANGUAGE") ?? map["Language"],
+      artist: map.getOrUpperCase("artist") ?? map["Artist"],
+      album: map.getOrUpperCase("album") ?? map["Album"],
+      composer: map.getOrUpperCase("composer") ?? map["Composer"],
+      majorBrand: map.getOrUpperCase("major_brand"),
+      description: map.getOrUpperCase("description") ?? map["Description"],
+      remixer: map.getOrLowerCase("REMIXER") ?? map["Remixer"],
+      synopsis: map.getOrUpperCase("synopsis") ?? map["Synopsis"],
+      title: map.getOrUpperCase("title") ?? map["Title"],
+      encoder: map.getOrUpperCase("encoder"),
+      minorVersion: map.getOrUpperCase("minor_version"),
+      albumArtist: map.getOrUpperCase("album_artist") ?? map["Album Artist"],
+      genre: map.getOrUpperCase("genre") ?? map["Genre"],
+      country: map.getOrUpperCase("country") ?? map["Country"],
+      label: map.getOrLowerCase("LABEL") ?? map["Label"],
+      comment: map.getOrUpperCase("comment") ?? map["Comment"],
+      disc: map.getOrUpperCase("disc") ?? map["Disc"],
+      track: map.getOrUpperCase("track") ?? map["Track"],
+      trackTotal: map.getOrLowerCase("TRACKTOTAL") ?? map.getOrLowerCase("TRACK_TOTAL"),
+      discTotal: map.getOrLowerCase("DISCTOTAL") ?? map.getOrLowerCase("DISC_TOTAL"),
+      lyrics: map.getOrUpperCase("lyrics") ?? map.getOrUpperCase("lyrics-XXX") ?? map.filterStartsWith('lyrics') ?? map.filterStartsWith('LYRICS') ?? map["Lyrics"],
+      lyricist: map.getOrLowerCase("LYRICIST") ?? map["Lyricist"],
+      compatibleBrands: map.getOrUpperCase("compatible_brands"),
+      mood: map.getOrUpperCase("mood") ?? map["Mood"],
+      gainData: ReplayGainData.fromAndroidMap(map),
+      sortInfo: FTagsSortInfo.fromFFmpegMap(map),
+    );
+  }
 
   Map<dynamic, dynamic> toMap() => {
     "date": date,
+    "BPM": bpm,
+    "rating": rating,
     "LANGUAGE": language,
     "artist": artist,
     "album": album,
@@ -260,47 +283,41 @@ class MIStream {
   final int? height;
 
   const MIStream({
-    this.rFrameRate,
-    this.startPts,
-    this.channelLayout,
-    this.durationTs,
-    this.duration,
-    this.bitRate,
-    this.codecTagString,
-    this.avgFrameRate,
-    this.nbFrames,
-    this.codecLongName,
-    this.timeBase,
-    this.profile,
-    this.index,
-    this.maxBitRate,
-    this.codecName,
-    this.tags,
-    this.startTime,
-    this.disposition,
-    this.codecTag,
-    this.sampleRate,
-    this.channels,
-    this.sampleFmt,
-    this.codecTimeBase,
-    this.bitsPerSample,
-    this.codecType,
-    this.colorRange,
-    this.pixFmt,
-    this.codedHeight,
-    this.level,
-    this.hasBFrames,
-    this.refs,
-    this.width,
-    this.codedWidth,
-    this.height,
+    required this.rFrameRate,
+    required this.startPts,
+    required this.channelLayout,
+    required this.durationTs,
+    required this.duration,
+    required this.bitRate,
+    required this.codecTagString,
+    required this.avgFrameRate,
+    required this.nbFrames,
+    required this.codecLongName,
+    required this.timeBase,
+    required this.profile,
+    required this.index,
+    required this.maxBitRate,
+    required this.codecName,
+    required this.tags,
+    required this.startTime,
+    required this.disposition,
+    required this.codecTag,
+    required this.sampleRate,
+    required this.channels,
+    required this.sampleFmt,
+    required this.codecTimeBase,
+    required this.bitsPerSample,
+    required this.codecType,
+    required this.colorRange,
+    required this.pixFmt,
+    required this.codedHeight,
+    required this.level,
+    required this.hasBFrames,
+    required this.refs,
+    required this.width,
+    required this.codedWidth,
+    required this.height,
   });
-
-  static int? _extractInt(dynamic value) {
-    if (value is int) return value;
-    if (value is String) return int.tryParse(value);
-    return null;
-  }
 
   factory MIStream.fromMap(Map<String, dynamic> map) {
     final tags = map.getOrUpperCase("tags");
@@ -328,7 +345,7 @@ class MIStream {
       channels: map.getOrUpperCase("channels"),
       sampleFmt: map.getOrUpperCase("sample_fmt"),
       codecTimeBase: map.getOrUpperCase("codec_time_base"),
-      bitsPerSample: _extractInt(map.getOrUpperCase("bits_per_raw_sample")) ?? _extractInt(map.getOrUpperCase("bits_per_sample")),
+      bitsPerSample: MediaInfo.extractInt(map.getOrUpperCase("bits_per_raw_sample")) ?? MediaInfo.extractInt(map.getOrUpperCase("bits_per_sample")),
       codecType: map.getOrUpperCase("codec_type"),
       colorRange: map.getOrUpperCase("color_range"),
       pixFmt: map.getOrUpperCase("pix_fmt"),
@@ -390,18 +407,18 @@ class MIStreamTags {
   final String? track;
 
   const MIStreamTags({
-    this.handlerName,
-    this.language,
-    this.title,
-    this.artist,
-    this.album,
-    this.albumArtist,
-    this.track,
+    required this.handlerName,
+    required this.language,
+    required this.title,
+    required this.artist,
+    required this.album,
+    required this.albumArtist,
+    required this.track,
   });
 
   factory MIStreamTags.fromMap(Map<String, dynamic> map) => MIStreamTags(
     handlerName: map.getOrUpperCase("handler_name"),
-    language: map.getOrUpperCase("language"),
+    language: map["Language"] ?? map.getOrUpperCase("language"),
     title: map["Title"] ?? map.getOrUpperCase("title"),
     artist: map["Artist"] ?? map.getOrUpperCase("artist"),
     album: map["Album"] ?? map.getOrUpperCase("album"),

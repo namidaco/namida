@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:namida/class/media_info.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -80,6 +81,7 @@ class FTags {
   final String? tempo;
   final String? country;
   final String? recordLabel;
+  final int? bpm;
 
   final double? ratingPercentage;
   final ReplayGainData? gainData;
@@ -114,6 +116,7 @@ class FTags {
     this.tempo,
     this.country,
     this.recordLabel,
+    this.bpm,
     this.ratingPercentage,
     this.gainData,
     this.sortInfo,
@@ -125,11 +128,12 @@ class FTags {
     return list.join('; ');
   }
 
-  static double? ratingUnsignedIntToPercentage(String? rating) {
+  static double? ratingToPercentage(String? rating) {
     if (rating == null) return null;
-    final unsignedInt = int.tryParse(rating);
-    if (unsignedInt == null) return null;
-    return unsignedInt / 255;
+    final value = int.tryParse(rating);
+    if (value == null || value == 0) return null;
+    if (value <= 5) return value / 5.0; // 0-5
+    return value / 100.0; // 0-100
   }
 
   static int ratingPercentageToUnsignedInt(double ratingPercentage) {
@@ -178,7 +182,8 @@ class FTags {
       tempo: _listToString(map["tempo"]) ?? map["TEMPO"],
       country: _listToString(map["country"]) ?? map["COUNTRY"],
       recordLabel: _listToString(map["recordLabel"]) ?? map["RECORDLABEL"] ?? map["label"] ?? map["LABEL"],
-      ratingPercentage: ratingUnsignedIntToPercentage(ratingString),
+      bpm: MediaInfo.extractInt(map["bpm"]),
+      ratingPercentage: ratingToPercentage(ratingString),
       gainData: ReplayGainData.fromAndroidMap(map),
       sortInfo: FTagsSortInfo.fromAndroidMap(map),
     );
@@ -213,6 +218,7 @@ class FTags {
       "tempo": tempo,
       "country": country,
       "recordLabel": recordLabel,
+      "bpm": bpm,
       "language": language,
       "gainData": gainData?.toMap(),
       "sortInfo": sortInfo?.toMap(),
@@ -347,15 +353,13 @@ class FAudioModel {
   }
 
   factory FAudioModel.fromMap(Map<String, dynamic> map) {
-    String? format = map["format"];
-    if (format != null && format.isNotEmpty) format = format.replaceFirst(RegExp('flac', caseSensitive: false), 'FLAC');
     return FAudioModel(
       tags: FTags.fromMap(map),
       durationMS: map["durationMS"],
       bitRate: map["bitRate"],
       channels: map["channels"],
       encodingType: map["encodingType"],
-      format: format,
+      format: map["format"],
       sampleRate: map["sampleRate"],
       bits: map["bits"],
       isVariableBitRate: map["isVariableBitRate"],
