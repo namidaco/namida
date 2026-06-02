@@ -9,7 +9,6 @@ import 'package:flutter/rendering.dart' as fr;
 import 'package:flutter/services.dart';
 
 import 'package:basic_audio_handler/basic_audio_handler.dart';
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:checkmark/checkmark.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
@@ -4666,7 +4665,7 @@ class HistoryJumpToDayIcon<T extends ItemWithDate, E> extends StatelessWidget {
           historyController: controller,
           title: lang.jumpToDay,
           buttonText: lang.jump,
-          calendarType: CalendarDatePicker2Type.single,
+          calendarType: NamidaCalendarDatePickerType.single,
           useHistoryDates: true,
           initialDate: initialDate,
           onGenerate: (dates) {

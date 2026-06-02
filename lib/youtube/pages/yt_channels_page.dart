@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:youtipie/class/channels/channel_info.dart';
 import 'package:youtipie/class/channels/channel_page_result.dart';
 import 'package:youtipie/class/channels/channel_tab.dart';
@@ -291,7 +290,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                               title: lang.date,
                               buttonText: lang.confirm,
                               useHistoryDates: false,
-                              calendarType: CalendarDatePicker2Type.single,
+                              calendarType: NamidaCalendarDatePickerType.single,
                               lastDate: DateTime.now(),
                               onGenerate: (dates) {
                                 if (dates.isNotEmpty) {

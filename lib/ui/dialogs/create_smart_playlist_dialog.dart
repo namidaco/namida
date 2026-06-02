@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
-
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
@@ -1246,7 +1244,7 @@ class _CalendarPickerIconWidget extends StatelessWidget {
             title: lang.date,
             buttonText: lang.confirm,
             useHistoryDates: false,
-            calendarType: CalendarDatePicker2Type.single,
+            calendarType: NamidaCalendarDatePickerType.single,
             onGenerate: (dates) {
               if (dates.isNotEmpty) {
                 onSelect(dates.first);

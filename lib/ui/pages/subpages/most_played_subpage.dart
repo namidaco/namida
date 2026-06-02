@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/controller/current_color.dart';
@@ -101,7 +100,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                           buttonText: lang.confirm,
                           useHistoryDates: true,
                           historyController: historyController,
-                          calendarType: CalendarDatePicker2Type.single,
+                          calendarType: NamidaCalendarDatePickerType.single,
                           lastDate: dateCustom.newest,
                           onGenerate: (dates) {
                             final newDate = dates.first;
@@ -131,7 +130,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                           buttonText: lang.confirm,
                           useHistoryDates: true,
                           historyController: historyController,
-                          calendarType: CalendarDatePicker2Type.single,
+                          calendarType: NamidaCalendarDatePickerType.single,
                           firstDate: dateCustom.oldest,
                           onGenerate: (dates) {
                             final newDate = dates.first;

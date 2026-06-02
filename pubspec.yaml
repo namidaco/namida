@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 6.1.8-beta+260526092
+version: 6.2.1-beta+260602229
 
 environment:
   sdk: ">=3.11.0 <4.0.0"
@@ -52,7 +52,9 @@ dependencies:
   connectivity_plus: ^7.0.0
   selectable_autolink_text: ^2.6.0
   share_plus: <=10.1.4 # v12.0.1 doesnt work on windows
-  calendar_date_picker2: ^2.0.0
+  calendar_date_picker2:
+    git:
+      url: https://github.com/MSOB7YY/calendar_date_picker2
   wakelock_plus: ^1.5.2
   screen_brightness:
     git:
