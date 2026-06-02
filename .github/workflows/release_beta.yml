@@ -218,9 +218,36 @@ jobs:
           token: ${{ secrets.PAT }}
           submodules: recursive
 
-      - uses: subosito/flutter-action@v2
+      - name: Install Flutter (x64)
+        if: matrix.arch == 'x64'
+        uses: subosito/flutter-action@v2
         with:
           flutter-version-file: pubspec.yaml
+
+      - name: Install Flutter (arm64)
+        if: matrix.arch == 'arm64'
+        shell: pwsh
+        run: |
+          # Read version from pubspec.yaml (e.g. "3.41.7")
+          $version = (Select-String -Path pubspec.yaml -Pattern '^\s*flutter:\s*([\d.]+)').Matches[0].Groups[1].Value
+          if (-not $version) {
+            Write-Error "Could not parse flutter version from pubspec.yaml"
+            exit 1
+          }
+          Write-Host "Flutter version: $version"
+
+          $url = "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_arm64_${version}-stable.zip"
+          Write-Host "Downloading $url"
+          Invoke-WebRequest -Uri $url -OutFile flutter.zip
+
+          Write-Host "Extracting..."
+          Expand-Archive -Path flutter.zip -DestinationPath C:\flutter-sdk -Force
+          Remove-Item flutter.zip
+
+          # Add to PATH for all subsequent steps
+          echo "C:\flutter-sdk\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+          flutter --version
 
       - name: Setup credentials
         run: |
