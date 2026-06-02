@@ -13,6 +13,7 @@ import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/class/videos/video_result.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
+import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
@@ -92,11 +93,38 @@ class YTUtils {
     List<int> overrideListens = const [],
     bool displayCacheIcons = true,
     double? fontMultiplier,
+    required Rxn<LikeStatus>? likeStatusRx,
   }) {
     iconsColor ??= context.theme.iconTheme.color;
     final listens = overrideListens.isNotEmpty ? overrideListens : YoutubeHistoryController.inst.topTracksMapListens.value[videoId] ?? [];
     final textTheme = context.textTheme;
     return [
+      if (likeStatusRx != null) ...[
+        ObxO(
+          rx: likeStatusRx,
+          builder: (context, likeStatus) {
+            if (likeStatus == null) return const SizedBox();
+            final (bool isFilled, IconData likedIcon, IconData normalIcon) = switch (likeStatus) {
+              LikeStatus.liked => (true, Broken.like_filled, Broken.like_1),
+              LikeStatus.disliked => (true, Broken.dislike_filled, Broken.dislike),
+              LikeStatus.undefined || LikeStatus.unknown => (false, Broken.like_filled, Broken.like_1),
+            };
+            return AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: likeStatus == LikeStatus.unknown ? 0.1 : 0.6,
+              child: NamidaRawLikeButton(
+                isLiked: isFilled,
+                likedIcon: likedIcon,
+                normalIcon: normalIcon,
+                disabledColor: context.theme.iconTheme.color,
+                size: 14.0,
+                removeConfirmationAction: null,
+                onTap: null,
+              ),
+            );
+          },
+        ),
+      ],
       if (listens.isNotEmpty)
         Material(
           type: MaterialType.transparency,
@@ -123,7 +151,10 @@ class YTUtils {
               ),
             ),
           ),
-        ),
+        )
+      else
+        const SizedBox(width: 5.0),
+
       if (displayCacheIcons) ...[
         Tooltip(
           message: lang.videoCache,

@@ -6,6 +6,7 @@ import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
+import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/track.dart';
@@ -302,6 +303,8 @@ class YTHistoryVideoCardBase<T> extends StatefulWidget {
 }
 
 class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
+  final _likeStatusRx = Rxn<LikeStatus>(LikeStatus.unknown);
+
   YoutubeID itemToYTIDPlay(T item) {
     final e = widget.itemToYTVideoId(item);
     return YoutubeID(id: e.$1, watchNull: e.$2, playlistID: widget.properties.configs.playlistID);
@@ -317,6 +320,12 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
   void didUpdateWidget(covariant YTHistoryVideoCardBase<T> oldWidget) {
     _assignItemInfoFromIndex();
     super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void dispose() {
+    _likeStatusRx.close();
+    super.dispose();
   }
 
   void _assignItemInfoFromIndex() {
@@ -336,7 +345,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
           _duration = null;
         },
       );
-      _initValues(videoId);
+      _initValues(videoId).whenComplete(_tryFetchLikeStatus);
     } else {
       refreshState();
     }
@@ -355,7 +364,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
   String? _duration;
   bool _isVideoUnavailable = false;
 
-  void _initValues(String videoId) async {
+  Future<void> _initValues(String videoId) async {
     if (_isInitializingValues) return;
 
     StreamInfoItem? infoFinal = this.widget.info?.call(item);
@@ -452,6 +461,13 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
           _duration = (newInfo.info?.durSeconds ?? newInfo.audioStreams.firstOrNull?.duration?.inSeconds)?.secondsLabel;
         },
       );
+    }
+  }
+
+  bool canFetchLikeStatus() => !widget.minimalCard;
+  Future<void> _tryFetchLikeStatus() async {
+    if (canFetchLikeStatus()) {
+      _likeStatusRx.value = await YoutubeInfoController.video.fetchLikeStatusForVideoCard(videoId);
     }
   }
 
@@ -736,6 +752,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> {
                   overrideListens: widget.overrideListens,
                   displayCacheIcons: !widget.minimalCard,
                   fontMultiplier: widget.minimalCard ? widget.minimalCardFontMultiplier : null,
+                  likeStatusRx: canFetchLikeStatus() ? _likeStatusRx : null,
                 ),
               ),
             ),

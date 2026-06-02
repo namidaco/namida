@@ -22,6 +22,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final personalizedMixPlaylists = RxnF<bool>(fallback: true);
   final preferMixRelatedVideos = RxnF<bool>(fallback: false);
   final searchCleanup = true.obs;
+  final showLikeStatusOnCards = RxnF<bool>(fallback: false);
 
   final ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
   final ytMiniplayerDimAfterSeconds = 15.obs;
@@ -66,6 +67,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? personalizedMixPlaylists,
     bool? preferMixRelatedVideos,
     bool? searchCleanup,
+    bool? showLikeStatusOnCards,
     String? ytDownloadLocation,
     int? ytMiniplayerDimAfterSeconds,
     double? ytMiniplayerDimOpacity,
@@ -104,6 +106,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (personalizedMixPlaylists != null) this.personalizedMixPlaylists.value = personalizedMixPlaylists;
     if (preferMixRelatedVideos != null) this.preferMixRelatedVideos.value = preferMixRelatedVideos;
     if (searchCleanup != null) this.searchCleanup.value = searchCleanup;
+    if (showLikeStatusOnCards != null) this.showLikeStatusOnCards.value = showLikeStatusOnCards;
 
     if (ytDownloadLocation != null) this.ytDownloadLocation.value = ytDownloadLocation;
     if (ytMiniplayerDimAfterSeconds != null) this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;
@@ -180,6 +183,7 @@ class _YoutubeSettings with SettingsFileWriter {
       personalizedMixPlaylists.value = json['personalizedMixPlaylists'] ?? personalizedMixPlaylists.value;
       preferMixRelatedVideos.value = json['preferMixRelatedVideos'] ?? preferMixRelatedVideos.value;
       searchCleanup.value = json['searchCleanup'] ?? searchCleanup.value;
+      showLikeStatusOnCards.value = json['showLikeStatusOnCards'] ?? showLikeStatusOnCards.value;
 
       ytDownloadLocation.value = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
       ytMiniplayerDimAfterSeconds.value = json['ytMiniplayerDimAfterSeconds'] ?? ytMiniplayerDimAfterSeconds.value;
@@ -236,6 +240,7 @@ class _YoutubeSettings with SettingsFileWriter {
     'personalizedMixPlaylists': ?personalizedMixPlaylists.value,
     'preferMixRelatedVideos': ?preferMixRelatedVideos.value,
     'searchCleanup': searchCleanup.value,
+    'showLikeStatusOnCards': ?showLikeStatusOnCards.value,
     'ytDownloadLocation': ytDownloadLocation.value,
     'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
     'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,

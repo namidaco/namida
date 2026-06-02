@@ -1007,12 +1007,27 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                     secondaryIcon: Broken.music_playlist,
                     secondaryIconSize: 12.0,
                   ),
-                  value: preferMixRelatedVideos ?? false,
+                  value: preferMixRelatedVideos ?? settings.youtube.preferMixRelatedVideos.fallback,
                   onChanged: (isTrue) {
                     settings.youtube.save(preferMixRelatedVideos: !isTrue);
                     YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: null, preferMix: !isTrue);
                   },
                   title: 'prefer_mix_playlist_as_related_videos'.toUpperCase(),
+                ),
+              ),
+              ObxO(
+                rx: settings.youtube.showLikeStatusOnCards,
+                builder: (context, showLikeStatusOnCards) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.card,
+                    secondaryIcon: Broken.like_1,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: showLikeStatusOnCards ?? settings.youtube.showLikeStatusOnCards.fallback,
+                  onChanged: (isTrue) {
+                    settings.youtube.save(showLikeStatusOnCards: !isTrue);
+                  },
+                  title: 'show_like_status_on_cards'.toUpperCase(),
                 ),
               ),
               ObxO(

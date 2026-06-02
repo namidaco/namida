@@ -7,6 +7,7 @@ import 'package:youtipie/class/result_wrapper/playlist_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
+import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/controller/player_controller.dart';
@@ -26,7 +27,7 @@ import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
-class YoutubeVideoCard extends StatelessWidget {
+class YoutubeVideoCard extends StatefulWidget {
   final VideoTileProperties properties;
   final StreamInfoItem video;
   final PlaylistID? playlistID;
@@ -58,77 +59,105 @@ class YoutubeVideoCard extends StatelessWidget {
     this.showThirdLine = true,
   });
 
+  @override
+  State<YoutubeVideoCard> createState() => _YoutubeVideoCardState();
+}
+
+class _YoutubeVideoCardState extends State<YoutubeVideoCard> {
+  final _likeStatusRx = Rxn<LikeStatus>(LikeStatus.unknown);
+
+  @override
+  void initState() {
+    _tryFetchLikeStatus();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _likeStatusRx.close();
+    super.dispose();
+  }
+
   FutureOr<List<NamidaPopupItem>> getMenuItems() {
-    final videoId = video.id;
+    final videoId = widget.video.id;
     return YTUtils.getVideoCardMenuItems(
-      queueSource: properties.configs.queueSource,
-      downloadIndex: playlistIndexAndCount?.index,
-      totalLength: playlistIndexAndCount?.totalLength,
-      playlistId: playlistIndexAndCount?.playlistId,
-      streamInfoItem: video,
+      queueSource: widget.properties.configs.queueSource,
+      downloadIndex: widget.playlistIndexAndCount?.index,
+      totalLength: widget.playlistIndexAndCount?.totalLength,
+      playlistId: widget.playlistIndexAndCount?.playlistId,
+      streamInfoItem: widget.video,
       videoId: videoId,
-      channelID: video.channel?.id,
-      playlistID: playlistID,
-      idsNamesLookup: {videoId: video.title},
-      playlistName: playlist?.basicInfo.title ?? '',
+      channelID: widget.video.channel?.id,
+      playlistID: widget.playlistID,
+      idsNamesLookup: {videoId: widget.video.title},
+      playlistName: widget.playlist?.basicInfo.title ?? '',
     );
+  }
+
+  Future<void> _tryFetchLikeStatus() async {
+    _likeStatusRx.value = await YoutubeInfoController.video.fetchLikeStatusForVideoCard(widget.video.id);
   }
 
   @override
   Widget build(BuildContext context) {
-    final videoId = video.id;
-    final viewsCount = video.viewsCount;
-    String? viewsCountText = video.viewsText;
+    final videoId = widget.video.id;
+    final viewsCount = widget.video.viewsCount;
+    String? viewsCountText = widget.video.viewsText;
     if (viewsCount != null) {
       viewsCountText = viewsCount.displayViewsKeywordShort;
     }
 
-    DateTime? publishedDate = video.publishedAt.date;
+    DateTime? publishedDate = widget.video.publishedAt.date;
     final uploadDateAgo = publishedDate == null ? null : TimeAgoController.dateFromNow(publishedDate);
 
-    final percentageWatched = video.percentageWatched;
+    final percentageWatched = widget.video.percentageWatched;
 
-    final smallBoxText = video.durSeconds?.secondsLabel;
-    final firstBadge = smallBoxText == null || smallBoxText.isEmpty ? video.badges?.firstOrNull : null;
+    final smallBoxText = widget.video.durSeconds?.secondsLabel;
+    final firstBadge = smallBoxText == null || smallBoxText.isEmpty ? widget.video.badges?.firstOrNull : null;
 
     final enableGifThumbnails = settings.youtube.enableGifThumbnails;
-    final thumbnailGifUrl = enableGifThumbnails ? video.thumbnailGifUrl : null;
+    final thumbnailGifUrl = enableGifThumbnails ? widget.video.thumbnailGifUrl : null;
     Widget finalChild = NamidaPopupWrapper(
       openOnTap: false,
       childrenDefault: getMenuItems,
       child: YoutubeCard(
         thumbnailType: ThumbnailType.video,
-        thumbnailWidthPercentage: thumbnailWidthPercentage,
-        fontMultiplier: fontMultiplier,
-        thumbnailWidth: thumbnailWidth,
-        thumbnailHeight: thumbnailHeight,
-        isImageImportantInCache: isImageImportantInCache,
+        thumbnailWidthPercentage: widget.thumbnailWidthPercentage,
+        fontMultiplier: widget.fontMultiplier,
+        thumbnailWidth: widget.thumbnailWidth,
+        thumbnailHeight: widget.thumbnailHeight,
+        isImageImportantInCache: widget.isImageImportantInCache,
         borderRadius: 12.0,
         videoId: thumbnailGifUrl != null ? null : videoId,
         thumbnailUrl: thumbnailGifUrl,
         shimmerEnabled: false,
-        title: video.title,
+        title: widget.video.title,
         subtitle: [
           if (viewsCountText != null && viewsCountText.isNotEmpty) viewsCountText,
           ?uploadDateAgo,
         ].join(' - '),
-        displaythirdLineText: showThirdLine,
-        thirdLineText: dateInsteadOfChannel ? video.badges?.join(' - ') ?? '' : video.channelName ?? '',
-        displayChannelThumbnail: !dateInsteadOfChannel,
-        channelThumbnailUrl: video.channel?.thumbnails.pick()?.url ?? YoutubeInfoController.utils.getVideoChannelThumbnailsSync(videoId, checkFromStorage: false)?.pick()?.url,
+        displaythirdLineText: widget.showThirdLine,
+        thirdLineText: widget.dateInsteadOfChannel ? widget.video.badges?.join(' - ') ?? '' : widget.video.channelName ?? '',
+        displayChannelThumbnail: !widget.dateInsteadOfChannel,
+        channelThumbnailUrl:
+            widget.video.channel?.thumbnails.pick()?.url ?? YoutubeInfoController.utils.getVideoChannelThumbnailsSync(videoId, checkFromStorage: false)?.pick()?.url,
         onTap:
-            onTap ??
+            widget.onTap ??
             () async {
               _VideoCardUtils.onVideoTap(
                 videoId: videoId,
-                index: playlistIndexAndCount?.index,
-                playlist: playlist,
-                playlistID: playlistID,
-                queueSource: properties.configs.queueSource,
+                index: widget.playlistIndexAndCount?.index,
+                playlist: widget.playlist,
+                playlistID: widget.playlistID,
+                queueSource: widget.properties.configs.queueSource,
               );
             },
         smallBoxText: smallBoxText,
-        bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(videoId: videoId, context: context),
+        bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(
+          videoId: videoId,
+          context: context,
+          likeStatusRx: _likeStatusRx,
+        ),
         menuChildrenDefault: getMenuItems,
         extractColor: false,
         onTopWidgets: percentageWatched == null && firstBadge == null
@@ -166,17 +195,17 @@ class YoutubeVideoCard extends StatelessWidget {
               ],
       ),
     );
-    if (properties.configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
-      final plItem = YoutubeID(id: videoId, playlistID: playlistID);
+    if (widget.properties.configs.horizontalGestures && (widget.properties.allowSwipeLeft || widget.properties.allowSwipeRight)) {
+      final plItem = YoutubeID(id: videoId, playlistID: widget.playlistID);
       return SwipeQueueAddTile(
         item: plItem,
         infoCallback: () => SwipeQueueAddTileInfo(
-          queueSource: properties.configs.queueSource,
+          queueSource: widget.properties.configs.queueSource,
           heroTag: null,
         ),
         dismissibleKey: plItem,
-        allowSwipeLeft: properties.allowSwipeLeft,
-        allowSwipeRight: properties.allowSwipeRight,
+        allowSwipeLeft: widget.properties.allowSwipeLeft,
+        allowSwipeRight: widget.properties.allowSwipeRight,
         child: finalChild,
       );
     }
@@ -262,7 +291,11 @@ class YoutubeShortVideoCard extends StatelessWidget {
                 openInFullScreen: true,
               );
             },
-        bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(videoId: short.id, context: context),
+        bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(
+          videoId: short.id,
+          context: context,
+          likeStatusRx: null,
+        ),
         menuChildrenDefault: getMenuItems,
       ),
     );
