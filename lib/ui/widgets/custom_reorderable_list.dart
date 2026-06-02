@@ -6,6 +6,8 @@
 /// to avoid whole list unnecessary rebuilds, improving performance significantly
 library;
 
+import 'dart:async' show Timer;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide ReorderableListView, SliverReorderableList, ReorderableDragStartListener;
@@ -766,10 +768,14 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
     return _dragInfo;
   }
 
-  void _dragUpdate(_DragInfo item, Offset position, Offset delta) {
+  void _dragUpdate(_DragInfo item, Offset position, Offset delta) async {
     _overlayEntry?.markNeedsBuild();
     _dragUpdateItems();
-    _autoScroller?.startAutoScrollIfNecessary(_dragTargetRect);
+    // -- workaround to avoid jumping instantly while starting to drag near the edge
+    Timer(
+      const Duration(milliseconds: 500),
+      () => _autoScroller?.startAutoScrollIfNecessary(_dragTargetRect),
+    );
   }
 
   void _dragCancel(_DragInfo item) {

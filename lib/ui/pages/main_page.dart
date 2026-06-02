@@ -47,6 +47,15 @@ class MainPage extends StatelessWidget {
     this.isMiniplayerAlwaysVisible = false,
   });
 
+  double _getReactiveBottomFabOffset(BuildContext context) {
+    final bottomNavHeight = settings.enableBottomNavBar.valueR && !Dimensions.inst.miniplayerIsWideScreen
+        ? kBottomNavigationBarHeight + MediaQuery.viewPaddingOf(context).bottom
+        : 0.0;
+    final fabBottomOffset = MediaQuery.viewInsetsOf(context).bottom - bottomNavHeight + 8.0;
+    final bottom = fabBottomOffset.withMinimum(isMiniplayerAlwaysVisible ? 12.0 : Dimensions.inst.globalBottomPaddingEffectiveR);
+    return bottom;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -130,20 +139,14 @@ class MainPage extends StatelessWidget {
 
               Builder(
                 builder: (context) {
-                  final fabBottomOffset =
-                      MediaQuery.viewInsetsOf(context).bottom -
-                      MediaQuery.viewPaddingOf(context).bottom -
-                      MediaQuery.systemGestureInsetsOf(context).bottom -
-                      kBottomNavigationBarHeight +
-                      8.0;
                   return Obx(
                     (context) {
                       final currentRoute = NamidaNavigator.inst.currentRouteR;
                       if (currentRoute == null) return const SizedBox();
 
                       final mainFABHidden = Dimensions.inst.shouldHideFABR;
-                      final bottom = fabBottomOffset.withMinimum(isMiniplayerAlwaysVisible ? 12.0 : Dimensions.inst.globalBottomPaddingEffectiveR);
                       final right = (mainFABHidden ? 0.0 : kFABSize + 12.0) + 8.0;
+                      final bottom = _getReactiveBottomFabOffset(context);
                       bool shouldHide;
                       bool shouldPlay = false;
 
@@ -197,16 +200,10 @@ class MainPage extends StatelessWidget {
               ),
               Builder(
                 builder: (context) {
-                  final fabBottomOffset =
-                      MediaQuery.viewInsetsOf(context).bottom -
-                      MediaQuery.viewPaddingOf(context).bottom -
-                      MediaQuery.systemGestureInsetsOf(context).bottom -
-                      kBottomNavigationBarHeight +
-                      8.0;
                   return Obx(
                     (context) {
                       final shouldHide = Dimensions.inst.shouldHideFABR;
-                      final bottom = fabBottomOffset.withMinimum(isMiniplayerAlwaysVisible ? 12.0 : Dimensions.inst.globalBottomPaddingEffectiveR);
+                      final bottom = _getReactiveBottomFabOffset(context);
                       return AnimatedPositioned(
                         right: 12.0,
                         bottom: bottom,

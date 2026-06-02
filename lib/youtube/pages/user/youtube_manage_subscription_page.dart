@@ -346,12 +346,14 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                                 final availableTill = userSupabaseSub.availableTill;
                                 String endTimeLeftText;
                                 if (availableTill == null) {
-                                  endTimeLeftText = '?';
+                                  endTimeLeftText = ' - ?';
+                                } else if (availableTill.isAfter(DateTime(9000))) {
+                                  endTimeLeftText = '';
                                 } else {
-                                  endTimeLeftText = TimeAgoController.dateFromNow(availableTill, long: false);
+                                  endTimeLeftText = ' - ${TimeAgoController.dateFromNow(availableTill, long: false)}';
                                 }
                                 return Text(
-                                  " - $endTimeLeftText",
+                                  endTimeLeftText,
                                   style: textTheme.displaySmall,
                                 );
                               },

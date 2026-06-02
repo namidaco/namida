@@ -114,7 +114,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                       const SizedBox(height: 6.0),
                       _AlbumsRow(
                         title: lang.appearsOn,
-                        icon: Broken.music_playlist,
+                        icon: Broken.format_circle,
                         identifiers: widget.extrasIdentifiers,
                         initiallyExpanded: extrasInitiallyExpanded,
                         onExpansionChanged: (value) {},

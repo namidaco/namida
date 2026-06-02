@@ -71,6 +71,8 @@ class Dimensions {
 
   /// + active miniplayer padding
   double get globalBottomPaddingEffectiveR {
+    final bottomNavHeight = settings.enableBottomNavBar.valueR && !Dimensions.inst.miniplayerIsWideScreen ? 0.0 : _getDeviceBottomGesturePaddingOrZero();
+
     final currentItem = Player.inst.currentItem.valueR;
     return (currentItem is YoutubeID
             ? settings.youtube.youtubeStyleMiniplayer.valueR
@@ -79,7 +81,16 @@ class Dimensions {
             : currentItem is Selectable
             ? _kMiniplayerBottomPadding
             : 0.0) +
-        12.0;
+        12.0 +
+        bottomNavHeight;
+  }
+
+  double _getDeviceBottomGesturePaddingOrZero() {
+    final context = namida.context;
+    if (context != null) {
+      return MediaQuery.systemGestureInsetsOf(context).bottom * 0.5;
+    }
+    return 0.0;
   }
 
   /// + floating action button padding

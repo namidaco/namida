@@ -266,9 +266,10 @@ class _QuickSuggestionsForSettings extends StatelessWidget {
               _QuickSuggestionsTile(
                 expanded: false,
                 icon: null,
-                leading: const RefreshLibraryIcon(
+                leading: (color) => RefreshLibraryIcon(
                   widgetKey: 'quick_suggestions',
                   size: 20.0,
+                  color: color,
                 ),
                 title: lang.refreshLibrary,
                 subtitle: '',
@@ -297,7 +298,7 @@ class _QuickSuggestionsForSettings extends StatelessWidget {
 
 class _QuickSuggestionsTile extends StatelessWidget {
   final IconData? icon;
-  final Widget? leading;
+  final Widget Function(Color color)? leading;
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
@@ -324,6 +325,7 @@ class _QuickSuggestionsTile extends StatelessWidget {
     final scaffoldBgColor = Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.5), isDarkMode ? Colors.black : Colors.white);
     const foregroundColorOpacity = 0.8;
     final foregroundColor = Color.alphaBlend(colorScheme.withOpacityExt(0.1), theme.colorScheme.onSurface).withOpacityExt(foregroundColorOpacity);
+    final iconColor = foregroundColor.withOpacityExt(foregroundColorOpacity * 0.9);
     return Tooltip(
       message: tooltip,
       child: NamidaInkWell(
@@ -333,14 +335,14 @@ class _QuickSuggestionsTile extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12.0.multipliedRadius),
           border: Border.all(
-            color: colorScheme.withOpacityExt(0.25),
+            color: colorScheme.withOpacityExt(0.2),
           ),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
               Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.95), colorScheme).withOpacityExt(1.0),
-              Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.75), colorScheme).withOpacityExt(1.0),
+              Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.80), colorScheme).withOpacityExt(1.0),
             ],
           ),
           boxShadow: [
@@ -364,11 +366,11 @@ class _QuickSuggestionsTile extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(width: 4.0),
-              leading ??
+              leading?.call(iconColor) ??
                   Icon(
                     icon,
                     size: 20.0,
-                    color: foregroundColor.withOpacityExt(foregroundColorOpacity * 0.85),
+                    color: iconColor,
                   ),
               if (title.isNotEmpty || subtitle.isNotEmpty) ...[
                 const SizedBox(width: 8.0),
@@ -381,7 +383,7 @@ class _QuickSuggestionsTile extends StatelessWidget {
                         Text(
                           title,
                           style: textTheme.displayMedium?.copyWith(
-                            color: foregroundColor.withOpacityExt(foregroundColorOpacity * 0.85),
+                            color: foregroundColor.withOpacityExt(foregroundColorOpacity * 0.9),
                           ),
                           overflow: TextOverflow.ellipsis,
                           softWrap: false,
@@ -390,7 +392,7 @@ class _QuickSuggestionsTile extends StatelessWidget {
                         Text(
                           subtitle,
                           style: textTheme.displaySmall?.copyWith(
-                            color: foregroundColor.withOpacityExt(foregroundColorOpacity * 0.6),
+                            color: foregroundColor.withOpacityExt(foregroundColorOpacity * 0.8),
                           ),
                           overflow: TextOverflow.ellipsis,
                           softWrap: false,

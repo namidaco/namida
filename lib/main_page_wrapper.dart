@@ -598,24 +598,28 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const SizedBox(width: 6.0),
-                                  Image.asset(
-                                    logoImgPath,
-                                    width: 22.0,
-                                    height: 22.0,
-                                    cacheHeight: 240,
-                                    cacheWidth: 240,
-                                    color: logoColor,
-                                    alignment: Alignment.center,
+                                  Flexible(
+                                    child: Image.asset(
+                                      logoImgPath,
+                                      width: 22.0,
+                                      height: 22.0,
+                                      cacheHeight: 240,
+                                      cacheWidth: 240,
+                                      color: logoColor,
+                                      alignment: Alignment.center,
+                                    ),
                                   ),
                                   const SizedBox(width: 4.0),
-                                  Text(
-                                    title,
-                                    style: textTheme.displayMedium?.copyWith(
-                                      color: logoTextColor,
-                                      fontSize: 14.0,
+                                  Flexible(
+                                    child: Text(
+                                      title,
+                                      style: textTheme.displayMedium?.copyWith(
+                                        color: logoTextColor,
+                                        fontSize: 14.0,
+                                      ),
+                                      overflow: TextOverflow.fade,
+                                      softWrap: false,
                                     ),
-                                    overflow: TextOverflow.fade,
-                                    softWrap: false,
                                   ),
                                   const SizedBox(width: 6.0),
                                   const SizedBox(width: 4.0),
