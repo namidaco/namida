@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 
 import 'package:rhttp/rhttp.dart';
 
@@ -1691,7 +1692,7 @@ class _ArtworkManager extends StatelessWidget {
                               : SmoothGridView.builder(
                                   padding: EdgeInsets.zero,
                                   shrinkWrap: true,
-                                  cacheExtent: context.height * 3,
+                                  scrollCacheExtent: ScrollCacheExtent.viewport(3),
                                   itemCount: urls.length,
                                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 3,

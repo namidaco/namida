@@ -659,7 +659,7 @@ class YTUtils {
             const YTUtils().showVideoClearDialog(videoId);
           },
         ),
-      if (moreMenuChildren != null) ...moreMenuChildren,
+      ...?moreMenuChildren,
     ];
   }
 

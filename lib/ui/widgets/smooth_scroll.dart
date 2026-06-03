@@ -100,7 +100,7 @@ class SmoothCustomScrollView extends StatelessWidget {
   final String? restorationId;
   final Clip clipBehavior;
   final DragStartBehavior dragStartBehavior;
-  final double? cacheExtent;
+  final fr.ScrollCacheExtent? scrollCacheExtent;
   final double anchor;
   final bool shrinkWrap;
 
@@ -116,7 +116,7 @@ class SmoothCustomScrollView extends StatelessWidget {
     this.restorationId,
     this.clipBehavior = Clip.hardEdge,
     this.dragStartBehavior = DragStartBehavior.start,
-    this.cacheExtent,
+    this.scrollCacheExtent,
     this.anchor = 0.0,
     this.shrinkWrap = false,
   });
@@ -138,7 +138,7 @@ class SmoothCustomScrollView extends StatelessWidget {
         restorationId: restorationId,
         clipBehavior: clipBehavior,
         dragStartBehavior: dragStartBehavior,
-        cacheExtent: cacheExtent,
+        scrollCacheExtent: scrollCacheExtent,
       ),
     );
   }
@@ -204,7 +204,7 @@ class SuperSmoothListView extends StatelessWidget {
   final ScrollPhysics? physics;
   final bool shrinkWrap;
   final EdgeInsetsGeometry? padding;
-  final double? cacheExtent;
+  final fr.ScrollCacheExtent? scrollCacheExtent;
   final List<Widget> children;
   final bool addAutomaticKeepAlives;
   final bool addRepaintBoundaries;
@@ -228,7 +228,7 @@ class SuperSmoothListView extends StatelessWidget {
     this.physics,
     this.shrinkWrap = false,
     this.padding,
-    this.cacheExtent,
+    this.scrollCacheExtent,
     required this.children,
     this.addAutomaticKeepAlives = true,
     this.addRepaintBoundaries = true,
@@ -259,7 +259,7 @@ class SuperSmoothListView extends StatelessWidget {
       primary: primary,
       shrinkWrap: shrinkWrap,
       padding: padding,
-      cacheExtent: cacheExtent,
+      cacheExtent: scrollCacheExtent?.value,
       semanticChildCount: semanticChildCount ?? children.length,
       dragStartBehavior: dragStartBehavior,
       keyboardDismissBehavior: keyboardDismissBehavior,
@@ -281,7 +281,7 @@ class SuperSmoothListView extends StatelessWidget {
     ScrollPhysics? physics,
     bool shrinkWrap = false,
     EdgeInsetsGeometry? padding,
-    double? cacheExtent,
+    fr.ScrollCacheExtent? scrollCacheExtent,
     required NullableIndexedWidgetBuilder itemBuilder,
     ChildIndexGetter? findChildIndexCallback,
     int? itemCount,
@@ -315,7 +315,7 @@ class SuperSmoothListView extends StatelessWidget {
             primary: primary,
             shrinkWrap: shrinkWrap,
             padding: padding,
-            cacheExtent: cacheExtent,
+            cacheExtent: scrollCacheExtent?.value,
             itemBuilder: itemBuilder,
             findChildIndexCallback: findChildIndexCallback,
             itemCount: itemCount,
@@ -338,7 +338,7 @@ class SuperSmoothListView extends StatelessWidget {
             primary: primary,
             shrinkWrap: shrinkWrap,
             padding: padding,
-            cacheExtent: cacheExtent,
+            scrollCacheExtent: scrollCacheExtent,
             itemBuilder: itemBuilder,
             findChildIndexCallback: findChildIndexCallback,
             itemCount: itemCount,
@@ -362,7 +362,7 @@ class SuperSmoothListView extends StatelessWidget {
     ScrollPhysics? physics,
     bool shrinkWrap = false,
     EdgeInsetsGeometry? padding,
-    double? cacheExtent,
+    fr.ScrollCacheExtent? scrollCacheExtent,
     required NullableIndexedWidgetBuilder itemBuilder,
     ChildIndexGetter? findChildIndexCallback,
     required IndexedWidgetBuilder separatorBuilder,
@@ -393,7 +393,7 @@ class SuperSmoothListView extends StatelessWidget {
       primary: primary,
       shrinkWrap: shrinkWrap,
       padding: padding,
-      cacheExtent: cacheExtent,
+      cacheExtent: scrollCacheExtent?.value,
       itemBuilder: itemBuilder,
       findChildIndexCallback: findChildIndexCallback,
       separatorBuilder: separatorBuilder,
@@ -417,7 +417,7 @@ class SuperSmoothListView extends StatelessWidget {
     ScrollPhysics? physics,
     bool shrinkWrap = false,
     EdgeInsetsGeometry? padding,
-    double? cacheExtent,
+    fr.ScrollCacheExtent? scrollCacheExtent,
     required SliverChildDelegate childrenDelegate,
     int? semanticChildCount,
     DragStartBehavior dragStartBehavior = DragStartBehavior.start,
@@ -443,7 +443,7 @@ class SuperSmoothListView extends StatelessWidget {
       primary: primary,
       shrinkWrap: shrinkWrap,
       padding: padding,
-      cacheExtent: cacheExtent,
+      cacheExtent: scrollCacheExtent?.value,
       childrenDelegate: childrenDelegate,
       semanticChildCount: semanticChildCount,
       dragStartBehavior: dragStartBehavior,
@@ -465,7 +465,7 @@ class SmoothGridView {
     ScrollPhysics? physics,
     bool shrinkWrap = false,
     EdgeInsetsGeometry? padding,
-    double? cacheExtent,
+    fr.ScrollCacheExtent? scrollCacheExtent,
     required NullableIndexedWidgetBuilder itemBuilder,
     ChildIndexGetter? findChildIndexCallback,
     int? itemCount,
@@ -489,7 +489,7 @@ class SmoothGridView {
       primary: primary,
       shrinkWrap: shrinkWrap,
       padding: padding,
-      cacheExtent: cacheExtent,
+      scrollCacheExtent: scrollCacheExtent,
       itemBuilder: itemBuilder,
       findChildIndexCallback: findChildIndexCallback,
       itemCount: itemCount,
@@ -516,7 +516,7 @@ class SmoothMasonryGridView {
     ScrollPhysics? physics,
     bool shrinkWrap = false,
     EdgeInsetsGeometry? padding,
-    double? cacheExtent,
+    fr.ScrollCacheExtent? scrollCacheExtent,
     required IndexedWidgetBuilder itemBuilder,
     int? itemCount,
     double mainAxisSpacing = 0.0,
@@ -541,7 +541,7 @@ class SmoothMasonryGridView {
       primary: primary,
       shrinkWrap: shrinkWrap,
       padding: padding,
-      cacheExtent: cacheExtent,
+      cacheExtent: scrollCacheExtent?.value,
       itemBuilder: itemBuilder,
       itemCount: itemCount,
       mainAxisSpacing: mainAxisSpacing,

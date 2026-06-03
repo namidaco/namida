@@ -163,7 +163,7 @@ class _FolderTileState extends State<FolderTile> {
             ),
           ];
     final subtitleRowChildren = <Widget>[
-      if (subtitleFirstPart != null) ...subtitleFirstPart,
+      ...?subtitleFirstPart,
       if (subtitleFirstPart != null && subtitleSecondPart != null)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -174,7 +174,7 @@ class _FolderTileState extends State<FolderTile> {
             style: subtitleTextStyle,
           ),
         ),
-      if (subtitleSecondPart != null) ...subtitleSecondPart,
+      ...?subtitleSecondPart,
     ];
 
     final thumbnailCoverPath = Indexer.inst.getFallbackFolderArtworkPath(folder: widget.folder);

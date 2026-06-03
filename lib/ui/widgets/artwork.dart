@@ -486,12 +486,12 @@ class _EncapsulateWithFloatingTilt extends StatelessWidget {
             enterDuration: Duration(milliseconds: 800),
             controllerLeaveDuration: Duration(milliseconds: 200),
           );
-    return Tilt(
-      clipBehavior: Clip.none,
+    return Tilt.base(
       tiltConfig: config,
       fps: 60,
+      clipBehavior: Clip.none,
       lightConfig: const LightConfig(disable: true, color: Colors.transparent),
-      shadowConfig: const ShadowConfig(disable: true, color: Colors.transparent),
+      shadowConfig: const ShadowBaseConfig(disable: true, color: Colors.transparent),
       childLayout: ChildLayout(
         inner: [
           TiltParallax(

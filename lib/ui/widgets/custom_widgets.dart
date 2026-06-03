@@ -684,7 +684,7 @@ class CustomBlurryDialog extends StatelessWidget {
                                       style: ctxth.textTheme.displayLarge,
                                     ),
                                   ),
-                                  if (trailingWidgets != null) ...trailingWidgets!,
+                                  ...?trailingWidgets,
                                 ],
                               ),
                             )
@@ -3082,8 +3082,7 @@ class _EncapsulateWithTilt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tilt(
-      clipBehavior: Clip.none,
+    return Tilt.base(
       tiltConfig: const TiltConfig(
         angle: 2.0,
         sensorFactor: 0.5,
@@ -3101,14 +3100,15 @@ class _EncapsulateWithTilt extends StatelessWidget {
         controllerLeaveDuration: Duration(milliseconds: 200),
       ),
       fps: 30,
+      clipBehavior: Clip.none,
       lightConfig: const LightConfig(
         enableReverse: true,
         maxIntensity: 0.2,
-        projectorScale: 0.8,
+        // projectorScale: 0.8,
         spreadFactor: 2.0,
         color: Color(0xCCFFFFFF),
       ),
-      shadowConfig: const ShadowConfig(
+      shadowConfig: const ShadowBaseConfig(
         disable: true,
         enableReverse: true,
         color: Colors.transparent,

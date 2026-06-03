@@ -524,7 +524,7 @@ class _NamidaState extends State<Namida> {
           key: ValueKey(l),
           (context) {
             final mode = settings.themeMode.valueR;
-            final isLight = mode.isLight(platformBrightness);
+            final isLight = mode.checkIsLight(platformBrightness);
             final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
             final mainChild = WindowController.instance?.usingCustomWindowTitleBar == true
                 ? WrapWithWindowGoodies(
@@ -581,7 +581,7 @@ class _NamidaState extends State<Namida> {
   static void refreshSystemBarsColors(BuildContext context, {bool forceRefresh = false}) {
     final mode = settings.themeMode.value;
     final platformBrightness = MediaQuery.platformBrightnessOf(context);
-    final isLight = mode.isLight(platformBrightness);
+    final isLight = mode.checkIsLight(platformBrightness);
     NamidaNavigator.inst.setSystemUIOverlayStyleCustom(isLight, forceRefresh: forceRefresh);
   }
 

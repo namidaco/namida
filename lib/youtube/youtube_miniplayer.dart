@@ -769,15 +769,15 @@ class _YTPlayerInnerPage extends StatelessWidget {
   final Rx<bool> _shouldShowGlowUnderVideo;
 
   const _YTPlayerInnerPage({
-    required bool canScrollQueue,
+    required this._canScrollQueue,
     required this.currentId,
-    required ScrollController scrollController,
+    required this._scrollController,
     required this.shimmerEnabled,
     required this.videoTitle,
     required this.mainTheme,
-    required Rx<bool> isTitleExpanded,
+    required this._isTitleExpanded,
     required this.mainTextTheme,
-    required Rx<int> numberOfRepeats,
+    required this._numberOfRepeats,
     required this.uploadDate,
     required this.uploadDateAgo,
     required this.maxWidth,
@@ -785,7 +785,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
     required this.videoViewCount,
     required this.expansibleController,
     required this.epansionTileChildren,
-    required YtVideoLikeManager videoLikeManager,
+    required this._videoLikeManager,
     required this.videoInfo,
     required this.currentIdTask,
     required this.downloadedFileExists,
@@ -801,13 +801,8 @@ class _YTPlayerInnerPage extends StatelessWidget {
     required this.ytTopComments,
     required this.relatedThumbnailHeight,
     required this.relatedThumbnailWidth,
-    required Rx<bool> shouldShowGlowUnderVideo,
-  }) : _canScrollQueue = canScrollQueue,
-       _scrollController = scrollController,
-       _isTitleExpanded = isTitleExpanded,
-       _numberOfRepeats = numberOfRepeats,
-       _videoLikeManager = videoLikeManager,
-       _shouldShowGlowUnderVideo = shouldShowGlowUnderVideo;
+    required this._shouldShowGlowUnderVideo,
+  });
 
   Future<bool> _onLikeTap({
     required bool isLiked,

@@ -1119,7 +1119,7 @@ extension ClamperExtDouble on double {
 }
 
 extension ThemeModeExtensions on ThemeMode {
-  bool isLight(Brightness? platformBrightness) {
+  bool checkIsLight(Brightness? platformBrightness) {
     final mode = this;
     final useDarkTheme = mode == ThemeMode.dark || (mode == ThemeMode.system && platformBrightness == Brightness.dark);
     final isLight = !useDarkTheme;

@@ -230,7 +230,7 @@ class ReorderableList extends StatefulWidget {
   final double anchor;
 
   /// {@macro flutter.rendering.RenderViewportBase.cacheExtent}
-  final double? cacheExtent;
+  final ScrollCacheExtent? cacheExtent;
 
   /// {@macro flutter.widgets.scrollable.dragStartBehavior}
   final DragStartBehavior dragStartBehavior;
@@ -389,7 +389,7 @@ class ReorderableListState extends State<ReorderableList> {
       physics: widget.physics,
       shrinkWrap: widget.shrinkWrap,
       anchor: widget.anchor,
-      cacheExtent: widget.cacheExtent,
+      scrollCacheExtent: widget.cacheExtent,
       dragStartBehavior: widget.dragStartBehavior,
       keyboardDismissBehavior: widget.keyboardDismissBehavior,
       restorationId: widget.restorationId,

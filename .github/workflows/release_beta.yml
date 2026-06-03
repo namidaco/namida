@@ -228,6 +228,8 @@ jobs:
         if: matrix.arch == 'arm64'
         shell: pwsh
         run: |
+          # Derived from https://github.com/flutter/flutter/issues/186730#issuecomment-4573214964 & https://github.com/flutter/flutter/issues/62597#issuecomment-4572851264
+
           # Read version from pubspec.yaml (e.g. "3.41.7")
           $version = (Select-String -Path pubspec.yaml -Pattern '^\s*flutter:\s*([\d.]+)').Matches[0].Groups[1].Value
           if (-not $version) {
@@ -236,18 +238,28 @@ jobs:
           }
           Write-Host "Flutter version: $version"
 
-          $url = "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_arm64_${version}-stable.zip"
+          # Download the standard x64 SDK zip, the bundled Dart/engine are x64,
+          # but the update_dart_sdk.ps1 script inside already knows how to fetch
+          # arm64 binaries when PROCESSOR_ARCHITECTURE=ARM64 (available since 3.44.0).
+          $url = "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_${version}-stable.zip"
           Write-Host "Downloading $url"
           Invoke-WebRequest -Uri $url -OutFile flutter.zip
-
-          Write-Host "Extracting..."
-          Expand-Archive -Path flutter.zip -DestinationPath C:\flutter-sdk -Force
+          Expand-Archive -Path flutter.zip -DestinationPath C:\ -Force
           Remove-Item flutter.zip
 
-          # Add to PATH for all subsequent steps
-          echo "C:\flutter-sdk\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          # Add flutter\bin to PATH for all subsequent steps
+          "C:\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-          flutter --version
+          # Delete the stamp so update_dart_sdk.ps1 ignores the bundled x64 Dart
+          # and re-downloads. Because this PowerShell session is native arm64
+          # (PROCESSOR_ARCHITECTURE=ARM64), it will fetch the arm64 Dart SDK.
+          Remove-Item "C:\flutter\bin\cache\engine-dart-sdk.stamp" -Force
+
+          # Triggers arm64 Dart SDK download
+          C:\flutter\bin\dart.bat --version
+
+          # Download arm64 engine artifacts (windows-arm64, -release, -profile, -debug)
+          C:\flutter\bin\flutter.bat precache --windows
 
       - name: Setup credentials
         run: |

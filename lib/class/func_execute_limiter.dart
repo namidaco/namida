@@ -6,10 +6,9 @@ import 'package:namida/core/extensions.dart';
 class FunctionExecuteLimiter<T> {
   FunctionExecuteLimiter({
     this.considerRapidAfterNExecutions = 2,
-    Duration considerRapid = const Duration(milliseconds: 800),
-    Duration executeAfter = const Duration(milliseconds: 800),
-  }) : _considerRapid = considerRapid,
-       _executeAfter = executeAfter;
+    this._considerRapid = const Duration(milliseconds: 800),
+    this._executeAfter = const Duration(milliseconds: 800),
+  });
 
   final Duration _considerRapid;
   final Duration _executeAfter;

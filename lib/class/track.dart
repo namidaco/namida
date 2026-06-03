@@ -42,11 +42,10 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> with ItemWithDate i
 
   const TrackWithDate({
     required this.dateAdded,
-    required Track track,
+    required this._track,
     this.queueSource,
     TrackSource? source,
-  }) : _track = track,
-       sourceNull = source;
+  }) : sourceNull = source;
 
   factory TrackWithDate.fromJson(Map<String, dynamic> json) {
     final finalTrack = Track.fromJson(json['track'] as String, isVideo: json['v'] == true);

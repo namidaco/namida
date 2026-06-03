@@ -125,7 +125,6 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                               padding: const EdgeInsets.only(bottom: kYoutubeHistoryDayListBottomPadding, top: kYoutubeHistoryDayListTopPadding),
                               primary: false,
                               shrinkWrap: false,
-                              cacheExtent: 0,
                               physics: const NeverScrollableScrollPhysics(),
                               itemExtent: Dimensions.youtubeCardItemExtent,
                               itemCount: videos.length,
