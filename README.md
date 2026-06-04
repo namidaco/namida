@@ -403,9 +403,10 @@ sudo dnf install ./namida.rpm   # Fedora/RHEL (download .rpm from beta releases)
 >   - playing tracks from a root folder
 >   - in-app file browser
 > - `VIBRATE`: vibrate/haptic feedback while doing some actions (can be turned off in settings).
-> - `POST_NOTIFICATIONS` (requested when needed): post notifications like history import/download progress
+> - `POST_NOTIFICATIONS` (requested when needed): post notifications like history import/download progress.
 > - `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` (requested when needed): improve downloads.
 > - `WRITE_SETTINGS` (requested when needed): to set audio as ringtone/etc.
+> - `QUERY_ALL_PACKAGES`: to allow opening custom equalizer apps.
 
 ### Special Thanks:
 

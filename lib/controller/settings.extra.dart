@@ -150,10 +150,10 @@ class _ExtraSettings with SettingsFileWriter {
     if (artistSinglesExpanded != null) 'artistSinglesExpanded': artistSinglesExpanded,
     if (ytStyleButtonSwitcher != null) 'ytStyleButtonSwitcher': ytStyleButtonSwitcher,
     'lastPlayedIndex': lastPlayedIndex,
-    'ytAddToPlaylistsTabIndex': ytAddToPlaylistsTabIndex,
-    'ytPlaylistsPageIndex': ytPlaylistsPageIndex,
-    'ytChannelsPageIndex': ytChannelsPageIndex,
-    'audioConfigPageIndex': audioConfigPageIndex,
+    'ytAddToPlaylistsTabIndex': ?ytAddToPlaylistsTabIndex,
+    'ytPlaylistsPageIndex': ?ytPlaylistsPageIndex,
+    'ytChannelsPageIndex': ?ytChannelsPageIndex,
+    'audioConfigPageIndex': ?audioConfigPageIndex,
     if (windowBounds != null)
       'windowBounds': {
         'l': windowBounds!.left,

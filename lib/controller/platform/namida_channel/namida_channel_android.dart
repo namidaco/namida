@@ -86,8 +86,11 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
-  Future<bool> openSystemEqualizer(int? sessionId) async {
-    final res = await _channel.invokeMethod<bool?>('openEqualizer', {'sessionId': sessionId});
+  Future<bool> openSystemEqualizer(int? sessionId, {String? package}) async {
+    final res = await _channel.invokeMethod<bool?>('openEqualizer', {
+      'sessionId': sessionId,
+      'package': package,
+    });
     return res ?? false;
   }
 

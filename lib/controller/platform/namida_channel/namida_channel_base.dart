@@ -53,7 +53,7 @@ abstract class NamidaChannel {
 
   Future<bool> setMusicAs({required String path, required List<SetMusicAsAction> types});
 
-  Future<bool> openSystemEqualizer(int? sessionId);
+  Future<bool> openSystemEqualizer(int? sessionId, {String? package});
 
   Future<bool> openNamidaSync(String backupFolder, String musicFoldersJoined);
 

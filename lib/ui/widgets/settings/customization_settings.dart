@@ -432,7 +432,7 @@ class CustomizationSettings extends SettingSubpageProvider {
               rx: rx,
               builder: (context, value) => Text(
                 value.toText(),
-                style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
+                style: context.textTheme.displayMedium,
                 textAlign: TextAlign.end,
               ),
             ),

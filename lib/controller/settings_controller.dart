@@ -211,6 +211,7 @@ class _SettingsController with SettingsFileWriter {
     TagField.lyrics,
   ].obs;
 
+  final customEQPackage = Rxn<String?>();
   final stretchLyricsDuration = true.obs;
 
   final playlistAddTracksAtBeginning = false.obs;
@@ -647,6 +648,7 @@ class _SettingsController with SettingsFileWriter {
         tagFieldsToEdit.value = tagFieldsToEditStorage.map((e) => TagField.values.getEnum(e as String)).toListy<TagField>();
       }
 
+      customEQPackage.value = json['customEQPackage'] ?? customEQPackage.value;
       stretchLyricsDuration.value = json['stretchLyricsDuration'] ?? stretchLyricsDuration.value;
       playlistAddTracksAtBeginning.value = json['playlistAddTracksAtBeginning'] ?? playlistAddTracksAtBeginning.value;
       playlistAddTracksAtBeginningYT.value = json['playlistAddTracksAtBeginningYT'] ?? playlistAddTracksAtBeginningYT.value;
@@ -888,6 +890,7 @@ class _SettingsController with SettingsFileWriter {
     'desktopTitlebar': desktopTitlebar.value,
     'desktopTitlebarType': desktopTitlebarType.value.name,
     'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.name),
+    'customEQPackage': ?customEQPackage.value,
     'stretchLyricsDuration': stretchLyricsDuration.value,
     'playlistAddTracksAtBeginning': playlistAddTracksAtBeginning.value,
     'playlistAddTracksAtBeginningYT': playlistAddTracksAtBeginningYT.value,
@@ -1081,6 +1084,7 @@ class _SettingsController with SettingsFileWriter {
     bool? desktopTitlebar,
     DesktopTitlebarIconsType? desktopTitlebarType,
     List<TagField>? tagFieldsToEdit,
+    String? customEQPackage,
     bool? stretchLyricsDuration,
     bool? playlistAddTracksAtBeginning,
     bool? playlistAddTracksAtBeginningYT,
@@ -1338,6 +1342,7 @@ class _SettingsController with SettingsFileWriter {
         }
       });
     }
+    if (customEQPackage != null) this.customEQPackage.value = customEQPackage;
     if (stretchLyricsDuration != null) this.stretchLyricsDuration.value = stretchLyricsDuration;
     if (playlistAddTracksAtBeginning != null) this.playlistAddTracksAtBeginning.value = playlistAddTracksAtBeginning;
     if (playlistAddTracksAtBeginningYT != null) this.playlistAddTracksAtBeginningYT.value = playlistAddTracksAtBeginningYT;

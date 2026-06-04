@@ -948,7 +948,10 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                                   color: context.defaultIconColor(),
                                 ),
                                 iconSize: 20.0,
-                                onPressed: () => NamidaChannel.inst.openSystemEqualizer(Player.inst.androidSessionId),
+                                onPressed: () => NamidaChannel.inst.openSystemEqualizer(
+                                  Player.inst.androidSessionId,
+                                  package: settings.customEQPackage.value,
+                                ),
                               ),
                             const SizedBox(width: 8.0),
                             CustomSwitch(

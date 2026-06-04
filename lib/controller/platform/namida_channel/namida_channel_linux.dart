@@ -91,7 +91,7 @@ class _NamidaChannelLinux extends NamidaChannel {
   }
 
   @override
-  Future<bool> openSystemEqualizer(int? sessionId) async {
+  Future<bool> openSystemEqualizer(int? sessionId, {String? package}) async {
     // -- unsupported
     return false;
   }

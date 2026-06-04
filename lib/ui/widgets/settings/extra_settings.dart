@@ -1229,7 +1229,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                         rx: settings.desktopTitlebarType,
                         builder: (context, type) => Text(
                           type.name,
-                          style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
+                          style: context.textTheme.displayMedium,
                           textAlign: TextAlign.end,
                         ),
                       ),
@@ -1244,6 +1244,53 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                 title: 'yt_style_player_button_switcher'.toUpperCase(),
               ),
 
+              if (NamidaFeaturesVisibility.equalizerAvailable)
+                ObxO(
+                  rx: settings.customEQPackage,
+                  builder: (context, package) => CustomListTile(
+                    icon: Broken.chart_3,
+                    title: 'custom_eq_package'.toUpperCase(),
+                    trailingText: package ?? '',
+                    onTap: () {
+                      final controller = TextEditingController(text: package);
+                      NamidaNavigator.inst.navigateDialog(
+                        onDisposing: () {
+                          controller.dispose();
+                        },
+                        dialog: CustomBlurryDialog(
+                          title: 'custom_eq_package'.toUpperCase(),
+                          actions: [
+                            IconButton(
+                              tooltip: lang.restoreDefaults,
+                              onPressed: () {
+                                settings.save(customEQPackage: '');
+                                NamidaNavigator.inst.closeDialog();
+                              },
+                              icon: const Icon(Broken.refresh),
+                            ),
+                            const CancelButton(),
+                            NamidaButton(
+                              text: lang.save,
+                              onTap: () {
+                                settings.save(customEQPackage: controller.text);
+                                NamidaNavigator.inst.closeDialog();
+                              },
+                            ),
+                          ],
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 14.0),
+                            child: CustomTagTextField(
+                              controller: controller,
+                              hintText: 'com.example.equalizer',
+                              labelText: lang.value,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
               NamidaPopupWrapper(
                 childrenDefault: _getSearchTypeChildren,
                 child: CustomListTile(
@@ -1255,7 +1302,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                       rx: settings.extra.preferredSearchType,
                       builder: (context, type, fallback) => Text(
                         (type ?? fallback).name,
-                        style: context.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.onSurface.withAlpha(200)),
+                        style: context.textTheme.displayMedium,
                         textAlign: TextAlign.end,
                       ),
                     ),

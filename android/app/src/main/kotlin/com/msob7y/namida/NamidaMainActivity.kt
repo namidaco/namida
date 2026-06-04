@@ -134,7 +134,7 @@ class NamidaMainActivity : FlutterActivity() {
         }
 
         "openEqualizer" -> {
-          result.success(openSystemEqualizer(call.argument<Int?>("sessionId")))
+          result.success(openSystemEqualizer(call.argument<Int?>("sessionId"), call.argument<String?>("package")))
         }
 
         "openNamidaSync" -> {
@@ -491,22 +491,47 @@ class NamidaMainActivity : FlutterActivity() {
 
   // ------- EQUALIZER -------
 
-  private fun openSystemEqualizer(sessionId: Int?): Boolean {
-    val intent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL)
-    intent.putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.getPackageName())
+  private fun openSystemEqualizer(sessionId: Int?, customPackage: String? = null): Boolean {
+    if (customPackage != null && customPackage.isNotEmpty() && tryOpenCustomEq(sessionId, customPackage)) return true
+    return tryOpenDefaultEq(sessionId)
+  }
+
+  private fun tryOpenCustomEq(sessionId: Int?, pkg: String): Boolean {
+    val intent = context.packageManager.getLaunchIntentForPackage(pkg)
+    if (intent == null) {
+      showToast("\"${pkg}\" was not found", 3)
+      return false
+    }
     intent.putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
     intent.putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
-    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
-
-    try {
+    return try {
       activity.startActivityForResult(intent, NamidaRequestCodes.REQUEST_CODE_OPEN_EQ)
-      return true
-    } catch (notFound: ActivityNotFoundException) {
-      showToast("No Built-in Equalizer was found", 3)
-      return false
+      true
+    } catch (_: ActivityNotFoundException) {
+      showToast("\"${pkg}\" was not found", 3)
+      false
     } catch (e: Exception) {
       showToast(e.message, 3)
-      return false
+      false
+    }
+  }
+
+  private fun tryOpenDefaultEq(sessionId: Int?): Boolean {
+    val intent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
+      putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
+      putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
+      putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
+      flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+    }
+    return try {
+      activity.startActivityForResult(intent, NamidaRequestCodes.REQUEST_CODE_OPEN_EQ)
+      true
+    } catch (_: ActivityNotFoundException) {
+      showToast("No Built-in Equalizer was found", 3)
+      false
+    } catch (e: Exception) {
+      showToast(e.message, 3)
+      false
     }
   }
 
