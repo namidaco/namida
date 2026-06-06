@@ -566,12 +566,20 @@ class NamidaNavigator {
     if (currentWidgetStack.length > 1) {
       currentWidgetStack.removeLast();
       navKey.currentState?.pop();
+
+      if (waitForAnimation) await Future.delayed(const Duration(milliseconds: _defaultRouteAnimationDurMS));
+      if (_shouldUpdateSubpagesColors) currentRoute?.updateColorScheme();
+      _hideSearchMenusAndUnfocus();
     } else {
+      if (!settings.extra.autoLibraryTab.value) {
+        final defaultTab = settings.extra.staticLibraryTab.value;
+        if (currentRoute?.isSameRouteAs(defaultTab.toWidget()) == false) {
+          ScrollSearchController.inst.animatePageController(defaultTab);
+          return;
+        }
+      }
       await _doubleTapToExit();
     }
-    if (waitForAnimation) await Future.delayed(const Duration(milliseconds: _defaultRouteAnimationDurMS));
-    if (_shouldUpdateSubpagesColors) currentRoute?.updateColorScheme();
-    _hideSearchMenusAndUnfocus();
   }
 
   DateTime _currentBackPressTime = DateTime(0);
@@ -612,7 +620,7 @@ enum SnackDisplayDuration {
   long(3000),
   veryLong(4000),
   eternal(5000),
-  tutorial(8000)
+  tutorial(8000),
   ;
 
   final int milliseconds;

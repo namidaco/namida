@@ -61,7 +61,6 @@ class ScrollSearchController {
   void animatePageController(LibraryTab tab, {bool jumpToTopIfSamePage = true}) async {
     if (tab == LibraryTab.search) {
       toggleSearch();
-
       return;
     }
 
