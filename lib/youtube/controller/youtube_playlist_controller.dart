@@ -114,7 +114,9 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     return res;
   }
 
-  void sortYTPlaylists({GroupSortType? sortBy, bool? reverse}) {
+  void sortYTPlaylists({GroupSortType? sortBy, bool? reverse}) async {
+    await waitForPlaylistsLoad;
+
     sortBy ??= settings.ytPlaylistSort.value;
     reverse ??= settings.ytPlaylistSortReversed.value;
 
