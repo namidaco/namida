@@ -205,7 +205,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     return item.executeAsync(
       selectable: (finalItem) {
         final track = finalItem.track.toTrackExt();
-        return track.stats?.audioTrackId;
+        return track.statsRaw?.audioTrackId;
       },
       youtubeID: (finalItem) async {
         final stats = await YoutubeController.inst.statsManager.getStats(finalItem);
@@ -225,7 +225,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         selectable: (finalItem) {
           final track = finalItem.track.toTrackExt();
           final duration = itemDuration?.inMilliseconds ?? track.durationMS;
-          return (track.stats?.lastPositionInMs, duration);
+          return (track.statsRaw?.lastPositionInMs, duration);
         },
         youtubeID: (finalItem) async {
           final duration = itemDuration ?? await YoutubeInfoController.utils.getVideoDuration(finalItem.id);

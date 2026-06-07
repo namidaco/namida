@@ -1449,7 +1449,7 @@ Future<void> showGeneralPopupDialog(
                                                 Broken.grammerly,
                                                 () => lang.setRating,
                                                 setTrackStatsDialog,
-                                                subtitle: stats.rating == 0 ? '' : ' ${stats.rating}%',
+                                                subtitle: stats.rating <= 0 ? '' : ' ${stats.rating}%',
                                               ),
                                             ),
                                     ),

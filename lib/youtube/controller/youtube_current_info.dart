@@ -5,7 +5,15 @@ class _YoutubeCurrentInfoController {
 
   RelatedVideosRequestParams get _relatedVideosParams => const RelatedVideosRequestParams.allowAll(); // -- from settings
   bool get _canShowComments => settings.youtube.youtubeStyleMiniplayer.value;
-  bool get _personzaliedRelatedVideos => settings.youtube.personalizedRelatedVideos.value;
+  _RelatedVideosType _getRelatedVideosType([bool? preferMix]) {
+    final preferMixRelatedVideos = (preferMix ?? settings.youtube.preferMixRelatedVideos.value) == true;
+    if (preferMixRelatedVideos) {
+      return settings.youtube.personalizedMixPlaylists.valueF ? .personalizedMixVideos : .nonPersonalizedMixVideos;
+    } else {
+      return settings.youtube.personalizedRelatedVideos.valueF ? .personalizedRelatedVideos : .nonPersonalizedRelatedVideos;
+    }
+  }
+
   bool get _dislikeCountEnabled => settings.youtube.ryd.value.enabled;
 
   RxBaseCore<YoutiPieVideoPageResult?> get currentVideoPage => _currentVideoPage;
@@ -62,11 +70,11 @@ class _YoutubeCurrentInfoController {
 
   Future<void> onPersonalizedRelatedVideosChanged({required bool? personalized, required bool? preferMix}) async {
     final didChangePreferMix = preferMix != null;
-    personalized ??= settings.youtube.personalizedRelatedVideos.value;
     preferMix ??= settings.youtube.preferMixRelatedVideos.value;
+    final relatedVideosType = _getRelatedVideosType(preferMix);
 
     YoutiPieRelatedVideosResult? relatedResult;
-    if (personalized) {
+    if (relatedVideosType == .personalizedRelatedVideos) {
       relatedResult = _currentVideoPage.value?.relatedVideosResult;
     }
     if (relatedResult == null || didChangePreferMix) {
@@ -74,7 +82,7 @@ class _YoutubeCurrentInfoController {
       if (videoId != null) {
         final relatedRes = await YoutubeInfoController.video.fetchRelatedVideos(
           videoId,
-          userPersonalized: personalized,
+          userPersonalized: relatedVideosType.isUserPersonalized,
           preferMix: preferMix,
           details: ExecuteDetails.normal(),
         );
@@ -111,16 +119,40 @@ class _YoutubeCurrentInfoController {
     if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentChannelPage.value = chPage;
 
-    final personzaliedRelatedVideos = _personzaliedRelatedVideos;
-    final relatedcache = YoutiPie.cacheBuilder.forRelatedVideos(videoId: videoId, userPersonalized: _personzaliedRelatedVideos);
-    YoutiPieRelatedVideosResult? relatedVideos = await relatedcache.read();
+    YoutiPieRelatedVideosResult? relatedVideos = await _getRelatedVideosCache(videoId);
     if (relatedVideos == null) {
+      final relatedVideosType = _getRelatedVideosType();
       final alreadyAnonymous = YoutubeAccountController.current.activeAccountChannel.value == null;
-      if (personzaliedRelatedVideos || (alreadyAnonymous && !personzaliedRelatedVideos)) relatedVideos = vidPageCached?.relatedVideosResult;
+      if (relatedVideosType == .personalizedRelatedVideos || (alreadyAnonymous && relatedVideosType == .nonPersonalizedRelatedVideos)) {
+        relatedVideos = vidPageCached?.relatedVideosResult;
+      }
     }
     if (!_canSafelyModifyMetadata(videoId)) return false;
     _currentRelatedVideos.value = relatedVideos;
     return vidPageCached != null;
+  }
+
+  Future<YoutiPieRelatedVideosResult?> _getRelatedVideosCache(String videoId) async {
+    final relatedVideosType = _getRelatedVideosType();
+
+    if (relatedVideosType.isMixVideos) {
+      final mixId = 'RD$videoId';
+      final isPersonalized = relatedVideosType.isUserPersonalized;
+      final mixCache = YoutiPie.cacheBuilder.forMixPlaylistVideos(
+        mixId: mixId,
+        userPersonalized: isPersonalized,
+      );
+      final mixVideos = await mixCache.read();
+      final relatedVideos = mixVideos?.toRelatedVideosResult();
+      return relatedVideos;
+    } else {
+      final relatedcache = YoutiPie.cacheBuilder.forRelatedVideos(
+        videoId: videoId,
+        userPersonalized: relatedVideosType.isUserPersonalized,
+      );
+      YoutiPieRelatedVideosResult? relatedVideos = await relatedcache.read();
+      return relatedVideos;
+    }
   }
 
   Future<bool> updateCurrentCommentsCache(String videoId) async {
@@ -165,8 +197,10 @@ class _YoutubeCurrentInfoController {
       }
     }
 
+    final relatedVideosType = _getRelatedVideosType();
+
     if (!requestPage && !requestComments) {
-      if (!_personzaliedRelatedVideos) _fetchAndUpdateNonPersonalizedRelatedVideos(videoId);
+      if (relatedVideosType != .personalizedRelatedVideos) _fetchAndUpdateRelatedVideos(videoId, relatedVideosType: relatedVideosType);
       if (_dislikeCountEnabled) fetchAndUpdateDislikeCount(videoId);
       return;
     }
@@ -211,10 +245,13 @@ class _YoutubeCurrentInfoController {
       if (requestPage) {
         _currentVideoPage.value = page; // page is still requested cuz comments need it
       }
-      if (_personzaliedRelatedVideos) {
+      if (relatedVideosType == .personalizedRelatedVideos) {
         _currentRelatedVideos.value = page?.relatedVideosResult;
       } else {
-        _fetchAndUpdateNonPersonalizedRelatedVideos(videoId);
+        _fetchAndUpdateRelatedVideos(
+          videoId,
+          relatedVideosType: relatedVideosType,
+        );
       }
 
       if (requestComments) {
@@ -239,13 +276,16 @@ class _YoutubeCurrentInfoController {
     }
   }
 
-  Future<void> _fetchAndUpdateNonPersonalizedRelatedVideos(String videoId, {bool forceRequest = false}) async {
-    if (forceRequest == false && _currentRelatedVideos.value != null) return; // already fetched
+  Future<void> _fetchAndUpdateRelatedVideos(String videoId, {required _RelatedVideosType relatedVideosType}) async {
     final relatedVideos = await YoutubeInfoController.video.fetchRelatedVideos(
       videoId,
-      userPersonalized: false,
-      preferMix: settings.youtube.preferMixRelatedVideos.value,
-      details: ExecuteDetails.kForceRequest,
+      userPersonalized: relatedVideosType.isUserPersonalized,
+      preferMix: relatedVideosType.isMixVideos,
+      details: switch (relatedVideosType) {
+        .personalizedRelatedVideos => ExecuteDetails.kForceRequest, // shouldn't even be here, personalized related videos are taken directly from video page
+        .nonPersonalizedRelatedVideos => ExecuteDetails.kForceRequest,
+        .personalizedMixVideos || .nonPersonalizedMixVideos => null,
+      },
     );
     if (_canSafelyModifyMetadata(videoId)) {
       _currentRelatedVideos.value = relatedVideos;
@@ -296,4 +336,27 @@ class _YoutubeCurrentInfoController {
     }
     return fetchedSuccessfully;
   }
+}
+
+enum _RelatedVideosType {
+  personalizedRelatedVideos,
+  nonPersonalizedRelatedVideos,
+  personalizedMixVideos,
+  nonPersonalizedMixVideos,
+  ;
+
+  bool get isUserPersonalized => switch (this) {
+    .personalizedRelatedVideos || .personalizedMixVideos => true,
+    .nonPersonalizedRelatedVideos || .nonPersonalizedMixVideos => false,
+  };
+
+  bool get isRelatedVideoVideos => switch (this) {
+    .personalizedRelatedVideos || .nonPersonalizedRelatedVideos => true,
+    .personalizedMixVideos || .nonPersonalizedMixVideos => false,
+  };
+
+  bool get isMixVideos => switch (this) {
+    .personalizedMixVideos || .nonPersonalizedMixVideos => true,
+    .personalizedRelatedVideos || .nonPersonalizedRelatedVideos => false,
+  };
 }

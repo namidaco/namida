@@ -476,6 +476,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       behavior: HitTestBehavior.translucent,
       onTap: Player.inst.seekSecondsBackward,
       child: LongPressDetector(
+        behavior: HitTestBehavior.translucent,
         onLongPress: () => Player.inst.seek(Duration.zero),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 12.0.spaceX),
@@ -497,6 +498,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
           behavior: HitTestBehavior.translucent,
           onTap: Player.inst.seekSecondsBackward,
           child: LongPressDetector(
+            behavior: HitTestBehavior.translucent,
             onLongPress: () => Player.inst.seek(Duration.zero),
             child: SizedBox(
               width: 54.0.spaceX,

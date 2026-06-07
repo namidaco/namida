@@ -382,16 +382,16 @@ class YoutubeSettings extends SettingSubpageProvider {
           getAutoStartRadioWidget(),
           getItemWrapper(
             key: _YoutubeSettingKeys.personalizedRelatedVideos,
-            child: ObxO(
+            child: ObxOF(
               rx: settings.youtube.personalizedRelatedVideos,
-              builder: (context, personalizedRelatedVideos) => CustomSwitchListTile(
+              builder: (context, personalizedRelatedVideos, fallback) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.personalizedRelatedVideos),
                 leading: const StackedIcon(
                   baseIcon: Broken.video_square,
                   secondaryIcon: Broken.profile_circle,
                   secondaryIconSize: 12.0,
                 ),
-                value: personalizedRelatedVideos,
+                value: personalizedRelatedVideos ?? fallback,
                 onChanged: (isTrue) {
                   settings.youtube.save(personalizedRelatedVideos: !isTrue);
                   if (settings.youtube.preferMixRelatedVideos.value != true) {

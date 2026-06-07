@@ -689,8 +689,6 @@ extension TrackExtUtils on TrackExtended {
 
   String get youtubeID => youtubeLink.getYoutubeID;
 
-  TrackStats? get stats => Indexer.inst.trackStatsMap.value[asTrack()];
-
   String get yearPreferyyyyMMdd {
     final yearString = year.toString();
     final parsed = yearAsDateTime(yearString: yearString);
@@ -707,6 +705,7 @@ extension TrackExtUtils on TrackExtended {
   }
 
   TrackStats? get statsRaw => Indexer.inst.trackStatsMap.value[asTrack()];
+
   int get effectiveRating {
     int? r = statsRaw?.rating;
     if (r != null && r > 0) return r;

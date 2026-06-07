@@ -109,18 +109,16 @@ class YTUtils {
               LikeStatus.disliked => (true, Broken.dislike_filled, Broken.dislike),
               LikeStatus.undefined || LikeStatus.unknown => (false, Broken.like_filled, Broken.like_1),
             };
-            return AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: likeStatus == LikeStatus.unknown ? 0.1 : 0.6,
-              child: NamidaRawLikeButton(
-                isLiked: isFilled,
-                likedIcon: likedIcon,
-                normalIcon: normalIcon,
-                disabledColor: context.theme.iconTheme.color,
-                size: 14.0,
-                removeConfirmationAction: null,
-                onTap: null,
-              ),
+            final likeButtonColor = iconsColor?.withOpacityExt(likeStatus == LikeStatus.unknown ? 0.1 : 0.6);
+            return NamidaRawLikeButton(
+              isLiked: isFilled,
+              likedIcon: likedIcon,
+              normalIcon: normalIcon,
+              enabledColor: likeButtonColor,
+              disabledColor: likeButtonColor,
+              size: 14.0,
+              removeConfirmationAction: null,
+              onTap: null,
             );
           },
         ),

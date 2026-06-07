@@ -18,7 +18,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final showChannelWatermarkFullscreen = true.obs;
   final showVideoEndcards = true.obs;
   final autoStartRadio = false.obs;
-  final personalizedRelatedVideos = true.obs;
+  final personalizedRelatedVideos = RxnF<bool>(fallback: true);
   final personalizedMixPlaylists = RxnF<bool>(fallback: true);
   final preferMixRelatedVideos = RxnF<bool>(fallback: false);
   final searchCleanup = true.obs;

@@ -2664,6 +2664,14 @@ class SubpageInfoContainer extends StatelessWidget {
   });
 
   void _openAdvancedShuffleDialog() {
+    return openAdvancedShuffleDialog(tracksFn, source);
+  }
+
+  void _openAdvancedPlayDialog() {
+    return openAdvancedPlayDialog(tracksFn, source);
+  }
+
+  static void openAdvancedShuffleDialog(Iterable<Selectable> Function() tracksFn, QueueSource source) {
     final tracks = tracksFn();
     final tracksCount = tracks.length;
     final countRx = tracksCount.obs;
@@ -2749,7 +2757,7 @@ class SubpageInfoContainer extends StatelessWidget {
     );
   }
 
-  void _openAdvancedPlayDialog() {
+  static void openAdvancedPlayDialog(Iterable<Selectable> Function() tracksFn, QueueSource source) {
     Iterable<Playable> getTracksWithLimit() {
       return tracksFn();
     }

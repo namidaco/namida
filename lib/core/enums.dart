@@ -321,7 +321,7 @@ enum QueueSourceEnum {
   tags(false),
   rating(false),
 
-  others(true)
+  others(true),
   ;
 
   final bool canHaveDuplicates;
@@ -353,7 +353,7 @@ enum QueueSourceYoutubeIDEnum {
 
   ytDownloadTask(false),
   ytVideoEndCard(false),
-  ytVideoDescription(false)
+  ytVideoDescription(false),
   ;
 
   final bool canHaveDuplicates;
@@ -680,7 +680,7 @@ enum QueueInsertionType {
   algorithm,
   algorithmDiscoverDate,
   algorithmTimeRange,
-  mix
+  mix,
   ;
 
   int? get recommendedSampleCount => switch (this) {
@@ -892,7 +892,7 @@ enum DownloadNotifications {
 enum DataSaverMode {
   off,
   medium,
-  extreme
+  extreme,
   ;
 
   bool get canFetchNetworkVideoStream => this == DataSaverMode.off;
@@ -908,7 +908,7 @@ enum InternalPlayerType {
   auto,
   exoplayer,
   exoplayer_sw,
-  mpv
+  mpv,
   ;
 
   InternalPlayerType ensureResolved() {
@@ -972,7 +972,7 @@ enum ReplayGainType {
   off(false),
   platform_default(false),
   loudness_enhancer(true),
-  volume(true)
+  volume(true),
   ;
 
   final bool _isValidMode;
@@ -997,7 +997,7 @@ enum ReplayGainType {
 
 enum LibraryImageSource {
   local,
-  lastfm
+  lastfm,
   ;
 
   bool get isNetwork => this == lastfm;

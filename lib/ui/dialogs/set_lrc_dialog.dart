@@ -640,7 +640,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
 
                   Widget listItemBuilder(BuildContext context, LyricsModel l, bool isTempFetched) {
                     final syncedText = l.synced ? lang.synced : lang.plain;
-                    final cacheText = l.file == null
+                    final cacheText = l.isEmbedded
+                        ? ''
+                        : l.file == null
                         ? ''
                         : l.isInCache
                         ? lang.cache
@@ -667,7 +669,11 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                             Row(
                               children: [
                                 Icon(
-                                  l.file == null ? Broken.document_download : Broken.document,
+                                  l.isEmbedded
+                                      ? Broken.document_code
+                                      : l.file == null
+                                      ? Broken.document_download
+                                      : Broken.document,
                                   size: 18.0,
                                 ),
                                 const SizedBox(width: 8.0),
@@ -714,14 +720,15 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                     );
                                   },
                                 ),
-                                NamidaIconButton(
-                                  verticalPadding: 3.0,
-                                  horizontalPadding: 3.0,
-                                  tooltip: () => lang.edit,
-                                  icon: Broken.edit_2,
-                                  iconSize: 20.0,
-                                  onPressed: () => onEditLyricsTap(l),
-                                ),
+                                if (!l.isEmbedded)
+                                  NamidaIconButton(
+                                    verticalPadding: 3.0,
+                                    horizontalPadding: 3.0,
+                                    tooltip: () => lang.edit,
+                                    icon: Broken.edit_2,
+                                    iconSize: 20.0,
+                                    onPressed: () => onEditLyricsTap(l),
+                                  ),
                                 if (l.file != null) ...[
                                   if (l.synced && !l.fromInternet)
                                     NamidaIconButton(
