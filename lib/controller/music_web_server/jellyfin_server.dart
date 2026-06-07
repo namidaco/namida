@@ -26,7 +26,7 @@ class _JellyfinServer extends MusicWebServer {
   Future<Uint8List?> getImage(String id) => _wrapper.getImage(id);
 
   @override
-  Future<void> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback) async {
+  Future<Set<String>?> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
     final wrapper = _wrapper;
 
     final server = authDetails.dir.toDbKey();
@@ -48,6 +48,8 @@ class _JellyfinServer extends MusicWebServer {
         ),
       );
     }
+
+    return null;
   }
 
   @override
@@ -142,6 +144,7 @@ class _JellyfinServer extends MusicWebServer {
     final size = mediaSource?.size ?? 0;
     final format = item.container ?? '';
     final dateAddedMs = item.dateCreated?.millisecondsSinceEpoch ?? 0;
+    final dateModifiedMs = item.dateModified?.millisecondsSinceEpoch ?? 0;
     final rating = (item.userData?.rating ?? 0);
 
     final isVideo = item.videoType != null;
@@ -165,7 +168,7 @@ class _JellyfinServer extends MusicWebServer {
       yearText: yearString,
       size: size,
       dateAdded: dateAddedMs,
-      dateModified: dateAddedMs,
+      dateModified: dateModifiedMs,
       path: path,
       comment: '',
       description: '',
@@ -431,23 +434,11 @@ class _JellyfinClientWrapper {
           '/Items',
           queryParameters: {
             'UserId': _userId,
-            'IncludeItemTypes': [
-              _JellyfinItemKind.audio,
-              _JellyfinItemKind.video,
-              _JellyfinItemKind.musicVideo,
-            ].map((e) => e.value).join(','),
+            'IncludeItemTypes': _JellyfinItemKind.values.map((e) => e.value).join(','),
             'Recursive': true,
             'StartIndex': offset,
             'Limit': batchSize,
-            'Fields': [
-              _JellyfinItemField.mediaStreams,
-              _JellyfinItemField.mediaSources,
-              _JellyfinItemField.genres,
-              _JellyfinItemField.dateCreated,
-              _JellyfinItemField.overview,
-              _JellyfinItemField.path,
-              _JellyfinItemField.tags,
-            ].map((e) => e.value).join(','),
+            'Fields': _JellyfinItemField.values.map((e) => e.value).join(','),
           },
         );
 

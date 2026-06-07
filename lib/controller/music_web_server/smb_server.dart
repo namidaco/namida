@@ -177,7 +177,7 @@ class _SMBServer extends MusicWebServer {
   }
 
   @override
-  Future<void> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback) async {
+  Future<Set<String>?> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
     try {
       final connection = await _getConnection();
       final server = authDetails.dir.toDbKey();
@@ -207,6 +207,8 @@ class _SMBServer extends MusicWebServer {
     } catch (e) {
       _onResError(authDetails.dir, e);
     }
+
+    return null;
   }
 
   void _onResError(DirectoryIndex dir, dynamic err) {

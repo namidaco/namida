@@ -616,6 +616,7 @@ class Indexer<T extends Track> {
 
   static Future<TrackExtended?> convertServerTagToTrack({
     required String path,
+    required String server,
     required FileStatsAdv stats,
     required FAudioModel trackInfo,
     required bool tryExtractingFromFilename,
@@ -628,6 +629,7 @@ class Indexer<T extends Track> {
   }) {
     return Indexer.convertTagToTrack(
       trackPath: path,
+      server: server,
       stats: stats,
       trackInfo: trackInfo,
       tryExtractingFromFilename: tryExtractingFromFilename,
@@ -642,6 +644,7 @@ class Indexer<T extends Track> {
 
   static Future<TrackExtended?> convertTagToTrack({
     required String trackPath,
+    String? server,
     FileStatsAdv? stats,
     required FAudioModel trackInfo,
     required bool tryExtractingFromFilename,
@@ -710,7 +713,7 @@ class Indexer<T extends Track> {
         albumsIdentifiersWrappers: [],
         isVideo: trackPath.isVideo(),
         hashKey: TrackExtended.generateHashKeyIfEnabled(null, trackPath, null),
-        server: null,
+        server: server,
       );
       if (!trackInfo.hasError) {
         int durationInMS = trackInfo.durationMS ?? 0;
@@ -874,15 +877,20 @@ class Indexer<T extends Track> {
 
   void _addTrackToLists(TrackExtended trackExt, FArtwork? artwork) {
     final tr = trackExt.asTrack() as T;
-    final skipAddingToTrackList = allTracksMappedByPath.containsKey(tr.path);
+    final alreadyExists = allTracksMappedByPath.containsKey(tr.path);
     allTracksMappedByPath[tr.path] = trackExt;
     unawaited(_tracksDBManager.put(tr.path, trackExt.toJsonWithoutPath()));
-    allTracksMappedByYTID.addForce(trackExt.youtubeID, tr);
     _currentFileNamesMap[trackExt.path.getFilename] = true;
 
-    if (!skipAddingToTrackList) {
+    if (!alreadyExists) {
       tracksInfoList.add(tr);
       SearchSortController.inst.trackSearchList.add(tr);
+      allTracksMappedByYTID.addForce(trackExt.youtubeID, tr);
+    } else {
+      final list = allTracksMappedByYTID[trackExt.youtubeID] ??= [];
+      if (!list.contains(tr)) {
+        list.add(tr);
+      }
     }
 
     if (artwork != null && artwork.file != null) {
@@ -1284,11 +1292,12 @@ class Indexer<T extends Track> {
       await Future.wait(audioFilesCompleters.map((e) => e.future).toList());
     }
 
+    final networkTrackSetsToRemove = await _addServerTracksIfAvailable(forceReIndex: forceReIndex).toList();
+
     /// doing some checks to remove unqualified tracks.
     /// removes tracks after changing `duration` or `size`.
-    /// also removes network tracks to re add them properly
     tracksInfoList.removeWhere((tr) {
-      final remove = tr.isNetwork || (tr.durationMS != 0 && tr.durationMS < minDur * 1000) || tr.size < minSize;
+      final remove = networkTrackSetsToRemove.any((set) => set.contains(tr.path)) || (tr.durationMS != 0 && tr.durationMS < minDur * 1000) || tr.size < minSize;
       if (remove) {
         allTracksMappedByPath.remove(tr.path);
         allTracksMappedByYTID.remove(tr.youtubeID);
@@ -1297,8 +1306,6 @@ class Indexer<T extends Track> {
       }
       return remove;
     });
-
-    await _addServerTracksIfAvailable();
 
     /// removes duplicated tracks after a refresh
     if (prevDuplicated) {
@@ -1322,21 +1329,34 @@ class Indexer<T extends Track> {
     SearchSortController.inst.refreshPortsIfNecessary();
   }
 
-  Future<void> _addServerTracksIfAvailable() async {
-    bool didRefreshSearchList = false; // to ensure same length
+  Map<String, int> getTracksModifiedMapForServer(String server) {
+    final modifiedMap = <String, int>{};
+    for (final trExt in allTracksMappedByPath.values) {
+      if (trExt.server == server) {
+        final key = MusicWebServer.baseUrlToId(trExt.path) ?? trExt.path;
+        modifiedMap[key] = trExt.dateModified;
+      }
+    }
+    return modifiedMap;
+  }
+
+  Stream<Set<String>> _addServerTracksIfAvailable({required bool forceReIndex}) async* {
+    bool didRefreshSearchList = false;
     for (final dir in settings.directoriesToScan.value) {
       if (dir is DirectoryIndexServer) {
-        MusicWebServer? server = dir.toWebServer();
+        final server = dir.toWebServer();
         if (server != null) {
           if (!didRefreshSearchList) {
             didRefreshSearchList = true;
             _refreshMediaTracksSubListsAfterSort([MediaType.track]);
           }
-          await server.fetchAllMusicAndProcess(
+          final toRemove = await server.fetchAllMusicAndProcess(
             (trExt) {
               _addTrackToLists(trExt, null);
             },
+            forceReIndex: forceReIndex,
           );
+          if (toRemove != null) yield toRemove;
         }
       }
     }

@@ -56,20 +56,10 @@ abstract class MusicWebServer {
 
   Future<MusicWebServerError?> ping();
   Future<Set<String>?> getAvailableShares() async => null;
-  Future<void> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback);
+  Future<Set<String>?> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback, {required bool forceReIndex});
   FutureOr<WebStreamUriDetails?> getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal});
   Future<Uint8List?> getImage(String id);
   void dispose();
-
-  Future<List<TrackExtended>> getAllMusic() async {
-    final allTracks = <TrackExtended>[];
-    await fetchAllMusicAndProcess(
-      (trExt) {
-        allTracks.add(trExt);
-      },
-    );
-    return allTracks;
-  }
 
   static FutureOr<WebStreamUriDetails?> baseUrlToActualUrl(
     String baseUrl, {

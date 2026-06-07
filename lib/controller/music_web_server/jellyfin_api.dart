@@ -10,8 +10,7 @@ enum _JellyfinImageType {
   backdrop('Backdrop'),
   banner('Banner'),
   logo('Logo'),
-  thumb('Thumb')
-  ;
+  thumb('Thumb');
 
   const _JellyfinImageType(this.value);
   final String value;
@@ -20,8 +19,7 @@ enum _JellyfinImageType {
 enum _JellyfinItemKind {
   audio('Audio'),
   video('Video'),
-  musicVideo('MusicVideo')
-  ;
+  musicVideo('MusicVideo');
 
   const _JellyfinItemKind(this.value);
   final String value;
@@ -32,10 +30,10 @@ enum _JellyfinItemField {
   mediaSources('MediaSources'),
   genres('Genres'),
   dateCreated('DateCreated'),
+  dateModified('dateModified'),
   overview('Overview'),
   path('Path'),
-  tags('Tags')
-  ;
+  tags('Tags');
 
   const _JellyfinItemField(this.value);
   final String value;
@@ -45,8 +43,7 @@ enum _JellyfinVideoType {
   videoFile('VideoFile'),
   iso('Iso'),
   dvd('Dvd'),
-  bluRay('BluRay')
-  ;
+  bluRay('BluRay');
 
   const _JellyfinVideoType(this.value);
   final String value;
@@ -145,6 +142,7 @@ class _JellyfinItem {
   final String? overview;
   final String? path;
   final DateTime? dateCreated;
+  final DateTime? dateModified;
   final List<String> genres;
   final List<String> tags;
   final List<_JellyfinMediaStream> mediaStreams;
@@ -170,6 +168,7 @@ class _JellyfinItem {
     this.overview,
     this.path,
     this.dateCreated,
+    this.dateModified,
     this.genres = const [],
     this.tags = const [],
     this.mediaStreams = const [],
@@ -194,6 +193,7 @@ class _JellyfinItem {
     overview: j['Overview'] as String?,
     path: j['Path'] as String?,
     dateCreated: j['DateCreated'] != null ? DateTime.tryParse(j['DateCreated'] as String) : null,
+    dateModified: j['DateModified'] != null ? DateTime.tryParse(j['DateModified'] as String) : null,
     genres: (j['Genres'] as List<dynamic>?)?.cast<String>() ?? [],
     tags: (j['Tags'] as List<dynamic>?)?.cast<String>() ?? [],
     mediaStreams: (j['MediaStreams'] as List<dynamic>?)?.map((e) => _JellyfinMediaStream.fromJson(e as Map<String, dynamic>)).toList() ?? [],

@@ -96,9 +96,9 @@ class _WebDAVServer extends MusicWebServer {
   }
 
   @override
-  Future<void> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback) async {
+  Future<Set<String>?> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
     final api = _api;
-    if (api == null) return;
+    if (api == null) return null;
 
     final server = authDetails.dir.toDbKey();
     final serverUriParsed = Uri.parse(server);
@@ -106,6 +106,9 @@ class _WebDAVServer extends MusicWebServer {
     final identifiersSet = TagsExtractor.getAlbumIdentifiersSet();
     final minDur = settings.indexMinDurationInSec.value;
     final minSize = settings.indexMinFileSizeInB.value;
+
+    final localTracksModifiedMap = Indexer.inst.getTracksModifiedMapForServer(server);
+    final diffState = _WebDAVDiffManager(localTracksModifiedMap);
 
     try {
       final networkFiles = await api.readDir('/');
@@ -119,14 +122,22 @@ class _WebDAVServer extends MusicWebServer {
         identifiersSet: identifiersSet,
         minDur: minDur,
         minSize: minSize,
+        diffState: diffState,
       );
 
       await for (final tr in stream) {
         callback(tr);
       }
+
+      final deletedUris = diffState.getDeletedUrisSet(serverUriParsed);
+      if (deletedUris.isNotEmpty) {
+        return deletedUris;
+      }
     } on DioException catch (e) {
       _onResError(authDetails.dir, e);
     }
+
+    return null;
   }
 
   void _onResError(DirectoryIndex dir, DioException err) {
@@ -144,12 +155,14 @@ class _WebDAVServer extends MusicWebServer {
     required Set<AlbumIdentifier> identifiersSet,
     required int minDur,
     required int minSize,
+    required _WebDAVDiffManager diffState,
   }) async* {
     final imageFiles = <webdav.File>[];
     final lrcFiles = <(webdav.File, bool)>[];
     final lrcFilesInfoToExtractLater = <String, TrackExtended>{};
     final artworksToExtractLater = <String, List<_ExtractInfo>>{};
     const subBatchSize = 10;
+
     for (var i = 0; i < files.length; i += subBatchSize) {
       final batch = files.skip(i).take(subBatchSize);
       final subfiles = <webdav.File>[];
@@ -178,8 +191,13 @@ class _WebDAVServer extends MusicWebServer {
         final futures = subfiles.map((file) async {
           final serverPath = file.path;
           if (serverPath == null) return null;
+
+          final canSkip = diffState.addAndCheckCanSkipScan(serverPath, file.mTime);
+          if (canSkip) return null;
+
           final res = await _fetchFileAndExtractInfo(serverPath, file.name, api, identifiersSet, artworksToExtractLater);
           if (res == null) return null;
+
           final trExt = await Indexer.convertServerTagToTrack(
             path: serverPath,
             trackInfo: res.$1,
@@ -188,6 +206,7 @@ class _WebDAVServer extends MusicWebServer {
               modified: file.mTime,
               size: file.size,
             ),
+            server: server,
             minDur: minDur,
             minSize: minSize,
             tryExtractingFromFilename: true,
@@ -233,10 +252,10 @@ class _WebDAVServer extends MusicWebServer {
       }
 
       for (final dir in subdirectories) {
-        final p = dir.path;
-        if (p != null) {
+        final dirPath = dir.path;
+        if (dirPath != null) {
           try {
-            final subfiles = await api.readDir(p);
+            final subfiles = await api.readDir(dirPath);
             yield* _fetchSongsForFilesBatch(
               api: api,
               server: server,
@@ -246,6 +265,7 @@ class _WebDAVServer extends MusicWebServer {
               identifiersSet: identifiersSet,
               minDur: minDur,
               minSize: minSize,
+              diffState: diffState,
             );
           } catch (_) {
             continue;
@@ -526,4 +546,46 @@ class _ExtractInfo {
     required this.ffmpegInfo,
     required this.identifiersSet,
   });
+}
+
+class _WebDAVDiffManager {
+  /// {serverPath: dateModifiedMS}
+  final Map<String, int> existingLibraryMap;
+  _WebDAVDiffManager(this.existingLibraryMap);
+
+  final scannedRemotePaths = <String>{};
+
+  static const _millisecondsAllowance = 1000;
+
+  bool addAndCheckCanSkipScan(String serverPath, DateTime? remoteDateModified) {
+    scannedRemotePaths.add(serverPath);
+
+    final remoteModifiedMs = remoteDateModified?.millisecondsSinceEpoch;
+    if (remoteModifiedMs != null && remoteModifiedMs >= 0) {
+      final localModifiedMs = existingLibraryMap[serverPath];
+      if (localModifiedMs != null) {
+        if ((localModifiedMs - remoteModifiedMs).abs() <= _millisecondsAllowance) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  Set<String> getDeletedUrisSet(Uri serverUriParsed) {
+    final uris = <String>{};
+    for (final rawPath in existingLibraryMap.keys) {
+      if (scannedRemotePaths.contains(rawPath)) continue;
+      final uri = serverUriParsed.replace(
+        queryParameters: {
+          ...serverUriParsed.queryParameters,
+          'd': rawPath,
+        },
+      );
+      final uriString = uri.toString();
+      uris.add(uriString);
+    }
+    return uris;
+  }
 }

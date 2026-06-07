@@ -89,9 +89,9 @@ class _SubsonicWebServer extends MusicWebServer {
   }
 
   @override
-  Future<void> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback) async {
+  Future<Set<String>?> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
     final api = _api;
-    if (api == null) return;
+    if (api == null) return null;
 
     final server = authDetails.dir.toDbKey();
     final serverUriParsed = Uri.parse(server);
@@ -132,6 +132,8 @@ class _SubsonicWebServer extends MusicWebServer {
         break;
       }
     }
+
+    return null;
   }
 
   bool _checkResError(DirectoryIndex dir, SubsonicResponse res) {
