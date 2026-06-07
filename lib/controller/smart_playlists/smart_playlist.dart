@@ -398,3 +398,7 @@ mixin SmartPlaylistRuleFilterSource {
   String toText();
   IconData? toIcon();
 }
+
+extension SmartPlaylistRuleGroupUtils on List<SmartPlaylistRuleGroup> {
+  bool isValid() => isNotEmpty && any((g) => g.rules.isNotEmpty);
+}

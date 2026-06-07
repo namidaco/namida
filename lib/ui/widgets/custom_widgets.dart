@@ -3224,6 +3224,7 @@ class SearchPageTitleRow extends StatelessWidget {
   final IconData icon;
   final Widget? trailing;
   final Widget? subtitleWidget;
+  final Widget? leading;
 
   const SearchPageTitleRow({
     super.key,
@@ -3232,6 +3233,7 @@ class SearchPageTitleRow extends StatelessWidget {
     required this.icon,
     this.trailing,
     this.subtitleWidget,
+    this.leading,
   });
 
   @override
@@ -3242,7 +3244,7 @@ class SearchPageTitleRow extends StatelessWidget {
         const SizedBox(width: 16.0),
         Row(
           children: [
-            Icon(icon),
+            leading ?? Icon(icon),
             const SizedBox(width: 8.0),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

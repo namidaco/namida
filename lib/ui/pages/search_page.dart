@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -9,10 +11,12 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/clipboard_controller.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -22,6 +26,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/create_smart_playlist_dialog.dart';
 import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/pages/subpages/moods_tags_tracks_subpage.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -33,8 +38,56 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 import 'package:namida/youtube/pages/yt_search_results_page.dart';
 
-class SearchPage extends StatelessWidget {
+class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
+
+  @override
+  State<SearchPage> createState() => _SearchPageState();
+}
+
+class _SearchPageState extends State<SearchPage> {
+  static SmartPlaylistWrapper? _smartSearchPlaylistWrapper;
+  final _isTracksFromSmartSearch = false.obs;
+
+  @override
+  void initState() {
+    SearchSortController.inst.trackSearchTemp.addListener(_onTrackSearchTempChanged);
+    super.initState();
+  }
+
+  void _onTrackSearchTempChanged() {
+    _isTracksFromSmartSearch.value = false;
+  }
+
+  void _onSmartSearchTap() async {
+    final smartSearchCompleter = Completer<SmartPlaylistWrapper?>();
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CreateSmartPlaylistDialog.forTempSmartSearch(
+        initialSmartPlaylistWrapper: _smartSearchPlaylistWrapper,
+        completer: smartSearchCompleter,
+      ),
+    );
+    final smartPlaylistWrapper = await smartSearchCompleter.future;
+
+    if (mounted) {
+      if (smartPlaylistWrapper != null && smartPlaylistWrapper.value.ruleGroups.isValid()) {
+        _smartSearchPlaylistWrapper = smartPlaylistWrapper;
+        final tracks = smartPlaylistWrapper.value.resolve();
+        SearchSortController.inst.trackSearchTemp.value = tracks;
+        SearchSortController.inst.sortTracksSearch();
+        _isTracksFromSmartSearch.value = true;
+      } else {
+        SearchSortController.inst.searchTracks(ScrollSearchController.inst.searchTextEditingController.text, temp: true);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    SearchSortController.inst.trackSearchTemp.removeListener(_onTrackSearchTempChanged);
+    _isTracksFromSmartSearch.close();
+    super.dispose();
+  }
 
   SliverToBoxAdapter _horizontalSliverList<T>({
     required double height,
@@ -200,12 +253,34 @@ class SearchPage extends StatelessWidget {
         children: [
           Column(
             children: [
-              SmoothSingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: filterChipsChildren,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: SmoothSingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: filterChipsChildren,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4.0),
+
+                  NamidaInkWell(
+                    onTap: _onSmartSearchTap,
+                    borderRadius: 8.0,
+                    child: NamidaCoolBox(
+                      hPadding: 12.0,
+                      colorScheme: context.theme.colorScheme.secondary,
+                      borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                      builder: (context) => const Icon(
+                        Broken.filter_search,
+                        size: 20.0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4.0),
+                ],
               ),
               Expanded(
                 child: Obx(
@@ -487,6 +562,12 @@ class SearchPage extends StatelessWidget {
                                               child: SearchPageTitleRow(
                                                 title: '$tracksSearchTitle • ${tracksSearchTemp.length}',
                                                 icon: Broken.music_circle,
+                                                leading: ObxO(
+                                                  rx: _isTracksFromSmartSearch,
+                                                  builder: (context, isFromSmartSearch) => Icon(
+                                                    isFromSmartSearch ? Broken.magicpen : Broken.music_circle,
+                                                  ),
+                                                ),
                                                 subtitleWidget: Row(
                                                   crossAxisAlignment: CrossAxisAlignment.center,
                                                   children: [

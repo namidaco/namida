@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/controller/indexer_controller.dart';
@@ -16,7 +18,15 @@ import 'package:namida/ui/widgets/expandable_box.dart';
 
 class CreateSmartPlaylistDialog extends StatefulWidget {
   final SmartPlaylistWrapper? initialSmartPlaylistWrapper;
-  const CreateSmartPlaylistDialog({super.key, this.initialSmartPlaylistWrapper});
+  final Completer<SmartPlaylistWrapper?>? _onSearchCompleter;
+
+  const CreateSmartPlaylistDialog({super.key, this.initialSmartPlaylistWrapper}) : _onSearchCompleter = null;
+
+  const CreateSmartPlaylistDialog.forTempSmartSearch({
+    super.key,
+    this.initialSmartPlaylistWrapper,
+    required Completer<SmartPlaylistWrapper?> completer,
+  }) : _onSearchCompleter = completer;
 
   @override
   State<CreateSmartPlaylistDialog> createState() => _CreateSmartPlaylistDialogState();
@@ -133,7 +143,23 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
   @override
   void dispose() {
     _nameController.dispose();
+    widget._onSearchCompleter?.completeIfWasnt(null);
     super.dispose();
+  }
+
+  void _resetEverything() {
+    _nameController.text = '';
+    _joiner = SmartJoiner.defaultForGroups;
+    _sort = null;
+    _sortReverse = false;
+    _moods.clear();
+    _ruleGroups.clear();
+
+    _ruleGroups.add(SmartPlaylistRuleGroup.create());
+
+    _resolvedTracksCountForCurrentSmartPlaylist = _buildResolvedTracksCount();
+
+    setState(() {});
   }
 
   SmartPlaylist _buildSmartPlaylistFromCurrentParams() {
@@ -161,7 +187,9 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
 
       _ruleGroups.removeWhere((g) => g.rules.isEmpty);
       final smartPlaylist = _buildSmartPlaylistFromCurrentParams();
-      if (widget.initialSmartPlaylistWrapper != null) {
+      if (widget._onSearchCompleter != null) {
+        widget._onSearchCompleter!.complete(SmartPlaylistWrapper(smartPlaylist));
+      } else if (widget.initialSmartPlaylistWrapper != null) {
         await SmartPlaylistsController.inst.edit(widget.initialSmartPlaylistWrapper!.value, smartPlaylist);
       } else {
         await SmartPlaylistsController.inst.create(smartPlaylist);
@@ -300,6 +328,9 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
     const ruleLeftSpaceForJoiner = 28.0;
     final textStyleMedium = context.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w500);
     final textStyleSmall = context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500);
+    final isForTempSearch = widget._onSearchCompleter != null;
+    final dialogTitle = isForTempSearch ? lang.search : lang.smartPlaylist;
+    final ruleGroupsAreValid = _ruleGroups.isValid();
     return Form(
       key: _formKey,
       child: SizedBox(
@@ -308,7 +339,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
           normalTitleStyle: true,
           icon: Broken.magicpen,
           horizontalInset: 38.0,
-          title: lang.smartPlaylist,
+          title: dialogTitle,
           titleWidgetInPadding: Row(
             children: [
               const Icon(
@@ -322,7 +353,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      lang.smartPlaylist,
+                      dialogTitle,
                       style: context.theme.textTheme.displayLarge,
                     ),
                     if (_resolvedTracksCountForCurrentSmartPlaylist != null)
@@ -333,43 +364,56 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                   ],
                 ),
               ),
-              Row(
-                children: [
-                  const SizedBox(width: 8.0),
-                  NamidaButton(
-                    dense: true,
-                    minHeight: NamidaTextButton.kDefaultMinHeight * 0.5,
-                    colors: NamidaButtonColors.dimmed,
-                    icon: Broken.sort,
-                    text: _sort?.toText() ?? lang.auto,
-                    fontSizeMultiplier: 0.95,
-                    onTap: () {
-                      CreateSmartPlaylistDialog.openSortMenu(
-                        context: context,
-                        activeSort: _sort,
-                        activeSortReverse: _sortReverse,
-                        setSort: _setSort,
-                        setSortReverse: _setSortReverse,
-                        popMenuOnSortReverse: false,
-                      );
-                    },
-                  ),
-                  NamidaIconButton(
-                    horizontalPadding: 8.0,
-                    icon: _sortReverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
-                    iconSize: 20.0,
-                    onPressed: () => _setSortReverse(!_sortReverse),
-                  ),
-                ],
-              ),
+              if (!isForTempSearch)
+                Row(
+                  children: [
+                    const SizedBox(width: 8.0),
+                    NamidaButton(
+                      dense: true,
+                      minHeight: NamidaTextButton.kDefaultMinHeight * 0.5,
+                      colors: NamidaButtonColors.dimmed,
+                      icon: Broken.sort,
+                      text: _sort?.toText() ?? lang.auto,
+                      fontSizeMultiplier: 0.95,
+                      onTap: () {
+                        CreateSmartPlaylistDialog.openSortMenu(
+                          context: context,
+                          activeSort: _sort,
+                          activeSortReverse: _sortReverse,
+                          setSort: _setSort,
+                          setSortReverse: _setSortReverse,
+                          popMenuOnSortReverse: false,
+                        );
+                      },
+                    ),
+                    NamidaIconButton(
+                      horizontalPadding: 8.0,
+                      icon: _sortReverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                      iconSize: 20.0,
+                      onPressed: () => _setSortReverse(!_sortReverse),
+                    ),
+                  ],
+                ),
+
+              if (isForTempSearch && ruleGroupsAreValid)
+                NamidaIconButton(
+                  horizontalPadding: 8.0,
+                  icon: Broken.refresh,
+                  iconSize: 20.0,
+                  onPressed: _resetEverything,
+                ),
             ],
           ),
           actions: [
             const CancelButton(),
             NamidaButton(
-              enabled: _ruleGroups.isNotEmpty && _ruleGroups.any((g) => g.rules.isNotEmpty),
+              enabled: isForTempSearch || ruleGroupsAreValid,
               onTap: _createOrEdit,
-              text: widget.initialSmartPlaylistWrapper != null ? lang.edit : lang.create,
+              text: isForTempSearch
+                  ? lang.search
+                  : widget.initialSmartPlaylistWrapper != null
+                  ? lang.edit
+                  : lang.create,
             ),
           ],
           child: Column(
@@ -635,13 +679,15 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                 ),
               ),
 
-              const SizedBox(height: 12.0),
-              CustomTagTextField(
-                controller: _nameController,
-                hintText: lang.name,
-                labelText: lang.name,
-                validator: (value) => SmartPlaylistsController.inst.validatePlaylistName(value, oldKey: widget.initialSmartPlaylistWrapper?.value.key),
-              ),
+              if (!isForTempSearch) ...[
+                const SizedBox(height: 12.0),
+                CustomTagTextField(
+                  controller: _nameController,
+                  hintText: lang.name,
+                  labelText: lang.name,
+                  validator: (value) => SmartPlaylistsController.inst.validatePlaylistName(value, oldKey: widget.initialSmartPlaylistWrapper?.value.key),
+                ),
+              ],
             ],
           ),
         ),
