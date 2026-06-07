@@ -1340,7 +1340,9 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                 NamidaNavigator.inst.isInYTCommentsSubpage = true;
                                 NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pushPage(
                                   const YTMiniplayerCommentsSubpage(),
-                                  maintainState: true, // vip to maintain scroll offset
+                                  params: const NamPackPushPageParams(
+                                    maintainState: true, // vip to maintain scroll offset
+                                  ),
                                 );
                               },
                               child: Column(

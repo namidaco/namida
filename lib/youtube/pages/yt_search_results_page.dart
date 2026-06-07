@@ -150,7 +150,9 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
         initialSearch: currentSearchText ?? ScrollSearchController.inst.searchTextEditingController.text,
         onVideoTap: widget.onVideoTap,
       ),
-      maintainState: false,
+      params: const NamPackPushPageParams(
+        maintainState: false,
+      ),
     );
   }
 

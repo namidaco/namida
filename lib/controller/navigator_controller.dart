@@ -214,9 +214,11 @@ class NamidaNavigator {
         },
         child: widget,
       ),
-      transition: Transition.noTransition,
-      durationInMs: 0,
-      maintainState: true,
+      params: const NamPackPushPageParams(
+        transition: Transition.noTransition,
+        durationInMs: 0,
+        maintainState: true,
+      ),
     );
 
     setDefaultSystemUIOverlayStyle(semiTransparent: true);
@@ -254,9 +256,11 @@ class NamidaNavigator {
 
     await navKey.currentState?.pushPage(
       page,
-      durationInMs: durationInMs,
-      transition: transition,
-      maintainState: true,
+      params: NamPackPushPageParams(
+        durationInMs: durationInMs,
+        transition: transition,
+        maintainState: true,
+      ),
     );
   }
 
@@ -268,10 +272,12 @@ class NamidaNavigator {
   }) async {
     return await _rootNav.currentState?.pushPage(
       page,
-      durationInMs: durationInMs,
-      transition: transition,
-      maintainState: true,
-      opaque: opaque,
+      params: NamPackPushPageParams(
+        durationInMs: durationInMs,
+        transition: transition,
+        maintainState: true,
+        opaque: opaque,
+      ),
     );
   }
 
@@ -281,15 +287,17 @@ class NamidaNavigator {
     int durationInMs = _defaultRouteAnimationDurMS,
     bool opaque = true,
   }) async {
-    currentWidgetStack.value = [];
+    currentWidgetStack.clear();
     _hideEverything();
 
     return await _rootNav.currentState?.pushPageReplacement(
       page,
-      durationInMs: durationInMs,
-      transition: transition,
-      maintainState: true,
-      opaque: opaque,
+      params: NamPackPushPageParams(
+        durationInMs: durationInMs,
+        transition: transition,
+        maintainState: true,
+        opaque: opaque,
+      ),
     );
   }
 
@@ -354,11 +362,13 @@ class NamidaNavigator {
           ),
         ),
       ),
-      durationInMs: durationInMs,
-      opaque: false,
-      fullscreenDialog: true,
-      transition: Transition.fade,
-      maintainState: true,
+      params: NamPackPushPageParams(
+        durationInMs: durationInMs,
+        opaque: false,
+        fullscreenDialog: true,
+        transition: Transition.fade,
+        maintainState: true,
+      ),
     );
     if (onDisposing != null) {
       onDisposing.executeAfterDelay(durationMS: durationInMs * 2);
@@ -453,9 +463,11 @@ class NamidaNavigator {
 
     await navKey.currentState?.pushPageReplacement(
       page,
-      durationInMs: durationInMs,
-      transition: transition,
-      maintainState: true,
+      params: NamPackPushPageParams(
+        durationInMs: durationInMs,
+        transition: transition,
+        maintainState: true,
+      ),
     );
   }
 
@@ -464,26 +476,29 @@ class NamidaNavigator {
     Transition transition = Transition.cupertino,
     int durationMs = 500,
   }) async {
-    currentWidgetStack.value = [page];
+    currentWidgetStack.assign(page);
     _hideEverything();
 
     if (_shouldUpdateSubpagesColors) page.updateColorScheme();
 
-    navKey.currentState?.popUntil((r) => r.isFirst);
     try {
-      await navKey.currentState?.pushPageReplacement(
+      await navKey.currentState?.pushPageReplacementAll(
         page,
-        durationInMs: durationMs,
-        transition: transition,
-        maintainState: true,
+        params: NamPackPushPageParams(
+          durationInMs: durationMs,
+          transition: transition,
+          maintainState: true,
+        ),
       );
     } on StateError catch (_) {
       // -- no route was there yet, simple push now
       await navKey.currentState?.pushPage(
         page,
-        durationInMs: durationMs,
-        transition: transition,
-        maintainState: true,
+        params: NamPackPushPageParams(
+          durationInMs: durationMs,
+          transition: transition,
+          maintainState: true,
+        ),
       );
     }
   }

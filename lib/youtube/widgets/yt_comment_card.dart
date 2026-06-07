@@ -99,7 +99,9 @@ class _YTCommentCardState extends State<YTCommentCard> {
         repliesCount: repliesCount,
         videoId: widget.videoId,
       ),
-      maintainState: false,
+      params: const NamPackPushPageParams(
+        maintainState: false,
+      ),
     );
   }
 
