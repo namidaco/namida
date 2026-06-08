@@ -32,6 +32,8 @@ enum SortType {
   path,
   duration,
   sampleRate,
+  bitDepth,
+  bpm,
   size,
   rating,
   shuffle,
@@ -64,6 +66,8 @@ enum SortType {
     SortType.path,
     SortType.duration,
     SortType.sampleRate,
+    SortType.bitDepth,
+    SortType.bpm,
     SortType.size,
     SortType.rating,
     SortType.latestPlayed,
@@ -89,6 +93,7 @@ enum GroupSortType {
   dateModified,
   composer,
   label,
+  bpm,
   duration,
   numberOfTracks,
   playCount,
@@ -122,6 +127,7 @@ enum GroupSortType {
     GroupSortType.artistsList,
     GroupSortType.composer,
     GroupSortType.label,
+    GroupSortType.bpm,
     GroupSortType.shuffle,
   ];
 
@@ -147,6 +153,7 @@ enum GroupSortType {
     GroupSortType.year,
     GroupSortType.dateAdded,
     GroupSortType.dateModified,
+    GroupSortType.bpm,
     GroupSortType.shuffle,
   ];
 
@@ -164,6 +171,7 @@ enum GroupSortType {
     GroupSortType.dateAdded,
     GroupSortType.dateModified,
     GroupSortType.composer,
+    GroupSortType.bpm,
     GroupSortType.shuffle,
   ];
 
@@ -176,6 +184,7 @@ enum GroupSortType {
     GroupSortType.playCount,
     GroupSortType.firstListen,
     GroupSortType.latestPlayed,
+    GroupSortType.bpm,
     GroupSortType.shuffle,
     GroupSortType.custom,
   ];
@@ -233,6 +242,8 @@ enum TrackTileItem {
   comment,
   bitrate,
   sampleRate,
+  bitDepth,
+  bpm,
   format,
   channels,
   rating,

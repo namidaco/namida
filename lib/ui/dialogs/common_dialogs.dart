@@ -44,9 +44,9 @@ class NamidaDialogs {
     await showGeneralPopupDialog(
       [track],
       trExt.originalArtist,
-      trExt.title.overflow,
+      trExt.title,
       source,
-      thirdLineText: trExt.originalAlbum.overflow,
+      thirdLineText: trExt.originalAlbum,
       forceSquared: settings.forceSquaredTrackThumbnail.value,
       tracksWithDates: trackWithDate == null ? [] : [trackWithDate],
       playlistName: playlistName,
@@ -63,10 +63,10 @@ class NamidaDialogs {
     final name = albumIdentifier.displayAlbumName;
     await showGeneralPopupDialog(
       tracks,
-      name.overflow,
+      name,
       "${tracks.displayTrackKeyword} & ${artists.length.displayArtistKeyword}",
       QueueSource.album(albumIdentifier, name),
-      thirdLineText: artists.join(', ').overflow,
+      thirdLineText: artists.join(', '),
       forceSquared: Dimensions.inst.shouldAlbumBeSquared(rootContext),
       forceSingleArtwork: true,
       heroTag: 'album_$albumIdentifier',
@@ -91,10 +91,10 @@ class NamidaDialogs {
         : QueueSource.artist(name);
     await showGeneralPopupDialog(
       tracks,
-      name.overflow,
+      name,
       "${tracks.displayTrackKeyword} & ${albumsSet.length.displayAlbumKeyword}",
       queueSource,
-      thirdLineText: albumsSet.take(5).join(', ').overflow,
+      thirdLineText: albumsSet.take(5).join(', '),
       forceSquared: true,
       forceSingleArtwork: true,
       heroTag: 'artist_$name',
@@ -208,7 +208,7 @@ class NamidaDialogs {
         playlist.name.translatePlaylistName(),
         [trackss.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
         playlist.toQueueSource(),
-        thirdLineText: playlist.moods.join(', ').overflow,
+        thirdLineText: playlist.moods.join(', '),
         playlistName: playlist.name,
         tracksWithDates: playlist.tracks,
         extractColor: false,

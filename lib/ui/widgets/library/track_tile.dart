@@ -50,6 +50,10 @@ class TrackTilePropertiesProvider extends StatelessWidget {
       (element) => element == TrackTileItem.listenCount || element == TrackTileItem.latestListenDate || element == TrackTileItem.firstListenDate,
     );
 
+    final listenToStatsMap = settings.trackItem.values.any(
+      (element) => element == TrackTileItem.rating || element == TrackTileItem.moods || element == TrackTileItem.tags,
+    );
+
     return ObxO(
       rx: settings.forceSquaredTrackThumbnail,
       builder: (context, forceSquaredThumbnails) => ObxO(
@@ -67,77 +71,81 @@ class TrackTilePropertiesProvider extends StatelessWidget {
                   builder: (context, trackTileHeight) => ObxO(
                     rx: Indexer.inst.tracksInfoList,
                     builder: (context, _) => ObxPrefer(
-                      enabled: queueSupportResuming,
-                      rx: QueueController.latestPlayedForSourceManager.map,
-                      builder: (context, latestPlayedForSource) {
-                        Selectable? currentHighlightedTrack;
-                        final currentHighlightedPlayable = latestPlayedForSource?[queueSource];
-                        if (currentHighlightedPlayable is Selectable) currentHighlightedTrack = currentHighlightedPlayable;
-                        return ObxO(
-                          rx: SelectedTracksController.inst.existingTracksMap,
-                          builder: (context, selectedTracksMap) => ObxPrefer(
-                            rx: HistoryController.inst.topTracksMapListens,
-                            enabled: listenToTopHistoryItems,
-                            builder: (context, _) => ObxO(
-                              rx: CurrentColor.inst.currentPlayingTrack,
-                              builder: (context, currentPlayingTrack) => ObxO(
-                                rx: CurrentColor.inst.currentPlayingIndex,
-                                builder: (context, currentPlayingIndex) => Obx(
-                                  (context) {
-                                    int? sleepingIndex;
-                                    if (comingFromQueue) {
-                                      final sleepconfig = Player.inst.sleepTimerConfig.valueR;
-                                      if (sleepconfig.enableSleepAfterItems) {
-                                        final repeatMode = settings.player.repeatMode.valueR;
-                                        if (repeatMode == PlayerRepeatMode.all || repeatMode == PlayerRepeatMode.none) {
-                                          sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+                      enabled: listenToStatsMap,
+                      rx: Indexer.inst.trackStatsMap,
+                      builder: (context, trackStatsMap) => ObxPrefer(
+                        enabled: queueSupportResuming,
+                        rx: QueueController.latestPlayedForSourceManager.map,
+                        builder: (context, latestPlayedForSource) {
+                          Selectable? currentHighlightedTrack;
+                          final currentHighlightedPlayable = latestPlayedForSource?[queueSource];
+                          if (currentHighlightedPlayable is Selectable) currentHighlightedTrack = currentHighlightedPlayable;
+                          return ObxO(
+                            rx: SelectedTracksController.inst.existingTracksMap,
+                            builder: (context, selectedTracksMap) => ObxPrefer(
+                              rx: HistoryController.inst.topTracksMapListens,
+                              enabled: listenToTopHistoryItems,
+                              builder: (context, _) => ObxO(
+                                rx: CurrentColor.inst.currentPlayingTrack,
+                                builder: (context, currentPlayingTrack) => ObxO(
+                                  rx: CurrentColor.inst.currentPlayingIndex,
+                                  builder: (context, currentPlayingIndex) => Obx(
+                                    (context) {
+                                      int? sleepingIndex;
+                                      if (comingFromQueue) {
+                                        final sleepconfig = Player.inst.sleepTimerConfig.valueR;
+                                        if (sleepconfig.enableSleepAfterItems) {
+                                          final repeatMode = settings.player.repeatMode.valueR;
+                                          if (repeatMode == PlayerRepeatMode.all || repeatMode == PlayerRepeatMode.none) {
+                                            sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+                                          }
                                         }
                                       }
-                                    }
 
-                                    final pageColorScheme = CurrentColor.inst.currentColorScheme;
-                                    final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
-                                        ? CurrentColor.inst.miniplayerColor
-                                        : pageColorScheme; // always follow track color
+                                      final pageColorScheme = CurrentColor.inst.currentColorScheme;
+                                      final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
+                                          ? CurrentColor.inst.miniplayerColor
+                                          : pageColorScheme; // always follow track color
 
-                                    Color? backgroundColorPlayingAlt;
+                                      Color? backgroundColorPlayingAlt;
 
-                                    final palette = CurrentColor.inst.miniplayerColorM.palette;
-                                    if (palette.isNotEmpty) {
-                                      backgroundColorPlayingAlt = palette[0].withOpacityExt(0.4);
-                                    }
+                                      final palette = CurrentColor.inst.miniplayerColorM.palette;
+                                      if (palette.isNotEmpty) {
+                                        backgroundColorPlayingAlt = palette[0].withOpacityExt(0.4);
+                                      }
 
-                                    final properties = TrackTileProperties(
-                                      pageColorScheme: pageColorScheme,
-                                      backgroundColorPlaying: backgroundColorPlaying,
-                                      backgroundColorPlayingAlt: backgroundColorPlayingAlt,
-                                      backgroundColorNotPlaying: backgroundColorNotPlaying,
-                                      selectionColorLayer: selectionColorLayer,
-                                      highlightColorLayer: highlightColorLayer,
-                                      thumbnailSize: thumbnailSize,
-                                      trackTileHeight: trackTileHeight,
-                                      forceSquaredThumbnails: forceSquaredThumbnails,
-                                      sleepingIndex: sleepingIndex,
-                                      displayThirdRow: displayThirdRow,
-                                      displayFavouriteIconInListTile: displayFavouriteIconInListTile,
-                                      comingFromQueue: comingFromQueue,
-                                      configs: configs,
-                                      canHaveDuplicates: canHaveDuplicates,
-                                      currentPlayingTrack: currentPlayingTrack,
-                                      currentPlayingIndex: currentPlayingIndex,
-                                      currentHighlightedTrack: currentHighlightedTrack,
-                                      isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
-                                      allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
-                                      allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
-                                    );
-                                    return builder(properties);
-                                  },
+                                      final properties = TrackTileProperties(
+                                        pageColorScheme: pageColorScheme,
+                                        backgroundColorPlaying: backgroundColorPlaying,
+                                        backgroundColorPlayingAlt: backgroundColorPlayingAlt,
+                                        backgroundColorNotPlaying: backgroundColorNotPlaying,
+                                        selectionColorLayer: selectionColorLayer,
+                                        highlightColorLayer: highlightColorLayer,
+                                        thumbnailSize: thumbnailSize,
+                                        trackTileHeight: trackTileHeight,
+                                        forceSquaredThumbnails: forceSquaredThumbnails,
+                                        sleepingIndex: sleepingIndex,
+                                        displayThirdRow: displayThirdRow,
+                                        displayFavouriteIconInListTile: displayFavouriteIconInListTile,
+                                        comingFromQueue: comingFromQueue,
+                                        configs: configs,
+                                        canHaveDuplicates: canHaveDuplicates,
+                                        currentPlayingTrack: currentPlayingTrack,
+                                        currentPlayingIndex: currentPlayingIndex,
+                                        currentHighlightedTrack: currentHighlightedTrack,
+                                        isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
+                                        allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
+                                        allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
+                                      );
+                                      return builder(properties);
+                                    },
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -824,26 +832,28 @@ class TrackTileManager {
   }
 
   static final _lookup = <TrackTileItem, String Function(TrackExtended track)>{
-    TrackTileItem.title: (track) => track.title.overflow,
-    TrackTileItem.artists: (track) => track.originalArtist.overflow,
-    TrackTileItem.album: (track) => track.originalAlbum.overflow,
-    TrackTileItem.albumArtist: (track) => track.albumArtist.overflow,
-    TrackTileItem.genres: (track) => track.originalGenre.overflow,
+    TrackTileItem.title: (track) => track.title,
+    TrackTileItem.artists: (track) => track.originalArtist,
+    TrackTileItem.album: (track) => track.originalAlbum,
+    TrackTileItem.albumArtist: (track) => track.albumArtist,
+    TrackTileItem.genres: (track) => track.originalGenre,
     TrackTileItem.duration: (track) => track.durationMS.milliSecondsLabel,
     TrackTileItem.year: (track) => track.year.yearFormatted,
     TrackTileItem.trackNumber: (track) => track.trackNo.toString(),
     TrackTileItem.discNumber: (track) => track.discNo.toString(),
-    TrackTileItem.fileNameWOExt: (track) => track.filenameWOExt.overflow,
+    TrackTileItem.fileNameWOExt: (track) => track.filenameWOExt,
     TrackTileItem.extension: (track) => track.extension,
-    TrackTileItem.fileName: (track) => track.filename.overflow,
-    TrackTileItem.folder: (track) => track.folderName.overflow,
+    TrackTileItem.fileName: (track) => track.filename,
+    TrackTileItem.folder: (track) => track.folderName,
     TrackTileItem.path: (track) => track.path.formatPath(),
     TrackTileItem.channels: (track) => track.channels.channelToLabel,
-    TrackTileItem.comment: (track) => track.comment.overflow,
-    TrackTileItem.composer: (track) => track.composer.overflow,
+    TrackTileItem.comment: (track) => track.comment,
+    TrackTileItem.composer: (track) => track.composer,
     TrackTileItem.dateAdded: (track) => track.dateAdded.dateFormatted,
     TrackTileItem.format: (track) => track.format.toUpperCase(),
     TrackTileItem.sampleRate: (track) => '${track.sampleRate}Hz',
+    TrackTileItem.bitDepth: (track) => '${track.bits} bit',
+    TrackTileItem.bpm: (track) => '${track.bpm ?? 0} BPM',
     TrackTileItem.size: (track) => track.size.fileSizeFormatted,
     TrackTileItem.bitrate: (track) => "${(track.bitrate)} kb/s",
     TrackTileItem.dateModified: (track) {

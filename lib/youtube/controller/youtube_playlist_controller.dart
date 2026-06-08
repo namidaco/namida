@@ -335,6 +335,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     GroupSortType.composer => null,
     GroupSortType.albumArtist => null,
     GroupSortType.label => null,
+    GroupSortType.bpm => null,
     GroupSortType.genresList => null,
     GroupSortType.albumsCount => null,
     GroupSortType.year => null,

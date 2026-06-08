@@ -184,6 +184,7 @@ class _JellyfinServer extends MusicWebServer {
       language: '',
       lyrics: '',
       label: '',
+      bpm: 0,
       rating: rating,
       originalTags: null,
       tagsList: [],

@@ -1171,7 +1171,7 @@ class _CompressImagesListTile extends StatelessWidget {
                           child: ListTileWithCheckMark(
                             icon: Broken.folder,
                             title: dirPath.last,
-                            subtitle: e.overflow,
+                            subtitle: e,
                             active: dirsToCompress.contains(e),
                             onTap: () => dirsToCompress.addOrRemove(e),
                           ),

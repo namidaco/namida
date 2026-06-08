@@ -116,7 +116,7 @@ class ArtistCard extends StatelessWidget {
                           child: NamidaHero(
                             tag: 'line1_$hero',
                             child: Text(
-                              name.overflow,
+                              name,
                               style: textTheme.displayMedium?.copyWith(
                                 fontSize: getFontSize(0.5),
                                 fontWeight: FontWeight.w500,

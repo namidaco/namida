@@ -3804,7 +3804,7 @@ class DefaultPlaylistCard extends StatelessWidget {
           const SizedBox(width: 10.0),
           Expanded(
             child: Text(
-              title.overflow,
+              title,
               style: textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(10), textTheme.displayMedium!.color!)),
               softWrap: false,
               overflow: TextOverflow.fade,

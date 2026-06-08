@@ -209,7 +209,7 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme,
         ],
         child: CustomTagTextField(
           controller: controller,
-          hintText: ytlink.overflow,
+          hintText: ytlink,
           labelText: lang.link,
           keyboardType: TextInputType.url,
           onChanged: (value) {

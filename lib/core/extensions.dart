@@ -134,6 +134,22 @@ extension TracksWithDatesUtils on List<Selectable> {
     }
     return size.fileSizeFormatted;
   }
+
+  double getAverageBpm() {
+    if (isEmpty) return 0.0;
+
+    int totalBPM = 0;
+    for (final s in this) {
+      totalBPM += s.track.bpm ?? 0;
+    }
+    return totalBPM / this.length;
+  }
+
+  String getAverageBpmFormatted() {
+    final avgBpm = this.getAverageBpm();
+    if (avgBpm <= 0) return '';
+    return '$avgBpm BPM';
+  }
 }
 
 extension TracksUtils on List<Track> {

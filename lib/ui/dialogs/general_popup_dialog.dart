@@ -880,7 +880,7 @@ Future<void> showGeneralPopupDialog(
                                     ),
                                   if (subtitle.isNotEmpty)
                                     Text(
-                                      subtitle.overflow,
+                                      subtitle,
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                       style: theme.textTheme.displayMedium?.copyWith(
@@ -891,7 +891,7 @@ Future<void> showGeneralPopupDialog(
                                     ),
                                   if (thirdLineText.isNotEmpty) ...[
                                     Text(
-                                      thirdLineText.overflow,
+                                      thirdLineText,
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                       style: theme.textTheme.displaySmall?.copyWith(

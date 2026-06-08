@@ -156,6 +156,7 @@ class SearchSortController extends SearchPortsProvider {
       GroupSortType.genresList => encapsulateSortCanIgnorePrefix(TrackSearchFilter.genre, (e) => e.value.first.genresList.join().toLowerCase()),
       GroupSortType.composer => encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.value.composer.toLowerCase()),
       GroupSortType.label => (e) => e.value.recordLabel.toLowerCase(),
+      GroupSortType.bpm => (e) => e.value.getAverageBpm(),
       GroupSortType.dateAdded => (e) => e.value.getDateAddedEffective() ?? 0,
       GroupSortType.dateModified => (e) => e.value.getDateModifiedEffective() ?? 0,
       GroupSortType.duration => (e) => e.value.totalDurationInMS,
@@ -203,6 +204,8 @@ class SearchSortController extends SearchPortsProvider {
       SortType.path => (e) => e.path,
       SortType.duration => (e) => e.durationMS,
       SortType.sampleRate => (e) => e.sampleRate,
+      SortType.bitDepth => (e) => e.bits,
+      SortType.bpm => (e) => e.bpm ?? 0,
       SortType.size => (e) => e.size,
       SortType.rating => (e) => e.effectiveRating,
       SortType.mostPlayed => (e) => -(HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0),
@@ -234,6 +237,7 @@ class SearchSortController extends SearchPortsProvider {
     GroupSortType.composer => (tracks) => tracks.firstOrNull?.composer,
     GroupSortType.albumArtist => (tracks) => tracks.albumArtist,
     GroupSortType.label => (tracks) => tracks.firstOrNull?.label,
+    GroupSortType.bpm => (tracks) => tracks.getAverageBpmFormatted(),
     GroupSortType.genresList => (tracks) => tracks.firstOrNull?.originalGenre,
     GroupSortType.numberOfTracks => (tracks) => tracks.length.toString(),
     GroupSortType.duration => (tracks) => tracks.totalDurationFormatted,
@@ -264,6 +268,7 @@ class SearchSortController extends SearchPortsProvider {
     GroupSortType.composer => (p) => p.tracks.firstOrNull?.track.composer,
     GroupSortType.albumArtist => (p) => p.tracks.firstOrNull?.track.albumArtist,
     GroupSortType.label => (p) => p.tracks.firstOrNull?.track.label,
+    GroupSortType.bpm => (p) => p.tracks.getAverageBpmFormatted(),
     GroupSortType.genresList => (p) => p.tracks.firstOrNull?.track.originalGenre,
     GroupSortType.numberOfTracks => (p) => p.tracks.length.toString(),
     GroupSortType.duration => (p) => p.tracks.totalDurationFormatted,
@@ -894,6 +899,12 @@ class SearchSortController extends SearchPortsProvider {
         break;
       case SortType.sampleRate:
         sortThis((e) => e.sampleRate);
+        break;
+      case SortType.bitDepth:
+        sortThis((e) => e.bits);
+        break;
+      case SortType.bpm:
+        sortThis((e) => e.bpm ?? 0);
         break;
       case SortType.size:
         sortThis((e) => e.size);

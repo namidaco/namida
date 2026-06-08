@@ -579,40 +579,6 @@ class CustomizationSettings extends SettingSubpageProvider {
 
   void _onSettingsChanged() => TrackTileManager.onTrackItemPropChange();
 
-  void _showTrackItemsDialog(TrackTilePosition p) {
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
-        title: lang.choose,
-        normalTitleStyle: true,
-        horizontalInset: 64.0,
-        verticalInset: 64.0,
-        child: SizedBox(
-          height: namida.height * 0.5,
-          width: namida.width,
-          child: NamidaListView(
-            listBottomPadding: 0,
-            itemBuilder: (context, i) {
-              final trItem = TrackTileItem.values[i];
-              return SmallListTile(
-                key: ValueKey(i),
-                title: trItem.toText(),
-                trailingIcon: trItem.toIcon(),
-                onTap: () {
-                  settings.updateTrackItemList(p, trItem);
-                  _onSettingsChanged();
-                  NamidaNavigator.inst.closeDialog();
-                },
-                active: settings.trackItem[p] == trItem,
-              );
-            },
-            itemCount: TrackTileItem.values.length,
-            itemExtent: null,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _getTrackTileCustomizationsTile(BuildContext context) {
     return getItemWrapper(
       key: _CustomizationSettingsKeys.TRACKTILECUSTOMIZATION,
@@ -843,8 +809,8 @@ class CustomizationSettings extends SettingSubpageProvider {
                                     ]
                                     .map(
                                       (e) => TrackItemSmallBox(
+                                        position: e,
                                         text: settings.trackItem[e]?.label,
-                                        onTap: () => _showTrackItemsDialog(e),
                                       ),
                                     )
                                     .addSeparators(separator: const SizedBox(width: 6.0))
@@ -864,8 +830,8 @@ class CustomizationSettings extends SettingSubpageProvider {
                                     ]
                                     .map(
                                       (e) => TrackItemSmallBox(
+                                        position: e,
                                         text: settings.trackItem[e]?.label,
-                                        onTap: () => _showTrackItemsDialog(e),
                                       ),
                                     )
                                     .addSeparators(separator: const SizedBox(width: 6.0))
@@ -886,8 +852,8 @@ class CustomizationSettings extends SettingSubpageProvider {
                                       ]
                                       .map(
                                         (e) => TrackItemSmallBox(
+                                          position: e,
                                           text: settings.trackItem[e]?.label,
-                                          onTap: () => _showTrackItemsDialog(e),
                                         ),
                                       )
                                       .addSeparators(separator: const SizedBox(width: 6.0))
@@ -910,8 +876,8 @@ class CustomizationSettings extends SettingSubpageProvider {
                           ]
                           .map(
                             (e) => TrackItemSmallBox(
+                              position: e,
                               text: settings.trackItem[e]?.label,
-                              onTap: () => _showTrackItemsDialog(e),
                             ),
                           )
                           .addSeparators(separator: const SizedBox(height: 3.0)),
@@ -1236,25 +1202,57 @@ class CustomizationSettings extends SettingSubpageProvider {
 }
 
 class TrackItemSmallBox extends StatelessWidget {
-  final void Function()? onTap;
-  final Widget? child;
+  final TrackTilePosition position;
   final String? text;
-  const TrackItemSmallBox({super.key, this.onTap, this.child, this.text});
+  final Widget? child;
+
+  const TrackItemSmallBox({
+    super.key,
+    required this.position,
+    this.text,
+    this.child,
+  });
+
+  Iterable<Widget> _getChildren() {
+    return TrackTileItem.values.map(
+      (e) => ObxO(
+        rx: settings.trackItem,
+        builder: (context, trackItemMap) => SmallListTile(
+          borderRadius: 12.0,
+          visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+          title: e.toText(),
+          trailingIcon: e.toIcon(),
+          active: trackItemMap[position] == e,
+          onTap: () {
+            settings.updateTrackItemList(position, e);
+            TrackTileManager.onTrackItemPropChange();
+            NamidaNavigator.inst.popMenu();
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    return NamidaInkWell(
-      bgColor: theme.colorScheme.surface.withAlpha(160),
-      onTap: onTap,
-      borderRadius: 8.0,
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      child: text != null
-          ? Text(
-              text!,
-              style: theme.textTheme.displaySmall,
-            )
-          : child,
+    return NamidaPopupWrapper(
+      children: _getChildren,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface.withAlpha(160),
+          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          child: text != null
+              ? Text(
+                  text!,
+                  style: theme.textTheme.displaySmall,
+                )
+              : child,
+        ),
+      ),
     );
   }
 }

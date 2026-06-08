@@ -186,7 +186,7 @@ class AlbumCard extends StatelessWidget {
                             NamidaHero(
                               tag: 'line1_$hero',
                               child: Text(
-                                name.overflow,
+                                name,
                                 style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28)),
                                 textAlign: TextAlign.start,
                                 softWrap: false,

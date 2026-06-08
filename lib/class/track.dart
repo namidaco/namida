@@ -320,6 +320,7 @@ class TrackExtended {
   final String language;
   final String lyrics;
   final String label;
+  final int? bpm;
   final double rating;
   final String? originalTags;
   final List<String> tagsList;
@@ -368,6 +369,7 @@ class TrackExtended {
     required this.language,
     required this.lyrics,
     required this.label,
+    required this.bpm,
     required this.rating,
     required this.originalTags,
     required this.tagsList,
@@ -556,6 +558,7 @@ class TrackExtended {
       language: json['language'] ?? '',
       lyrics: json['lyrics'] ?? '',
       label: json['label'] ?? '',
+      bpm: json['bpm'] as int?,
       rating: json['rating'] ?? 0.0,
       originalTags: json['originalTags'],
       tagsList: Indexer.splitGeneral(
@@ -602,6 +605,7 @@ class TrackExtended {
       if (language.isNotEmpty) 'language': language,
       if (lyrics.isNotEmpty) 'lyrics': lyrics,
       if (label.isNotEmpty) 'label': label,
+      if (bpm != null && bpm! > 0) 'bpm': bpm,
       if (rating > 0) 'rating': rating,
       if (originalTags?.isNotEmpty == true) 'originalTags': originalTags,
       if (gainData != null) 'gainData': ?gainData?.toMap(),
@@ -838,6 +842,7 @@ extension TrackExtUtils on TrackExtended {
       language: tag.language ?? language,
       lyrics: tag.lyrics ?? lyrics,
       label: tag.recordLabel ?? label,
+      bpm: tag.bpm ?? bpm,
       rating: tag.ratingPercentage ?? rating,
       originalTags: tag.tags ?? originalTags,
       tagsList: finaltagsEmbedded,
@@ -902,6 +907,7 @@ extension TrackExtUtils on TrackExtended {
     String? language,
     String? lyrics,
     String? label,
+    int? bpm,
     double? rating,
     String? originalTags,
     List<String>? tagsList,
@@ -949,6 +955,7 @@ extension TrackExtUtils on TrackExtended {
       language: language ?? this.language,
       lyrics: lyrics ?? this.lyrics,
       label: label ?? this.label,
+      bpm: bpm ?? this.bpm,
       rating: rating ?? this.rating,
       originalTags: originalTags ?? this.originalTags,
       tagsList: tagsList ?? this.tagsList,
@@ -1011,6 +1018,7 @@ extension TrackUtils on Track {
   String get language => toTrackExt().language;
   String get lyrics => toTrackExt().lyrics;
   String get label => toTrackExt().label;
+  int? get bpm => toTrackExt().bpm;
 
   int? get lastPlayedPositionInMs => statsRaw?.lastPositionInMs;
   TrackStats? get statsRaw => Indexer.inst.trackStatsMap.value[this];

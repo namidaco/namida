@@ -81,7 +81,7 @@ class MultiArtworkCard extends StatelessWidget {
                             enabled: enableHero,
                             tag: 'line1_$heroTag',
                             child: Text(
-                              name.overflow,
+                              name,
                               style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.38)),
                               softWrap: false,
                               overflow: TextOverflow.fade,

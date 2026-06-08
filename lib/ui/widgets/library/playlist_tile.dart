@@ -107,7 +107,7 @@ class PlaylistTile extends StatelessWidget {
                                 enabled: enableHero,
                                 tag: 'line3_$hero',
                                 child: Text(
-                                  playlist.moods.join(', ').overflow,
+                                  playlist.moods.join(', '),
                                   style: textTheme.displaySmall,
                                   overflow: TextOverflow.ellipsis,
                                 ),
