@@ -44,13 +44,13 @@ class YoutubeVideoHistory {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = id;
-    data['title'] = title;
-    data['channel'] = channel;
-    data['channelUrl'] = channelUrl;
-    data['watches'] = watches;
-    return data;
+    return <String, dynamic>{
+      'id': id,
+      'title': title,
+      'channel': channel,
+      'channelUrl': channelUrl,
+      'watches': watches.map((e) => e.toJson()).toFixedList(),
+    };
   }
 }
 

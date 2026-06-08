@@ -68,11 +68,11 @@ class NamidaOnTaps {
 
     final albumIdsMap = <AlbumIdentifierWrapper, List<Track>>{};
     for (final tr in tracks) {
-      tr.albumsIdentifiersModified.loop((album) {
+      for (var album in tr.albumsIdentifiersModified) {
         albumIdsMap[album] ??= album.getAlbumTracks();
-      });
+      }
     }
-    final albumIdsFinalList = albumIdsMap.entries.toList();
+    final albumIdsFinalList = albumIdsMap.entries.toFixedList();
     SearchSortController.inst.sortAlbumsListRaw(albumIdsFinalList, settings.albumSort.value, settings.albumSortReversed.value);
 
     final albumIds = <AlbumIdentifierWrapper>[];
@@ -220,7 +220,7 @@ class NamidaOnTaps {
         whatDoYouWant: () async {
           final daysToSave = HistoryController.inst.addTracksToHistoryOnly(tempList, preventDuplicate: true);
           HistoryController.inst.updateMostPlayedPlaylist(tempList);
-          HistoryController.inst.sortHistoryTracks(tempList.mapped((e) => e.dateAdded.toDaysSince1970()));
+          HistoryController.inst.sortHistoryTracks(tempList.map((e) => e.dateAdded.toDaysSince1970()));
           await HistoryController.inst.saveHistoryToStorage(daysToSave);
         },
       );
@@ -229,10 +229,10 @@ class NamidaOnTaps {
       if (playlist == null) return;
 
       final Map<TrackWithDate, int> twdAndIndexes = {};
-      tracksWithDates.loop((twd) {
+      for (var twd in tracksWithDates) {
         final index = playlist.tracks.indexOf(twd);
         if (index > -1) twdAndIndexes[twd] = index;
-      });
+      }
 
       await PlaylistController.inst.removeTracksFromPlaylist(playlist, twdAndIndexes.values.toList());
       showSnacky(
@@ -472,11 +472,12 @@ class NamidaOnTaps {
 
   static Map<int, int> _getQueuesSize(String dir) {
     final map = <int, int>{};
-    Directory(dir).listSync().loop((e) {
+    final files = Directory(dir).listSync();
+    for (var e in files) {
       try {
         if (e is File) map[int.parse(e.path.getFilenameWOExt)] = e.lengthSync();
       } catch (_) {}
-    });
+    }
     return map;
   }
 
@@ -486,14 +487,14 @@ class NamidaOnTaps {
     String getSubtitle(Map<int, int> lookup, List<int> datesList) {
       int total = 0;
       String? suffix;
-      datesList.loop((e) {
+      for (var e in datesList) {
         final size = lookup[e];
         if (size != null) {
           total += size;
         } else {
           suffix ??= '?';
         }
-      });
+      }
       return "${total.fileSizeFormatted}${suffix ?? ''}";
     }
 
@@ -524,19 +525,19 @@ class NamidaOnTaps {
       int total = 0;
       if (nonFavourites.value) {
         total += lookupNonFavourites.values.where((v) => v).length;
-        selectedToClear.loop((e) {
+        for (var e in selectedToClear.value) {
           total += lookup[e]?.where((element) => lookupNonFavourites[element] != true).length ?? 0;
-        });
-        selectedHomepageItemToClear.loop((e) {
+        }
+        for (var e in selectedHomepageItemToClear.value) {
           total += lookupHomepageItem[e]?.where((element) => lookupNonFavourites[element] != true).length ?? 0;
-        });
+        }
       } else {
-        selectedToClear.loop((e) {
+        for (var e in selectedToClear.value) {
           total += lookup[e]?.length ?? 0;
-        });
-        selectedHomepageItemToClear.loop((e) {
+        }
+        for (var e in selectedHomepageItemToClear.value) {
           total += lookupHomepageItem[e]?.length ?? 0;
-        });
+        }
       }
 
       totalToRemove.value = total;
@@ -732,7 +733,7 @@ class NamidaOnTaps {
                         ),
                       ),
                     )
-                    .toList(),
+                    .toFixedList(),
               ),
             ],
           ),
@@ -1540,14 +1541,14 @@ class TracksAddOnTap {
               final allAvailableMoodsPlaylists = <String, List<Track>>{};
               final tempPlaylistTracksSet = <Track>{};
               for (final pl in PlaylistController.inst.playlistsMap.value.entries) {
-                pl.value.moods.loop((mood) {
+                for (var mood in pl.value.moods) {
                   final list = allAvailableMoodsPlaylists[mood] ??= <Track>[];
                   for (final tr in pl.value.tracks.tracks) {
                     if (tempPlaylistTracksSet.add(tr)) {
                       list.add(tr);
                     }
                   }
-                });
+                }
               }
 
               final allAvailableMoodsTracks = Indexer.inst.getTracksGroupedByMoods();
@@ -1676,12 +1677,12 @@ class TracksAddOnTap {
                         text: lang.generate,
                         onTap: () {
                           final finalTracks = <Track>[];
-                          selectedmoodsPlaylists.value.loop((m) {
+                          for (var m in selectedmoodsPlaylists.value) {
                             finalTracks.addAll(allAvailableMoodsPlaylists[m] ?? []);
-                          });
-                          selectedmoodsTracks.value.loop((m) {
+                          }
+                          for (var m in selectedmoodsTracks.value) {
                             finalTracks.addAll(allAvailableMoodsTracks[m] ?? []);
-                          });
+                          }
                           Player.inst.addToQueue(
                             finalTracks.uniqued(),
                             insertionType: insertionType,
@@ -2301,15 +2302,13 @@ class TracksAddOnTap {
                     final iterables = disabledOnes == null || disabledOnes.isEmpty
                         ? InsertionSortingType.values
                         : InsertionSortingType.values.where((element) => !disabledOnes.contains(element));
-                    return iterables
-                        .map(
-                          (e) => NamidaPopupItem(
-                            icon: e.toIcon(),
-                            title: e.toText(),
-                            onTap: () => sortBy.value = e,
-                          ),
-                        )
-                        .toList();
+                    return iterables.map(
+                      (e) => NamidaPopupItem(
+                        icon: e.toIcon(),
+                        title: e.toText(),
+                        onTap: () => sortBy.value = e,
+                      ),
+                    );
                   },
                   child: ObxO(
                     rx: sortBy,

@@ -22,21 +22,20 @@ class _YoutubeInfoUtils {
 
   static Map<String, YoutubeVideoHistory> _parseBackupHistoryInfoIsolate(String dirPath) {
     final map = <String, YoutubeVideoHistory>{};
-    Directory(dirPath).listSyncSafe().loop((f) {
+    final files = Directory(dirPath).listSyncSafe();
+    for (var f in files) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync(ensureExists: false);
           if (response is List) {
-            response.loop(
-              (r) {
-                final yvh = YoutubeVideoHistory.fromJson(r);
-                map[yvh.id] = yvh;
-              },
-            );
+            for (var r in response) {
+              final yvh = YoutubeVideoHistory.fromJson(r);
+              map[yvh.id] = yvh;
+            }
           }
         } catch (_) {}
       }
-    });
+    }
     map.remove('');
     return map;
   }

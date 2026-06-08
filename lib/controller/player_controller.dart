@@ -899,7 +899,7 @@ class _AudioConfigsManager {
     final existenceCache = <String, bool>{};
     final toUpdate = <String, String>{};
 
-    for (final key in _mapRx.value.keys.toList()) {
+    for (final key in _mapRx.value.keys.toFixedList()) {
       final normalizedKey = replaceFunctionNormalizePath(key);
       final shouldUpdate = replaceFunctionForUpdatedPaths(
         key,

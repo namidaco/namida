@@ -226,7 +226,7 @@ class SelectedTracksRow extends StatelessWidget {
           width: 140,
           child: Obx(
             (context) {
-              final selectedTracks = SelectedTracksController.inst.selectedTracks.valueR.tracks.toList();
+              final selectedTracks = SelectedTracksController.inst.selectedTracks.valueR.tracks;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

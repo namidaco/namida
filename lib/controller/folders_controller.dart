@@ -260,7 +260,7 @@ class FoldersController<T extends Folder, E extends Track> {
       return a.compareTo(b);
     }
 
-    final sorted = map.entries.toList()..sort(compare);
+    final sorted = map.entries.toFixedList()..sort(compare);
     map.assignAllEntries(sorted); // we clear after building new sorted one
 
     _FolderNode._walkChildrenRescursive(rootNode, (map) => map.sort(compare));

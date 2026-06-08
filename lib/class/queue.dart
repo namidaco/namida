@@ -56,7 +56,7 @@ class Queue {
                 'v': true,
               }
             : e.toJson();
-      }).toList(),
+      }).toFixedList(),
     };
   }
 

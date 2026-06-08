@@ -18,8 +18,8 @@ class YTOnGoingFinishedDownloads {
     if (forIsGoing == null) return;
 
     void addToListy({required bool Function(bool fileExists, bool isDownloadingOrFetching) filter}) {
-      YoutubeController.inst.youtubeDownloadTasksMap.keys.toList().reverseLoop((key) {
-        final smallList = YoutubeController.inst.youtubeDownloadTasksMap[key]?.values.toList();
+      YoutubeController.inst.youtubeDownloadTasksMap.keys.toFixedList().reverseLoop((key) {
+        final smallList = YoutubeController.inst.youtubeDownloadTasksMap[key]?.values.toFixedList();
         // -- reverseLoop to insert newer first.
         smallList?.reverseLoop((v) {
           final fileExist = YoutubeController.inst.downloadedFilesMap[key]?[v.filename] != null;

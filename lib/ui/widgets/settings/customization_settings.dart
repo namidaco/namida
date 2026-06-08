@@ -360,7 +360,7 @@ class CustomizationSettings extends SettingSubpageProvider {
     required Rx<TrackExecuteActions> rx,
     required void Function(TrackExecuteActions newItem) onSave,
   }) {
-    List<Widget> getChildren() {
+    Iterable<Widget> getChildren() {
       var values = TrackExecuteActions.values;
       if (excludePlayerActions || excludeDelete || excludeFocus) {
         final valuesToExclude = <TrackExecuteActions>[
@@ -379,42 +379,40 @@ class CustomizationSettings extends SettingSubpageProvider {
         values = TrackExecuteActions.values.where((element) => !valuesToExclude.remove(element)).toList();
       }
 
-      return [
-        ...values.map(
-          (e) {
-            void onTap() {
-              onSave(e);
-              NamidaNavigator.inst.popMenu();
-            }
+      return values.map(
+        (e) {
+          void onTap() {
+            onSave(e);
+            NamidaNavigator.inst.popMenu();
+          }
 
-            return ObxO(
-              rx: rx,
-              builder: (context, value) => NamidaInkWell(
-                margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                borderRadius: 6.0,
-                bgColor: value == e ? context.theme.cardColor : null,
-                onTap: onTap,
-                child: Row(
-                  children: [
-                    Icon(
-                      e.toIcon(),
-                      size: 18.0,
+          return ObxO(
+            rx: rx,
+            builder: (context, value) => NamidaInkWell(
+              margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+              borderRadius: 6.0,
+              bgColor: value == e ? context.theme.cardColor : null,
+              onTap: onTap,
+              child: Row(
+                children: [
+                  Icon(
+                    e.toIcon(),
+                    size: 18.0,
+                  ),
+                  const SizedBox(width: 6.0),
+                  Expanded(
+                    child: Text(
+                      e.toText(),
+                      style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
                     ),
-                    const SizedBox(width: 6.0),
-                    Expanded(
-                      child: Text(
-                        e.toText(),
-                        style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            );
-          },
-        ),
-      ];
+            ),
+          );
+        },
+      );
     }
 
     return getItemWrapper(
@@ -850,7 +848,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                                       ),
                                     )
                                     .addSeparators(separator: const SizedBox(width: 6.0))
-                                    .toList(),
+                                    .toFixedList(),
                           ),
                         ),
                         const SizedBox(
@@ -871,7 +869,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                                       ),
                                     )
                                     .addSeparators(separator: const SizedBox(width: 6.0))
-                                    .toList(),
+                                    .toFixedList(),
                           ),
                         ),
                         const SizedBox(
@@ -893,7 +891,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                                         ),
                                       )
                                       .addSeparators(separator: const SizedBox(width: 6.0))
-                                      .toList(),
+                                      .toFixedList(),
                             ),
                           ),
                       ],
@@ -1362,7 +1360,7 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
               .addSeparators(
                 separator: SizedBox(width: 4.0),
               )
-              .toList(),
+              .toFixedList(),
     );
 
     return Column(

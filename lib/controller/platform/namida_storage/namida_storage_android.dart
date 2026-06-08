@@ -48,7 +48,9 @@ class _NamidaStorageAndroid extends NamidaStorage {
       List<String>? extensionsList;
       if (allowedExtensions != null) {
         extensionsList = <String>[];
-        allowedExtensions.loop((item) => extensionsList!.addAll(item.extensions));
+        for (var item in allowedExtensions) {
+          extensionsList.addAll(item.extensions);
+        }
       }
 
       final res = await _channel.invokeListMethod<String?>('pickFile', {

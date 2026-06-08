@@ -134,10 +134,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     final timeNow = DateTime.now();
 
     // -- Recently Added --
-    final alltracks = Indexer.inst.recentlyAddedTracksSorted();
+    final allRecentlyAddedtracks = Indexer.inst.recentlyAddedTracksSorted();
 
-    _recentlyAddedFull = alltracks;
-    _recentlyAdded.addAll(alltracks.take(40));
+    _recentlyAddedFull = allRecentlyAddedtracks;
+    _recentlyAdded.addAll(allRecentlyAddedtracks.take(40));
 
     // -- Recent Listens --
     if (_recentListened.isEmpty) {
@@ -325,7 +325,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     currentRecentsSourceType = type;
 
     final map = QueueController.inst.queuesMap.value;
-    final keysSortedByLatest = map.keys.toList().reversed;
+    final keysSortedByLatest = map.keys.toFixedList().reversed;
     final addedSources = <QueueSourceBase>{};
     final queuesToTake = <Queue>[];
     for (final k in keysSortedByLatest) {
@@ -381,15 +381,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     );
     currentTopRecentsDaysAgo = days;
     _topRecentListened = sortedMap.entriesSortedByValue.toList();
-    _topRecentListened.loop((e) {
+    for (var e in _topRecentListened) {
       // -- Top Recent Albums --
-      e.key.albumsIdentifiersModified.loop((identifier) {
+      for (var identifier in e.key.albumsIdentifiersModified) {
         _topRecentAlbums.update(identifier, (value) => value + 1, ifAbsent: () => 1);
-      });
+      }
 
       // -- Top Recent Artists --
-      e.key.artistsList.loop((e) => _topRecentArtists.update(e, (value) => value + 1, ifAbsent: () => 1));
-    });
+      for (var e in e.key.artistsList) {
+        _topRecentArtists.update(e, (value) => value + 1, ifAbsent: () => 1);
+      }
+    }
     if (_topRecentsScrollController.hasClients) _topRecentsScrollController.jumpTo(0);
   }
 
@@ -606,7 +608,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                                       ),
                                                     ),
                                                   )
-                                                  .toList(),
+                                                  .toFixedList(),
                                             ),
                                           ),
                                         ),
@@ -671,7 +673,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                                       ),
                                                     ),
                                                   )
-                                                  .toList(),
+                                                  .toFixedList(),
                                             ),
                                           ),
                                         ),
@@ -754,7 +756,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
                                                             ),
                                                           ),
                                                         )
-                                                        .toList(),
+                                                        .toFixedList(),
                                               ),
                                             ),
                                           ),

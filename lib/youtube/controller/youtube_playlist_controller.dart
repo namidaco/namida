@@ -120,7 +120,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     sortBy ??= settings.ytPlaylistSort.value;
     reverse ??= settings.ytPlaylistSortReversed.value;
 
-    final playlistList = playlistsMap.entries.toList();
+    final playlistList = playlistsMap.entries.toFixedList();
     _performSortYTPlaylists(playlistList, sortBy: sortBy, reverse: reverse, customIndicesOrder: customIndicesOrderRx.value);
     playlistsMap.assignAllEntries(playlistList);
 
@@ -228,7 +228,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   Map<String, dynamic> itemToJson(YoutubeID item) => item.toJson();
 
   @override
-  dynamic sortToJson(List<YTSortType> items) => items.map((e) => e.name).toList();
+  dynamic sortToJson(List<YTSortType> items) => items.map((e) => e.name).toFixedList();
 
   @override
   String get favouritePlaylistPath => AppPaths.YT_LIKES_PLAYLIST;

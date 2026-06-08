@@ -77,16 +77,14 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
       playlistsFilesPath = {};
       for (final d in dirs) {
         final subfiles = await d.listAllIsolate(recursive: true);
-        subfiles.loop(
-          (f) {
-            if (f is File) {
-              var path = f.path;
-              if (NamidaFileExtensionsWrapper.m3u.isPathValid(path)) {
-                playlistsFilesPath.add(path);
-              }
+        for (var f in subfiles) {
+          if (f is File) {
+            var path = f.path;
+            if (NamidaFileExtensionsWrapper.m3u.isPathValid(path)) {
+              playlistsFilesPath.add(path);
             }
-          },
-        );
+          }
+        }
       }
     } else {
       final playlistsFiles = await NamidaFileBrowser.pickFiles(note: lang.import, allowedExtensions: NamidaFileExtensionsWrapper.m3u);
@@ -498,7 +496,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                           child: ObxO(
                             rx: SmartPlaylistsController.inst.smartPlaylistsMap,
                             builder: (context, smartPlaylistsMap) {
-                              final smartPlaylists = smartPlaylistsMap.values.toList();
+                              final smartPlaylists = smartPlaylistsMap.values.toFixedList();
                               if (smartPlaylists.isEmpty) return const SizedBox();
                               return SizedBox(
                                 height: 48.0,
@@ -659,8 +657,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                           }
                                           playlistSearchListSorted.sortBy((key) => sortedIndices[key] ?? (existingStatus[key] == true ? -2 : -1));
                                           if (shouldReSort) {
-                                            for (var i = 0; i < playlistSearchListSorted.length; i++) {
-                                              sortedIndices[playlistSearchListSorted[i]] = i;
+                                            int index = 0;
+                                            for (final p in playlistSearchListSorted) {
+                                              sortedIndices[p] = index;
+                                              index++;
                                             }
                                           }
                                           playlistSearchList = playlistSearchListSorted;

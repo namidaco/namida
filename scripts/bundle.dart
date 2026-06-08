@@ -237,14 +237,12 @@ Future<void> _watchAndCopyBinariesForDir(MapEntry<String, Directory> entry) asyn
 
   final releaseBinDir = Directory('${d.path}/bin');
   releaseBinDir.createSync(recursive: false);
-  Directory('external/ffmpeg_build/linux').listSync().forEach(
-    (element) {
-      if (element is File) {
-        final filename = element.path.split('/').last;
-        element.copySync('${releaseBinDir.path}/$filename');
-      }
-    },
-  );
+  for (final element in Directory('external/ffmpeg_build/linux').listSync()) {
+    if (element is File) {
+      final filename = element.path.split('/').last;
+      element.copySync('${releaseBinDir.path}/$filename');
+    }
+  }
   print('====--> copied binaries.');
 
   _resumeActiveProcesses();

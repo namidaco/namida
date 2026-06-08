@@ -156,13 +156,13 @@ class SplitDelimiter {
     final listToAddLater = <String>[];
     String filteredString = text;
     if (blacklist.isNotEmpty) {
-      blacklist.loop((b) {
+      for (var b in blacklist) {
         final withoutBL = filteredString.split(b);
         if (withoutBL.length > 1) {
           filteredString = withoutBL.join();
           listToAddLater.add(b);
         }
-      });
+      }
     }
 
     final splitted = filteredString.split(_regex).map((e) => e.trim()).where((e) => e.isNotEmpty).toList();

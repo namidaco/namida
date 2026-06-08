@@ -341,7 +341,7 @@ class NamidaFFMPEG {
     final allFiles = <FileSystemEntity>[];
     int remainingDirsLength = directoriesPaths.length;
     final completer = Completer<void>();
-    directoriesPaths.loop((e) {
+    for (var e in directoriesPaths) {
       Directory(e).listAllIsolate(recursive: recursive).then(
         (value) {
           allFiles.addAll(value);
@@ -349,7 +349,7 @@ class NamidaFFMPEG {
           if (remainingDirsLength == 0) completer.complete();
         },
       );
-    });
+    }
     await completer.future;
     final totalFilesLength = allFiles.length;
 

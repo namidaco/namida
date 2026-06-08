@@ -266,7 +266,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                   ),
                                 ),
                               )
-                              .toList(),
+                              .toFixedList(),
                         ),
                       ),
                     ),
@@ -808,40 +808,38 @@ class ExtrasSettings extends SettingSubpageProvider {
               ),
               title: lang.vibrationType,
               trailing: NamidaPopupWrapper(
-                children: () => [
-                  ...VibrationType.values.map(
-                    (e) {
-                      void onTap() {
-                        settings.save(vibrationType: e);
-                        NamidaNavigator.inst.popMenu();
-                      }
+                children: () => VibrationType.values.map(
+                  (e) {
+                    void onTap() {
+                      settings.save(vibrationType: e);
+                      NamidaNavigator.inst.popMenu();
+                    }
 
-                      return ObxO(
-                        rx: settings.vibrationType,
-                        builder: (context, vibrationType) => NamidaInkWell(
-                          margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                          borderRadius: 6.0,
-                          bgColor: vibrationType == e ? theme.cardColor : null,
-                          onTap: onTap,
-                          child: Row(
-                            children: [
-                              Icon(
-                                e.toIcon(),
-                                size: 16.0,
-                              ),
-                              const SizedBox(width: 6.0),
-                              Text(
-                                e.toText(),
-                                style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                              ),
-                            ],
-                          ),
+                    return ObxO(
+                      rx: settings.vibrationType,
+                      builder: (context, vibrationType) => NamidaInkWell(
+                        margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                        borderRadius: 6.0,
+                        bgColor: vibrationType == e ? theme.cardColor : null,
+                        onTap: onTap,
+                        child: Row(
+                          children: [
+                            Icon(
+                              e.toIcon(),
+                              size: 16.0,
+                            ),
+                            const SizedBox(width: 6.0),
+                            Text(
+                              e.toText(),
+                              style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                  ),
-                ],
+                      ),
+                    );
+                  },
+                ),
                 child: ObxO(
                   rx: settings.vibrationType,
                   builder: (context, vibrationType) => Text(
@@ -1060,72 +1058,70 @@ class _ExtrasFlagsOptions extends StatefulWidget {
 }
 
 class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
-  List<Widget> _getTitlebarIconsTypeChildren() {
+  Iterable<Widget> _getTitlebarIconsTypeChildren() {
     final buttonWidth = 18.0;
     final buttonHeight = 18.0;
-    return [
-      ...DesktopTitlebarIconsType.values.map(
-        (e) {
-          void onTap() {
-            settings.save(desktopTitlebarType: e);
-            NamidaNavigator.inst.popMenu();
-          }
+    return DesktopTitlebarIconsType.values.map(
+      (e) {
+        void onTap() {
+          settings.save(desktopTitlebarType: e);
+          NamidaNavigator.inst.popMenu();
+        }
 
-          final buttonsType = e.toThemeType();
-          final row = buttonsType == null
-              ? Text(
-                  lang.none,
-                  textAlign: TextAlign.center,
-                )
-              : buttonsType == mtb.ThemeType.auto
-              ? Text(
-                  lang.auto,
-                  textAlign: TextAlign.center,
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    mtb.DecoratedMinimizeButton(
-                      width: buttonWidth,
-                      height: buttonHeight,
-                      type: buttonsType,
-                      onPressed: () {},
-                    ),
-                    const SizedBox(width: 2.0),
-                    mtb.DecoratedMaximizeButton(
-                      width: buttonWidth,
-                      height: buttonHeight,
-                      type: buttonsType,
-                      onPressed: () {},
-                    ),
-                    const SizedBox(width: 2.0),
-                    mtb.DecoratedCloseButton(
-                      width: buttonWidth,
-                      height: buttonHeight,
-                      type: buttonsType,
-                      onPressed: () {},
-                    ),
-                  ],
-                );
-          return ObxO(
-            rx: settings.desktopTitlebarType,
-            builder: (context, value) => NamidaInkWell(
-              margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-              borderRadius: 6.0,
-              bgColor: value == e ? context.theme.cardColor : null,
-              onTap: onTap,
-              child: row,
-            ),
-          );
-        },
-      ),
-    ];
+        final buttonsType = e.toThemeType();
+        final row = buttonsType == null
+            ? Text(
+                lang.none,
+                textAlign: TextAlign.center,
+              )
+            : buttonsType == mtb.ThemeType.auto
+            ? Text(
+                lang.auto,
+                textAlign: TextAlign.center,
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  mtb.DecoratedMinimizeButton(
+                    width: buttonWidth,
+                    height: buttonHeight,
+                    type: buttonsType,
+                    onPressed: () {},
+                  ),
+                  const SizedBox(width: 2.0),
+                  mtb.DecoratedMaximizeButton(
+                    width: buttonWidth,
+                    height: buttonHeight,
+                    type: buttonsType,
+                    onPressed: () {},
+                  ),
+                  const SizedBox(width: 2.0),
+                  mtb.DecoratedCloseButton(
+                    width: buttonWidth,
+                    height: buttonHeight,
+                    type: buttonsType,
+                    onPressed: () {},
+                  ),
+                ],
+              );
+        return ObxO(
+          rx: settings.desktopTitlebarType,
+          builder: (context, value) => NamidaInkWell(
+            margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+            borderRadius: 6.0,
+            bgColor: value == e ? context.theme.cardColor : null,
+            onTap: onTap,
+            child: row,
+          ),
+        );
+      },
+    );
   }
 
-  static List<NamidaPopupItem> _getSearchTypeChildren([void Function()? onSave]) => [
-    ...SearchType.values.map(
+  static Iterable<NamidaPopupItem> _getSearchTypeChildren([void Function()? onSave]) {
+    return SearchType.values.map(
       (e) => NamidaPopupItem(
         icon: Broken.cd,
         title: e.name,
@@ -1134,8 +1130,8 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
           onSave?.call();
         },
       ),
-    ),
-  ];
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -197,7 +197,9 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                   final streamsList = this.streamsList;
                   if (streamsList == null) return null;
                   final m = <String, StreamInfoItem>{};
-                  streamsList.loop((e) => m[e.id] = e);
+                  for (var e in streamsList) {
+                    m[e.id] = e;
+                  }
                   return m;
                 },
                 playlistBasicInfo: () => PlaylistBasicInfo(

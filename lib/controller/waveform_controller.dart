@@ -95,7 +95,7 @@ class WaveformController {
   static Map<num, List<double>> _downscaledWaveformLists({required List<num> original, required List<int> targetSizes}) {
     final newLists = <num, List<double>>{};
     const maxClamping = 64.0;
-    targetSizes.loop((targetSize) {
+    for (var targetSize in targetSizes) {
       newLists[targetSize] = original.changeListSize(
         targetSize: targetSize,
         clampToMax: maxClamping,
@@ -105,7 +105,7 @@ class WaveformController {
           return maxValue > maxClamping * 2.0;
         },
       );
-    });
+    }
     return newLists;
   }
 

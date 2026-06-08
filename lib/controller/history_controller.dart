@@ -27,7 +27,9 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
     final trackTileExtent = Dimensions.inst.trackTileItemExtent;
     const dayHeaderExtent = kHistoryDayHeaderHeightWithPadding;
     double total = 0;
-    days.loop((day) => total += dayToSectionExtent(day, trackTileExtent, dayHeaderExtent));
+    for (var day in days) {
+      total += dayToSectionExtent(day, trackTileExtent, dayHeaderExtent);
+    }
     return total;
   }
 
@@ -123,12 +125,12 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
     for (final f in files) {
       if (f is File) {
         try {
-          final response = f.readAsJsonSync(ensureExists: false) as List?;
+          final responseList = f.readAsJsonSync(ensureExists: false) as List?;
           final dayOfTrack = int.parse(f.path.getFilenameWOExt);
           final listTracks = <TrackWithDate>[];
-          if (response != null) {
-            for (var i = 0; i < response.length; i++) {
-              var twd = TrackWithDate.fromJson(response[i]);
+          if (responseList != null) {
+            for (final map in responseList) {
+              var twd = TrackWithDate.fromJson(map);
               listTracks.add(twd);
               tempMapTopItems.addForce(twd.track, twd.dateAdded);
             }

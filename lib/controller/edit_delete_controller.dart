@@ -40,10 +40,10 @@ class EditDeleteController {
   }
 
   Future<void> deleteCachedAudios(List<Selectable> tracks) async {
-    return tracks.loopAsync((e) async {
+    for (var e in tracks) {
       var ytid = e.track.youtubeID;
       await AudioCacheController.inst.deleteAudioCache(ytid);
-    });
+    }
   }
 
   Future<void> deleteTXTLyrics(List<Selectable> tracks) async {
@@ -55,7 +55,7 @@ class EditDeleteController {
   }
 
   Future<void> deleteArtwork(List<Selectable> tracks) async {
-    final files = tracks.map((e) => e.track.pathToImage).toList();
+    final files = tracks.map((e) => e.track.pathToImage).toFixedList();
     final details = await Isolate.run(() => _deleteAllWithDetailsIsolate(files));
     Indexer.inst.updateImageSizesInStorage(removedCount: details.deletedCount, removedSize: details.sizeOfDeleted);
     await deleteExtractedColor(tracks);
@@ -66,20 +66,20 @@ class EditDeleteController {
   }
 
   Future<void> _deleteAll(String dir, String extension, List<Selectable> tracks, String Function(Selectable e) cacheKeyBuilder) async {
-    final files = tracks.map((e) => FileParts.joinPath(dir, "${cacheKeyBuilder(e)}.$extension")).toList();
+    final files = tracks.map((e) => FileParts.joinPath(dir, "${cacheKeyBuilder(e)}.$extension")).toFixedList();
     await Isolate.run(() => _deleteAllIsolate(files));
   }
 
   /// returns failed deletes.
   static int _deleteAllIsolate(List<String> files) {
     int failed = 0;
-    files.loop((e) {
+    for (var e in files) {
       try {
         File(e).deleteSync();
       } catch (_) {
         failed++;
       }
-    });
+    }
     return failed;
   }
 
@@ -87,7 +87,7 @@ class EditDeleteController {
   static ({int deletedCount, int sizeOfDeleted}) _deleteAllWithDetailsIsolate(List<String> files) {
     int deleted = 0;
     int size = 0;
-    files.loop((e) {
+    for (var e in files) {
       final file = File(e);
       int s = 0;
       try {
@@ -98,7 +98,7 @@ class EditDeleteController {
         deleted++;
         size += s;
       } catch (_) {}
-    });
+    }
     return (deletedCount: deleted, sizeOfDeleted: size);
   }
 

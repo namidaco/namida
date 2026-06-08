@@ -281,13 +281,13 @@ class BackupController {
     final possibleFiles = dir.listSyncSafe();
 
     final List<File> matchingBackups = [];
-    possibleFiles.loop((pf) {
+    for (var pf in possibleFiles) {
       if (pf is File) {
         if (pf.path.getFilename.startsWith('Namida Backup - ')) {
           matchingBackups.add(pf);
         }
       }
-    });
+    }
 
     // seems like the files are already sorted but anyways
     matchingBackups.sortByReverse((e) => e.lastModifiedSync());
@@ -318,7 +318,7 @@ class BackupController {
     final possibleFiles = dir.listSyncSafe();
 
     final statsLookup = <String, FileStat>{};
-    possibleFiles.loop((pf) {
+    for (var pf in possibleFiles) {
       if (pf is File) {
         final filename = pf.path.getFilename;
         if (filename.startsWith('Namida Backup - ') && filename.endsWith(" - auto.zip")) {
@@ -327,7 +327,7 @@ class BackupController {
           } catch (_) {}
         }
       }
-    });
+    }
 
     final remainingBackups = <File>[];
     for (final s in statsLookup.entries) {

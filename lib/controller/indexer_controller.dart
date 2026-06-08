@@ -113,7 +113,7 @@ class Indexer<T extends Track> {
   late final _audioQuery = OnAudioQuery();
 
   List<T> recentlyAddedTracksSorted() {
-    final alltracks = List<T>.from(tracksInfoList.value);
+    final alltracks = tracksInfoList.value.toFixedList();
     alltracks.sort((a, b) {
       var result = b.dateModified.compareTo(a.dateModified);
       if (result == 0) result = b.dateAdded.compareTo(a.dateAdded);
@@ -214,7 +214,7 @@ class Indexer<T extends Track> {
 
   void rebuildTracksAfterSplitConfigChanges() async {
     final splitConfig = _createSplitConfig();
-    final keysList = allTracksMappedByPath.keys.toList();
+    final keysList = allTracksMappedByPath.keys.toFixedList();
     for (final trPath in keysList) {
       final oldtr = allTracksMappedByPath[trPath]!;
       allTracksMappedByPath[trPath] = oldtr.copyWith(
@@ -244,7 +244,7 @@ class Indexer<T extends Track> {
 
   void rebuildTracksAfterExtractFeatArtistChanges() async {
     final artistsSplitConfig = ArtistsSplitConfig.settings();
-    final keysList = allTracksMappedByPath.keys.toList();
+    final keysList = allTracksMappedByPath.keys.toFixedList();
     for (final trPath in keysList) {
       final oldtr = allTracksMappedByPath[trPath]!;
       allTracksMappedByPath[trPath] = oldtr.copyWith(
@@ -462,17 +462,17 @@ class Indexer<T extends Track> {
       }
     }
 
-    trExt.albumsIdentifiersModified.loop((identifier) {
+    for (var identifier in trExt.albumsIdentifiersModified) {
       removeAndDeleteEmpty(mainMapAlbums.value, identifier);
-    });
-    trExt.artistsList.loop((artist) {
+    }
+    for (var artist in trExt.artistsList) {
       removeAndDeleteEmpty(mainMapArtists.value, artist);
-    });
+    }
     removeAndDeleteEmpty(mainMapAlbumArtists.value, trExt.albumArtist);
     removeAndDeleteEmpty(mainMapComposer.value, trExt.composer);
-    trExt.genresList.loop((genre) {
+    for (var genre in trExt.genresList) {
       removeAndDeleteEmpty(mainMapGenres.value, genre);
-    });
+    }
 
     tr is Video ? removeAndDeleteEmpty(mainMapFoldersVideos.value, tr.folder) : removeAndDeleteEmpty(mainMapFoldersTracks.value, tr.folder);
     removeAndDeleteEmpty(mainMapFoldersTracksAndVideos.value, tr.folder);
@@ -532,12 +532,10 @@ class Indexer<T extends Track> {
     (List<D> newOnes, List<D> oldOnes) differenceLists<D>(List<D> newOnes, List<D> oldOnes) {
       final oldOnesCopy = List<D>.from(oldOnes);
       final newOnesFinal = <D>[];
-      newOnes.loop(
-        (element) {
-          final alreadyExistedInOld = oldOnesCopy.remove(element);
-          if (!alreadyExistedInOld) newOnesFinal.add(element);
-        },
-      );
+      for (var element in newOnes) {
+        final alreadyExistedInOld = oldOnesCopy.remove(element);
+        if (!alreadyExistedInOld) newOnesFinal.add(element);
+      }
       return (newOnesFinal, oldOnesCopy);
     }
 
@@ -907,7 +905,7 @@ class Indexer<T extends Track> {
       final recentlyDeletedFile = File("${AppDirs.RECENTLY_DELETED}${DateFormat('yyyy_MM_dd HH_mm_ss').format(DateTime.now())} - (${tracksToRemove.length}).txt");
       recentlyDeletedFileWrite = recentlyDeletedFile.openWrite(mode: FileMode.writeOnlyAppend);
     }
-    final tracksToRemoveCopy = tracksToRemove.toList(growable: false);
+    final tracksToRemoveCopy = tracksToRemove.toFixedList();
     for (final trS in tracksToRemoveCopy) {
       final tr = trS.track;
       recentlyDeletedFileWrite?.writeln(tr.path);
@@ -945,7 +943,7 @@ class Indexer<T extends Track> {
     final tracksRealPaths = <String>[];
     final tracksMissing = <Track>[];
     final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
-    await tracks.loopAsync((s) async {
+    for (final s in tracks) {
       bool exists = false;
       final tr = s.track;
       try {
@@ -958,13 +956,15 @@ class Indexer<T extends Track> {
         tracksMissing.add(tr);
       }
       TrackTileManager.rebuildTrackInfo(tr);
-    });
+    }
 
     if (updateArtwork) {
       Indexer.clearMemoryImageCache();
     }
 
-    tracksMissing.loop((e) => onProgress(false));
+    for (var _ in tracksMissing) {
+      onProgress(false);
+    }
 
     final keyWrapper = ExtractingPathKey.create();
     final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
@@ -1223,7 +1223,9 @@ class Indexer<T extends Track> {
       _clearTracksDBAndReOpen();
       allTracksMappedByYTID.clear();
       _currentFileNamesMap.clear();
-      trs.loop((e) => _addTrackToLists(e, null));
+      for (var e in trs) {
+        _addTrackToLists(e, null);
+      }
     } else {
       NamidaTaggerController.inst.currentPathsBeingExtracted.clear();
       final audioFilesWithoutDuplicates = <String>[];
@@ -1289,7 +1291,7 @@ class Indexer<T extends Track> {
       audioFilesParts.loopAdv((part, partIndex) {
         extractAll(part).then((value) => audioFilesCompleters[partIndex].complete());
       });
-      await Future.wait(audioFilesCompleters.map((e) => e.future).toList());
+      await Future.wait(audioFilesCompleters.map((e) => e.future));
     }
 
     final networkTrackSetsToRemove = await _addServerTracksIfAvailable(forceReIndex: forceReIndex).toList();
@@ -1382,7 +1384,7 @@ class Indexer<T extends Track> {
     final moodsFinalLookup = <String, bool>{};
     final moodsFinal = <String>[];
     final moodsPre = listText.split(',');
-    moodsPre.loop((m) {
+    for (var m in moodsPre) {
       if (m.isNotEmpty && m != ' ') {
         final cleaned = m.trimAll();
         if (moodsFinalLookup[cleaned] == null) {
@@ -1390,7 +1392,7 @@ class Indexer<T extends Track> {
           moodsFinal.add(cleaned);
         }
       }
-    });
+    }
     return moodsFinal;
   }
 
@@ -1467,7 +1469,7 @@ class Indexer<T extends Track> {
     final existenceCache = <String, bool>{};
     final toUpdate = <Track, Track>{};
 
-    for (final track in trackStatsMap.value.keys.toList()) {
+    for (final track in trackStatsMap.value.keys.toFixedList()) {
       final normalizedPath = replaceFunctionNormalizePath(track.path);
       final shouldUpdate = replaceFunctionForUpdatedPaths(
         track.path,
@@ -1557,22 +1559,25 @@ class Indexer<T extends Track> {
     for (final e in Indexer.inst.trackStatsMap.value.entries) {
       final tr = e.key;
       if (tr.hasInfoInLibrary()) {
-        e.value.moods?.loop((mood) {
-          if (tempSet.add((tr, mood))) {
-            callback(mood, tr);
+        final moods = e.value.moods;
+        if (moods != null) {
+          for (var mood in moods) {
+            if (tempSet.add((tr, mood))) {
+              callback(mood, tr);
+            }
           }
-        });
+        }
       }
     }
 
     // -- from track embedded tag
-    allTracksInLibrary.loop((tr) {
-      tr.moodList.loop((mood) {
+    for (var tr in allTracksInLibrary) {
+      for (var mood in tr.moodList) {
         if (tempSet.add((tr, mood))) {
           callback(mood, tr);
         }
-      });
-    });
+      }
+    }
   }
 
   Map<String, List<Track>> getTracksGroupedByTags({bool sort = true}) {
@@ -1589,22 +1594,25 @@ class Indexer<T extends Track> {
     for (final e in Indexer.inst.trackStatsMap.value.entries) {
       final tr = e.key;
       if (tr.hasInfoInLibrary()) {
-        e.value.tags?.loop((tag) {
-          if (tempSet.add((tr, tag))) {
-            callback(tag, tr);
+        final tags = e.value.tags;
+        if (tags != null) {
+          for (var tag in tags) {
+            if (tempSet.add((tr, tag))) {
+              callback(tag, tr);
+            }
           }
-        });
+        }
       }
     }
 
     // -- from track embedded tag
-    allTracksInLibrary.loop((tr) {
-      tr.tagsList.loop((tag) {
+    for (var tr in allTracksInLibrary) {
+      for (var tag in tr.tagsList) {
         if (tempSet.add((tr, tag))) {
           callback(tag, tr);
         }
-      });
-    });
+      }
+    }
   }
 
   Map<String, List<Track>> getTracksGroupedByRatings({bool sort = true}) {
@@ -1615,9 +1623,9 @@ class Indexer<T extends Track> {
   }
 
   void _loopLibraryRatings(void Function(String name, Track tr) callback) {
-    allTracksInLibrary.loop((tr) {
+    for (var tr in allTracksInLibrary) {
       callback(tr.effectiveRating.toString(), tr);
-    });
+    }
   }
 
   Future<void> _readTrackData([Completer<void>? completer]) async {
@@ -1916,7 +1924,8 @@ class Indexer<T extends Track> {
     int totalSize = 0;
 
     void calDirRecursive(Directory dir) {
-      dir.listSyncSafe().loop((f) {
+      final files = dir.listSyncSafe();
+      for (var f in files) {
         if (f is File) {
           try {
             totalSize += (f).lengthSync();
@@ -1927,7 +1936,7 @@ class Indexer<T extends Track> {
             calDirRecursive(f as Directory);
           } catch (_) {}
         }
-      });
+      }
     }
 
     calDirRecursive(Directory(dirPath));
@@ -1938,17 +1947,18 @@ class Indexer<T extends Track> {
   // static int _caclulateDirectoryCountIsolate(String dirPath) {
   //   int totalCount = 0;
 
-  //   void calDirRecursive(Directory dir) {
-  //     dir.listSyncSafe().loop((f) {
-  //       if (f is File) {
-  //         totalCount++;
-  //       } else {
-  //         try {
-  //           calDirRecursive(f as Directory);
-  //         } catch (_) {}
-  //       }
-  //     });
+  // void calDirRecursive(Directory dir) {
+  //   final files = dir.listSyncSafe();
+  //   for (var f in files) {
+  //     if (f is File) {
+  //       totalCount++;
+  //     } else {
+  //       try {
+  //         calDirRecursive(f as Directory);
+  //       } catch (_) {}
+  //     }
   //   }
+  // }
 
   //   calDirRecursive(Directory(dirPath));
 

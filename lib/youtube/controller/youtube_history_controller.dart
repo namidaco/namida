@@ -21,7 +21,9 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
     const trackTileExtent = Dimensions.youtubeCardItemExtent;
     const dayHeaderExtent = kHistoryDayHeaderHeightWithPadding;
     double total = 0;
-    days.loop((day) => total += dayToSectionExtent(day, trackTileExtent, dayHeaderExtent));
+    for (var day in days) {
+      total += dayToSectionExtent(day, trackTileExtent, dayHeaderExtent);
+    }
     return total;
   }
 

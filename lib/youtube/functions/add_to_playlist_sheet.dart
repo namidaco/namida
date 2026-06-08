@@ -315,7 +315,9 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
     final res = await YoutiPie.userplaylist.getUserPlaylists();
     if (res != null && mounted) {
       setState(() {
-        res.items.loop((item) => _playlistsLookup[item.id] = item);
+        for (var item in res.items) {
+          _playlistsLookup[item.id] = item;
+        }
       });
     }
   }

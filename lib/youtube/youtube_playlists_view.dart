@@ -55,9 +55,9 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
   Iterable<YoutubeID> getHistoryVideos(Map<int, List<YoutubeID>> map) {
     final videos = <String, YoutubeID>{};
     for (final trs in map.values) {
-      trs.loop((e) {
+      for (var e in trs) {
         videos[e.id] ??= e;
-      });
+      }
       if (videos.length >= 50) break;
     }
     return videos.values;
@@ -549,8 +549,10 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                             }
                             playlistsNamesSorted.sortBy((key) => sortedIndices[key] ?? (existingStatus[key] == true ? -2 : -1));
                             if (shouldReSort) {
-                              for (var i = 0; i < playlistsNamesSorted.length; i++) {
-                                sortedIndices[playlistsNamesSorted[i]] = i;
+                              int index = 0;
+                              for (final p in playlistsNamesSorted) {
+                                sortedIndices[p] = index;
+                                index++;
                               }
                             }
                             playlistsNames = playlistsNamesSorted;

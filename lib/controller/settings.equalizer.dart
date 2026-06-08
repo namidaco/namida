@@ -69,7 +69,7 @@ class EqualizerSettings with SettingsFileWriter {
     "loudnessEnhancerEnabled": loudnessEnhancerEnabled.value,
     "loudnessEnhancer": loudnessEnhancer.value,
     "uiTapToUpdate": uiTapToUpdate.value,
-    "eqPresets": eqPresets.value.map((e) => e.toMap()).toList(),
+    "eqPresets": eqPresets.value.map((e) => e.toMap()).toFixedList(),
   };
 
   Future<void> _writeToStorage() async => await writeToStorage();

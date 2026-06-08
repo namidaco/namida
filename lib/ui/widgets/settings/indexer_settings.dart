@@ -431,7 +431,7 @@ class IndexerSettings extends SettingSubpageProvider {
                               separator: SizedBox(width: 8.0),
                               skipFirst: 1,
                             )
-                            .toList(),
+                            .toFixedList(),
                       ),
                     ),
                     if (initialType.check(.isFileBased)) ...[
@@ -520,7 +520,7 @@ class IndexerSettings extends SettingSubpageProvider {
                                             ),
                                           ),
                                         )
-                                        .toList(),
+                                        .toFixedList(),
                                   ),
                                 ),
                                 const SizedBox(height: 12.0),
@@ -631,7 +631,7 @@ class IndexerSettings extends SettingSubpageProvider {
                 },
               );
             },
-          ).toList(),
+          ).toFixedList(),
         ),
       ),
     );
@@ -1601,7 +1601,7 @@ class IndexerSettings extends SettingSubpageProvider {
                       ),
                     );
                   },
-                ).toList(),
+                ).toFixedList(),
               ),
             ),
           ),
@@ -2023,7 +2023,7 @@ class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
                           ),
                         ),
                       )
-                      .toList(),
+                      .toFixedList(),
                 );
         },
       ),
@@ -2045,7 +2045,7 @@ class _LocalFilesSmallChip extends StatelessWidget {
   });
 
   void _onTap() {
-    final pathsList = paths.toList();
+    final pathsList = paths.toFixedList();
     if (pathsList.isEmpty) return;
 
     final separatorWidget = NamidaContainerDivider(

@@ -740,7 +740,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                           final videos = await _getAllPlaylistVideos();
                                           if (videos.isEmpty) return;
                                           final infoLookup = <String, StreamInfoItem>{};
-                                          _playlist.items.loop((e) => infoLookup[e.id] = e);
+                                          for (var e in _playlist.items) {
+                                            infoLookup[e.id] = e;
+                                          }
                                           YTPlaylistDownloadPage(
                                             ids: videos,
                                             playlistName: playlist.basicInfo.title,

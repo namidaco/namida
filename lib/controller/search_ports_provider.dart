@@ -96,7 +96,7 @@ abstract class SearchPortsProvider {
   }
 
   Future<void> refreshPortsIfNecessary() async {
-    final activeTypes = _sendPorts.keys.toList();
+    final activeTypes = _sendPorts.keys.toFixedList();
     await Future.wait(activeTypes.map(_reopenPortOnMainListChanges));
   }
 

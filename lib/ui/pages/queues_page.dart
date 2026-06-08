@@ -6,6 +6,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -28,7 +29,7 @@ class QueuesPage extends StatelessWidget with NamidaRouteWidget {
               const SliverPadding(padding: EdgeInsets.only(top: Dimensions.tileBottomMargin6)),
               Obx(
                 (context) {
-                  final queuesKeys = QueueController.inst.queuesMap.valueR.keys.toList();
+                  final queuesKeys = QueueController.inst.queuesMap.valueR.keys.toFixedList();
                   final queuesLength = queuesKeys.length;
                   return SliverFixedExtentList.builder(
                     itemCount: queuesLength,

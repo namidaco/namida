@@ -56,7 +56,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
       "extractArtwork": extractArtwork,
       "overrideArtwork": overrideArtwork,
       "uniqueArtworkHash": TagsExtractor.defaultUniqueArtworkHash,
-      "artworkIdentifiers": TagsExtractor.defaultGroupArtworksByAlbum ? TagsExtractor.defaultAlbumIdentifier.map((e) => e.index).toList() : null,
+      "artworkIdentifiers": TagsExtractor.defaultGroupArtworksByAlbum ? TagsExtractor.defaultAlbumIdentifier.map((e) => e.index).toFixedList() : null,
     });
     try {
       return FAudioModel.fromMap(map!.cast());
@@ -194,8 +194,8 @@ class _TagsExtractorAndroid extends TagsExtractor {
       "extractArtwork": extractArtwork,
       "overrideArtwork": overrideArtwork,
       "uniqueArtworkHash": TagsExtractor.defaultUniqueArtworkHash,
-      "videoExtensions": NamidaFileExtensionsWrapper.video.extensions.toList(),
-      "artworkIdentifiers": TagsExtractor.defaultGroupArtworksByAlbum ? TagsExtractor.defaultAlbumIdentifier.map((e) => e.index).toList() : null,
+      "videoExtensions": NamidaFileExtensionsWrapper.video.extensions.toFixedList(),
+      "artworkIdentifiers": TagsExtractor.defaultGroupArtworksByAlbum ? TagsExtractor.defaultAlbumIdentifier.map((e) => e.index).toFixedList() : null,
     });
     final usingStream = Completer<void>();
     int toExtract = paths.length;

@@ -200,7 +200,7 @@ class YTUtils {
               iconSize: 20.0,
               onPressed: () {
                 NamidaNavigator.inst.popMenu();
-                Player.inst.playOrPause(0, videos.toList().reversed, queueSource);
+                Player.inst.playOrPause(0, videos.toFixedList().reversed, queueSource);
               },
             )
           : null,
@@ -846,7 +846,7 @@ class YTUtils {
       showSnacky(
         whatDoYouWant: () async {
           await YoutubeHistoryController.inst.addTracksToHistory(tempList);
-          YoutubeHistoryController.inst.sortHistoryTracks(tempList.mapped((e) => e.dateAddedMS.toDaysSince1970()));
+          YoutubeHistoryController.inst.sortHistoryTracks(tempList.map((e) => e.dateAddedMS.toDaysSince1970()));
         },
       );
     } else {
@@ -854,10 +854,10 @@ class YTUtils {
       if (playlist == null) return;
 
       final Map<YoutubeID, int> twdAndIndexes = {};
-      videosToDelete.loop((twd) {
+      for (var twd in videosToDelete) {
         final index = playlist.tracks.indexOf(twd);
         if (index > -1) twdAndIndexes[twd] = index;
-      });
+      }
 
       await YoutubePlaylistController.inst.removeTracksFromPlaylist(playlist, twdAndIndexes.values.toList());
       showSnacky(
@@ -902,21 +902,23 @@ class YTUtils {
       fileTypeLookup[e.file.path] = 0;
     }
 
-    videosCached.loop((e) {
+    for (var e in videosCached) {
       final s = e.sizeInBytes;
       videosSize += s;
       fileSizeLookup[e.path] = s;
       fileTypeLookup[e.path] = 1;
-    });
+    }
 
-    extraTilesBuilt?.loop(
-      (e) => e.items.loop((item) {
-        final data = e.itemBuilder(item);
-        final s = e.itemSize(item);
-        fileSizeLookup[data.path] = s;
-        fileTypeLookup[data.path] = 2;
-      }),
-    );
+    if (extraTilesBuilt != null) {
+      for (var e in extraTilesBuilt) {
+        for (var item in e.items) {
+          final data = e.itemBuilder(item);
+          final s = e.itemSize(item);
+          fileSizeLookup[data.path] = s;
+          fileTypeLookup[data.path] = 2;
+        }
+      }
+    }
 
     const cm = StorageCacheManager();
     cm.getTempAudiosForID(videoId).then((value) => tempFilesSizeAudio.value = value);
@@ -979,9 +981,20 @@ class YTUtils {
               onChanged: (_) {
                 final newVal = allSelected.toggle();
                 if (newVal == true) {
-                  audiosCached.loop((e) => pathsToDelete[e.file.path] = true);
-                  videosCached.loop((e) => pathsToDelete[e.path] = true);
-                  extraTilesBuilt?.loop((e) => e.items.loop((item) => pathsToDelete[e.itemBuilder(item).path] = true));
+                  for (var e in audiosCached) {
+                    pathsToDelete[e.file.path] = true;
+                  }
+                  for (var e in videosCached) {
+                    pathsToDelete[e.path] = true;
+                  }
+                  if (extraTilesBuilt != null) {
+                    for (var e in extraTilesBuilt) {
+                      for (var item in e.items) {
+                        pathsToDelete[e.itemBuilder(item).path] = true;
+                      }
+                    }
+                  }
+
                   deleteTempAudio.value = true;
                   deleteTempVideo.value = true;
                 } else {

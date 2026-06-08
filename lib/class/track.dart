@@ -86,7 +86,7 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> with ItemWithDate i
 }
 
 extension TWDUtils on List<TrackWithDate> {
-  List<Track> toTracks() => mapped((e) => e.track);
+  List<Track> toTracks() => map((e) => e.track).toList();
 }
 
 class TrackStats extends PlayableItemStats {
@@ -607,7 +607,7 @@ class TrackExtended {
       if (gainData != null) 'gainData': ?gainData?.toMap(),
       if (sortInfo != null) 'sortInfo': ?sortInfo?.toMap(),
       if (hashKey != null) 'hashKey': hashKey,
-      if (albumsIdentifiersWrappers.isNotEmpty) 'albumsIdentifiersWrappers': albumsIdentifiersWrappers.map((e) => e.toMap()).toList(),
+      if (albumsIdentifiersWrappers.isNotEmpty) 'albumsIdentifiersWrappers': albumsIdentifiersWrappers.map((e) => e.toMap()).toFixedList(),
       if (isVideo) 'v': isVideo,
       if (server != null) 'server': server,
     };

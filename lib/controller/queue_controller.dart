@@ -83,10 +83,10 @@ class QueueController {
 
   Future<void> removeQueues(List<int> queuesDates) async {
     bool hasLatestAdded = false;
-    queuesDates.loop((date) {
+    for (var date in queuesDates) {
       queuesMap.value.remove(date);
       if (date == _latestAddedQueueDate) hasLatestAdded = true;
-    });
+    }
     queuesMap.refresh();
     if (hasLatestAdded) _latestAddedQueueDate = 0;
     await _deleteQueuesFromStorage(queuesDates);
@@ -102,10 +102,6 @@ class QueueController {
     queuesMap.value[date] = queue;
     queuesMap.refresh();
   }
-
-  // void removeQueues(List<Queue> queues) async {
-  //   queues.loop((q) => removeQueue(q));
-  // }
 
   Future<bool> toggleFavButton(Queue oldQueue) async {
     final isNowFav = !(queuesMap.value[oldQueue.date]?.isFav ?? false);
@@ -302,14 +298,14 @@ class QueueController {
     try {
       final items = File(filePath).readAsJsonSync() as List?;
       if (items != null) {
-        items.loop((e) {
+        for (var e in items) {
           final type = e['t'] as String;
           final valueMap = e['p'];
           final item = _LatestQueueSaver._typesBuilderMapLookup[type]?.call(valueMap);
           if (item != null) {
             latestQueue.add(item);
           }
-        });
+        }
       }
     } catch (_) {}
     return latestQueue;
@@ -350,11 +346,11 @@ class QueueController {
   }
 
   static void _deleteQueuesFromStorageIsolate((String, List<int>) pathAndDates) async {
-    pathAndDates.$2.loop((date) {
+    for (var date in pathAndDates.$2) {
       try {
         File('${pathAndDates.$1}$date.json').deleteSync();
       } catch (_) {}
-    });
+    }
   }
 
   final _queuesLoad = Completer<bool>();

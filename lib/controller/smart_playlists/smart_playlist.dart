@@ -48,7 +48,7 @@ class SmartPlaylist {
   }
 
   Iterable<Track> resolveIterableUnSorted(Iterable<Track> allTracks) sync* {
-    final effectiveGroups = ruleGroups.where((group) => group.rules.isNotEmpty).toList();
+    final effectiveGroups = ruleGroups.where((group) => group.rules.isNotEmpty).toFixedList();
     if (effectiveGroups.isEmpty) return;
 
     // inject date filters into the number rules that require the date filters (eg: totalListensInRange)
@@ -97,7 +97,7 @@ class SmartPlaylist {
       'sort': sort?.name,
       'sortReverse': sortReverse,
       'moods': moods,
-      'ruleGroups': ruleGroups.map((e) => e.toMap()).toList(),
+      'ruleGroups': ruleGroups.map((e) => e.toMap()).toFixedList(),
     };
   }
 
@@ -169,7 +169,7 @@ class SmartPlaylistRuleGroup {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'joiner': joiner.name,
-      'rules': rules.map((e) => e.toMap()).toList(),
+      'rules': rules.map((e) => e.toMap()).toFixedList(),
     };
   }
 }

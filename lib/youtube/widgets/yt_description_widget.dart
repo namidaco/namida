@@ -75,13 +75,15 @@ class YoutubeDescriptionWidgetManager {
   late final _activeRecognizers = <TapGestureRecognizer>[];
 
   void dispose() {
-    _activeRecognizers.loop((item) => item.dispose());
+    for (var item in _activeRecognizers) {
+      item.dispose();
+    }
     _activeRecognizers.clear();
   }
 
   TextSpan buildMainSpan(List<StylesWrapper> styleParts, String? videoId, Color linkColor) {
     return TextSpan(
-      children: styleParts.mapped((sw) => _styleWrapperToSpan(sw, videoId, linkColor)),
+      children: styleParts.map((sw) => _styleWrapperToSpan(sw, videoId, linkColor)).toFixedList(),
     );
   }
 

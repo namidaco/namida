@@ -582,7 +582,7 @@ class CurrentColor {
 
   static Future<List<Color>> _extractPaletteGeneratorCompute(EncodedImage encimg) async {
     final result = await PaletteGenerator.fromByteData(encimg, filters: const [], maximumColorCount: 28);
-    return result.colors.toList();
+    return result.colors.toFixedList();
   }
 
   void _updateInColorMap(String filenameWoExt, NamidaColor? nc) {

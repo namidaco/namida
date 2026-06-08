@@ -275,13 +275,13 @@ class BackupAndRestore extends SettingSubpageProvider {
     (int, bool) getItemsSize(List<AppPathsBackupEnum> items, Map<AppPathsBackupEnum, int> map) {
       int s = 0;
       bool hasUnknown = false;
-      items.loop((e) {
+      for (var e in items) {
         if (map[e] == null) {
           hasUnknown = true;
         } else {
           s += map[e]!;
         }
-      });
+      }
       return (s, hasUnknown);
     }
 
@@ -519,7 +519,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                   youtubeForceFollowItems: true,
                   youtubeItems: [],
                 ),
-              ].addSeparators(separator: const SizedBox(height: 8.0)).toList(),
+              ].addSeparators(separator: const SizedBox(height: 8.0)).toFixedList(),
             ),
           ),
         ),

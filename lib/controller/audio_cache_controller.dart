@@ -59,7 +59,11 @@ class AudioCacheController {
 
   Future<void> deleteAudioCache(String videoId) async {
     final audios = audioCacheMap[videoId];
-    await audios?.loopAsync((item) => item.file.delete());
+    if (audios != null) {
+      for (final item in audios) {
+        await item.file.delete();
+      }
+    }
     audioCacheMap.remove(videoId);
   }
 

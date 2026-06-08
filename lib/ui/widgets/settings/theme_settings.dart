@@ -126,7 +126,7 @@ class ThemeSetting extends SettingSubpageProvider {
           subtitle: currentLanguage!.name,
           onTap: () {
             final allLocalesPre = AppLocalizations.supportedLocales;
-            final allLanguages = allLocalesPre.map(NamidaLanguage.fromLocale).toList();
+            final allLanguages = allLocalesPre.map(NamidaLanguage.fromLocale).toFixedList();
             allLanguages.sortBy((e) => e.name);
 
             final selectedLangRx = Language.inst.getCurrentLanguageOrDevice().obs;

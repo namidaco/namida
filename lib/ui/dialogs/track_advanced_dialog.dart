@@ -48,7 +48,7 @@ void showTrackAdvancedDialog({
   final Map<TrackSource, int> sourcesMap = {};
   final tracksWithYTID = <Track, String>{};
   final tracksForColorPaletteMap = <String, Track>{};
-  tracks.loop((e) {
+  for (var e in tracks) {
     final twd = e.trackWithDate;
     if (twd != null) {
       sourcesMap.update(twd.source, (value) => value + 1, ifAbsent: () => 1);
@@ -57,7 +57,7 @@ void showTrackAdvancedDialog({
     final ytid = e.track.youtubeID;
     if (ytid.isNotEmpty) tracksWithYTID[e.track] ??= ytid;
     tracksForColorPaletteMap[e.track.pathToImage] = e.track;
-  });
+  }
   // -- makes sense when group artworks by albums enabled, or whatever reason that makes tracks have same image path
   final tracksForColorPalette = tracksForColorPaletteMap.values.toList();
 
@@ -512,7 +512,7 @@ void showTrackAdvancedDialog({
                               ),
                             ),
                           )
-                          .toList(),
+                          .toFixedList(),
                     ),
                   ),
                 );

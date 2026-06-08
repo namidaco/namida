@@ -717,7 +717,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   Map<String, dynamic> itemToJson(TrackWithDate item) => item.toJson();
 
   @override
-  dynamic sortToJson(List<SortType> items) => items.map((e) => e.name).toList();
+  dynamic sortToJson(List<SortType> items) => items.map((e) => e.name).toFixedList();
 
   @override
   bool canRemovePlaylist(LocalPlaylist playlist) {

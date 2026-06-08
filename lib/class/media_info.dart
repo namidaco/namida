@@ -54,7 +54,7 @@ class MediaInfo {
   }
 
   Map<dynamic, dynamic> toMap() => {
-    "streams": streams?.map((e) => e.toMap()).toList(),
+    "streams": streams?.map((e) => e.toMap()).toFixedList(),
     "format": format?.toMap(),
   };
 }

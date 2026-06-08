@@ -714,9 +714,9 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
   ];
 
   /// creating controllers
-  availableTagsToEdit.loop((at) {
+  for (var at in availableTagsToEdit) {
     tagsControllers[at] = TextEditingController();
-  });
+  }
   void checkEmptyValues() {
     hasEmptyDumbValues.value = editedTags.values.any((element) => element.cleanUpForComparison == '');
   }

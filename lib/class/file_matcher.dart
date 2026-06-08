@@ -94,7 +94,7 @@ class FileMatcher {
     final trackArtist = l.$2;
 
     if (_allFilesByCleanedToken.isNotEmpty) {
-      final queryTokens = filenameToMatchCleaned.split(' ').where((t) => t.isNotEmpty).toList();
+      final queryTokens = filenameToMatchCleaned.split(' ').where((t) => t.isNotEmpty);
       if (queryTokens.isNotEmpty) {
         final sets = queryTokens.map((t) => _allFilesByCleanedToken[t]?.toSet() ?? <String>{});
         final matches = sets.reduce((a, b) => a.intersection(b));

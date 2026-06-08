@@ -349,7 +349,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                                               ),
                                             ),
                                           )
-                                          .toList(),
+                                          .toFixedList(),
                                     ),
                                   ),
                                 ),

@@ -165,22 +165,22 @@ class SelectedTracksController {
       finalTracks = tracks;
     }
     if (pln != null && pln != '') {
-      finalTracks.loop((twd) {
+      for (var twd in finalTracks) {
         final tr = twd.track;
         if (hashMap[tr] == null) {
           trMainList.add(twd);
           hashMap[tr] = true;
           selectedPlaylistsNames[tr] = pln; // <-- difference here
         }
-      });
+      }
     } else {
-      finalTracks.loop((twd) {
+      for (var twd in finalTracks) {
         final tr = twd.track;
         if (hashMap[tr] == null) {
           trMainList.add(twd);
           hashMap[tr] = true;
         }
-      });
+      }
     }
 
     _allTracksHashCodes.refresh();
@@ -223,8 +223,8 @@ class SelectedTracksController {
     );
     // -- either dont update stuff, or clear everything
     // _allTracksHashCodes.clear();
-    // _tracksOrTwdList.value.loop((e) {
+    // for (var e in _tracksOrTwdList.value) {
     //   _allTracksHashCodes[e.track] = true;
-    // });
+    // }
   }
 }

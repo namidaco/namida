@@ -23,7 +23,6 @@ import 'package:youtipie/class/thumbnail.dart';
 import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
-import 'package:youtipie/core/extensions.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
@@ -272,13 +271,12 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
     required bool isPfp,
   }) async {
     final files = <(String, File?)>[];
-    await imagesList.loopAsync(
-      (item) async {
-        File? cf = _getThumbFileForCache(item.url, temp: false);
-        if (await cf?.exists() == false) cf = _getThumbFileForCache(item.url, temp: true);
-        files.add((item.url, cf));
-      },
-    );
+    for (var item in imagesList) {
+      File? cf = _getThumbFileForCache(item.url, temp: false);
+      if (await cf?.exists() == false) cf = _getThumbFileForCache(item.url, temp: true);
+      files.add((item.url, cf));
+    }
+
     if (isPfp) {
       final cf = _getThumbFileForCache(channelID, temp: false);
       if (cf != null && await cf.exists()) files.add((channelID, cf));

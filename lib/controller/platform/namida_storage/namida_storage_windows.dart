@@ -93,12 +93,10 @@ class _NamidaStorageWindows extends NamidaStorage {
   }) async {
     final extensionsMap = <String, String>{};
     if (allowedExtensions != null) {
-      allowedExtensions.loop(
-        (item) {
-          final extstring = item.extensions.map((e) => '*.$e').join(';');
-          extensionsMap['($extstring)'] = extstring;
-        },
-      );
+      for (var item in allowedExtensions) {
+        final extstring = item.extensions.map((e) => '*.$e').join(';');
+        extensionsMap['($extstring)'] = extstring;
+      }
     } else {
       extensionsMap['All Files'] = '*.*';
     }

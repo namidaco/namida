@@ -66,15 +66,15 @@ class _NamidaStorageLinux extends NamidaStorage {
     bool skipHeader = false,
     bool reverse = false,
   }) async {
-    final lines = LineSplitter.split(res.stdout as String).map((line) => line.trim()).where((line) => line.isNotEmpty).toList();
-
-    var paths = skipHeader ? lines.skip(1) : lines;
-    if (reverse) paths = paths.toList().reversed;
-
     final all = <String>{};
 
     final home = NamidaPlatformBuilder.linuxUserHome;
     if (home != null) all.add(home);
+
+    final lines = LineSplitter.split(res.stdout as String).map((line) => line.trim()).where((line) => line.isNotEmpty);
+
+    var paths = skipHeader ? lines.skip(1) : lines;
+    if (reverse) paths = paths.toFixedList().reversed;
 
     for (final p in paths) {
       final isAccessible = await _isAccessibleDirectory(p);
@@ -194,7 +194,9 @@ class _NamidaStorageLinux extends NamidaStorage {
     List<String>? extensionsList;
     if (allowedExtensions != null) {
       extensionsList = <String>[];
-      allowedExtensions.loop((item) => extensionsList!.addAll(item.extensions));
+      for (var item in allowedExtensions) {
+        extensionsList.addAll(item.extensions);
+      }
     }
     final fileType = extensionsList != null && extensionsList.isNotEmpty
         ? FileType.custom

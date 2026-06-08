@@ -77,10 +77,10 @@ class _NamidaChannelAndroid extends NamidaChannel {
   @override
   Future<bool> setMusicAs({required String path, required List<SetMusicAsAction> types}) async {
     final t = <int>[];
-    types.loop((e) {
+    for (var e in types) {
       final n = _setMusicAsActionConverter[e];
       if (n != null) t.add(n);
-    });
+    }
     final res = await _channel.invokeMethod<bool?>('setMusicAs', {'path': path, 'types': t});
     return res ?? false;
   }

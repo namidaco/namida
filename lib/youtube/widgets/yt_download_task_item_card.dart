@@ -99,7 +99,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     );
   }
 
-  void _onResumeDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig, BuildContext context) {
+  void _onResumeDownloadTap(Iterable<YoutubeItemDownloadConfig> itemsConfig, BuildContext context) {
     YoutubeController.inst.downloadYoutubeVideos(
       useCachedVersionsIfAvailable: true,
       itemsConfig: itemsConfig,

@@ -135,12 +135,12 @@ class YoutubeSettings extends SettingSubpageProvider {
                   children: [
                     NamidaPopupWrapper(
                       child: NamidaPopupWrapper(
-                        childrenDefault: () => _YTFlagsOptionsState._dataSaverChildren(),
+                        childrenDefault: _YTFlagsOptionsState._dataSaverChildren,
                         child: CustomListTile(
                           icon: Broken.wifi_square,
                           title: lang.dataSaverMode,
                           trailing: NamidaPopupWrapper(
-                            childrenDefault: () => _YTFlagsOptionsState._dataSaverChildren(),
+                            childrenDefault: _YTFlagsOptionsState._dataSaverChildren,
                             child: ObxO(
                               rx: settings.youtube.dataSaverMode,
                               builder: (context, dataSaverMode) => Text(
@@ -153,12 +153,12 @@ class YoutubeSettings extends SettingSubpageProvider {
                     ),
                     NamidaPopupWrapper(
                       child: NamidaPopupWrapper(
-                        childrenDefault: () => _YTFlagsOptionsState._dataSaverMobileChildren(),
+                        childrenDefault: _YTFlagsOptionsState._dataSaverMobileChildren,
                         child: CustomListTile(
                           icon: Broken.chart_1,
                           title: '${lang.dataSaverMode} (${lang.mobile})',
                           trailing: NamidaPopupWrapper(
-                            childrenDefault: () => _YTFlagsOptionsState._dataSaverMobileChildren(),
+                            childrenDefault: _YTFlagsOptionsState._dataSaverMobileChildren,
                             child: ObxO(
                               rx: settings.youtube.dataSaverModeMobile,
                               builder: (context, dataSaverModeMobile) => Text(
@@ -179,17 +179,17 @@ class YoutubeSettings extends SettingSubpageProvider {
     );
   }
 
-  List<NamidaPopupItem> get _notificationsChildren => DownloadNotifications.values
-      .map(
-        (e) => NamidaPopupItem(
-          icon: Broken.notification_bing,
-          title: e.toText(),
-          onTap: () {
-            settings.youtube.save(downloadNotifications: e);
-          },
-        ),
-      )
-      .toList();
+  Iterable<NamidaPopupItem> _notificationsChildren() {
+    return DownloadNotifications.values.map(
+      (e) => NamidaPopupItem(
+        icon: Broken.notification_bing,
+        title: e.toText(),
+        onTap: () {
+          settings.youtube.save(downloadNotifications: e);
+        },
+      ),
+    );
+  }
 
   Widget getAutoStartRadioWidget() {
     return getItemWrapper(
@@ -585,17 +585,15 @@ class YoutubeSettings extends SettingSubpageProvider {
                   icon: Broken.mouse_circle,
                   title: lang.tapToSeek,
                   trailing: NamidaPopupWrapper(
-                    childrenDefault: () => YTSeekActionMode.values
-                        .map(
-                          (e) => NamidaPopupItem(
-                            icon: Broken.external_drive,
-                            title: e.toText(),
-                            onTap: () {
-                              settings.youtube.save(tapToSeek: e);
-                            },
-                          ),
-                        )
-                        .toList(),
+                    childrenDefault: () => YTSeekActionMode.values.map(
+                      (e) => NamidaPopupItem(
+                        icon: Broken.external_drive,
+                        title: e.toText(),
+                        onTap: () {
+                          settings.youtube.save(tapToSeek: e);
+                        },
+                      ),
+                    ),
                     child: Obx(
                       (context) => Text(
                         settings.youtube.tapToSeek.valueR.toText(),
@@ -608,17 +606,15 @@ class YoutubeSettings extends SettingSubpageProvider {
                   icon: Broken.arrow_swap_horizontal,
                   title: lang.dragToSeek,
                   trailing: NamidaPopupWrapper(
-                    childrenDefault: () => YTSeekActionMode.values
-                        .map(
-                          (e) => NamidaPopupItem(
-                            icon: Broken.external_drive,
-                            title: e.toText(),
-                            onTap: () {
-                              settings.youtube.save(dragToSeek: e);
-                            },
-                          ),
-                        )
-                        .toList(),
+                    childrenDefault: () => YTSeekActionMode.values.map(
+                      (e) => NamidaPopupItem(
+                        icon: Broken.external_drive,
+                        title: e.toText(),
+                        onTap: () {
+                          settings.youtube.save(dragToSeek: e);
+                        },
+                      ),
+                    ),
                     child: Obx(
                       (context) => Text(
                         settings.youtube.dragToSeek.valueR.toText(),
@@ -678,7 +674,7 @@ class YoutubeSettings extends SettingSubpageProvider {
           getItemWrapper(
             key: _YoutubeSettingKeys.downloadNotifications,
             child: NamidaPopupWrapper(
-              childrenDefault: () => _notificationsChildren,
+              childrenDefault: _notificationsChildren,
               child: ObxO(
                 rx: settings.youtube.downloadNotifications,
                 builder: (context, downloadNotifications) => CustomListTile(
@@ -807,7 +803,7 @@ class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
                               ),
                             );
                           },
-                        ).toList(),
+                        ).toFixedList(),
                       ),
                     ),
                   ),
@@ -861,8 +857,8 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
     ),
   ];
 
-  static List<NamidaPopupItem> _dataSaverChildren([void Function()? onSave]) => [
-    ...DataSaverMode.values.map(
+  static Iterable<NamidaPopupItem> _dataSaverChildren([void Function()? onSave]) {
+    return DataSaverMode.values.map(
       (e) => NamidaPopupItem(
         icon: Broken.cd,
         title: e.toText(),
@@ -871,8 +867,8 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
           onSave?.call();
         },
       ),
-    ),
-  ];
+    );
+  }
 
   static List<NamidaPopupItem> _dataSaverMobileChildren([void Function()? onSave]) => [
     ...DataSaverMode.values.map(

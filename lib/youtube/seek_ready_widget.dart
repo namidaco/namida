@@ -1103,7 +1103,7 @@ class SmoothLinePainter extends CustomPainter {
       index++;
     }
 
-    final blurredPoints = _applyGaussianBlur(controlPoints, 1).toList();
+    final blurredPoints = _applyGaussianBlur(controlPoints, 1).toFixedList();
     _drawSmoothBezier(path, blurredPoints, smoothness);
 
     // -- close the path back to start

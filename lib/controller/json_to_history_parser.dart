@@ -219,13 +219,13 @@ class JsonToHistoryParser {
                   confirmMessage: 'Add ${_latestMissingMap.value.entries.length} as dummy tracks?',
                   onConfirm: () async {
                     final historyDays = <int>[];
-                    final missing = _latestMissingMap.value.entries.toList()..sortByReverse((e) => e.value.length);
-                    missing.loop((e) {
+                    final missing = _latestMissingMap.value.entries.toFixedList()..sortByReverse((e) => e.value.length);
+                    for (var e in missing) {
                       final replacedWithTrack = _latestMissingMapAddedStatus[e.key];
                       if (replacedWithTrack == null) {
                         historyDays.addAll(addTrackToHistoryOnly(e, getDummyTrack(e.key)));
                       }
-                    });
+                    }
 
                     HistoryController.inst.removeDuplicatedItems(historyDays);
                     HistoryController.inst.sortHistoryTracks(historyDays);
@@ -263,7 +263,7 @@ class JsonToHistoryParser {
               Expanded(
                 child: Obx(
                   (context) {
-                    final missing = _latestMissingMap.valueR.entries.toList()..sortByReverse((e) => e.value.length);
+                    final missing = _latestMissingMap.valueR.entries.toFixedList()..sortByReverse((e) => e.value.length);
                     return NamidaScrollbarWithController(
                       child: (sc) => SuperSmoothListView.separated(
                         controller: sc,
@@ -593,7 +593,7 @@ class JsonToHistoryParser {
               'v': e.isVideo,
             },
           )
-          .toList(),
+          .toFixedList(),
       'files': files,
       'isMatchingTypeLink': isMatchingTypeLink,
       'isMatchingTypeTitleAndArtist': isMatchingTypeTitleAndArtist,
@@ -756,20 +756,20 @@ class JsonToHistoryParser {
     Map<String, List<Track>>? tracksIdsMap;
     if (isMatchingTypeLink) {
       tracksIdsMap = <String, List<Track>>{};
-      allTracks.loop((trMap) {
+      for (var trMap in allTracks) {
         String? videoId = NamidaLinkUtils.extractYoutubeId(trMap['comment'] as String? ?? '');
         videoId ??= NamidaLinkUtils.extractYoutubeId(trMap['filename'] as String? ?? '');
         if (videoId != null && videoId.isNotEmpty) {
-          tracksIdsMap!.addForce(videoId, Track.decide(trMap['path'], trMap['v']));
+          tracksIdsMap.addForce(videoId, Track.decide(trMap['path'], trMap['v']));
         }
-      });
+      }
     }
 
     final reverseTitleMatcher = ReverseSearchMatcher<Map>();
     final reverseArtistMatcher = ReverseSearchMatcher<Map>();
     final reverseAlbumMatcher = ReverseSearchMatcher<Map>();
     if (isMatchingTypeTitleAndArtist) {
-      allTracks.loop((trMap) {
+      for (var trMap in allTracks) {
         final title = trMap['title'] as String;
         final album = trMap['album'] as String;
         final originalArtist = trMap['artist'] as String;
@@ -783,7 +783,7 @@ class JsonToHistoryParser {
         if (artistsList.isNotEmpty) {
           reverseArtistMatcher.addItemWithTokens(trMap, artistsList.first);
         }
-      });
+      }
     }
 
     int jsonResponseTotal = 0;
@@ -841,7 +841,11 @@ class JsonToHistoryParser {
             matchAll: matchAll,
             tracksIdsMap: tracksIdsMap,
             matchByTitleAndArtistIfNotFoundInMap: isMatchingTypeTitleAndArtist,
-            onMissingEntries: (e) => e.loop((e) => missingEntries.addForce(e, e.dateMSSE)),
+            onMissingEntries: (entries) {
+              for (final e in entries) {
+                missingEntries.addForce(e, e.dateMSSE);
+              }
+            },
             allTracks: allTracks,
             artistsSplitConfig: artistsSplitConfig,
             reverseTitleMatcher: reverseTitleMatcher,
@@ -849,7 +853,7 @@ class JsonToHistoryParser {
             reverseAlbumMatcher: reverseAlbumMatcher,
           );
           totalAdded += tracks.length;
-          tracks.loop((item) {
+          for (var item in tracks) {
             final day = item.dateAdded.toDaysSince1970();
             final tracks = localHistory[day] ??= [];
             if (!tracks.contains(item)) {
@@ -857,10 +861,10 @@ class JsonToHistoryParser {
               tracks.add(item);
               addedLocalHistoryCount++;
             }
-          });
+          }
 
           // -- youtube history --
-          yth.watches.loop((w) {
+          for (var w in yth.watches) {
             final canAdd = _canSafelyAddToYTHistory(
               watch: w,
               matchYT: matchYT,
@@ -883,7 +887,7 @@ class JsonToHistoryParser {
                 addedYTHistoryCount++;
               }
             }
-          });
+          }
 
           if (totalParsed >= chunkSize) {
             portProgressParsed.send(totalParsed);
@@ -950,7 +954,7 @@ class JsonToHistoryParser {
     required bool matchAll,
     required Map<String, List<Track>>? tracksIdsMap,
     required bool matchByTitleAndArtistIfNotFoundInMap,
-    required void Function(List<_MissingListenEntry> missingEntries) onMissingEntries,
+    required void Function(Iterable<_MissingListenEntry> missingEntries) onMissingEntries,
     required ArtistsSplitConfig artistsSplitConfig,
     required List<Map> allTracks,
     required ReverseSearchMatcher<Map> reverseTitleMatcher,
@@ -994,7 +998,7 @@ class JsonToHistoryParser {
 
     final tracksToAdd = <TrackWithDate>[];
     if (tracks.isNotEmpty) {
-      vh.watches.loop((d) {
+      for (var d in vh.watches) {
         final canAdd = _canSafelyAddToYTHistory(
           watch: d,
           matchYT: matchYT,
@@ -1013,20 +1017,18 @@ class JsonToHistoryParser {
             ),
           );
         }
-      });
+      }
     } else {
       onMissingEntries(
-        vh.watches
-            .map(
-              (e) => _MissingListenEntry(
-                youtubeID: vh.id,
-                dateMSSE: e.dateMS,
-                source: e.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
-                artistOrChannel: vh.channel,
-                title: vh.title,
-              ),
-            )
-            .toList(),
+        vh.watches.map(
+          (e) => _MissingListenEntry(
+            youtubeID: vh.id,
+            dateMSSE: e.dateMS,
+            source: e.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
+            artistOrChannel: vh.channel,
+            title: vh.title,
+          ),
+        ),
       );
     }
     return tracksToAdd;
@@ -1057,7 +1059,7 @@ class JsonToHistoryParser {
               'v': e.isVideo,
             },
           )
-          .toList(),
+          .toFixedList(),
       'oldestDay': oldestDate?.toDaysSince1970(),
       'newestDay': newestDate?.toDaysSince1970(),
       'files': files,
@@ -1349,7 +1351,7 @@ class JsonToHistoryParser {
         }
         updatedIds.add(id);
       }
-      file.writeAsJsonSync(videosMapInStorage.values.toList());
+      file.writeAsJsonSync(videosMapInStorage.values.toFixedList());
       progressPort.send(updatedIds.length);
     }
   }

@@ -92,41 +92,39 @@ class AdvancedSettings extends SettingSubpageProvider {
                 icon: Broken.cpu_setting,
                 title: lang.performanceMode,
                 trailing: NamidaPopupWrapper(
-                  children: () => [
-                    ...PerformanceMode.values.map(
-                      (e) {
-                        void onTap() {
-                          changedArtworkCacheM = !changedArtworkCacheM;
-                          e.executeAndSave();
-                          NamidaNavigator.inst.popMenu();
-                        }
+                  children: () => PerformanceMode.values.map(
+                    (e) {
+                      void onTap() {
+                        changedArtworkCacheM = !changedArtworkCacheM;
+                        e.executeAndSave();
+                        NamidaNavigator.inst.popMenu();
+                      }
 
-                        return ObxO(
-                          rx: settings.performanceMode,
-                          builder: (context, performanceMode) => NamidaInkWell(
-                            margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                            borderRadius: 6.0,
-                            bgColor: performanceMode == e ? theme.cardColor : null,
-                            onTap: onTap,
-                            child: Row(
-                              children: [
-                                Icon(
-                                  e.toIcon(),
-                                  size: 18.0,
-                                ),
-                                const SizedBox(width: 6.0),
-                                Text(
-                                  e.toText(),
-                                  style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                                ),
-                              ],
-                            ),
+                      return ObxO(
+                        rx: settings.performanceMode,
+                        builder: (context, performanceMode) => NamidaInkWell(
+                          margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                          borderRadius: 6.0,
+                          bgColor: performanceMode == e ? theme.cardColor : null,
+                          onTap: onTap,
+                          child: Row(
+                            children: [
+                              Icon(
+                                e.toIcon(),
+                                size: 18.0,
+                              ),
+                              const SizedBox(width: 6.0),
+                              Text(
+                                e.toText(),
+                                style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
-                  ],
+                        ),
+                      );
+                    },
+                  ),
                   child: ObxO(
                     rx: settings.performanceMode,
                     builder: (context, performanceMode) => Text(
@@ -278,7 +276,11 @@ class AdvancedSettings extends SettingSubpageProvider {
 
     final RxMap<TrackSource, int> sourcesMap = <TrackSource, int>{}.obs;
     void resetSourcesMap() {
-      sourcesMap.execute((map) => TrackSource.values.loop((e) => map[e] = 0));
+      sourcesMap.execute((map) {
+        for (var e in TrackSource.values) {
+          map[e] = 0;
+        }
+      });
     }
 
     final totalTracksToBeRemoved = 0.obs;
@@ -296,20 +298,20 @@ class AdvancedSettings extends SettingSubpageProvider {
         printy(sussyDays);
       }
       resetSourcesMap();
-      sussyDays.loop((d) {
+      for (var d in sussyDays) {
         final tracks = manager.historyMap.value[d] ?? [];
-        tracks.loop((twd) {
+        for (var twd in tracks) {
           sourcesMap.update(twd.source, (value) => value + 1, ifAbsent: () => 1);
-        });
-      });
+        }
+      }
       if (isBetweenDays) {
         totalTracksBetweenDates.value = sourcesMap.values.reduce((value, element) => value + element);
       }
       if (sourcesToDelete.isNotEmpty) {
         totalTracksToBeRemoved.value = 0;
-        sourcesToDelete.loop((e) {
+        for (var e in sourcesToDelete.value) {
           totalTracksToBeRemoved.value += sourcesMap[e] ?? 0;
-        });
+        }
       }
     }
 
@@ -617,15 +619,14 @@ class __ClearVideoCacheListTileState extends State<_ClearVideoCacheListTile> {
 
   static int _getSizeIsolate(List<String> dirsPath) {
     int size = 0;
-    dirsPath.loop(
-      (dirPath) {
-        Directory(dirPath).listSyncSafe().loop((e) {
-          if (e is File) {
-            size += e.fileSizeSync() ?? 0;
-          }
-        });
-      },
-    );
+    for (var dirPath in dirsPath) {
+      final files = Directory(dirPath).listSyncSafe();
+      for (var e in files) {
+        if (e is File) {
+          size += e.fileSizeSync() ?? 0;
+        }
+      }
+    }
     return size;
   }
 
@@ -847,9 +848,10 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
 
   static int _fillSizeIsolate(String dirPath) {
     int size = 0;
-    Directory(dirPath).listSyncSafe().loop((e) {
+    final files = Directory(dirPath).listSyncSafe();
+    for (var e in files) {
       if (e is File) size += e.fileSizeSync() ?? 0;
-    });
+    }
     return size;
   }
 
@@ -866,7 +868,9 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
       onTap: () {
         final allaudios = <AudioCacheDetails>[];
         for (final acFiles in AudioCacheController.inst.audioCacheMap.values) {
-          acFiles.loop((e) => allaudios.add(e));
+          for (var e in acFiles) {
+            allaudios.add(e);
+          }
         }
 
         const cacheManager = StorageCacheManager();

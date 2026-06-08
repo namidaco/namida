@@ -79,7 +79,7 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
   void updatePeakDates(List<StreamInfoItem> streams) {
     int oldest = (streamsPeakDates?.oldest ?? DateTime.now()).millisecondsSinceEpoch;
     int newest = (streamsPeakDates?.newest ?? DateTime(0)).millisecondsSinceEpoch;
-    streams.loop((e) {
+    for (var e in streams) {
       final d = e.publishedAt.date;
       if (d != null) {
         final ms = d.millisecondsSinceEpoch;
@@ -89,7 +89,7 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
           newest = ms;
         }
       }
-    });
+    }
     streamsPeakDates = (oldest: DateTime.fromMillisecondsSinceEpoch(oldest), newest: DateTime.fromMillisecondsSinceEpoch(newest));
   }
 

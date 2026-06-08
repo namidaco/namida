@@ -467,7 +467,7 @@ Future<void> showTrackInfoDialog(
                                 ),
                               const SizedBox(height: 12.0),
                             ],
-                          ].addSeparators(separator: NamidaContainerDivider(color: color.value), skipFirst: 3).toList(),
+                          ].addSeparators(separator: NamidaContainerDivider(color: color.value), skipFirst: 3).toFixedList(),
                         ),
                       ],
                     ),

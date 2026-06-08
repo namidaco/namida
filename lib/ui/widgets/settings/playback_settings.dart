@@ -111,63 +111,61 @@ class PlaybackSettings extends SettingSubpageProvider {
         trailing: Padding(
           padding: isInEQPage ? const EdgeInsetsGeometry.only(right: 12.0) : EdgeInsetsGeometry.zero,
           child: NamidaPopupWrapper(
-            children: () => [
-              ...ReplayGainType.valuesForPlatform.map(
-                (e) {
-                  void onTap() async {
-                    NamidaNavigator.inst.popMenu();
+            children: () => ReplayGainType.valuesForPlatform.map(
+              (e) {
+                void onTap() async {
+                  NamidaNavigator.inst.popMenu();
 
-                    settings.player.save(replayGainType: e);
+                  settings.player.save(replayGainType: e);
 
-                    // -- safer to disable all first
-                    Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(0);
-                    Player.inst.loudnessEnhancerExtended?.refreshEnabled();
-                    Player.inst.setReplayGainLinearVolume(1.0);
+                  // -- safer to disable all first
+                  Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(0);
+                  Player.inst.loudnessEnhancerExtended?.refreshEnabled();
+                  Player.inst.setReplayGainLinearVolume(1.0);
 
-                    if (e.isAnyEnabled) {
-                      double? vol;
-                      final currentItem = Player.inst.currentItem.value;
-                      if (currentItem is Track) {
-                        final gainData = currentItem.toTrackExt().gainData;
+                  if (e.isAnyEnabled) {
+                    double? vol;
+                    final currentItem = Player.inst.currentItem.value;
+                    if (currentItem is Track) {
+                      final gainData = currentItem.toTrackExt().gainData;
+                      if (e.isLoudnessEnhancerEnabled) {
+                        final gainToUse = gainData?.gainToUse;
+                        if (gainToUse != null) Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(gainToUse);
+                      } else if (e.isVolumeEnabled) {
+                        vol = gainData?.calculateGainAsVolume();
+                      }
+                    } else if (currentItem is YoutubeID) {
+                      final streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(currentItem.id);
+                      final loudnessDb = streamsResult?.loudnessDBData?.loudnessDb;
+                      if (loudnessDb != null) {
                         if (e.isLoudnessEnhancerEnabled) {
-                          final gainToUse = gainData?.gainToUse;
-                          if (gainToUse != null) Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(gainToUse);
+                          Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(-loudnessDb.toDouble());
                         } else if (e.isVolumeEnabled) {
-                          vol = gainData?.calculateGainAsVolume();
-                        }
-                      } else if (currentItem is YoutubeID) {
-                        final streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(currentItem.id);
-                        final loudnessDb = streamsResult?.loudnessDBData?.loudnessDb;
-                        if (loudnessDb != null) {
-                          if (e.isLoudnessEnhancerEnabled) {
-                            Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(-loudnessDb.toDouble());
-                          } else if (e.isVolumeEnabled) {
-                            vol = ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
-                          }
+                          vol = ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
                         }
                       }
-                      vol ??= ReplayGainData.kDefaultFallbackVolume;
-                      Player.inst.setReplayGainLinearVolume(vol);
                     }
+                    vol ??= ReplayGainData.kDefaultFallbackVolume;
+                    Player.inst.setReplayGainLinearVolume(vol);
                   }
+                }
 
-                  return ObxO(
-                    rx: settings.player.replayGainType,
-                    builder: (context, replayGainType) => NamidaInkWell(
-                      margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                      borderRadius: 6.0,
-                      bgColor: replayGainType == e ? context.theme.cardColor : null,
-                      onTap: onTap,
-                      child: Text(
-                        e.toText(),
-                        style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                      ),
+                return ObxO(
+                  rx: settings.player.replayGainType,
+                  builder: (context, replayGainType) => NamidaInkWell(
+                    margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                    borderRadius: 6.0,
+                    bgColor: replayGainType == e ? context.theme.cardColor : null,
+                    onTap: onTap,
+                    child: Text(
+                      e.toText(),
+                      style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
                     ),
-                  );
-                },
-              ),
-            ],
+                  ),
+                );
+              },
+            ),
             child: ObxO(
               rx: settings.player.replayGainType,
               builder: (context, replayGainType) => Text(
@@ -840,17 +838,13 @@ class PlaybackSettings extends SettingSubpageProvider {
                   title: type.toText(),
                   subtitle: type.toSubtitle(),
                   trailing: NamidaPopupWrapper(
-                    childrenDefault: () {
-                      return InterruptionAction.values
-                          .map(
-                            (action) => NamidaPopupItem(
-                              icon: action.toIcon(),
-                              title: action.toText(),
-                              onTap: () => settings.player.updatePlayerInterruption(type, action),
-                            ),
-                          )
-                          .toList();
-                    },
+                    childrenDefault: () => InterruptionAction.values.map(
+                      (action) => NamidaPopupItem(
+                        icon: action.toIcon(),
+                        title: action.toText(),
+                        onTap: () => settings.player.updatePlayerInterruption(type, action),
+                      ),
+                    ),
                     child: Obx(
                       (context) {
                         final actionInSetting = settings.player.onInterrupted[type] ?? InterruptionAction.pause;

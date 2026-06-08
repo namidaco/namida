@@ -448,7 +448,7 @@ class SMBServerInfo {
     final segments = [
       normalizedShare,
       normalizedSubdir,
-    ].where((s) => s.isNotEmpty).toList();
+    ].where((s) => s.isNotEmpty);
 
     final basePath = segments.isEmpty ? '/' : '/${segments.join('/')}';
 

@@ -1041,7 +1041,7 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                                   ),
                                 ),
                               )
-                              .toList(),
+                              .toFixedList(),
                         ),
                       );
                     },

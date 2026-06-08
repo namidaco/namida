@@ -15,7 +15,9 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
     final shouldDefaultSort = sortByListensInRangeIfRequired && QueueInsertionType.listenTimeRange.toQueueInsertion().sortBy == InsertionSortingType.none;
     if (shouldDefaultSort) {
       final listensCountInThisRange = <E, int>{};
-      items.loop((item) => listensCountInThisRange.update(historyController.mainItemToSubItem(item), (value) => value + 1, ifAbsent: () => 1));
+      for (var item in items) {
+        listensCountInThisRange.update(historyController.mainItemToSubItem(item), (value) => value + 1, ifAbsent: () => 1);
+      }
       items.removeDuplicates(historyController.mainItemToSubItem);
       items.sortByReverse((item) => listensCountInThisRange[historyController.mainItemToSubItem(item)] ?? 0);
       return items;
@@ -52,7 +54,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
     final qit = QueueInsertionType.algorithmDiscoverDate;
     final q = qit.toQueueInsertion();
     final listensSampleCount = q.sample ?? 2;
-    final firstListens = historyController.topTracksMapListens.value[item]?.take(listensSampleCount).toList();
+    final firstListens = historyController.topTracksMapListens.value[item]?.take(listensSampleCount);
     if (firstListens == null) return [];
     final daysCount = q.sampleDays ?? qit.recommendedSampleDaysCount ?? 18;
     return _getDaysTracksByListens(
@@ -65,7 +67,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
           final totalListens = historyController.topTracksMapListens.value[itemToSub(element)] ?? [];
           return totalListens.take(listensSampleCount).contains(element.dateAddedMS); // only allow tracks with first few listens
         },
-      ).toList(),
+      ),
       sorter: (e) => historyController.topTracksMapListens.value[e.key]?.length ?? e.value, // prefer sort by total listens
     );
   }
@@ -85,10 +87,10 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
 
   Iterable<E> _getDaysTracksByListens(
     E item,
-    List<int>? listens,
+    Iterable<int>? listens,
     E Function(T current) itemToSub, {
     required int daysCount,
-    List<T> Function(List<T> tracks)? filterTracks,
+    Iterable<T> Function(Iterable<T> tracks)? filterTracks,
     Comparable<dynamic> Function(MapEntry<E, int>)? sorter,
   }) {
     if (listens == null || listens.isEmpty) return [];
@@ -109,7 +111,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
 
     final numberOfListensMap = _TracksWithNumberOfListensMap<E>();
     for (final d in daysToInclude) {
-      var tracks = historyController.historyMap.value[d];
+      Iterable<T>? tracks = historyController.historyMap.value[d];
       if (tracks == null) continue;
       if (filterTracks != null) tracks = filterTracks(tracks);
       for (final t in tracks) {
@@ -121,7 +123,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
   }
 
   Iterable<E> generateRecommendedItemsFor(E item, E Function(T current) itemToSub, {int? sampleCount}) {
-    final historytracks = historyController.historyTracks.toList();
+    final historytracks = historyController.historyTracks.toFixedList();
     if (historytracks.isEmpty) return [];
 
     if (sampleCount == null) {
@@ -138,10 +140,10 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
       final t = historytracks[i];
       final subItem = itemToSub(t);
       if (subItem == item) {
-        final heatTracks = historytracks.getRange(clamped(i - sampleCount), clamped(i + sampleCount)).toList();
-        heatTracks.loop((e) {
+        final heatTracks = historytracks.getRange(clamped(i - sampleCount), clamped(i + sampleCount));
+        for (final e in heatTracks) {
           numberOfListensMap.addListen(itemToSub(e));
-        });
+        }
         // skip sampleCount since we already took 10 tracks.
         i += sampleCount;
       } else {
@@ -162,7 +164,7 @@ class _TracksWithNumberOfListensMap<E> {
   Iterable<E> finalize(E originalItem, {Comparable<dynamic> Function(MapEntry<E, int>)? sorter}) {
     numberOfListensMap.remove(originalItem);
 
-    final sortedByValueMap = numberOfListensMap.entries.toList();
+    final sortedByValueMap = numberOfListensMap.entries.toFixedList();
     sortedByValueMap.sortByReverse(sorter ?? (e) => e.value);
     return sortedByValueMap.map((e) => e.key);
   }

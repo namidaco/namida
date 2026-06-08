@@ -190,7 +190,7 @@ final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlayli
       'type': type.name,
       'filter': filter.name,
       'source': source.name,
-      'data': data?.map((t) => t.toMap()).toList(),
+      'data': data?.map((t) => t.toMap()).toFixedList(),
       if (enableCleanup) 'enableCleanup': enableCleanup,
     };
   }

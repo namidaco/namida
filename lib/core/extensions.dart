@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -128,7 +129,9 @@ extension TracksWithDatesUtils on List<Selectable> {
 
   String get totalSizeFormatted {
     int size = 0;
-    loop((s) => size += s.track.size);
+    for (final s in this) {
+      size += s.track.size;
+    }
     return size.fileSizeFormatted;
   }
 }
@@ -137,7 +140,9 @@ extension TracksUtils on List<Track> {
   Set<AlbumIdentifierWrapper> toUniqueAlbums() {
     final tracks = this;
     final albums = <AlbumIdentifierWrapper>{};
-    tracks.loop((t) => t.albumsIdentifiersModified.loop(albums.add));
+    for (var t in tracks) {
+      t.albumsIdentifiersModified.forEach(albums.add);
+    }
     return albums;
   }
 
@@ -179,8 +184,8 @@ extension TracksUtils on List<Track> {
 
   String _firstNonEmpty(String Function(Track e) resolver) {
     if (isEmpty) return '';
-    for (var i = 0; i < this.length; i++) {
-      final p = resolver(this[i]);
+    for (final item in this) {
+      final p = resolver(item);
       if (p.isNotEmpty) return p;
     }
     return '';
@@ -340,38 +345,34 @@ extension ListieEqualityUtils<T1> on List<T1>? {
 
 extension ListieFutureUtils<T> on List<T> {
   Stream<T> whereAsync(FutureOr<bool> Function(T element) test) async* {
-    for (var i = 0; i < length; i++) {
-      var e = this[i];
+    for (final e in this) {
       if (await test(e)) yield e;
     }
   }
 
   Future<T?> firstWhereEffAsync(FutureOr<bool> Function(T element) test, {T? fallback}) async {
-    for (var i = 0; i < length; i++) {
-      var e = this[i];
+    for (final e in this) {
       if (await test(e)) return e;
     }
     return fallback;
   }
 
   Future<bool> anyAsync(FutureOr<bool> Function(T element) test, {T? fallback}) async {
-    for (var i = 0; i < length; i++) {
-      var e = this[i];
+    for (final e in this) {
       if (await test(e)) return true;
     }
     return false;
   }
 
   Stream<E> mapAsync<E>(FutureOr<E> Function(T element) converter) async* {
-    for (var i = 0; i < length; i++) {
-      var e = this[i];
+    for (final e in this) {
       yield await converter(e);
     }
   }
 
   Future<void> loopAsync(FutureOr<dynamic> Function(T element) fn) async {
-    for (var i = 0; i < length; i++) {
-      await fn(this[i]);
+    for (final e in this) {
+      await fn(e);
     }
   }
 }
@@ -757,12 +758,12 @@ extension DirectoryUtils on Directory {
 
   Future<List<FileSystemEntity>> listAllIsolate({bool recursive = false, bool followLinks = true}) async {
     try {
-      final params = {
-        'dirPath': path,
-        'recursive': recursive,
-        'followLinks': followLinks,
-      };
-      return await compute(_listAllIsolate, params);
+      return await Isolate.run(
+        () => this.listSync(
+          recursive: recursive,
+          followLinks: followLinks,
+        ),
+      );
     } catch (e) {
       printy(e, isError: true);
       return [];
@@ -771,35 +772,21 @@ extension DirectoryUtils on Directory {
 
   Future<int?> getTotalSize({bool recursive = false, bool followLinks = true}) async {
     try {
-      final params = {
-        'dirPath': path,
-        'recursive': recursive,
-        'followLinks': followLinks,
-      };
-      return await compute(_getDirSizeIsolate, params);
+      return await Isolate.run(
+        () {
+          int size = 0;
+          final files = this.listSync(recursive: recursive, followLinks: followLinks);
+          for (var e in files) {
+            size += (e is File ? File(e.path).fileSizeSync() ?? 0 : 0);
+          }
+          return size;
+        },
+      );
     } catch (e) {
       printy(e, isError: true);
       return null;
     }
   }
-}
-
-List<FileSystemEntity> _listAllIsolate(Map params) {
-  final dirPath = params['dirPath'] as String;
-  final recursive = params['recursive'] as bool;
-  final followLinks = params['followLinks'] as bool;
-  return Directory(dirPath).listSync(recursive: recursive, followLinks: followLinks);
-}
-
-int _getDirSizeIsolate(Map params) {
-  final dirPath = params['dirPath'] as String;
-  final recursive = params['recursive'] as bool;
-  final followLinks = params['followLinks'] as bool;
-  int size = 0;
-  Directory(dirPath).listSync(recursive: recursive, followLinks: followLinks).loop((e) {
-    size += (e is File ? File(e.path).fileSizeSync() ?? 0 : 0);
-  });
-  return size;
 }
 
 extension FileUtils on File {

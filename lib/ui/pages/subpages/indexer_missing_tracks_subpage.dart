@@ -29,8 +29,7 @@ enum _LoadingProgress {
   collectingPlaylistTracks('Collecting playlist tracks'),
   findingHistoryTracks('Finding history tracks'),
   findingLibraryTracks('Finding library tracks'),
-  findingPlaylistTracks('Finding playlist tracks')
-  ;
+  findingPlaylistTracks('Finding playlist tracks');
 
   final String value;
   const _LoadingProgress(this.value);
@@ -526,9 +525,9 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                 if (allSelected) {
                                   _selectedTracksToUpdate.clear();
                                 } else {
-                                  _missingTracksPaths.loop((e) {
+                                  for (var e in _missingTracksPaths) {
                                     if (_missingTracksSuggestions[e] != null) _selectedTracksToUpdate[e] = true;
-                                  });
+                                  }
                                 }
                               },
                             );

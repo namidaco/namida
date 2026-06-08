@@ -73,7 +73,7 @@ class NamidaColor {
       'used': used?.intValue,
       // 'mix': mix.intValue,
       'mix2': mix2.intValue,
-      'palette': palette.mapped((e) => e.intValue),
+      'palette': palette.map((e) => e.intValue).toFixedList(),
     };
   }
 

@@ -177,7 +177,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
       child: ObxO(
         rx: YoutubeAccountController.current.signedInAccounts,
         builder: (context, signedInAccountsSet) {
-          final signedInAccounts = signedInAccountsSet.toList();
+          final signedInAccounts = signedInAccountsSet.toFixedList();
           return ObxO(
             rx: YoutubeAccountController.current.activeAccountChannel,
             builder: (context, currentChannel) => Stack(

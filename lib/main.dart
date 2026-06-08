@@ -212,7 +212,7 @@ Future<bool> _mainAppInitialization() async {
 
     if (settings.directoriesToScan.value.isEmpty) {
       final defaultDirs = await _getDefaultDirectoriesToScan(paths);
-      settings.directoriesToScan.value.addAll(defaultDirs.toList());
+      settings.directoriesToScan.value.addAll(defaultDirs);
     } else {
       final servers = settings.directoriesToScan.value.allServers();
       if (servers.isNotEmpty) {
@@ -373,7 +373,7 @@ Future<Set<DirectoryIndex>> _getDefaultDirectoriesToScan(List<String> paths) asy
 void _cleanOldLogsSync(List params) {
   String dirPath = params[0];
   String? fileSuffix = params[1];
-  Directory(dirPath).listSyncSafe().loop((e) {
+  for (final e in Directory(dirPath).listSyncSafe()) {
     if (e is File) {
       final filename = e.path.getFilename;
       if (filename.startsWith('logs_') && fileSuffix != null && !filename.endsWith("$fileSuffix.txt")) {
@@ -382,7 +382,7 @@ void _cleanOldLogsSync(List params) {
         } catch (_) {}
       }
     }
-  });
+  }
 }
 
 void _initErrorInterpreters() {
@@ -438,16 +438,13 @@ Future<void> _clearIntentCachedFiles() async {
   final cacheDir = await pp.getTemporaryDirectory();
   return Isolate.run(
     () {
-      final items = cacheDir.listSyncSafe();
-      items.loop(
-        (item) {
-          if (item is File) {
-            try {
-              item.deleteSync();
-            } catch (_) {}
-          }
-        },
-      );
+      for (final e in cacheDir.listSyncSafe()) {
+        if (e is File) {
+          try {
+            e.deleteSync();
+          } catch (_) {}
+        }
+      }
     },
   );
 }
@@ -766,7 +763,7 @@ class NamidaReceiveIntentManager {
       if (files.isNotEmpty) {
         final paths = <String>[];
         final m3uPaths = <String>{};
-        files.loop((f) {
+        for (var f in files) {
           final realPath = realPathCallback(f);
           if (realPath != null) {
             final path = Platform.isAndroid ? realPath.replaceAll(r'\', '') : realPath;
@@ -776,13 +773,16 @@ class NamidaReceiveIntentManager {
               paths.add(path);
             }
           } else {
-            valueCallback(f)?.split('\n').loop((e) {
-              e.split('https://').loop((line) {
-                if (line.isNotEmpty) paths.add("https://$line");
-              });
-            });
+            final results = valueCallback(f)?.split('\n');
+            if (results != null) {
+              for (var e in results) {
+                for (final line in e.split('https://')) {
+                  if (line.isNotEmpty) paths.add("https://$line");
+                }
+              }
+            }
           }
-        });
+        }
 
         if (m3uPaths.isNotEmpty) {
           final allTracks = await PlaylistController.inst.readM3UFiles(m3uPaths);

@@ -267,7 +267,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                               ObxO(
                                                 rx: foldersController.foldersMap,
                                                 builder: (context, mainMap) {
-                                                  final mainMapFoldersKeys = mainMap.keys.toList();
+                                                  final mainMapFoldersKeys = mainMap.keys.toFixedList();
                                                   return SuperSliverList.builder(
                                                     itemCount: mainMapFoldersKeys.length,
                                                     itemBuilder: (context, i) {

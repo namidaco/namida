@@ -29,7 +29,7 @@ class IsolateFunctionReturnBuild<T> {
 mixin PortsProvider<E> {
   static final _activePortsProviders = <PortsProvider, bool>{};
   static Future<void> disposeAll() async {
-    final providers = _activePortsProviders.keys.toList();
+    final providers = _activePortsProviders.keys.toFixedList();
     _activePortsProviders.clear();
     await providers.map((e) => e.disposePort()).executeAllAndSilentReportErrors();
   }

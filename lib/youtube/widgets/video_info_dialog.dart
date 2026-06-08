@@ -640,7 +640,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                   ),
                                   skipFirst: 4,
                                 )
-                                .toList(),
+                                .toFixedList(),
                       ),
                     ),
                   ),

@@ -49,16 +49,17 @@ class _YTSubscribeButtonManager {
 
   static void afterModifySuccess(String? channelId, RxBaseCore<YoutiPieChannelInfo?> channelPageRx) {
     if (channelId == null) return;
-    _activeChannelInfos[channelId]?.loop(
-      (item) {
+    final activeChannels = _activeChannelInfos[channelId];
+    if (activeChannels != null) {
+      for (var item in activeChannels) {
         item.value?.rebuild(
           newSubscribed: channelPageRx.value?.subscribed,
           newNotifications: channelPageRx.value?.notifications,
           newNotificationParameters: channelPageRx.value?.notificationParameters,
         );
         item.refresh();
-      },
-    );
+      }
+    }
   }
 }
 
@@ -279,21 +280,21 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
     final addedAtFirst = <String, bool>{};
     final allChannelGroups = <String>[];
     final currentGroups = (YoutubeSubscriptionsController.inst.getGroupsForChannel(channelId)).obs;
-    currentGroups.loop(
-      (item) {
-        addedAtFirst[item] = true;
-        allChannelGroups.add(item);
-      },
-    );
+    for (var item in currentGroups.value) {
+      addedAtFirst[item] = true;
+      allChannelGroups.add(item);
+    }
     final allGroupsFile = File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL);
-    (await allGroupsFile.readAsJson() as List?)?.loop(
-      (item) {
+    final list = await allGroupsFile.readAsJson() as List?;
+    if (list != null) {
+      for (var item in list) {
         item as String;
         if (addedAtFirst[item] != true) {
           allChannelGroups.add(item);
         }
-      },
-    );
+      }
+    }
+
     addedAtFirst.clear();
 
     bool didChangeCurrentGroups = false;
@@ -407,7 +408,7 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
                                 ),
                               ),
                             )
-                            .toList(),
+                            .toFixedList(),
                       ),
                     ),
                   ),

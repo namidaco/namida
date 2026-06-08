@@ -26,26 +26,33 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
   int audiosTotalSize = 0;
   int lyricsTotalSize = 0;
   int imagesTotalSize = 0;
-  await tracksPre.loopAsync(
-    (item) async {
-      var tr = item.track;
-      if (tracksMap[tr] == null) {
-        tracksMap[tr] = true;
-        var ytId = tr.youtubeID;
-        (await VideoController.inst.getNVFromID(tr.youtubeID)).loop((item) => videosTotalSize += item.sizeInBytes);
-        AudioCacheController.inst.audioCacheMap[ytId]?.loop((item) async => audiosTotalSize += await item.file.fileSize() ?? 0);
 
-        final artworkFile = File(tr.pathToImage);
-        if (await artworkFile.exists()) imagesTotalSize += await artworkFile.fileSize() ?? 0;
-
-        final lrcUtils = LrcSearchUtilsSelectable(kDummyExtendedTrack, tr);
-        final cachedLRCFile = lrcUtils.cachedLRCFile;
-        final cachedTxtFile = lrcUtils.cachedTxtFile;
-        if (await cachedLRCFile.exists()) lyricsTotalSize += await cachedLRCFile.fileSize() ?? 0;
-        if (await cachedTxtFile.exists()) lyricsTotalSize += await cachedTxtFile.fileSize() ?? 0;
+  for (var item in tracksPre) {
+    var tr = item.track;
+    if (tracksMap[tr] == null) {
+      tracksMap[tr] = true;
+      var ytId = tr.youtubeID;
+      for (var item in (await VideoController.inst.getNVFromID(tr.youtubeID))) {
+        videosTotalSize += item.sizeInBytes;
       }
-    },
-  );
+      final audioCaches = AudioCacheController.inst.audioCacheMap[ytId];
+      if (audioCaches != null) {
+        for (final item in audioCaches) {
+          audiosTotalSize += await item.file.fileSize() ?? 0;
+        }
+      }
+
+      final artworkFile = File(tr.pathToImage);
+      if (await artworkFile.exists()) imagesTotalSize += await artworkFile.fileSize() ?? 0;
+
+      final lrcUtils = LrcSearchUtilsSelectable(kDummyExtendedTrack, tr);
+      final cachedLRCFile = lrcUtils.cachedLRCFile;
+      final cachedTxtFile = lrcUtils.cachedTxtFile;
+      if (await cachedLRCFile.exists()) lyricsTotalSize += await cachedLRCFile.fileSize() ?? 0;
+      if (await cachedTxtFile.exists()) lyricsTotalSize += await cachedTxtFile.fileSize() ?? 0;
+    }
+  }
+
   final tracks = tracksMap.keys.toList();
   final isSingle = tracks.length == 1;
   final singleVideoId = isSingle ? tracks[0].youtubeID : null;

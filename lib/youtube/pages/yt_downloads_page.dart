@@ -275,21 +275,21 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                     icon: Broken.play,
                                     iconSize: 24.0,
                                     onPressed: () {
-                                      _downloadTasksTempList.loop((e) {
+                                      for (var e in _downloadTasksTempList.value) {
                                         YoutubeController.inst.resumeDownloadTasks(groupName: e.$1, itemsConfig: [e.$2]);
-                                      });
+                                      }
                                     },
                                   ),
                                   NamidaIconButton(
                                     icon: Broken.pause,
                                     iconSize: 24.0,
                                     onPressed: () {
-                                      _downloadTasksTempList.loop((e) {
+                                      for (var e in _downloadTasksTempList.value) {
                                         YoutubeController.inst.pauseDownloadTask(
                                           itemsConfig: [e.$2],
                                           groupName: e.$1,
                                         );
-                                      });
+                                      }
                                     },
                                   ),
                                   NamidaIconButton(
@@ -303,13 +303,13 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                         itemsLength: _downloadTasksTempList.length,
                                       );
                                       if (confirmation.confirmed) {
-                                        _downloadTasksTempList.loop((e) {
+                                        for (var e in _downloadTasksTempList.value) {
                                           YoutubeController.inst.cancelDownloadTask(
                                             itemsConfig: [e.$2],
                                             groupName: e.$1,
                                             delete: confirmation.delete,
                                           );
-                                        });
+                                        }
                                       }
                                     },
                                   ),
@@ -324,7 +324,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                     child: NamidaScrollbarWithController(
                       child: (sc) => Obx(
                         (context) {
-                          final keys = YoutubeController.inst.youtubeDownloadTasksMap.keys.toList();
+                          final keys = YoutubeController.inst.youtubeDownloadTasksMap.keys.toFixedList();
                           keys.sortByReverse((e) => YoutubeController.inst.latestEditedGroupDownloadTask[e] ?? 0);
                           return SmoothCustomScrollView(
                             controller: sc,
@@ -332,7 +332,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                               if (_isOnGoingSelectedR == null)
                                 ...keys.mapIndexed(
                                   (groupName, index) {
-                                    final list = YoutubeController.inst.youtubeDownloadTasksMap[groupName]?.values.toList() ?? [];
+                                    final list = YoutubeController.inst.youtubeDownloadTasksMap[groupName]?.values.toFixedList() ?? [];
                                     final lastEditedMSSE = YoutubeController.inst.latestEditedGroupDownloadTask[groupName] ?? 0;
                                     final lastEditedAgo = lastEditedMSSE == 0 ? null : TimeAgoController.dateMSSEFromNow(lastEditedMSSE);
 

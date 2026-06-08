@@ -160,7 +160,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     _allChannelsStreamsLoading.value = true;
 
     final streams = <StreamInfoItem>[];
-    final ids = YoutubeSubscriptionsController.inst.subscribedChannels.toList();
+    final ids = YoutubeSubscriptionsController.inst.subscribedChannels.toFixedList();
     final idsLength = ids.length;
 
     final maxDateBeforeMS = allChannelFetchOldestDate.value.millisecondsSinceEpoch;

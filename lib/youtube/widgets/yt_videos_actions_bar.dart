@@ -118,11 +118,11 @@ class YTVideosActionBar extends StatelessWidget {
     final info = <String, String?>{};
 
     final infoLookup = infoLookupCallback?.call() ?? {};
-    videos.loop((e) {
+    for (var e in videos) {
       final id = e.id;
       ids.add(id);
       info[id] = infoLookup[id]?.title;
-    });
+    }
 
     showAddToPlaylistSheet(
       ids: ids,

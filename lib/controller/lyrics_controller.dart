@@ -403,7 +403,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
             );
           }
 
-          jsonLists.loop((jsonRes) {
+          for (var jsonRes in jsonLists) {
             final syncedLyrics = jsonRes?["syncedLyrics"] as String? ?? '';
             final plain = jsonRes?["plainLyrics"] as String? ?? '';
             if (syncedLyrics != '') {
@@ -445,7 +445,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
                 ),
               );
             }
-          });
+          }
           fetched.removeDuplicates();
           return fetched;
         } catch (_) {}

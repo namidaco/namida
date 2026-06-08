@@ -1251,7 +1251,7 @@ class _TextWithFadingProgress extends StatelessWidget {
                   ),
                 );
               },
-            ).toList(),
+            ).toFixedList(),
           ),
           textAlign: textAlign,
         ),

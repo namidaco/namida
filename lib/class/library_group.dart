@@ -41,44 +41,42 @@ class LibraryGroup<T extends Track> {
     final mainMapFoldersTracks = this.mainMapFoldersTracks.value..clear();
     final mainMapFoldersVideos = this.mainMapFoldersVideos.value..clear();
 
-    allTracks.loop(
-      (tr) {
-        final trExt = trackToExtended(tr);
+    for (var tr in allTracks) {
+      final trExt = trackToExtended(tr);
 
-        // -- Assigning Albums
-        final identifiers = trExt.getAlbumsIdentifiersModified(albumIdentifier);
-        identifiers.loop((item) {
-          mainMapAlbums.addForce(item, tr);
-        });
+      // -- Assigning Albums
+      final identifiers = trExt.getAlbumsIdentifiersModified(albumIdentifier);
+      for (var item in identifiers) {
+        mainMapAlbums.addForce(item, tr);
+      }
 
-        // -- Assigning Artists
-        trExt.artistsList.loop((artist) {
-          mainMapArtists.addForce(artist, tr);
-        });
+      // -- Assigning Artists
+      for (var artist in trExt.artistsList) {
+        mainMapArtists.addForce(artist, tr);
+      }
 
-        // -- Assigning Album Artist
-        mainMapAlbumArtists.addForce(trExt.albumArtist, tr);
+      // -- Assigning Album Artist
+      mainMapAlbumArtists.addForce(trExt.albumArtist, tr);
 
-        // -- Assigning Composer
-        mainMapComposer.addForce(trExt.composer, tr);
+      // -- Assigning Composer
+      mainMapComposer.addForce(trExt.composer, tr);
 
-        // -- Assigning Genres
-        trExt.genresList.loop((genre) {
-          mainMapGenres.addForce(genre, tr);
-        });
+      // -- Assigning Genres
+      for (var genre in trExt.genresList) {
+        mainMapGenres.addForce(genre, tr);
+      }
 
-        // -- Assigning Folders
-        if (tr is Video) {
-          final folder = tr.folder;
-          mainMapFoldersVideos.addForce(folder, tr);
-          mainMapFoldersTracksAndVideos.addForce(folder, tr);
-        } else {
-          final folder = tr.folder;
-          mainMapFoldersTracks.addForce(folder, tr);
-          mainMapFoldersTracksAndVideos.addForce(folder, tr);
-        }
-      },
-    );
+      // -- Assigning Folders
+      if (tr is Video) {
+        final folder = tr.folder;
+        mainMapFoldersVideos.addForce(folder, tr);
+        mainMapFoldersTracksAndVideos.addForce(folder, tr);
+      } else {
+        final folder = tr.folder;
+        mainMapFoldersTracks.addForce(folder, tr);
+        mainMapFoldersTracksAndVideos.addForce(folder, tr);
+      }
+    }
 
     didFill = true;
   }

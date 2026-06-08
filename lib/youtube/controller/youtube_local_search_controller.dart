@@ -142,9 +142,15 @@ class YTLocalSearchController with PortsProvider<Map> {
     streamSub = recievePort.listen((p) {
       if (PortsProvider.isDisposeMessage(p)) {
         recievePort.close();
-        lookupListStreamInfoMapCacheDetails.loop((item) => item.close());
-        lookupListVideoStreamsMapCacheDetails.loop((item) => item.close());
-        lookupListVideoMissingVideoCacheDetails.loop((item) => item.close());
+        for (var item in lookupListStreamInfoMapCacheDetails) {
+          item.close();
+        }
+        for (var item in lookupListVideoStreamsMapCacheDetails) {
+          item.close();
+        }
+        for (var item in lookupListVideoMissingVideoCacheDetails) {
+          item.close();
+        }
         lookupListVideoMissingInfo.clear();
         lookupListYTVH.clear();
         lookupListStreamInfoMap.clear();
@@ -268,61 +274,54 @@ class YTLocalSearchController with PortsProvider<Map> {
       return true;
     }
 
-    lookupListStreamInfoMapCacheDetails.loop(
-      (db) {
-        db.loadEverythingSync((map) {
-          try {
-            final info = StreamInfoItem.fromMap(map);
-            final wrapper = _StreamResultInfoWrapper.fromInfo(info);
-            onAddItem(wrapper, lookupListStreamInfoMap, 2);
-          } catch (_) {}
-        });
-        db.close();
-      },
-    );
-    lookupListVideoStreamsMapCacheDetails.loop(
-      (db) {
-        db.loadEverythingSync((wholeStreamsResultMap) {
-          try {
-            final map = wholeStreamsResultMap['info'] as Map; // VideoStreamInfo
-            final info = VideoStreamInfo.fromMap(map).toStreamInfo();
-            final wrapper = _StreamResultInfoWrapper.fromInfo(info);
-            onAddItem(wrapper, lookupListVideoStreamsMap, 3);
-          } catch (_) {}
-        });
-        db.close();
-      },
-    );
+    for (var db in lookupListStreamInfoMapCacheDetails) {
+      db.loadEverythingSync((map) {
+        try {
+          final info = StreamInfoItem.fromMap(map);
+          final wrapper = _StreamResultInfoWrapper.fromInfo(info);
+          onAddItem(wrapper, lookupListStreamInfoMap, 2);
+        } catch (_) {}
+      });
+      db.close();
+    }
+    for (var db in lookupListVideoStreamsMapCacheDetails) {
+      db.loadEverythingSync((wholeStreamsResultMap) {
+        try {
+          final map = wholeStreamsResultMap['info'] as Map; // VideoStreamInfo
+          final info = VideoStreamInfo.fromMap(map).toStreamInfo();
+          final wrapper = _StreamResultInfoWrapper.fromInfo(info);
+          onAddItem(wrapper, lookupListVideoStreamsMap, 3);
+        } catch (_) {}
+      });
+      db.close();
+    }
 
-    lookupListVideoMissingVideoCacheDetails.loop(
-      (db) {
-        db.loadEverythingSync((map) {
-          try {
-            final info = MissingVideoInfo.fromMap(map).toStreamInfo();
-            final wrapper = _StreamResultInfoWrapper.fromInfo(info);
-            onAddItem(wrapper, lookupListVideoMissingInfo, 4);
-          } catch (_) {}
-        });
-        db.close();
-      },
-    );
+    for (var db in lookupListVideoMissingVideoCacheDetails) {
+      db.loadEverythingSync((map) {
+        try {
+          final info = MissingVideoInfo.fromMap(map).toStreamInfo();
+          final wrapper = _StreamResultInfoWrapper.fromInfo(info);
+          onAddItem(wrapper, lookupListVideoMissingInfo, 4);
+        } catch (_) {}
+      });
+      db.close();
+    }
 
-    Directory(statsDir).listSyncSafe().loop((f) {
+    final files = Directory(statsDir).listSyncSafe();
+    for (var f in files) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync(ensureExists: false);
           if (response is List) {
-            response.loop(
-              (map) {
-                final info = YoutubeVideoHistory.fromJson(map).toStreamInfo();
-                final wrapper = _StreamResultInfoWrapper.fromInfo(info);
-                onAddItem(wrapper, lookupListYTVH, 5);
-              },
-            );
+            for (var map in response) {
+              final info = YoutubeVideoHistory.fromJson(map).toStreamInfo();
+              final wrapper = _StreamResultInfoWrapper.fromInfo(info);
+              onAddItem(wrapper, lookupListYTVH, 5);
+            }
           }
         } catch (_) {}
       }
-    });
+    }
 
     for (final item in faultyTitlesBackupList.entries) {
       final alreadyAdded = lookupItemAvailable[item.key] != null;

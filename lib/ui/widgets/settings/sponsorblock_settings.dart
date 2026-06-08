@@ -247,7 +247,7 @@ class _SponsorBlockCategoryTile extends StatelessWidget {
                 },
               ),
             );
-          }).toList(),
+          }).toFixedList(),
         ),
       ),
     );

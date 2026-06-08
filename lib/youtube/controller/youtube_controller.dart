@@ -279,7 +279,9 @@ class YoutubeController {
       }
     }
     if (pendingFnsAfterLoop != null) {
-      pendingFnsAfterLoop.loop((fn) => fn());
+      for (var fn in pendingFnsAfterLoop) {
+        fn();
+      }
       pendingFnsAfterLoop = null;
     }
   }
@@ -406,11 +408,11 @@ class YoutubeController {
     for (final e in youtubeDownloadTasksMap.value.entries) {
       for (final config in e.value.values) {
         final groupName = e.key;
-        videosIds.loop((e) {
+        for (var e in videosIds) {
           if (e == config.id) {
             onMatch(groupName, config);
           }
-        });
+        }
       }
     }
   }
@@ -481,7 +483,9 @@ class YoutubeController {
         onMatch: onMatch,
       );
     } else {
-      itemsConfig.loop((c) => onMatch(groupName, c));
+      for (var c in itemsConfig) {
+        onMatch(groupName, c);
+      }
     }
     youtubeDownloadTasksInQueueMap.refresh();
   }
@@ -509,7 +513,7 @@ class YoutubeController {
   }
 
   Future<void> _updateDownloadTask({
-    required List<YoutubeItemDownloadConfig> itemsConfig,
+    required Iterable<YoutubeItemDownloadConfig> itemsConfig,
     required DownloadTaskGroupName groupName,
     bool remove = false,
     bool delete = false,
@@ -526,7 +530,7 @@ class YoutubeController {
     if (remove) {
       final directory = Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
       final itemsToCancel = allInGroupName
-          ? youtubeDownloadTasksMap.value[groupName]!.values.toList()
+          ? youtubeDownloadTasksMap.value[groupName]!.values.toFixedList()
           : List<YoutubeItemDownloadConfig>.from(itemsConfig); // copy bcz we can remove if from original list
       for (final c in itemsToCancel) {
         _downloadManager.stopDownload(file: _downloadClientsMap[groupName]?[c.filename]);
@@ -553,7 +557,7 @@ class YoutubeController {
         // await downloadTasksGroupDB.fileInfo.file.delete(); // db.deleteEverything() leaves leftovers.
       }
     } else {
-      await downloadTasksGroupDB.putAll(
+      await downloadTasksGroupDB.putAllIterable(
         itemsConfig,
         (c) {
           youtubeDownloadTasksMap.value[groupName]![c.filename] = c;
@@ -573,7 +577,7 @@ class YoutubeController {
   final _completersVAI = <YoutubeItemDownloadConfig, Completer<VideoStreamsResult?>?>{};
 
   Future<void> downloadYoutubeVideos({
-    required List<YoutubeItemDownloadConfig> itemsConfig,
+    required Iterable<YoutubeItemDownloadConfig> itemsConfig,
     DownloadTaskGroupName groupName = const DownloadTaskGroupName.defaulty(),
     int parallelDownloads = 1,
     required bool useCachedVersionsIfAvailable,
@@ -1461,7 +1465,9 @@ class _YTDownloadManager with PortsProvider<SendPort> {
 
   Future<void> stopDownloads({required List<File> files}) async {
     if (files.isEmpty) return;
-    files.loop((e) => _onFileFinish(e.path, const _UserCanceledException()));
+    for (var e in files) {
+      _onFileFinish(e.path, const _UserCanceledException());
+    }
     final p = {'files': files, 'stop': true};
     await sendPort(p);
   }
@@ -1600,9 +1606,9 @@ class _IsolateFunctions {
     final allFiles = Directory(params.tasksDatabasesPath).listSyncSafe();
     final oldJsonFiles = <File>[];
     final newDBFiles = <File>[];
-    allFiles.loop((item) {
+    for (var item in allFiles) {
       if (item is File) item.path.endsWith('.json') ? oldJsonFiles.add(item) : newDBFiles.add(item);
-    });
+    }
 
     DownloadTaskGroupName fileToGroupName(File file) {
       final filenameWOExt = file.path.getFilenameWOExt;
@@ -1693,7 +1699,7 @@ class _IsolateFunctions {
 
     // we loop again to give a chance for duplicated groups, if any.
     if (hadEmptyGroups) {
-      newDBFiles.loop((dbFile) {
+      for (var dbFile in newDBFiles) {
         final group = fileToGroupName(dbFile);
         if (dbsThatHadError[group] != true && (youtubeDownloadTasksMap[group]?.isEmpty ?? true)) {
           // db is empty, delete it. we don't delete immediately at runtime bcz it might be accessed again after deleting and many bad things would happen.
@@ -1704,7 +1710,7 @@ class _IsolateFunctions {
             dbFile.deleteSync();
           } catch (_) {}
         }
-      });
+      }
     }
 
     downloadTasksMainDBManager.closeAll();

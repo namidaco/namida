@@ -447,19 +447,19 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
         int totalSize = 0;
         final subDir = <Directory>[];
         final items = dir.listSync(recursive: false);
-        items.loop((e) {
+        for (var e in items) {
           if (e is File) {
             totalSize += onFileAdd(dir, e);
           } else if (e is Directory) {
             subDir.add(e);
             directoryForFolders.addForce(dir.path, e.path);
           }
-        });
-        subDir.loop((sub) {
+        }
+        for (var sub in subDir) {
           totalSize += dirSafeRecursiveListSync(
             sub,
           );
-        });
+        }
         infoDirSize[dir.path] = totalSize;
         return totalSize;
       } catch (_) {
@@ -490,7 +490,9 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
 
     for (final fileEntry in directoryForFiles.entries) {
       int totalSize = 0;
-      fileEntry.value.loop((e) => totalSize += infoFiles[e]?.size ?? 0);
+      for (var e in fileEntry.value) {
+        totalSize += infoFiles[e]?.size ?? 0;
+      }
       onDirInfo(fileEntry, totalSize);
     }
     for (final dirEntry in directoryForFolders.entries) {
@@ -541,7 +543,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   //     // -- files
   //     if (p.$2.isNotEmpty) {
   //       final newMapFiles = <String, NamidaFileStat>{};
-  //       p.$2.loop((e){
+  //       p.$2.forEach((e){
   //         try {
   //           if (allFilesStats[e.path] == null) {
   //             final stats = e.statSync();
@@ -561,7 +563,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   //     // -- dirs
   //     if (p.$3.isNotEmpty) {
   //       final newMapDirs = <String, NamidaDirStat>{};
-  //       p.$3.loop((dir){
+  //       p.$3.forEach((dir){
   //         try {
   //           int totalSize = 0;
   //           if (allDirsStats[dir.path] == null) {
@@ -574,7 +576,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
   //             }
   //             int filesCount = 0;
   //             int foldersCount = 0;
-  //             itemsInside.loop((file){
+  //             itemsInside.forEach((file){
   //               if (file is File) {
   //                 // -- file stats inside each dir
   //                 final stats = file.statSync();
@@ -631,30 +633,32 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     final extensionsWrappers = params.allowedExtensionsWrappers;
 
     if (excludeHidden && extensionsWrappers.isNotEmpty) {
-      items.loop((e) {
+      for (var e in items) {
         final filename = e.path.splitLast(_pathSeparator);
         if (e is Directory) {
           if (!filename.startsWith('.')) onAdd(e);
         } else {
           if (!filename.startsWith('.') && extensionsWrappers.any((wrapper) => wrapper.isPathValid(filename))) onAdd(e);
         }
-      });
+      }
     } else if (excludeHidden) {
-      items.loop((e) {
+      for (var e in items) {
         final fileorDirName = e.path.splitLast(_pathSeparator);
         if (!fileorDirName.startsWith('.')) onAdd(e);
-      });
+      }
     } else if (extensionsWrappers.isNotEmpty) {
-      items.loop((e) {
+      for (var e in items) {
         if (e is File) {
           final filename = e.path.splitLast(_pathSeparator);
           if (extensionsWrappers.any((wrapper) => wrapper.isPathValid(filename))) onAdd(e);
         } else {
           onAdd(e);
         }
-      });
+      }
     } else {
-      items.loop((e) => onAdd(e));
+      for (var e in items) {
+        onAdd(e);
+      }
     }
 
     files.sortBy((e) => _pathToName(e.path));
@@ -1155,7 +1159,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                               ),
                             ),
                           )
-                          .toList(),
+                          .toFixedList(),
                     ),
                   ),
                 ),

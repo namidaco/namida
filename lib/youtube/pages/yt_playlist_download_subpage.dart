@@ -329,7 +329,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         tooltip: () => lang.invertSelection,
                         icon: Broken.recovery_convert,
                         onPressed: () {
-                          widget.ids.loop((e) => _onItemTap(e.id));
+                          for (var e in widget.ids) {
+                            _onItemTap(e.id);
+                          }
                           _didManuallyEditSelection = true;
                         },
                       ),
@@ -595,26 +597,24 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         if (!await requestManageStoragePermission()) return;
                         final timeNow = DateTime.now();
                         final group = _groupName.value;
-                        final itemsConfig = _selectedList.value
-                            .map(
-                              (id) =>
-                                  _configMap.value[id]?.copyWith(
-                                    // -- in case they were changed
-                                    addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
-                                    autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
-                                    keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
-                                    downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
-                                    deleteOldFile: settings.downloadOverrideOldFiles.value,
-                                  ) ??
-                                  // -- this is not really used since initState() calls onRenameAllTasks() which fills _configMap
-                                  _getDummyDownloadConfig(
-                                    id,
-                                    widget.ids.indexWhere((element) => element.id == id),
-                                    group,
-                                    timeNow: timeNow,
-                                  ),
-                            )
-                            .toList();
+                        final itemsConfig = _selectedList.value.map(
+                          (id) =>
+                              _configMap.value[id]?.copyWith(
+                                // -- in case they were changed
+                                addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
+                                autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
+                                keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
+                                downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
+                                deleteOldFile: settings.downloadOverrideOldFiles.value,
+                              ) ??
+                              // -- this is not really used since initState() calls onRenameAllTasks() which fills _configMap
+                              _getDummyDownloadConfig(
+                                id,
+                                widget.ids.indexWhere((element) => element.id == id),
+                                group,
+                                timeNow: timeNow,
+                              ),
+                        );
                         NamidaNavigator.inst.popPage();
                         YoutubeController.inst.downloadYoutubeVideos(
                           groupName: group,

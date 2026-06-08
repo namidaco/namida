@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:super_hot_key/super_hot_key.dart';
 
 import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.dart';
+import 'package:namida/core/extensions.dart';
 
 class ShortcutKeyData {
   final LogicalKeyboardKey? key;
@@ -50,7 +51,7 @@ class ShortcutKeyData {
   }
 
   static Future<void> disposeAllHotkeys() async {
-    final copies = _createdHotkeys.values.toList();
+    final copies = _createdHotkeys.values.toFixedList();
     _createdHotkeys.clear();
     await Future.wait(copies.map((c) => c.dispose()));
   }

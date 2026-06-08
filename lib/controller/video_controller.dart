@@ -264,11 +264,11 @@ class VideoController {
   List<NamidaVideo> getCurrentVideosInCache() {
     final videos = <NamidaVideo>[];
     for (final vl in _videoCacheIDMap.values) {
-      vl.loop((v) {
+      for (var v in vl) {
         if (File(v.path).existsSync()) {
           videos.add(v);
         }
-      });
+      }
     }
     return videos;
   }

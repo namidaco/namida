@@ -89,9 +89,9 @@ Future<void> showGeneralPopupDialog(
       if (t.existsSync()) tracksExisting.add(t);
     }
   } else {
-    tracks.loop((t) {
+    for (var t in tracks) {
       if (t.hasInfoInLibrary()) tracksExisting.add(t);
-    });
+    }
   }
 
   final isSingleAndFromQueue = index != null && isSingle && source == QueueSource.playerQueue;
@@ -1784,23 +1784,29 @@ void showSetTrackStatsDialog({
 
   // -- moods/tags from stats
   for (final tr in Indexer.inst.trackStatsMap.value.entries) {
-    tr.value.moods?.loop((mood) {
-      allAvailableMoodsCount.value.update(mood, (value) => value + 1, ifAbsent: () => 1);
-    });
-    tr.value.tags?.loop((tag) {
-      allAvailableTagsCount.value.update(tag, (value) => value + 1, ifAbsent: () => 1);
-    });
+    final moods = tr.value.moods;
+    final tags = tr.value.tags;
+    if (moods != null) {
+      for (var mood in moods) {
+        allAvailableMoodsCount.value.update(mood, (value) => value + 1, ifAbsent: () => 1);
+      }
+    }
+    if (tags != null) {
+      for (var tag in tags) {
+        allAvailableTagsCount.value.update(tag, (value) => value + 1, ifAbsent: () => 1);
+      }
+    }
   }
 
   // -- moods/tags from track embedded tag
-  allTracksInLibrary.loop((tr) {
-    tr.moodList.loop((mood) {
+  for (var tr in allTracksInLibrary) {
+    for (var mood in tr.moodList) {
       allAvailableMoodsCount.value.update(mood, (value) => value + 1, ifAbsent: () => 1);
-    });
-    tr.tagsList.loop((tag) {
+    }
+    for (var tag in tr.tagsList) {
       allAvailableTagsCount.value.update(tag, (value) => value + 1, ifAbsent: () => 1);
-    });
-  });
+    }
+  }
 
   allAvailableMoodsCount.value.sortByReverse((e) => e.value);
   allAvailableTagsCount.value.sortByReverse((e) => e.value);
@@ -2146,7 +2152,7 @@ class TrackRatingRowWidget extends StatelessWidget {
                     ),
                   );
                 },
-              ).toList(),
+              ).toFixedList(),
             ),
           ),
         ),
@@ -2190,7 +2196,7 @@ class _SetMoodsTagsRows extends StatelessWidget {
                     ),
                   );
                 },
-              ).toList(),
+              ).toFixedList(),
             ),
           ),
         ),
@@ -2201,11 +2207,10 @@ class _SetMoodsTagsRows extends StatelessWidget {
           child: ObxO(
             rx: allAvailableMapRx,
             builder: (context, allAvailableMap) {
-              final allAvailableMoodsList = allAvailableMap.keys.toList();
               return ObxO(
                 rx: selectedRx,
                 builder: (context, selected) => Row(
-                  children: allAvailableMoodsList.map(
+                  children: allAvailableMap.keys.map(
                     (e) {
                       final isSelected = selected.contains(e);
                       if (isSelected) return SizedBox();
@@ -2225,7 +2230,7 @@ class _SetMoodsTagsRows extends StatelessWidget {
                         ),
                       );
                     },
-                  ).toList(),
+                  ).toFixedList(),
                 ),
               );
             },

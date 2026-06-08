@@ -186,7 +186,7 @@ class NamidaWaveBars extends StatelessWidget {
               child: decorationBox,
             ),
           )
-          .toList(),
+          .toFixedList(),
     );
   }
 }

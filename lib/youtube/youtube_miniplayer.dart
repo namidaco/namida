@@ -1783,7 +1783,7 @@ class _StreamSegmentsRowState extends State<_StreamSegmentsRow> {
               ),
             );
           },
-        ).toList(),
+        ).toFixedList(),
       ),
     );
   }

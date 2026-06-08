@@ -773,11 +773,11 @@ class _SettingsController with SettingsFileWriter {
     'animatedTheme': animatedTheme.value,
     'staticColor_v2': staticColor.value,
     'staticColorDark_v2': staticColorDark.value,
-    'libraryTabs': libraryTabs.mapped((element) => element.name),
-    'homePageItems': homePageItems.mapped((element) => element.name),
+    'libraryTabs': libraryTabs.value.map((element) => element.name).toFixedList(),
+    'homePageItems': homePageItems.value.map((element) => element.name).toFixedList(),
     'activeArtistType': activeArtistType.value.name,
-    'activeSearchMediaTypes': activeSearchMediaTypes.mapped((element) => element.name),
-    'albumIdentifiers': albumIdentifiers.mapped((element) => element.name),
+    'activeSearchMediaTypes': activeSearchMediaTypes.value.map((element) => element.name).toFixedList(),
+    'albumIdentifiers': albumIdentifiers.value.map((element) => element.name).toFixedList(),
     'borderRadiusMultiplier': borderRadiusMultiplier.value,
     'fontScaleFactor': fontScaleFactor.value,
     'artworkCacheHeightMultiplier': artworkCacheHeightMultiplier.value,
@@ -825,12 +825,12 @@ class _SettingsController with SettingsFileWriter {
     'ytPlaylistSortReversed': ytPlaylistSortReversed.value,
     'indexMinDurationInSec': indexMinDurationInSec.value,
     'indexMinFileSizeInB': indexMinFileSizeInB.value,
-    'trackSearchFilter': trackSearchFilter.value.mapped((e) => e.name),
-    'ignoreCommonPrefixForTypes': ignoreCommonPrefixForTypes.value.mapped((e) => e.name),
+    'trackSearchFilter': trackSearchFilter.value.map((e) => e.name).toFixedList(),
+    'ignoreCommonPrefixForTypes': ignoreCommonPrefixForTypes.value.map((e) => e.name).toFixedList(),
     'commonPrefixes': commonPrefixes.value,
     'playlistSearchFilter': playlistSearchFilter.value,
-    'directoriesToScan': directoriesToScan.value.map((e) => e.toMap()).toList(),
-    'directoriesToExclude': directoriesToExclude.value.map((e) => e.toMap()).toList(),
+    'directoriesToScan': directoriesToScan.value.map((e) => e.toMap()).toFixedList(),
+    'directoriesToExclude': directoriesToExclude.value.map((e) => e.toMap()).toFixedList(),
     'preventDuplicatedTracks': preventDuplicatedTracks.value,
     'respectNoMedia': respectNoMedia.value,
     'defaultBackupLocation_v2': defaultBackupLocation.value,
@@ -843,7 +843,7 @@ class _SettingsController with SettingsFileWriter {
     'displayArtistBeforeTitle': displayArtistBeforeTitle.value,
     'heatmapListensView': heatmapListensView.value,
     'reverseListensView': reverseListensView.value,
-    'backupItemslist_v2': backupItemslist.value?.map((e) => e.name).toList(),
+    'backupItemslist_v2': backupItemslist.value?.map((e) => e.name).toFixedList(),
     'enableVideoPlayback': enableVideoPlayback.value,
     'enableLyrics': enableLyrics.value,
     'lyricsSource': lyricsSource.value.name,
@@ -889,7 +889,7 @@ class _SettingsController with SettingsFileWriter {
     'bypassRefreshPrompt': bypassRefreshPrompt.value,
     'desktopTitlebar': desktopTitlebar.value,
     'desktopTitlebarType': desktopTitlebarType.value.name,
-    'tagFieldsToEdit': tagFieldsToEdit.mapped((element) => element.name),
+    'tagFieldsToEdit': tagFieldsToEdit.value.map((element) => element.name).toFixedList(),
     'customEQPackage': ?customEQPackage.value,
     'stretchLyricsDuration': stretchLyricsDuration.value,
     'playlistAddTracksAtBeginning': playlistAddTracksAtBeginning.value,
@@ -930,10 +930,10 @@ class _SettingsController with SettingsFileWriter {
     'pickColorsFromDeviceWallpaper': pickColorsFromDeviceWallpaper.value,
     'trackItem': trackItem.value.map((key, value) => MapEntry(key.name, value.name)),
     'queueInsertion': queueInsertion.value.map((key, value) => MapEntry(key.name, value.toJson())),
-    'mediaItemsTrackSorting': mediaItemsTrackSorting.value.map((key, value) => MapEntry(key.name, value.map((e) => e.name).toList())),
+    'mediaItemsTrackSorting': mediaItemsTrackSorting.value.map((key, value) => MapEntry(key.name, value.map((e) => e.name).toFixedList())),
     'mediaItemsTrackSortingReverse': mediaItemsTrackSortingReverse.value.map((key, value) => MapEntry(key.name, value)),
-    'imageSourceAlbum': imageSourceAlbum.value.map((e) => e.name).toList(),
-    'imageSourceArtist': imageSourceArtist.value.map((e) => e.name).toList(),
+    'imageSourceAlbum': imageSourceAlbum.value.map((e) => e.name).toFixedList(),
+    'imageSourceArtist': imageSourceArtist.value.map((e) => e.name).toFixedList(),
 
     'fontScaleLRC': fontScaleLRC,
     'fontScaleLRCFull': fontScaleLRCFull,
@@ -1115,33 +1115,33 @@ class _SettingsController with SettingsFileWriter {
     if (staticColor != null) this.staticColor.value = staticColor;
     if (staticColorDark != null) this.staticColorDark.value = staticColorDark;
     if (libraryTabs != null) {
-      libraryTabs.loop((t) {
+      for (var t in libraryTabs) {
         if (!this.libraryTabs.contains(t)) {
           this.libraryTabs.add(t);
         }
-      });
+      }
     }
     if (homePageItems != null) {
-      homePageItems.loop((t) {
+      for (var t in homePageItems) {
         if (!this.homePageItems.contains(t)) {
           this.homePageItems.add(t);
         }
-      });
+      }
     }
     if (activeArtistType != null) this.activeArtistType.value = activeArtistType;
     if (activeSearchMediaTypes != null) {
-      activeSearchMediaTypes.loop((t) {
+      for (var t in activeSearchMediaTypes) {
         if (!this.activeSearchMediaTypes.contains(t)) {
           this.activeSearchMediaTypes.add(t);
         }
-      });
+      }
     }
     if (albumIdentifiers != null) {
-      albumIdentifiers.loop((t) {
+      for (var t in albumIdentifiers) {
         if (!this.albumIdentifiers.contains(t)) {
           this.albumIdentifiers.add(t);
         }
-      });
+      }
     }
 
     if (borderRadiusMultiplier != null) this.borderRadiusMultiplier.value = borderRadiusMultiplier;
@@ -1209,46 +1209,46 @@ class _SettingsController with SettingsFileWriter {
     if (indexMinDurationInSec != null) this.indexMinDurationInSec.value = indexMinDurationInSec;
     if (indexMinFileSizeInB != null) this.indexMinFileSizeInB.value = indexMinFileSizeInB;
     if (trackSearchFilter != null) {
-      trackSearchFilter.loop((f) {
+      for (var f in trackSearchFilter) {
         if (!this.trackSearchFilter.contains(f)) {
           this.trackSearchFilter.add(f);
         }
-      });
+      }
     }
     if (ignoreCommonPrefixForTypes != null) {
-      ignoreCommonPrefixForTypes.loop((f) {
+      for (var f in ignoreCommonPrefixForTypes) {
         if (!this.ignoreCommonPrefixForTypes.contains(f)) {
           this.ignoreCommonPrefixForTypes.add(f);
         }
-      });
+      }
     }
     if (commonPrefixes != null) {
-      commonPrefixes.loop((f) {
+      for (var f in commonPrefixes) {
         if (!this.commonPrefixes.contains(f)) {
           this.commonPrefixes.add(f);
         }
-      });
+      }
     }
     if (playlistSearchFilter != null) {
-      playlistSearchFilter.loop((f) {
+      for (var f in playlistSearchFilter) {
         if (!this.playlistSearchFilter.contains(f)) {
           this.playlistSearchFilter.add(f);
         }
-      });
+      }
     }
     if (directoriesToScan != null) {
-      directoriesToScan.loop((d) {
+      for (var d in directoriesToScan) {
         if (!this.directoriesToScan.contains(d)) {
           this.directoriesToScan.add(d);
         }
-      });
+      }
     }
     if (directoriesToExclude != null) {
-      directoriesToExclude.loop((d) {
+      for (var d in directoriesToExclude) {
         if (!this.directoriesToExclude.contains(d)) {
           this.directoriesToExclude.add(d);
         }
-      });
+      }
     }
     if (preventDuplicatedTracks != null) this.preventDuplicatedTracks.value = preventDuplicatedTracks;
     if (respectNoMedia != null) this.respectNoMedia.value = respectNoMedia;
@@ -1264,19 +1264,19 @@ class _SettingsController with SettingsFileWriter {
     if (reverseListensView != null) this.reverseListensView.value = reverseListensView;
     if (backupItemslist != null) {
       this.backupItemslist.value ??= AppPathsBackupEnumCategories.everything;
-      backupItemslist.loop((d) {
+      for (var d in backupItemslist) {
         if (!this.backupItemslist.value!.contains(d)) {
           this.backupItemslist.value!.add(d);
         }
-      });
+      }
       this.backupItemslist.refresh();
     }
     if (youtubeVideoQualities != null) {
-      youtubeVideoQualities.loop((q) {
+      for (var q in youtubeVideoQualities) {
         if (!this.youtubeVideoQualities.contains(q)) {
           this.youtubeVideoQualities.add(q);
         }
-      });
+      }
     }
     if (enableVideoPlayback != null) this.enableVideoPlayback.value = enableVideoPlayback;
     if (enableLyrics != null) this.enableLyrics.value = enableLyrics;
@@ -1336,11 +1336,11 @@ class _SettingsController with SettingsFileWriter {
     if (desktopTitlebar != null) this.desktopTitlebar.value = desktopTitlebar;
     if (desktopTitlebarType != null) this.desktopTitlebarType.value = desktopTitlebarType;
     if (tagFieldsToEdit != null) {
-      tagFieldsToEdit.loop((d) {
+      for (var d in tagFieldsToEdit) {
         if (!this.tagFieldsToEdit.contains(d)) {
           this.tagFieldsToEdit.add(d);
         }
-      });
+      }
     }
     if (customEQPackage != null) this.customEQPackage.value = customEQPackage;
     if (stretchLyricsDuration != null) this.stretchLyricsDuration.value = stretchLyricsDuration;
@@ -1431,36 +1431,76 @@ class _SettingsController with SettingsFileWriter {
       extensionsBlacklist.refresh();
     }
     if (trackSearchFilter1 != null) trackSearchFilter.remove(trackSearchFilter1);
-    if (trackSearchFilterAll != null) trackSearchFilterAll.loop((f) => trackSearchFilter.remove(f));
+    if (trackSearchFilterAll != null) {
+      for (var f in trackSearchFilterAll) {
+        trackSearchFilter.remove(f);
+      }
+    }
     if (ignoreCommonPrefixForTypes1 != null) ignoreCommonPrefixForTypes.remove(ignoreCommonPrefixForTypes1);
-    if (ignoreCommonPrefixForTypesAll != null) ignoreCommonPrefixForTypesAll.loop((f) => ignoreCommonPrefixForTypes.remove(f));
+    if (ignoreCommonPrefixForTypesAll != null) {
+      for (var f in ignoreCommonPrefixForTypesAll) {
+        ignoreCommonPrefixForTypes.remove(f);
+      }
+    }
     if (playlistSearchFilter1 != null) playlistSearchFilter.remove(playlistSearchFilter1);
     if (playlistSearchFilterAll != null) {
-      playlistSearchFilterAll.loop((f) => playlistSearchFilter.remove(f));
+      for (var f in playlistSearchFilterAll) {
+        playlistSearchFilter.remove(f);
+      }
     }
     if (directoriesToScan1 != null) directoriesToScan.remove(directoriesToScan1);
-    if (directoriesToScanAll != null) directoriesToScanAll.loop((f) => directoriesToScan.remove(f));
+    if (directoriesToScanAll != null) {
+      for (var f in directoriesToScanAll) {
+        directoriesToScan.remove(f);
+      }
+    }
     if (directoriesToExclude1 != null) directoriesToExclude.remove(directoriesToExclude1);
-    if (directoriesToExcludeAll != null) directoriesToExcludeAll.loop((f) => directoriesToExclude.remove(f));
+    if (directoriesToExcludeAll != null) {
+      for (var f in directoriesToExcludeAll) {
+        directoriesToExclude.remove(f);
+      }
+    }
     if (libraryTab1 != null) libraryTabs.remove(libraryTab1);
-    if (libraryTabsAll != null) libraryTabsAll.loop((t) => libraryTabs.remove(t));
+    if (libraryTabsAll != null) {
+      for (var t in libraryTabsAll) {
+        libraryTabs.remove(t);
+      }
+    }
     if (homePageItem1 != null) homePageItems.remove(homePageItem1);
-    if (homePageItemsAll != null) homePageItemsAll.loop((t) => homePageItems.remove(t));
+    if (homePageItemsAll != null) {
+      for (var t in homePageItemsAll) {
+        homePageItems.remove(t);
+      }
+    }
     if (activeSearchMediaTypes1 != null) activeSearchMediaTypes.remove(activeSearchMediaTypes1);
     if (albumIdentifiers1 != null) albumIdentifiers.remove(albumIdentifiers1);
-    if (albumIdentifiersAll != null) albumIdentifiersAll.loop((t) => albumIdentifiers.remove(t));
+    if (albumIdentifiersAll != null) {
+      for (var t in albumIdentifiersAll) {
+        albumIdentifiers.remove(t);
+      }
+    }
     if (backupItemslist1 != null) {
       backupItemslist.value?.remove(backupItemslist1);
       backupItemslist.refresh();
     }
     if (backupItemslistAll != null) {
-      backupItemslistAll.loop((t) => backupItemslist.value?.remove(t));
+      for (var t in backupItemslistAll) {
+        backupItemslist.value?.remove(t);
+      }
       backupItemslist.refresh();
     }
     if (youtubeVideoQualities1 != null) youtubeVideoQualities.remove(youtubeVideoQualities1);
-    if (youtubeVideoQualitiesAll != null) youtubeVideoQualitiesAll.loop((t) => youtubeVideoQualities.remove(t));
+    if (youtubeVideoQualitiesAll != null) {
+      for (var t in youtubeVideoQualitiesAll) {
+        youtubeVideoQualities.remove(t);
+      }
+    }
     if (tagFieldsToEdit1 != null) tagFieldsToEdit.remove(tagFieldsToEdit1);
-    if (tagFieldsToEditAll != null) tagFieldsToEditAll.loop((t) => tagFieldsToEdit.remove(t));
+    if (tagFieldsToEditAll != null) {
+      for (var t in tagFieldsToEditAll) {
+        tagFieldsToEdit.remove(t);
+      }
+    }
 
     if (imageSourceAlbum1 != null) imageSourceAlbum.remove(imageSourceAlbum1);
     if (imageSourceArtist1 != null) imageSourceArtist.remove(imageSourceArtist1);

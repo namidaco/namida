@@ -145,8 +145,12 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     streamSub = recievePort.listen((p) async {
       if (PortsProvider.isDisposeMessage(p)) {
         recievePort.close();
-        lookupListStreamInfoMapCacheDetails.loop((item) => item.close());
-        lookupListVideoStreamsMapCacheDetails.loop((item) => item.close());
+        for (var item in lookupListStreamInfoMapCacheDetails) {
+          item.close();
+        }
+        for (var item in lookupListVideoStreamsMapCacheDetails) {
+          item.close();
+        }
         releaseDateMap.clear();
         allIds.clear();
         allIdsAdded.clear();
@@ -168,12 +172,12 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
           final results = <String>[];
           final daysRange = p['daysRange'] as int;
           final videoToRemove = p['videoToRemove'] as String?;
-          allIds.loop((id) {
+          for (var id in allIds) {
             final dt = releaseDateMap[id];
             if (dt != null && (dt.difference(dateReleased).inDays).abs() <= daysRange) {
               results.add(id);
             }
-          });
+          }
           if (videoToRemove != null) results.remove(videoToRemove);
           sendPort.send({'videos': results, 'type': type});
           break;
@@ -205,28 +209,26 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     lookupListStreamInfoMapCacheDetails.add(CacheDetailsBase(YoutiPieSection.streamInfoItem, null, () => null));
     lookupListVideoStreamsMapCacheDetails.add(CacheDetailsBase(YoutiPieSection.videoStreams, null, () => null));
 
-    lookupListStreamInfoMapCacheDetails.loop(
-      (db) {
-        db.loadEverythingSync(
-          (map) {
-            try {
-              final id = map['id'];
-              if (id != null && releaseDateMap[id] == null) {
-                DateTime? date;
-                try {
-                  date = PublishTime.fromMap(map['publishedAt']).date?.toLocal();
-                } catch (_) {}
-                allIds.add(id);
-                allIdsAdded[id] = true;
-                releaseDateMap[id] = date;
-              }
-            } catch (_) {}
-          },
-        );
-        db.close();
-      },
-    );
-    lookupListVideoStreamsMapCacheDetails.loop((db) {
+    for (var db in lookupListStreamInfoMapCacheDetails) {
+      db.loadEverythingSync(
+        (map) {
+          try {
+            final id = map['id'];
+            if (id != null && releaseDateMap[id] == null) {
+              DateTime? date;
+              try {
+                date = PublishTime.fromMap(map['publishedAt']).date?.toLocal();
+              } catch (_) {}
+              allIds.add(id);
+              allIdsAdded[id] = true;
+              releaseDateMap[id] = date;
+            }
+          } catch (_) {}
+        },
+      );
+      db.close();
+    }
+    for (var db in lookupListVideoStreamsMapCacheDetails) {
       db.loadEverythingSync(
         (map) {
           try {
@@ -250,27 +252,26 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
         },
       );
       db.close();
-    });
+    }
 
-    Directory(statsDir).listSyncSafe().loop((f) {
+    final files = Directory(statsDir).listSyncSafe();
+    for (var f in files) {
       if (f is File) {
         try {
           final response = f.readAsJsonSync(ensureExists: false);
           if (response is List) {
-            response.loop(
-              (r) {
-                final id = r['id'] as String? ?? '';
-                if (releaseDateMap[id] == null) {
-                  allIds.add(id);
-                  allIdsAdded[id] = true;
-                  // releaseDateMap[id] = null;
-                }
-              },
-            );
+            for (var r in response) {
+              final id = r['id'] as String? ?? '';
+              if (releaseDateMap[id] == null) {
+                allIds.add(id);
+                allIdsAdded[id] = true;
+                // releaseDateMap[id] = null;
+              }
+            }
           }
         } catch (_) {}
       }
-    });
+    }
 
     // -- filling from playlists
     for (final id in mostplayedPlaylist) {
@@ -278,20 +279,20 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
         allIds.add(id);
       }
     }
-    favouritesPlaylist.loop((v) {
+    for (var v in favouritesPlaylist) {
       final id = v.id;
       if (allIdsAdded[id] == null) {
         allIds.add(id);
       }
-    });
+    }
 
     for (final pl in playlists.values) {
-      pl.loop((v) {
+      for (var v in pl) {
         final id = v.id;
         if (allIdsAdded[id] == null) {
           allIds.add(id);
         }
-      });
+      }
     }
     // -- end filling from playlists
     sendPort.send(null); // finished filling

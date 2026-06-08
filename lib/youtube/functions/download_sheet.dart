@@ -389,12 +389,12 @@ Future<void> showDownloadVideoBottomSheet({
 
   Widget getDivider() => const NamidaContainerDivider(margin: EdgeInsets.symmetric(vertical: 8.0));
 
-  Widget getPopupItem<T>({required List<T> items, required Widget Function(T item) itemBuilder}) {
+  Widget getPopupItem<T>({required Iterable<T> items, required Widget Function(T item) itemBuilder}) {
     return Wrap(
       alignment: WrapAlignment.start,
       runAlignment: WrapAlignment.start,
       crossAxisAlignment: WrapCrossAlignment.start,
-      children: items.map((element) => itemBuilder(element)).toList(),
+      children: items.map((element) => itemBuilder(element)).toFixedList(),
     );
   }
 
@@ -621,7 +621,7 @@ Future<void> showDownloadVideoBottomSheet({
                                             : ObxO(
                                                 rx: showAudioWebm,
                                                 builder: (context, showAudioWebm) => getPopupItem(
-                                                  items: showAudioWebm ? streamResult!.audioStreams : streamResult!.audioStreams.where((element) => !element.isWebm).toList(),
+                                                  items: showAudioWebm ? streamResult!.audioStreams : streamResult!.audioStreams.where((element) => !element.isWebm),
                                                   itemBuilder: (element) {
                                                     return Obx(
                                                       (context) {
@@ -684,7 +684,7 @@ Future<void> showDownloadVideoBottomSheet({
                                             : ObxO(
                                                 rx: showVideoWebm,
                                                 builder: (context, showVideoWebm) => getPopupItem(
-                                                  items: showVideoWebm ? streamResult!.videoStreams : streamResult!.videoStreams.where((element) => !element.isWebm).toList(),
+                                                  items: showVideoWebm ? streamResult!.videoStreams : streamResult!.videoStreams.where((element) => !element.isWebm),
                                                   itemBuilder: (element) {
                                                     return Obx(
                                                       (context) {

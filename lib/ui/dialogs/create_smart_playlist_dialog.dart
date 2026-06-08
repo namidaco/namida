@@ -732,7 +732,7 @@ class _JoinerRow extends StatelessWidget {
             separator: const SizedBox(width: 8.0),
             skipFirst: 1,
           )
-          .toList(),
+          .toFixedList(),
     );
   }
 }
@@ -973,36 +973,33 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
     );
   }
 
-  List<Widget> _getFilterTypeChildren() {
+  Iterable<Widget> _getFilterTypeChildren() {
     final selectedRule = _selectedRule;
     if (selectedRule == null) return [];
-    return selectedRule.filter.type
-        .getRuleFilters()
-        .map(
-          (e) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 1.0),
-            child: NamidaInkWell(
-              borderRadius: 8.0,
-              padding: const .symmetric(vertical: 8.0, horizontal: 4.0),
-              onTap: () {
-                final isRelative = e.isRelativeDate;
-                setState(() {
-                  _selectedRule = selectedRule.copyWith(
-                    filter: e,
-                    datas: isRelative ? (null, null) : null,
-                    relativeDuration: isRelative ? _selectedRule?.relativeDuration ?? SmartPlaylistRelativeDuration.initial() : null,
-                  );
-                });
-                _tempFilterForTypeMap[_selectedRule?.type] = e;
-                NamidaNavigator.inst.popMenu();
-              },
-              child: _FilterInfoRow(
+    return selectedRule.filter.type.getRuleFilters().map(
+      (e) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 1.0),
+        child: NamidaInkWell(
+          borderRadius: 8.0,
+          padding: const .symmetric(vertical: 8.0, horizontal: 4.0),
+          onTap: () {
+            final isRelative = e.isRelativeDate;
+            setState(() {
+              _selectedRule = selectedRule.copyWith(
                 filter: e,
-              ),
-            ),
+                datas: isRelative ? (null, null) : null,
+                relativeDuration: isRelative ? _selectedRule?.relativeDuration ?? SmartPlaylistRelativeDuration.initial() : null,
+              );
+            });
+            _tempFilterForTypeMap[_selectedRule?.type] = e;
+            NamidaNavigator.inst.popMenu();
+          },
+          child: _FilterInfoRow(
+            filter: e,
           ),
-        )
-        .toList();
+        ),
+      ),
+    );
   }
 
   @override
@@ -1477,7 +1474,7 @@ class _RelativeDurationPickerState extends State<_RelativeDurationPicker> {
                 ),
               ),
             );
-          }).toList(),
+          }).toFixedList(),
         ),
       ],
     );

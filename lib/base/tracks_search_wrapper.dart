@@ -53,7 +53,7 @@ class TracksSearchWrapper {
               'lc': HistoryController.inst.topTracksMapListens.value[e.asTrack()]?.length,
             },
           )
-          .toList(),
+          .toFixedList(),
       'splitConfig': SplitArtistGenreConfigsWrapper.settings(),
       'filters': filters,
       'cleanup': settings.enableSearchCleanup.value,
@@ -345,14 +345,15 @@ class TracksSearchWrapper {
 
     final scored = <int, List<(_CustomTrackExtended, int)>>{};
 
-    for (var i = 0; i < _tracksExtended.length; i++) {
-      final trExt = _tracksExtended[i];
+    int index = 0;
+    for (final trExt in _tracksExtended) {
       final score = matchScore(trExt);
       if (score <= 0) continue;
-      (scored[score] ??= []).add((trExt, i));
+      (scored[score] ??= []).add((trExt, index));
+      index++;
     }
 
-    final sortedKeys = scored.keys.toList()..sort((a, b) => b.compareTo(a));
+    final sortedKeys = scored.keys.toFixedList()..sort((a, b) => b.compareTo(a));
     final sortForScoreAbove = sortedKeys.length < 5 ? 0 : 100;
     for (final key in sortedKeys) {
       final innerList = scored[key]!;

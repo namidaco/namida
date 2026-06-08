@@ -774,7 +774,12 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
     // -- workaround to avoid jumping instantly while starting to drag near the edge
     Timer(
       const Duration(milliseconds: 500),
-      () => _autoScroller?.startAutoScrollIfNecessary(_dragTargetRect),
+      () {
+        final dragInfo = _dragInfo;
+        if (dragInfo != null) {
+          _autoScroller?.startAutoScrollIfNecessary(_getDragTargetRect(dragInfo));
+        }
+      },
     );
   }
 
@@ -845,12 +850,12 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
   }
 
   void _handleScrollableAutoScrolled() {
-    if (_dragInfo == null) {
-      return;
-    }
+    final dragInfo = _dragInfo;
+    if (dragInfo == null) return;
+
     _dragUpdateItems();
     // Continue scrolling if the drag is still in progress.
-    _autoScroller?.startAutoScrollIfNecessary(_dragTargetRect);
+    _autoScroller?.startAutoScrollIfNecessary(_getDragTargetRect(dragInfo));
   }
 
   void _dragUpdateItems() {
@@ -926,9 +931,9 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
     }
   }
 
-  Rect get _dragTargetRect {
-    final Offset origin = _dragInfo!.dragPosition - _dragInfo!.dragOffset;
-    return Rect.fromLTWH(origin.dx, origin.dy, _dragInfo!.itemSize.width, _dragInfo!.itemSize.height);
+  Rect _getDragTargetRect(_DragInfo dragInfo) {
+    final Offset origin = dragInfo.dragPosition - dragInfo.dragOffset;
+    return Rect.fromLTWH(origin.dx, origin.dy, dragInfo.itemSize.width, dragInfo.itemSize.height);
   }
 
   Offset _itemOffsetAt(int index) {

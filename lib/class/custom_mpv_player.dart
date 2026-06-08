@@ -360,14 +360,14 @@ class CustomMPVPlayer implements AVPlayer {
   List<AudioTrack> _toAudioTracks(List<mk.AudioTrack> tracks) {
     final audioTracks = <AudioTrack>[];
     final playerAudioTrack = _player.state.track.audio;
-    for (var i = 0; i < tracks.length; i++) {
-      final track = tracks[i];
+    int index = 0;
+    for (final track in tracks) {
       if (_isAudioTrackDummy(track)) continue;
       final selected = _isAudioTrackDummy(playerAudioTrack) ? track.isDefault : playerAudioTrack.id == track.id;
       audioTracks.add(
         AudioTrack(
           groupIndex: 0,
-          trackIndex: i,
+          trackIndex: index,
           isSelected: selected ?? false,
           id: track.id,
           label: track.title,
@@ -378,6 +378,7 @@ class CustomMPVPlayer implements AVPlayer {
           sampleRate: track.samplerate,
         ),
       );
+      index++;
     }
     return audioTracks;
   }

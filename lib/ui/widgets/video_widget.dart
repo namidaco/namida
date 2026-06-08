@@ -1329,7 +1329,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               isCached: true,
                                             );
                                           },
-                                        ).toList(),
+                                        ),
                                         child: Padding(
                                           padding: const EdgeInsets.all(4.0),
                                           child: NamidaBgBlurClipped(
@@ -1365,42 +1365,40 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           _resetTimer();
                                           setControlsVisibily(true);
                                         },
-                                        children: () => streamsMap.values
-                                            .map(
-                                              (element) => Obx(
-                                                (context) {
-                                                  bool isSelected = false;
-                                                  final audioTrack = element.audioTrack;
-                                                  final langCode = audioTrack?.langCode;
-                                                  if (langCode != null) {
-                                                    if (langCode == Player.inst.currentCachedAudio.valueR?.langaugeCode) {
-                                                      isSelected = true;
-                                                    } else if (langCode == Player.inst.currentAudioStream.valueR?.audioTrack?.langCode) {
-                                                      isSelected = true;
-                                                    }
+                                        children: () => streamsMap.values.map(
+                                          (element) => Obx(
+                                            (context) {
+                                              bool isSelected = false;
+                                              final audioTrack = element.audioTrack;
+                                              final langCode = audioTrack?.langCode;
+                                              if (langCode != null) {
+                                                if (langCode == Player.inst.currentCachedAudio.valueR?.langaugeCode) {
+                                                  isSelected = true;
+                                                } else if (langCode == Player.inst.currentAudioStream.valueR?.audioTrack?.langCode) {
+                                                  isSelected = true;
+                                                }
+                                              }
+                                              final id = Player.inst.currentVideoR?.id;
+                                              return _getQualityChip(
+                                                title: audioTrack?.displayName ?? '?',
+                                                subtitle: " • ${langCode ?? 0}",
+                                                onPlay: (isSelected) {
+                                                  if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized == true) {
+                                                    Player.inst.onItemPlayYoutubeIDSetAudio(
+                                                      stream: element,
+                                                      mainStreams: streams,
+                                                      cachedFile: null,
+                                                      useCache: true,
+                                                      videoId: Player.inst.currentVideo?.id ?? '',
+                                                    );
                                                   }
-                                                  final id = Player.inst.currentVideoR?.id;
-                                                  return _getQualityChip(
-                                                    title: audioTrack?.displayName ?? '?',
-                                                    subtitle: " • ${langCode ?? 0}",
-                                                    onPlay: (isSelected) {
-                                                      if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized == true) {
-                                                        Player.inst.onItemPlayYoutubeIDSetAudio(
-                                                          stream: element,
-                                                          mainStreams: streams,
-                                                          cachedFile: null,
-                                                          useCache: true,
-                                                          videoId: Player.inst.currentVideo?.id ?? '',
-                                                        );
-                                                      }
-                                                    },
-                                                    selected: isSelected,
-                                                    isCached: element.getCachedFileSync(id) != null,
-                                                  );
                                                 },
-                                              ),
-                                            )
-                                            .toList(),
+                                                selected: isSelected,
+                                                isCached: element.getCachedFileSync(id) != null,
+                                              );
+                                            },
+                                          ),
+                                        ),
                                         child: Padding(
                                           padding: const EdgeInsets.all(4.0),
                                           child: NamidaBgBlurClipped(
@@ -2388,7 +2386,7 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
                       ),
                     ),
                   )
-                  .toList(),
+                  .toFixedList(),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 14.0),
@@ -2769,7 +2767,7 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
                           ),
                         );
                       },
-                    ).toList(),
+                    ).toFixedList(),
                   ),
                 );
               },

@@ -135,10 +135,10 @@ class YoutubeImportController {
       final plID = details != null ? PlaylistID(id: details.playlistID) : null;
       final newTracks = <String>[];
       final newTracksDates = <String, int?>{};
-      playlist.$2.loop((e) {
+      for (var e in playlist.$2) {
         newTracks.add(e.id);
         newTracksDates[e.id] = e.dateAdded?.millisecondsSinceEpoch;
-      });
+      }
       YoutubePlaylistController.inst
           .addNewPlaylistRaw(
             playlist.$1.name,
@@ -172,7 +172,7 @@ class YoutubeImportController {
   Future<int> importSubscriptions(String subscriptionsFilePath) async {
     isImportingSubscriptions.value = true;
     final res = await _parseSubscriptions.thready(subscriptionsFilePath);
-    res.loop((e) {
+    for (var e in res) {
       final valInMap = YoutubeSubscriptionsController.inst.availableChannels.value[e.id];
       YoutubeSubscriptionsController.inst.setChannel(
         e.id,
@@ -183,7 +183,7 @@ class YoutubeImportController {
           lastFetched: valInMap?.lastFetched,
         ),
       );
-    });
+    }
     YoutubeSubscriptionsController.inst.sortByLastFetched();
     await YoutubeSubscriptionsController.inst.saveFile();
     isImportingSubscriptions.value = false;
@@ -207,12 +207,12 @@ class YoutubeImportController {
 
     List<_VideoEntry> getVideos(List<String> lines) {
       final videos = <_VideoEntry>[];
-      lines.loop((e) {
+      for (var e in lines) {
         try {
           final parts = e.split(','); // id, dateAdded
           if (parts.length >= 2) videos.add(_VideoEntry(id: parts[0], dateAdded: parseDate(parts[1]))); // should be only 2, but maybe more stuff will be appended in future
         } catch (_) {}
-      });
+      }
       return videos;
     }
 
@@ -258,15 +258,15 @@ class YoutubeImportController {
         final plLines = plMetaFile.readAsLinesSync();
         final header = plLines.removeAt(0);
         final headerParts = header.split(',');
-        plLines.loop((line) {
+        for (var line in plLines) {
           final splitted = line.split(',');
           final details = getPlaylistDetailsNew(headerParts, splitted);
           playlistsMetadata[details.name] = details;
-        });
+        }
       } catch (_) {}
     }
 
-    files.loop((e) {
+    for (var e in files) {
       if (e is File) {
         try {
           String playlistName = e.path.getFilenameWOExt;
@@ -292,7 +292,7 @@ class YoutubeImportController {
           }
         } catch (_) {}
       }
-    });
+    }
     return playlists;
   }
 
@@ -303,12 +303,12 @@ class YoutubeImportController {
       final header = lines.removeAt(0);
       final list = <({String id, String title})>[];
       if (header.split(',').length < 3) return list;
-      lines.loop((e) {
+      for (var e in lines) {
         try {
           final parts = e.split(','); // id, url, name
           if (parts.length >= 3) list.add((id: parts[0], title: parts[2])); // should be only 3, but maybe more stuff will be appended in future
         } catch (_) {}
-      });
+      }
       return list;
     } catch (e) {
       return [];
@@ -325,36 +325,33 @@ class YoutubeImportController {
 
     void onDirMatch(String plsdirPath) {
       final details = _parsePlaylistsFiles(plsdirPath);
-      details.loop(
-        (pl) {
-          final playlistName = pl.$1.name;
-          final existingDetails = playlistsDetailsMap[playlistName];
-          final newDetails = pl.$1.details;
-          final finalDetails = existingDetails != null && newDetails != null ? _YTPlaylistDetails.merge(newDetails, existingDetails) : newDetails ?? existingDetails;
-          playlistsDetailsMap[playlistName] = finalDetails;
-          playlistsMap[playlistName] ??= [];
-          playlistsMap[playlistName]!.add(pl.$2);
-        },
-      );
+      for (var pl in details) {
+        final playlistName = pl.$1.name;
+        final existingDetails = playlistsDetailsMap[playlistName];
+        final newDetails = pl.$1.details;
+        final finalDetails = existingDetails != null && newDetails != null ? _YTPlaylistDetails.merge(newDetails, existingDetails) : newDetails ?? existingDetails;
+        playlistsDetailsMap[playlistName] = finalDetails;
+        playlistsMap[playlistName] ??= [];
+        playlistsMap[playlistName]!.add(pl.$2);
+      }
     }
 
     if (isPlaylistDirectory(mainDir)) {
       onDirMatch(mainDir);
     } else {
-      Directory(mainDir).listSync(recursive: true).loop(
-        (plsdir) {
-          final plsDirPath = plsdir.path;
-          if (plsdir is Directory && isPlaylistDirectory(plsDirPath)) {
-            onDirMatch(plsDirPath);
-          }
-        },
-      );
+      final files = Directory(mainDir).listSync(recursive: true);
+      for (var plsdir in files) {
+        final plsDirPath = plsdir.path;
+        if (plsdir is Directory && isPlaylistDirectory(plsDirPath)) {
+          onDirMatch(plsDirPath);
+        }
+      }
     }
 
     final playlistsListMerged = <(_YTPlaylistEntry, List<_VideoEntry>)>[];
     for (final entries in playlistsMap.entries) {
       final mainList = <_VideoEntry>[];
-      entries.value.loop(mainList.addAll);
+      entries.value.forEach(mainList.addAll);
       mainList.removeDuplicates((element) => '${element.id}${element.dateAdded}');
       mainList.sortBy((e) => e.dateAdded ?? DateTime(0));
       playlistsListMerged.add((_YTPlaylistEntry(name: entries.key, details: playlistsDetailsMap[entries.key]), mainList));

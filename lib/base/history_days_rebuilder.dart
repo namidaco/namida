@@ -57,7 +57,7 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
   }
 
   void _updateDays() {
-    _historyDays = historyManager.historyMap.value.keys.toList();
+    _historyDays = historyManager.historyMap.value.keys.toFixedList();
     _historyYears = historyManager.getHistoryYears();
   }
 

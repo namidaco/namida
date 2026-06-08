@@ -253,31 +253,29 @@ class _YtFilenameRebuilder {
 
   String _formatDescription(List<StylesWrapper> parts) {
     var buffer = StringBuffer();
-    parts.loop(
-      (item) {
-        String? finalLink;
+    for (var item in parts) {
+      String? finalLink;
 
-        if (item.channelId != null) {
-          finalLink = YTUrlUtils.buildChannelUrl(item.channelId!);
-        } else if (item.playlistId != null) {
-          finalLink = YTUrlUtils.buildPlaylistUrl(item.playlistId!);
-        } else if (item.videoId != null) {
-          finalLink = YTUrlUtils.buildVideoUrl(item.videoId!);
-        } else if (item.link != null) {
-          finalLink = item.linkClean ?? item.link!;
-        }
+      if (item.channelId != null) {
+        finalLink = YTUrlUtils.buildChannelUrl(item.channelId!);
+      } else if (item.playlistId != null) {
+        finalLink = YTUrlUtils.buildPlaylistUrl(item.playlistId!);
+      } else if (item.videoId != null) {
+        finalLink = YTUrlUtils.buildVideoUrl(item.videoId!);
+      } else if (item.link != null) {
+        finalLink = item.linkClean ?? item.link!;
+      }
 
-        if (finalLink != null && finalLink != item.text) {
-          buffer.write('[');
-          buffer.write(item.text);
-          buffer.write('](');
-          buffer.write(finalLink);
-          buffer.write(')');
-        } else {
-          buffer.write(item.text);
-        }
-      },
-    );
+      if (finalLink != null && finalLink != item.text) {
+        buffer.write('[');
+        buffer.write(item.text);
+        buffer.write('](');
+        buffer.write(finalLink);
+        buffer.write(')');
+      } else {
+        buffer.write(item.text);
+      }
+    }
     return buffer.toString();
   }
 }

@@ -171,7 +171,7 @@ class YtUtilsPlaylist {
                       ),
                     );
                   },
-                ).toList(),
+                ).toFixedList(),
               ),
             ),
           ),
@@ -407,7 +407,9 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
 
     final playlist = this;
     final infoLookup = <String, StreamInfoItem>{};
-    playlistToFetch.items.loop((e) => infoLookup[e.id] = e);
+    for (var e in playlistToFetch.items) {
+      infoLookup[e.id] = e;
+    }
 
     YTPlaylistDownloadPage(
       ids: videoIDs.toList(),
@@ -515,11 +517,11 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
 
           final ids = <String>[];
           final info = <String, String?>{};
-          playlistToFetch.items.loop((e) {
+          for (var e in playlistToFetch.items) {
             final id = e.id;
             ids.add(id);
             info[id] = e.title;
-          });
+          }
 
           showAddToPlaylistSheet(
             ids: ids,

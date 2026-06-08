@@ -682,12 +682,14 @@ class _VideoTrimmer {
       }
     }
 
-    Directory(tempDir).listSyncSafe().loop(checkFileAndAdd);
-    Directory(normalDir).listSyncSafe().loop((e) {
+    for (final e in Directory(tempDir).listSyncSafe()) {
+      checkFileAndAdd(e);
+    }
+    for (final e in Directory(normalDir).listSyncSafe()) {
       if (e.path.endsWith('.part')) {
         checkFileAndAdd(e);
       }
-    });
+    }
     return filesMap;
   }
 }
@@ -726,7 +728,8 @@ class _AudioTrimmer {
 
     final filesMap = <File, int>{};
 
-    Directory(dirPath).listSyncSafe().loop((e) {
+    final files = Directory(dirPath).listSyncSafe();
+    for (var e in files) {
       if (e.path.endsWith('.part')) {
         if (e is File) {
           final filename = e.path.splitLast(sep);
@@ -735,7 +738,7 @@ class _AudioTrimmer {
           }
         }
       }
-    });
+    }
     return filesMap;
   }
 }
@@ -864,13 +867,13 @@ class _Trimmer {
     int totalDeletedBytes = 0;
     int totalBytes = 0;
     final sizesMap = <String, int>{};
-    files.loop((f) {
+    for (var f in files) {
       if (f is File) {
         final size = f.fileSizeSync() ?? 0;
         sizesMap[f.path] = size;
         totalBytes += size;
       }
-    });
+    }
     for (final file in files) {
       if (totalBytes <= maxBytes) break; // better than checking with each loop
       if (file is File) {
@@ -893,17 +896,19 @@ class _AudioVideoTrimmer {
     final tempDir = dirsPath['temp'] as String?;
     final normalDir = dirsPath['normal'] as String;
     if (tempDir != null) {
-      Directory(tempDir).listSyncSafe().loop((e) {
+      final files = Directory(tempDir).listSyncSafe();
+      for (var e in files) {
         if (e is File) {
           size += e.fileSizeSync() ?? 0;
         }
-      });
+      }
     }
-    Directory(normalDir).listSyncSafe().loop((e) {
+    final files = Directory(normalDir).listSyncSafe();
+    for (var e in files) {
       if (e is File && e.path.endsWith('.part')) {
         size += e.fileSizeSync() ?? 0;
       }
-    });
+    }
     return size;
   }
 
@@ -911,15 +916,17 @@ class _AudioVideoTrimmer {
     final tempDir = dirsPath['temp'] as String?;
     final normalDir = dirsPath['normal'] as String;
     if (tempDir != null) {
-      Directory(tempDir).listSyncSafe().loop((e) {
+      final files = Directory(tempDir).listSyncSafe();
+      for (var e in files) {
         if (e is File) {
           try {
             e.deleteSync();
           } catch (_) {}
         }
-      });
+      }
     }
-    Directory(normalDir).listSyncSafe().loop((e) {
+    final files = Directory(normalDir).listSyncSafe();
+    for (var e in files) {
       if (e.path.endsWith('.part')) {
         if (e is File) {
           try {
@@ -927,7 +934,7 @@ class _AudioVideoTrimmer {
           } catch (_) {}
         }
       }
-    });
+    }
   }
 
   static (List<File>, int) _countAudioFilesThatAlreadyExistsIsolate(Map params) {
@@ -953,7 +960,8 @@ class _AudioVideoTrimmer {
     final forVideos = params['forVideos'] as bool;
     // ignore: prefer_function_declarations_over_variables
     final forVideosChecker = forVideos ? (Track tr) => tr is Video : (Track tr) => true;
-    Directory(normalDir).listSyncSafe().loop((file) {
+    final files = Directory(normalDir).listSyncSafe();
+    for (var file in files) {
       if (file is File) {
         try {
           final filename = file.path.getFilename;
@@ -966,7 +974,7 @@ class _AudioVideoTrimmer {
           }
         } catch (_) {}
       }
-    });
+    }
   }
 }
 

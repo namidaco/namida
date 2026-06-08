@@ -121,7 +121,7 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
 
     // -- [yyyy] year format.
     if (yearTimeStamp.toString().length == 4) {
-      allTracksInLibrary.loop((e) {
+      for (var e in allTracksInLibrary) {
         if (e.year != 0) {
           // -- if the track also has [yyyy]
           if (e.year.toString().length == 4) {
@@ -137,21 +137,21 @@ class NamidaGenerator extends NamidaGeneratorBase<TrackWithDate, Track> {
             }
           }
         }
-      });
+      }
 
       // -- parsable year format.
     } else {
       final dateParsed = DateTime.tryParse(yearTimeStamp.toString());
       if (dateParsed == null) return [];
 
-      allTracksInLibrary.loop((e) {
+      for (var e in allTracksInLibrary) {
         if (e.year != 0) {
           final dt = e.yearAsDateTime();
           if (dt != null && (dt.difference(dateParsed).inDays).abs() <= daysRange) {
             tracksAvailable.add(e);
           }
         }
-      });
+      }
     }
     tracksAvailable.remove(currentTrack);
     return tracksAvailable;

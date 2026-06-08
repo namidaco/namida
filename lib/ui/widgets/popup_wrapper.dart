@@ -17,8 +17,8 @@ part '../../../packages/custom_popup.dart';
 class NamidaPopupWrapper extends StatelessWidget {
   final Widget child;
   final PopupMenuController? controller;
-  final FutureOr<List<Widget>> Function()? children;
-  final FutureOr<List<NamidaPopupItem>> Function()? childrenDefault;
+  final FutureOr<Iterable<Widget>> Function()? children;
+  final FutureOr<Iterable<NamidaPopupItem>> Function()? childrenDefault;
   final bool childrenAfterChildrenDefault;
   final BoxDecoration? contentDecoration;
   final VoidCallback? onTap;
@@ -47,7 +47,7 @@ class NamidaPopupWrapper extends StatelessWidget {
     NamidaNavigator.inst.popMenu(handleClosing: handleClosing);
   }
 
-  Iterable<Widget> _mapChildren(List<Widget> children) {
+  Iterable<Widget> _mapChildren(Iterable<Widget> children) {
     return children.map(
       (e) => ConstrainedBox(
         constraints: BoxConstraints(minHeight: 12.0),
@@ -62,7 +62,7 @@ class NamidaPopupWrapper extends StatelessWidget {
     );
   }
 
-  Iterable<Widget> _mapChildrenDefault(BuildContext context, List<NamidaPopupItem> childrenDefault) {
+  Iterable<Widget> _mapChildrenDefault(BuildContext context, Iterable<NamidaPopupItem> childrenDefault) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     return childrenDefault.map(

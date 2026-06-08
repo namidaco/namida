@@ -269,36 +269,34 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                 final listItems = listItemsPre as YoutiPieListSorterMixin;
                 final selectedSort = listItems.customSort ?? listItems.itemsSort.firstWhereEff((e) => e.initiallySelected);
                 return NamidaPopupWrapper(
-                  childrenDefault: () {
-                    return listItems.itemsSort.map(
-                      (s) {
-                        return NamidaPopupItem(
-                          icon: s.title == selectedSort?.title ? Broken.tick_circle : Broken.arrow_swap,
-                          title: s.title,
-                          onTap: () async {
-                            final currentSort = _currentSort;
-                            if (currentSort!.value?.title == s.title) return;
+                  childrenDefault: () => listItems.itemsSort.map(
+                    (s) {
+                      return NamidaPopupItem(
+                        icon: s.title == selectedSort?.title ? Broken.tick_circle : Broken.arrow_swap,
+                        title: s.title,
+                        onTap: () async {
+                          final currentSort = _currentSort;
+                          if (currentSort!.value?.title == s.title) return;
 
-                            final initialSort = currentSort.value;
+                          final initialSort = currentSort.value;
 
-                            _isLoadingCurrentFeed.value = true;
-                            currentSort.value = s;
+                          _isLoadingCurrentFeed.value = true;
+                          currentSort.value = s;
 
-                            final didFetch = await listItems.fetchWithNewSort(sort: s, details: ExecuteDetails.kForceRequest);
-                            if (currentSort.value?.title != s.title) return; // if interrupted
+                          final didFetch = await listItems.fetchWithNewSort(sort: s, details: ExecuteDetails.kForceRequest);
+                          if (currentSort.value?.title != s.title) return; // if interrupted
 
-                            _isLoadingCurrentFeed.value = false;
+                          _isLoadingCurrentFeed.value = false;
 
-                            if (didFetch) {
-                              if (mounted) _currentFeed.refresh();
-                            } else {
-                              currentSort.value = initialSort;
-                            }
-                          },
-                        );
-                      },
-                    ).toList();
-                  },
+                          if (didFetch) {
+                            if (mounted) _currentFeed.refresh();
+                          } else {
+                            currentSort.value = initialSort;
+                          }
+                        },
+                      );
+                    },
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 2.0),
                     child: ObxO(

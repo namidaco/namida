@@ -5824,70 +5824,68 @@ class RepeatModeIconButton extends StatelessWidget {
   //   return repeat.buildText();
   // }
 
-  List<Widget> _popupChildren(BuildContext context) {
-    return [
-      ...PlayerRepeatMode.values.map(
-        (repeatMode) {
-          final enabled = repeatMode == settings.player.repeatMode.value;
-          final mainIcon = repeatMode.toMainIcon();
-          final secondaryIcon = repeatMode.toSecondaryIcon();
-          const iconSize = 22.0;
-          final iconColor = context.defaultIconColor();
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-            child: NamidaInkWell(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-              borderRadius: 12.0,
-              bgColor: enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null,
-              onTap: () {
-                settings.player.save(repeatMode: repeatMode);
-                NamidaNavigator.inst.popMenu();
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      secondaryIcon != null
-                          ? StackedIcon(
-                              baseIcon: mainIcon,
-                              secondaryIcon: secondaryIcon,
-                              baseIconColor: iconColor,
-                              secondaryIconColor: iconColor,
-                              iconSize: iconSize,
-                              secondaryIconSize: iconSize * 0.6,
-                            )
-                          : Icon(
-                              mainIcon,
-                              size: iconSize,
-                              color: iconColor,
-                            ),
-
-                      if (repeatMode == PlayerRepeatMode.forNtimes)
-                        ObxO(
-                          rx: Player.inst.numberOfRepeats,
-                          builder: (context, numberOfRepeats) => Text(
-                            '$numberOfRepeats',
-                            style: context.textTheme.displaySmall?.copyWith(color: iconColor),
+  Iterable<Widget> _popupChildren(BuildContext context) {
+    return PlayerRepeatMode.values.map(
+      (repeatMode) {
+        final enabled = repeatMode == settings.player.repeatMode.value;
+        final mainIcon = repeatMode.toMainIcon();
+        final secondaryIcon = repeatMode.toSecondaryIcon();
+        const iconSize = 22.0;
+        final iconColor = context.defaultIconColor();
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+          child: NamidaInkWell(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+            borderRadius: 12.0,
+            bgColor: enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null,
+            onTap: () {
+              settings.player.save(repeatMode: repeatMode);
+              NamidaNavigator.inst.popMenu();
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    secondaryIcon != null
+                        ? StackedIcon(
+                            baseIcon: mainIcon,
+                            secondaryIcon: secondaryIcon,
+                            baseIconColor: iconColor,
+                            secondaryIconColor: iconColor,
+                            iconSize: iconSize,
+                            secondaryIconSize: iconSize * 0.6,
+                          )
+                        : Icon(
+                            mainIcon,
+                            size: iconSize,
+                            color: iconColor,
                           ),
+
+                    if (repeatMode == PlayerRepeatMode.forNtimes)
+                      ObxO(
+                        rx: Player.inst.numberOfRepeats,
+                        builder: (context, numberOfRepeats) => Text(
+                          '$numberOfRepeats',
+                          style: context.textTheme.displaySmall?.copyWith(color: iconColor),
                         ),
-                    ],
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: Text(
+                    repeatMode.buildText(),
+                    style: context.textTheme.displayMedium,
                   ),
-                  const SizedBox(width: 8.0),
-                  Expanded(
-                    child: Text(
-                      repeatMode.buildText(),
-                      style: context.textTheme.displayMedium,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
-      ),
-    ];
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -6715,28 +6713,26 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
               ),
               const NamidaContainerDivider(),
             ],
-            childrenDefault: () => CacheVideoPriority.values
-                .map(
-                  (e) => NamidaPopupItem(
-                    icon: Broken.cpu,
-                    title: e.toText(),
-                    onTap: () async {
-                      if (widget.totalCount == 1) {
-                        VideoController.inst.videosPriorityManager.setVideoPriority(widget.videosId.first, e);
-                        setState(() => cachePriority = e);
-                        widget.onChanged(e);
-                      } else {
-                        final confirmed = await _confirmSetPriorityForAll(widget.totalCount);
-                        if (confirmed) {
-                          VideoController.inst.videosPriorityManager.setVideosPriority(widget.videosId, e);
-                          if (mounted) setState(() => cachePriority = e);
-                          widget.onChanged(e);
-                        }
-                      }
-                    },
-                  ),
-                )
-                .toList(),
+            childrenDefault: () => CacheVideoPriority.values.map(
+              (e) => NamidaPopupItem(
+                icon: Broken.cpu,
+                title: e.toText(),
+                onTap: () async {
+                  if (widget.totalCount == 1) {
+                    VideoController.inst.videosPriorityManager.setVideoPriority(widget.videosId.first, e);
+                    setState(() => cachePriority = e);
+                    widget.onChanged(e);
+                  } else {
+                    final confirmed = await _confirmSetPriorityForAll(widget.totalCount);
+                    if (confirmed) {
+                      VideoController.inst.videosPriorityManager.setVideosPriority(widget.videosId, e);
+                      if (mounted) setState(() => cachePriority = e);
+                      widget.onChanged(e);
+                    }
+                  }
+                },
+              ),
+            ),
             child: NamidaInkWell(
               padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
               bgColor: theme.cardColor.withOpacityExt(0.5),
