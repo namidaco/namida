@@ -16,6 +16,7 @@ import java.nio.ByteBuffer
 import java.util.Base64
 import kotlin.collections.List
 import kotlin.collections.Map
+import kotlin.math.roundToInt
 import kotlinx.coroutines.*
 import org.jaudiotagger.audio.AudioFile
 import org.jaudiotagger.audio.AudioFileIO
@@ -310,14 +311,8 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
               else -> {
                   // 0-255, convert to 0-100
                   val v = ratingRaw.toIntOrNull()
-                  when {
-                      v == null || v == 0 -> ""
-                      v < 32 -> "20"
-                      v < 96 -> "40"
-                      v < 160 -> "60"
-                      v < 224 -> "80"
-                      else -> "100"
-                  }
+                  if (v == null) ""
+                  else ((v / 255.0) * 100).roundToInt().toString()
               }
           }
           metadata["mood"] = tag.getAll(FieldKey.MOOD)
@@ -597,7 +592,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
     val ext = if (dotIndex > 0) cleaned.substring(dotIndex) else ""
     if (ext.length >= maxLength) return cleaned.substring(0, maxLength)
     return cleaned.substring(0, maxLength - ext.length) + ext
-  }
+}
 
 }
 

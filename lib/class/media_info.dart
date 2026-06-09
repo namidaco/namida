@@ -178,12 +178,29 @@ class MIFormatTags {
     required this.sortInfo,
   });
 
-  factory MIFormatTags.fromMap(Map<String, dynamic> map) {
+  static double? _extractRatingPercentage(Map<String, dynamic> map) {
     final ratingRaw = MediaInfo.extractNum(map.getOrUpperCase("rating")); // 0-5
+    if (ratingRaw != null) return ratingRaw / 5.0;
+
+    final ratingPercentage = MediaInfo.extractNum(map.getOrUpperCaseOrLowerCase("FMPS_Rating"));
+    if (ratingPercentage != null) return ratingPercentage.toDouble();
+
+    // -- probably non-existent
+    final popmString = map.getOrUpperCase("POPM");
+    if (popmString is String && popmString.isNotEmpty) {
+      final popm = MediaInfo.extractNum(popmString) ?? MediaInfo.extractNum(RegExp(r'rating=(\d+)', caseSensitive: false).firstMatch(popmString)?.group(1));
+      if (popm != null) return popm / 255.0;
+    }
+
+    return null;
+  }
+
+  factory MIFormatTags.fromMap(Map<String, dynamic> map) {
+    final ratingPercentage = _extractRatingPercentage(map);
     return MIFormatTags(
       date: map.getOrUpperCase("date") ?? map["Date"],
-      bpm: MediaInfo.extractInt(map.getOrLowerCase("BPM")) ?? MediaInfo.extractInt(map.getOrLowerCase("TBPM")),
-      rating: ratingRaw == null ? null : ratingRaw / 5.0,
+      bpm: MediaInfo.extractInt(map.getOrLowerCase("BPM")) ?? MediaInfo.extractInt(map.getOrLowerCase("TBPM")) ?? MediaInfo.extractNum(map.getOrLowerCase("FBPM"))?.round(),
+      rating: ratingPercentage,
       language: map.getOrLowerCase("LANGUAGE") ?? map["Language"],
       artist: map.getOrUpperCase("artist") ?? map["Artist"],
       album: map.getOrUpperCase("album") ?? map["Album"],
@@ -456,6 +473,7 @@ extension SreamTypeDetector on MIStream {
 }
 
 extension _MapValueGetter on Map<String, dynamic> {
+  dynamic getOrUpperCaseOrLowerCase(String lowercase) => this[lowercase] ?? this[lowercase.toUpperCase()] ?? this[lowercase.toLowerCase()];
   dynamic getOrUpperCase(String lowercase) => this[lowercase] ?? this[lowercase.toUpperCase()];
   dynamic getOrLowerCase(String uppercase) => this[uppercase] ?? this[uppercase.toLowerCase()];
 

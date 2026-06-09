@@ -584,7 +584,7 @@ enum FFMPEGTagField {
       // -- TESTED NOT WORKING. disabling to prevent unwanted fields corruption etc.
       FFMPEGTagField.mood => null,
       FFMPEGTagField.tags => null,
-      FFMPEGTagField.rating => null,
+      FFMPEGTagField.rating => newTags.ratingPercentage?.toString(),
       // ----------
       FFMPEGTagField.titleSort => newTags.sortInfo?.title,
       FFMPEGTagField.artistSort => newTags.sortInfo?.artist,

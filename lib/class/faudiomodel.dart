@@ -143,9 +143,9 @@ class FTags {
     return value / 100.0; // 0-100
   }
 
-  static int ratingPercentageToUnsignedInt(double ratingPercentage) {
-    return (ratingPercentage * 255).round();
-  }
+  // static int ratingPercentageToUnsignedInt(double ratingPercentage) {
+  //   return (ratingPercentage * 255).round();
+  // }
 
   // -- upper cased are the ones extracted manually.
   factory FTags.fromMap(Map<String, dynamic> map) {
@@ -209,7 +209,7 @@ class FTags {
       "comment": comment,
       "description": description,
       "synopsis": synopsis,
-      "year": year,
+      "year": year, 
       "trackNumber": trackNumber,
       "trackTotal": trackTotal,
       "discNumber": discNumber,
@@ -219,7 +219,7 @@ class FTags {
       "djmixer": djmixer,
       "mixer": mixer,
       "mood": mood,
-      "rating": ratingPercentage != null ? "${ratingPercentageToUnsignedInt(ratingPercentage!)}" : rating,
+      "rating": ratingPercentage ?? rating,
       "remixer": remixer,
       "tags": tags,
       "tempo": tempo,
