@@ -595,13 +595,53 @@ class Indexer<T extends Track> {
             : SearchSortController.inst.getMediaTracksSortingComparables(type);
         final reverse = settings.mediaItemsTrackSortingReverse.value[type] ?? false;
 
-        if (reverse) {
-          for (final k in modifiedKeys) {
-            map[k]?.sortByReverseAlts(sorters); // sub-list sorting
+        // -- similar approach to [LibraryGroup.sortAllSync], complicated but much better performance
+        final affectedTracks = <T>[];
+        final trackIndex = <T, int>{};
+        for (final k in modifiedKeys) {
+          final list = map[k];
+          if (list == null) continue;
+          for (final track in list) {
+            if (!trackIndex.containsKey(track)) {
+              trackIndex[track] = affectedTracks.length;
+              affectedTracks.add(track);
+            }
           }
-        } else {
-          for (final k in modifiedKeys) {
-            map[k]?.sortByAlts(sorters); // sub-list sorting
+        }
+
+        final precomputedKeys = List.generate(
+          sorters.length,
+          (sorterIndex) => List.generate(
+            affectedTracks.length,
+            (i) => sorters[sorterIndex](affectedTracks[i]),
+            growable: false,
+          ),
+          growable: false,
+        );
+
+        for (final k in modifiedKeys) {
+          final list = map[k];
+          if (list == null) continue;
+          if (reverse) {
+            list.sort((a, b) {
+              final aIndex = trackIndex[a]!;
+              final bIndex = trackIndex[b]!;
+              for (final key in precomputedKeys) {
+                final cmp = key[bIndex].compareTo(key[aIndex]);
+                if (cmp != 0) return cmp;
+              }
+              return 0;
+            });
+          } else {
+            list.sort((a, b) {
+              final aIndex = trackIndex[a]!;
+              final bIndex = trackIndex[b]!;
+              for (final key in precomputedKeys) {
+                final cmp = key[aIndex].compareTo(key[bIndex]);
+                if (cmp != 0) return cmp;
+              }
+              return 0;
+            });
           }
         }
       }

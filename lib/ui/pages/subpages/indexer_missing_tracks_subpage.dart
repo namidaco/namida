@@ -362,7 +362,7 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                             enabled: !_isUpdatingPaths,
                             child: SuperSmoothListView.builder(
                               controller: _scrollController,
-                              padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingEffectiveR + 56.0 + 4.0),
+                              padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingEffectiveR + kFABSize + 8.0),
                               itemCount: _missingTracksPaths.length,
                               itemBuilder: (context, index) {
                                 final path = _missingTracksPaths[index];

@@ -1399,6 +1399,9 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                         /// Waveform
                         FadeIgnoreTransition(
                           opacity: slowOpacityAnimation,
+                          // -- to avoid hero animation when not visible (eg: while entering lyrics fullscreen)
+                          // -- this might slightly affect performance while expanding player
+                          completelyKillWhenPossible: true,
                           child: Transform.translate(
                             offset: Offset(0, vOffsetWaveform),
                             child: _ScaleYIfNeeded(

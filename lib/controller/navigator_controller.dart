@@ -152,9 +152,20 @@ class NamidaNavigator {
     }
   }
 
+  static bool? _latestSystemUIImmersive;
+  static List<SystemUiOverlay>? _latestSystemUIOverlays;
+
   /// Raw access to system UI mode. For more accurate results, use [MiniPlayerController.setImmersiveMode].
-  static Future<void> setSystemUIImmersiveMode(bool immersive, {List<SystemUiOverlay> overlays = SystemUiOverlay.values}) {
-    final mode = immersive ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge;
+  static Future<void> setSystemUIImmersiveMode(bool immersive, {List<SystemUiOverlay> overlays = SystemUiOverlay.values}) async {
+    if (_latestSystemUIImmersive == immersive && !overlays.didChangeFrom(_latestSystemUIOverlays)) {
+      return;
+    }
+    _latestSystemUIImmersive = immersive;
+    _latestSystemUIOverlays = overlays;
+
+    // final mode = immersive ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge;
+    // TODO: remove manual with flutter >v3.44.1
+    final mode = immersive ? SystemUiMode.immersiveSticky : SystemUiMode.manual;
     return SystemChrome.setEnabledSystemUIMode(mode, overlays: overlays);
   }
 

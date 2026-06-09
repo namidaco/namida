@@ -5056,6 +5056,8 @@ class LazyLoadListView extends StatefulWidget {
 }
 
 class _LazyLoadListViewState extends State<LazyLoadListView> {
+  ScrollPosition? get _getControllerPositionSafe => controller.positions.firstOrNull;
+
   late final ScrollController controller;
   bool _isExecuting = false;
 
@@ -5088,8 +5090,9 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
 
   Future<void> _fetchIfNotScrollable() async {
     if (_isExecuting) return;
-    if (!controller.hasClients) return;
-    if (controller.position.maxScrollExtent > 0) return;
+    final position = _getControllerPositionSafe;
+    if (position == null) return;
+    if (position.maxScrollExtent > 0) return;
     if (widget.requiresNetwork && !ConnectivityController.inst.hasConnection) return;
 
     _isExecuting = true;
@@ -5118,7 +5121,7 @@ class _LazyLoadListViewState extends State<LazyLoadListView> {
         if (notification.metrics.maxScrollExtent == 0) {
           WidgetsBinding.instance.addPostFrameCallback(
             (_) {
-              if (controller.position.maxScrollExtent == 0) {
+              if (_getControllerPositionSafe?.maxScrollExtent == 0) {
                 // -- ensure still 0
                 _fetchIfNotScrollable();
               }
@@ -7836,6 +7839,7 @@ class NamidaNavigatorWidget extends StatelessWidget {
       observers: observers,
       pages: pages,
       onGenerateInitialRoutes: onGenerateInitialRoutes,
+      onUnknownRoute: (_) => MaterialPageRoute(builder: (_) => const SizedBox()),
     );
   }
 }

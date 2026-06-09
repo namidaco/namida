@@ -4,6 +4,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -110,7 +111,7 @@ class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
       _FilterType.tags => Indexer.inst.getTracksGroupedByTags(),
       _FilterType.rating => Indexer.inst.getTracksGroupedByRatings(),
     };
-    _items = _allAvailableMap.keys.toList();
+    _items = _allAvailableMap.keys.toFixedList();
   }
 
   @override
@@ -120,6 +121,7 @@ class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
 
     return BackgroundWrapper(
       child: SuperSmoothListView.builder(
+        padding: EdgeInsets.only(bottom: Dimensions.inst.globalBottomPaddingTotalR + 8.0),
         itemCount: _items.length,
         itemBuilder: (context, index) {
           final name = _items[index];
