@@ -272,6 +272,24 @@ jobs:
           flutter pub upgrade
           git submodule update --init --remote --recursive
 
+      - name: Install Rust (arm64 only)
+        if: matrix.arch == 'arm64'
+        shell: pwsh
+        run: |
+          # windows-11-arm runners do not have Rust pre-installed.
+          # Install rustup using the native arm64 bootstrapper, then add the target.
+          Invoke-WebRequest -Uri "https://static.rust-lang.org/rustup/dist/aarch64-pc-windows-msvc/rustup-init.exe" -OutFile rustup-init.exe
+          .\rustup-init.exe --default-toolchain none -y
+          "$env:USERPROFILE\.cargo\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "CARGO_HOME=$env:USERPROFILE\.cargo" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Install Rust stable + aarch64 target (arm64 only)
+        if: matrix.arch == 'arm64'
+        run: |
+          rustup install stable
+          rustup default stable
+          rustup target add aarch64-pc-windows-msvc
+
       - name: Build Windows App
         run: |
           flutter config --enable-windows-desktop
