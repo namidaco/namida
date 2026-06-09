@@ -470,12 +470,15 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           }
 
           if (!fileExists) {
+            // no idea, trying to get from library
             if (tracksDBManager == null) await loadTracksDb();
-            final normalizedPath = p.normalize(line);
-            final maybePath = libraryTracksPaths.firstWhereEff((path) => path.endsWith(normalizedPath)); // no idea, trying to get from library
-            if (maybePath != null) {
-              fullPath = maybePath;
-              // if (pathExists(fullPath)) fileExists = true; // no further checks
+            final normalizedLowerPath = p.normalize(line).toLowerCase();
+            for (final trackPath in libraryTracksPaths) {
+              if (trackPath.toLowerCase().endsWith(normalizedLowerPath)) {
+                fullPath = trackPath;
+                // if (pathExists(fullPath)) fileExists = true; // no further checks
+                break;
+              }
             }
           }
           if (Platform.isWindows) {
