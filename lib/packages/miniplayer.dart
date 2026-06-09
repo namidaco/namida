@@ -515,6 +515,9 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     final videoChannelId = vidpage?.channelInfo?.id ?? vidstreams?.info?.channelId;
 
     final menu = NamidaPopupWrapper(
+      onPop: () {
+        _numberOfRepeats.value = 1;
+      },
       childrenDefault: () => YTUtils.getVideoCardMenuItemsForCurrentlyPlaying(
         queueSource: QueueSourceYoutubeID.ytPlayerQueue,
         numberOfRepeats: _numberOfRepeats,

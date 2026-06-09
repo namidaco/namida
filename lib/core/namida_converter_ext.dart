@@ -533,12 +533,12 @@ extension FFMPEGTagFieldUtilsC on FFMPEGTagField {
 }
 
 extension PlayerRepeatModeUtils on PlayerRepeatMode {
-  String buildText() => switch (this) {
+  String buildText({int? numberOfRepeats}) => switch (this) {
     PlayerRepeatMode.none => lang.repeatModeNone,
     PlayerRepeatMode.one => lang.repeatModeOne,
     PlayerRepeatMode.all => lang.repeatModeAll,
     PlayerRepeatMode.allShuffle => "${lang.repeatModeAll} (${lang.shuffle})",
-    PlayerRepeatMode.forNtimes => lang.repeatForNTimes(number: Player.inst.numberOfRepeats.value),
+    PlayerRepeatMode.forNtimes => lang.repeatForNTimes(number: numberOfRepeats ?? Player.inst.numberOfRepeats.value),
   };
 }
 

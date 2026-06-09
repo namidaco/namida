@@ -5808,6 +5808,8 @@ class RepeatModeIconButton extends StatelessWidget {
     this.builder,
   });
 
+  static final _numberOfRepeats = 1.obso;
+
   void _onPressed(BuildContext context) {
     NamidaPopupWrapper(
       children: () => _popupChildren(context),
@@ -5840,6 +5842,9 @@ class RepeatModeIconButton extends StatelessWidget {
             bgColor: enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null,
             onTap: () {
               settings.player.save(repeatMode: repeatMode);
+              if (repeatMode == PlayerRepeatMode.forNtimes) {
+                Player.inst.updateNumberOfRepeats(_numberOfRepeats.value);
+              }
               NamidaNavigator.inst.popMenu();
             },
             child: Row(
@@ -5865,9 +5870,9 @@ class RepeatModeIconButton extends StatelessWidget {
 
                     if (repeatMode == PlayerRepeatMode.forNtimes)
                       ObxO(
-                        rx: Player.inst.numberOfRepeats,
-                        builder: (context, numberOfRepeats) => Text(
-                          '$numberOfRepeats',
+                        rx: _numberOfRepeats,
+                        builder: (context, repeats) => Text(
+                          '$repeats',
                           style: context.textTheme.displaySmall?.copyWith(color: iconColor),
                         ),
                       ),
@@ -5875,11 +5880,23 @@ class RepeatModeIconButton extends StatelessWidget {
                 ),
                 const SizedBox(width: 8.0),
                 Expanded(
-                  child: Text(
-                    repeatMode.buildText(),
-                    style: context.textTheme.displayMedium,
+                  child: ObxPrefer(
+                    rx: _numberOfRepeats,
+                    enabled: repeatMode == PlayerRepeatMode.forNtimes,
+                    builder: (context, repeats) => Text(
+                      repeatMode.buildText(numberOfRepeats: repeats),
+                      style: context.textTheme.displayMedium,
+                    ),
                   ),
                 ),
+
+                if (repeatMode == PlayerRepeatMode.forNtimes)
+                  NumberOfRepeatsWidgetProvider(
+                    numberOfRepeatsRx: _numberOfRepeats,
+                    iconColor: iconColor,
+                    iconSize: 18.0,
+                    horizontalPadding: 4.0,
+                  ),
               ],
             ),
           ),
@@ -5964,10 +5981,51 @@ class RepeatModeIconButton extends StatelessWidget {
       },
     );
     return NamidaPopupWrapper(
+      onPop: () {
+        _numberOfRepeats.value = 1;
+      },
       openOnTap: true,
       openOnLongPress: true,
       children: () => _popupChildren(context),
       child: rawWidget,
+    );
+  }
+}
+
+class NumberOfRepeatsWidgetProvider extends StatelessWidget {
+  final RxBase<int> numberOfRepeatsRx;
+  final Color? iconColor;
+  final double iconSize;
+  final double horizontalPadding;
+
+  const NumberOfRepeatsWidgetProvider({
+    super.key,
+    required this.numberOfRepeatsRx,
+    required this.iconColor,
+    this.iconSize = 20.0,
+    this.horizontalPadding = 8.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        NamidaIconButton(
+          horizontalPadding: horizontalPadding,
+          icon: Broken.minus_cirlce,
+          onPressed: () => numberOfRepeatsRx.value = (numberOfRepeatsRx.value - 1).clampInt(1, 20),
+          iconSize: iconSize,
+          iconColor: iconColor,
+        ),
+        NamidaIconButton(
+          horizontalPadding: horizontalPadding,
+          icon: Broken.add_circle,
+          onPressed: () => numberOfRepeatsRx.value = (numberOfRepeatsRx.value + 1).clampInt(1, 20),
+          iconSize: iconSize,
+          iconColor: iconColor,
+        ),
+      ],
     );
   }
 }

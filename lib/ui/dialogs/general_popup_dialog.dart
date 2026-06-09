@@ -1338,22 +1338,10 @@ Future<void> showGeneralPopupDialog(
                                       settings.player.save(repeatMode: PlayerRepeatMode.forNtimes);
                                       Player.inst.updateNumberOfRepeats(repeats);
                                     },
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        NamidaIconButton(
-                                          icon: Broken.minus_cirlce,
-                                          onPressed: () => numberOfRepeats.value = (numberOfRepeats.value - 1).clampInt(1, 20),
-                                          iconSize: 20.0,
-                                          iconColor: iconColor,
-                                        ),
-                                        NamidaIconButton(
-                                          icon: Broken.add_circle,
-                                          onPressed: () => numberOfRepeats.value = (numberOfRepeats.value + 1).clampInt(1, 20),
-                                          iconSize: 20.0,
-                                          iconColor: iconColor,
-                                        ),
-                                      ],
+                                    trailing: NumberOfRepeatsWidgetProvider(
+                                      numberOfRepeatsRx: numberOfRepeats,
+                                      iconColor: iconColor,
+                                      iconSize: 20.0,
                                     ),
                                   ),
                                 ),

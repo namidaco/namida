@@ -336,20 +336,11 @@ class YTUtils {
           settings.player.save(repeatMode: PlayerRepeatMode.forNtimes);
           Player.inst.updateNumberOfRepeats(numberOfRepeats.value);
         },
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            NamidaIconButton(
-              icon: Broken.minus_cirlce,
-              onPressed: () => numberOfRepeats.value = (numberOfRepeats.value - 1).clampInt(1, 20),
-              iconSize: 20.0,
-            ),
-            NamidaIconButton(
-              icon: Broken.add_circle,
-              onPressed: () => numberOfRepeats.value = (numberOfRepeats.value + 1).clampInt(1, 20),
-              iconSize: 20.0,
-            ),
-          ],
+        trailing: NumberOfRepeatsWidgetProvider(
+          numberOfRepeatsRx: numberOfRepeats,
+          iconColor: null,
+          iconSize: 18.0,
+          horizontalPadding: 4.0,
         ),
       );
     }
