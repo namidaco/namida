@@ -1,9 +1,22 @@
+import 'dart:io';
+
+import 'package:namida/core/extensions.dart';
+
 class DownloadTaskFilename {
+  static final int _fullPathLimit = Platform.isWindows
+      ? 258
+      : Platform.isMacOS
+      ? 1024
+      : 4096;
+
   static final RegExp cleanupFilenameRegex = RegExp(r'[*#\$|/\\!^:"\?%<>\u2F38\u2044\u29F8]', caseSensitive: false);
-  static String cleanupFilename(String filename, {int maxLength = 100}) {
+  static String cleanupFilename(String filename, {required String parentDirPath}) {
     final cleaned = filename.replaceAll(cleanupFilenameRegex, '_');
+    final maxLength = 255.withMaximum(_fullPathLimit - parentDirPath.length);
     if (cleaned.length <= maxLength) return cleaned;
-    final ext = cleaned.contains('.') ? '.${cleaned.split('.').last}' : '';
+    final dotIndex = cleaned.lastIndexOf('.');
+    final ext = dotIndex > 0 ? cleaned.substring(dotIndex) : '';
+    if (ext.length >= maxLength) return cleaned.substring(0, maxLength);
     return '${cleaned.substring(0, maxLength - ext.length)}$ext';
   }
 

@@ -299,7 +299,8 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
 
           if (value.startsWith('.')) return "${lang.filenameShouldntStartWith} .";
 
-          final filenameClean = DownloadTaskFilename.cleanupFilename(value);
+          final parentDirPath = FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName);
+          final filenameClean = DownloadTaskFilename.cleanupFilename(value, parentDirPath: parentDirPath);
           if (value != filenameClean) {
             final baddiesAll = DownloadTaskFilename.cleanupFilenameRegex.pattern;
             final baddies = baddiesAll.split('').where((element) => value.contains(element)).join();

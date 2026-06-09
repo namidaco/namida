@@ -91,6 +91,8 @@ class CurrentColor {
   final allColorPalettesGeneratingProgress = 0.obs;
   final allColorPalettesGeneratingTotal = 0.obs;
 
+  late final _defaultPaletteDirectory = Directory(AppDirs.PALETTES);
+
   void _refreshColorsRx() {
     _namidaColor.refresh();
     _namidaColorMiniplayer.refresh();
@@ -299,7 +301,7 @@ class CurrentColor {
     bool delightnedAndAlpha = true,
     bool useIsolate = _defaultUseIsolate,
   }) {
-    final filename = networkArtworkInfo?.toArtworkIfExistsAndEnabled()?.path ?? track.cacheKeyForImage;
+    final filename = networkArtworkInfo?.toArtworkIfExistsAndEnabled()?.path ?? track.cacheKeyForImage(_defaultPaletteDirectory.path);
 
     final valInMap = _colorsMap[filename];
 
@@ -314,14 +316,15 @@ class CurrentColor {
   }
 
   int getRemainingColorsToExtractCount(List<Track> tracks) {
+    final paletteSaveDirectory = this._defaultPaletteDirectory;
     int remainingCount = 0;
     for (final tr in tracks) {
-      if (_colorsMap[tr.cacheKeyForImage] == null) {
+      if (_colorsMap[tr.cacheKeyForImage(paletteSaveDirectory.path)] == null) {
         remainingCount++;
         continue;
       }
 
-      final pf = _getPaletteFile(tr.cacheKeyForImage);
+      final pf = _getPaletteFile(tr.cacheKeyForImage(paletteSaveDirectory.path), paletteSaveDirectory: paletteSaveDirectory);
       if (!pf.existsSync()) {
         remainingCount++;
         continue;
@@ -352,7 +355,7 @@ class CurrentColor {
       useIsolate: useIsolate,
     );
 
-    final filename = networkArtwork ?? track.cacheKeyForImage;
+    final filename = networkArtwork ?? track.cacheKeyForImage(_defaultPaletteDirectory.path);
 
     final finalnc = _maybeDelightned(
       nc,
@@ -398,9 +401,9 @@ class CurrentColor {
 
   File _getPaletteFile(
     String filename, {
-    Directory? paletteSaveDirectory,
+    required Directory? paletteSaveDirectory,
   }) {
-    paletteSaveDirectory ??= Directory(AppDirs.PALETTES);
+    paletteSaveDirectory ??= this._defaultPaletteDirectory;
     final paletteFile = FileParts.join(paletteSaveDirectory.path, "$filename.palette");
     return paletteFile;
   }
@@ -412,9 +415,11 @@ class CurrentColor {
     bool useIsolate = _defaultUseIsolate,
     Directory? paletteSaveDirectory,
   }) async {
+    paletteSaveDirectory ??= this._defaultPaletteDirectory;
+
     // if (!forceReExtract && !await File(imagePath).exists()) return null; // _extractPaletteGenerator tries to get artwork from audio
 
-    final filename = track != null ? track.cacheKeyForImage : imagePath.getFilenameWOExt;
+    final filename = track != null ? track.cacheKeyForImage(paletteSaveDirectory.path) : imagePath.getFilenameWOExt;
     final paletteFile = _getPaletteFile(filename, paletteSaveDirectory: paletteSaveDirectory);
 
     // -- try reading the cached file
@@ -455,7 +460,7 @@ class CurrentColor {
   Future<void> reExtractTrackColorPalette({required Track track, required NamidaColor? newNC, required String? imagePath, bool useIsolate = true}) async {
     assert(newNC != null || imagePath != null, 'a color or imagePath must be provided');
 
-    final key = track.cacheKeyForImage;
+    final key = track.cacheKeyForImage(_defaultPaletteDirectory.path);
     final paletteFile = FileParts.join(AppDirs.PALETTES, "$key.palette");
     if (newNC != null) {
       await paletteFile.writeAsJson(newNC.toJson());
@@ -612,7 +617,7 @@ class CurrentColor {
   }
 
   Future<void> generateAllColorPalettes() async {
-    await Directory(AppDirs.PALETTES).create();
+    await _defaultPaletteDirectory.create();
 
     final alltracks = allTracksInLibrary;
 

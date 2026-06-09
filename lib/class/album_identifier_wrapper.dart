@@ -11,7 +11,7 @@ class AlbumIdentifierWrapper {
     required this.year,
   });
 
-  static String _normalize(String text) => text.isEmpty ? text : DownloadTaskFilename.cleanupFilename(text);
+  static String _normalize(String text, String parentDirPath) => text.isEmpty ? text : DownloadTaskFilename.cleanupFilename(text, parentDirPath: parentDirPath);
 
   static List<AlbumIdentifierWrapper> fromAlbums({
     required List<String> albums,
@@ -29,10 +29,10 @@ class AlbumIdentifierWrapper {
         .toList();
   }
 
-  String resolved() => resolve(settings.albumIdentifiers.value);
-  String resolve(List<AlbumIdentifier> identifiers) {
+  String resolved() => resolve(settings.albumIdentifiers.value, AppDirs.ARTWORKS);
+  String resolve(List<AlbumIdentifier> identifiers, String parentDirPath) {
     final modified = modifyOnly(identifiers);
-    return "${_normalize(modified.album)}${_normalize(modified.albumArtist)}${_normalize(modified.year)}";
+    return "${_normalize(modified.album, parentDirPath)}${_normalize(modified.albumArtist, parentDirPath)}${_normalize(modified.year, parentDirPath)}";
   }
 
   AlbumIdentifierWrapper modifiedOnly() => modifyOnly(settings.albumIdentifiers.value);

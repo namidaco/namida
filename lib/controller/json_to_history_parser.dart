@@ -1328,7 +1328,7 @@ class JsonToHistoryParser {
       final filename = entry.key; // id[0]
       final videos = entry.value; // {id: YoutubeVideoHistory}
 
-      final file = File('$dirPath$filename.json');
+      final file = FileParts.join(dirPath, '$filename.json');
       final res = file.readAsJsonSync();
       final videosInStorage = (res as List?)?.map((e) => YoutubeVideoHistory.fromJson(e)) ?? [];
       final videosMapInStorage = <String, YoutubeVideoHistory>{};

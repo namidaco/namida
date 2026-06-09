@@ -889,55 +889,59 @@ class YoutubeController {
         playlistInfo = pl?.info;
       } catch (_) {}
     }
+
     final finalFilenameWrapper = config.filename;
     String finalFilenameTemp = finalFilenameWrapper.filename;
     bool requiresRenaming = false;
 
-    if (finalFilenameTemp.isEmpty || finalFilenameTemp == fileExtension || finalFilenameTemp == '.$fileExtension') {
-      finalFilenameTemp = settings.youtube.defaultFilenameBuilder;
-      requiresRenaming = true;
-    }
-
-    final finalFilenameTempRebuilt = filenameBuilder.rebuildFilenameWithDecodedParams(
-      finalFilenameTemp,
-      id.videoId,
-      streamInfo,
-      pageResult,
-      config.streamInfoItem,
-      playlistInfo,
-      videoStream,
-      audioStream,
-      config.originalIndex,
-      config.totalLength,
-    );
-    if (finalFilenameTempRebuilt != null && finalFilenameTempRebuilt.isNotEmpty) {
-      finalFilenameTemp = finalFilenameTempRebuilt;
-      requiresRenaming = true;
-    }
-
-    if (!finalFilenameTemp.endsWith('.$fileExtension')) {
-      finalFilenameTemp += '.$fileExtension';
-      requiresRenaming = true;
-    }
-
-    final filenameCleanTemp = DownloadTaskFilename.cleanupFilename(finalFilenameTemp);
-    if (filenameCleanTemp != finalFilenameTemp) {
-      finalFilenameTemp = filenameCleanTemp;
-      requiresRenaming = true;
-    }
-
-    if (requiresRenaming) {
-      await renameConfigFilename(
-        videoID: id,
-        groupName: groupName,
-        config: config,
-        newFilename: finalFilenameTemp,
-        renameCacheFiles: false, // no worries we still gonna do the job.
-      );
-    }
-
     File? df;
     try {
+      if (finalFilenameTemp.isEmpty || finalFilenameTemp == fileExtension || finalFilenameTemp == '.$fileExtension') {
+        finalFilenameTemp = settings.youtube.defaultFilenameBuilder;
+        requiresRenaming = true;
+      }
+
+      final finalFilenameTempRebuilt = filenameBuilder.rebuildFilenameWithDecodedParams(
+        finalFilenameTemp,
+        id.videoId,
+        streamInfo,
+        pageResult,
+        config.streamInfoItem,
+        playlistInfo,
+        videoStream,
+        audioStream,
+        config.originalIndex,
+        config.totalLength,
+      );
+      if (finalFilenameTempRebuilt != null && finalFilenameTempRebuilt.isNotEmpty) {
+        finalFilenameTemp = finalFilenameTempRebuilt;
+        requiresRenaming = true;
+      }
+
+      if (!finalFilenameTemp.endsWith('.$fileExtension')) {
+        finalFilenameTemp += '.$fileExtension';
+        requiresRenaming = true;
+      }
+
+      saveDirectory ??= Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
+      await saveDirectory.create(recursive: true);
+
+      final filenameCleanTemp = DownloadTaskFilename.cleanupFilename(finalFilenameTemp, parentDirPath: saveDirectory.path);
+      if (filenameCleanTemp != finalFilenameTemp) {
+        finalFilenameTemp = filenameCleanTemp;
+        requiresRenaming = true;
+      }
+
+      if (requiresRenaming) {
+        await renameConfigFilename(
+          videoID: id,
+          groupName: groupName,
+          config: config,
+          newFilename: finalFilenameTemp,
+          renameCacheFiles: false, // no worries we still gonna do the job.
+        );
+      }
+
       File? videoFile;
       File? audioFile;
 
@@ -951,9 +955,6 @@ class YoutubeController {
         isDownloading.refresh();
       }
       isDownloading.value[id]![config.filename] = true;
-
-      saveDirectory ??= Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName));
-      await saveDirectory.create(recursive: true);
 
       if (streams != null && streams.playability.status != VideoPlayabiltyStatus.ok) {
         final missingStreams = config.fetchMissingVideo != false && config.fetchMissingAudio == false

@@ -647,27 +647,29 @@ extension TrackExtUtils on TrackExtended {
   String get folderPath => isNetwork ? DirectoryIndexServer.parseFromEncodedUrlPath(path).toDbKey() : path.getDirectoryPath;
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
-    final identifier = this.cacheKeyForImage;
-    return "${isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS}$identifier.png";
+    final dirPath = isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS;
+    final identifier = this.cacheKeyForImage(dirPath);
+    return "$dirPath$identifier.png";
   }
 
-  String get rawCacheKey {
+  String rawCacheKey(String parentDirPath) {
     return this.isNetwork
         ? DownloadTaskFilename.cleanupFilename(
             [
               title,
               MusicWebServer.baseUrlToId(path) ?? '',
             ].joinText(separator: ' - '),
+            parentDirPath: parentDirPath,
           )
         : this.filename;
   }
 
-  String get cacheKeyForImage {
+  String cacheKeyForImage(String parentDirPath) {
     if (settings.groupArtworksByAlbum.value) {
       final id = albumsIdentifiersModified.map((e) => e.resolved()).join();
       if (id.isNotEmpty) return id;
     }
-    final rawCacheKey = this.rawCacheKey;
+    final rawCacheKey = this.rawCacheKey(parentDirPath);
     if (TagsExtractor.defaultUniqueArtworkHash) {
       return hashKey != null ? "${rawCacheKey}_$hashKey" : rawCacheKey;
     }
@@ -1053,8 +1055,9 @@ extension TrackUtils on Track {
   String get folderPath => isNetwork ? DirectoryIndexServer.parseFromEncodedUrlPath(path).toDbKey() : path.getDirectoryPath;
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
-    final identifier = this.cacheKeyForImage;
-    return "${this is Video ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS}$identifier.png";
+    final dirPath = this is Video ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS;
+    final identifier = this.cacheKeyForImage(dirPath);
+    return "$dirPath$identifier.png";
   }
 
   String get youtubeLink => toTrackExt().youtubeLink;
@@ -1064,8 +1067,8 @@ extension TrackUtils on Track {
   String? get gainDataFormatted => toTrackExt().gainDataFormatted;
   String get audioInfoFormattedCompact => toTrackExt().audioInfoFormattedCompact;
 
-  String get rawCacheKey => toTrackExt().rawCacheKey;
-  String get cacheKeyForImage => toTrackExt().cacheKeyForImage;
+  String rawCacheKey(String parentDirPath) => toTrackExt().rawCacheKey(parentDirPath);
+  String cacheKeyForImage(String parentDirPath) => toTrackExt().cacheKeyForImage(parentDirPath);
   List<AlbumIdentifierWrapper> get albumsIdentifiersModified => toTrackExt().albumsIdentifiersModified;
   List<AlbumIdentifierWrapper> getAlbumsIdentifiersModified(List<AlbumIdentifier> identifiers) => toTrackExt().getAlbumsIdentifiersModified(identifiers);
 

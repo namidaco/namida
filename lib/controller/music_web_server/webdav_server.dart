@@ -325,6 +325,7 @@ class _WebDAVServer extends MusicWebServer {
     final ffmpegInfo = info.ffmpegInfo;
     final name = serverPath.getFilename;
     final isVideo = name.isVideo();
+    final artworkDirectory = isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS;
     final filename = TagsExtractor.buildImageFilename(
       path: serverPath,
       identifiers: info.identifiersSet,
@@ -338,9 +339,9 @@ class _WebDAVServer extends MusicWebServer {
         artist: ffmpegInfo?.format?.tags?.artist,
       ),
       hashKeyCallback: () => serverPath.toFastHashKey(),
+      parentDirPath: artworkDirectory,
     );
 
-    final artworkDirectory = isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS;
     if (bytes != null && bytes.isNotEmpty) {
       await FileParts.join(artworkDirectory, filename).writeAsBytes(bytes);
     } else {

@@ -52,6 +52,7 @@ class ThumbnailManager {
 
     final goodId = id != null && id.isNotEmpty;
     if (goodId || type == ThumbnailType.video) {
+      final innerDirPath = AppDirs.YT_THUMBNAILS;
       String? filename;
       if (symlinkId != null) {
         filename = symlinkId;
@@ -82,12 +83,12 @@ class ThumbnailManager {
                 return null;
               },
             );
-            if (filename != null) filename = DownloadTaskFilename.cleanupFilename(filename);
+            if (filename != null) filename = DownloadTaskFilename.cleanupFilename(filename, parentDirPath: innerDirPath);
           }
         } catch (_) {}
       }
       if (filename == null || filename.isEmpty) return null;
-      return File("${AppDirs.YT_THUMBNAILS}$dirPrefix$filename");
+      return File("$innerDirPath$dirPrefix$filename");
     }
     String? finalUrl = url;
     final imageUrl = finalUrl?.split(RegExp(r'i\.ytimg\.com/vi.*?/'));
@@ -98,8 +99,9 @@ class ThumbnailManager {
     }
 
     if (finalUrl != null) {
-      finalUrl = DownloadTaskFilename.cleanupFilename(finalUrl);
-      return File("${AppDirs.YT_THUMBNAILS_CHANNELS}$dirPrefix${symlinkId ?? finalUrl}");
+      final innerDirPath = AppDirs.YT_THUMBNAILS_CHANNELS;
+      finalUrl = DownloadTaskFilename.cleanupFilename(finalUrl, parentDirPath: innerDirPath);
+      return File("$innerDirPath$dirPrefix${symlinkId ?? finalUrl}");
     }
 
     return null;

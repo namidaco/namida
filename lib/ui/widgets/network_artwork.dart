@@ -552,5 +552,5 @@ sealed class NetworkArtworkInfo {
   }
 
   /// returns file location, even if it doesn't exist
-  static File _getCustomArtworkLocation(String dir, String name) => FileParts.join(dir, '${DownloadTaskFilename.cleanupFilename(name)}.png');
+  static File _getCustomArtworkLocation(String dir, String name) => FileParts.join(dir, '${DownloadTaskFilename.cleanupFilename(name, parentDirPath: dir)}.png');
 }

@@ -65,8 +65,8 @@ class EditDeleteController {
     await _deleteAll(AppDirs.PALETTES, 'palette', tracks, EditDeleteController._cacheKeyForImageBuilder);
   }
 
-  Future<void> _deleteAll(String dir, String extension, List<Selectable> tracks, String Function(Selectable e) cacheKeyBuilder) async {
-    final files = tracks.map((e) => FileParts.joinPath(dir, "${cacheKeyBuilder(e)}.$extension")).toFixedList();
+  Future<void> _deleteAll(String dir, String extension, List<Selectable> tracks, String Function(String directory, Selectable e) cacheKeyBuilder) async {
+    final files = tracks.map((e) => FileParts.joinPath(dir, "${cacheKeyBuilder(dir, e)}.$extension")).toFixedList();
     await Isolate.run(() => _deleteAllIsolate(files));
   }
 
@@ -121,6 +121,7 @@ class EditDeleteController {
       final filename = TagsExtractor.buildImageFilenameFromTrack(
         track: track,
         trExt: trExt,
+        parentDirPath: saveDirPath,
       );
       final newImgFilePath = FileParts.joinPath(saveDirPath, filename);
       if (fileToCopy != null) {
@@ -233,8 +234,8 @@ class EditDeleteController {
     }
   }
 
-  static String _cacheKeyBuilder(Selectable e) => e.track.rawCacheKey;
-  static String _cacheKeyForImageBuilder(Selectable e) => e.track.cacheKeyForImage;
+  static String _cacheKeyBuilder(String directory, Selectable e) => e.track.rawCacheKey(directory);
+  static String _cacheKeyForImageBuilder(String directory, Selectable e) => e.track.cacheKeyForImage(directory);
 }
 
 extension HasCachedFiles on List<Selectable> {
@@ -267,9 +268,14 @@ extension HasCachedFiles on List<Selectable> {
 
   Future<bool> get hasAnythingCached async => await hasArtworkCached || await hasTXTLyricsCached || await hasLRCLyricsCached /* || await hasColorCached */;
 
-  Future<bool> _doesAnyPathExist(String directory, String extension, String Function(Selectable e) cacheKeyBuilder, {String Function(Selectable tr)? fullPath}) async {
+  Future<bool> _doesAnyPathExist(
+    String directory,
+    String extension,
+    String Function(String directory, Selectable e) cacheKeyBuilder, {
+    String Function(Selectable tr)? fullPath,
+  }) async {
     for (final track in this) {
-      if (await File(fullPath != null ? fullPath(track) : "$directory${cacheKeyBuilder(track)}.$extension").exists()) {
+      if (await File(fullPath != null ? fullPath(track) : "$directory${cacheKeyBuilder(directory, track)}.$extension").exists()) {
         return true;
       }
     }

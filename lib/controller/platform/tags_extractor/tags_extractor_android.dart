@@ -128,6 +128,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
               artist: trackInfo?.tags.artist,
             ),
             hashKeyCallback: () => trackPath.toFastHashKey(),
+            parentDirPath: artworkDirectory,
           );
           final File? thumbFile = await TagsExtractor.extractThumbnailCustom(
             trackPath: trackPath,

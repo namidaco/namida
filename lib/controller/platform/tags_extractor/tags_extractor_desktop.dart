@@ -43,6 +43,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
             artist: ffmpegInfo?.format?.tags?.artist,
           ),
           hashKeyCallback: () => trackPath.toFastHashKey(),
+          parentDirPath: artworkDirectory,
         );
 
         final possibleThumbFile = FileParts.join(artworkDirectory, filename);

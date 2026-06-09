@@ -511,7 +511,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
     // -- copying newly found m3u files as a backup
     for (final m3u in all.entries) {
-      final backupFile = File("$backupDirPath${m3u.key}.m3u");
+      final backupFile = FileParts.join(backupDirPath, "${m3u.key}.m3u");
       if (!backupFile.existsSync()) {
         File(m3u.value.path).copySync(backupFile.path);
       }

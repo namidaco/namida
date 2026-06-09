@@ -24,10 +24,10 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
   String get embeddedLyrics => trackExt.lyrics;
 
   @override
-  File get cachedTxtFile => File(p.join(mainLyricsCacheDirectory, "${track.rawCacheKey}.txt"));
+  File get cachedTxtFile => File(p.join(mainLyricsCacheDirectory, "${track.rawCacheKey(mainLyricsCacheDirectory)}.txt"));
 
   @override
-  File get cachedLRCFile => File(p.join(mainLyricsCacheDirectory, "${track.rawCacheKey}.lrc"));
+  File get cachedLRCFile => File(p.join(mainLyricsCacheDirectory, "${track.rawCacheKey(mainLyricsCacheDirectory)}.lrc"));
 
   @override
   List<File Function()> get deviceLRCFiles {
@@ -123,8 +123,24 @@ class LrcSearchUtilsSelectableFromNetwork extends LrcSearchUtilsSelectable {
   const LrcSearchUtilsSelectableFromNetwork(super.trackExt, super.track);
 
   @override
-  File get cachedTxtFile => File(p.join(mainLyricsCacheDirectory, "${DownloadTaskFilename.cleanupFilename(track.rawCacheKey)}.txt"));
+  File get cachedTxtFile => File(
+    p.join(
+      mainLyricsCacheDirectory,
+      "${DownloadTaskFilename.cleanupFilename(
+        track.rawCacheKey(mainLyricsCacheDirectory),
+        parentDirPath: mainLyricsCacheDirectory,
+      )}.txt",
+    ),
+  );
 
   @override
-  File get cachedLRCFile => File(p.join(mainLyricsCacheDirectory, "${DownloadTaskFilename.cleanupFilename(track.rawCacheKey)}.lrc"));
+  File get cachedLRCFile => File(
+    p.join(
+      mainLyricsCacheDirectory,
+      "${DownloadTaskFilename.cleanupFilename(
+        track.rawCacheKey(mainLyricsCacheDirectory),
+        parentDirPath: mainLyricsCacheDirectory,
+      )}.lrc",
+    ),
+  );
 }

@@ -397,7 +397,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                         if (artworkIdentifiers[ArtworkIdentifier.year] == true) {
                           if (year != null) parts += year
                         }
-                        artworkFilenameToUse = cleanupFilename(parts)
+                        artworkFilenameToUse = cleanupFilename(parts, artworkDirectory)
                       }
                       if (artworkFilenameToUse.isEmpty()) artworkFilenameToUse = path.split("/").last()
 
@@ -588,8 +588,15 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
   }
 
   private val cleanupFilenameRegex = Regex("""[*#\$|/\\!^:"\?%<>\u2F38\u2044\u29F8]""", RegexOption.IGNORE_CASE)
-  private fun cleanupFilename(filename: String): String {
-    return filename.replace(cleanupFilenameRegex, "_")
+  private val fullPathLimitAndroid = 4096
+  private fun cleanupFilename(filename: String, parentDirPath: String): String {
+    val cleaned = filename.replace(cleanupFilenameRegex, "_")
+    val maxLength = minOf(255, fullPathLimitAndroid - parentDirPath.length)
+    if (cleaned.length <= maxLength) return cleaned
+    val dotIndex = cleaned.lastIndexOf('.')
+    val ext = if (dotIndex > 0) cleaned.substring(dotIndex) else ""
+    if (ext.length >= maxLength) return cleaned.substring(0, maxLength)
+    return cleaned.substring(0, maxLength - ext.length) + ext
   }
 
 }

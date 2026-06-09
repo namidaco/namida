@@ -98,7 +98,7 @@ abstract class TagsExtractor {
 
   static Set<AlbumIdentifier> getAlbumIdentifiersSet() => defaultAlbumIdentifier.toSet();
 
-  static String buildImageFilenameFromTrack({required Track track, String? networkId, required TrackExtended? trExt}) {
+  static String buildImageFilenameFromTrack({required Track track, String? networkId, required TrackExtended? trExt, required String parentDirPath}) {
     return TagsExtractor.buildImageFilename(
       path: track.path,
       isNetwork: track.isNetwork,
@@ -113,6 +113,7 @@ abstract class TagsExtractor {
         artist: trExt?.originalArtist,
       ),
       hashKeyCallback: () => trExt?.hashKey ?? track.path.toFastHashKey(),
+      parentDirPath: parentDirPath,
     );
   }
 
@@ -132,6 +133,7 @@ abstract class TagsExtractor {
     Function()
     infoCallback,
     required String? Function() hashKeyCallback,
+    required String parentDirPath,
   }) {
     final woext = buildImageFilenameWOExt(
       path: path,
@@ -141,6 +143,7 @@ abstract class TagsExtractor {
       identifierCallback: identifierCallback,
       infoCallback: infoCallback,
       hashKeyCallback: hashKeyCallback,
+      parentDirPath: parentDirPath,
     );
     return '$woext.png';
   }
@@ -161,6 +164,7 @@ abstract class TagsExtractor {
     Function()
     infoCallback,
     required String? Function() hashKeyCallback,
+    required String parentDirPath,
   }) {
     final identifiersSet = identifiers ?? TagsExtractor.getAlbumIdentifiersSet();
     if (TagsExtractor.defaultGroupArtworksByAlbum) {
@@ -175,6 +179,7 @@ abstract class TagsExtractor {
         albumArtist: info.albumArtist,
         year: info.year,
         identifiers: identifiersSet,
+        parentDirPath: parentDirPath,
       );
       if (id.isNotEmpty) return id;
     }
@@ -187,6 +192,7 @@ abstract class TagsExtractor {
           info.title ?? '',
           networkId ?? MusicWebServer.baseUrlToId(path) ?? '',
         ].joinText(separator: ' - '),
+        parentDirPath: parentDirPath,
       );
     } else {
       filename = path.getFilename;
@@ -206,20 +212,25 @@ abstract class TagsExtractor {
     required String? albumArtist,
     required String? year,
     required Set<AlbumIdentifier> identifiers,
+    required String parentDirPath,
   }) {
     var buffer = StringBuffer();
     if (albumName != null && identifiers.contains(AlbumIdentifier.albumName)) buffer.write(albumName);
     if (albumArtist != null && identifiers.contains(AlbumIdentifier.albumArtist)) buffer.write(albumArtist);
     if (year != null && identifiers.contains(AlbumIdentifier.year)) buffer.write(year);
-    return DownloadTaskFilename.cleanupFilename(buffer.toString());
+    return DownloadTaskFilename.cleanupFilename(
+      buffer.toString(),
+      parentDirPath: parentDirPath,
+    );
   }
 
-  static String getArtworkIdentifierFromInfo(FAudioModel? data, Set<AlbumIdentifier> identifiers) {
+  static String getArtworkIdentifierFromInfo(FAudioModel? data, Set<AlbumIdentifier> identifiers, String parentDirPath) {
     return getArtworkIdentifier(
       albumName: data?.tags.album,
       albumArtist: data?.tags.albumArtist,
       year: data?.tags.year,
       identifiers: identifiers,
+      parentDirPath: parentDirPath,
     );
   }
 }

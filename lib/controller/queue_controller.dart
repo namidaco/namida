@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
@@ -312,7 +313,7 @@ class QueueController {
   }
 
   Future<void> _saveQueueToStorage(Queue queue) async {
-    await File('${AppDirs.QUEUES}${queue.date}.json').writeAsJson(queue.toJson());
+    await FileParts.join(AppDirs.QUEUES, '${queue.date}.json').writeAsJson(queue.toJson());
   }
 
   final _queueFnLimiter = FunctionExecuteLimiter(
@@ -338,7 +339,7 @@ class QueueController {
   }
 
   Future<void> _deleteQueueFromStorage(Queue queue) async {
-    await File('${AppDirs.QUEUES}${queue.date}.json').tryDeleting();
+    await FileParts.join(AppDirs.QUEUES, '${queue.date}.json').tryDeleting();
   }
 
   Future<void> _deleteQueuesFromStorage(List<int> queuesDates) async {
