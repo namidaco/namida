@@ -307,7 +307,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
           metadata["tags"] = tag.getAll(FieldKey.TAGS)
           metadata["remixer"] = tag.getAll(FieldKey.REMIXER)
           metadata["rating"] = when {
-              tag is VorbisCommentTag || tag is FlacTag -> ratingRaw  // 0-5 or 0-100
+              tag is VorbisCommentTag || tag is FlacTag || ratingRaw.contains('.') -> ratingRaw  // 0-5 or 0-100
               else -> {
                   // 0-255, convert to 0-100
                   val v = ratingRaw.toIntOrNull()

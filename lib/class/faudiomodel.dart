@@ -137,7 +137,8 @@ class FTags {
 
   static double? ratingToPercentage(String? rating) {
     if (rating == null) return null;
-    final value = int.tryParse(rating);
+    final value = num.tryParse(rating);
+    if (value is double && value <= 1.0) return value;
     if (value == null || value == 0) return null;
     if (value <= 5) return value / 5.0; // 0-5
     return value / 100.0; // 0-100
@@ -158,7 +159,7 @@ class FTags {
       ];
     }
 
-    final ratingString = map["rating"] ?? map["RATING"];
+    final ratingString = map["FMPS_Rating"] ?? map["rating"] ?? map["RATING"];
 
     return FTags(
       path: map["path"],
@@ -209,7 +210,7 @@ class FTags {
       "comment": comment,
       "description": description,
       "synopsis": synopsis,
-      "year": year, 
+      "year": year,
       "trackNumber": trackNumber,
       "trackTotal": trackTotal,
       "discNumber": discNumber,

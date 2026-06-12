@@ -1450,21 +1450,24 @@ class Indexer<T extends Track> {
       TrackTileManager.rebuildTrackInfo(track);
     }
 
+    final statsRaw = track.statsRaw;
+
+    // fallback rating should not access tags rating (effectiveRating), otherwise it would stick and reindexing won't solve it
     final rating = ratingString != null
         ? ratingString.isEmpty
-              ? 0
-              : int.tryParse(ratingString) ?? track.effectiveRating
-        : track.effectiveRating;
+              ? null
+              : int.tryParse(ratingString) ?? statsRaw?.rating
+        : statsRaw?.rating;
     final tags = tagsString != null ? splitByCommaList(tagsString) : track.effectiveTags;
     final moods = moodsString != null ? splitByCommaList(moodsString) : track.effectiveMoods;
     lastPositionInMs ??= track.lastPlayedPositionInMs ?? 0;
     final newStats = TrackStats(
       track: track,
-      rating: rating.clampInt(0, 100),
+      rating: rating?.clampInt(0, 100) ?? 0,
       tags: tags,
       moods: moods,
       lastPositionInMs: lastPositionInMs,
-      audioTrackId: track.statsRaw?.audioTrackId,
+      audioTrackId: statsRaw?.audioTrackId,
     );
     trackStatsMap[track] = newStats;
     unawaited(_trackStatsDBManager.put(track.path, newStats.toJsonWithoutTrack()));
