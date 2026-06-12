@@ -653,6 +653,8 @@ enum SnackDisplayDuration {
   const SnackDisplayDuration(this.milliseconds);
 }
 
+final _snackbarsStack = <SnackbarController>[];
+
 SnackbarController snackyy({
   IconData? icon,
   String title = '',
@@ -675,6 +677,13 @@ SnackbarController snackyy({
   final view = context?.view ?? namida.platformView;
   final backgroundColor = context?.theme.scaffoldBackgroundColor.withOpacityExt(0.3) ?? Colors.black54;
   final itemsColor = context?.theme.colorScheme.onSurface.withOpacityExt(0.7) ?? Colors.white54;
+
+  final displayDurationEffective = Duration(milliseconds: displayDuration.milliseconds);
+  // -- add extra duration to older snackbars,
+  // -- so that they don't close while the current one is covering or drawing attention
+  for (final s in _snackbarsStack) {
+    s.addDuration(displayDurationEffective);
+  }
 
   TextStyle getTextStyle(FontWeight fontWeight, double size, {bool action = false}) => TextStyle(
     fontWeight: fontWeight,
@@ -782,7 +791,7 @@ SnackbarController snackyy({
   );
   final snackbar = NamSnackBar(
     margin: margin,
-    duration: Duration(milliseconds: displayDuration.milliseconds),
+    duration: displayDurationEffective,
     animationDuration: Duration(milliseconds: animationDurationMS),
     alignment: Alignment.centerLeft,
     top: top,
@@ -828,7 +837,10 @@ SnackbarController snackyy({
   );
 
   snackbarController = SnackbarController(snackbar);
-  snackbarController.show();
+  _snackbarsStack.add(snackbarController);
+  snackbarController.show().whenComplete(
+    () => _snackbarsStack.remove(snackbarController),
+  );
   return snackbarController;
 }
 
