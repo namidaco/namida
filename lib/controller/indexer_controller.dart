@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1677,31 +1676,10 @@ class Indexer<T extends Track> {
     tracksInfoList.clear(); // clearing for cases which refreshing library is required (like after changing separators)
 
     final mediaSorters = <MediaType, List<Comparable<dynamic> Function(Track)>>{};
-    final mediaSortersNOTSafeInIsolate = _getMediaTypeSortThatDependOnHistory();
     final mediaSortersReverse = settings.mediaItemsTrackSortingReverse.value;
 
     for (final e in MediaType.values) {
-      if (!mediaSortersNOTSafeInIsolate.contains(e)) {
-        mediaSorters[e] = SearchSortController.inst.getMediaTracksSortingComparables(e);
-      }
-    }
-
-    final tracksRecievePort = ReceivePort();
-
-    Future<void> handleRecieveTracks() async {
-      try {
-        final value = await tracksRecievePort.first;
-        value as _TracksLoadResult;
-        allTracksMappedByPath = value.allTracksMappedByPath;
-        allTracksMappedByYTID = value.allTracksMappedByYTID as Map<String, List<T>>;
-        tracksInfoList.value = value.tracksInfoList as List<T>;
-        this.sortMediaTracksSubLists([MediaType.track]);
-        completer?.completeIfWasnt();
-      } catch (e, st) {
-        completer?.completeErrorIfWasnt(e, st);
-      } finally {
-        tracksRecievePort.close();
-      }
+      mediaSorters[e] = SearchSortController.inst.getMediaTracksSortingComparables(e);
     }
 
     await [
@@ -1715,15 +1693,30 @@ class Indexer<T extends Track> {
             AppPaths.TRACKS_DB_INFO,
             AppPaths.TRACKS_OLD,
             _createSplitConfig(),
-            mediaSorters,
-            mediaSortersReverse,
-            settings.albumIdentifiers.value,
-            TagsExtractor.defaultUniqueArtworkHash,
-            tracksRecievePort.sendPort,
           ])
           .then(
-            (libraryGroup) async {
-              mainMapsGroup.updateFrom(libraryGroup);
+            (value) async {
+              allTracksMappedByPath = value.allTracksMappedByPath;
+              allTracksMappedByYTID = value.allTracksMappedByYTID as Map<String, List<T>>;
+              tracksInfoList.value = value.tracksInfoList as List<T>;
+
+              mainMapsGroup.fillAll(
+                tracksInfoList.value,
+                (tr) =>
+                    allTracksMappedByPath[tr.path] ??
+                    kDummyExtendedTrack.copyWith(
+                      title: tr.path.getFilenameWOExt,
+                      path: tr.path,
+                      generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
+                    ),
+                settings.albumIdentifiers.value,
+              );
+
+              mainMapsGroup.sortAllSync(
+                mediaSorters,
+                mediaSortersReverse,
+                tracksInfoList.value,
+              );
 
               FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos.value);
               FoldersController.tracksAndVideos.onFirstLoad();
@@ -1733,16 +1726,87 @@ class Indexer<T extends Track> {
               FoldersController.videos.onMapChanged(mainMapFoldersVideos.value);
               FoldersController.videos.onFirstLoad();
 
-              _refreshMediaTracksSubListsAfterSort(mediaSorters.keys);
+              completer?.completeIfWasnt();
 
               SearchSortController.inst.refreshPortsIfNecessary(); // -- vip to refresh filtering
             },
           ),
-      handleRecieveTracks(),
     ].executeAllAndSilentReportErrors();
 
     printy("All Tracks Length From File: ${tracksInfoList.length}");
   }
+
+  /// Same as [_readTrackData] but sorting happens on the spawned isolate, means everything needs to be copied instead of just tracks
+  // Future<void> _readTrackDataWithOffloadSorting([Completer<void>? completer]) async {
+  //   tracksInfoList.clear(); // clearing for cases which refreshing library is required (like after changing separators)
+
+  //   final mediaSorters = <MediaType, List<Comparable<dynamic> Function(Track)>>{};
+  //   final mediaSortersNOTSafeInIsolate = _getMediaTypeSortThatDependOnHistory();
+  //   final mediaSortersReverse = settings.mediaItemsTrackSortingReverse.value;
+
+  //   for (final e in MediaType.values) {
+  //     if (!mediaSortersNOTSafeInIsolate.contains(e)) {
+  //       mediaSorters[e] = SearchSortController.inst.getMediaTracksSortingComparables(e);
+  //     }
+  //   }
+
+  //   final tracksRecievePort = ReceivePort();
+
+  //   Future<void> handleRecieveTracks() async {
+  //     try {
+  //       final value = await tracksRecievePort.first;
+  //       value as _TracksLoadResult;
+  //       allTracksMappedByPath = value.allTracksMappedByPath;
+  //       allTracksMappedByYTID = value.allTracksMappedByYTID as Map<String, List<T>>;
+  //       tracksInfoList.value = value.tracksInfoList as List<T>;
+  //       this.sortMediaTracksSubLists([MediaType.track]);
+  //       completer?.completeIfWasnt();
+  //     } catch (e, st) {
+  //       completer?.completeErrorIfWasnt(e, st);
+  //     } finally {
+  //       tracksRecievePort.close();
+  //     }
+  //   }
+
+  //   await [
+  //     _IndexerIsolateExecuter._readTrackStatsDataSync.thready([AppPaths.TRACKS_STATS_DB_INFO, AppPaths.TRACKS_STATS_OLD]).then(
+  //       (res) {
+  //         trackStatsMap.value = res;
+  //       },
+  //     ),
+  //     _IndexerIsolateExecuter._readTracksDataSync
+  //         .thready([
+  //           AppPaths.TRACKS_DB_INFO,
+  //           AppPaths.TRACKS_OLD,
+  //           _createSplitConfig(),
+  //           mediaSorters,
+  //           mediaSortersReverse,
+  //           settings.albumIdentifiers.value,
+  //           TagsExtractor.defaultUniqueArtworkHash,
+  //           tracksRecievePort.sendPort,
+  //         ])
+  //         .then(
+  //           (libraryGroup) async {
+  //             mainMapsGroup.updateFrom(libraryGroup);
+
+  //             FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos.value);
+  //             FoldersController.tracksAndVideos.onFirstLoad();
+
+  //             FoldersController.tracks.onMapChanged(mainMapFoldersTracks.value);
+  //             FoldersController.tracks.onFirstLoad();
+  //             FoldersController.videos.onMapChanged(mainMapFoldersVideos.value);
+  //             FoldersController.videos.onFirstLoad();
+
+  //             _refreshMediaTracksSubListsAfterSort(mediaSorters.keys);
+
+  //             SearchSortController.inst.refreshPortsIfNecessary(); // -- vip to refresh filtering
+  //           },
+  //         ),
+  //     handleRecieveTracks(),
+  //   ].executeAllAndSilentReportErrors();
+
+  //   printy("All Tracks Length From File: ${tracksInfoList.length}");
+  // }
 
   static List<String> splitArtist({
     required String? title,
@@ -2098,15 +2162,17 @@ class _IndexerIsolateExecuter {
   }
 
   /// Reading actual tracks db.
-  static Future<LibraryGroup<Track>> _readTracksDataSync(List paramsList) async {
+  static Future<_TracksLoadResult> _readTracksDataSync(List paramsList) async {
     final tracksDbInfo = paramsList[0] as DbWrapperFileInfo;
     final oldJsonFilePath = paramsList[1] as String;
     final splitconfig = paramsList[2] as SplitArtistGenreConfigsWrapper;
-    final mediaItemsTrackSorters = paramsList[3] as Map<MediaType, List<Comparable<dynamic> Function(Track)>>;
-    final mediaItemsTrackSortingReverse = paramsList[4] as Map<MediaType, bool>;
-    final albumIdentifiers = paramsList[5] as List<AlbumIdentifier>;
-    final generatePathHash = paramsList[6] as bool? ?? false;
-    final tracksInitPort = paramsList[7] as SendPort;
+    // --------- enable only if sorting will be done here ---------
+    // final mediaItemsTrackSorters = paramsList[3] as Map<MediaType, List<Comparable<dynamic> Function(Track)>>;
+    // final mediaItemsTrackSortingReverse = paramsList[4] as Map<MediaType, bool>;
+    // final albumIdentifiers = paramsList[5] as List<AlbumIdentifier>;
+    // final generatePathHash = paramsList[6] as bool? ?? false;
+    // final tracksInitPort = paramsList[7] as SendPort;
+    // ------------------
 
     final tracksDBManager = await DBWrapper.openFromInfoSyncTry(
       fileInfo: tracksDbInfo,
@@ -2168,39 +2234,47 @@ class _IndexerIsolateExecuter {
 
     tracksDBManager?.close();
 
-    tracksInitPort.send(
-      _TracksLoadResult(
-        tracksInfoList: tracksInfoList,
-        allTracksMappedByPath: allTracksMappedByPath,
-        allTracksMappedByYTID: allTracksMappedByYTID,
-      ),
+    return _TracksLoadResult(
+      tracksInfoList: tracksInfoList,
+      allTracksMappedByPath: allTracksMappedByPath,
+      allTracksMappedByYTID: allTracksMappedByYTID,
     );
 
-    // -- so that sorting works, the Indexer here is local to this isolate only
-    Indexer.inst.allTracksMappedByPath = allTracksMappedByPath;
-    Indexer.inst.tracksInfoList.value = tracksInfoList;
-    Indexer.inst.allTracksMappedByYTID = allTracksMappedByYTID;
+    // --------- enable only if sorting will be done here ---------
+    // tracksInitPort.send(
+    //   _TracksLoadResult(
+    //     tracksInfoList: tracksInfoList,
+    //     allTracksMappedByPath: allTracksMappedByPath,
+    //     allTracksMappedByYTID: allTracksMappedByYTID,
+    //   ),
+    // );
 
-    final libraryGroup = LibraryGroup();
-    libraryGroup.fillAll(
-      tracksInfoList,
-      (tr) =>
-          allTracksMappedByPath[tr.path] ??
-          kDummyExtendedTrack.copyWith(
-            title: tr.path.getFilenameWOExt,
-            path: tr.path,
-            generatePathHash: generatePathHash,
-          ),
-      albumIdentifiers,
-    );
+    // // -- so that sorting works, the Indexer here is local to this isolate only
+    // Indexer.inst.allTracksMappedByPath = allTracksMappedByPath;
+    // Indexer.inst.tracksInfoList.value = tracksInfoList;
+    // Indexer.inst.allTracksMappedByYTID = allTracksMappedByYTID;
 
-    libraryGroup.sortAllSync(
-      mediaItemsTrackSorters,
-      mediaItemsTrackSortingReverse,
-      tracksInfoList,
-    );
+    // final libraryGroup = LibraryGroup();
+    // libraryGroup.fillAll(
+    //   tracksInfoList,
+    //   (tr) =>
+    //       allTracksMappedByPath[tr.path] ??
+    //       kDummyExtendedTrack.copyWith(
+    //         title: tr.path.getFilenameWOExt,
+    //         path: tr.path,
+    //         generatePathHash: generatePathHash,
+    //       ),
+    //   albumIdentifiers,
+    // );
 
-    return libraryGroup;
+    // libraryGroup.sortAllSync(
+    //   mediaItemsTrackSorters,
+    //   mediaItemsTrackSortingReverse,
+    //   tracksInfoList,
+    // );
+
+    // return libraryGroup;
+    // ------------------
   }
 }
 
