@@ -348,8 +348,9 @@ class TracksSearchWrapper {
     int index = 0;
     for (final trExt in _tracksExtended) {
       final score = matchScore(trExt);
-      if (score <= 0) continue;
-      (scored[score] ??= []).add((trExt, index));
+      if (score > 0) {
+        (scored[score] ??= []).add((trExt, index));
+      }
       index++;
     }
 

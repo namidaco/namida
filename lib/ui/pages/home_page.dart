@@ -325,7 +325,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     currentRecentsSourceType = type;
 
     final map = QueueController.inst.queuesMap.value;
-    final keysSortedByLatest = map.keys.toFixedList().reversed;
+    final keysSortedByLatest = map.keys.toList().reversed;
     final addedSources = <QueueSourceBase>{};
     final queuesToTake = <Queue>[];
     for (final k in keysSortedByLatest) {
