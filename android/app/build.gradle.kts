@@ -137,7 +137,7 @@ repositories {
 }
 
 dependencies {
-    implementation("net.jthink:jaudiotagger:3.0.1")
+    implementation("com.github.chr56:jaudiotagger:0.1.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9")
     implementation("androidx.glance:glance-appwidget") {
         version { strictly("1.1.1") }
