@@ -538,8 +538,6 @@ extension EnumUtils<E extends Enum> on E {
 }
 
 extension TRACKPLAYMODE on TrackPlayMode {
-  bool get shouldBeIndex0 => this == TrackPlayMode.selectedTrack || this == TrackPlayMode.trackAlbum || this == TrackPlayMode.trackArtist || this == TrackPlayMode.trackGenre;
-
   List<Track> generateQueue(Track trackPre, {List<Track>? searchQueue}) {
     final track = trackPre.toTrackExt();
     final queue =

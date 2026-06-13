@@ -298,11 +298,16 @@ enum LibraryTab {
 }
 
 enum TrackPlayMode {
-  selectedTrack,
-  searchResults,
+  selectedTrack(gentlePlay: true),
+  searchResults(shouldBeIndex0: false),
   trackAlbum,
   trackArtist,
   trackGenre,
+  ;
+
+  final bool shouldBeIndex0;
+  final bool gentlePlay;
+  const TrackPlayMode({this.shouldBeIndex0 = true, this.gentlePlay = false});
 }
 
 enum QueueSourceEnum {
