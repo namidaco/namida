@@ -144,7 +144,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     if (_isVisible) {
       setControlsVisibily(false);
     } else {
-      if (_canShowControls) {
+      if (widget.showControls) {
         setControlsVisibily(true);
       }
     }
@@ -155,7 +155,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _currentDeviceVolume.value = null; // hide volume slider
     _canShowBrightnessSlider.value = false; // hide brightness slider
 
-    if (_canShowControls) {
+    if (widget.showControls) {
       setControlsVisibily(true);
     }
 
@@ -260,9 +260,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     if (!mounted) return;
     final value = MiniPlayerController.inst.animation.value;
     final hideUnder = widget.disableControlsUnderPercentage!;
-    final shouldShow = value >= hideUnder;
-    if (shouldShow != _isControlsEnabled) {
-      setState(() => _isControlsEnabled = shouldShow);
+    final shouldHide = value < hideUnder;
+    if (shouldHide != _isLocked) {
+      setState(() => _isLocked = shouldHide);
     }
   }
 
@@ -640,8 +640,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _doubleTapTimer = null;
   }
 
-  late bool _isControlsEnabled = widget.showControls;
-  bool get _canShowControls => _isControlsEnabled && !NamidaChannel.inst.isInPip.value;
+  bool get _canShowControls => !_isLocked && !NamidaChannel.inst.isInPip.value;
 
   EdgeInsets _deviceInsets = EdgeInsets.zero;
 
@@ -686,6 +685,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _isEndCardsVisible.value = true;
   }
 
+  bool _isLocked = false;
+  void _toggleLocked() {
+    setState(() {
+      _isLocked = !_isLocked;
+    });
+  }
+
   late final _seekReadyKey = widget.isFullScreen ? SeekReadyWidget.fullscreenKey : SeekReadyWidget.normalKey;
   SeekReadyWidgetState? get _seekReady => _seekReadyKey.currentState;
 
@@ -697,7 +703,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       if (newDeviceInsets != EdgeInsets.zero) _deviceInsets = newDeviceInsets;
     }
 
-    final maxWidth = _maxWidth = widget.isFullScreen ? context.width : context.width.withMaximum(Dimensions.inst.miniplayerMaxWidth);
+    final isFullScreen = widget.isFullScreen;
+
+    final maxWidth = _maxWidth = isFullScreen ? context.width : context.width.withMaximum(Dimensions.inst.miniplayerMaxWidth);
     final maxHeight = _maxHeight = context.height;
 
     final inLandscape = NamidaNavigator.inst.isInLanscape;
@@ -728,7 +736,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             ),
           );
         }
-        if (widget.isLocal && !widget.isFullScreen) {
+        if (widget.isLocal && !isFullScreen) {
           return Container(
             key: const Key('dummy_container'),
             color: Colors.transparent,
@@ -781,20 +789,20 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       },
     );
 
-    final horizontalControlsPadding = widget.isFullScreen
+    final horizontalControlsPadding = isFullScreen
         ? inLandscape
               ? EdgeInsets.only(left: 12.0 + _deviceInsets.left, right: 12.0 + _deviceInsets.right) // lanscape videos
               : EdgeInsets.only(left: 12.0 + _deviceInsets.left, right: 12.0 + _deviceInsets.right) // vertical videos
         : const EdgeInsets.symmetric(horizontal: 2.0);
 
-    final safeAreaPadding = widget.isFullScreen
+    final safeAreaPadding = isFullScreen
         ? inLandscape
               ? EdgeInsets.only(left: _deviceInsets.left, right: _deviceInsets.right)
               : EdgeInsets
                     .zero // bcz we hide status bar and nav bar
         : EdgeInsets.zero;
 
-    final bottomPadding = widget.isFullScreen
+    final bottomPadding = isFullScreen
         ? inLandscape
               ? 12.0 +
                     _deviceInsets
@@ -804,7 +812,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                         _deviceInsets
                             .bottom // vertical videos
         : 2.0;
-    final topPadding = widget.isFullScreen
+    final topPadding = isFullScreen
         ? inLandscape
               ? 12.0 +
                     _deviceInsets
@@ -814,8 +822,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                         .top // vertical videos
         : 2.0;
     final itemsColor = Colors.white.withAlpha(200);
-    final shouldShowSliders = _canShowControls && widget.isFullScreen;
-    final shouldShowSeekBar = widget.isFullScreen;
+    final shouldShowSliders = _canShowControls && isFullScreen;
+    final shouldShowSeekBar = isFullScreen;
     final view = View.of(context);
 
     final mainButtonSize = 40.0.withMaximum(maxWidth * 0.1);
@@ -825,6 +833,28 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
     final secondaryButtonSize = 30.0.withMaximum(maxWidth * 0.06);
     final secondaryButtonPadding = EdgeInsets.all(10.0.withMaximum(maxWidth * 0.025));
+
+    final lockIconWidget = isFullScreen
+        ? NamidaBgBlurClipped(
+            blur: 3.0,
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacityExt(0.2),
+              borderRadius: borr8,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(6.0),
+              child: NamidaIconButton(
+                verticalPadding: 2.0,
+                horizontalPadding: 8.0,
+                padding: EdgeInsets.zero,
+                icon: _isLocked ? Broken.lock_slash : Broken.lock_1,
+                iconSize: _isLocked ? 22.0 : 18.0,
+                iconColor: itemsColor,
+                onPressed: _toggleLocked,
+              ),
+            ),
+          )
+        : null;
 
     final skipSponsorButton = ObxO(
       rx: settings.youtube.sponsorBlockSettings,
@@ -911,7 +941,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       },
     );
 
-    Widget videoControlsWidget = Listener(
+    Widget videoControlsWidget = _ListenerEnabled(
+      enabled: !_isLocked,
       behavior: HitTestBehavior.translucent,
       onPointerDown: (event) {
         _pointerDownedOnRight = event.position.dx > maxWidth / 2;
@@ -933,10 +964,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       },
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onHorizontalDragStart: !_isControlsEnabled ? null : (details) => _seekReady?.onHorizontalDragStartSimple(),
-        onHorizontalDragUpdate: !_isControlsEnabled ? null : (event) => _seekReady?.onHorizontalDragUpdateSimple(event),
-        onHorizontalDragEnd: !_isControlsEnabled ? null : (event) => _seekReady?.onHorizontalDragEnd(allowMagnet: false),
-        onHorizontalDragCancel: !_isControlsEnabled ? null : _seekReady?.onHorizontalDragCancel,
+        onHorizontalDragStart: _isLocked ? null : (details) => _seekReady?.onHorizontalDragStartSimple(),
+        onHorizontalDragUpdate: _isLocked ? null : (event) => _seekReady?.onHorizontalDragUpdateSimple(event),
+        onHorizontalDragEnd: _isLocked ? null : (event) => _seekReady?.onHorizontalDragEnd(allowMagnet: false),
+        onHorizontalDragCancel: _isLocked ? null : _seekReady?.onHorizontalDragCancel,
         onVerticalDragUpdate: !shouldShowSliders
             ? null
             : (event) async {
@@ -994,6 +1025,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   });
                 }
               }
+            : _isLocked
+            ? (_) {
+                _onTap();
+              }
             : null,
         onTapCancel: () {
           _onFinishingDoubleTapTimer();
@@ -1015,7 +1050,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       builder: (context, enableGlowBehindVideo) => ObxO(
                         rx: NamidaChannel.inst.isInPip,
                         builder: (context, inPip) => _DropShadowWrapper(
-                          enabled: widget.isFullScreen && !inPip && enableGlowBehindVideo,
+                          enabled: isFullScreen && !inPip && enableGlowBehindVideo,
                           child: finalVideoWidget,
                         ),
                       ),
@@ -1031,7 +1066,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                   rx: _isEndCardsVisible,
                                   builder: (context, endcardsvisible) => _YTVideoEndcards(
                                     visible: endcardsvisible,
-                                    inFullScreen: widget.isFullScreen,
+                                    inFullScreen: isFullScreen,
                                   ),
                                 ),
                               ),
@@ -1056,7 +1091,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
             // -- seek ready cant have expanded hit test otherwise it would block bottom controls here
             // -- this widgets adds extra horizontal drag detection behind controls
-            if (!widget.isFullScreen && _isControlsEnabled)
+            if (!isFullScreen && !_isLocked)
               Positioned(
                 left: 0,
                 right: 0,
@@ -1068,6 +1103,17 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       maxWidth: maxWidth,
                     ) ??
                     const SizedBox(),
+              ),
+
+            if (_isLocked && lockIconWidget != null)
+              Align(
+                alignment: .topLeft,
+                child: Padding(
+                  padding: horizontalControlsPadding + EdgeInsets.only(top: topPadding) + const EdgeInsets.all(8.0),
+                  child: _getBuilder(
+                    child: lockIconWidget,
+                  ),
+                ),
               ),
 
             if (widget.showControls)
@@ -1088,7 +1134,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               final topPortion = maxHeight * 0.1;
                               final bottomPortion = maxHeight * 0.8;
 
-                              final allowBottom = widget.isFullScreen;
+                              final allowBottom = isFullScreen;
 
                               return MouseRegion(
                                 opaque: false,
@@ -1128,7 +1174,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                         child: LongPressDetector(
                           onLongPress: null,
                           initializer: (instance) {
-                            instance.onLongPressStart = !_isControlsEnabled ? null : (_) => _startLongPressAction();
+                            instance.onLongPressStart = _isLocked ? null : (_) => _startLongPressAction();
                             instance.onLongPressEnd = (_) => _endLongPressAction();
                             instance.onLongPressCancel = () => _endLongPressAction();
                           },
@@ -1145,18 +1191,18 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             child: _getBuilder(
                               child: Row(
                                 children: [
-                                  if (widget.isFullScreen || widget.onMinimizeTap != null)
+                                  if (isFullScreen || widget.onMinimizeTap != null)
                                     NamidaIconButton(
                                       horizontalPadding: 12.0,
                                       verticalPadding: 6.0,
-                                      onPressed: widget.isFullScreen ? NamidaNavigator.inst.exitFullScreen : widget.onMinimizeTap,
+                                      onPressed: isFullScreen ? NamidaNavigator.inst.exitFullScreen : widget.onMinimizeTap,
                                       icon: Broken.arrow_down_2,
                                       iconColor: itemsColor,
                                       iconSize: 20.0,
                                     ),
                                   const SizedBox(width: 8.0),
                                   Expanded(
-                                    child: widget.isFullScreen
+                                    child: isFullScreen
                                         ? Material(
                                             type: MaterialType.transparency,
                                             child: _VideoTitleSubtitleWidget(
@@ -1715,7 +1761,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     ),
                                   ),
 
-                                  if (widget.isFullScreen)
+                                  if (isFullScreen)
                                     NamidaPopupWrapper(
                                       openOnTap: true,
                                       onPop: _startTimer,
@@ -1819,8 +1865,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             padding: const EdgeInsets.symmetric(horizontal: 12.0),
                                             child: SeekReadyWidget(
                                               key: SeekReadyWidget.fullscreenKey,
-                                              isFullscreen: widget.isFullScreen,
-                                              showPositionCircle: widget.isFullScreen,
+                                              isFullscreen: isFullScreen,
+                                              showPositionCircle: isFullScreen,
                                               isLocal: widget.isLocal,
                                               canDrag: () {
                                                 return _currentDeviceVolume.value == null && !_canShowBrightnessSlider.value;
@@ -1889,7 +1935,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             ),
                                           ),
                                           const SizedBox(width: 4.0),
-                                          if (widget.isFullScreen) ...[
+                                          if (isFullScreen) ...[
                                             // -- queue order
                                             queueOrderChip,
                                             const SizedBox(width: 4.0),
@@ -1900,6 +1946,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               child: currentSegmentsChip,
                                             ),
                                           ),
+                                          if (lockIconWidget != null) ...[
+                                            const SizedBox(width: 4.0),
+                                            lockIconWidget,
+                                          ],
                                           const SizedBox(width: 4.0),
                                           NamidaBgBlurClipped(
                                             blur: 3.0,
@@ -1912,7 +1962,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               child: Row(
                                                 children: [
                                                   const SizedBox(width: 2.0),
-                                                  if (NamidaFeaturesVisibility.showRotateScreenInFullScreen && widget.isFullScreen) ...[
+                                                  if (NamidaFeaturesVisibility.showRotateScreenInFullScreen && isFullScreen) ...[
                                                     // -- rotate screen button
                                                     NamidaIconButton(
                                                       verticalPadding: 2.0,
@@ -1929,7 +1979,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                     const SizedBox(width: 10.0),
                                                   ],
 
-                                                  if (!widget.isFullScreen && settings.extra.ytStyleButtonSwitcher == true) ...[
+                                                  if (!isFullScreen && settings.extra.ytStyleButtonSwitcher == true) ...[
                                                     NamidaIconButton(
                                                       verticalPadding: 2.0,
                                                       horizontalPadding: 4.0,
@@ -1953,7 +2003,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                       _startTimer();
                                                     },
                                                   ),
-                                                  if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
+                                                  if (isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
                                                   SoundControlButton(
                                                     compact: true,
                                                     color: itemsColor,
@@ -1961,7 +2011,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                       _startTimer();
                                                     },
                                                   ),
-                                                  if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
+                                                  if (isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
                                                   NamidaIconButton(
                                                     verticalPadding: 2.0,
                                                     horizontalPadding: 4.0,
@@ -1980,7 +2030,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                       if (id != null) YTUtils.showCopyItemsDialog(id);
                                                     },
                                                   ),
-                                                  if (widget.isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
+                                                  if (isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
                                                   NamidaIconButton(
                                                     verticalPadding: 2.0,
                                                     horizontalPadding: 4.0,
@@ -2264,7 +2314,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                         ),
                       ),
 
-                      if (widget.isFullScreen && _canShowControls)
+                      if (isFullScreen && _canShowControls)
                         ObxO(
                           rx: settings.youtube.showChannelWatermarkFullscreen,
                           builder: (context, showChannelWatermarkFullscreen) {
@@ -2301,6 +2351,36 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     }
 
     return videoControlsWidget;
+  }
+}
+
+class _ListenerEnabled extends StatelessWidget {
+  final bool enabled;
+  final PointerDownEventListener? onPointerDown;
+  final PointerUpEventListener? onPointerUp;
+  final PointerCancelEventListener? onPointerCancel;
+  final HitTestBehavior behavior;
+  final Widget child;
+
+  const _ListenerEnabled({
+    required this.enabled,
+    this.onPointerDown,
+    this.onPointerUp,
+    this.onPointerCancel,
+    this.behavior = HitTestBehavior.deferToChild,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    return Listener(
+      onPointerDown: onPointerDown,
+      onPointerUp: onPointerUp,
+      onPointerCancel: onPointerCancel,
+      behavior: behavior,
+      child: child,
+    );
   }
 }
 
