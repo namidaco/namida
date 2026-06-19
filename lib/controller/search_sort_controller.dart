@@ -228,6 +228,13 @@ class SearchSortController extends SearchPortsProvider {
       final sorter = getTracksSortingComparables(e);
       l.add(sorter);
     }
+
+    // -- auto add .trackNo after .discNo for albums if it was the only one there
+    if (media == .album && sorts.length == 1 && sorts[0] == .discNo) {
+      final sorter = getTracksSortingComparables(.trackNo);
+      l.add(sorter);
+    }
+
     return l;
   }
 
