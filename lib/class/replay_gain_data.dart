@@ -5,7 +5,7 @@ class ReplayGainData {
   final double? trackGain, albumGain;
   final double? trackPeak, albumPeak;
 
-  const ReplayGainData({
+  const ReplayGainData._({
     required this.trackGain,
     required this.trackPeak,
     required this.albumGain,
@@ -29,27 +29,27 @@ class ReplayGainData {
   }
 
   static ReplayGainData? fromAndroidMap(Map map) {
-    double? trackGainDB = ((map['replaygain_track_gain'] ?? map['REPLAYGAIN_TRACK_GAIN']) as String?)?._parseGainValue(); // "-0.515000 dB"
-    double? albumGainDB = ((map['replaygain_album_gain'] ?? map['REPLAYGAIN_ALBUM_GAIN']) as String?)?._parseGainValue(); // "+0.040000 dB"
+    double? trackGainDB = ((map['replaygain_track_gain'] ?? map['REPLAYGAIN_TRACK_GAIN']) as String?)?._parseGainValue()?._ensureValidNumber(); // "-0.515000 dB"
+    double? albumGainDB = ((map['replaygain_album_gain'] ?? map['REPLAYGAIN_ALBUM_GAIN']) as String?)?._parseGainValue()?._ensureValidNumber(); // "+0.040000 dB"
 
-    trackGainDB ??= ((map['r128_track_gain'] ?? map['R128_TRACK_GAIN']) as String?)?._parseGainValueR128();
-    albumGainDB ??= ((map['r128_album_gain'] ?? map['R128_ALBUM_GAIN']) as String?)?._parseGainValueR128();
+    trackGainDB ??= ((map['r128_track_gain'] ?? map['R128_TRACK_GAIN']) as String?)?._parseGainValueR128()?._ensureValidNumber();
+    albumGainDB ??= ((map['r128_album_gain'] ?? map['R128_ALBUM_GAIN']) as String?)?._parseGainValueR128()?._ensureValidNumber();
 
-    final trackPeak = ((map['replaygain_track_peak'] ?? map['REPLAYGAIN_TRACK_PEAK']) as String?)?._parsePeakValue();
-    final albumPeak = ((map['replaygain_album_peak'] ?? map['REPLAYGAIN_ALBUM_PEAK']) as String?)?._parsePeakValue();
+    final trackPeak = ((map['replaygain_track_peak'] ?? map['REPLAYGAIN_TRACK_PEAK']) as String?)?._parsePeakValue()?._ensureValidNumber();
+    final albumPeak = ((map['replaygain_album_peak'] ?? map['REPLAYGAIN_ALBUM_PEAK']) as String?)?._parsePeakValue()?._ensureValidNumber();
 
-    final data = ReplayGainData(
+    if (trackGainDB == null && trackPeak == null && albumGainDB == null && albumPeak == null) return null;
+
+    return ReplayGainData._(
       trackGain: trackGainDB,
       trackPeak: trackPeak,
       albumGain: albumGainDB,
       albumPeak: albumPeak,
     );
-    if (data.trackGain == null && data.trackPeak == null && data.albumGain == null && data.albumPeak == null) return null;
-    return data;
   }
 
   factory ReplayGainData.fromMap(Map<String, dynamic> map) {
-    return ReplayGainData(
+    return ReplayGainData._(
       trackGain: map['tg'],
       trackPeak: map['tp'],
       albumGain: map['ag'],
@@ -67,7 +67,7 @@ class ReplayGainData {
   }
 }
 
-extension _GainParser on String? {
+extension on String? {
   double? _parseGainValueR128() {
     final parsed = _parseGainValue();
     return parsed == null ? null : (parsed / 256) + 5;
@@ -82,4 +82,8 @@ extension _GainParser on String? {
     var text = this;
     return text == null ? null : double.tryParse(text);
   }
+}
+
+extension on double {
+  double? _ensureValidNumber() => isNaN ? null : this;
 }
