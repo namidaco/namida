@@ -221,6 +221,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   length: lrc.length,
                   offset: newOffset.value,
                   language: lrc.language,
+                  isRTL: lrc.isRTL,
                 );
                 final lyricsString = newLRC.format();
                 await lrcUtils.saveLyricsToCache(lyricsString, true);

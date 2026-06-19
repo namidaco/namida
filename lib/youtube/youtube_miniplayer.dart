@@ -361,7 +361,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                             // ====  MiniPlayer Body, contains title, description, comments, ..etc. ====
                             final miniplayerBody = Obx(
                               (context) {
-                                final showLyrics = settings.enableLyrics.valueR && (Lyrics.inst.currentLyricsLRC.valueR != null || Lyrics.inst.currentLyricsText.valueR.isNotEmpty);
+                                final showLyrics =
+                                    settings.enableLyrics.valueR && (Lyrics.inst.currentLyricsLRC.valueR != null || Lyrics.inst.currentLyricsText.valueR.text.isNotEmpty);
                                 return Stack(
                                   alignment: Alignment.bottomCenter, // bottom alignment is for touch absorber
                                   children: [

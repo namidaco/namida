@@ -37,7 +37,7 @@ class Lyrics {
   final lrcViewKey = GlobalKey<LyricsLRCParsedViewState>();
   final lrcViewKeyFullscreen = GlobalKey<LyricsLRCParsedViewState>();
 
-  final currentLyricsText = ''.obs;
+  final currentLyricsText = LrcText.empty.obs;
   final currentLyricsLRC = Rxn<Lrc>();
   final lyricsCanBeAvailable = true.obs;
 
@@ -49,7 +49,7 @@ class Lyrics {
 
   final _lrcSearchManager = _LRCSearchManager();
 
-  void _updateWidgets(Lrc? lrc, String? txt) {
+  void _updateWidgets(Lrc? lrc, LrcText? txt) {
     WakelockController.inst.updateLRCStatus(lrc != null);
     lrcViewKey.currentState?.fillLists(lrc, txt);
     lrcViewKeyFullscreen.currentState?.fillLists(lrc, txt);
@@ -57,7 +57,7 @@ class Lyrics {
 
   void resetLyrics() {
     _currentItem = null;
-    currentLyricsText.value = '';
+    currentLyricsText.value = LrcText.empty;
     currentLyricsLRC.value = null;
     WakelockController.inst.updateLRCStatus(false);
     lrcViewKey.currentState?.clearLists();
@@ -67,7 +67,7 @@ class Lyrics {
   Future<void> updateLyrics(Playable item) async {
     await _updateLyrics(item);
     if (settings.tutorial.lyricsLongPressFullScreen) {
-      if (currentLyricsLRC.value != null || currentLyricsText.value.isNotEmpty) {
+      if (currentLyricsLRC.value != null || currentLyricsText.value.text.isNotEmpty) {
         snackyy(
           message: lang.longPressTheLyricsToEnterFullscreen,
           top: false,
@@ -111,7 +111,7 @@ class Lyrics {
         currentLyricsLRC.value = lrc;
         _updateWidgets(lrc, null);
       } else {
-        final txt = _cleanPlainLyrics(embedded);
+        final txt = LrcText.fromText(_cleanPlainLyrics(embedded));
         currentLyricsText.value = txt;
         _updateWidgets(null, txt);
       }
@@ -131,7 +131,7 @@ class Lyrics {
       _updateWidgets(lrcLyrics.$1, null);
       return;
     } else if (lrcLyrics.$2 != null) {
-      final txt = _cleanPlainLyrics(lrcLyrics.$2!);
+      final txt = LrcText.fromText(_cleanPlainLyrics(lrcLyrics.$2!));
       currentLyricsText.value = txt;
       _updateWidgets(null, txt);
       return;
@@ -147,7 +147,7 @@ class Lyrics {
     if (checkInterrupted()) return;
 
     if (textLyrics != '') {
-      final txt = _cleanPlainLyrics(textLyrics);
+      final txt = LrcText.fromText(_cleanPlainLyrics(textLyrics));
       currentLyricsText.value = txt;
       _updateWidgets(null, txt);
     } else {
@@ -475,5 +475,29 @@ class _LRCSearchManager with PortsProvider<SendPort> {
     });
 
     sendPort.send(null); // prepared
+  }
+}
+
+class LrcText {
+  final String text;
+  final bool isRTL;
+
+  const LrcText({
+    required this.text,
+    required this.isRTL,
+  });
+
+  static const empty = LrcText(
+    text: '',
+    isRTL: false,
+  );
+
+  factory LrcText.fromText(String text) {
+    final textSample = text.substring(0, 100.withMaximum(text.length));
+    final isRTL = LrcParser.isLrcRTLRaw([textSample]);
+    return LrcText(
+      text: text,
+      isRTL: isRTL,
+    );
   }
 }

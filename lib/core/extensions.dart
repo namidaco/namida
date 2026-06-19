@@ -642,7 +642,12 @@ extension LRCParsingUtils on String {
           );
         }
 
-        return Lrc(lyrics: lines);
+        final isRTL = LrcParser.isLrcRTL(lines);
+
+        return Lrc(
+          lyrics: lines,
+          isRTL: isRTL,
+        );
       }
     } catch (_) {}
     return null;
