@@ -68,7 +68,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
           return totalListens.take(listensSampleCount).contains(element.dateAddedMS); // only allow tracks with first few listens
         },
       ),
-      sorter: (e) => historyController.topTracksMapListens.value[e.key]?.length ?? e.value, // prefer sort by total listens
+      sorter: (track, localListensCount) => historyController.topTracksMapListens.value[track]?.length ?? localListensCount, // prefer sort by total listens
     );
   }
 
@@ -91,7 +91,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
     E Function(T current) itemToSub, {
     required int daysCount,
     Iterable<T> Function(Iterable<T> tracks)? filterTracks,
-    Comparable<dynamic> Function(MapEntry<E, int>)? sorter,
+    Comparable<dynamic> Function(E item, int localListensCount)? sorter,
   }) {
     if (listens == null || listens.isEmpty) return [];
 
@@ -136,11 +136,23 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
 
     final numberOfListensMap = _TracksWithNumberOfListensMap<E>();
 
+    Iterable<T>? tempHeatTracks;
+
     for (int i = 0; i <= historytracks.length - 1;) {
       final t = historytracks[i];
       final subItem = itemToSub(t);
+
       if (subItem == item) {
         final heatTracks = historytracks.getRange(clamped(i - sampleCount), clamped(i + sampleCount));
+        if (numberOfListensMap.isEmpty) {
+          // -- first occurence, we want to skip the first listen if it's too recent
+          final diff = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(t.dateAddedMS));
+          if (diff < const Duration(hours: 2)) {
+            tempHeatTracks = heatTracks;
+            i++;
+            continue;
+          }
+        }
         for (final e in heatTracks) {
           numberOfListensMap.addListen(itemToSub(e));
         }
@@ -150,6 +162,14 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
         i++;
       }
     }
+
+    // -- yes we skip first listen if too recent, but if this results in nothing then nah go back
+    if (numberOfListensMap.isEmpty && tempHeatTracks != null) {
+      for (final e in tempHeatTracks) {
+        numberOfListensMap.addListen(itemToSub(e));
+      }
+    }
+
     return numberOfListensMap.finalize(item);
   }
 }
@@ -157,15 +177,18 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
 class _TracksWithNumberOfListensMap<E> {
   final numberOfListensMap = <E, int>{};
 
+  bool get isEmpty => numberOfListensMap.isEmpty;
+
   void addListen(E e) {
     numberOfListensMap.update(e, (value) => value + 1, ifAbsent: () => 1);
   }
 
-  Iterable<E> finalize(E originalItem, {Comparable<dynamic> Function(MapEntry<E, int>)? sorter}) {
+  List<E> finalize(E originalItem, {Comparable<dynamic> Function(E item, int localListensCount)? sorter}) {
     numberOfListensMap.remove(originalItem);
 
-    final sortedByValueMap = numberOfListensMap.entries.toFixedList();
-    sortedByValueMap.sortByReverse(sorter ?? (e) => e.value);
-    return sortedByValueMap.map((e) => e.key);
+    final effectiveSorter = sorter != null ? (e) => sorter(e, numberOfListensMap[e] ?? 0) : (e) => numberOfListensMap[e] ?? 0;
+    final sortedByValueMap = numberOfListensMap.keys.toList();
+    sortedByValueMap.sortByReverse(effectiveSorter);
+    return sortedByValueMap;
   }
 }
