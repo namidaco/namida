@@ -25,6 +25,7 @@ class FolderTile extends StatefulWidget {
   final bool isTracksRecursive;
   final bool isHome;
   final int dirInsideCount;
+  final String? title;
   final String? subtitle;
 
   const FolderTile({
@@ -36,6 +37,7 @@ class FolderTile extends StatefulWidget {
     required this.isTracksRecursive,
     required this.isHome,
     required this.dirInsideCount,
+    this.title,
     this.subtitle,
   });
 
@@ -101,7 +103,7 @@ class _FolderTileState extends State<FolderTile> {
     final double thumbSize = iconSize * 0.7;
     final extraInfo = _getFolderExtraInfo(widget.folder);
 
-    String folderTitle = widget.folder.folderNameRaw;
+    String folderTitle = widget.title ?? widget.folder.folderNameRaw;
     Widget? trailingWidget;
     if (widget.isHome) {
       try {

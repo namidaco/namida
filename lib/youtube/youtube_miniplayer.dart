@@ -130,7 +130,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     } catch (_) {}
     resetGlowUnderVideo();
     startDimTimer();
-    _isTitleExpanded.value = false;
+    // _expansibleController.collapse();
   }
 
   final _expansibleController = ExpansibleController();

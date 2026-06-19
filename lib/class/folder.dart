@@ -61,7 +61,26 @@ class Folder {
 
   List<String> splitParts() => _key.split(_pathSeparator);
 
-  String folderNameAvoidingConflicts() => hasSimilarFolderNames ? formattedPath() : folderNameTryFormatNetwork();
+  String folderNameAvoidingConflicts() {
+    Folder folder = this;
+    int retries = 0;
+    String folderName = folder.folderNameTryFormatNetwork();
+    while (folder.hasSimilarFolderNames) {
+      final newParent = folder.parent;
+      if (newParent.path == folder.path) {
+        break;
+      }
+      folder = newParent;
+      folderName = '${folder.folderNameRaw}${Platform.pathSeparator}$folderName';
+
+      retries++;
+      if (retries >= 3) {
+        // -- more than 3 duplicates, return full path
+        return formattedPath();
+      }
+    }
+    return folderName;
+  }
 
   String folderNameTryFormatNetwork() {
     final parts = folderNameTryFormatNetworkAsParts();

@@ -35,6 +35,7 @@ import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class YtUtilsPlaylist {
@@ -454,12 +455,29 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     playlistNameToAddAs += suffix;
 
     final isInYTOnlineLibrary = playlistToFetch is YoutiPiePlaylistResult ? playlistToFetch.info.isInLibrary.value : null;
+    final activeAccount = YoutubeAccountController.current.activeAccountChannel.value;
     return [
       if (playlistToFetch is YoutiPiePlaylistResult && isInYTOnlineLibrary != null)
         NamidaPopupItem(
           icon: Broken.archive,
           title: isInYTOnlineLibrary ? lang.removeFromLibrary : lang.saveToLibrary,
-          trailing: const Icon(Broken.global, size: 14.0),
+          subtitle: activeAccount?.title ?? activeAccount?.handler ?? '',
+          trailing: activeAccount != null
+              ? YoutubeThumbnail(
+                  type: ThumbnailType.channel,
+                  key: Key(activeAccount.id),
+                  width: 20.0,
+                  height: 20.0,
+                  forceSquared: false,
+                  isImportantInCache: true,
+                  blur: 0.0,
+                  customUrl: activeAccount.thumbnails.pick()?.url,
+                  isCircle: true,
+                )
+              : const Icon(
+                  Broken.global,
+                  size: 14.0,
+                ),
           onTap: () async {
             bool? didSuccess;
             if (isInYTOnlineLibrary) {
@@ -481,7 +499,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       if (playlistNameToAddAs != '')
         NamidaPopupItem(
           icon: Broken.add_square,
-          title: lang.addAsANewPlaylist,
+          title: "${lang.addAsANewPlaylist} (${lang.local})",
           subtitle: playlistNameToAddAs,
           onTap: () async {
             final fetchRes = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch);

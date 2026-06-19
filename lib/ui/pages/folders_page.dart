@@ -280,7 +280,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                                         folder: folder,
                                                         highlightedFolder: highlightedFolder,
                                                         controller: foldersController,
-                                                        subtitle: folder.hasSimilarFolderNames ? folder.parent.formattedPath() : null,
+                                                        title: folder.folderNameAvoidingConflicts(),
                                                         tracks: tracks,
                                                         isTracksRecursive: isTracksRecursive,
                                                         dirInsideCount: dirInsideCount,
