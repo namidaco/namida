@@ -472,12 +472,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       ),
     );
 
-    final positionTextChild = TapDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: Player.inst.seekSecondsBackward,
-      child: LongPressDetector(
-        behavior: HitTestBehavior.translucent,
-        onLongPress: () => Player.inst.seek(Duration.zero),
+    final positionTextChild = _SeekBackwardsDetectorWidget(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 12.0.spaceX),
           child: ObxO(
@@ -485,7 +480,6 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             builder: (context, nowPlayingPosition) => Text(
               nowPlayingPosition.milliSecondsLabel,
               style: textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
-            ),
           ),
         ),
       ),
@@ -494,21 +488,13 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     final positionDurationSeekerBoxesRowChild = Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        TapDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: Player.inst.seekSecondsBackward,
-          child: LongPressDetector(
-            behavior: HitTestBehavior.translucent,
-            onLongPress: () => Player.inst.seek(Duration.zero),
+        _SeekBackwardsDetectorWidget(
             child: SizedBox(
               width: 54.0.spaceX,
               height: 48.0.spaceY,
             ),
           ),
-        ),
-        TapDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: Player.inst.seekSecondsForward,
+        _SeekForwardDetectorWidget(
           child: SizedBox(
             width: 54.0.spaceX,
             height: 48.0.spaceY,
@@ -805,9 +791,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 positionTextChild,
-                TapDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: Player.inst.seekSecondsForward,
+                _SeekForwardDetectorWidget(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12.0.spaceX),
                     child: NamidaHero(
@@ -1481,6 +1465,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                                 horizontalPadding: nextPrevIconPadding / 2,
                                                 verticalPadding: nextPrevIconPadding,
                                                 onPressed: MiniPlayerController.inst.snapToPrev,
+                                                onLongPress: () => Player.inst.seek(Duration.zero),
                                               ),
                                             ),
                                           ),
@@ -1580,6 +1565,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                                 horizontalPadding: nextPrevIconPadding / 2,
                                                 verticalPadding: nextPrevIconPadding,
                                                 onPressed: MiniPlayerController.inst.snapToNext,
+                                                onLongPressStart: Player.inst.startSpeedUp,
+                                                onLongPressFinish: Player.inst.endSpeedUp,
                                               ),
                                             ),
                                           ),
@@ -2222,6 +2209,55 @@ class _QueueListChildWrapper extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+class _SeekBackwardsDetectorWidget extends StatelessWidget {
+  final Widget child;
+  const _SeekBackwardsDetectorWidget({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return TapDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: Player.inst.seekSecondsBackward,
+      child: LongPressDetector(
+        behavior: HitTestBehavior.translucent,
+        onLongPress: null,
+        initializer: (instance) {
+          instance
+            ..onLongPressStart = Player.inst.startRewind
+            ..onLongPressEnd = Player.inst.endRewind
+            ..onLongPressCancel = Player.inst.endRewind
+            ..onLongPressUp = Player.inst.endRewind;
+        },
+        child: child,
+      ),
+    );
+  }
+}
+
+class _SeekForwardDetectorWidget extends StatelessWidget {
+  final Widget child;
+  const _SeekForwardDetectorWidget({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return TapDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: Player.inst.seekSecondsForward,
+      child: LongPressDetector(
+        onLongPress: null,
+        initializer: (instance) {
+          instance
+            ..onLongPressStart = Player.inst.startFastForward
+            ..onLongPressEnd = Player.inst.endFastForward
+            ..onLongPressCancel = Player.inst.endFastForward
+            ..onLongPressUp = Player.inst.endFastForward;
+        },
+        child: child,
+      ),
     );
   }
 }

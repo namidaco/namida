@@ -162,6 +162,9 @@ class Player {
   void cancelPlayErrorSkipTimer() => _audioHandler.cancelPlayErrorSkipTimer();
   RxBaseCore<int> get playErrorRemainingSecondsToSkip => _audioHandler.playErrorRemainingSecondsToSkip;
 
+  RxBaseCore<bool?> get isSpeedModifierActive => _isSpeedModifierActive;
+  final _isSpeedModifierActive = Rxn<bool>();
+
   StreamSubscription? _notificationClickedSub;
 
   Future<void> initializePlayer() async {
@@ -301,6 +304,50 @@ class Player {
     setVolume(newVal);
     settings.player.save(volume: newVal);
     return newVal;
+  }
+
+  double get _defaultSpeedUpValue => settings.player.longPressSpeed.value;
+  Timer? _fastForwardTimer;
+  Timer? _rewindTimer;
+
+  void startSpeedUp([_]) {
+    final speed = _defaultSpeedUpValue;
+    if (speed <= 0) return;
+    Player.inst.setSpeed(speed);
+    _isSpeedModifierActive.value = true;
+  }
+
+  void endSpeedUp([_]) {
+    final speed = _defaultSpeedUpValue;
+    if (speed <= 0) return;
+    final currentConfig = Player.audioConfigs.map.value[Player.inst.currentItem.value?.key ?? ''];
+    final originalSpeed = currentConfig?.speed ?? settings.player.speed.value;
+    Player.inst.setSpeed(originalSpeed);
+    _isSpeedModifierActive.value = null;
+  }
+
+  void startFastForward([_]) {
+    _fastForwardTimer?.cancel();
+    _fastForwardTimer = Timer.periodic(
+      const Duration(milliseconds: 100),
+      (_) => seekSecondsForward(),
+    );
+  }
+
+  void endFastForward([_]) {
+    _fastForwardTimer?.cancel();
+  }
+
+  void startRewind([_]) {
+    _rewindTimer?.cancel();
+    _rewindTimer = Timer.periodic(
+      const Duration(milliseconds: 100),
+      (_) => seekSecondsBackward(),
+    );
+  }
+
+  void endRewind([_]) {
+    _rewindTimer?.cancel();
   }
 
   void refreshRxVariables() {

@@ -338,21 +338,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   final _volumeListenerKey = 'video_widget';
 
-  final _isLongPressActive = false.obs;
-  double get defaultLongPressSpeed => settings.player.longPressSpeed.value;
-
-  void _startLongPressAction() {
-    Player.inst.setSpeed(defaultLongPressSpeed);
-    _isLongPressActive.value = true;
-  }
-
-  void _endLongPressAction() {
-    final currentConfig = Player.audioConfigs.map.value[Player.inst.currentItem.value?.key ?? ''];
-    final originalSpeed = currentConfig?.speed ?? settings.player.speed.value;
-    Player.inst.setSpeed(originalSpeed);
-    _isLongPressActive.value = false;
-  }
-
   @override
   void dispose() {
     seekAnimationForward1.dispose();
@@ -363,7 +348,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _canShowBrightnessSlider.close();
     _seekSecondsRx.close();
     _isEndCardsVisible.close();
-    _isLongPressActive.close();
     Player.inst.onVolumeChangeRemoveListener(_volumeListenerKey);
     MiniPlayerController.inst.animation.removeListener(_disableControlsListener);
     _systemBrightnessStreamSub?.cancel();
@@ -1174,9 +1158,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                         child: LongPressDetector(
                           onLongPress: null,
                           initializer: (instance) {
-                            instance.onLongPressStart = _isLocked ? null : (_) => _startLongPressAction();
-                            instance.onLongPressEnd = (_) => _endLongPressAction();
-                            instance.onLongPressCancel = () => _endLongPressAction();
+                            instance.onLongPressStart = _isLocked ? null : (_) => Player.inst.startSpeedUp();
+                            instance.onLongPressEnd = (_) => Player.inst.endSpeedUp();
+                            instance.onLongPressCancel = () => Player.inst.endSpeedUp();
                           },
                         ),
                       ),
@@ -2275,10 +2259,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       Positioned(
                         top: 0,
                         child: ObxO(
-                          rx: _isLongPressActive,
-                          builder: (context, isLongPress) => CustomAnimatedSwitcher(
+                          rx: Player.inst.isSpeedModifierActive,
+                          builder: (context, modifierActive) => CustomAnimatedSwitcher(
                             duration: const Duration(milliseconds: 100),
-                            child: isLongPress
+                            child: modifierActive == true
                                 ? Padding(
                                     key: const Key('longpress_active'),
                                     padding: EdgeInsets.only(top: 24.0 + topPadding),
@@ -2294,10 +2278,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                             Icon(
                                               Broken.forward,
                                               size: 20.0,
+                                              color: itemsColor,
                                             ),
                                             const SizedBox(width: 6.0),
                                             Text(
-                                              "${lang.speed} ${defaultLongPressSpeed}x",
+                                              "${lang.speed} ${settings.player.longPressSpeed.value}x",
                                               style: context.textTheme.displayMedium?.copyWith(
                                                 color: itemsColor,
                                               ),
