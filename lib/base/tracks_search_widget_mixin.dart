@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -130,8 +131,10 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
   }
 
   @override
-  IsolateFunctionReturnBuild<Map<String, dynamic>> isolateFunction(SendPort port) {
-    final params = TracksSearchWrapper.generateParams(port, getTracksExtended());
+  Future<IsolateFunctionReturnBuild<Map<String, dynamic>>> isolateFunction(SendPort port) async {
+    await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
+    final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
+    final params = TracksSearchWrapper.generateParams(port, getTracksExtended(), topTracksMapListens);
     return IsolateFunctionReturnBuild(_searchTracksIsolate, params);
   }
 }

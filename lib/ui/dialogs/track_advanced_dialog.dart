@@ -1201,8 +1201,10 @@ class _TracksSearchTemp with PortsProvider<Map> {
   }
 
   @override
-  IsolateFunctionReturnBuild<Map> isolateFunction(SendPort port) {
-    final params = SearchSortController.inst.generateTrackSearchIsolateParams(port);
+  Future<IsolateFunctionReturnBuild<Map<dynamic, dynamic>>> isolateFunction(SendPort port) async {
+    await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
+    final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
+    final params = SearchSortController.inst.generateTrackSearchIsolateParams(port, topTracksMapListens);
     return IsolateFunctionReturnBuild(SearchSortController.searchTracksIsolate, params);
   }
 

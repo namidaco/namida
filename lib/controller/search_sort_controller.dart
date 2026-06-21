@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:isolate';
 import 'dart:math' as math;
 
+import 'package:history_manager/history_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
@@ -368,15 +369,17 @@ class SearchSortController extends SearchPortsProvider {
         }
       },
       isolateFunction: (itemsSendPort) async {
-        final params = generateTrackSearchIsolateParams(itemsSendPort);
+        await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
+        final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
+        final params = generateTrackSearchIsolateParams(itemsSendPort, topTracksMapListens);
         await Isolate.spawn(searchTracksIsolate, params);
       },
     );
   }
 
-  Map<String, dynamic> generateTrackSearchIsolateParams(SendPort sendPort) {
+  Map<String, dynamic> generateTrackSearchIsolateParams(SendPort sendPort, ListensSortedMap<Track> topTracksMapListens) {
     final tracks = _tracksInfoList.value.map((e) => e.toTrackExt());
-    return TracksSearchWrapper.generateParams(sendPort, tracks);
+    return TracksSearchWrapper.generateParams(sendPort, tracks, topTracksMapListens);
   }
 
   Future<SendPortWithCachedMessage> _preparePlaylistPorts() async {

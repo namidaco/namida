@@ -100,7 +100,7 @@ mixin PortsProvider<E> {
   void onResult(dynamic result);
 
   @protected
-  IsolateFunctionReturnBuild<E> isolateFunction(SendPort port);
+  FutureOr<IsolateFunctionReturnBuild<E>> isolateFunction(SendPort port);
 
   void onPreparing(bool prepared) {}
 
@@ -123,7 +123,7 @@ mixin PortsProvider<E> {
     await preparePortRaw(
       onResult: (result) => onResultVarFn(result), // don't assign fn directly
       isolateFunction: (itemsSendPort) async {
-        final isolateFn = isolateFunction(itemsSendPort);
+        final isolateFn = await isolateFunction(itemsSendPort);
         _isolate = await Isolate.spawn(isolateFn.entryPoint, isolateFn.message);
       },
     );
