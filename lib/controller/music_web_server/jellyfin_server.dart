@@ -5,12 +5,17 @@ class _JellyfinServer extends MusicWebServer {
   late _JellyfinClientWrapper _wrapper;
 
   _JellyfinServer.init(super.authDetails) {
-    _serverUri = Uri.parse(authDetails.dir.sourceRaw);
+    final uriFull = Uri.parse(authDetails.dir.sourceRaw);
+    final uriClean = DirectoryIndexServer.parseWithoutLibraryIdAndClean(authDetails.dir.sourceRaw);
+
+    _serverUri = Uri.parse(uriClean);
     final jellyfinAuth = authDetails.auth.toJellyfinAuthModel();
+    final libraryId = uriFull.queryParameters['_libraryId'];
     _wrapper = _JellyfinClientWrapper(
-      authDetails.dir.sourceRaw,
+      uriClean,
       jellyfinAuth.username,
       jellyfinAuth.password,
+      libraryId,
     );
   }
 
@@ -23,10 +28,13 @@ class _JellyfinServer extends MusicWebServer {
   Future<MusicWebServerError?> ping() => _wrapper.ping();
 
   @override
+  Future<Set<ServerShareWrapper>?> getAvailableShares() async => _wrapper.getLibraries();
+
+  @override
   Future<Uint8List?> getImage(String id) => _wrapper.getImage(id);
 
   @override
-  Future<Set<String>?> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
+  Future<void> fetchAllMusicAndProcess(Map<String, int> serverTracksInLibrary, void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
     final wrapper = _wrapper;
 
     final server = authDetails.dir.toDbKey();
@@ -38,18 +46,16 @@ class _JellyfinServer extends MusicWebServer {
       batchSize: 400,
       checkResError: (res) => _checkResError(authDetails.dir, res),
     );
-    await for (final item in stream) {
-      callback(
-        _baseItemDtoToTrackExtended(
-          item,
-          splitConfig: splitConfig,
-          server: server,
-          serverUriParsed: serverUriParsed,
-        ),
-      );
-    }
 
-    return null;
+    await for (final item in stream) {
+      final trExt = _baseItemDtoToTrackExtended(
+        item,
+        splitConfig: splitConfig,
+        server: server,
+        serverUriParsed: serverUriParsed,
+      );
+      callback(trExt);
+    }
   }
 
   @override
@@ -353,8 +359,14 @@ class _JellyfinClientWrapper {
   final _JellyfinApi _api;
   final String _username;
   final String _password;
+  final String? _libraryId;
 
-  _JellyfinClientWrapper(String baseUrl, this._username, this._password) : _api = _JellyfinApi(baseUrl);
+  _JellyfinClientWrapper(
+    String baseUrl,
+    this._username,
+    this._password,
+    this._libraryId,
+  ) : _api = _JellyfinApi(baseUrl);
 
   String? _userId;
   String? _token;
@@ -424,6 +436,15 @@ class _JellyfinClientWrapper {
     }
   }
 
+  Future<Set<ServerShareWrapper>> getLibraries() async {
+    if (!await ensureAuthenticated()) return {};
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/$_userId/Views',
+    );
+    final items = (res.data?['Items'] as List<dynamic>?) ?? [];
+    return items.map((e) => ServerShareWrapper.fromJellyfinJson(e as Map<String, dynamic>)).toSet();
+  }
+
   Stream<_JellyfinItem> fetchAllMedia({
     int batchSize = 400,
     required bool Function(Response<dynamic>? res) checkResError,
@@ -435,6 +456,7 @@ class _JellyfinClientWrapper {
           '/Items',
           queryParameters: {
             'UserId': _userId,
+            if (_libraryId != null) 'ParentId': _libraryId,
             'IncludeItemTypes': _JellyfinItemKind.values.map((e) => e.value).join(','),
             'Recursive': true,
             'StartIndex': offset,

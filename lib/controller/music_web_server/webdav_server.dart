@@ -96,9 +96,9 @@ class _WebDAVServer extends MusicWebServer {
   }
 
   @override
-  Future<Set<String>?> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
+  Future<void> fetchAllMusicAndProcess(Map<String, int> serverTracksInLibrary, void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
     final api = _api;
-    if (api == null) return null;
+    if (api == null) return;
 
     final server = authDetails.dir.toDbKey();
     final serverUriParsed = Uri.parse(server);
@@ -107,8 +107,7 @@ class _WebDAVServer extends MusicWebServer {
     final minDur = settings.indexMinDurationInSec.value;
     final minSize = settings.indexMinFileSizeInB.value;
 
-    final localTracksModifiedMap = Indexer.inst.getTracksModifiedMapForServer(server);
-    final diffState = _WebDAVDiffManager(localTracksModifiedMap);
+    final diffState = _WebDAVDiffManager(serverUriParsed, serverTracksInLibrary);
 
     try {
       final networkFiles = await api.readDir('/');
@@ -125,19 +124,12 @@ class _WebDAVServer extends MusicWebServer {
         diffState: diffState,
       );
 
-      await for (final tr in stream) {
-        callback(tr);
-      }
-
-      final deletedUris = diffState.getDeletedUrisSet(serverUriParsed);
-      if (deletedUris.isNotEmpty) {
-        return deletedUris;
+      await for (final trExt in stream) {
+        callback(trExt);
       }
     } on DioException catch (e) {
       _onResError(authDetails.dir, e);
     }
-
-    return null;
   }
 
   void _onResError(DirectoryIndex dir, DioException err) {
@@ -192,7 +184,7 @@ class _WebDAVServer extends MusicWebServer {
           final serverPath = file.path;
           if (serverPath == null) return null;
 
-          final canSkip = diffState.addAndCheckCanSkipScan(serverPath, file.mTime);
+          final canSkip = diffState.checkCanSkipScanAndMarkExists(serverPath, file.mTime);
           if (canSkip) return null;
 
           final res = await _fetchFileAndExtractInfo(serverPath, file.name, api, identifiersSet, artworksToExtractLater);
@@ -550,43 +542,43 @@ class _ExtractInfo {
 }
 
 class _WebDAVDiffManager {
-  /// {serverPath: dateModifiedMS}
-  final Map<String, int> existingLibraryMap;
-  _WebDAVDiffManager(this.existingLibraryMap);
+  final Uri serverUriParsed;
+  final Map<String, int> existingLibraryMapSoonToBeRemoved;
 
-  final scannedRemotePaths = <String>{};
+  const _WebDAVDiffManager(
+    this.serverUriParsed,
+    this.existingLibraryMapSoonToBeRemoved,
+  );
 
   static const _millisecondsAllowance = 1000;
 
-  bool addAndCheckCanSkipScan(String serverPath, DateTime? remoteDateModified) {
-    scannedRemotePaths.add(serverPath);
+  bool checkCanSkipScanAndMarkExists(String serverPath, DateTime? remoteDateModified) {
+    final uri = serverUriParsed.replace(
+      queryParameters: {
+        ...serverUriParsed.queryParameters,
+        'd': serverPath,
+      },
+    );
+    final uriString = uri.toString();
+    final canSkip = _checkCanSkipScan(uriString, remoteDateModified);
 
+    existingLibraryMapSoonToBeRemoved.remove(uriString); // mark exist
+
+    return canSkip;
+  }
+
+  bool _checkCanSkipScan(String fullPath, DateTime? remoteDateModified) {
     final remoteModifiedMs = remoteDateModified?.millisecondsSinceEpoch;
     if (remoteModifiedMs != null && remoteModifiedMs >= 0) {
-      final localModifiedMs = existingLibraryMap[serverPath];
+      final localModifiedMs = existingLibraryMapSoonToBeRemoved[fullPath];
       if (localModifiedMs != null) {
         if ((localModifiedMs - remoteModifiedMs).abs() <= _millisecondsAllowance) {
+          // -- can skip rescanning this
           return true;
         }
       }
     }
 
     return false;
-  }
-
-  Set<String> getDeletedUrisSet(Uri serverUriParsed) {
-    final uris = <String>{};
-    for (final rawPath in existingLibraryMap.keys) {
-      if (scannedRemotePaths.contains(rawPath)) continue;
-      final uri = serverUriParsed.replace(
-        queryParameters: {
-          ...serverUriParsed.queryParameters,
-          'd': rawPath,
-        },
-      );
-      final uriString = uri.toString();
-      uris.add(uriString);
-    }
-    return uris;
   }
 }

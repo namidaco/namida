@@ -71,6 +71,25 @@ final class DirectoryIndexServer extends DirectoryIndex {
     return DirectoryIndexServer.raw(uri.toString(), type, username);
   }
 
+  factory DirectoryIndexServer.withLibraryId(
+    String url,
+    String? libraryId,
+    DirectoryIndexType type,
+    String username,
+  ) {
+    final uriPre = Uri.parse(url);
+    final uriNew = uriPre.replace(
+      queryParameters: {
+        ...uriPre.queryParameters,
+        if (libraryId != null && libraryId.isNotEmpty) '_libraryId': libraryId,
+      },
+    );
+
+    String uriCleanText = uriNew.toString();
+    if (uriCleanText.endsWith('?')) uriCleanText = uriCleanText.substring(0, uriCleanText.length - 1);
+    return DirectoryIndexServer.raw(uriCleanText, type, username);
+  }
+
   factory DirectoryIndexServer.parseFromEncodedUrlPath(String path, {Uri? uri, void Function(String? id)? parseIdCallback}) {
     uri ??= Uri.parse(path);
     final username = uri.queryParameters['namida_u'];
@@ -91,6 +110,17 @@ final class DirectoryIndexServer extends DirectoryIndex {
     }
 
     return DirectoryIndexServer.raw(uriCleanText, type ?? DirectoryIndexType.unknown, username ?? '');
+  }
+
+  static String parseWithoutLibraryIdAndClean(String url) {
+    final uriPre = Uri.parse(url);
+    final cleanParams = Map<String, String>.from(uriPre.queryParameters)..remove('_libraryId');
+    final uriClean = uriPre.replace(queryParameters: cleanParams);
+
+    String uriCleanText = uriClean.toString();
+    if (uriCleanText.endsWith('?')) uriCleanText = uriCleanText.substring(0, uriCleanText.length - 1);
+
+    return uriCleanText;
   }
 
   @override
@@ -233,6 +263,7 @@ enum DirectoryIndexTypeTag {
   supportsShare,
   supportsSubdir,
   supportsPort,
+  supportsLibraryId,
   isFileBased,
 }
 
@@ -245,6 +276,7 @@ enum DirectoryIndexType {
   jellyfin({
     .server,
     .legacyAuthOnly,
+    .supportsLibraryId,
   }),
   webdav({
     .server,

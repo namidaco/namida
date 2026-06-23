@@ -158,6 +158,8 @@ class IndexerSettings extends SettingSubpageProvider {
     final isURLHost = initialType.check(.isURLHost);
     final initialSource = initialDir?.sourceRaw;
 
+    final supportsLibraryId = initialType.check(.supportsLibraryId);
+
     final isAuthenticatingRx = false.obs;
     final possibleErrorRx = Rxn<MusicWebServerError>();
     final selectedTypeRx = initialType.obs;
@@ -165,16 +167,17 @@ class IndexerSettings extends SettingSubpageProvider {
     final urlOrHostController = TextEditingController(text: initialSource);
     final usernameController = TextEditingController(text: initialDir?.username);
     final passwordController = TextEditingController(text: null);
-    final shareController = initialType.check(.supportsShare) ? TextEditingController(text: null) : null;
+    final shareNameController = initialType.check(.supportsShare) ? TextEditingController(text: null) : null;
+    final libraryIdController = initialType.check(.supportsLibraryId) ? TextEditingController(text: null) : null;
     final subdirController = initialType.check(.supportsSubdir) ? TextEditingController(text: null) : null;
-    final portController = initialType.check(.supportsSubdir) ? TextEditingController(text: null) : null;
-    final availableSharesRx = shareController == null ? null : <String>{}.obs;
+    final portController = initialType.check(.supportsPort) ? TextEditingController(text: null) : null;
+    final availableSharesRx = shareNameController == null && libraryIdController == null ? null : <ServerShareWrapper>{}.obs;
     final formKey = GlobalKey<FormState>();
 
     if (availableSharesRx != null) {
       initialDir?.toWebServer()?.getAvailableShares().catchError((_) => null).then(
         (value) {
-          availableSharesRx.value = value ?? <String>{};
+          availableSharesRx.value = value ?? <ServerShareWrapper>{};
         },
       );
     }
@@ -183,6 +186,7 @@ class IndexerSettings extends SettingSubpageProvider {
     String? shareHint;
     String? subdirHint;
     String? portHint;
+    String? libraryIdHint;
     if (initialSource != null && isURLHost) {
       try {
         final parsed = SMBServerInfo.fromUrl(initialSource);
@@ -192,9 +196,21 @@ class IndexerSettings extends SettingSubpageProvider {
         portHint = parsed.port?.toString();
 
         urlOrHostController.text = parsed.host;
-        shareController?.text = parsed.share ?? '';
+        shareNameController?.text = parsed.share ?? '';
         subdirController?.text = parsed.subdir ?? '';
         portController?.text = parsed.port?.toString() ?? '';
+      } catch (_) {}
+    }
+    if (initialSource != null && supportsLibraryId) {
+      try {
+        final library = ServerShareWrapper.fromUrl(initialSource);
+        final uriCleanString = DirectoryIndexServer.parseWithoutLibraryIdAndClean(initialSource);
+
+        initialDirSourceHint = uriCleanString;
+        libraryIdHint = library?.id;
+
+        urlOrHostController.text = uriCleanString;
+        libraryIdController?.text = library?.id ?? '';
       } catch (_) {}
     }
 
@@ -268,8 +284,9 @@ class IndexerSettings extends SettingSubpageProvider {
         final urlOrHost = urlOrHostController.text;
         final username = usernameController.text;
         final password = passwordController.text;
-        final share = shareController?.text;
+        final share = shareNameController?.text;
         final subdir = subdirController?.text;
+        final libraryId = libraryIdController?.text;
         final port = portController?.text;
         final selectedType = selectedTypeRx.value;
         final legacyAuth = legacyAuthRx?.value ?? initialType.check(.legacyAuthOnly);
@@ -282,6 +299,13 @@ class IndexerSettings extends SettingSubpageProvider {
                 selectedType,
                 username,
                 port,
+              )
+            : supportsLibraryId
+            ? DirectoryIndexServer.withLibraryId(
+                urlOrHost,
+                libraryId,
+                selectedType,
+                username,
               )
             : DirectoryIndexServer.raw(
                 urlOrHost,
@@ -333,7 +357,8 @@ class IndexerSettings extends SettingSubpageProvider {
         urlOrHostController.dispose();
         usernameController.dispose();
         passwordController.dispose();
-        shareController?.dispose();
+        shareNameController?.dispose();
+        libraryIdController?.dispose();
         subdirController?.dispose();
         portController?.dispose();
         availableSharesRx?.close();
@@ -483,11 +508,19 @@ class IndexerSettings extends SettingSubpageProvider {
                       ],
                     ),
                     const SizedBox(height: 12.0),
-                    if (shareController != null) ...[
+                    if (shareNameController != null) ...[
                       CustomTagTextField(
-                        controller: shareController,
+                        controller: shareNameController,
                         hintText: shareHint ?? '',
                         labelText: lang.share,
+                      ),
+                      const SizedBox(height: 12.0),
+                    ],
+                    if (libraryIdController != null) ...[
+                      CustomTagTextField(
+                        controller: libraryIdController,
+                        hintText: libraryIdHint ?? '',
+                        labelText: "${lang.folder} (ID)",
                       ),
                       const SizedBox(height: 12.0),
                     ],
@@ -499,6 +532,7 @@ class IndexerSettings extends SettingSubpageProvider {
                             show: availableShares.isNotEmpty,
                             duration: const Duration(milliseconds: 300),
                             child: Column(
+                              crossAxisAlignment: .start,
                               mainAxisSize: .min,
                               children: [
                                 SmoothSingleChildScrollView(
@@ -512,10 +546,10 @@ class IndexerSettings extends SettingSubpageProvider {
                                             margin: const EdgeInsets.symmetric(horizontal: 3.0),
                                             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                                             onTap: () {
-                                              shareController?.text = e;
+                                              libraryIdController?.text = e.id;
                                             },
                                             child: Text(
-                                              e,
+                                              e.name,
                                               style: context.textTheme.displayMedium,
                                             ),
                                           ),

@@ -346,7 +346,7 @@ class Indexer<T extends Track> {
           }
 
           if (newFilesLength == 0 && deletedFilesLength == 0) {
-            msgParts.add(lang.noChangesFound);
+            msgParts.add('${lang.local}: ${lang.noChangesFound}');
           } else {
             msgParts.add('${lang.newLabel}: ${newFilesLength.displayFilesKeyword}');
             msgParts.add('${lang.deleted}/${lang.filtered}: ${deletedFilesLength.displayFilesKeyword}');
@@ -1335,12 +1335,12 @@ class Indexer<T extends Track> {
       await Future.wait(audioFilesCompleters.map((e) => e.future));
     }
 
-    final networkTrackSetsToRemove = await _addServerTracksIfAvailable(forceReIndex: forceReIndex).toList();
+    final networkTrackMapsToRemove = await _addServerTracksIfAvailable(forceReIndex: forceReIndex).toList();
 
     /// doing some checks to remove unqualified tracks.
     /// removes tracks after changing `duration` or `size`.
     tracksInfoList.removeWhere((tr) {
-      final remove = networkTrackSetsToRemove.any((set) => set.contains(tr.path)) || (tr.durationMS != 0 && tr.durationMS < minDur * 1000) || tr.size < minSize;
+      final remove = networkTrackMapsToRemove.any((map) => map.containsKey(tr.path)) || (tr.durationMS != 0 && tr.durationMS < minDur * 1000) || tr.size < minSize;
       if (remove) {
         allTracksMappedByPath.remove(tr.path);
         allTracksMappedByYTID.remove(tr.youtubeID);
@@ -1372,37 +1372,58 @@ class Indexer<T extends Track> {
     SearchSortController.inst.refreshPortsIfNecessary();
   }
 
-  Map<String, int> getTracksModifiedMapForServer(String server) {
-    final modifiedMap = <String, int>{};
-    for (final trExt in allTracksMappedByPath.values) {
-      if (trExt.server == server) {
-        final key = MusicWebServer.baseUrlToId(trExt.path) ?? trExt.path;
-        modifiedMap[key] = trExt.dateModified;
-      }
-    }
-    return modifiedMap;
-  }
-
-  Stream<Set<String>> _addServerTracksIfAvailable({required bool forceReIndex}) async* {
+  /// Streams Maps of tracks that should be deleted, cuz they no longer exist on the server
+  Stream<Map<String, int>> _addServerTracksIfAvailable({required bool forceReIndex}) async* {
     bool didRefreshSearchList = false;
+
+    final tracksByServer = _getTracksGroupedByServer();
+    final configuredServers = <String>{};
+
     for (final dir in settings.directoriesToScan.value) {
       if (dir is DirectoryIndexServer) {
         final server = dir.toWebServer();
         if (server != null) {
+          final dbKey = dir.toDbKey();
+          configuredServers.add(dbKey);
+
           if (!didRefreshSearchList) {
             didRefreshSearchList = true;
             _refreshMediaTracksSubListsAfterSort([MediaType.track]);
           }
-          final toRemove = await server.fetchAllMusicAndProcess(
+
+          final serverTracksInLibrary = tracksByServer[dbKey] ??= <String, int>{};
+
+          await server.fetchAllMusicAndProcess(
+            serverTracksInLibrary,
             (trExt) {
               _addTrackToLists(trExt, null);
+              serverTracksInLibrary.remove(trExt.path); // still exists
             },
             forceReIndex: forceReIndex,
           );
-          if (toRemove != null) yield toRemove;
+          // -- now without the tracks that was seen again on server
+          yield serverTracksInLibrary;
         }
       }
     }
+
+    // -- remove tracks from servers that no longer exist
+    for (final entry in tracksByServer.entries) {
+      if (!configuredServers.contains(entry.key)) {
+        yield entry.value;
+      }
+    }
+  }
+
+  Map<String, Map<String, int>> _getTracksGroupedByServer() {
+    final map = <String, Map<String, int>>{};
+    for (final trExt in allTracksMappedByPath.values) {
+      final server = trExt.server;
+      if (server != null && server.isNotEmpty) {
+        (map[server] ??= <String, int>{})[trExt.path] = trExt.dateModified;
+      }
+    }
+    return map;
   }
 
   Future<void> updateTrackDuration(Track track, Duration dur) async {

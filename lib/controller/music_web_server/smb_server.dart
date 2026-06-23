@@ -155,7 +155,7 @@ class _SMBServer extends MusicWebServer {
   }
 
   @override
-  Future<Set<String>?> getAvailableShares() async {
+  Future<Set<ServerShareWrapper>?> getAvailableShares() async {
     try {
       final connection = await _getConnection();
       final shares = await connection.listShares();
@@ -171,16 +171,17 @@ class _SMBServer extends MusicWebServer {
         },
       );
       shares.addAll(invalidShares);
-      return shares.map((e) => e.name).toSet();
+      return shares.map((e) => ServerShareWrapper.simple(e.name)).toSet();
     } catch (_) {}
     return null;
   }
 
   @override
-  Future<Set<String>?> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
+  Future<void> fetchAllMusicAndProcess(Map<String, int> serverTracksInLibrary, void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
+    final server = authDetails.dir.toDbKey();
+
     try {
       final connection = await _getConnection();
-      final server = authDetails.dir.toDbKey();
       final serverUriParsed = Uri.parse(server);
       final splittersConfigs = SplitArtistGenreConfigsWrapper.settings();
       final minDur = settings.indexMinDurationInSec.value;
@@ -201,14 +202,12 @@ class _SMBServer extends MusicWebServer {
         minSize: minSize,
       );
 
-      await for (final tr in stream) {
-        callback(tr);
+      await for (final trExt in stream) {
+        callback(trExt);
       }
     } catch (e) {
       _onResError(authDetails.dir, e);
     }
-
-    return null;
   }
 
   void _onResError(DirectoryIndex dir, dynamic err) {

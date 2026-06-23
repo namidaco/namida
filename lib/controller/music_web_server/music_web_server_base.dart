@@ -55,8 +55,8 @@ abstract class MusicWebServer {
   }
 
   Future<MusicWebServerError?> ping();
-  Future<Set<String>?> getAvailableShares() async => null;
-  Future<Set<String>?> fetchAllMusicAndProcess(void Function(TrackExtended trExt) callback, {required bool forceReIndex});
+  Future<Set<ServerShareWrapper>?> getAvailableShares() async => null;
+  Future<void> fetchAllMusicAndProcess(Map<String, int> serverTracksInLibrary, void Function(TrackExtended trExt) callback, {required bool forceReIndex});
   FutureOr<WebStreamUriDetails?> getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal});
   Future<Uint8List?> getImage(String id);
   void dispose();
@@ -154,6 +154,36 @@ class MediaUrlParseResult {
       type: type ?? DirectoryIndexType.unknown,
       username: username,
       id: id,
+    );
+  }
+}
+
+class ServerShareWrapper {
+  final String id;
+  final String name;
+
+  const ServerShareWrapper({
+    required this.id,
+    required this.name,
+  });
+
+  const ServerShareWrapper.simple(
+    this.name,
+  ) : id = name;
+
+  factory ServerShareWrapper.fromJellyfinJson(Map<String, dynamic> json) => ServerShareWrapper(
+    id: json['Id'] as String,
+    name: json['Name'] as String? ?? '',
+  );
+
+  static ServerShareWrapper? fromUrl(String url) {
+    final uri = Uri.parse(url);
+    final libraryId = uri.queryParameters['_libraryId'];
+    if (libraryId == null) return null;
+
+    return ServerShareWrapper(
+      id: libraryId,
+      name: libraryId,
     );
   }
 }
