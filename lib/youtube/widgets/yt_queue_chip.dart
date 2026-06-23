@@ -835,6 +835,7 @@ class _QueueConfigureOptions extends StatelessWidget {
           padding: EdgeInsets.zero,
           shrinkWrap: true,
           children: [
+            const SizedBox(height: 8.0),
             if (!isLocal) ...[
               ytSettings.getAutoStartRadioWidget(),
               NamidaContainerDivider(

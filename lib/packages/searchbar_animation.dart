@@ -262,8 +262,8 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
               AnimatedPositioned(
                 duration: Duration(milliseconds: widget.durationInMilliSeconds),
                 top: _SBDimensions.d5,
-                left: widget.isSearchBoxOnRightSide ? _SBDimensions.d6 : null,
-                right: !widget.isSearchBoxOnRightSide ? _SBDimensions.d6 : null,
+                left: widget.isSearchBoxOnRightSide ? _SBDimensions.d4 : null,
+                right: !widget.isSearchBoxOnRightSide ? _SBDimensions.d4 : null,
                 curve: Curves.easeOut,
                 child: AnimatedOpacity(
                   opacity: (!_switcher) ? _SBDimensions.d0 : _SBDimensions.d1,
@@ -276,18 +276,23 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                 left: (!_switcher)
                     ? _SBDimensions.d20
                     : (!widget.textAlignToRight)
-                    ? _SBDimensions.d35
+                    ? _SBDimensions.d26
+                    : _SBDimensions.d80,
+                right: (!_switcher)
+                    ? _SBDimensions.d20
+                    : (!widget.textAlignToRight)
+                    ? _SBDimensions.d10
                     : _SBDimensions.d80,
                 curve: Curves.easeOut,
-                top: 0,
-                bottom: 0,
+                top: 6.0,
+                bottom: 6.0,
                 child: AnimatedOpacity(
                   opacity: (!_switcher) ? _SBDimensions.d0 : _SBDimensions.d1,
                   duration: const Duration(milliseconds: _SBDimensions.t200),
                   child: Container(
                     padding: const EdgeInsets.only(left: _SBDimensions.d11),
                     alignment: Alignment.center,
-                    width: smallButtonTotalPaddingPart + (widget.searchBoxWidth ?? MediaQuery.sizeOf(context).width) / _SBDimensions.d1_7,
+                    width: smallButtonTotalPaddingPart + (widget.searchBoxWidth ?? MediaQuery.sizeOf(context).width),
                     child: _textFormField(context, smallButtonTotalPaddingPart),
                   ),
                 ),
@@ -526,17 +531,16 @@ class _SBDimensions {
   static const double d1 = 1.0;
   static const double d1_2 = 1.2;
   static const double d1_5 = 1.5;
-  static const double d1_7 = 1.7;
   static const double d2 = 2.0;
+  static const double d4 = 4.0;
   static const double d5 = 5.0;
-  static const double d6 = 6.0;
   static const double d7 = 7.0;
   static const double d10 = 10.0;
   static const double d11 = 11.0;
   static const double d15 = 15.0;
   static const double d20 = 20.0;
+  static const double d26 = 26.0;
   static const double d30 = 30.0;
-  static const double d35 = 35.0;
   static const double d48 = 48.0;
   static const double d60 = 60.0;
   static const double d80 = 80.0;

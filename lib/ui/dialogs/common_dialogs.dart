@@ -325,8 +325,8 @@ class NamidaDialogs {
     final smartPlaylist = smartPlaylistWrapper.value;
     await showGeneralPopupDialog(
       tracks,
+      smartPlaylist.name,
       smartPlaylist.creationDate.dateFormatted,
-      smartPlaylist.creationDate.clockFormatted,
       QueueSource.smartPlaylist(smartPlaylist.key),
       thirdLineText: [
         tracks.displayTrackKeyword,

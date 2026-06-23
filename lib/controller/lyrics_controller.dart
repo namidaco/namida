@@ -101,6 +101,7 @@ class Lyrics {
     final LrcSearchUtils? lrcUtils = await LrcSearchUtils.fromPlayable(item);
 
     if (lrcUtils == null) return;
+    if (checkInterrupted()) return;
 
     final embedded = lrcUtils.embeddedLyrics;
     if (embedded.startsWith('IGNORE')) return;

@@ -5557,6 +5557,7 @@ class AnimatedShow extends StatelessWidget {
   final bool isHorizontal;
   final Duration duration;
   final Curve curve;
+  final AlignmentGeometry alignment;
   final Widget child;
 
   const AnimatedShow({
@@ -5565,6 +5566,7 @@ class AnimatedShow extends StatelessWidget {
     this.isHorizontal = false,
     this.duration = const Duration(milliseconds: 300),
     this.curve = Curves.fastEaseInToSlowEaseOut,
+    this.alignment = Alignment.center,
     required this.child,
   });
 
@@ -5574,7 +5576,7 @@ class AnimatedShow extends StatelessWidget {
     return IgnorePointer(
       ignoring: !show,
       child: AnimatedAlign(
-        alignment: Alignment.center,
+        alignment: alignment,
         heightFactor: isHorizontal ? null : factor,
         widthFactor: isHorizontal ? factor : null,
         duration: duration,

@@ -227,7 +227,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
     color ??= theme.colorScheme.onSecondaryContainer;
     return Obx(
       (context) => settings.enableLyrics.valueR
-          ? Lyrics.inst.currentLyricsText.valueR == '' && Lyrics.inst.currentLyricsLRC.valueR == null
+          ? Lyrics.inst.currentLyricsText.valueR.text == '' && Lyrics.inst.currentLyricsLRC.valueR == null
                 ? StackedIcon(
                     margin: 0.0,
                     baseIcon: Broken.document,
@@ -473,13 +473,13 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     );
 
     final positionTextChild = _SeekBackwardsDetectorWidget(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12.0.spaceX),
-          child: ObxO(
-            rx: Player.inst.nowPlayingPosition,
-            builder: (context, nowPlayingPosition) => Text(
-              nowPlayingPosition.milliSecondsLabel,
-              style: textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 12.0.spaceX),
+        child: ObxO(
+          rx: Player.inst.nowPlayingPosition,
+          builder: (context, nowPlayingPosition) => Text(
+            nowPlayingPosition.milliSecondsLabel,
+            style: textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
           ),
         ),
       ),
@@ -489,11 +489,11 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _SeekBackwardsDetectorWidget(
-            child: SizedBox(
-              width: 54.0.spaceX,
-              height: 48.0.spaceY,
-            ),
+          child: SizedBox(
+            width: 54.0.spaceX,
+            height: 48.0.spaceY,
           ),
+        ),
         _SeekForwardDetectorWidget(
           child: SizedBox(
             width: 54.0.spaceX,
