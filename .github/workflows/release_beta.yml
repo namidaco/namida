@@ -204,12 +204,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: windows-latest
+          - runner: windows-2022
             arch: x64
             artifact_arch: x86_64
-          - runner: windows-11-arm
-            arch: arm64
-            artifact_arch: arm64
+          # - runner: windows-11-arm
+          #   arch: arm64
+          #   artifact_arch: arm64
     runs-on: ${{ matrix.runner }}
 
     steps:
