@@ -983,6 +983,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                                                 parts: parts,
                                                 textStyle: textStyle,
                                                 textAlign: textAlign,
+                                                textDirection: textDirection,
                                               )
                                             : Text(
                                                 text,
@@ -1180,11 +1181,13 @@ class _TextWithFadingProgress extends StatelessWidget {
   final List<LrcLinePart> parts;
   final TextStyle textStyle;
   final TextAlign textAlign;
+  final TextDirection textDirection;
 
   const _TextWithFadingProgress({
     required this.parts,
     required this.textStyle,
     required this.textAlign,
+    required this.textDirection,
   });
 
   @override
@@ -1248,7 +1251,7 @@ class _TextWithFadingProgress extends StatelessWidget {
                             progress,
                             progress == 0 ? 0.0 : progress + 0.1,
                           ],
-                        ).createShader(bounds),
+                        ).createShader(bounds, textDirection: textDirection),
                         blendMode: BlendMode.dstIn,
                         child: ClipRect(
                           // -- clip is important to avoid artifacts caused by font exisitng outside shader mask area
@@ -1261,6 +1264,7 @@ class _TextWithFadingProgress extends StatelessWidget {
               },
             ).toFixedList(),
           ),
+          textDirection: textDirection,
           textAlign: textAlign,
         ),
       ),
