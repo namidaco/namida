@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:isolate';
+import 'dart:typed_data' show Uint32List;
 
 import 'package:history_manager/history_manager.dart';
 import 'package:lrc/lrc.dart';
+import 'package:nampack/extensions/extensions.dart';
 
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
@@ -14,16 +16,20 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
 class TracksSearchWrapper {
+  static final _matcher = _StringMatcher();
+
   final bool cleanup;
   final List<_CustomTrackExtended> _tracksExtended;
   final String Function(String) textCleanedForSearch;
   final String Function(String)? textCleanedMinorForSearch;
+  final int maxListensCount;
 
   const TracksSearchWrapper._(
     this.cleanup,
     this._tracksExtended,
     this.textCleanedForSearch,
     this.textCleanedMinorForSearch,
+    this.maxListensCount,
   );
 
   static Map<String, dynamic> generateParams(SendPort sendPort, Iterable<TrackExtended> tracks, ListensSortedMap<Track> topTracksMapListens) {
@@ -32,6 +38,7 @@ class TracksSearchWrapper {
     final addLyrics = filters.contains(TrackSearchFilter.lyrics);
     final addMoods = filters.contains(TrackSearchFilter.moods);
     final addTags = filters.contains(TrackSearchFilter.tags);
+    final maxListensCount = topTracksMapListens.values.firstOrNull?.length;
     return {
       'tracks': tracks
           .map(
@@ -58,6 +65,7 @@ class TracksSearchWrapper {
       'filters': filters,
       'cleanup': settings.enableSearchCleanup.value,
       'lyricsCacheDirectory': AppDirs.LYRICS,
+      'maxListensCount': maxListensCount,
       'sendPort': sendPort,
     };
   }
@@ -68,6 +76,7 @@ class TracksSearchWrapper {
     final tsf = params['filters'] as List<TrackSearchFilter>;
     final cleanup = params['cleanup'] as bool;
     final lyricsCacheDirectory = params['lyricsCacheDirectory'] as String;
+    final maxListensCount = params['maxListensCount'] as int? ?? 0;
 
     var stitle = tsf.contains(TrackSearchFilter.title);
     final sfilename = tsf.contains(TrackSearchFilter.filename);
@@ -89,12 +98,13 @@ class TracksSearchWrapper {
     final textCleanedForSearch = _functionOfCleanup(cleanup);
     final textCleanedMinorForSearch = cleanup ? _functionOfCleanup(false) : null;
 
-    _Property? splitThis(String? property, bool split) {
+    _Property? splitThis(String? property, bool split, {bool tryCutBeforeBrackets = false}) {
       if (!split || property == null) return null;
       return _splitTextCleanedAndCleanedMinor(
         property,
         textCleanedForSearch,
         textCleanedMinorForSearch,
+        tryCutBeforeBrackets: tryCutBeforeBrackets,
       );
     }
 
@@ -111,7 +121,7 @@ class TracksSearchWrapper {
       tracksExtended.add(
         _CustomTrackExtended(
           track: track,
-          splitTitle: splitThis(title, stitle),
+          splitTitle: splitThis(title, stitle, tryCutBeforeBrackets: true),
           splitFilename: splitThis(path.getFilename, sfilename),
           splitFolder: splitThis(Track.explicit(path).folderName, sfolder),
           splitAlbum: salbum
@@ -188,6 +198,7 @@ class TracksSearchWrapper {
       tracksExtended,
       textCleanedForSearch,
       textCleanedMinorForSearch,
+      maxListensCount,
     );
   }
 
@@ -241,64 +252,101 @@ class TracksSearchWrapper {
     );
   }
 
-  static _Property _splitTextCleanedAndCleanedMinor(String text, String Function(String) textCleanedForSearch, String Function(String)? textCleanedMinorForSearch) {
-    final allParts = <String>[];
-    for (final item in text.split(' ')) {
-      var cleaned = textCleanedForSearch(item);
-      if (cleaned.isNotEmpty) {
-        allParts.add(cleaned);
-      }
-      var cleanedMinor = textCleanedMinorForSearch?.call(item);
-      if (cleanedMinor != null) {
-        if (cleanedMinor.isNotEmpty) {
-          if (!allParts.contains(cleanedMinor)) {
-            allParts.add(cleanedMinor);
-          }
-        }
-      }
-    }
-    return _Property._(
-      splits: allParts,
-      joinedCleaned: textCleanedForSearch(text),
-      joinedCleanedMinor: textCleanedMinorForSearch?.call(text),
+  static _Property _splitTextCleanedAndCleanedMinor(
+    String text,
+    String Function(String) textCleanedForSearch,
+    String Function(String)? textCleanedMinorForSearch, {
+    bool tryCutBeforeBrackets = false,
+  }) {
+    return _mapListCleanedAndCleanedMinor(
+      text.split(' '),
+      textCleanedForSearch,
+      textCleanedMinorForSearch,
+      text: text,
+      tryCutBeforeBrackets: tryCutBeforeBrackets,
     );
   }
 
-  static _Property? _mapListCleanedAndCleanedMinorOrNull(List<String>? splitted, String Function(String) textCleanedForSearch, String Function(String)? textCleanedMinorForSearch) {
+  static _Property? _mapListCleanedAndCleanedMinorOrNull(
+    List<String>? splitted,
+    String Function(String) textCleanedForSearch,
+    String Function(String)? textCleanedMinorForSearch,
+  ) {
     if (splitted == null) return null;
-    return _mapListCleanedAndCleanedMinor(splitted, textCleanedForSearch, textCleanedMinorForSearch);
+    return _mapListCleanedAndCleanedMinor(
+      splitted,
+      textCleanedForSearch,
+      textCleanedMinorForSearch,
+      text: null,
+    );
   }
 
-  static _Property _mapListCleanedAndCleanedMinor(List<String> splitted, String Function(String) textCleanedForSearch, String Function(String)? textCleanedMinorForSearch) {
-    final allParts = <String>[];
+  static _Property _mapListCleanedAndCleanedMinor(
+    List<String> splitted,
+    String Function(String) textCleanedForSearch,
+    String Function(String)? textCleanedMinorForSearch, {
+    String? text,
+    bool tryCutBeforeBrackets = false,
+  }) {
     final cleanedParts = <String>[];
     final cleanedMinorParts = <String>[];
 
+    int? cleanedCutAtIndex;
+    int? cleanedMinorCutAtIndex;
+
+    int index = 0;
     for (final item in splitted) {
       var cleaned = textCleanedForSearch(item);
       if (cleaned.isNotEmpty) {
         cleanedParts.add(cleaned);
-        allParts.add(cleaned);
       }
 
       var cleanedMinor = textCleanedMinorForSearch?.call(item);
       if (cleanedMinor != null) {
         if (cleanedMinor.isNotEmpty) {
           cleanedMinorParts.add(cleanedMinor);
-          if (!allParts.contains(cleanedMinor)) {
-            allParts.add(cleanedMinor);
+        }
+      }
+
+      if (tryCutBeforeBrackets && cleanedCutAtIndex == null /* && cleanedMinorCutAtIndex == null */ ) {
+        // ignore first (0-1) chars
+        if (index > 1) {
+          if (item.startsWith('(') || item.startsWith('[')) {
+            cleanedCutAtIndex = index;
+            cleanedMinorCutAtIndex = index;
           }
         }
       }
+
+      index++;
     }
 
-    final joinedCleaned = cleanedParts.join(' ');
-    final joinedCleanedMinor = cleanedMinorParts.join(' ');
+    String joinedCleaned;
+    String joinedCleanedMinor;
+    if (text != null) {
+      joinedCleaned = textCleanedForSearch(text);
+      joinedCleanedMinor = textCleanedMinorForSearch?.call(text) ?? '';
+    } else {
+      joinedCleaned = cleanedParts.join(' ');
+      joinedCleanedMinor = cleanedMinorParts.join(' ');
+    }
+
+    String? joinedCutCleaned;
+    String? joinedCutCleanedMinor;
+    if (cleanedCutAtIndex != null) {
+      joinedCutCleaned = cleanedParts.take(cleanedCutAtIndex).join(' ');
+    }
+    if (cleanedMinorCutAtIndex != null) {
+      joinedCutCleanedMinor = cleanedMinorParts.take(cleanedMinorCutAtIndex).join(' ');
+    }
 
     return _Property._(
-      splits: allParts,
+      splitsCleaned: cleanedParts,
+      splitsCleanedMinor: cleanedMinorParts,
       joinedCleaned: joinedCleaned,
       joinedCleanedMinor: joinedCleanedMinor,
+      joinedCutCleaned: joinedCutCleaned,
+      joinedCutCleanedMinor: joinedCutCleanedMinor,
     );
   }
 
@@ -321,115 +369,31 @@ class TracksSearchWrapper {
   }
 
   void _filter(String text, void Function(_CustomTrackExtended trExt, int index) onMatch) {
+    text = text.trimAll();
     final lctextCleaned = textCleanedForSearch(text);
     final lctextCleanedMinor = textCleanedMinorForSearch == null ? null : textCleanedMinorForSearch!(text);
     final lctextProperty = _splitTextCleanedAndCleanedMinor(text, textCleanedForSearch, textCleanedMinorForSearch);
-    final lctextSplit = lctextProperty.splits;
+    final lctextSplitCleaned = lctextProperty.splitsCleaned;
+    final lctextSplitCleanedMinor = lctextProperty.splitsCleanedMinor;
 
-    bool containsWordSequence(List<String> fieldTokens, List<String> queryTokens) {
-      if (queryTokens.isEmpty || queryTokens.length > fieldTokens.length) return false;
-      for (var i = 0; i <= fieldTokens.length - queryTokens.length; i++) {
-        var match = true;
-        for (var j = 0; j < queryTokens.length; j++) {
-          if (fieldTokens[i + j] != queryTokens[j]) {
-            match = false;
-            break;
-          }
-        }
-        if (match) return true;
-      }
-      return false;
-    }
-
-    const maxScore = 1200;
-
-    int matchScore(_CustomTrackExtended trExt) {
-      int score = 0;
-
-      void scorePropertySimple(_PropertySimple? propertyString, {int multiplier = 1}) {
-        if (propertyString == null) return;
-
-        if (propertyString.joined.contains(lctextCleaned)) {
-          score += 20 * multiplier;
-        }
-      }
-
-      void scoreProperty(_Property? property, {int multiplier = 1}) {
-        if (property == null) return;
-
-        if (property.joinedCleaned.isEmpty) return;
-
-        final propertyJoinedCleaned = property.joinedCleaned;
-        final propertyJoinedCleanedMinor = property.joinedCleanedMinor;
-
-        if (lctextCleaned.isNotEmpty) {
-          if (propertyJoinedCleaned == lctextCleaned) {
-            score += 400 * multiplier;
-            return;
-          } else if (propertyJoinedCleanedMinor != null && propertyJoinedCleanedMinor == lctextCleanedMinor) {
-            score += 400 * multiplier;
-            return;
-          }
-        }
-
-        if (containsWordSequence(property.splits, lctextSplit)) {
-          final coverage = lctextSplit.length / property.splits.length;
-          score += (100 + 50 * coverage).round() * multiplier;
-          return;
-        }
-
-        int exactWordHits = 0;
-        int substringHits = 0;
-        for (final word in lctextSplit) {
-          if (property.splits.contains(word)) {
-            exactWordHits++;
-          } else if (propertyJoinedCleaned.contains(word) || propertyJoinedCleanedMinor?.contains(word) == true) {
-            substringHits++;
-          }
-        }
-
-        final splitsCount = property.splits.length;
-        if (splitsCount > 0) {
-          final exactRatio = exactWordHits / splitsCount;
-          final substringRatio = substringHits / splitsCount;
-          final partial = (100 * exactRatio + 10 * substringRatio).round();
-          score += partial * multiplier;
-        }
-      }
-
-      bool scorePropertySimpleAndIsEnough(_PropertySimple? property, {int multiplier = 1}) {
-        scorePropertySimple(property, multiplier: multiplier);
-        return score >= maxScore;
-      }
-
-      bool scorePropertyAndIsEnough(_Property? property, {int multiplier = 1}) {
-        scoreProperty(property, multiplier: multiplier);
-        return score >= maxScore;
-      }
-
-      if (scorePropertyAndIsEnough(trExt.splitTitle, multiplier: 4)) return score;
-      if (scorePropertyAndIsEnough(trExt.splitArtist, multiplier: 2)) return score;
-      if (scorePropertyAndIsEnough(trExt.splitAlbum, multiplier: 2)) return score;
-      if (scorePropertyAndIsEnough(trExt.splitFilename, multiplier: 1)) return score;
-      if (scorePropertyAndIsEnough(trExt.splitFolder)) return score;
-      if (scorePropertyAndIsEnough(trExt.splitAlbumArtist)) return score;
-      if (scorePropertyAndIsEnough(trExt.splitGenre)) return score;
-      if (scorePropertyAndIsEnough(trExt.splitComposer)) return score;
-      if (scorePropertyAndIsEnough(trExt.splitComment)) return score;
-      if (scorePropertySimpleAndIsEnough(trExt.description)) return score;
-      if (scorePropertyAndIsEnough(trExt.splitMoods)) return score;
-      if (scorePropertyAndIsEnough(trExt.splitTags)) return score;
-      if (scorePropertySimpleAndIsEnough(trExt.year)) return score;
-      if (scorePropertySimpleAndIsEnough(trExt.lyrics)) return score;
-
-      return score;
-    }
+    final calculator = _ScoreCalculator(
+      matcher: _matcher,
+      lctextCleaned: lctextCleaned,
+      lctextCleanedMinor: lctextCleanedMinor,
+      lctextSplitCleaned: lctextSplitCleaned,
+      lctextSplitCleanedMinor: lctextSplitCleanedMinor,
+    );
 
     final scored = <int, List<(_CustomTrackExtended, int)>>{};
 
     int index = 0;
     for (final trExt in _tracksExtended) {
-      final score = matchScore(trExt);
+      int score = calculator.calculate(trExt);
+      if (maxListensCount > 0) {
+        final listensPercentage = (trExt.listensCount ?? 0) / maxListensCount;
+        final listensScore = (listensPercentage.roundDecimals(1) * 100).round();
+        score += listensScore;
+      }
       if (score > 0) {
         (scored[score] ??= []).add((trExt, index));
       }
@@ -491,14 +455,20 @@ class _CustomTrackExtended {
 }
 
 class _Property {
-  final List<String> splits;
+  final List<String> splitsCleaned;
+  final List<String>? splitsCleanedMinor;
   final String joinedCleaned;
   final String? joinedCleanedMinor;
+  final String? joinedCutCleaned;
+  final String? joinedCutCleanedMinor;
 
   const _Property._({
-    required this.splits,
+    required this.splitsCleaned,
+    required this.splitsCleanedMinor,
     required this.joinedCleaned,
     required this.joinedCleanedMinor,
+    required this.joinedCutCleaned,
+    required this.joinedCutCleanedMinor,
   });
 }
 
@@ -513,4 +483,265 @@ class _PropertySimple {
     if (joined == null) return null;
     return _PropertySimple._(joined: joined);
   }
+}
+
+class _ScoreCalculator {
+  final _StringMatcher matcher;
+  final String lctextCleaned;
+  final String? lctextCleanedMinor;
+  final List<String> lctextSplitCleaned;
+  final List<String>? lctextSplitCleanedMinor;
+
+  const _ScoreCalculator({
+    required this.matcher,
+    required this.lctextCleaned,
+    required this.lctextCleanedMinor,
+    required this.lctextSplitCleaned,
+    required this.lctextSplitCleanedMinor,
+  });
+
+  static const int maxScore = 1200;
+  static int score = 0;
+
+  void scorePropertySimple(_PropertySimple? propertyString, {int multiplier = 1}) {
+    if (propertyString == null) return;
+
+    if (propertyString.joined.contains(lctextCleaned)) {
+      score += 20 * multiplier;
+    }
+  }
+
+  void scoreProperty(_Property? property, {int multiplier = 1, bool allowFuzzy = false}) {
+    if (property == null) return;
+
+    if (property.joinedCleaned.isEmpty) return;
+    if (lctextCleaned.isEmpty) return;
+
+    // -- exact match
+    // -- ex: `"still here"` == `"still here"`
+    final propertyJoinedCleaned = property.joinedCleaned;
+    final propertyJoinedCleanedMinor = property.joinedCleanedMinor;
+    if (propertyJoinedCleaned == lctextCleaned) {
+      score += 400 * multiplier;
+      return;
+    } else if (propertyJoinedCleanedMinor != null && propertyJoinedCleanedMinor == lctextCleanedMinor) {
+      score += 400 * multiplier;
+      return;
+    }
+
+    // -- same as exact match, but without the brackets possibly in title
+    // -- ex: `"still here"` == `"still here"(feat. amy)`
+    // -- worth noting that _simpleRatioForSplits picks the best match ratio not combined average,
+    // -- so this might not be always useful, but it shines when exact matches score better than
+    // -- the ones with brackets, putting it further down instead of first.
+    // -- (ex: "without" makes their score similar, but "without me" gives 'false?' advantage)
+    final propertyJoinedCutCleaned = property.joinedCutCleaned;
+    final propertyJoinedCutCleanedMinor = property.joinedCutCleanedMinor;
+    if (propertyJoinedCutCleaned != null && propertyJoinedCutCleaned == lctextCleaned) {
+      score += 400 * multiplier;
+      return;
+    } else if (propertyJoinedCutCleanedMinor != null && propertyJoinedCutCleanedMinor == lctextCleanedMinor) {
+      score += 400 * multiplier;
+      return;
+    }
+
+    final propertySplitsCleaned = property.splitsCleaned;
+    final matchingPercentageCleaned = matcher.compareMatchingPercentage(
+      lctextCleaned,
+      lctextSplitCleaned,
+      propertyJoinedCleaned,
+      propertySplitsCleaned,
+      allowFuzzy: allowFuzzy,
+    );
+    score += (matchingPercentageCleaned * 200).round() * multiplier;
+
+    if (score > 0) return;
+
+    final propertySplitsCleanedMinor = property.splitsCleanedMinor;
+    if (lctextCleanedMinor != null && lctextSplitCleanedMinor != null && propertyJoinedCleanedMinor != null && propertySplitsCleanedMinor != null) {
+      final matchingPercentageCleanedMinor = matcher.compareMatchingPercentage(
+        lctextCleanedMinor!,
+        lctextSplitCleanedMinor!,
+        propertyJoinedCleanedMinor,
+        propertySplitsCleanedMinor,
+        allowFuzzy: allowFuzzy,
+      );
+      score += (matchingPercentageCleanedMinor * 300).round() * multiplier;
+    }
+  }
+
+  bool scorePropertySimpleAndIsEnough(_PropertySimple? property, {int multiplier = 1}) {
+    scorePropertySimple(property, multiplier: multiplier);
+    return score >= maxScore;
+  }
+
+  bool scorePropertyAndIsEnough(_Property? property, {int multiplier = 1, bool allowFuzzy = false}) {
+    scoreProperty(property, multiplier: multiplier, allowFuzzy: allowFuzzy);
+    return score >= maxScore;
+  }
+
+  int calculate(_CustomTrackExtended trExt) {
+    score = 0;
+
+    if (scorePropertyAndIsEnough(trExt.splitTitle, multiplier: 6, allowFuzzy: true)) return score;
+    if (scorePropertyAndIsEnough(trExt.splitArtist, multiplier: 2, allowFuzzy: true)) return score;
+    if (scorePropertyAndIsEnough(trExt.splitAlbum, multiplier: 2, allowFuzzy: true)) return score;
+    if (scorePropertyAndIsEnough(trExt.splitFilename, multiplier: 1, allowFuzzy: true)) return score;
+    // -- prevent scoring more if already found in main properties
+    // -- for example very useful to prevent lyrics in description from producing more score
+    if (score > 0) return score;
+    if (scorePropertyAndIsEnough(trExt.splitFolder)) return score;
+    if (scorePropertyAndIsEnough(trExt.splitAlbumArtist)) return score;
+    if (scorePropertyAndIsEnough(trExt.splitGenre)) return score;
+    if (scorePropertyAndIsEnough(trExt.splitComposer)) return score;
+    if (scorePropertyAndIsEnough(trExt.splitComment)) return score;
+    if (scorePropertySimpleAndIsEnough(trExt.description)) return score;
+    if (scorePropertyAndIsEnough(trExt.splitMoods)) return score;
+    if (scorePropertyAndIsEnough(trExt.splitTags)) return score;
+    if (scorePropertySimpleAndIsEnough(trExt.year)) return score;
+    if (scorePropertySimpleAndIsEnough(trExt.lyrics)) return score;
+
+    return score;
+  }
+}
+
+class _StringMatcher {
+  const _StringMatcher();
+
+  /// Does NOT check if [query] == [property]. this must be done manually before calling this function.
+  double compareMatchingPercentage(
+    String query,
+    List<String> querySplits,
+    String property,
+    List<String> propertySplits, {
+    int roundDecimals = 1,
+    bool allowFuzzy = false,
+  }) {
+    double finalRatio = _simpleRatio(
+      query,
+      property,
+      queryMultiplier: 0.7,
+    );
+
+    if (finalRatio < 0.7) {
+      final ratioForSplits = _simpleRatioForSplits(
+        querySplits,
+        propertySplits,
+        queryMultiplier: 0.4,
+        queryMorePartsMultiplier: 0.5,
+      );
+      if (ratioForSplits > finalRatio) finalRatio = ratioForSplits;
+    }
+
+    if (allowFuzzy && finalRatio < _kMaxLevenshtienRatio) {
+      final levenshteinRatio = _levenshteinRatio(query, property) * _kMaxLevenshtienRatio;
+      if (levenshteinRatio > finalRatio) finalRatio = levenshteinRatio;
+    }
+
+    if (roundDecimals > 0) {
+      finalRatio = finalRatio.roundDecimals(roundDecimals);
+    }
+
+    return finalRatio;
+  }
+
+  double _simpleRatioForSplits(
+    List<String> querySplits,
+    List<String> propertySplits, {
+    double queryMultiplier = 0.4,
+    double queryMorePartsMultiplier = 0.5,
+  }) {
+    final querySplitsLength = querySplits.length;
+    final propertySplitsLength = propertySplits.length;
+    double combinedRatio = 0.0;
+    for (final qPart in querySplits) {
+      // -- max ratio has great advantage over combining all ratios
+      // -- yes it will no longer favour shorter matches, but would
+      // -- allow better sorting using other factors (ex: listens count)
+      double maxRatioForQPart = 0.0;
+      for (final pPart in propertySplits) {
+        final qpRatio = _simpleRatio(qPart, pPart, queryMultiplier: queryMultiplier);
+        if (qpRatio > maxRatioForQPart) maxRatioForQPart = qpRatio;
+        if (maxRatioForQPart >= 1.0) break;
+      }
+      combinedRatio += maxRatioForQPart;
+    }
+    // -- ex: query="where go", property: "go"
+    // -- so decrease score to allow tracks with "where do we go" to appear
+    if (querySplitsLength > propertySplitsLength) combinedRatio *= queryMorePartsMultiplier;
+
+    final combinedRatioAverage = combinedRatio / querySplitsLength;
+    return combinedRatioAverage;
+  }
+
+  double _simpleRatio(
+    String query,
+    String property, {
+    double queryMultiplier = 1.0,
+    double propertyMultiplier = 1.0,
+  }) {
+    if (property.length < query.length) {
+      final matchIndex = query.indexOf(property);
+      if (matchIndex >= 0) {
+        final offsetMultiplier = 1 - (matchIndex / query.length);
+        return (property.length / query.length) * offsetMultiplier * queryMultiplier;
+      }
+    } else {
+      final matchIndex = property.indexOf(query);
+      if (matchIndex >= 0) {
+        final offsetMultiplier = 1 - (matchIndex / property.length);
+        return (query.length / property.length) * offsetMultiplier * propertyMultiplier;
+      }
+    }
+    return 0.0;
+  }
+
+  double _levenshteinRatio(String a, String b) {
+    final maxLen = a.length > b.length ? a.length : b.length;
+    if (maxLen == 0) return _kEmptyStringsCompareRatio;
+    final distance = _levenshteinDistance(a, b);
+    return 1 - distance / maxLen;
+  }
+
+  // by claude.ai
+  int _levenshteinDistance(String s1, String s2) {
+    if (s1.isEmpty) return s2.length;
+    if (s2.isEmpty) return s1.length;
+
+    final units1 = s1.codeUnits;
+    final units2 = s2.codeUnits;
+    final len2 = units2.length;
+
+    var prevRow = Uint32List(len2 + 1);
+    for (var k = 0; k <= len2; k++) {
+      prevRow[k] = k;
+    }
+    var currRow = Uint32List(len2 + 1);
+
+    for (var i = 0; i < units1.length; i++) {
+      currRow[0] = i + 1;
+      final u1 = units1[i];
+      for (var j = 0; j < len2; j++) {
+        final cost = u1 == units2[j] ? 0 : 1 + _kSubstitutionExtraCost;
+        final deletion = prevRow[j + 1] + 1;
+        final insertion = currRow[j] + 1;
+        final substitution = prevRow[j] + cost;
+
+        var best = deletion;
+        if (insertion < best) best = insertion;
+        if (substitution < best) best = substitution;
+        currRow[j + 1] = best;
+      }
+
+      final temp = prevRow;
+      prevRow = currRow;
+      currRow = temp;
+    }
+
+    return prevRow[len2];
+  }
+
+  static const int _kSubstitutionExtraCost = 4;
+  static const double _kEmptyStringsCompareRatio = 0.0;
+  static const double _kMaxLevenshtienRatio = 0.2;
 }
