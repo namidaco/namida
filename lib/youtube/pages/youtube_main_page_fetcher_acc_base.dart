@@ -272,8 +272,9 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                   childrenDefault: () => listItems.itemsSort.map(
                     (s) {
                       return NamidaPopupItem(
-                        icon: s.title == selectedSort?.title ? Broken.tick_circle : Broken.arrow_swap,
+                        icon: Broken.arrow_swap,
                         title: s.title,
+                        selected: s.title == selectedSort?.title,
                         onTap: () async {
                           final currentSort = _currentSort;
                           if (currentSort!.value?.title == s.title) return;
@@ -297,17 +298,25 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                       );
                     },
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                    child: ObxO(
-                      rx: _currentSort!,
-                      builder: (context, sort) => Text(
-                        sort?.title ?? selectedSort?.title ?? '?',
-                        style: textTheme.displaySmall?.copyWith(
-                          color: context.theme.colorScheme.secondary,
+                  child: Row(
+                    mainAxisSize: .min,
+                    children: [
+                      Icon(
+                        Broken.arrow_swap,
+                        size: 12.0,
+                        color: context.theme.colorScheme.secondary,
+                      ),
+                      const SizedBox(width: 4.0),
+                      ObxO(
+                        rx: _currentSort!,
+                        builder: (context, sort) => Text(
+                          sort?.title ?? selectedSort?.title ?? '?',
+                          style: textTheme.displaySmall?.copyWith(
+                            color: context.theme.colorScheme.secondary,
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 );
               }

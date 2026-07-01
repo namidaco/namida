@@ -123,6 +123,7 @@ class NamidaPopupWrapper extends StatelessWidget {
           popupItem = NamidaInkWell(
             borderRadius: 8.0,
             enableSecondaryTap: true,
+            bgColor: e.selected ? context.theme.colorScheme.secondary.withOpacityExt(0.1) : null,
             onTap: () {
               popMenu();
               e.onTap();
@@ -142,9 +143,9 @@ class NamidaPopupWrapper extends StatelessWidget {
           );
         }
         return ConstrainedBox(
-          constraints: BoxConstraints(minHeight: 40.0),
+          constraints: BoxConstraints(minHeight: 38.0),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2.0),
+            padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
             child: popupItem,
           ),
         );
@@ -239,6 +240,7 @@ class NamidaPopupItem {
   final void Function() onTap;
   final void Function()? onLongPress;
   final bool enabled;
+  final bool selected;
   final bool oneLinedSub;
   final Widget? trailing;
 
@@ -251,6 +253,7 @@ class NamidaPopupItem {
     required this.onTap,
     this.onLongPress,
     this.enabled = true,
+    this.selected = false,
     this.oneLinedSub = false,
     this.trailing,
   });

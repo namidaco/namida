@@ -184,6 +184,7 @@ class YoutubeSettings extends SettingSubpageProvider {
       (e) => NamidaPopupItem(
         icon: Broken.notification_bing,
         title: e.toText(),
+        selected: e == settings.youtube.downloadNotifications.value,
         onTap: () {
           settings.youtube.save(downloadNotifications: e);
         },
@@ -589,6 +590,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                       (e) => NamidaPopupItem(
                         icon: Broken.external_drive,
                         title: e.toText(),
+                        selected: e == settings.youtube.tapToSeek.value,
                         onTap: () {
                           settings.youtube.save(tapToSeek: e);
                         },
@@ -610,6 +612,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                       (e) => NamidaPopupItem(
                         icon: Broken.external_drive,
                         title: e.toText(),
+                        selected: e == settings.youtube.dragToSeek.value,
                         onTap: () {
                           settings.youtube.save(dragToSeek: e);
                         },
@@ -842,6 +845,7 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
     NamidaPopupItem(
       icon: Broken.video_horizontal,
       title: lang.defaultLabel,
+      selected: null == settings.youtube.innertubeClient,
       onTap: () {
         setState(() => settings.youtube.save(setDefaultInnertubeClient: true));
       },
@@ -850,6 +854,7 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
       (e) => NamidaPopupItem(
         icon: Broken.video_octagon,
         title: e.name,
+        selected: e == settings.youtube.innertubeClient,
         onTap: () {
           setState(() => settings.youtube.save(innertubeClient: e));
         },
@@ -862,6 +867,7 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
       (e) => NamidaPopupItem(
         icon: Broken.cd,
         title: e.toText(),
+        selected: e == settings.youtube.dataSaverMode.value,
         onTap: () {
           settings.youtube.save(dataSaverMode: e);
           onSave?.call();
@@ -875,6 +881,7 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
       (e) => NamidaPopupItem(
         icon: Broken.cd,
         title: e.toText(),
+        selected: e == settings.youtube.dataSaverModeMobile.value,
         onTap: () {
           settings.youtube.save(dataSaverModeMobile: e);
           onSave?.call();

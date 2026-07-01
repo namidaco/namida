@@ -977,25 +977,26 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
     final selectedRule = _selectedRule;
     if (selectedRule == null) return [];
     return selectedRule.filter.type.getRuleFilters().map(
-      (e) => Padding(
+      (filter) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 1.0),
         child: NamidaInkWell(
           borderRadius: 8.0,
           padding: const .symmetric(vertical: 8.0, horizontal: 4.0),
+          bgColor: filter == selectedRule.filter ? context.theme.colorScheme.secondary.withOpacityExt(0.1) : null,
           onTap: () {
-            final isRelative = e.isRelativeDate;
+            final isRelative = filter.isRelativeDate;
             setState(() {
               _selectedRule = selectedRule.copyWith(
-                filter: e,
+                filter: filter,
                 datas: isRelative ? (null, null) : null,
                 relativeDuration: isRelative ? _selectedRule?.relativeDuration ?? SmartPlaylistRelativeDuration.initial() : null,
               );
             });
-            _tempFilterForTypeMap[_selectedRule?.type] = e;
+            _tempFilterForTypeMap[_selectedRule?.type] = filter;
             NamidaNavigator.inst.popMenu();
           },
           child: _FilterInfoRow(
-            filter: e,
+            filter: filter,
           ),
         ),
       ),
@@ -1188,7 +1189,7 @@ class _FilterInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _FilterInfoRowRaw(
+    return _InfoRowRaw(
       filterIcon: filter?.toIcon(),
       filterIconText: filter?.toIconText(),
       filterText: filter?.toText(),
@@ -1202,7 +1203,7 @@ class _FilterSourceInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _FilterInfoRowRaw(
+    return _InfoRowRaw(
       filterIcon: source?.toIcon(),
       filterIconText: null,
       filterText: source?.toText(),
@@ -1210,12 +1211,12 @@ class _FilterSourceInfoRow extends StatelessWidget {
   }
 }
 
-class _FilterInfoRowRaw extends StatelessWidget {
+class _InfoRowRaw extends StatelessWidget {
   final IconData? filterIcon;
   final String? filterIconText;
   final String? filterText;
 
-  const _FilterInfoRowRaw({
+  const _InfoRowRaw({
     required this.filterIcon,
     required this.filterIconText,
     required this.filterText,

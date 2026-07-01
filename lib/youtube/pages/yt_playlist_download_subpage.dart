@@ -173,6 +173,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       NamidaPopupItem(
         icon: Broken.musicnote,
         title: lang.audio,
+        selected: true == settings.downloadAudioOnly.value,
         onTap: () {
           _updateAudioOnly(true);
         },
@@ -181,6 +182,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
         (e) => NamidaPopupItem(
           icon: Broken.story,
           title: e,
+          selected: false == settings.downloadAudioOnly.value,
           onTap: () {
             _updateAudioOnly(false);
             preferredQuality.value = e;

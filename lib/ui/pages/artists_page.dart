@@ -71,16 +71,19 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
       NamidaPopupItem(
         icon: Broken.microphone,
         title: lang.artist,
+        selected: MediaType.artist == settings.activeArtistType.value,
         onTap: () => onTap(MediaType.artist),
       ),
       NamidaPopupItem(
         icon: Broken.user,
         title: lang.albumArtist,
+        selected: MediaType.albumArtist == settings.activeArtistType.value,
         onTap: () => onTap(MediaType.albumArtist),
       ),
       NamidaPopupItem(
         icon: Broken.profile_2user,
         title: lang.composer,
+        selected: MediaType.composer == settings.activeArtistType.value,
         onTap: () => onTap(MediaType.composer),
       ),
     ];

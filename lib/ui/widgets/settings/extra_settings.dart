@@ -808,35 +808,18 @@ class ExtrasSettings extends SettingSubpageProvider {
               ),
               title: lang.vibrationType,
               trailing: NamidaPopupWrapper(
-                children: () => VibrationType.values.map(
+                childrenDefault: () => VibrationType.values.map(
                   (e) {
                     void onTap() {
                       settings.save(vibrationType: e);
                       NamidaNavigator.inst.popMenu();
                     }
 
-                    return ObxO(
-                      rx: settings.vibrationType,
-                      builder: (context, vibrationType) => NamidaInkWell(
-                        margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                        borderRadius: 6.0,
-                        bgColor: vibrationType == e ? theme.cardColor : null,
-                        onTap: onTap,
-                        child: Row(
-                          children: [
-                            Icon(
-                              e.toIcon(),
-                              size: 16.0,
-                            ),
-                            const SizedBox(width: 6.0),
-                            Text(
-                              e.toText(),
-                              style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                            ),
-                          ],
-                        ),
-                      ),
+                    return NamidaPopupItem(
+                      onTap: onTap,
+                      icon: e.toIcon(),
+                      title: e.toText(),
+                      selected: e == settings.vibrationType.value,
                     );
                   },
                 ),
@@ -1125,6 +1108,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
       (e) => NamidaPopupItem(
         icon: Broken.cd,
         title: e.name,
+        selected: e == settings.extra.preferredSearchType.value,
         onTap: () {
           settings.extra.save(preferredSearchType: e);
           onSave?.call();

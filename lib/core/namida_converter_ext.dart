@@ -2180,6 +2180,14 @@ extension TrackPlayModeL10n on TrackPlayMode {
     TrackPlayMode.trackArtist => lang.trackPlayModeTrackArtist,
     TrackPlayMode.trackGenre => lang.trackPlayModeTrackGenre,
   };
+
+  IconData toIcon() => switch (this) {
+    TrackPlayMode.selectedTrack => Broken.music_circle,
+    TrackPlayMode.searchResults => Broken.search_normal_1,
+    TrackPlayMode.trackAlbum => Broken.music_dashboard,
+    TrackPlayMode.trackArtist => Broken.profile_2user,
+    TrackPlayMode.trackGenre => Broken.smileys,
+  };
 }
 
 extension InsertionSortingTypeL10n on InsertionSortingType {

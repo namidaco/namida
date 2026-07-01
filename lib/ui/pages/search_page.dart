@@ -611,14 +611,28 @@ class _SearchPageState extends State<SearchPage> {
                                                     ),
                                                   ],
                                                 ),
-                                                trailing: NamidaButton(
-                                                  colors: .mid,
-                                                  icon: Broken.play,
-                                                  text: settings.trackPlayMode.valueR.toText(),
-                                                  onTap: () {
-                                                    final element = settings.trackPlayMode.value.nextElement(TrackPlayMode.values);
-                                                    settings.save(trackPlayMode: element);
-                                                  },
+                                                trailing: Builder(
+                                                  builder: (context) => NamidaButton(
+                                                    colors: .mid,
+                                                    icon: Broken.play,
+                                                    text: settings.trackPlayMode.valueR.toText(),
+                                                    onTap: () {
+                                                      final menu = NamidaPopupWrapper(
+                                                        childrenDefault: () => TrackPlayMode.values.map(
+                                                          (e) => NamidaPopupItem(
+                                                            icon: e.toIcon(),
+                                                            title: e.toText(),
+                                                            selected: e == settings.trackPlayMode.value,
+                                                            onTap: () {
+                                                              settings.save(trackPlayMode: e);
+                                                              NamidaNavigator.inst.popMenu();
+                                                            },
+                                                          ),
+                                                        ),
+                                                      );
+                                                      menu.showPopupMenu(context);
+                                                    },
+                                                  ),
                                                 ),
                                               ),
                                             ),

@@ -473,6 +473,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
                     return NamidaPopupItem(
                       icon: icon,
                       title: "$title$countText",
+                      selected: name == groupName.value,
                       onTap: () => onGroupNameChanged(name),
                     );
                   },

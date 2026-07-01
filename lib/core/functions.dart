@@ -2320,6 +2320,7 @@ class TracksAddOnTap {
                       (e) => NamidaPopupItem(
                         icon: e.toIcon(),
                         title: e.toText(),
+                        selected: e == sortBy.value,
                         onTap: () => sortBy.value = e,
                       ),
                     );

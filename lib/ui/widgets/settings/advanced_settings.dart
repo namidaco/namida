@@ -92,7 +92,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                 icon: Broken.cpu_setting,
                 title: lang.performanceMode,
                 trailing: NamidaPopupWrapper(
-                  children: () => PerformanceMode.values.map(
+                  childrenDefault: () => PerformanceMode.values.map(
                     (e) {
                       void onTap() {
                         changedArtworkCacheM = !changedArtworkCacheM;
@@ -100,28 +100,11 @@ class AdvancedSettings extends SettingSubpageProvider {
                         NamidaNavigator.inst.popMenu();
                       }
 
-                      return ObxO(
-                        rx: settings.performanceMode,
-                        builder: (context, performanceMode) => NamidaInkWell(
-                          margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                          borderRadius: 6.0,
-                          bgColor: performanceMode == e ? theme.cardColor : null,
-                          onTap: onTap,
-                          child: Row(
-                            children: [
-                              Icon(
-                                e.toIcon(),
-                                size: 18.0,
-                              ),
-                              const SizedBox(width: 6.0),
-                              Text(
-                                e.toText(),
-                                style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                              ),
-                            ],
-                          ),
-                        ),
+                      return NamidaPopupItem(
+                        selected: e == settings.performanceMode.value,
+                        icon: e.toIcon(),
+                        title: e.toText(),
+                        onTap: onTap,
                       );
                     },
                   ),

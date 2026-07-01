@@ -6780,6 +6780,7 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
               (e) => NamidaPopupItem(
                 icon: Broken.cpu,
                 title: e.toText(),
+                selected: e == cachePriority,
                 onTap: () async {
                   if (widget.totalCount == 1) {
                     VideoController.inst.videosPriorityManager.setVideoPriority(widget.videosId.first, e);

@@ -360,7 +360,7 @@ class CustomizationSettings extends SettingSubpageProvider {
     required Rx<TrackExecuteActions> rx,
     required void Function(TrackExecuteActions newItem) onSave,
   }) {
-    Iterable<Widget> getChildren() {
+    Iterable<NamidaPopupItem> getChildren() {
       var values = TrackExecuteActions.values;
       if (excludePlayerActions || excludeDelete || excludeFocus) {
         final valuesToExclude = <TrackExecuteActions>[
@@ -386,30 +386,11 @@ class CustomizationSettings extends SettingSubpageProvider {
             NamidaNavigator.inst.popMenu();
           }
 
-          return ObxO(
-            rx: rx,
-            builder: (context, value) => NamidaInkWell(
-              margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-              borderRadius: 6.0,
-              bgColor: value == e ? context.theme.cardColor : null,
-              onTap: onTap,
-              child: Row(
-                children: [
-                  Icon(
-                    e.toIcon(),
-                    size: 18.0,
-                  ),
-                  const SizedBox(width: 6.0),
-                  Expanded(
-                    child: Text(
-                      e.toText(),
-                      style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          return NamidaPopupItem(
+            icon: e.toIcon(),
+            title: e.toText(),
+            selected: e == rx.value,
+            onTap: onTap,
           );
         },
       );
@@ -418,14 +399,14 @@ class CustomizationSettings extends SettingSubpageProvider {
     return getItemWrapper(
       key: key,
       child: NamidaPopupWrapper(
-        children: getChildren,
+        childrenDefault: getChildren,
         child: CustomListTile(
           extraDense: true,
           bgColor: getBgColor(key),
           icon: icon,
           title: title,
           trailing: NamidaPopupWrapper(
-            children: getChildren,
+            childrenDefault: getChildren,
             child: ObxO(
               rx: rx,
               builder: (context, value) => Text(

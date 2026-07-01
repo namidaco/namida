@@ -335,12 +335,14 @@ class ChangeGridCountWidget extends StatelessWidget {
               NamidaPopupItem(
                 icon: _resolveIcon(autoCountPerRow.rawValue),
                 title: lang.auto,
+                selected: currentCount.rawValue == autoCountPerRow.rawValue,
                 onTap: () => _onTap(autoCountPerRow),
               ),
               ...CountPerRow.getAvailableOptions().map(
                 (e) => NamidaPopupItem(
                   icon: _resolveIcon(e.rawValue),
                   title: '${e.rawValue}',
+                  selected: currentCount.rawValue == e.rawValue,
                   onTap: () => _onTap(e),
                 ),
               ),

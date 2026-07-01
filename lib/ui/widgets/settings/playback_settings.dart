@@ -111,7 +111,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         trailing: Padding(
           padding: isInEQPage ? const EdgeInsetsGeometry.only(right: 12.0) : EdgeInsetsGeometry.zero,
           child: NamidaPopupWrapper(
-            children: () => ReplayGainType.valuesForPlatform.map(
+            childrenDefault: () => ReplayGainType.valuesForPlatform.map(
               (e) {
                 void onTap() async {
                   NamidaNavigator.inst.popMenu();
@@ -150,19 +150,12 @@ class PlaybackSettings extends SettingSubpageProvider {
                   }
                 }
 
-                return ObxO(
-                  rx: settings.player.replayGainType,
-                  builder: (context, replayGainType) => NamidaInkWell(
-                    margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                    borderRadius: 6.0,
-                    bgColor: replayGainType == e ? context.theme.cardColor : null,
-                    onTap: onTap,
-                    child: Text(
-                      e.toText(),
-                      style: context.textTheme.displayMedium?.copyWith(fontSize: 14.0),
-                    ),
-                  ),
+                return NamidaPopupItem(
+                  icon: Broken.airpods,
+                  secondaryIcon: Broken.voice_cricle,
+                  selected: e == settings.player.replayGainType.value,
+                  title: e.toText(),
+                  onTap: onTap,
                 );
               },
             ),
@@ -477,8 +470,20 @@ class PlaybackSettings extends SettingSubpageProvider {
                           title: lang.matchingType,
                           trailingText: settings.localVideoMatchingType.valueR.toText(),
                           onTap: () {
-                            final e = settings.localVideoMatchingType.value.nextElement(LocalVideoMatchingType.values);
-                            settings.save(localVideoMatchingType: e);
+                            final menu = NamidaPopupWrapper(
+                              childrenDefault: () => LocalVideoMatchingType.values.map(
+                                (e) => NamidaPopupItem(
+                                  icon: Broken.video_tick,
+                                  title: e.toText(),
+                                  selected: e == settings.localVideoMatchingType.value,
+                                  onTap: () {
+                                    settings.save(localVideoMatchingType: e);
+                                    NamidaNavigator.inst.popMenu();
+                                  },
+                                ),
+                              ),
+                            );
+                            menu.showPopupMenu(context);
                           },
                         ),
                       ),
@@ -507,9 +512,21 @@ class PlaybackSettings extends SettingSubpageProvider {
             subtitle: settings.wakelockMode.valueR.toText(),
             icon: Broken.external_drive,
             onTap: () {
-              final e = settings.wakelockMode.value.nextElement(WakelockMode.values);
-              settings.save(wakelockMode: e);
-              WakelockController.inst.onSettingChanged();
+              final menu = NamidaPopupWrapper(
+                childrenDefault: () => WakelockMode.values.map(
+                  (e) => NamidaPopupItem(
+                    icon: Broken.external_drive,
+                    title: e.toText(),
+                    selected: e == settings.wakelockMode.value,
+                    onTap: () {
+                      settings.save(wakelockMode: e);
+                      WakelockController.inst.onSettingChanged();
+                      NamidaNavigator.inst.popMenu();
+                    },
+                  ),
+                ),
+              );
+              menu.showPopupMenu(context);
             },
           ),
         ),
@@ -573,8 +590,20 @@ class PlaybackSettings extends SettingSubpageProvider {
             title: lang.killPlayerAfterDismissingApp,
             icon: Broken.forbidden_2,
             onTap: () {
-              final element = settings.player.killAfterDismissingApp.value.nextElement(KillAppMode.values);
-              settings.player.save(killAfterDismissingApp: element);
+              final menu = NamidaPopupWrapper(
+                childrenDefault: () => KillAppMode.values.map(
+                  (e) => NamidaPopupItem(
+                    icon: Broken.forbidden_2,
+                    title: e.toText(),
+                    selected: e == settings.player.killAfterDismissingApp.value,
+                    onTap: () {
+                      settings.player.save(killAfterDismissingApp: e);
+                      NamidaNavigator.inst.popMenu();
+                    },
+                  ),
+                ),
+              );
+              menu.showPopupMenu(context);
             },
             trailingText: settings.player.killAfterDismissingApp.valueR.toText(),
           ),
@@ -589,8 +618,20 @@ class PlaybackSettings extends SettingSubpageProvider {
             trailingText: settings.onNotificationTapAction.valueR.toText(),
             icon: Broken.card,
             onTap: () {
-              final element = settings.onNotificationTapAction.value.nextElement(NotificationTapAction.values);
-              settings.save(onNotificationTapAction: element);
+              final menu = NamidaPopupWrapper(
+                childrenDefault: () => NotificationTapAction.values.map(
+                  (e) => NamidaPopupItem(
+                    icon: Broken.card,
+                    title: e.toText(),
+                    selected: e == settings.onNotificationTapAction.value,
+                    onTap: () {
+                      settings.save(onNotificationTapAction: e);
+                      NamidaNavigator.inst.popMenu();
+                    },
+                  ),
+                ),
+              );
+              menu.showPopupMenu(context);
             },
           ),
         ),
@@ -842,6 +883,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                       (action) => NamidaPopupItem(
                         icon: action.toIcon(),
                         title: action.toText(),
+                        selected: action == settings.player.onInterrupted.value[type],
                         onTap: () => settings.player.updatePlayerInterruption(type, action),
                       ),
                     ),
