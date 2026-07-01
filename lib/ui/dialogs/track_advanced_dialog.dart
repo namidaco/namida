@@ -62,6 +62,7 @@ void showTrackAdvancedDialog({
   final tracksForColorPalette = tracksForColorPaletteMap.values.toList();
 
   final willUpdateArtwork = false.obs;
+  final isLoadingFilesToShare = false.obso;
 
   final reIndexedTracksSuccessful = 0.obs;
   final reIndexedTracksFailed = 0.obs;
@@ -342,6 +343,7 @@ void showTrackAdvancedDialog({
     tapToDismiss: () => !isDeletingRx.value && !isMovingRx.value && !isCopyingRx.value,
     onDisposing: () {
       willUpdateArtwork.close();
+      isLoadingFilesToShare.close();
       reIndexedTracksSuccessful.close();
       reIndexedTracksFailed.close();
       shouldShowReIndexProgress.close();
@@ -453,6 +455,33 @@ void showTrackAdvancedDialog({
                 ),
               ),
             ),
+
+          ObxO(
+            rx: isLoadingFilesToShare,
+            builder: (context, isLoading) => AnimatedEnabled(
+              enabled: !isLoading,
+              child: AnimatedRotatingBorder(
+                isLoading: isLoading,
+                borderRadius: 18.0.multipliedRadius,
+                colors: [colorScheme.withOpacityExt(0.5)],
+                child: CustomListTile(
+                  extraDense: true,
+                  passedColor: colorScheme,
+                  title: lang.share,
+                  icon: Broken.share,
+                  onTap: () async {
+                    final trs = tracksUniquedPhysical.map((tr) => tr.path);
+                    if (trs.isEmpty) return;
+                    isLoadingFilesToShare.value = true;
+                    await NamidaUtils.shareFiles(trs);
+                    isLoadingFilesToShare.value = false;
+                    NamidaNavigator.inst.closeAllDialogs();
+                  },
+                ),
+              ),
+            ),
+          ),
+
           if (sourcesMap.isNotEmpty)
             CustomListTile(
               passedColor: colorScheme,
@@ -528,7 +557,7 @@ void showTrackAdvancedDialog({
                   enabled: shouldReIndexEnabled.valueR,
                   passedColor: colorScheme,
                   title: lang.reIndex,
-                  icon: Broken.direct_inbox,
+                  icon: Broken.refresh,
                   subtitle: shouldShow ? "${reIndexedTracksSuccessful.valueR}/${tracksUniquedPhysical.length}$secondLine" : null,
                   trailingRaw: NamidaInkWell(
                     padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),

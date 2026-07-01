@@ -47,7 +47,6 @@ import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
-import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
@@ -136,7 +135,6 @@ Future<void> showGeneralPopupDialog(
   final String? firstVideolId = availableYoutubeIDs.firstOrNull?.id;
 
   final numberOfRepeats = 1.obso;
-  final isLoadingFilesToShare = false.obso;
 
   bool shoulShowPlaylistUtils() => comingFromPlaylistMenu && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
   bool shoulShowRemoveFromPlaylist() => !comingFromPlaylistMenu && tracksWithDates.isNotEmpty && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
@@ -757,7 +755,6 @@ Future<void> showGeneralPopupDialog(
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       numberOfRepeats.close();
-      isLoadingFilesToShare.close();
       statsWrapper?.close();
       colorDelightened.close();
       iconColor.close();
@@ -1193,29 +1190,6 @@ Future<void> showGeneralPopupDialog(
                                 SmallListTile(
                                   color: colorDelightened,
                                   compact: false,
-                                  title: lang.share,
-                                  icon: Broken.share,
-                                  trailing: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                                    child: ObxO(
-                                      rx: isLoadingFilesToShare,
-                                      builder: (context, loading) => loading ? const LoadingIndicator() : const SizedBox(),
-                                    ),
-                                  ),
-                                  onTap: () async {
-                                    final trs = tracksExisting.mapPhysicalOrError((tr) => tr.path);
-                                    if (trs.isEmpty) return;
-                                    isLoadingFilesToShare.value = true;
-                                    await NamidaUtils.shareFiles(trs);
-                                    isLoadingFilesToShare.value = false;
-                                    NamidaNavigator.inst.closeDialog();
-                                  },
-                                ),
-
-                              if (!isSingle)
-                                SmallListTile(
-                                  color: colorDelightened,
-                                  compact: false,
                                   title: lang.playAll,
                                   icon: Broken.play_circle,
                                   onTap: () {
@@ -1253,16 +1227,18 @@ Future<void> showGeneralPopupDialog(
                                   },
                                 ),
 
-                              SmallListTile(
-                                color: colorDelightened,
-                                compact: false,
-                                title: lang.addToPlaylist,
-                                icon: Broken.music_library_2,
-                                onTap: () {
-                                  NamidaNavigator.inst.closeDialog();
-                                  showAddToPlaylistDialog(tracks);
-                                },
-                              ),
+                              if (!isSingle)
+                                SmallListTile(
+                                  color: colorDelightened,
+                                  compact: false,
+                                  title: lang.addToPlaylist,
+                                  icon: Broken.music_library_2,
+                                  onTap: () {
+                                    NamidaNavigator.inst.closeDialog();
+                                    showAddToPlaylistDialog(tracks);
+                                  },
+                                ),
+
                               SmallListTile(
                                 color: colorDelightened,
                                 compact: false,
@@ -1348,10 +1324,6 @@ Future<void> showGeneralPopupDialog(
 
                               ?removeFromPlaylistListTile,
 
-                              ?playlistUtilsRow,
-
-                              ?smartPlaylistUtilsRow,
-
                               /// Track Utils
                               /// TODO: support for multiple tracks editing
                               if (isSingle && playlistUtilsRow == null && smartPlaylistUtilsRow == null)
@@ -1360,35 +1332,11 @@ Future<void> showGeneralPopupDialog(
                                     const SizedBox(width: 24.0),
                                     Expanded(
                                       child: bigIcon(
-                                        Broken.share,
-                                        iconWidget: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Broken.share,
-                                              color: iconColor,
-                                            ),
-                                            ObxO(
-                                              rx: isLoadingFilesToShare,
-                                              builder: (context, loading) => Padding(
-                                                padding: const EdgeInsets.only(top: 2.0),
-                                                child: const LoadingIndicator().animateEntrance(
-                                                  showWhen: loading,
-                                                  allCurves: Curves.fastEaseInToSlowEaseOut,
-                                                  durationMS: 200,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        () => lang.share,
-                                        () async {
-                                          final trs = tracksExisting.mapPhysicalOrError((tr) => tr.path);
-                                          if (trs.isEmpty) return;
-                                          isLoadingFilesToShare.value = true;
-                                          await NamidaUtils.shareFiles(trs);
-                                          isLoadingFilesToShare.value = false;
+                                        Broken.music_library_2,
+                                        () => lang.addToPlaylist,
+                                        () {
                                           NamidaNavigator.inst.closeDialog();
+                                          showAddToPlaylistDialog(tracks);
                                         },
                                       ),
                                     ),
@@ -1468,6 +1416,11 @@ Future<void> showGeneralPopupDialog(
                                     const SizedBox(width: 24.0),
                                   ],
                                 ),
+
+                              ?playlistUtilsRow,
+
+                              ?smartPlaylistUtilsRow,
+
                               const SizedBox(height: 4.0),
 
                               Divider(
