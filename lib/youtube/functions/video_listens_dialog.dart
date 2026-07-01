@@ -29,5 +29,11 @@ void showVideoListensDialog(String videoId, {List<int> datesOfListen = const [],
     },
     colorSchemeFunctionSync: null,
     onListenTap: (listen) => YTUtils.onYoutubeHistoryPlaylistTap(initialListen: listen),
+    onTopListensRangeTap: (customRange) {
+      YTUtils.onYoutubeMostPlayedPlaylistTap(
+        mptr: .custom,
+        dateCustom: customRange,
+      );
+    },
   );
 }

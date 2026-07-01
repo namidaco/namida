@@ -173,7 +173,18 @@ class NamidaOnTaps {
     }
   }
 
-  Future<void> onMostPlayedPlaylistTap() async {
+  Future<void> onMostPlayedPlaylistTap({MostPlayedTimeRange? mptr, DateRange? dateCustom}) async {
+    if (mptr != null) {
+      settings.save(
+        mostPlayedTimeRange: mptr,
+        mostPlayedCustomDateRange: dateCustom,
+      );
+      HistoryController.inst.updateTempMostPlayedPlaylist(
+        mptr: mptr,
+        customDateRange: dateCustom,
+      );
+    }
+
     return const MostPlayedTracksPage().navigate();
   }
 

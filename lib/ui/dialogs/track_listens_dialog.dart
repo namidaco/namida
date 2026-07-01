@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:history_manager/history_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:paged_vertical_calendar/paged_vertical_calendar.dart';
 
@@ -29,6 +30,12 @@ void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Co
     colorSchemeFunction: () => CurrentColor.inst.getTrackDelightnedColor(track, null, useIsolate: true),
     colorSchemeFunctionSync: () => CurrentColor.inst.getTrackDelightnedColorSync(track, null, useIsolate: true),
     onListenTap: (listen) => NamidaOnTaps.inst.onHistoryPlaylistTap(initialListen: listen),
+    onTopListensRangeTap: (customRange) {
+      NamidaOnTaps.inst.onMostPlayedPlaylistTap(
+        mptr: .custom,
+        dateCustom: customRange,
+      );
+    },
   );
 }
 
@@ -39,6 +46,7 @@ void showListensDialog({
   required Color? Function()? colorSchemeFunctionSync,
   required Color? colorScheme,
   required void Function(int listen) onListenTap,
+  required void Function(DateRange customRange) onTopListensRangeTap,
 }) async {
   if (datesOfListen.isEmpty) return;
 
@@ -256,6 +264,7 @@ void showListensDialog({
                             borderRadius: 14.0,
                             title: t.dateAndClockFormattedOriginal,
                             subtitle: TimeAgoController.dateMSSEFromNow(t),
+                            onTap: () => onListenTap(t),
                             leading: DecoratedBox(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(6.0.multipliedRadius),
@@ -272,7 +281,24 @@ void showListensDialog({
                                 ),
                               ),
                             ),
-                            onTap: () => onListenTap(t),
+                            trailing: NamidaIconButton(
+                              icon: null,
+                              child: StackedIcon(
+                                baseIcon: Broken.award,
+                                secondaryIcon: Broken.export_2,
+                                secondaryIconSize: 13.0,
+                                delightenColors: true,
+                              ),
+                              onPressed: () {
+                                final listenDate = DateTime.fromMillisecondsSinceEpoch(t);
+                                const duration = Duration(days: 60);
+                                final customDateRange = DateRange(
+                                  oldest: listenDate.subtract(duration),
+                                  newest: listenDate.add(duration),
+                                );
+                                onTopListensRangeTap(customDateRange);
+                              },
+                            ),
                           );
                         },
                         itemCount: datesOfListen.length,

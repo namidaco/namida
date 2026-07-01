@@ -395,19 +395,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Pull
     if (_topRecentsScrollController.hasClients) _topRecentsScrollController.jumpTo(0);
   }
 
-  void _onGoingToMostPlayedPage({
-    required MostPlayedTimeRange mptr,
-    DateRange? dateCustom,
-  }) {
-    settings.save(
-      mostPlayedTimeRange: mptr,
-      mostPlayedCustomDateRange: dateCustom,
-    );
-    widget.historyManager.updateTempMostPlayedPlaylist(
-      mptr: mptr,
-      customDateRange: dateCustom,
-    );
-    NamidaOnTaps.inst.onMostPlayedPlaylistTap();
+  void _onGoingToMostPlayedPage({required MostPlayedTimeRange mptr, DateRange? dateCustom}) {
+    NamidaOnTaps.inst.onMostPlayedPlaylistTap(mptr: mptr, dateCustom: dateCustom);
   }
 
   List<E?> _listOrShimmer<E>(List<E> listy) {

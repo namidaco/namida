@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/comments/comment_info_item.dart';
 import 'package:youtipie/class/comments/comment_info_item_base.dart';
@@ -816,7 +817,18 @@ class YTUtils {
     ).navigate();
   }
 
-  static Future<void> onYoutubeMostPlayedPlaylistTap() {
+  static Future<void> onYoutubeMostPlayedPlaylistTap({MostPlayedTimeRange? mptr, DateRange? dateCustom}) async {
+    if (mptr != null) {
+      settings.save(
+        ytMostPlayedTimeRange: mptr,
+        ytMostPlayedCustomDateRange: dateCustom,
+      );
+      YoutubeHistoryController.inst.updateTempMostPlayedPlaylist(
+        mptr: mptr,
+        customDateRange: dateCustom,
+      );
+    }
+
     return const YTMostPlayedVideosPage().navigate();
   }
 
