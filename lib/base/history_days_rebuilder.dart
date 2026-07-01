@@ -23,7 +23,7 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
     }
   }
 
-  int dayToMillis(int day) => HistoryManager.dayToMilliseconds(day);
+  int dayToMillis(int day) => HistoryManager.daysSince1970ToMilliseconds(day);
 
   var _historyDays = <int>[];
   var _historyYears = <int>[];

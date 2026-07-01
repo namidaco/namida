@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
+import 'package:youtipie/youtipie.dart' show CodecInfoUtils;
 
 import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/route.dart';
@@ -632,11 +633,11 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
               List<TextSpan>? textChildren;
               if (settings.displayAudioInfoMiniplayer.valueR) {
                 final audioStream = Player.inst.currentAudioStream.valueR;
-                final formatName = audioStream?.codecInfo.codec;
+                final formatName = audioStream?.codecInfo.codecCleaned();
                 final bitrate = audioStream?.bitrate ?? Player.inst.currentCachedAudio.valueR?.bitrate;
                 final bitrateText = bitrate == null ? null : "${bitrate ~/ 1000} kb/s";
                 final sampleRate = audioStream?.codecInfo.embeddedAudioInfo?.audioSampleRate;
-                final sampleRateText = sampleRate == null ? null : "$sampleRate kHz";
+                final sampleRateText = sampleRate == null ? null : "${sampleRate / 1000} kHz";
                 final language = audioStream?.audioTrack?.langCode ?? Player.inst.currentCachedAudio.valueR?.langaugeCode;
 
                 final finalText = <String?>[

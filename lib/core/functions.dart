@@ -136,13 +136,14 @@ class NamidaOnTaps {
         initialListen,
         Dimensions.inst.trackTileItemExtent,
         kHistoryDayHeaderHeightWithPadding,
+        RouteType.SUBPAGE_historyTracks,
       );
     }
     if (shouldNavigate) await HistoryTracksPage().navigate();
   }
 
   /// returns wether the page is most likely not rendered and thus should be navigated to.
-  static bool jumpToListen(HistoryManager historyManager, int listen, double itemHeight, double headerHeight) {
+  static bool jumpToListen(HistoryManager historyManager, int listen, double itemHeight, double headerHeight, RouteType routeType) {
     final scrollInfo = historyManager.getListenScrollPosition(
       listenMS: listen,
       extraItemsOffset: 2,
@@ -150,8 +151,10 @@ class NamidaOnTaps {
 
     historyManager.highlightedItem.value = scrollInfo;
 
+    bool isInHistoryPage() => NamidaNavigator.inst.currentRoute?.route == routeType && historyManager.scrollController.hasClients;
+
     void jump() {
-      if (historyManager.scrollController.hasClients) {
+      if (isInHistoryPage()) {
         final p = historyManager.scrollController.positions.firstOrNull;
         if (p != null && p.hasContentDimensions) {
           historyManager.scrollController.jumpTo(scrollInfo.toScrollOffset(itemHeight, headerHeight));
@@ -161,7 +164,7 @@ class NamidaOnTaps {
 
     NamidaNavigator.inst.hideStuff();
 
-    if (historyManager.scrollController.hasClients) {
+    if (isInHistoryPage()) {
       jump();
       return false;
     } else {

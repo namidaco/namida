@@ -1055,7 +1055,10 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
                   });
                 },
               ),
-            if (selectedRule != null && selectedRule.source.supportsClockOnly && !selectedRule.filter.isRelativeDate)
+            if (selectedRule != null &&
+                selectedRule.source.supportsClockOnly &&
+                !selectedRule.filter.isRelativeDate &&
+                (selectedRule.filter.requiresDataField || selectedRule.filter.requiresData2Field))
               CustomSwitchListTile(
                 icon: Broken.clock,
                 title: lang.clockOnly,

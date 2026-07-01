@@ -112,8 +112,10 @@ class ScrollSearchController {
       final direction = position?.userScrollDirection;
       if (direction != ScrollDirection.idle) {
         var newIsVisible = direction != ScrollDirection.reverse;
-        if (!newIsVisible && (position?.pixels ?? 0) < kExpandableBoxHeight) newIsVisible = true;
+        if (!newIsVisible && (position?.pixels ?? 0) <= kExpandableBoxHeight) newIsVisible = true;
         isBarVisibleMap[tab]?.value = newIsVisible;
+      } else if ((position?.pixels ?? 0) <= kExpandableBoxHeight) {
+        isBarVisibleMap[tab]?.value = true;
       }
     });
   }

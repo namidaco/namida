@@ -1139,7 +1139,7 @@ class SearchSortController extends SearchPortsProvider {
   }
 
   /// Sorts Playlists and Saves automatically to settings
-  void _sortPlaylists({GroupSortType? sortBy, bool? reverse, Map<String, int>? customIndicesOrder}) async {
+  void _sortPlaylists({GroupSortType? sortBy, bool? reverse}) async {
     // -- mainly to avoid resetting custom sort since it wouldn't be loaded yet
     await PlaylistController.inst.waitForPlaylistsLoad;
 

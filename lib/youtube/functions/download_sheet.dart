@@ -629,7 +629,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                         return getQualityButton(
                                                           selected: selectedAudioOnlyStream.valueR == element,
                                                           cacheExists: cacheFile != null,
-                                                          title: "${element.codecInfo.codec} • ${element.sizeInBytes.fileSizeFormatted}",
+                                                          title: "${element.codecInfo.codecCleaned()} • ${element.sizeInBytes.fileSizeFormatted}",
                                                           subtitle: "${element.codecInfo.container} • ${element.bitrateText()}",
                                                           onTap: () {
                                                             selectedAudioOnlyStream.value = element;

@@ -1810,6 +1810,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     currentCachedVideo.value = config?.cachedVideo;
     _isCurrentAudioFromCache = config?.isAudioFromCache ?? false;
 
+    // -- for displaying proper audio info. can also mark stream as selected but thats not too bad
+    final cachedAudioBitrate = config?.cachedAudio?.bitrate;
+    if (currentAudioStream.value == null && cachedAudioBitrate != null) {
+      currentAudioStream.value = config?.streamsResult?.audioStreams.firstWhereEff((a) => a.bitrate == cachedAudioBitrate);
+    }
+
     ensureReplayGainVolumeUpdated(item, streamsResult: config?.streamsResult);
 
     final bool okaySetFromCache = config?.cachedAudio != null && (canPlayAudioOnlyFromCache || config?.cachedVideo != null);

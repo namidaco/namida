@@ -801,6 +801,7 @@ class YTUtils {
         initialListen,
         Dimensions.youtubeCardItemExtent,
         kYoutubeHistoryDayHeaderHeightWithPadding,
+        RouteType.YOUTUBE_HISTORY_SUBPAGE,
       );
     }
     if (shouldNavigate) await YoutubeHistoryPage().navigate();

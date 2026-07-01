@@ -117,6 +117,11 @@ class _YoutubeVideoCardState extends State<YoutubeVideoCard> {
 
     final enableGifThumbnails = settings.youtube.enableGifThumbnails;
     final thumbnailGifUrl = enableGifThumbnails ? widget.video.thumbnailGifUrl : null;
+    final channelThumbnailUrl =
+        widget.video.channel?.thumbnails.pick()?.url ?? //
+        YoutubeInfoController.utils.getVideoChannelThumbnailsSync(videoId, checkFromStorage: false)?.pick()?.url;
+    // -- we only need channel id as a fallback for channel thumbnail
+    // final channelID = channelThumbnailUrl == null ? YoutubeInfoController.utils.getVideoChannelIDSync(videoId, checkFromStorage: false) : null;
     Widget finalChild = NamidaPopupWrapper(
       openOnTap: false,
       childrenDefault: getMenuItems,
@@ -139,8 +144,7 @@ class _YoutubeVideoCardState extends State<YoutubeVideoCard> {
         displaythirdLineText: widget.showThirdLine,
         thirdLineText: widget.dateInsteadOfChannel ? widget.video.badges?.join(' - ') ?? '' : widget.video.channelName ?? '',
         displayChannelThumbnail: !widget.dateInsteadOfChannel,
-        channelThumbnailUrl:
-            widget.video.channel?.thumbnails.pick()?.url ?? YoutubeInfoController.utils.getVideoChannelThumbnailsSync(videoId, checkFromStorage: false)?.pick()?.url,
+        channelThumbnailUrl: channelThumbnailUrl,
         onTap:
             widget.onTap ??
             () async {
