@@ -238,6 +238,7 @@ flutter_native_splash:
   android_12:
     color: "#fff5eb"
     color_dark: "#161212"
+    image: assets/disposables/namida_icon_android12.png
 
 flutter:
   generate: true
