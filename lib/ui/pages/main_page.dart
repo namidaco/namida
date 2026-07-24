@@ -34,6 +34,7 @@ import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
+import 'package:namida/ui/widgets/settings_search_bar.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
 
@@ -79,6 +80,14 @@ class MainPage extends StatelessWidget {
     );
 
     final fabChild = _MainPageFABButton();
+    late final settingsFabChild = ObxO(
+      rx: SettingsSearchController.inst.canShowSearch,
+      builder: (context, isActive) => NamidaFABButton(
+        tooltip: () => isActive ? lang.clear : '${lang.search}: ${lang.settings}',
+        onTap: () => NamidaSettingSearchBar.globalKey.currentState?.toggle(),
+        icon: isActive ? Broken.shield_slash : Broken.shield_search,
+      ),
+    );
     Widget mainChild = Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: PreferredSize(
@@ -203,6 +212,7 @@ class MainPage extends StatelessWidget {
                   return Obx(
                     (context) {
                       final shouldHide = Dimensions.inst.shouldHideFABR;
+                      final shouldShowSettingsFab = Dimensions.inst.shouldShowSettingsFABR;
                       final bottom = _getReactiveBottomFabOffset(context);
                       return AnimatedPositioned(
                         right: 12.0,
@@ -213,7 +223,7 @@ class MainPage extends StatelessWidget {
                           isHorizontal: true,
                           show: !shouldHide,
                           duration: const Duration(milliseconds: 400),
-                          child: fabChild,
+                          child: shouldShowSettingsFab ? settingsFabChild : fabChild,
                         ),
                       );
                     },

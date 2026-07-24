@@ -101,7 +101,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       control: true,
       callback: () {
         if (_isInSettingsPage()) {
-          NamidaSettingSearchBar.globalKey.currentState?.open();
+          NamidaSettingSearchBar.globalKey.currentState?.toggle();
         } else {
           ScrollSearchController.inst.toggleSearch(
             forceOpen: ScrollSearchController.inst.searchBarKey.currentState?.focusNode.hasPrimaryFocus != true,

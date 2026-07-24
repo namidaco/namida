@@ -90,12 +90,12 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
           cursorRadius: const Radius.circular(12.0),
           buttonWidget: const IgnorePointer(
             child: NamidaIconButton(
-              icon: Broken.search_normal,
+              icon: Broken.shield_search,
             ),
           ),
           secondaryButtonWidget: const IgnorePointer(
             child: NamidaIconButton(
-              icon: Broken.search_status_1,
+              icon: Broken.shield_slash,
             ),
           ),
           trailingWidget: NamidaIconButton(
