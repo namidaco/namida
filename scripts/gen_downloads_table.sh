@@ -61,7 +61,8 @@ if [ "$IS_BETA" = "true" ]; then
 fi
 
 row "Windows" \
-  "${PREFIX}-Installer-x86_64.exe|Namida-x86_64-${PREFIXRAW}-Installer.exe"
+  "${PREFIX}-Installer-x86_64.exe|Namida-x86_64-${PREFIXRAW}-Installer.exe" \
+  "${PREFIX}-Portable-x86_64.zip|Namida-x86_64-${PREFIXRAW}-Portable.zip"
 
 if [ "$IS_BETA" = "true" ]; then
   row "Linux" \

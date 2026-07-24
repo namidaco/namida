@@ -1,12 +1,59 @@
 part of 'namida_storage.dart';
 
-class _NamidaStorageWindows extends NamidaStorage {
-  const _NamidaStorageWindows() : super(r'C:\');
+class _NamidaStorageWindowsInstallation extends _NamidaStorageWindowsBase {
+  const _NamidaStorageWindowsInstallation() : super(r'C:\');
 
   @override
   String getUserDataDirectory(List<String> appDataDirectories) {
     return NamidaPlatformBuilder.windowsNamidaHome ?? appDataDirectories.firstOrNull ?? '';
   }
+
+  @override
+  Future<List<String>> getStorageDirectoriesAppCache() async {
+    Directory dir;
+    try {
+      dir = await pp.getApplicationCacheDirectory();
+    } on pp.MissingPlatformDirectoryException catch (_) {
+      dir = await pp.getTemporaryDirectory();
+    }
+    return [dir.path];
+  }
+
+  @override
+  Future<List<String>> getStorageDirectoriesAppData() async {
+    Directory dir;
+    try {
+      dir = await pp.getApplicationSupportDirectory();
+    } on pp.MissingPlatformDirectoryException catch (_) {
+      dir = Directory.current;
+    }
+    return [dir.path];
+  }
+}
+
+class _NamidaStorageWindowsPortable extends _NamidaStorageWindowsBase {
+  _NamidaStorageWindowsPortable() : super(_portableBasePath);
+
+  static String get _portableBasePath => File(Platform.resolvedExecutable).parent.path;
+
+  @override
+  String getUserDataDirectory(List<String> appDataDirectories) {
+    return appDataDirectories.firstOrNull ?? _portableBasePath;
+  }
+
+  @override
+  Future<List<String>> getStorageDirectoriesAppCache() async {
+    return [FileParts.joinPath(_portableBasePath, 'cache')];
+  }
+
+  @override
+  Future<List<String>> getStorageDirectoriesAppData() async {
+    return [FileParts.joinPath(_portableBasePath, 'files')];
+  }
+}
+
+abstract class _NamidaStorageWindowsBase extends NamidaStorage {
+  const _NamidaStorageWindowsBase(super.defaultFallbackStoragePath);
 
   @override
   Future<String?> getRealPath(String? contentUri) async {
@@ -51,28 +98,6 @@ class _NamidaStorageWindows extends NamidaStorage {
         )
         // .skip(1) // skip C volume
         .toList();
-  }
-
-  @override
-  Future<List<String>> getStorageDirectoriesAppCache() async {
-    Directory dir;
-    try {
-      dir = await pp.getApplicationCacheDirectory();
-    } on pp.MissingPlatformDirectoryException catch (_) {
-      dir = await pp.getTemporaryDirectory();
-    }
-    return [dir.path];
-  }
-
-  @override
-  Future<List<String>> getStorageDirectoriesAppData() async {
-    Directory dir;
-    try {
-      dir = await pp.getApplicationSupportDirectory();
-    } on pp.MissingPlatformDirectoryException catch (_) {
-      dir = Directory.current;
-    }
-    return [dir.path];
   }
 
   @override

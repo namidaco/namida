@@ -153,6 +153,9 @@ Future<bool> _mainAppInitialization() async {
     }
 
     Future<void> fetchRootDir() async {
+      String? path;
+
+      if (!isWindowsPortable) {
       Directory? dir;
       for (final fn in [
         pp.getApplicationSupportDirectory,
@@ -162,9 +165,10 @@ Future<bool> _mainAppInitialization() async {
           dir = await fn();
           break;
         } catch (_) {}
+        }
+        path = dir?.path;
       }
 
-      String? path = dir?.path;
       if (path == null) {
         final appDatas = await NamidaStorage.inst.getStorageDirectoriesAppData();
         path = appDatas.firstOrNull;
@@ -191,7 +195,10 @@ Future<bool> _mainAppInitialization() async {
       if (fallback != null) paths.add(fallback);
     }
     kStoragePaths.addAll(paths);
-    AppDirs.INTERNAL_STORAGE = FileParts.joinPath(paths[0], 'Namida');
+    AppDirs.INTERNAL_STORAGE = FileParts.joinPath(
+      isWindowsPortable ? AppDirs.ROOT_DIR : paths[0],
+      'Namida',
+    );
 
     _initErrorInterpreters();
     _cleanOldLogsSync.thready([AppDirs.LOGS_DIRECTORY, AppPaths.getLogsSuffix()]);

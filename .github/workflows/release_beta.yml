@@ -324,6 +324,20 @@ jobs:
           $installer = Get-ChildItem "./build/windows/${{ matrix.arch }}/installer/Release/" -Filter "*.exe" | Select-Object -First 1
           Move-Item $installer.FullName "build_final/Namida-${{ matrix.artifact_arch }}-${{ needs.create_release.outputs.version_name }}-Installer.exe"
 
+      - name: Build Windows App (Portable)
+        run: |
+          flutter build windows --release --dart-define=WINDOWS_PORTABLE=true --verbose 2>&1 | Tee-Object -FilePath build_log_portable.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== CARGO / CARGOKIT ERRORS ==="
+            Select-String -Path build_log_portable.txt -Pattern "error|cargo|cargokit" -CaseSensitive:$false | Select-Object -First 80
+            exit 1
+          }
+
+      - name: Package portable ZIP
+        run: |
+          $releaseDir = "build/windows/${{ matrix.arch }}/runner/Release"
+          Compress-Archive -Path "$releaseDir/*" -DestinationPath "build_final/Namida-${{ matrix.artifact_arch }}-${{ needs.create_release.outputs.version_name }}-Portable.zip"
+
       - name: Upload installer to Snapshot Release
         uses: softprops/action-gh-release@v2
         with:

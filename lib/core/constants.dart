@@ -125,6 +125,7 @@ final kMainColorLightOldValue = const Color(0xFF9c99c1).intValue;
 final kMainColorDarkOldValue = const Color(0xFF4e4c72).intValue;
 
 const isKuru = bool.fromEnvironment('IS_KURU_BUILD');
+const isWindowsPortable = bool.fromEnvironment('WINDOWS_PORTABLE');
 
 abstract class NamidaLinkRegex {
   static const url = r'https?://([\w-]+\.)+[\w-]+(/[\w-./?%&@\$=~#+]*)?';
