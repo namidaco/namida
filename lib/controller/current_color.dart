@@ -274,6 +274,7 @@ class CurrentColor {
     currentPlayingTrack.value = null;
     _namidaColorMiniplayer.value = null;
     _currentPlayingVideo = null;
+    _namidaColor.value = null;
   }
 
   bool _checkDummyColor(NamidaColor value) => value.palette.isEmpty || (value.palette.length == 1 && value.color == value.palette.first && value.color == value.palette.last);
