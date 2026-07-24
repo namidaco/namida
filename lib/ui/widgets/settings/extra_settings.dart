@@ -1271,6 +1271,23 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   ),
                 ),
               ObxO(
+                rx: settings.visualDelayMS,
+                builder: (context, visualDelayMS) => CustomListTile(
+                  icon: Broken.clock,
+                  title: 'visual_to_audio_delay'.toUpperCase(),
+                  subtitle: 'delay certain ui animations (ex. lyrics) to match with bluetooth audio delay',
+                  trailing: NamidaWheelSlider(
+                    initValue: visualDelayMS ~/ 10,
+                    max: 200,
+                    onValueChanged: (val) {
+                      final ms = val * 10;
+                      settings.save(visualDelayMS: ms);
+                    },
+                    text: '$visualDelayMS ms',
+                  ),
+                ),
+              ),
+              ObxO(
                 rx: settings.timeCapsuleYears,
                 builder: (context, timeCapsuleYears) {
                   timeCapsuleYears ??= 0;

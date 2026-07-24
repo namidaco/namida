@@ -196,6 +196,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     final uiInfo = lrc.forUiDisplay(
       cal,
       durationDifferenceToInsertEmptyLine: const Duration(seconds: 1),
+      extraOffsetDuration: Duration(milliseconds: -settings.visualDelayMS.value),
       romanize: false,
     );
 

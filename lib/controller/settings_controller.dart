@@ -213,6 +213,7 @@ class _SettingsController with SettingsFileWriter {
 
   final customEQPackage = Rxn<String?>();
   final stretchLyricsDuration = true.obs;
+  final visualDelayMS = 0.obs;
   final timeCapsuleYears = Rxn<int>();
 
   final playlistAddTracksAtBeginning = false.obs;
@@ -651,6 +652,7 @@ class _SettingsController with SettingsFileWriter {
 
       customEQPackage.value = json['customEQPackage'] ?? customEQPackage.value;
       stretchLyricsDuration.value = json['stretchLyricsDuration'] ?? stretchLyricsDuration.value;
+      visualDelayMS.value = json['visualDelayMS'] ?? visualDelayMS.value;
       timeCapsuleYears.value = json['timeCapsuleYears'] ?? timeCapsuleYears.value;
       playlistAddTracksAtBeginning.value = json['playlistAddTracksAtBeginning'] ?? playlistAddTracksAtBeginning.value;
       playlistAddTracksAtBeginningYT.value = json['playlistAddTracksAtBeginningYT'] ?? playlistAddTracksAtBeginningYT.value;
@@ -894,6 +896,7 @@ class _SettingsController with SettingsFileWriter {
     'tagFieldsToEdit': tagFieldsToEdit.value.map((element) => element.name).toFixedList(),
     'customEQPackage': ?customEQPackage.value,
     'stretchLyricsDuration': stretchLyricsDuration.value,
+    'visualDelayMS': visualDelayMS.value,
     'timeCapsuleYears': timeCapsuleYears.value,
     'playlistAddTracksAtBeginning': playlistAddTracksAtBeginning.value,
     'playlistAddTracksAtBeginningYT': playlistAddTracksAtBeginningYT.value,
@@ -1089,6 +1092,7 @@ class _SettingsController with SettingsFileWriter {
     List<TagField>? tagFieldsToEdit,
     String? customEQPackage,
     bool? stretchLyricsDuration,
+    int? visualDelayMS,
     int? timeCapsuleYears,
     bool? playlistAddTracksAtBeginning,
     bool? playlistAddTracksAtBeginningYT,
@@ -1348,6 +1352,7 @@ class _SettingsController with SettingsFileWriter {
     }
     if (customEQPackage != null) this.customEQPackage.value = customEQPackage;
     if (stretchLyricsDuration != null) this.stretchLyricsDuration.value = stretchLyricsDuration;
+    if (visualDelayMS != null) this.visualDelayMS.value = visualDelayMS;
     if (timeCapsuleYears != null) this.timeCapsuleYears.value = timeCapsuleYears;
     if (playlistAddTracksAtBeginning != null) this.playlistAddTracksAtBeginning.value = playlistAddTracksAtBeginning;
     if (playlistAddTracksAtBeginningYT != null) this.playlistAddTracksAtBeginningYT.value = playlistAddTracksAtBeginningYT;
