@@ -12,10 +12,11 @@ sealed class ServerAuthModel {
   final String username;
   const ServerAuthModel._(this.username);
 
-  static ServerAuthModel createModel(String username, String password, String? share, String? subdir, bool legacyAuth, bool legacyAuthEncrypt) {
+  static ServerAuthModel createModel(String username, String password, String? share, String? subdir, bool legacyAuth, bool legacyAuthEncode) {
     if (legacyAuth) {
-      if (legacyAuthEncrypt) {
-        return ServerAuthModel.encryptedPassword(username, 'enc:${_generateToken(password: password)}');
+      if (legacyAuthEncode) {
+        // -- encoding gives nothing extra, except avoid illegal chars in url
+        return ServerAuthModel.encodedPassword(username, 'enc:${_hexEncode(password)}');
       } else {
         return ServerAuthModel.rawPassword(username, password);
       }
@@ -37,15 +38,23 @@ sealed class ServerAuthModel {
     return md5.convert(utf8.encode('$password$salt')).toString();
   }
 
+  static String _hexEncode(String input) {
+    final buffer = StringBuffer();
+    for (final c in input.codeUnits) {
+      buffer.write(c.toRadixString(16).padLeft(2, '0'));
+    }
+    return buffer.toString();
+  }
+
   const factory ServerAuthModel.rawPassword(
     String username,
     String password,
   ) = _ServerAuthWithRawPassword;
 
-  const factory ServerAuthModel.encryptedPassword(
+  const factory ServerAuthModel.encodedPassword(
     String username,
-    String encryptedPassword,
-  ) = _ServerAuthWithEncryptedPassword;
+    String encodedPassword,
+  ) = _ServerAuthWithEncodedPassword;
 
   const factory ServerAuthModel.token(
     String username,
@@ -83,15 +92,15 @@ class _ServerAuthWithRawPassword extends ServerAuthModel {
   };
 }
 
-class _ServerAuthWithEncryptedPassword extends ServerAuthModel {
-  final String encryptedPassword;
+class _ServerAuthWithEncodedPassword extends ServerAuthModel {
+  final String encodedPassword;
 
-  const _ServerAuthWithEncryptedPassword(super.username, this.encryptedPassword) : super._();
+  const _ServerAuthWithEncodedPassword(super.username, this.encodedPassword) : super._();
 
   @override
   Map<String, String> toUrlParams() => {
     'u': username,
-    'p': encryptedPassword,
+    'p': encodedPassword,
   };
 }
 

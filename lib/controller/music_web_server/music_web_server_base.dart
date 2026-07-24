@@ -259,7 +259,7 @@ class MusicWebServerAuthDetails {
       share,
       subdir,
       legacyAuth,
-      dir.type.check(DirectoryIndexTypeTag.legacyAuthEncrypt),
+      dir.type.check(DirectoryIndexTypeTag.legacyAuthEncode),
     );
   }
 
@@ -278,7 +278,7 @@ class MusicWebServerAuthDetails {
               authMap['s'], // new salt would result in auth error [40]
             )
           : (password?.startsWith('enc:') ?? false)
-          ? ServerAuthModel.encryptedPassword(
+          ? ServerAuthModel.encodedPassword(
               username,
               password!,
             )

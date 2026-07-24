@@ -258,7 +258,7 @@ sealed class DirectoryIndex {
 enum DirectoryIndexTypeTag {
   server,
   legacyAuthOnly,
-  legacyAuthEncrypt,
+  legacyAuthEncode,
   isURLHost,
   supportsShare,
   supportsSubdir,
@@ -271,7 +271,7 @@ enum DirectoryIndexType {
   local({}),
   subsonic({
     .server,
-    .legacyAuthEncrypt,
+    .legacyAuthEncode,
   }),
   jellyfin({
     .server,
