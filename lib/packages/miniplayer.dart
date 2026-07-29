@@ -52,7 +52,7 @@ import 'package:namida/youtube/youtube_miniplayer.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class MiniPlayerParent extends StatelessWidget {
-  final AnimationController animation;
+  final Animation<double> animation;
   const MiniPlayerParent({super.key, required this.animation});
 
   @override

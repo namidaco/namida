@@ -39,7 +39,7 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
 
 class MainPage extends StatelessWidget {
-  final AnimationController animation;
+  final Animation<double> animation;
   final bool isMiniplayerAlwaysVisible;
 
   const MainPage({
@@ -785,7 +785,7 @@ class ArtistSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
 }
 
 class _CustomAppBar extends StatelessWidget {
-  final AnimationController animation;
+  final Animation<double> animation;
   final bool isMiniplayerAlwaysVisible;
 
   const _CustomAppBar({
@@ -886,7 +886,7 @@ class _CustomAppBar extends StatelessWidget {
 }
 
 class _CustomNavBar extends StatelessWidget {
-  final AnimationController animation;
+  final Animation<double> animation;
   const _CustomNavBar({required this.animation});
 
   @override

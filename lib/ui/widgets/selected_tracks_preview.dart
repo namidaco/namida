@@ -18,7 +18,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class SelectedTracksPreviewContainer extends StatelessWidget {
-  final AnimationController animation;
+  final Animation<double> animation;
   final bool isMiniplayerAlwaysVisible;
 
   const SelectedTracksPreviewContainer({

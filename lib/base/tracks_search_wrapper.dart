@@ -109,7 +109,9 @@ class TracksSearchWrapper {
     }
 
     final tracksExtended = <_CustomTrackExtended>[];
+    int index = -1;
     for (final trMap in tracks) {
+      index++;
       final path = trMap['path'] as String;
       final title = trMap['title'] as String;
       final isVideo = trMap['v'] == true;
@@ -120,6 +122,7 @@ class TracksSearchWrapper {
 
       tracksExtended.add(
         _CustomTrackExtended(
+          ogIndex: index,
           track: track,
           splitTitle: splitThis(title, stitle, tryCutBeforeBrackets: true),
           splitFilename: splitThis(path.getFilename, sfilename),
@@ -358,23 +361,23 @@ class TracksSearchWrapper {
 
   List<Track> filter(String text) {
     final result = <Track>[];
-    _filter(text, (trExt, _) => result.add(trExt.track));
+    _filter(text, (trExt) => result.add(trExt.track));
     return result;
   }
 
   List<int> filterIndicesAsList(String text) {
     final result = <int>[];
-    _filter(text, (_, index) => result.add(index));
+    _filter(text, (trExt) => result.add(trExt.ogIndex));
     return result;
   }
 
   Set<int> filterIndicesAsSet(String text) {
     final result = <int>{};
-    _filter(text, (_, index) => result.add(index));
+    _filter(text, (trExt) => result.add(trExt.ogIndex));
     return result;
   }
 
-  void _filter(String text, void Function(_CustomTrackExtended trExt, int index) onMatch) {
+  void _filter(String text, void Function(_CustomTrackExtended trExt) onMatch) {
     text = text.trimAll();
     final lctextCleaned = textCleanedForSearch(text);
     final lctextCleanedMinor = textCleanedMinorForSearch == null ? null : textCleanedMinorForSearch!(text);
@@ -390,27 +393,26 @@ class TracksSearchWrapper {
       lctextSplitCleanedMinor: lctextSplitCleanedMinor,
     );
 
-    final scored = <int, List<(_CustomTrackExtended, int)>>{};
+    final scored = <int, List<_CustomTrackExtended>>{};
 
-    int index = 0;
     for (final trExt in _tracksExtended) {
       int score = calculator.calculate(trExt);
-      if (maxListensCount > 0) {
+      if (score > 0 && maxListensCount > 0) {
+        // -- score must be > 0, otherwise would always show results with high listen counts
         final listensPercentage = (trExt.listensCount ?? 0) / maxListensCount;
         final listensScore = (listensPercentage.roundDecimals(1) * 100).round();
         score += listensScore;
       }
       if (score > 0) {
-        (scored[score] ??= []).add((trExt, index));
+        (scored[score] ??= []).add(trExt);
       }
-      index++;
     }
 
     final sortedKeys = scored.keys.toFixedList()..sort((a, b) => b.compareTo(a));
     for (final scoreKey in sortedKeys) {
       final innerList = scored[scoreKey]!;
       for (final e in innerList) {
-        onMatch(e.$1, e.$2);
+        onMatch(e);
       }
     }
   }
@@ -421,6 +423,7 @@ class TracksSearchWrapper {
 }
 
 class _CustomTrackExtended {
+  final int ogIndex;
   final Track track;
   final _Property? splitTitle;
   final _Property? splitFilename;
@@ -439,6 +442,7 @@ class _CustomTrackExtended {
   final int? listensCount;
 
   const _CustomTrackExtended({
+    required this.ogIndex,
     required this.track,
     required this.splitTitle,
     required this.splitFilename,

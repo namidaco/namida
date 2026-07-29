@@ -73,17 +73,37 @@ class NamidaDeviceInfo {
     if (_deviceId != null) return _deviceId!;
     try {
       if (Platform.isWindows) {
-        _deviceId = await _getWindowsUDID();
-      } else {
-        _deviceId = await FlutterUdid.udid;
+        _deviceId = await _getWindowsUDID() ?? await _getWindowsUDIDOld();
       }
+    } catch (_) {}
+    try {
+      _deviceId ??= await FlutterUdid.udid;
     } catch (_) {}
     return _deviceId;
   }
 
-  // native call causes debug connection to get lost, this works fine
+  /// Windows 11 removed `wmic` so [_getWindowsUDIDOld] is not functional on new devices
+  static Future<String?> _getWindowsUDID() async {
+    final process = await Process.run(
+      'powershell',
+      [
+        '-command',
+        '(gcim Win32_ComputerSystemProduct).UUID',
+      ],
+      runInShell: true,
+    );
+    String? udid = await process.stdout as String;
+    if (udid.isEmpty) {
+      udid = null;
+    } else {
+      udid = udid.trim();
+    }
+    return udid;
+  }
+
+  // native call could cause debug connection to get lost, this works fine
   // source: https://github.com/BestBurning/platform_device_id/issues/21#issuecomment-1133934641
-  static Future<String> _getWindowsUDID() async {
+  static Future<String> _getWindowsUDIDOld() async {
     String biosID = '';
     final process = await Process.start(
       'wmic',

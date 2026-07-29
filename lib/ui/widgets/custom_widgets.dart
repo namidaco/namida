@@ -3032,6 +3032,7 @@ class AnimatingTile extends StatelessWidget {
 
 class AnimatingGrid extends StatelessWidget {
   final int position;
+  final int countPerRowResolved;
   final int columnCount;
   final Widget child;
   final bool shouldAnimate;
@@ -3040,6 +3041,7 @@ class AnimatingGrid extends StatelessWidget {
   const AnimatingGrid({
     super.key,
     required this.position,
+    required this.countPerRowResolved,
     required this.columnCount,
     required this.child,
     this.shouldAnimate = true,
@@ -3050,14 +3052,17 @@ class AnimatingGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget child = this.child;
     if (shouldAnimate) {
+      final duration = Duration(
+        milliseconds: (400 / countPerRowResolved).clamp(100, 400).round(),
+      );
       child = AnimationConfiguration.staggeredGrid(
         columnCount: columnCount,
         position: position,
-        duration: const Duration(milliseconds: 400),
+        duration: duration,
         child: SlideAnimation(
           verticalOffset: 25.0,
           child: FadeInAnimation(
-            duration: const Duration(milliseconds: 400),
+            duration: duration,
             child: child,
           ),
         ),

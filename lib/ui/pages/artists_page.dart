@@ -223,6 +223,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                                   final artist = finalArtists[i];
                                   final tracks = artist.getArtistTracksFor(artistType);
                                   return AnimatingGrid(
+                                    countPerRowResolved: countPerRowResolved,
                                     columnCount: finalArtists.length,
                                     position: i,
                                     shouldAnimate: _shouldAnimate,

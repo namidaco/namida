@@ -106,6 +106,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                           final tracks = genre.getGenresTracks();
                           final topRightText = extraTextResolver?.call(tracks);
                           return AnimatingGrid(
+                            countPerRowResolved: countPerRowResolved,
                             columnCount: SearchSortController.inst.genreSearchList.length,
                             position: i,
                             shouldAnimate: _shouldAnimate,

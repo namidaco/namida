@@ -707,6 +707,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                   final playlist = playlistsMap[key]!;
                                                   final extraText = extraTextResolver?.call(playlist);
                                                   return AnimatingGrid(
+                                                    countPerRowResolved: countPerRowResolved,
                                                     columnCount: playlistSearchList.length,
                                                     position: i,
                                                     shouldAnimate: _shouldAnimate,

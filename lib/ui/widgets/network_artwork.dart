@@ -362,7 +362,7 @@ final class _NetworkArtworkInfoAlbum extends NetworkArtworkInfo {
   RxList<LibraryImageSource> get settingsKey => settings.imageSourceAlbum;
 
   @override
-  File toArtworkLocation() => NetworkArtworkInfo._getCustomArtworkLocation(AppDirs.ARTWORKS_ALBUMS, name);
+  File toArtworkLocation() => NetworkArtworkInfo._getCustomArtworkLocation(AppDirs.ARTWORKS_ALBUMS, fileIdentifier ?? name);
 
   @override
   String? toLastfmUrl() {

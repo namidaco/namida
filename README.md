@@ -329,8 +329,9 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 ### Linux Installation
 
+1. **Install Dependencies**
 > [!IMPORTANT]
-> Install dependencies: **mpv** (for playback)
+> Install dependencies: **mpv** for playback
 > (you may skip this if you used a package manager)
 >
 > ```bash
@@ -340,7 +341,7 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 > ```
 
 > [!NOTE]
-> (Optional) Install **wpe** (for login support) or download the `*_login` variant
+> (Optional) Install **wpe** for login support (or download the `*_login` variant)
 >
 > ```bash
 > # Arch/Manjaro
@@ -355,6 +356,7 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 > sudo dnf install wpewebkit
 > ```
 
+2. **Install Namida**
 ```bash
 # Quick Install
 curl -fsSL https://raw.githubusercontent.com/namidaco/namida/main/scripts/install_linux_tar.sh | sudo bash

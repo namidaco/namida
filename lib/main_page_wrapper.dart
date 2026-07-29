@@ -34,30 +34,14 @@ import 'package:namida/ui/widgets/settings/customization_settings.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 
-class MainPageWrapper extends StatelessWidget {
+class MainPageWrapper extends StatefulWidget {
   const MainPageWrapper({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return NamidaInnerDrawer(
-      key: NamidaNavigator.inst.innerDrawerKey,
-      borderRadius: 42.0.multipliedRadius,
-      drawerChild: const NamidaDrawer(),
-      maxPercentage: 194.0 / context.width,
-      initiallySwipeable: settings.swipeableDrawer.value,
-      child: const MainScreenStack(),
-    );
-  }
+  State<MainPageWrapper> createState() => _MainPageWrapperState();
 }
 
-class MainScreenStack extends StatefulWidget {
-  const MainScreenStack({super.key});
-
-  @override
-  State<MainScreenStack> createState() => _MainScreenStackState();
-}
-
-class _MainScreenStackState extends State<MainScreenStack> with TickerProviderStateMixin {
+class _MainPageWrapperState extends State<MainPageWrapper> with TickerProviderStateMixin {
   late AnimationController animation;
 
   @override
@@ -84,6 +68,25 @@ class _MainScreenStackState extends State<MainScreenStack> with TickerProviderSt
       if (mounted) setState(() {}); // update mp values
     }
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaInnerDrawer(
+      key: NamidaNavigator.inst.innerDrawerKey,
+      borderRadius: 42.0.multipliedRadius,
+      drawerChild: const NamidaDrawer(),
+      maxPercentage: 194.0 / context.width,
+      initiallySwipeable: settings.swipeableDrawer.value,
+      child: MainScreenStack(
+        animation: animation,
+      ),
+    );
+  }
+}
+
+class MainScreenStack extends StatelessWidget {
+  final Animation<double> animation;
+  const MainScreenStack({super.key, required this.animation});
 
   @override
   Widget build(BuildContext context) {
