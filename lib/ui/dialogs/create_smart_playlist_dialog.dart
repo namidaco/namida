@@ -1598,6 +1598,8 @@ class _TextDataTokensEditor extends StatefulWidget {
 
 class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
   late final _tokensCopy = List<SmartPlaylistTextDataToken>.from(widget.rule.data ?? <SmartPlaylistTextDataToken>[]);
+  late final Set<String> _allLibraryMoods = Indexer.inst.getAllLibraryMoods();
+  late final Set<String> _allLibraryTags = Indexer.inst.getAllLibraryTags();
 
   void _refreshTokens() {
     widget.onChanged(
@@ -1611,6 +1613,11 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
     _tokensCopy.add(SmartPlaylistTextDataTokenLiteral(text));
     _refreshTokens();
     widget.controller.clear();
+  }
+
+  void _addLiteralFromSuggestion(String text) {
+    widget.controller.text = text;
+    _addLiteralFromField();
   }
 
   void _removeAt(int index) {
@@ -1675,6 +1682,13 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
     final tokens = _tokensCopy;
     final filter = widget.rule.filter;
     final isRegex = filter.isRegex();
+
+    final Set<String>? librarySearchableItems = switch (widget.rule.source) {
+      SmartPlaylistRuleFilterTextSource.moods => _allLibraryMoods,
+      SmartPlaylistRuleFilterTextSource.tags => _allLibraryTags,
+      _ => null,
+    };
+
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
@@ -1783,6 +1797,44 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
                 ),
               ],
             ),
+            if (librarySearchableItems != null && librarySearchableItems.isNotEmpty)
+              ValueListenableBuilder(
+                valueListenable: widget.controller,
+                builder: (context, value, child) {
+                  final search = value.text.toLowerCase();
+                  final results = librarySearchableItems.where(
+                    (item) {
+                      if (search.isNotEmpty && !item.toLowerCase().contains(search)) return false;
+                      return !tokens.any((t) => t is SmartPlaylistTextDataTokenLiteral && t.text == item);
+                    },
+                  );
+                  if (results.isEmpty) return const SizedBox();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: SmoothSingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: results
+                            .map(
+                              (item) => NamidaInkWell(
+                                margin: const EdgeInsets.only(right: 6.0),
+                                borderRadius: 99.0,
+                                bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.25),
+                                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                                onTap: () => _addLiteralFromSuggestion(item),
+                                child: Text(
+                                  item,
+                                  style: context.textTheme.displaySmall,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                  );
+                },
+              ),
           ],
         ),
       ),
