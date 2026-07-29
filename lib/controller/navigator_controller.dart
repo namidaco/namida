@@ -163,9 +163,7 @@ class NamidaNavigator {
     _latestSystemUIImmersive = immersive;
     _latestSystemUIOverlays = overlays;
 
-    // final mode = immersive ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge;
-    // TODO: remove manual with flutter >v3.44.1
-    final mode = immersive ? SystemUiMode.immersiveSticky : SystemUiMode.manual;
+    final mode = immersive ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge;
     return SystemChrome.setEnabledSystemUIMode(mode, overlays: overlays);
   }
 

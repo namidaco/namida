@@ -118,12 +118,12 @@ class NamidaTaggerController {
     }
 
     final newTags = commentToInsert.isNotEmpty
-        ? FTags(
+        ? FTags.edit(
             path: '',
             comment: oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
             artwork: FArtwork(),
           )
-        : FTags(
+        : FTags.edit(
             path: '',
             artwork: FArtwork(file: imageFile),
             title: editedTags[TagField.title],
@@ -168,6 +168,7 @@ class NamidaTaggerController {
     final shouldEditStats = kStatsFields.any((f) => editedTags[f] != null);
     late final wantedToEditNonStatsTags = editedTags.keys.any((et) => kStatsFields.contains(et));
 
+    await _extractor.initializeForWrite();
     final splittersConfigs = SplitArtistGenreConfigsWrapper.settings();
     final tracksMap = <Track, TrackExtended>{};
     for (final track in tracks) {
@@ -241,6 +242,8 @@ class NamidaTaggerController {
         );
       }
     }
+
+    await _extractor.disposeForWrite();
 
     if (onUpdatingTracksStart != null) onUpdatingTracksStart();
 

@@ -1,9 +1,16 @@
 part of 'tags_extractor.dart';
 
+// ignore: unused_element
 class _TagsExtractorAndroid extends TagsExtractor {
   _TagsExtractorAndroid._init() {
     _channel = const MethodChannel('faudiotagger');
   }
+
+  @override
+  Future<void> initializeForWrite() async {}
+
+  @override
+  Future<void> disposeForWrite() async {}
 
   late MethodChannel _channel;
 
@@ -74,14 +81,16 @@ class _TagsExtractorAndroid extends TagsExtractor {
       });
     } catch (_) {}
 
-    final File? tempFile = await TagsExtractor.extractThumbnailCustom(
-      trackPath: trackPath,
-      filename: null,
-      artworkDirectory: null,
-      isVideo: isVideo,
-    );
-    bytes = await tempFile?.readAsBytes();
-    tempFile?.tryDeleting();
+    if (bytes == null) {
+      final File? tempFile = await TagsExtractor.extractThumbnailCustom(
+        trackPath: trackPath,
+        filename: null,
+        artworkDirectory: null,
+        isVideo: isVideo,
+      );
+      bytes = await tempFile?.readAsBytes();
+      tempFile?.tryDeleting();
+    }
 
     return bytes == null ? null : FArtwork(bytes: bytes);
   }

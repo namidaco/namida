@@ -4,8 +4,8 @@ publish_to: "none"
 version: 6.3.1-beta+260625092
 
 environment:
-  sdk: ">=3.12.1 <4.0.0"
-  flutter: 3.44.1
+  sdk: ">=3.12.2 <4.0.0"
+  flutter: 3.44.8
 
 dependency_overrides:
   intl: ^0.20.2
@@ -126,6 +126,10 @@ dependencies:
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
+  flutter_taglib:
+    git:
+      url: https://github.com/MSOB7YY/flutter_taglib
+      ref: custom_taglib
   on_audio_query:
     git:
       url: https://github.com/MSOB7YY/on_audio_query

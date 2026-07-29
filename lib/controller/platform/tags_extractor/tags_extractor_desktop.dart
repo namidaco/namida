@@ -1,7 +1,14 @@
 part of 'tags_extractor.dart';
 
+// ignore: unused_element
 class _TagsExtractorDesktop extends TagsExtractor {
   _TagsExtractorDesktop._internal();
+
+  @override
+  Future<void> initializeForWrite() async {}
+
+  @override
+  Future<void> disposeForWrite() async {}
 
   @override
   Future<void> updateLogsPath() async {}

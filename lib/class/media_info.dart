@@ -141,6 +141,10 @@ class MIFormatTags {
   final String? discTotal;
   final String? lyrics;
   final String? lyricist;
+  final String? djmixer;
+  final String? mixer;
+  final String? tempo;
+  final String? tags;
   final String? compatibleBrands;
   final String? mood;
   final ReplayGainData? gainData;
@@ -172,6 +176,10 @@ class MIFormatTags {
     required this.discTotal,
     required this.lyrics,
     required this.lyricist,
+    required this.djmixer,
+    required this.mixer,
+    required this.tempo,
+    required this.tags,
     required this.compatibleBrands,
     required this.mood,
     required this.gainData,
@@ -223,9 +231,13 @@ class MIFormatTags {
       discTotal: map.getOrLowerCase("DISCTOTAL") ?? map.getOrLowerCase("DISC_TOTAL"),
       lyrics: map.getOrUpperCase("lyrics") ?? map.getOrUpperCase("lyrics-XXX") ?? map.filterStartsWith('lyrics') ?? map.filterStartsWith('LYRICS') ?? map["Lyrics"],
       lyricist: map.getOrLowerCase("LYRICIST") ?? map["Lyricist"],
+      djmixer: map.getOrUpperCase("djmixer"),
+      mixer: map.getOrUpperCase("mixer"),
+      tags: map.getOrUpperCase("tags"),
+      tempo: map.getOrUpperCase("tempo"),
       compatibleBrands: map.getOrUpperCase("compatible_brands"),
       mood: map.getOrUpperCase("mood") ?? map["Mood"],
-      gainData: ReplayGainData.fromAndroidMap(map),
+      gainData: ReplayGainData.fromPropertiesMap(map),
       sortInfo: FTagsSortInfo.fromFFmpegMap(map),
     );
   }
@@ -256,6 +268,10 @@ class MIFormatTags {
     "DISCTOTAL": discTotal,
     "lyrics": lyrics,
     "LYRICIST": lyricist,
+    "djmixer": djmixer,
+    "mixer": mixer,
+    "tempo": tempo,
+    "tags": tags,
     "compatible_brands": compatibleBrands,
     "mood": mood,
     "gainData": gainData?.toMap(),

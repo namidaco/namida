@@ -156,15 +156,15 @@ Future<bool> _mainAppInitialization() async {
       String? path;
 
       if (!isWindowsPortable) {
-      Directory? dir;
-      for (final fn in [
-        pp.getApplicationSupportDirectory,
-        pp.getApplicationDocumentsDirectory,
-      ]) {
-        try {
-          dir = await fn();
-          break;
-        } catch (_) {}
+        Directory? dir;
+        for (final fn in [
+          pp.getApplicationSupportDirectory,
+          pp.getApplicationDocumentsDirectory,
+        ]) {
+          try {
+            dir = await fn();
+            break;
+          } catch (_) {}
         }
         path = dir?.path;
       }
@@ -833,7 +833,8 @@ class NamidaReceiveIntentManager {
       } else {
         return 'Empty List (original ${paths.length} | extracted: ${trs.length})';
       }
-    } catch (e) {
+    } catch (e, st) {
+      logger.error('Error playing file', e: e, st: st);
       return e.toString();
     }
   }

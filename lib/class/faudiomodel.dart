@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/replay_gain_data.dart';
+import 'package:namida/class/taglib_res.dart';
 import 'package:namida/core/extensions.dart';
 
 class FArtwork {
@@ -59,6 +60,10 @@ class FTags {
       artist?.isNotEmpty == true ||
       albumArtist?.isNotEmpty == true;
 
+  String? get label => recordLabel;
+  String? get date => year;
+  String? get style => null; // TODO: add style
+
   /// Used for bulk extractions.
   final String path;
   final FArtwork artwork;
@@ -95,6 +100,41 @@ class FTags {
   final FTagsSortInfo? sortInfo;
 
   const FTags({
+    required this.path,
+    required this.artwork,
+    required this.title,
+    required this.album,
+    required this.albumArtist,
+    required this.artist,
+    required this.composer,
+    required this.genre,
+    required this.trackNumber,
+    required this.trackTotal,
+    required this.discNumber,
+    required this.discTotal,
+    required this.lyrics,
+    required this.comment,
+    required this.description,
+    required this.synopsis,
+    required this.year,
+    required this.language,
+    required this.lyricist,
+    required this.djmixer,
+    required this.mixer,
+    required this.mood,
+    required this.rating,
+    required this.remixer,
+    required this.tags,
+    required this.tempo,
+    required this.country,
+    required this.recordLabel,
+    required this.bpm,
+    required this.ratingPercentage,
+    required this.gainData,
+    required this.sortInfo,
+  });
+
+  const FTags.edit({
     required this.path,
     required this.artwork,
     this.title,
@@ -192,7 +232,7 @@ class FTags {
       recordLabel: _listToString(map["recordLabel"]) ?? map["RECORDLABEL"] ?? map["label"] ?? map["LABEL"],
       bpm: MediaInfo.extractInt(map["bpm"]),
       ratingPercentage: ratingToPercentage(ratingString),
-      gainData: ReplayGainData.fromAndroidMap(map),
+      gainData: ReplayGainData.fromPropertiesMap(map),
       sortInfo: FTagsSortInfo.fromAndroidMap(map),
     );
   }
@@ -230,6 +270,45 @@ class FTags {
       "language": language,
       "gainData": gainData?.toMap(),
       "sortInfo": sortInfo?.toMap(),
+    };
+  }
+
+  List<String>? _createList(String? value) => value == null ? null : List<String>.filled(1, value, growable: false);
+
+  Map<String, List<String>> toTagLibMap() {
+    return <String, List<String>>{
+      TagLibField.title: ?_createList(title),
+      TagLibField.album: ?_createList(album),
+      TagLibField.albumArtist: ?_createList(albumArtist),
+      TagLibField.artist: ?_createList(artist),
+      TagLibField.composer: ?_createList(composer),
+      TagLibField.genre: ?_createList(genre),
+      TagLibField.style: ?_createList(style),
+      TagLibField.trackNumber: ?_createList(trackNumber),
+      TagLibField.trackTotal: ?_createList(trackTotal),
+      TagLibField.discNumber: ?_createList(discNumber),
+      TagLibField.discTotal: ?_createList(discTotal),
+      TagLibField.lyrics: ?_createList(lyrics),
+      TagLibField.comment: ?_createList(comment),
+      TagLibField.description: ?_createList(description),
+      TagLibField.synopsis: ?_createList(synopsis),
+      TagLibField.date: ?_createList(date),
+      TagLibField.language: ?_createList(language),
+      TagLibField.lyricist: ?_createList(lyricist),
+      TagLibField.remixer: ?_createList(remixer),
+      TagLibField.rating: ?_createList(ratingPercentage?.toString()),
+      TagLibField.mood: ?_createList(mood),
+      TagLibField.tags: ?_createList(tags),
+      TagLibField.country: ?_createList(country),
+      TagLibField.label: ?_createList(label),
+      TagLibField.tempo: ?_createList(tempo),
+      TagLibField.mixer: ?_createList(mixer),
+      TagLibField.djmixer: ?_createList(djmixer),
+      TagLibField.titleSort: ?_createList(sortInfo?.title),
+      TagLibField.albumSort: ?_createList(sortInfo?.album),
+      TagLibField.albumArtistSort: ?_createList(sortInfo?.albumArtist),
+      TagLibField.artistSort: ?_createList(sortInfo?.artist),
+      TagLibField.composerSort: ?_createList(sortInfo?.composer),
     };
   }
 }
@@ -303,6 +382,16 @@ class FTagsSortInfo {
     );
   }
 
+  static FTagsSortInfo? fromTagLibMap(TagLibPropertiesWrapper properties) {
+    return FTagsSortInfo.orNull(
+      title: properties.titleSort,
+      album: properties.albumSort,
+      albumArtist: properties.albumArtistSort,
+      artist: properties.artistSort,
+      composer: properties.composerSort,
+    );
+  }
+
   static FTagsSortInfo? fromMap(Map map) {
     return FTagsSortInfo.orNull(
       title: map["title"],
@@ -355,7 +444,7 @@ class FAudioModel {
 
   factory FAudioModel.dummy(String? path, FArtwork? artwork) {
     return FAudioModel(
-      tags: FTags(path: path ?? '', artwork: artwork ?? FArtwork(size: 0)),
+      tags: FTags.edit(path: path ?? '', artwork: artwork ?? FArtwork(size: 0)),
       hasError: true,
     );
   }

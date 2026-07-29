@@ -340,6 +340,7 @@ extension MediaInfoToFAudioModel on MediaInfo {
     final bitrate = parsy(infoFull.format?.bitRate); // 234292
     final bitrateThousands = bitrate == null ? null : bitrate / 1000; // 234
     String? format = audioStream?.codecName ?? infoFull.format?.formatName;
+    int? channels = audioStream?.channels;
     return FAudioModel(
       tags: FTags(
         path: infoFull.path,
@@ -369,16 +370,20 @@ extension MediaInfoToFAudioModel on MediaInfo {
         gainData: info?.gainData,
         sortInfo: info?.sortInfo,
         ratingPercentage: info?.rating,
+        djmixer: info?.djmixer,
+        mixer: info?.mixer,
+        tags: info?.tags,
+        tempo: info?.tempo,
+        rating: info?.rating?.toString(),
       ),
       durationMS: infoFull.format?.duration?.inMilliseconds,
       bitRate: bitrateThousands?.round(),
-      channels: audioStream?.channels == null
-          ? null
-          : switch (audioStream?.channels) {
+      channels: switch (channels) {
+        null => null,
               0 => null,
               1 => 'mono',
               2 => 'stereo',
-              _ => null,
+        _ => channels.toString(),
             },
       format: format,
       sampleRate: parsy(audioStream?.sampleRate),

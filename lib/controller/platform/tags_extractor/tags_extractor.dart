@@ -1,16 +1,18 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/services.dart';
 
+import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
+import 'package:namida/class/taglib_res.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/ffmpeg_executer/ffmpeg_executer.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
@@ -26,3 +28,4 @@ import 'package:namida/youtube/class/download_task_base.dart';
 part 'tags_extractor_android.dart';
 part 'tags_extractor_base.dart';
 part 'tags_extractor_desktop.dart';
+part 'tags_extractor_taglib.dart';

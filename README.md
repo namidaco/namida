@@ -59,7 +59,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 
 ## Library & Indexing
 
-- Powerful Indexer & Tag Editor, powered by @jaudiotagger.
+- Powerful Indexer & Tag Editor, powered by ~~@jaudiotagger~~ `taglib` <sub><code>since v6.4.0</code></sub>.
 - Artists and Genres Separators.
 - Prevent Duplicated Tracks.
 - Set Minimum File Size & Duration.

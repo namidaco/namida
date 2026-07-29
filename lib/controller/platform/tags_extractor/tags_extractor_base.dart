@@ -7,15 +7,19 @@ abstract class TagsExtractor {
   TagsExtractor() : this.ffmpegController = NamidaFFMPEG.inst, this.videoController = VideoController.inst;
 
   static TagsExtractor platform() {
-    return NamidaPlatformBuilder.init(
-      android: () => _TagsExtractorAndroid._init(),
-      windows: () => _TagsExtractorDesktop._internal(),
-      linux: () => _TagsExtractorDesktop._internal(),
-    );
+    return _TagsExtractorTagLib._internal();
+    // return NamidaPlatformBuilder.init(
+    //   android: () => _TagsExtractorAndroid._init(),
+    //   windows: () => _TagsExtractorDesktop._internal(),
+    //   linux: () => _TagsExtractorDesktop._internal(),
+    // );
   }
 
   final _streamControllers = <int, StreamController<FAudioModel>>{};
   final currentPathsBeingExtracted = <int, String>{}.obs;
+
+  Future<void> initializeForWrite();
+  Future<void> disposeForWrite();
 
   Future<void> updateLogsPath();
 

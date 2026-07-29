@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:namida/class/taglib_res.dart';
+
 class ReplayGainData {
   final double? trackGain, albumGain;
   final double? trackPeak, albumPeak;
@@ -29,7 +31,12 @@ class ReplayGainData {
     return gainLinear * withRespectiveVolume;
   }
 
-  static ReplayGainData? fromAndroidMap(Map map) {
+  static ReplayGainData? fromTagLibMap(TagLibPropertiesWrapper properties) {
+    final simpleMap = properties.propertiesMap.map<String, String?>((key, value) => MapEntry(key, value.firstOrNull));
+    return ReplayGainData.fromPropertiesMap(simpleMap);
+  }
+
+  static ReplayGainData? fromPropertiesMap(Map map) {
     double? trackGainDB = ((map['replaygain_track_gain'] ?? map['REPLAYGAIN_TRACK_GAIN']) as String?)?._parseGainValue()?._ensureValidNumber(); // "-0.515000 dB"
     double? albumGainDB = ((map['replaygain_album_gain'] ?? map['REPLAYGAIN_ALBUM_GAIN']) as String?)?._parseGainValue()?._ensureValidNumber(); // "+0.040000 dB"
 
