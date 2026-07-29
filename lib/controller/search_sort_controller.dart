@@ -31,7 +31,7 @@ class SearchSortController extends SearchPortsProvider {
   String lastSearchText = '';
 
   bool get isSearching =>
-      (trackSearchTemp.isNotEmpty ||
+      trackSearchTemp.isNotEmpty ||
       albumSearchTemp.isNotEmpty ||
       artistSearchTemp.isNotEmpty ||
       albumArtistSearchTemp.isNotEmpty ||
@@ -41,7 +41,7 @@ class SearchSortController extends SearchPortsProvider {
       folderTracksSearchTemp.isNotEmpty ||
       folderVideosSearchTemp.isNotEmpty ||
       moodSearchTemp.isNotEmpty ||
-      tagSearchTemp.isNotEmpty);
+      tagSearchTemp.isNotEmpty;
 
   final trackSearchList = <Track>[].obs;
   final albumSearchList = <AlbumIdentifierWrapper>[].obs;
@@ -343,6 +343,7 @@ class SearchSortController extends SearchPortsProvider {
       MediaType.folderVideo => () => _prepareMediaPorts(Indexer.inst.mainMapFoldersVideos.mapToPaths(), MediaType.folderVideo),
       MediaType.mood => () => _prepareMediaPorts(Indexer.inst.getAllLibraryMoods(), MediaType.mood),
       MediaType.tag => () => _prepareMediaPorts(Indexer.inst.getAllLibraryTags(), MediaType.tag),
+      MediaType.rating => () => _prepareMediaPorts(const [], MediaType.rating),
       MediaType.track => _prepareTracksPorts,
       MediaType.album => _prepareAlbumsPorts,
       MediaType.playlist => _preparePlaylistPorts,
@@ -568,6 +569,7 @@ class SearchSortController extends SearchPortsProvider {
       MediaType.folderVideo => Indexer.inst.mainMapFoldersVideos.mapToPaths(),
       MediaType.mood => Indexer.inst.getAllLibraryMoods(),
       MediaType.tag => Indexer.inst.getAllLibraryTags(),
+      MediaType.rating => <String>[],
       MediaType.track => <String>[],
       MediaType.album => <String>[],
       MediaType.playlist => <String>[],

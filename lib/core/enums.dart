@@ -665,6 +665,7 @@ enum MediaType {
   playlist,
   mood,
   tag,
+  rating,
 
   /// not used
   folder,

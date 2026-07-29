@@ -33,6 +33,8 @@ final class SmartPlaylistRuleNumber extends SmartPlaylistRuleBase<int, int, Smar
       SmartPlaylistRuleFilterNumber.isNotSame => '≠ ${data ?? '?'}',
       SmartPlaylistRuleFilterNumber.isGreaterThan => '> ${data ?? '?'}',
       SmartPlaylistRuleFilterNumber.isSmallerThan => '< ${data ?? '?'}',
+      SmartPlaylistRuleFilterNumber.isGreaterThanOrEq => '≥ ${data ?? '?'}',
+      SmartPlaylistRuleFilterNumber.isSmallerThanOrEq => '≤ ${data ?? '?'}',
       SmartPlaylistRuleFilterNumber.isBetween => '${data ?? '?'} -> • <- ${data2 ?? '?'}',
       SmartPlaylistRuleFilterNumber.isOutside => '• <- ${data ?? '?'} - ${data2 ?? '?'} -> • ',
     };
@@ -104,6 +106,8 @@ final class SmartPlaylistRuleNumber extends SmartPlaylistRuleBase<int, int, Smar
     SmartPlaylistRuleFilterNumber.isNotSame => (number) => number != _startNumber,
     SmartPlaylistRuleFilterNumber.isGreaterThan => (number) => number != null && _startNumber != null && number > _startNumber,
     SmartPlaylistRuleFilterNumber.isSmallerThan => (number) => number != null && _startNumber != null && number < _startNumber,
+    SmartPlaylistRuleFilterNumber.isGreaterThanOrEq => (number) => number != null && _startNumber != null && number >= _startNumber,
+    SmartPlaylistRuleFilterNumber.isSmallerThanOrEq => (number) => number != null && _startNumber != null && number <= _startNumber,
     SmartPlaylistRuleFilterNumber.isBetween => (number) => number != null && _startNumber != null && _endNumber != null && (number >= _startNumber && number <= _endNumber),
     SmartPlaylistRuleFilterNumber.isOutside => (number) => number != null && _startNumber != null && _endNumber != null && (number < _startNumber || number > _endNumber),
   };
@@ -162,6 +166,8 @@ enum SmartPlaylistRuleFilterNumber with SmartPlaylistRuleFilter {
   isNotSame,
   isGreaterThan,
   isSmallerThan,
+  isGreaterThanOrEq,
+  isSmallerThanOrEq,
   isBetween(requiresData2Field: true),
   isOutside(requiresData2Field: true),
   ;
@@ -183,6 +189,8 @@ enum SmartPlaylistRuleFilterNumber with SmartPlaylistRuleFilter {
     SmartPlaylistRuleFilterNumber.isNotSame => lang.isNotSame,
     SmartPlaylistRuleFilterNumber.isGreaterThan => lang.isGreaterThan,
     SmartPlaylistRuleFilterNumber.isSmallerThan => lang.isSmallerThan,
+    SmartPlaylistRuleFilterNumber.isGreaterThanOrEq => "${lang.isGreaterThan} + ${lang.isSame}",
+    SmartPlaylistRuleFilterNumber.isSmallerThanOrEq => "${lang.isSmallerThan} + ${lang.isSame}",
     SmartPlaylistRuleFilterNumber.isBetween => lang.isInBetween,
     SmartPlaylistRuleFilterNumber.isOutside => lang.isOutside,
   };
@@ -196,6 +204,8 @@ enum SmartPlaylistRuleFilterNumber with SmartPlaylistRuleFilter {
     SmartPlaylistRuleFilterNumber.isNotSame => '≠',
     SmartPlaylistRuleFilterNumber.isGreaterThan => '>',
     SmartPlaylistRuleFilterNumber.isSmallerThan => '<',
+    SmartPlaylistRuleFilterNumber.isGreaterThanOrEq => '≥',
+    SmartPlaylistRuleFilterNumber.isSmallerThanOrEq => '≤',
     SmartPlaylistRuleFilterNumber.isBetween => '-><-',
     SmartPlaylistRuleFilterNumber.isOutside => '<-->',
   };

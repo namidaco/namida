@@ -63,6 +63,7 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Ma
                     tracks.totalDurationFormatted,
                   ].join(' - '),
                   type: MediaType.genre,
+                  pageTitle: name,
                 ),
                 infoBox: (maxWidth) => SubpageInfoContainer(
                   maxWidth: maxWidth,

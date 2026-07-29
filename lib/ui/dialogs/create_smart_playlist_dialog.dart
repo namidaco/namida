@@ -31,6 +31,17 @@ class CreateSmartPlaylistDialog extends StatefulWidget {
   @override
   State<CreateSmartPlaylistDialog> createState() => _CreateSmartPlaylistDialogState();
 
+  static Future<SmartPlaylistWrapper?> getTempPlaylist({SmartPlaylistWrapper? initialSmartPlaylistWrapper}) async {
+    final smartSearchCompleter = Completer<SmartPlaylistWrapper?>();
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CreateSmartPlaylistDialog.forTempSmartSearch(
+        initialSmartPlaylistWrapper: initialSmartPlaylistWrapper,
+        completer: smartSearchCompleter,
+      ),
+    );
+    return await smartSearchCompleter.future;
+  }
+
   static void promptDeletePlaylist(SmartPlaylist pl) {
     NamidaNavigator.inst.navigateDialog(
       dialogBuilder: (theme) => CustomBlurryDialog(

@@ -130,7 +130,7 @@ class MainPage extends StatelessWidget {
                 child: Obx(
                   (context) => CustomAnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
-                    child: ScrollSearchController.inst.isGlobalSearchMenuShown.valueR ? const SearchPage() : null,
+                    child: ScrollSearchController.inst.isGlobalSearchMenuShown.valueR ? SearchPage.main() : null,
                   ),
                 ),
               ),

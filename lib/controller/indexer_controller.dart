@@ -440,6 +440,7 @@ class Indexer<T extends Track> {
           MediaType.folderVideo => settings.mediaItemsTrackSorting.value[MediaType.folderVideo]?.firstOrNull?.requiresHistory ?? false,
           MediaType.mood => false,
           MediaType.tag => false,
+          MediaType.rating => false,
         };
         if (sortRequiresHistory) SearchSortController.inst.sortMedia(e);
       }

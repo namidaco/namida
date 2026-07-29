@@ -157,6 +157,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                               tracks.totalDurationFormatted,
                             ].join(' - '),
                             type: MediaType.album,
+                            pageTitle: widget.albumIdentifier.album,
                           ),
                           slivers: [
                             if (tracksMappedWithDisc != null && tracksMappedWithDisc.keys.any((n) => n > 1))

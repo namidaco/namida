@@ -47,9 +47,41 @@ class SmartPlaylist {
     return resolveIterableUnSorted(allTracks).toList();
   }
 
+  Set<int> resolveAsIndicesSetUnsorted() {
+    final allTracks = Indexer.inst.tracksInfoList.value;
+    return resolveIterableUnSortedAsIndices(allTracks).toSet();
+  }
+
   Iterable<Track> resolveIterableUnSorted(Iterable<Track> allTracks) sync* {
+    final effectiveGroups = _setupGroupsBeforeResolving();
+
+    for (final track in allTracks) {
+      final isMatch = _isMatch(effectiveGroups, track);
+      if (isMatch) yield track;
+    }
+  }
+
+  Iterable<int> resolveIterableUnSortedAsIndices(Iterable<Track> allTracks) sync* {
+    final effectiveGroups = _setupGroupsBeforeResolving();
+
+    int index = 0;
+    for (final track in allTracks) {
+      final isMatch = _isMatch(effectiveGroups, track);
+      if (isMatch) yield index;
+      index++;
+    }
+  }
+
+  bool _isMatch(List<SmartPlaylistRuleGroup> effectiveGroups, Track track) {
+    return switch (joiner) {
+      SmartJoiner.and => effectiveGroups.every((group) => group.isMatch(track)),
+      SmartJoiner.or => effectiveGroups.any((group) => group.isMatch(track)),
+    };
+  }
+
+  List<SmartPlaylistRuleGroup> _setupGroupsBeforeResolving() {
     final effectiveGroups = ruleGroups.where((group) => group.rules.isNotEmpty).toFixedList();
-    if (effectiveGroups.isEmpty) return;
+    if (effectiveGroups.isEmpty) return effectiveGroups;
 
     // inject date filters into the number rules that require the date filters (eg: totalListensInRange)
     for (final g in ruleGroups) {
@@ -68,13 +100,7 @@ class SmartPlaylist {
       }
     }
 
-    for (final track in allTracks) {
-      final isMatch = switch (joiner) {
-        SmartJoiner.and => effectiveGroups.every((group) => group.isMatch(track)),
-        SmartJoiner.or => effectiveGroups.any((group) => group.isMatch(track)),
-      };
-      if (isMatch) yield track;
-    }
+    return effectiveGroups;
   }
 
   factory SmartPlaylist.fromMap(Map<String, dynamic> map) {

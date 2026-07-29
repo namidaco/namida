@@ -39,7 +39,21 @@ import 'package:namida/ui/widgets/sort_by_button.dart';
 import 'package:namida/youtube/pages/yt_search_results_page.dart';
 
 class SearchPage extends StatefulWidget {
-  const SearchPage({super.key});
+  SearchPage.main() : super(key: _globalKey);
+
+  static final _globalKey = GlobalKey<_SearchPageState>();
+
+  static void setSmartSearchPlaylistWrapper({SmartPlaylistWrapper? initialSmartSearchPlaylistWrapper}) {
+    // -- give chance for `NamidaTabView.onIndexChanged` to call `SearchSortController.inst.searchAll()`
+    Timer(
+      const Duration(milliseconds: 50),
+      () {
+        _globalKey.currentState?._onSmartSearchTap(
+          initialSmartSearchPlaylistWrapper: initialSmartSearchPlaylistWrapper,
+        );
+      },
+    );
+  }
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -59,15 +73,12 @@ class _SearchPageState extends State<SearchPage> {
     _isTracksFromSmartSearch.value = false;
   }
 
-  void _onSmartSearchTap() async {
-    final smartSearchCompleter = Completer<SmartPlaylistWrapper?>();
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CreateSmartPlaylistDialog.forTempSmartSearch(
-        initialSmartPlaylistWrapper: _smartSearchPlaylistWrapper,
-        completer: smartSearchCompleter,
-      ),
-    );
-    final smartPlaylistWrapper = await smartSearchCompleter.future;
+  void _onSmartSearchTap({SmartPlaylistWrapper? initialSmartSearchPlaylistWrapper}) async {
+    final smartPlaylistWrapper =
+        initialSmartSearchPlaylistWrapper ??
+        await CreateSmartPlaylistDialog.getTempPlaylist(
+          initialSmartPlaylistWrapper: _smartSearchPlaylistWrapper,
+        );
 
     if (mounted) {
       if (smartPlaylistWrapper != null && smartPlaylistWrapper.value.ruleGroups.isValid()) {
@@ -77,7 +88,10 @@ class _SearchPageState extends State<SearchPage> {
         SearchSortController.inst.sortTracksSearch();
         _isTracksFromSmartSearch.value = true;
       } else {
-        SearchSortController.inst.searchTracks(ScrollSearchController.inst.searchTextEditingController.text, temp: true);
+        if (initialSmartSearchPlaylistWrapper == null) {
+          // -- only if not coming from subpage
+          SearchSortController.inst.searchTracks(ScrollSearchController.inst.searchTextEditingController.text, temp: true);
+        }
       }
     }
   }

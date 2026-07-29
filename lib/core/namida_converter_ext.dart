@@ -99,6 +99,7 @@ extension MediaTypeUtils on MediaType {
       MediaType.folderVideo => LibraryTab.foldersVideos,
       MediaType.mood => LibraryTab.moods,
       MediaType.tag => LibraryTab.tags,
+      MediaType.rating => LibraryTab.rating,
       MediaType.playlist => LibraryTab.playlists,
     };
   }
@@ -1769,6 +1770,7 @@ extension MediaTypeL10n on MediaType {
     MediaType.folder => lang.folders,
     MediaType.mood => lang.moods,
     MediaType.tag => lang.tags,
+    MediaType.rating => lang.rating,
     MediaType.folderMusic => "${lang.folders}: ${lang.tracks}",
     MediaType.folderVideo => "${lang.folders}: ${lang.videos}",
   };

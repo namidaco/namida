@@ -134,6 +134,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                     tracks.totalDurationFormatted,
                   ].join(' - '),
                   type: type,
+                  pageTitle: name,
                 ),
                 infoBox: (maxWidth) => SubpageInfoContainer(
                   maxWidth: maxWidth,

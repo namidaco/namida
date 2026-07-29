@@ -25,6 +25,7 @@ class ExpandableBox extends StatefulWidget {
   final double? textFieldHeight;
   final ChangeGridCountWidget? gridWidget;
   final List<Widget>? leftWidgets;
+  final void Function()? onFilterIconLongPress;
   final bool enableHero;
 
   const ExpandableBox({
@@ -41,6 +42,7 @@ class ExpandableBox extends StatefulWidget {
     this.textFieldHeight = 46.0,
     this.gridWidget,
     this.leftWidgets,
+    this.onFilterIconLongPress,
     required this.enableHero,
   });
 
@@ -166,6 +168,7 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                                   horizontalPadding: 6.0,
                                   icon: Broken.filter_search,
                                   onPressed: _onFilterIconTap,
+                                  onLongPress: widget.onFilterIconLongPress,
                                   iconSize: 20.0,
                                 ),
                                 const SizedBox(width: 6.0),
