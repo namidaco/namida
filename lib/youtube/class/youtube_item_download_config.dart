@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
@@ -5,6 +7,8 @@ import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
+import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 
@@ -198,6 +202,51 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
       keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded ?? this.keepCachedVersionsIfDownloaded,
       downloadFilesWriteUploadDate: downloadFilesWriteUploadDate ?? this.downloadFilesWriteUploadDate,
       deleteOldFile: deleteOldFile ?? this.deleteOldFile,
+    );
+  }
+
+  FTags buildTagsValues({required String path, required File? thumbnailFile}) {
+    final ffmpegTags = this.ffmpegTags;
+    double? doubleFromString(String? value) => value == null ? null : double.tryParse(ffmpegTags[FFMPEGTagField.rating.tagKey] ?? '');
+    return FTags(
+      path: path,
+      artwork: FArtwork(file: thumbnailFile),
+      title: ffmpegTags[FFMPEGTagField.title.tagKey],
+      album: ffmpegTags[FFMPEGTagField.album.tagKey],
+      albumArtist: ffmpegTags[FFMPEGTagField.albumArtist.tagKey],
+      artist: ffmpegTags[FFMPEGTagField.artist.tagKey],
+      composer: ffmpegTags[FFMPEGTagField.composer.tagKey],
+      genre: ffmpegTags[FFMPEGTagField.genre.tagKey],
+      trackNumber: ffmpegTags[FFMPEGTagField.trackNumber.tagKey],
+      trackTotal: ffmpegTags[FFMPEGTagField.trackTotal.tagKey],
+      discNumber: ffmpegTags[FFMPEGTagField.discNumber.tagKey],
+      discTotal: ffmpegTags[FFMPEGTagField.discTotal.tagKey],
+      lyrics: ffmpegTags[FFMPEGTagField.lyrics.tagKey],
+      comment: ffmpegTags[FFMPEGTagField.comment.tagKey],
+      description: ffmpegTags[FFMPEGTagField.description.tagKey],
+      synopsis: ffmpegTags[FFMPEGTagField.synopsis.tagKey],
+      year: ffmpegTags[FFMPEGTagField.year.tagKey],
+      language: ffmpegTags[FFMPEGTagField.language.tagKey],
+      lyricist: ffmpegTags[FFMPEGTagField.lyricist.tagKey],
+      mood: ffmpegTags[FFMPEGTagField.mood.tagKey],
+      rating: ffmpegTags[FFMPEGTagField.rating.tagKey],
+      remixer: ffmpegTags[FFMPEGTagField.remixer.tagKey],
+      tags: ffmpegTags[FFMPEGTagField.tags.tagKey],
+      country: ffmpegTags[FFMPEGTagField.country.tagKey],
+      recordLabel: ffmpegTags[FFMPEGTagField.recordLabel.tagKey],
+      ratingPercentage: doubleFromString(ffmpegTags[FFMPEGTagField.rating.tagKey]),
+      djmixer: null,
+      mixer: null,
+      tempo: null,
+      bpm: null,
+      gainData: null,
+      sortInfo: FTagsSortInfo.orNull(
+        title: ffmpegTags[FFMPEGTagField.titleSort.tagKey],
+        album: ffmpegTags[FFMPEGTagField.albumSort.tagKey],
+        albumArtist: ffmpegTags[FFMPEGTagField.albumArtistSort.tagKey],
+        artist: ffmpegTags[FFMPEGTagField.artistSort.tagKey],
+        composer: ffmpegTags[FFMPEGTagField.composerSort.tagKey],
+      ),
     );
   }
 }

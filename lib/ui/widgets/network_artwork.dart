@@ -234,7 +234,11 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
       return null;
     }
 
-    if (response.statusCode < 200 || response.statusCode >= 300) return ''; // -- failed to load last.fm page, return empty to write empty bytes
+    // -- return empty to write empty bytes
+    if (response.statusCode == 404) return '';
+
+    // -- return null to try again later. server issue, rate limit, etc..
+    if (response.statusCode < 200 || response.statusCode >= 300) return null;
 
     final body = response.body;
     RegExpMatch? match;
@@ -246,7 +250,8 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
       }
     }
 
-    return ''; // -- could be 404 or simply no images, still write empty file
+    // -- no images found, still write empty bytes
+    return '';
   }
 
   Future<String?> _fetchNetworkArtwork(NetworkArtworkInfo info) async {

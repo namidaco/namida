@@ -82,6 +82,19 @@ class NamidaTaggerController {
     );
   }
 
+  Future<bool> writeTagsRaw({
+    required String path,
+    required FTags newTags,
+  }) async {
+    return _extractor.writeTags(
+      path: path,
+      newTags: newTags,
+      commentToInsert: null,
+      oldComment: null,
+      displayFFmpegFallbackWarning: false,
+    );
+  }
+
   /// [commentToInsert] is applicable for first track only
   Future<void> updateTracksMetadata({
     required List<Track> tracks,

@@ -153,7 +153,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
           }
         : FFMPEGTagField.createTagsMapfromFTag(newTags);
 
-    final didUpdate = await ffmpegController.editMetadata(
+    final didUpdate = await ffmpegController.ffmpegEditMetadata(
       path: path,
       tagsMap: ffmpegTagsMap,
     );

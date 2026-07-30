@@ -47,7 +47,7 @@ class NamidaFFMPEG {
     return _executer.extractMetadata(path);
   }
 
-  Future<bool> editMetadata({
+  Future<bool> ffmpegEditMetadata({
     required String path,
     MIFormatTags? oldTags,
     required Map<String, String?> tagsMap,

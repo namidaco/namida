@@ -112,7 +112,7 @@ class Indexer<T extends Track> {
   late final _audioQuery = OnAudioQuery();
 
   List<T> recentlyAddedTracksSorted() {
-    final alltracks = tracksInfoList.value.toFixedList();
+    final alltracks = tracksInfoList.value.toList();
     alltracks.sort((a, b) {
       var result = b.dateModified.compareTo(a.dateModified);
       if (result == 0) result = b.dateAdded.compareTo(a.dateAdded);

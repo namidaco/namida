@@ -174,6 +174,7 @@ class _TagsExtractorTagLib extends TagsExtractor {
     required FTags newTags,
   }) async {
     try {
+      await initializeForWrite();
       return await _isolateWriteExecuter!.write(
         _TagLibIsolateRequestWriteTags(
           path: path,
@@ -182,6 +183,8 @@ class _TagsExtractorTagLib extends TagsExtractor {
       );
     } catch (e) {
       return e.toString();
+    } finally {
+      await disposeForWrite();
     }
   }
 
@@ -208,7 +211,7 @@ class _TagsExtractorTagLib extends TagsExtractor {
               FFMPEGTagField.comment.tagKey: oldComment == null || oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
             }
           : FFMPEGTagField.createTagsMapfromFTag(newTags);
-      didUpdate = await ffmpegController.editMetadata(
+      didUpdate = await ffmpegController.ffmpegEditMetadata(
         path: path,
         tagsMap: ffmpegTagsMap,
       );

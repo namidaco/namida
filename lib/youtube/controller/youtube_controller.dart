@@ -23,6 +23,7 @@ import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart' hide ExecuteDelayedMinUtils, logger;
 
 import 'package:namida/base/ports_provider.dart';
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/video.dart';
@@ -33,6 +34,7 @@ import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -691,6 +693,40 @@ class YoutubeController {
       _updateDownloadTask(groupName: groupName, itemsConfig: [config]); // to refresh with new data
 
       final pageResult = await YoutubeInfoController.video.fetchVideoPage(videoID.videoId).catchError((_) => null);
+      Completer<File?>? thumbnailCompleter;
+      bool isTempThumbnail = false;
+      Future<File?> getEffectiveThumbnail() async {
+        if (thumbnailCompleter != null) return thumbnailCompleter!.future;
+        thumbnailCompleter = Completer<File?>();
+
+        final videoId = videoID.videoId;
+        File? thumbnailFile;
+        try {
+          // -- try getting cropped version if required
+          final channelName = await YoutubeInfoController.utils.getVideoChannelName(videoId);
+          const topic = '- Topic';
+          if (channelName != null && channelName.endsWith(topic)) {
+            final thumbFilePath = FileParts.joinPath(Directory.systemTemp.path, '$videoId.png');
+            final thumbFile = await YoutubeInfoController.video.fetchMusicVideoThumbnailToFile(videoId, thumbFilePath);
+            if (thumbFile != null) {
+              thumbnailFile = thumbFile;
+              isTempThumbnail = true;
+            }
+          }
+        } catch (_) {}
+        thumbnailFile ??= await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+          id: videoId,
+          isImportantInCache: true,
+          type: ThumbnailType.video,
+        );
+
+        thumbnailCompleter!.complete(thumbnailFile);
+
+        return thumbnailFile;
+      }
+
+      FTags? cachedTags;
+
       final downloadedFile = await _downloadYoutubeVideoRaw(
         groupName: groupName,
         id: videoID,
@@ -710,44 +746,31 @@ class YoutubeController {
         onInitialAudioFileSize: (initialFileSize) {},
         ffmpegTags: config.ffmpegTags,
         onAudioFileReady: (audioFile) async {
-          final videoId = videoID.videoId;
-          File? thumbnailFile;
-          bool isTempThumbnail = false;
-          try {
-            // -- try getting cropped version if required
-            final channelName = await YoutubeInfoController.utils.getVideoChannelName(videoId);
-            const topic = '- Topic';
-            if (channelName != null && channelName.endsWith(topic)) {
-              final thumbFilePath = FileParts.joinPath(Directory.systemTemp.path, '$videoId.png');
-              final thumbFile = await YoutubeInfoController.video.fetchMusicVideoThumbnailToFile(videoId, thumbFilePath);
-              if (thumbFile != null) {
-                thumbnailFile = thumbFile;
-                isTempThumbnail = true;
-              }
-            }
-          } catch (_) {}
-          thumbnailFile ??= await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
-            id: videoId,
-            isImportantInCache: true,
-            type: ThumbnailType.video,
+          final path = audioFile.path;
+          final thumbnailFile = await getEffectiveThumbnail();
+          final newTags = cachedTags ??= config.buildTagsValues(path: path, thumbnailFile: thumbnailFile);
+          await NamidaTaggerController.inst.writeTagsRaw(
+            path: path,
+            newTags: newTags,
           );
-          await YTUtils.writeAudioMetadata(
-            videoId: videoId,
-            audioFile: audioFile,
-            thumbnailFile: thumbnailFile,
-            tagsMap: config.ffmpegTags,
-          );
-          if (isTempThumbnail) {
-            thumbnailFile?.tryDeleting();
-          }
         },
         onVideoFileReady: (videoFile) async {
-          await NamidaFFMPEG.inst.editMetadata(
-            path: videoFile.path,
-            tagsMap: config.ffmpegTags,
+          final path = videoFile.path;
+          final thumbnailFile = await getEffectiveThumbnail();
+          final newTags = cachedTags ??= config.buildTagsValues(path: path, thumbnailFile: thumbnailFile);
+          await NamidaTaggerController.inst.writeTagsRaw(
+            path: path,
+            newTags: newTags,
           );
         },
       );
+
+      if (isTempThumbnail) {
+        if (thumbnailCompleter != null && thumbnailCompleter!.isCompleted) {
+          final thumbnailFile = await thumbnailCompleter!.future;
+          thumbnailFile?.tryDeleting();
+        }
+      }
 
       if (downloadFilesWriteUploadDate && downloadedFile != null) {
         final d = config.fileDate;

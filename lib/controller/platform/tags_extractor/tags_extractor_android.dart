@@ -332,7 +332,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
               FFMPEGTagField.comment.tagKey: oldComment == null || oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
             }
           : FFMPEGTagField.createTagsMapfromFTag(newTags);
-      didUpdate = await ffmpegController.editMetadata(
+      didUpdate = await ffmpegController.ffmpegEditMetadata(
         path: path,
         tagsMap: ffmpegTagsMap,
       );

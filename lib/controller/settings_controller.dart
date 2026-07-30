@@ -211,7 +211,7 @@ class _SettingsController with SettingsFileWriter {
     TagField.lyrics,
   ].obs;
 
-  final customEQPackage = Rxn<String?>();
+  final customEQPackage = Rxn<String>();
   final stretchLyricsDuration = true.obs;
   final visualDelayMS = 0.obs;
   final timeCapsuleYears = Rxn<int>();

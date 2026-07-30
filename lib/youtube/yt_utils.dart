@@ -778,22 +778,6 @@ class YTUtils {
     return infoMap;
   }
 
-  static Future<bool> writeAudioMetadata({
-    required String videoId,
-    required File audioFile,
-    required File? thumbnailFile,
-    required Map<String, String?> tagsMap,
-  }) async {
-    final thumbnail = thumbnailFile ?? await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: videoId, type: ThumbnailType.video);
-    if (thumbnail != null) {
-      await NamidaFFMPEG.inst.editAudioThumbnail(audioPath: audioFile.path, thumbnailPath: thumbnail.path);
-    }
-    return await NamidaFFMPEG.inst.editMetadata(
-      path: audioFile.path,
-      tagsMap: tagsMap,
-    );
-  }
-
   static Future<void> onYoutubeHistoryPlaylistTap({int? initialListen}) async {
     bool shouldNavigate = true;
     if (initialListen != null) {
