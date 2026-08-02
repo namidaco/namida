@@ -189,8 +189,8 @@ class TagLibRes {
         _ => channels.toString(),
       },
       format: audioInfo.format,
-      bits: parsy(info.bits),
-      // isLossless: info.isLossless,
+      bits: audioInfo.bitsPerSample,
+      isLossless: audioInfo.isLossless,
     );
   }
 }
@@ -261,7 +261,6 @@ class TagLibPropertiesWrapper {
   String? get recordLabel => _getPropertyFallbacks(_TagLibFieldsFallback.label);
   String? get bpm => _getPropertyFirst(TagLibField.bpm);
   String? get sampleRate => _getPropertyFirst(TagLibField.sampleRate);
-  String? get bits => _getPropertyFirst(TagLibField.bits);
   String? get tempo => _getPropertyFirst(TagLibField.tempo);
   String? get mixer => _getPropertyFirst(TagLibField.mixer);
   String? get djmixer => _getPropertyFirst(TagLibField.djmixer);
@@ -419,7 +418,6 @@ class TagLibField {
   static const length = 'LENGTH';
   static const channels = 'CHANNELS';
   static const sampleRate = 'SAMPLERATE';
-  static const bits = 'BITS';
   static const work = 'WORK';
   static const grouping = 'GROUPING';
   static const movementName = 'MOVEMENTNAME';

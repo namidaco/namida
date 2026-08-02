@@ -205,6 +205,7 @@ dependencies:
   file_picker:
     git:
       url: https://github.com/miguelpruivo/flutter_file_picker
+      ref: 8dc97859f42ca7ca2d6d347dd7960a3c7b657baf
   modern_titlebar_buttons: ^1.1.2
   anni_mpris_service: ^0.1.0
 
