@@ -1449,7 +1449,10 @@ class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with S
     return TextPainter(
       text: TextSpan(
         text: _fullText,
-        style: style.copyWith(color: color),
+        style: style.copyWith(
+          color: color,
+          height: 1.5, // -- ensure it clips more for higher glyphs, shouldn't affect anything else even with very high number
+        ),
       ),
       textAlign: widget.textAlign,
       textDirection: widget.textDirection,
@@ -1548,7 +1551,7 @@ class _KaraokeTextPainter extends CustomPainter {
     final cRect = cb.toRect();
     final ltr = cb.direction == TextDirection.ltr;
     final lineTop = cRect.top;
-    final lineBottom = cRect.bottom + 12.0; // -- ensure it clips more for higher glyphs, shouldn't affect anything else even with very high number
+    final lineBottom = cRect.bottom;
     final boundaryX = ltr ? cRect.left + frac * cRect.width : cRect.right - frac * cRect.width;
 
     // -- one small saveLayer: paint the full-color line, then carve it down to the sung region
