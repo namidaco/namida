@@ -368,7 +368,13 @@ class _LRCSearchManager with PortsProvider<SendPort> {
         final url = Uri.encodeFull(urlPre);
 
         try {
-          final response = await mainRequester.getUrl(url, cancelToken: null);
+          final response = await mainRequester.getUrl(
+            url,
+            headers: {
+              'User-Agent': 'namida',
+            },
+            cancelToken: null,
+          );
           final jsonLists = (jsonDecode(response.body) as List<dynamic>?) ?? [];
           final fetched = <LyricsModel>[];
 
