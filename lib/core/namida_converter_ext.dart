@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:history_manager/history_manager.dart';
@@ -67,6 +68,7 @@ import 'package:namida/ui/pages/playlists_page.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
+import 'package:namida/ui/pages/sync_manager_page.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -381,11 +383,11 @@ extension MediaInfoToFAudioModel on MediaInfo {
       bitRate: bitrateThousands?.round(),
       channels: switch (channels) {
         null => null,
-              0 => null,
-              1 => 'mono',
-              2 => 'stereo',
+        0 => null,
+        1 => 'mono',
+        2 => 'stereo',
         _ => channels.toString(),
-            },
+      },
       format: format,
       sampleRate: parsy(audioStream?.sampleRate),
       bits: audioStream?.bitsPerSample,
@@ -1477,6 +1479,17 @@ extension RouteUtils on NamidaRoute {
         ),
         shouldShow: JsonToHistoryParser.inst.shouldShowMissingEntriesDialog,
       ),
+
+      if (kDebugMode || isKuru)
+        _getAnimatedCrossFade(
+          child: NamidaAppBarIcon(
+            icon: Broken.cloud_change,
+            onPressed: () {
+              NamidaNavigator.inst.navigateTo(const NamidaSyncManagerPage());
+            },
+          ),
+          shouldShow: true,
+        ),
 
       _getAnimatedCrossFade(
         child: ObxO(

@@ -643,7 +643,7 @@ class SearchSortController extends SearchPortsProvider {
           })
         >[];
     for (final plMap in playlistsMap) {
-      final pl = LocalPlaylist.fromJson(plMap, (itemJson) => TrackWithDate.fromJson(itemJson), PlaylistController.sortFromJson);
+      final pl = LocalPlaylist.fromJson(plMap, TrackWithDate.fromJson, SortType.sortListFromJsonList);
       final trName = textCleanedForSearch(translatePlName(pl.name));
       final dateCreatedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(pl.creationDate));
       final dateModifiedFormatted = formatDate.format(DateTime.fromMillisecondsSinceEpoch(pl.modifiedDate));

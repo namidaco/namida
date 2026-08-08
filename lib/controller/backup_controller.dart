@@ -115,6 +115,7 @@ class BackupController {
         AppPaths.SETTINGS_PLAYER,
         AppPaths.SETTINGS_YOUTUBE,
         AppPaths.SETTINGS_EXTRA,
+        AppPaths.SETTINGS_SYNC,
         AppPaths.SETTINGS_TUTORIAL,
         AppPaths.SETTINGS_SHORTCUTS,
         AppPaths.LATEST_QUEUE,

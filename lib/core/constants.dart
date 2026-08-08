@@ -319,6 +319,7 @@ enum AppPathsBackupEnum {
   SETTINGS_PLAYER,
   SETTINGS_YOUTUBE,
   SETTINGS_EXTRA,
+  SETTINGS_SYNC,
   SETTINGS_TUTORIAL,
   SETTINGS_SHORTCUTS,
   TRACKS_DB_INFO,
@@ -392,6 +393,7 @@ enum AppPathsBackupEnum {
       AppPathsBackupEnum.SETTINGS_PLAYER => AppPaths.SETTINGS_PLAYER,
       AppPathsBackupEnum.SETTINGS_YOUTUBE => AppPaths.SETTINGS_YOUTUBE,
       AppPathsBackupEnum.SETTINGS_EXTRA => AppPaths.SETTINGS_EXTRA,
+      AppPathsBackupEnum.SETTINGS_SYNC => AppPaths.SETTINGS_SYNC,
       AppPathsBackupEnum.SETTINGS_TUTORIAL => AppPaths.SETTINGS_TUTORIAL,
       AppPathsBackupEnum.SETTINGS_SHORTCUTS => AppPaths.SETTINGS_SHORTCUTS,
       AppPathsBackupEnum.TRACKS_DB_INFO => AppPaths.TRACKS_DB_INFO.file.path,
@@ -507,6 +509,7 @@ class AppPathsBackupEnumCategories {
     AppPathsBackupEnum.SETTINGS_EQUALIZER,
     AppPathsBackupEnum.SETTINGS_EXTRA,
     AppPathsBackupEnum.SETTINGS_PLAYER,
+    AppPathsBackupEnum.SETTINGS_SYNC,
     AppPathsBackupEnum.SETTINGS_TUTORIAL,
     AppPathsBackupEnum.SETTINGS_SHORTCUTS,
     AppPathsBackupEnum.SETTINGS_YOUTUBE,
@@ -570,6 +573,7 @@ class AppPaths {
   static final SETTINGS_PLAYER = _join(_USER_DATA, 'namida_settings_player.json');
   static final SETTINGS_YOUTUBE = _join(_USER_DATA, 'namida_settings_youtube.json');
   static final SETTINGS_EXTRA = _join(_USER_DATA, 'namida_settings_extra.json');
+  static final SETTINGS_SYNC = _join(_USER_DATA, 'namida_settings_sync.json');
   static final SETTINGS_TUTORIAL = _join(_USER_DATA, 'namida_settings_tutorial.json');
   static final SETTINGS_SHORTCUTS = _join(_USER_DATA, 'namida_settings_shortcuts.json');
   static final TRACKS_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'tracks');
@@ -635,6 +639,7 @@ class AppPaths {
         AppPaths.SETTINGS_PLAYER,
         AppPaths.SETTINGS_YOUTUBE,
         AppPaths.SETTINGS_EXTRA,
+        AppPaths.SETTINGS_SYNC,
         AppPaths.SETTINGS_TUTORIAL,
         AppPaths.SETTINGS_SHORTCUTS,
       ],

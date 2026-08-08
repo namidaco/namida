@@ -720,7 +720,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   Map<String, dynamic> itemToJson(TrackWithDate item) => item.toJson();
 
   @override
-  dynamic sortToJson(List<SortType> items) => items.map((e) => e.name).toFixedList();
+  dynamic sortToJson(List<SortType> items) => SortType.sortsToJson(items);
 
   @override
   bool canRemovePlaylist(LocalPlaylist playlist) {
@@ -792,7 +792,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   static LocalPlaylist? _prepareFavouritesFile(String path) {
     try {
       final response = File(path).readAsJsonSync();
-      return LocalPlaylist.fromJson(response, TrackWithDate.fromJson, sortFromJson);
+      return LocalPlaylist.fromJson(response, TrackWithDate.fromJson, SortType.sortListFromJsonList);
     } catch (_) {}
     return null;
   }
@@ -804,20 +804,13 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       if (f is File) {
         try {
           final response = f.readAsJsonSync(ensureExists: false);
-          final pl = LocalPlaylist.fromJson(response, TrackWithDate.fromJson, sortFromJson);
+          final pl = LocalPlaylist.fromJson(response, TrackWithDate.fromJson, SortType.sortListFromJsonList);
           map[pl.name] = pl;
         } catch (_) {}
       }
     }
 
     return map;
-  }
-
-  static List<SortType>? sortFromJson(dynamic value) {
-    try {
-      return (value as List).map((e) => SortType.values.getEnum(e)!).toList();
-    } catch (_) {}
-    return null;
   }
 }
 

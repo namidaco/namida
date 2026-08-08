@@ -50,6 +50,8 @@ dependencies:
   archive: ^4.0.7
   url_launcher: ^6.3.0
   connectivity_plus: ^7.0.0
+  mdns_dart: ^2.2.1
+  uuid: ^4.5.3
   selectable_autolink_text: ^2.6.0
   share_plus:
     git:

@@ -228,7 +228,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   Map<String, dynamic> itemToJson(YoutubeID item) => item.toJson();
 
   @override
-  dynamic sortToJson(List<YTSortType> items) => items.map((e) => e.name).toFixedList();
+  dynamic sortToJson(List<YTSortType> items) => YTSortType.sortsToJson(items);
 
   @override
   String get favouritePlaylistPath => AppPaths.YT_LIKES_PLAYLIST;
@@ -268,7 +268,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   static YoutubePlaylist? _prepareFavouritesFile(String path) {
     try {
       final response = File(path).readAsJsonSync();
-      return YoutubePlaylist.fromJson(response, (itemJson) => YoutubeID.fromJson(itemJson), _sortFromJson);
+      return YoutubePlaylist.fromJson(response, YoutubeID.fromJson, YTSortType.sortListFromJsonList);
     } catch (_) {
       return null;
     }
@@ -281,7 +281,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
       if (f is File) {
         try {
           final response = f.readAsJsonSync(ensureExists: false);
-          final pl = YoutubePlaylist.fromJson(response, (itemJson) => YoutubeID.fromJson(itemJson), _sortFromJson);
+          final pl = YoutubePlaylist.fromJson(response, YoutubeID.fromJson, YTSortType.sortListFromJsonList);
           entries.add(MapEntry(pl.name, pl));
         } catch (_) {}
       }
@@ -293,13 +293,6 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
 
   @override
   void sortPlaylists() => sortYTPlaylists();
-
-  static List<YTSortType>? _sortFromJson(dynamic value) {
-    try {
-      return (value as List).map((e) => YTSortType.values.getEnum(e)!).toList();
-    } catch (_) {}
-    return null;
-  }
 
   @override
   Future<void> onPlaylistItemsSort(List<YTSortType> sorts, bool reverse, List<YoutubeID> items) async {

@@ -28,9 +28,10 @@ import 'package:namida/youtube/controller/youtube_account_controller.dart';
 part 'settings.equalizer.dart';
 part 'settings.extra.dart';
 part 'settings.player.dart';
+part 'settings.shortcuts.dart';
+part 'settings.sync.dart';
 part 'settings.tutorial.dart';
 part 'settings.youtube.dart';
-part 'settings.shortcuts.dart';
 
 final settings = _SettingsController._internal();
 
@@ -44,6 +45,7 @@ class _SettingsController with SettingsFileWriter {
       this.player.prepareSettingsFile(),
       this.youtube.prepareSettingsFile(),
       this.extra.prepareSettingsFile(),
+      this.sync.prepareSettingsFile(),
       this.tutorial.prepareSettingsFile(),
       if (isDesktop) this.shortcuts.prepareSettingsFile(),
     ]);
@@ -54,6 +56,7 @@ class _SettingsController with SettingsFileWriter {
   final youtube = _YoutubeSettings._internal();
   final extra = _ExtraSettings._internal();
   final tutorial = _TutorialSettings._internal();
+  final sync = _SyncSettings._internal();
   final shortcuts = _ShortcutsSettings._internal();
 
   final language = Rxn<NamidaLanguage>();

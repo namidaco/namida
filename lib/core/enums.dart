@@ -80,6 +80,15 @@ enum SortType {
     SortType.composerSort,
     SortType.shuffle,
   ];
+
+  static List<SortType>? sortListFromJsonList(dynamic value) {
+    try {
+      return (value as List).map((e) => SortType.values.getEnum(e)!).toList();
+    } catch (_) {}
+    return null;
+  }
+
+  static dynamic sortsToJson(List<SortType> items) => items.map((e) => e.name).toFixedList();
 }
 
 enum GroupSortType {
@@ -604,6 +613,7 @@ enum RouteType {
   PAGE_rating,
   PAGE_stats,
   PAGE_about,
+  PAGE_Sync,
 
   // ----- Subpages -----
   SUBPAGE_recentlyAddedTracks,
@@ -898,6 +908,16 @@ enum YTSortType {
   mostPlayed,
   latestPlayed,
   firstListen,
+  ;
+
+  static List<YTSortType>? sortListFromJsonList(dynamic value) {
+    try {
+      return (value as List).map((e) => YTSortType.values.getEnum(e)!).toList();
+    } catch (_) {}
+    return null;
+  }
+
+  static dynamic sortsToJson(List<YTSortType> items) => items.map((e) => e.name).toFixedList();
 }
 
 enum DownloadNotifications {
