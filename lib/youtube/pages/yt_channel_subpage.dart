@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -135,22 +134,25 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
   double _latestAnimation = 1.0;
   void _scrollAnimationListener() {
     if (_isAboutTab()) return;
-
-    final scroll = _itemsScrollController.positions.lastOrNull;
-    if (scroll != null) {
-      final isDownwards = scroll.userScrollDirection == ScrollDirection.reverse;
-      double position = scroll.pixels;
-
-      final p = (position - _scrollThreshold) / 100;
-      final pc = (1 - p).clampDouble(0.0, 1.0);
-      if (isDownwards && pc > 0 && pc > _latestAnimation) return; // prevent jumping from hidden to visible (after switching to new tab)
-      _scrollAnimationFinalizer(p: pc);
-    }
+    _scrollAnimationFinalizer();
   }
 
-  void _scrollAnimationFinalizer({double? p}) {
-    p ??= _scrollAnimation.value;
-    final newValue = p > 0.5 ? 1.0 : 0.0;
+  void _scrollAnimationFinalizer() {
+    final scroll = _itemsScrollController.positions.lastOrNull;
+    double? position = scroll?.pixels;
+    final double newValue;
+    if (position == null) {
+      final p = _scrollAnimation.value;
+      // final p = (position - _scrollThreshold) / 100;
+      final pc = (1 - p).clampDouble(0.0, 1.0);
+      newValue = pc > 0.5 ? 1.0 : 0.0;
+    } else if (position >= _scrollThreshold) {
+      newValue = 0.0;
+    } else if (position <= 0) {
+      newValue = 1.0;
+    } else {
+      return;
+    }
     if (_latestAnimation == newValue) return;
     _latestAnimation = newValue;
     _scrollAnimation.animateTo(

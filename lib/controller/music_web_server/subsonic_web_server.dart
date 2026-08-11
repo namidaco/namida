@@ -38,14 +38,9 @@ class _SubsonicWebServer extends MusicWebServer {
     final baseUri = _serverUri;
     if (baseUri == null) return null;
 
-    final uri = Uri(
-      host: baseUri.host,
-      fragment: baseUri.fragment,
-      port: baseUri.port,
-      userInfo: baseUri.userInfo,
-      scheme: baseUri.scheme,
-      path: '/rest/stream',
-      queryParameters: {
+    final uri = baseUri.buildEndpointUri(
+      '/rest/stream',
+      {
         'v': api.version,
         'c': api.clientId,
         'id': id,

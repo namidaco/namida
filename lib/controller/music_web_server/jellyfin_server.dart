@@ -65,13 +65,9 @@ class _JellyfinServer extends MusicWebServer {
 
     await _wrapper.ensureAuthenticated();
 
-    final uri = Uri(
-      scheme: baseUri.scheme,
-      host: baseUri.host,
-      port: baseUri.port,
-      userInfo: baseUri.userInfo,
-      path: '/Audio/$id/stream',
-      queryParameters: {
+    final uri = baseUri.buildEndpointUri(
+      '/Audio/$id/stream',
+      {
         'UserId': ?_wrapper._userId,
         'api_key': ?_wrapper._token,
         'static': 'true',

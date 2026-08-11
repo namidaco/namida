@@ -120,6 +120,19 @@ abstract class MusicWebServer {
   }
 }
 
+extension _ServerEndpointUriExt on Uri {
+  Uri buildEndpointUri(String endpointPath, Map<String, String> queryParameters) {
+    final basePath = path.endsWith('/') ? path.substring(0, path.length - 1) : path;
+    return replace(
+      path: '$basePath$endpointPath',
+      queryParameters: {
+        ...this.queryParameters,
+        ...queryParameters,
+      },
+    );
+  }
+}
+
 class MusicWebServerError {
   final int code;
   final String message;

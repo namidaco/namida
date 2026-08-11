@@ -78,7 +78,9 @@ class ReplayGainData {
 extension on String? {
   double? _parseGainValueR128() {
     final parsed = _parseGainValue();
-    return parsed == null ? null : (parsed / 256) + 5;
+    if (parsed == null) return null;
+    if (parsed == 0) return null;
+    return (parsed / 256) + 5;
   }
 
   double? _parseGainValue() {
