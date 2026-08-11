@@ -386,6 +386,73 @@ enum AppPathsBackupEnum {
   final bool isDir;
   const AppPathsBackupEnum([this.isDir = false]);
 
+  /// whether this item supports being synced across devices.
+  /// true: supported
+  /// null: support coming soon
+  /// false: won't be supported
+  bool? supportsSync() {
+    return switch (this) {
+      // -- supported
+      AppPathsBackupEnum.TRACKS_DB_INFO ||
+      AppPathsBackupEnum.TRACKS_STATS_DB_INFO ||
+      AppPathsBackupEnum.LATEST_PLAYED_FOR_SOURCE ||
+      AppPathsBackupEnum.AUDIO_CONFIGS ||
+      AppPathsBackupEnum.SMART_PLAYLISTS ||
+      AppPathsBackupEnum.LATEST_QUEUE ||
+      AppPathsBackupEnum.FAVOURITES_PLAYLIST ||
+      AppPathsBackupEnum.YT_LIKES_PLAYLIST ||
+      AppPathsBackupEnum.YT_SUBSCRIPTIONS ||
+      AppPathsBackupEnum.YT_SUBSCRIPTIONS_GROUPS_ALL ||
+      AppPathsBackupEnum.VIDEO_ID_STATS_DB_INFO ||
+      AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY ||
+      AppPathsBackupEnum.HISTORY_PLAYLIST ||
+      AppPathsBackupEnum.PLAYLISTS ||
+      AppPathsBackupEnum.PLAYLISTS_ARTWORKS ||
+      AppPathsBackupEnum.SMART_PLAYLISTS_ARTWORKS ||
+      AppPathsBackupEnum.QUEUES ||
+      AppPathsBackupEnum.LYRICS ||
+      AppPathsBackupEnum.VIDEOS_CACHE ||
+      AppPathsBackupEnum.AUDIOS_CACHE ||
+      AppPathsBackupEnum.ARTWORKS_ARTISTS ||
+      AppPathsBackupEnum.ARTWORKS_ALBUMS ||
+      AppPathsBackupEnum.YT_PLAYLISTS ||
+      AppPathsBackupEnum.YT_PLAYLISTS_ARTWORKS ||
+      AppPathsBackupEnum.YT_HISTORY_PLAYLIST ||
+      AppPathsBackupEnum.YT_THUMBNAILS ||
+      AppPathsBackupEnum.YT_THUMBNAILS_CHANNELS ||
+      AppPathsBackupEnum.VIDEOS_CACHE_DB_INFO => true,
+
+      // -- coming soon
+      AppPathsBackupEnum.SETTINGS ||
+      AppPathsBackupEnum.SETTINGS_EQUALIZER ||
+      AppPathsBackupEnum.SETTINGS_PLAYER ||
+      AppPathsBackupEnum.SETTINGS_YOUTUBE ||
+      AppPathsBackupEnum.SETTINGS_EXTRA ||
+      AppPathsBackupEnum.SETTINGS_TUTORIAL ||
+      AppPathsBackupEnum.SETTINGS_SHORTCUTS ||
+      AppPathsBackupEnum.TOTAL_LISTEN_TIME ||
+      AppPathsBackupEnum.PLAYLISTS_METADATA ||
+      AppPathsBackupEnum.YT_PLAYLISTS_METADATA ||
+      AppPathsBackupEnum.YT_STATS ||
+      AppPathsBackupEnum.YT_DOWNLOAD_TASKS => null,
+
+      // -- device specific, obsolete, cache, etc...
+      AppPathsBackupEnum.SETTINGS_SYNC ||
+      AppPathsBackupEnum.VIDEOS_LOCAL_DB_INFO ||
+      AppPathsBackupEnum.TRACKS_OLD ||
+      AppPathsBackupEnum.TRACKS_STATS_OLD ||
+      AppPathsBackupEnum.VIDEOS_LOCAL_OLD ||
+      AppPathsBackupEnum.VIDEOS_CACHE_OLD ||
+      AppPathsBackupEnum.ARTWORKS ||
+      AppPathsBackupEnum.PALETTES ||
+      AppPathsBackupEnum.THUMBNAILS ||
+      AppPathsBackupEnum.M3UBackup ||
+      AppPathsBackupEnum.RECENTLY_DELETED ||
+      AppPathsBackupEnum.YOUTIPIE_CACHE ||
+      AppPathsBackupEnum.YT_PALETTES => false,
+    };
+  }
+
   String resolve() {
     return switch (this) {
       AppPathsBackupEnum.SETTINGS => AppPaths.SETTINGS,

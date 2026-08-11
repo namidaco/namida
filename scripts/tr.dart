@@ -9,11 +9,10 @@ void main(List<String> args) {
     if (value.isNotEmpty) {
       final keyPre = value.replaceAll(RegExp(r'''[\.!?%,{}‘’*'"()]'''), '').replaceAll(RegExp(r'[ /-]'), '_').replaceAll(r'\n', '_');
       final key = ensureLangKeyValidForArb(keyPre);
-      map[key] = value.replaceAll('\\n', '\n');
 
       final placeholders = extractPlaceholders(value);
 
-      map[key] = value;
+      map[key] = convertPlaceholders(value.replaceAll('\\n', '\n'));
 
       if (placeholders.isNotEmpty) {
         map['@$key'] = {

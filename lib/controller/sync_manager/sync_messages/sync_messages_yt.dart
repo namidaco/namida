@@ -23,7 +23,7 @@ class YTHistoryListensMessage extends BaseMessage {
   @override
   FutureOr<void> executeOnReceived() {
     if (SyncUtils.kAllowModification) {
-      return YoutubeHistoryController.inst.addTracksToHistory(videos);
+      return YoutubeHistoryController.inst.addTracksToHistoryImportPreventDuplicates(videos);
     } else {
       snackyy(message: 'Importing ${videos.length} yt listen | ${videos.take(10).map((e) => e.id).toFixedList()}');
     }
@@ -60,6 +60,135 @@ class YTPlaylistsMessage extends BaseMessage {
   }
 }
 
+class YTSubscriptionsMessage extends BaseMessage {
+  final Iterable<YoutubeSubscription> channels;
+
+  const YTSubscriptionsMessage({
+    required this.channels,
+    required super.messageInfo,
+  }) : super(MessageType.ytSubscriptions);
+
+  static Future<YTSubscriptionsMessage> createForCurrentDevice() async {
+    return YTSubscriptionsMessage(
+      channels: YoutubeSubscriptionsController.inst.buildSyncEntries(),
+      messageInfo: await SyncUtils.createMessageInfo(.add),
+    );
+  }
+
+  static YoutubeSubscription? _tryParse(dynamic map) {
+    try {
+      return YoutubeSubscription.fromJson((map as Map).cast<String, dynamic>());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  factory YTSubscriptionsMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
+    return YTSubscriptionsMessage(
+      channels: (map['c'] as List).map(_tryParse).nonNulls,
+      messageInfo: messageInfo,
+    );
+  }
+
+  @override
+  Map<String, dynamic> _encodeToMap() => {
+    'c': channels.map((e) => e.toJson()).toFixedList(),
+  };
+
+  @override
+  String toRawInfo() => 'YTSubscriptions(${channels.length} channels)';
+
+  @override
+  FutureOr<void> executeOnReceived() {
+    if (SyncUtils.kAllowModification) {
+      return YoutubeSubscriptionsController.inst.import(channels);
+    } else {
+      snackyy(message: 'Importing ${channels.length} yt subscriptions');
+    }
+  }
+}
+
+class YTSubscriptionsGroupsMessage extends BaseMessage {
+  final List<String> groups;
+
+  const YTSubscriptionsGroupsMessage({
+    required this.groups,
+    required super.messageInfo,
+  }) : super(MessageType.ytSubscriptionsGroups);
+
+  static Future<YTSubscriptionsGroupsMessage> createForCurrentDevice() async {
+    return YTSubscriptionsGroupsMessage(
+      groups: await YoutubeSubscriptionsController.inst.readAllGroups(),
+      messageInfo: await SyncUtils.createMessageInfo(.add),
+    );
+  }
+
+  factory YTSubscriptionsGroupsMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
+    return YTSubscriptionsGroupsMessage(
+      groups: (map['g'] as List).cast<String>(),
+      messageInfo: messageInfo,
+    );
+  }
+
+  @override
+  Map<String, dynamic> _encodeToMap() => {
+    'g': groups,
+  };
+
+  @override
+  FutureOr<void> executeOnReceived() {
+    if (SyncUtils.kAllowModification) {
+      return YoutubeSubscriptionsController.inst.importGroups(groups);
+    } else {
+      snackyy(message: 'Importing ${groups.length} yt subscription groups');
+    }
+  }
+}
+
+class YTLikesMessage extends BaseMessage {
+  final Iterable<YoutubeID> videos;
+
+  const YTLikesMessage({
+    required this.videos,
+    required super.messageInfo,
+  }) : super(MessageType.ytLikes);
+
+  factory YTLikesMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
+    return YTLikesMessage(
+      videos: (map['videos'] as List).map((e) => YoutubeID.fromJson(e)),
+      messageInfo: messageInfo,
+    );
+  }
+
+  @override
+  Map<String, dynamic> _encodeToMap() => {
+    'videos': videos.map((e) => e.toJson()).toFixedList(),
+  };
+
+  @override
+  String toRawInfo() => 'YTLikes(${videos.length} videos)';
+
+  @override
+  FutureOr<void> executeOnReceived() async {
+    if (SyncUtils.kAllowModification) {
+      final favouritesPlaylist = YoutubePlaylistController.inst.favouritesPlaylist.value;
+      // -- adds only missing videos, keeping their original date added
+      await YoutubePlaylistController.inst.importTracksToPlaylist(
+        favouritesPlaylist,
+        videos.map(
+          (e) => YoutubeID(
+            id: e.id,
+            watchNull: e.watchNull,
+            playlistID: favouritesPlaylist.playlistID,
+          ),
+        ),
+      );
+    } else {
+      snackyy(message: 'Importing ${videos.length} yt likes | ${videos.take(10).map((e) => e.id).toFixedList()}');
+    }
+  }
+}
+
 class YTPlaylistsManifestResponseMessage extends BaseMessage {
   final List<PlaylistManifest> available;
 
@@ -83,9 +212,10 @@ class YTPlaylistsManifestResponseMessage extends BaseMessage {
     messageInfo: messageInfo,
     available: available,
     playlistsManager: YoutubePlaylistController.inst,
-    createPlaylistsMessage: (playlistsToSend) => YTPlaylistsMessage(
+    tracksArePaths: false,
+    createPlaylistsMessage: (playlistsToSend, createdMessageInfo) => YTPlaylistsMessage(
       playlists: playlistsToSend,
-      messageInfo: messageInfo,
+      messageInfo: createdMessageInfo,
     ),
   );
 }

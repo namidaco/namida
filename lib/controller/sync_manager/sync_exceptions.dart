@@ -17,3 +17,11 @@ class BlockedMessageException implements Exception {
   @override
   String toString() => 'Message "${type.name}" Received from a blocked device: $deviceId';
 }
+
+class DeviceNotConnectedException implements Exception {
+  final String deviceId;
+  DeviceNotConnectedException(this.deviceId);
+
+  @override
+  String toString() => 'Device is not connected: $deviceId';
+}

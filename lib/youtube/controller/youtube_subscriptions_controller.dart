@@ -82,4 +82,69 @@ class YoutubeSubscriptionsController {
     final file = File(AppPaths.YT_SUBSCRIPTIONS);
     await file.writeAsJson(_availableChannels.map((key, value) => MapEntry(key, value.toJson())));
   }
+
+  Iterable<YoutubeSubscription> buildSyncEntries() => _availableChannels.value.values;
+
+  Future<void> import(Iterable<YoutubeSubscription> incomingChannels) async {
+    await _didLoadCompleter.future;
+    bool anyChanged = false;
+    for (final incoming in incomingChannels) {
+      final channelID = incoming.channelID;
+      if (channelID.isEmpty) continue;
+
+      final local = _availableChannels.value[channelID];
+      if (local == null) {
+        _availableChannels.value[channelID] = incoming;
+        anyChanged = true;
+        continue;
+      }
+
+      final subscribed = local.subscribed == true || incoming.subscribed == true;
+      final groups = <String>[...local.groups];
+      for (final g in incoming.groups) {
+        if (!groups.contains(g)) groups.add(g);
+      }
+
+      final changed =
+          subscribed != (local.subscribed == true) || //
+          groups.length != local.groups.length ||
+          (local.title.isEmpty && incoming.title.isNotEmpty);
+      if (!changed) continue;
+
+      _availableChannels.value[channelID] = YoutubeSubscription(
+        title: local.title.isNotEmpty ? local.title : incoming.title,
+        channelID: channelID,
+        subscribed: subscribed ? true : local.subscribed,
+        groups: groups,
+        lastFetched: local.lastFetched,
+      );
+      anyChanged = true;
+    }
+    if (anyChanged) {
+      _availableChannels.refresh();
+      await saveFile();
+    }
+  }
+
+  Future<List<String>> readAllGroups() async {
+    try {
+      final list = await File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL).readAsJson() as List?;
+      if (list != null) return list.cast<String>();
+    } catch (_) {}
+    return [];
+  }
+
+  Future<void> importGroups(List<String> incoming) async {
+    final current = await readAllGroups();
+    bool changed = false;
+    for (final group in incoming) {
+      if (!current.contains(group)) {
+        current.add(group);
+        changed = true;
+      }
+    }
+    if (changed) {
+      await File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL).writeAsJson(current);
+    }
+  }
 }

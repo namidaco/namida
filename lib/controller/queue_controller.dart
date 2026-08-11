@@ -12,6 +12,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -119,6 +120,7 @@ class QueueController {
   }
 
   Future<void> updateLatestQueue(List<Playable> items, {required QueueSourceBase<Enum> source, HomePageItems? homePageItem}) async {
+    _playerQueueModifiedTime = _pendingSyncQueueTimestamp ?? currentTimeMS;
     await Future.wait([
       _saveLatestQueueToStorage(items),
       if (await _allowSavingQueue(items.length))
@@ -265,6 +267,7 @@ class QueueController {
   }
 
   Future<void> emptyLatestQueue() async {
+    _playerQueueModifiedTime = _pendingSyncQueueTimestamp ?? currentTimeMS;
     await File(AppPaths.LATEST_QUEUE).tryDeleting();
   }
 
@@ -357,11 +360,73 @@ class QueueController {
   final _queuesLoad = Completer<bool>();
   Future<bool> get waitForQueuesLoad => _queuesLoad.future;
   bool get isQueuesLoaded => _queuesLoad.isCompleted;
+
+  int get playerQueueModifiedTime => _playerQueueModifiedTime;
+  int _playerQueueModifiedTime = 0;
+
+  /// used when importing queue from another device,
+  /// cuz [_playerQueueModifiedTime] is used as a token
+  int? _pendingSyncQueueTimestamp;
+
+  (Iterable<Map<String, dynamic>>, int, int)? buildPlayerQueueSyncPayload() {
+    final queue = Player.inst.currentQueue.value;
+    if (queue.isEmpty) return null;
+    final items = queue.map(
+      (e) => <String, dynamic>{
+        'p': e.toJson(),
+        't': _LatestQueueSaver._typesMapLookup[e.runtimeType],
+      },
+    );
+    return (items, _playerQueueModifiedTime, Player.inst.currentIndex.value);
+  }
+
+  Future<void> importPlayerQueue(Iterable<dynamic> items, int queueModifiedTime, int currentIndex, String senderDeviceId) async {
+    final resolvedItems = <Playable>[];
+    for (final e in items) {
+      final map = (e as Map).cast<String, dynamic>();
+      var type = map['t'] as String?;
+      if (type == null) continue;
+      var payload = map['p'];
+
+      // -- resolve sender paths into local ones
+      switch (type) {
+        case _LatestQueueSaver._kTypeTrack || _LatestQueueSaver._kTypeVideo:
+          final resolved = SyncPathResolver.resolveTrackByPath(senderDeviceId, payload as String);
+          if (resolved != null) {
+            payload = resolved.path;
+            type = resolved is Video ? _LatestQueueSaver._kTypeVideo : _LatestQueueSaver._kTypeTrack;
+          }
+        case _LatestQueueSaver._kTypeTrackWithDate:
+          payload = SyncPathResolver.resolveTrackWithDate(senderDeviceId, TrackWithDate.fromJson(payload)).toJson();
+        default:
+          break;
+      }
+
+      final item = _LatestQueueSaver._typesBuilderMapLookup[type]?.call(payload);
+      if (item != null) resolvedItems.add(item);
+    }
+    if (resolvedItems.isEmpty) return;
+    if (currentIndex < 0 || currentIndex >= resolvedItems.length) currentIndex = 0;
+
+    _pendingSyncQueueTimestamp = queueModifiedTime;
+    try {
+      await Player.inst.playOrPause(
+        currentIndex,
+        resolvedItems,
+        QueueSource.playerQueue,
+      );
+    } finally {
+      _playerQueueModifiedTime = queueModifiedTime;
+      _pendingSyncQueueTimestamp = null;
+    }
+  }
 }
 
 class _LatestPlayedForSourceManager {
   RxBaseCore<Map<QueueSourceBase<dynamic>, Playable>> get map => _mapRx;
   static final _mapRx = <QueueSourceBase<dynamic>, Playable>{}.obs;
+
+  static final _modifiedTimesMap = <QueueSourceBase<dynamic>, int>{};
 
   late final _dBManager = DBWrapper.openFromInfo(
     fileInfo: AppPaths.LATEST_PLAYED_FOR_SOURCE,
@@ -380,6 +445,8 @@ class _LatestPlayedForSourceManager {
       final item = _LatestQueueSaver._typesBuilderMapLookup[type]?.call(valueMap);
       if (item != null) {
         _mapRx.value[source] ??= item;
+        final mt = map['_mt'] as int? ?? 0;
+        if (mt > 0) _modifiedTimesMap[source] ??= mt;
       }
     }
     _mapRx.refresh();
@@ -387,9 +454,12 @@ class _LatestPlayedForSourceManager {
 
   void update(QueueSourceBase source, Playable item) async {
     _mapRx[source] = item;
+    final mt = currentTimeMS;
+    _modifiedTimesMap[source] = mt;
     await _dBManager.put(source.toDbKey(), {
       'p': item.toJson(),
       't': _LatestQueueSaver._typesMapLookup[item.runtimeType],
+      '_mt': mt,
     });
   }
 
@@ -399,6 +469,8 @@ class _LatestPlayedForSourceManager {
       _mapRx.value[newSource] = oldValue;
       _mapRx.refresh();
     }
+    final mt = _modifiedTimesMap.remove(oldSource);
+    if (mt != null) _modifiedTimesMap[newSource] = mt;
     final oldValueDB = await _dBManager.get(oldSource.toDbKey());
     await _dBManager.put(newSource.toDbKey(), oldValueDB);
     await delete(oldSource);
@@ -406,6 +478,7 @@ class _LatestPlayedForSourceManager {
 
   Future<void> delete(QueueSourceBase source) async {
     _mapRx.remove(source);
+    _modifiedTimesMap.remove(source);
     await _dBManager.delete(source.toDbKey());
   }
 
@@ -413,27 +486,90 @@ class _LatestPlayedForSourceManager {
     final keysToRemove = <String>[];
     for (final source in sources) {
       _mapRx.value.remove(source);
+      _modifiedTimesMap.remove(source);
       keysToRemove.add(source.toDbKey());
     }
     _mapRx.refresh();
     await _dBManager.deleteBulk(keysToRemove);
+  }
+
+  Iterable<MapEntry<String, Map<String, dynamic>>> buildSyncEntries() {
+    return _mapRx.value.entries.map((e) {
+      final type = _LatestQueueSaver._typesMapLookup[e.value.runtimeType];
+      if (type == null) return null;
+      return MapEntry(e.key.toDbKey(), <String, dynamic>{
+        'p': e.value.toJson(),
+        't': type,
+        '_mt': _modifiedTimesMap[e.key] ?? 0,
+      });
+    }).nonNulls;
+  }
+
+  Future<void> import(Iterable<MapEntry<String, Map<String, dynamic>>> incomingEntries, String senderDeviceId) async {
+    bool anyChanged = false;
+    for (final entry in incomingEntries) {
+      final incoming = entry.value;
+      final incomingMt = incoming['_mt'] as int? ?? 0;
+
+      final sourceRaw = jsonDecode(entry.key);
+      final QueueSourceBase? source = QueueSource.fromJson(sourceRaw) ?? QueueSourceYoutubeID.fromJson(sourceRaw);
+      if (source == null) continue; // -- unknown source, dont force into `others`
+
+      if (_mapRx.value[source] != null && (_modifiedTimesMap[source] ?? 0) >= incomingMt) continue;
+
+      var type = incoming['t'] as String?;
+      if (type == null) continue;
+      var payload = incoming['p'];
+
+      // -- resolve sender paths into local ones
+      switch (type) {
+        case _LatestQueueSaver._kTypeTrack || _LatestQueueSaver._kTypeVideo:
+          final resolved = SyncPathResolver.resolveTrackByPath(senderDeviceId, payload as String);
+          if (resolved != null) {
+            payload = resolved.path;
+            type = resolved is Video ? _LatestQueueSaver._kTypeVideo : _LatestQueueSaver._kTypeTrack;
+          }
+        case _LatestQueueSaver._kTypeTrackWithDate:
+          payload = SyncPathResolver.resolveTrackWithDate(senderDeviceId, TrackWithDate.fromJson(payload)).toJson();
+        default:
+          break;
+      }
+
+      final item = _LatestQueueSaver._typesBuilderMapLookup[type]?.call(payload);
+      if (item == null) continue;
+
+      _mapRx.value[source] = item;
+      _modifiedTimesMap[source] = incomingMt;
+      anyChanged = true;
+      await _dBManager.put(source.toDbKey(), {
+        'p': payload,
+        't': type,
+        '_mt': incomingMt,
+      });
+    }
+    if (anyChanged) _mapRx.refresh();
   }
 }
 
 class _LatestQueueSaver {
   const _LatestQueueSaver();
 
+  static const _kTypeVideo = 'v';
+  static const _kTypeTrack = 'tr';
+  static const _kTypeTrackWithDate = 'twd';
+  static const _kTypeYTVideo = 'ytv';
+
   static final _typesBuilderMapLookup = <String, Playable Function(dynamic p)>{
-    'v': (p) => Video.explicit(p),
-    'tr': (p) => Track.explicit(p),
-    'twd': (p) => TrackWithDate.fromJson(p),
-    'ytv': (p) => YoutubeID.fromJson(p),
+    _LatestQueueSaver._kTypeVideo: (p) => Video.explicit(p),
+    _LatestQueueSaver._kTypeTrack: (p) => Track.explicit(p),
+    _LatestQueueSaver._kTypeTrackWithDate: (p) => TrackWithDate.fromJson(p),
+    _LatestQueueSaver._kTypeYTVideo: (p) => YoutubeID.fromJson(p),
   };
 
   static const _typesMapLookup = <Type, String>{
-    Video: 'v',
-    Track: 'tr',
-    TrackWithDate: 'twd',
-    YoutubeID: 'ytv',
+    Video: _LatestQueueSaver._kTypeVideo,
+    Track: _LatestQueueSaver._kTypeTrack,
+    TrackWithDate: _LatestQueueSaver._kTypeTrackWithDate,
+    YoutubeID: _LatestQueueSaver._kTypeYTVideo,
   };
 }

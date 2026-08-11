@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -9,6 +11,7 @@ import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 
 import 'package:namida/base/audio_handler.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/search_matcher.dart';
 import 'package:namida/class/track.dart';
@@ -219,6 +222,24 @@ class VideoController {
     // well, no matter what happens, sometimes the info coming has extra info
     _videoCacheIDMap[id]?.removeDuplicates((element) => "${element.height}_${element.resolution}_${element.path}");
     _saveCachedVideos(id);
+  }
+
+  Map<String, Map<String, dynamic>> buildCacheVideosSyncInfoByFilename() {
+    final result = <String, Map<String, dynamic>>{};
+    for (final videos in _videoCacheIDMap.values) {
+      for (final v in videos) {
+        result[v.path.getFilename] = v.toJson();
+      }
+    }
+    return result;
+  }
+
+  void importSyncedCacheVideoInfo(String fileName, Map<String, dynamic> info) {
+    info['path'] = FileParts.joinPath(AppDirs.VIDEOS_CACHE, fileName);
+    final nv = NamidaVideo.fromJson(info);
+    final id = nv.ytID;
+    if (id == null || id.isEmpty) return;
+    addYTVideoToCacheMap(id, nv);
   }
 
   NamidaVideo addLocalVideoFileInfoToCacheMap(String path, MediaInfo info, FileStat fileStats, {String? ytID}) {

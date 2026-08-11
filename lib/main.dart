@@ -53,6 +53,7 @@ import 'package:namida/controller/smtc_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/tray_controller.dart';
+import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/controller/version_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
@@ -328,6 +329,8 @@ Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
     if (!shouldShowOnBoarding) await BackupController.inst.checkForAutoBackup(); // --> !can block
     const StorageCacheManager().trimExtraFiles();
     VersionController.inst.ensureInitialized();
+    SyncDiscovery.autoRestoreOnStartup();
+    SyncSender.inst.setupAutoSync();
     _clearIntentCachedFiles(); // clearing files cached by intents
     // CurrentColor.inst.generateAllColorPalettes();
   } catch (e, st) {

@@ -53,6 +53,7 @@ class SmartPlaylistsController {
   }
 
   Future<void> create(SmartPlaylist smartPlaylist) async {
+    smartPlaylist = smartPlaylist.copyWith(modifiedDate: currentTimeMS);
     final key = smartPlaylist.key;
     final alreadyExisting = smartPlaylistsMap.value[key];
     if (alreadyExisting != null) {
@@ -65,6 +66,7 @@ class SmartPlaylistsController {
   }
 
   Future<void> edit(SmartPlaylist oldSmartPlaylist, SmartPlaylist smartPlaylist) async {
+    smartPlaylist = smartPlaylist.copyWith(modifiedDate: currentTimeMS);
     if (oldSmartPlaylist.key == smartPlaylist.key) {
       await create(smartPlaylist);
     } else {
@@ -97,6 +99,25 @@ class SmartPlaylistsController {
     final pl = smartPlaylistsMap.value[key];
     smartPlaylistsMap.refresh();
     await _dBManager.put(key, pl?.value.toMap());
+  }
+
+  Iterable<SmartPlaylist> buildSyncEntries() => smartPlaylistsMap.value.values.map((e) => e.value);
+
+  Future<void> import(Iterable<SmartPlaylist> incomingPlaylists) async {
+    bool anyChanged = false;
+    for (final incoming in incomingPlaylists) {
+      final key = incoming.key;
+      final local = smartPlaylistsMap.value[key];
+      if (local != null && local.value.modifiedDate >= incoming.modifiedDate) continue;
+      if (local != null) {
+        local.value = incoming;
+      } else {
+        smartPlaylistsMap.value[key] = SmartPlaylistWrapper(incoming);
+      }
+      anyChanged = true;
+      await _dBManager.put(key, incoming.toMap());
+    }
+    if (anyChanged) smartPlaylistsMap.refresh();
   }
 
   String? validatePlaylistName(String? value, {required SmartPlaylistKey? oldKey}) {

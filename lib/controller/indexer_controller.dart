@@ -30,6 +30,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
+import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -1489,6 +1490,7 @@ class Indexer<T extends Track> {
       moods: moods,
       lastPositionInMs: lastPositionInMs,
       audioTrackId: statsRaw?.audioTrackId,
+      modifiedDate: currentTimeMS,
     );
     trackStatsMap[track] = newStats;
     unawaited(_trackStatsDBManager.put(track.path, newStats.toJsonWithoutTrack()));
@@ -1507,9 +1509,38 @@ class Indexer<T extends Track> {
       moods: stats?.moods,
       lastPositionInMs: stats?.lastPositionInMs ?? 0,
       audioTrackId: audioTrackId,
+      modifiedDate: currentTimeMS,
     );
     trackStatsMap[track] = newStats;
     unawaited(_trackStatsDBManager.put(track.path, newStats.toJsonWithoutTrack()));
+  }
+
+  Future<void> importTrackStats(Iterable<TrackStats> incomingStats, String senderDeviceId) async {
+    bool anyChanged = false;
+    for (final incoming in incomingStats) {
+      final resolvedTrack = SyncPathResolver.resolveTrackByPath(senderDeviceId, incoming.track.path);
+      final effective = resolvedTrack == null
+          ? incoming
+          : TrackStats(
+              track: resolvedTrack,
+              rating: incoming.rating,
+              tags: incoming.tags,
+              moods: incoming.moods,
+              lastPositionInMs: incoming.lastPositionInMs,
+              audioTrackId: incoming.audioTrackId,
+              modifiedDate: incoming.modifiedDate,
+            );
+      final track = effective.track;
+      final local = trackStatsMap.value[track];
+      if (local != null && local.modifiedDate >= effective.modifiedDate) continue;
+      final json = effective.toJsonWithoutTrack();
+      if (json == null) continue;
+      trackStatsMap.value[track] = effective;
+      anyChanged = true;
+      if (track is Video) json['v'] = true;
+      await _trackStatsDBManager.put(track.path, json);
+    }
+    if (anyChanged) trackStatsMap.refresh();
   }
 
   Future<void> moveStatsPath(Map<Track, Track> oldNewTrack) async {

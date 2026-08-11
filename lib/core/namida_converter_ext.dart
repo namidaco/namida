@@ -39,6 +39,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
+import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/version_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
@@ -1638,6 +1639,10 @@ extension RouteUtils on NamidaRoute {
           child: NamidaAppBarIcon(
             icon: Broken.setting_2,
             onPressed: const SettingsPage().navigate,
+            child: const SyncStatusIconWrapper(
+              icon: Broken.setting_2,
+              showDisconnectedDot: false,
+            ),
           ),
         ),
         shouldShow: shouldShowSettingsIcon,
@@ -1724,6 +1729,66 @@ extension InterruptionTypeL10n on InterruptionType {
     InterruptionType.shouldPause => Broken.pause_circle,
     InterruptionType.shouldDuck => Broken.volume_low_1,
     InterruptionType.unknown => Broken.status,
+  };
+}
+
+extension SyncDataItemL10n on SyncDataItem {
+  String toText() => switch (this) {
+    SyncDataItem.history => lang.history,
+    SyncDataItem.historyYt => '${lang.history} (${lang.youtube})',
+    SyncDataItem.playlists => lang.playlists,
+    SyncDataItem.playlistsYt => '${lang.playlists} (${lang.youtube})',
+    SyncDataItem.favourites => lang.favourites,
+    SyncDataItem.favouritesYt => '${lang.favourites} (${lang.youtube})',
+    SyncDataItem.stats => lang.stats,
+    SyncDataItem.statsYt => '${lang.stats} (${lang.youtube})',
+    SyncDataItem.latestPlayedForSource => lang.lastPlayed,
+    SyncDataItem.audioConfigs => lang.audioConfigs,
+    SyncDataItem.smartPlaylists => lang.smartPlaylists,
+    SyncDataItem.videosPriority => '${lang.videoCache} • ${lang.priority}',
+    SyncDataItem.subscriptionsYt => '${lang.subscriptions} (${lang.youtube})',
+    SyncDataItem.queues => lang.queues,
+    SyncDataItem.lyrics => lang.lyrics,
+    SyncDataItem.videosCache => lang.videoCache,
+    SyncDataItem.audiosCache => lang.audioCache,
+    SyncDataItem.playlistsArtworks => '${lang.playlists} • ${lang.artworks}',
+    SyncDataItem.smartPlaylistsArtworks => '${lang.smartPlaylists} • ${lang.artworks}',
+    SyncDataItem.playlistsArtworksYt => '${lang.playlists} • ${lang.artworks} (${lang.youtube})',
+    SyncDataItem.artworksArtists => '${lang.artworks} • ${lang.artists}',
+    SyncDataItem.artworksAlbums => '${lang.artworks} • ${lang.albums}',
+    SyncDataItem.thumbnailsYt => '${lang.thumbnails} (${lang.youtube})',
+    SyncDataItem.thumbnailsChannelsYt => '${lang.thumbnails} • ${lang.channels} (${lang.youtube})',
+    SyncDataItem.playerQueue => lang.queue,
+    SyncDataItem.playback => lang.playbackSetting,
+  };
+
+  IconData toIcon() => switch (this) {
+    SyncDataItem.history => Broken.refresh,
+    SyncDataItem.historyYt => Broken.video_play,
+    SyncDataItem.playlists => Broken.music_library_2,
+    SyncDataItem.playlistsYt => Broken.video_square,
+    SyncDataItem.favourites => Broken.heart,
+    SyncDataItem.favouritesYt => Broken.like_1,
+    SyncDataItem.stats => Broken.chart_2,
+    SyncDataItem.statsYt => Broken.chart,
+    SyncDataItem.latestPlayedForSource => Broken.clock,
+    SyncDataItem.audioConfigs => Broken.sound,
+    SyncDataItem.smartPlaylists => Broken.magicpen,
+    SyncDataItem.videosPriority => Broken.ranking,
+    SyncDataItem.subscriptionsYt => Broken.user_tick,
+    SyncDataItem.queues => Broken.driver,
+    SyncDataItem.lyrics => Broken.document,
+    SyncDataItem.videosCache => Broken.video,
+    SyncDataItem.audiosCache => Broken.audio_square,
+    SyncDataItem.playlistsArtworks => Broken.image,
+    SyncDataItem.smartPlaylistsArtworks => Broken.image,
+    SyncDataItem.playlistsArtworksYt => Broken.image,
+    SyncDataItem.artworksArtists => Broken.image,
+    SyncDataItem.artworksAlbums => Broken.image,
+    SyncDataItem.thumbnailsYt => Broken.image,
+    SyncDataItem.thumbnailsChannelsYt => Broken.image,
+    SyncDataItem.playerQueue => Broken.rotate_left_1,
+    SyncDataItem.playback => Broken.play,
   };
 }
 

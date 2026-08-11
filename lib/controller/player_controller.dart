@@ -23,6 +23,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
@@ -887,9 +888,25 @@ class _AudioConfigsManager {
 
   Future<void> updateProperty(String key, PlayerConfig Function(PlayerConfig current) builder) async {
     final currentConfig = await get(key);
-    final config = builder(currentConfig ?? PlayerConfig.initial);
+    final config = builder(currentConfig ?? PlayerConfig.initial).copyWith(modifiedDate: currentTimeMS);
     _mapRx.value[key] = config;
     _scheduleSave(key);
+  }
+
+  Iterable<MapEntry<String, PlayerConfig>> buildSyncEntries() => _mapRx.value.entries;
+
+  Future<void> import(Iterable<MapEntry<String, PlayerConfig>> incomingConfigs, String senderDeviceId) async {
+    bool anyChanged = false;
+    for (final e in incomingConfigs) {
+      final incoming = e.value;
+      final key = SyncPathResolver.resolvePath(senderDeviceId, e.key) ?? e.key;
+      final local = _mapRx.value[key];
+      if (local != null && local.modifiedDate >= incoming.modifiedDate) continue;
+      _mapRx.value[key] = incoming;
+      anyChanged = true;
+      await _dBManager.put(key, incoming.toMap());
+    }
+    if (anyChanged) _mapRx.refresh();
   }
 
   void _scheduleSave(String key) {

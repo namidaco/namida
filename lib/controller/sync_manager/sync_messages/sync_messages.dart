@@ -46,14 +46,35 @@ sealed class BaseMessage {
       MessageType.ping => PingMessage.fromMap,
       MessageType.connectionRequest => ConnectionRequestMessage.fromMap,
       MessageType.messageRequest => RequestMessage.fromMap,
+      MessageType.syncItemsRequest => SyncItemsRequestMessage.fromMap,
       // ------------- local -------------
       MessageType.historyListens => HistoryListensMessage.fromMap,
       MessageType.playlists => PlaylistsMessage.fromMap,
+      MessageType.tracksDbFingerprints => TracksDbFingerprintsMessage.fromMap,
+      MessageType.latestPlayedForSource => LatestPlayedForSourceMessage.fromMap,
+      MessageType.audioConfigs => AudioConfigsMessage.fromMap,
+      MessageType.smartPlaylists => SmartPlaylistsMessage.fromMap,
+      MessageType.trackStats => TrackStatsMessage.fromMap,
+      MessageType.favourites => FavouritesMessage.fromMap,
       MessageType.playlistsManifestResponse => PlaylistsManifestResponseMessage.fromMap,
       // -------------  yt   -------------
       MessageType.ytHistoryListens => YTHistoryListensMessage.fromMap,
       MessageType.ytPlaylists => YTPlaylistsMessage.fromMap,
+      MessageType.ytLikes => YTLikesMessage.fromMap,
+      MessageType.ytSubscriptions => YTSubscriptionsMessage.fromMap,
+      MessageType.ytSubscriptionsGroups => YTSubscriptionsGroupsMessage.fromMap,
       MessageType.ytPlaylistsManifestResponse => YTPlaylistsManifestResponseMessage.fromMap,
+      // ------------- files -------------
+      MessageType.dirFilesManifestRequest => DirFilesManifestRequestMessage.fromMap,
+      MessageType.dirFilesManifestResponse => DirFilesManifestResponseMessage.fromMap,
+      MessageType.dirFile => DirFileMessage.fromMap,
+      MessageType.dbFile => DbFileMessage.fromMap,
+      MessageType.dbManifestRequest => DbManifestRequestMessage.fromMap,
+      MessageType.dbManifestResponse => DbManifestResponseMessage.fromMap,
+      MessageType.dbEntries => DbEntriesMessage.fromMap,
+      // ------------- playback -----------
+      MessageType.playerQueue => PlayerQueueMessage.fromMap,
+      MessageType.playback => PlaybackStateMessage.fromMap,
     };
   }
 
@@ -98,6 +119,13 @@ sealed class BaseMessage {
     final factory = getFactory(type);
     return factory(map, info);
   }
+}
+
+/// a message that has raw bytes message in a separate binary frame right after its
+/// json frame, avoiding base64/byte-array in json. see [_FrameWriter.sendMessage].
+mixin BinaryPayloadMessage on BaseMessage {
+  /// set by the sender at construction, and by the receiver right before [executeOnReceived].
+  Uint8List? binaryPayload;
 }
 
 class PingMessage extends BaseMessage {
@@ -147,13 +175,18 @@ class RequestMessage extends BaseMessage {
   };
 
   @override
-  FutureOr<void> executeOnReceived() async {
-    final available = <PlaylistManifest>[];
-
-    final PlaylistManager plManager = switch (msgRequestType) {
-      MessageRequestType.playlistsManifest => PlaylistController.inst,
-      MessageRequestType.ytPlaylistsManifest => YoutubePlaylistController.inst,
+  FutureOr<void> executeOnReceived() {
+    return switch (msgRequestType) {
+      MessageRequestType.playlistsManifest => _sendPlaylistsManifest(PlaylistController.inst),
+      MessageRequestType.ytPlaylistsManifest => _sendPlaylistsManifest(YoutubePlaylistController.inst),
+      MessageRequestType.playerQueue => _sendPlayerQueue(),
+      // -- they lost our fingerprints (ex: restarted), force resend even if we think they have them
+      MessageRequestType.tracksDbFingerprints => SyncSender.inst.resendFingerprints(messageInfo.senderDeviceId),
     };
+  }
+
+  Future<void> _sendPlaylistsManifest(PlaylistManager plManager) async {
+    final available = <PlaylistManifest>[];
 
     for (final pl in plManager.playlistsMap.value.values) {
       final manifest = PlaylistManifest(
@@ -174,9 +207,57 @@ class RequestMessage extends BaseMessage {
         messageInfo: createdMessageInfo,
         available: available,
       ),
+      MessageRequestType.playerQueue || MessageRequestType.tracksDbFingerprints => throw Exception('playlist manifest only'),
     };
 
     await SyncDiscovery.sendMessage(msg, messageInfo.senderDeviceId);
+  }
+
+  Future<void> _sendPlayerQueue() async {
+    final receiverDeviceId = messageInfo.senderDeviceId;
+    final msg = await PlayerQueueMessage.createForCurrentDevice();
+    if (msg == null) return; // -- empty queue, nothing to send
+    await SyncSender.inst.ensureFingerprintsSent(receiverDeviceId);
+    await SyncDiscovery.sendMessage(msg, receiverDeviceId);
+  }
+}
+
+/// asks the other device to send us [items].
+/// items are chosen by the requesting (receiving) device, which is us.
+class SyncItemsRequestMessage extends BaseMessage {
+  final List<SyncDataItem> items;
+
+  const SyncItemsRequestMessage({
+    required this.items,
+    required super.messageInfo,
+  }) : super(MessageType.syncItemsRequest);
+
+  static Future<SyncItemsRequestMessage> createForCurrentDevice(List<SyncDataItem> items) async {
+    return SyncItemsRequestMessage(
+      items: items,
+      messageInfo: await SyncUtils.createMessageInfo(.manifest),
+    );
+  }
+
+  factory SyncItemsRequestMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
+    return SyncItemsRequestMessage(
+      items: (map['items'] as List).map((e) => SyncDataItem.lookupMap[e]).nonNulls.toList(),
+      messageInfo: messageInfo,
+    );
+  }
+
+  @override
+  Map<String, dynamic> _encodeToMap() => {
+    'items': items.map((e) => e.name).toFixedList(),
+  };
+
+  @override
+  String toRawInfo() => 'SyncItemsRequest(${items.map((e) => e.name).join(', ')})';
+
+  @override
+  FutureOr<void> executeOnReceived() {
+    if (items.isEmpty) return null;
+    return SyncSender.inst.sendItemsToDevice(items, messageInfo.senderDeviceId);
   }
 }
 
@@ -230,13 +311,13 @@ class ConnectionRequestMessage extends BaseMessage {
         settings.sync.updateDeviceName(senderDeviceId, senderDeviceName);
         if (version != SyncUtils.kSyncVersion) {
           VibratorController.high();
-          final reasonMessage = 'Version mismatch, make sure both apps are on the same version';
+          final reasonMessage = lang.versionMismatchMakeSureBothAppsAreOnTheSameVersion;
           await SyncDiscovery.server.rejectConnection(senderDeviceId, reason: reasonMessage);
           await NamidaNavigator.inst.navigateDialog(
             dialog: CustomBlurryDialog(
               isWarning: true,
               normalTitleStyle: true,
-              title: 'Connection Rejected - $senderDeviceName',
+              title: '${lang.connectionRejected} - $senderDeviceName',
               bodyText: reasonMessage,
               actions: [
                 NamidaButton(
@@ -250,28 +331,36 @@ class ConnectionRequestMessage extends BaseMessage {
           );
           return;
         }
+        if (settings.sync.autoReconnect.valueF && settings.sync.allowedDeviceIds.contains(senderDeviceId)) {
+          // -- device was accepted before, silently accept again (blocked devices are ignored in _FrameDispatcher)
+          await SyncDiscovery.server.acceptConnection(senderDeviceId);
+          return;
+        }
         await NamidaNavigator.inst.navigateDialog(
           dialog: CustomBlurryDialog(
             isWarning: true,
             normalTitleStyle: true,
-            bodyText: 'Accept Connection from "$senderDeviceName"?',
-            actions: [
-              NamidaButton(
-                text: 'block'.toUpperCase(),
-                onTap: () async {
+            bodyText: lang.acceptConnectionFromName(name: '"$senderDeviceName"'),
+            trailingWidgets: [
+              NamidaIconButton(
+                icon: Broken.shield_slash,
+                tooltip: () => lang.block.toUpperCase(),
+                onPressed: () async {
                   await SyncDiscovery.server.blockConnection(senderDeviceId);
                   NamidaNavigator.inst.closeDialog();
                 },
               ),
+            ],
+            actions: [
               NamidaButton(
-                text: 'reject'.toUpperCase(),
+                text: lang.reject.toUpperCase(),
                 onTap: () async {
                   await SyncDiscovery.server.rejectConnection(senderDeviceId);
                   NamidaNavigator.inst.closeDialog();
                 },
               ),
               NamidaButton(
-                text: 'accept'.toUpperCase(),
+                text: lang.accept.toUpperCase(),
                 onTap: () async {
                   await SyncDiscovery.server.acceptConnection(senderDeviceId);
                   NamidaNavigator.inst.closeDialog();
@@ -307,7 +396,8 @@ abstract class PlaylistsManifestResponseMessageUtils {
     required BaseMessageInfo messageInfo,
     required List<PlaylistManifest> available,
     required PlaylistManager<T, E, S> playlistsManager,
-    required BaseMessage Function(List<GeneralPlaylist<T, S>> playlistsToSend) createPlaylistsMessage,
+    required bool tracksArePaths,
+    required BaseMessage Function(List<GeneralPlaylist<T, S>> playlistsToSend, BaseMessageInfo createdMessageInfo) createPlaylistsMessage,
   }) async {
     final alreadyAvailableOnOtherDevice = available;
     final playlistsToSend = <GeneralPlaylist<T, S>>[];
@@ -317,9 +407,11 @@ abstract class PlaylistsManifestResponseMessageUtils {
         playlistsToSend.add(plInLibrary);
       }
     }
-    final msg = createPlaylistsMessage(playlistsToSend);
-    snackyy(message: '==> playlistsToSend[${playlistsManager.runtimeType}]: ${playlistsToSend.map((e) => e.name).toList()}');
-    await SyncDiscovery.sendMessage(msg, messageInfo.senderDeviceId);
+    final receiverDeviceId = messageInfo.senderDeviceId;
+    final createdMessageInfo = await SyncUtils.createMessageInfo(.add);
+    final msg = createPlaylistsMessage(playlistsToSend, createdMessageInfo);
+    if (tracksArePaths) await SyncSender.inst.ensureFingerprintsSent(receiverDeviceId);
+    await SyncDiscovery.sendMessage(msg, receiverDeviceId);
   }
 }
 

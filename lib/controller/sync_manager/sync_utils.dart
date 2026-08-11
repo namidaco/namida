@@ -10,10 +10,30 @@ class SyncUtils {
 
   /// if enabled, will directly edit library on receiving valid data
   /// if disabled, will only display a snackbar with the received info
-  static const kAllowModification = false;
+  static const kAllowModification = true;
 
-  static final currentDeviceName = _fetchDeviceName();
+  /// if enabled, db-backed items sync by diffing manifests & sending only the
+  /// missing/newer entries, see [DbManifestRequestMessage]. otherwise the whole
+  /// db file gets sent & merged on the receiver, see [DbFileMessage].
+  static final kUseDbEntriesSync = true;
+
+  static final fallbackDeviceName = _fetchDeviceName();
+
+  /// custom name set by the user, falling back to the actual device name
+  static Future<String> get currentDeviceName {
+    final custom = settings.sync.customDeviceName.value;
+    if (custom != null && custom.isNotEmpty) return Future.value(custom);
+    return fallbackDeviceName;
+  }
+
   static final currentDeviceId = _fetchDeviceId();
+
+  static Future<BaseMessageInfo> createMessageInfo(MessageActionType action) async {
+    return BaseMessageInfo(
+      action: action,
+      senderDeviceId: await currentDeviceId,
+    );
+  }
 
   static String _createServiceName({required String deviceName}) {
     return 'Namida - ${Platform.operatingSystem} - ${Platform.operatingSystemVersion}';

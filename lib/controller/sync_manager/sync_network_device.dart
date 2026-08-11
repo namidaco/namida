@@ -61,7 +61,7 @@ class NetworkDevice {
     return <String>[
       deviceName,
       nameCleaned,
-      if (port > 0) 'Port: $port',
+      if (port > 0) '${lang.port}: $port',
       'Address: $address',
     ].join('\n');
   }
@@ -78,4 +78,24 @@ class NetworkDevice {
   int get hashCode {
     return name.hashCode ^ address.hashCode ^ port.hashCode ^ deviceId.hashCode;
   }
+}
+
+class SyncDeviceView {
+  final String deviceId;
+
+  /// known when we discovered & connected to their server. used for reconnecting.
+  NetworkDevice? networkDevice;
+  String? remoteAddress;
+
+  bool asClient = false;
+
+  bool asServer = false;
+
+  SyncDeviceView(this.deviceId);
+
+  bool get connectedAsClient => SyncDiscovery.client._connectedServers.containsKey(deviceId);
+  bool get connectedAsServer => SyncDiscovery.server._clientsSockets.containsKey(deviceId);
+  bool get isConnected => connectedAsClient || connectedAsServer;
+
+  String get displayName => settings.sync.deviceIdNames[deviceId] ?? networkDevice?.deviceName ?? deviceId;
 }

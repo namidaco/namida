@@ -47,16 +47,17 @@ class ServerWrapper {
     await serverSocket.close();
   }
 
-  String buildText({bool simple = true}) => info.buildText(simple: simple);
+  String buildText({required String? deviceName, bool simple = true}) => info.buildText(deviceName: deviceName, simple: simple);
 }
 
 extension on MDNSService {
-  String buildText({bool simple = true}) {
+  String buildText({required String? deviceName, bool simple = true}) {
     final parts = <String>[];
 
     final hostNameCleaned = hostName.endsWith('.') ? hostName.substring(0, hostName.length - 1) : hostName;
-    parts.add('Host: $hostNameCleaned');
-    if (port > 0) parts.add('Port: $port');
+    if (deviceName != null) parts.add('${lang.name}: $deviceName');
+    parts.add('${lang.host}: $hostNameCleaned');
+    if (port > 0) parts.add('${lang.port}: $port');
 
     if (!simple) {
       parts.add('Domain: $domain');

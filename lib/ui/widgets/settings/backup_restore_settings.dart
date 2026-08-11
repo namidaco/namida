@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
@@ -19,6 +19,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
+import 'package:namida/ui/pages/sync_manager_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -30,7 +31,7 @@ enum _BackupAndRestoreKeys with SettingKeysBase {
   restore,
   defaultLocation,
   autoBackupInterval,
-  crossPlatformSync,
+  sync,
   importYT,
   importLastfm,
 }
@@ -47,7 +48,7 @@ class BackupAndRestore extends SettingSubpageProvider {
     _BackupAndRestoreKeys.restore: [lang.restoreBackup],
     _BackupAndRestoreKeys.defaultLocation: [lang.defaultBackupLocation],
     _BackupAndRestoreKeys.autoBackupInterval: [lang.autoBackupInterval],
-    _BackupAndRestoreKeys.crossPlatformSync: [lang.crossPlatformSync],
+    _BackupAndRestoreKeys.sync: [lang.sync, lang.syncAppDataBetweenYourDevices],
     _BackupAndRestoreKeys.importYT: [lang.importYoutubeHistory],
     _BackupAndRestoreKeys.importLastfm: [lang.importLastFmHistory],
   };
@@ -166,79 +167,79 @@ class BackupAndRestore extends SettingSubpageProvider {
     );
   }
 
-  void _openNamidaSync() async {
-    final backupFolder = settings.defaultBackupLocation.value ?? AppDirs.BACKUPS;
-    final musicFolders = settings.directoriesToScan.value;
+  // void _openNamidaSync() async {
+  //   final backupFolder = settings.defaultBackupLocation.value ?? AppDirs.BACKUPS;
+  //   final musicFolders = settings.directoriesToScan.value;
 
-    final musicFoldersJoined = musicFolders.where((e) => e.sourceRaw.isNotEmpty).map((e) => e).join(',');
+  //   final musicFoldersJoined = musicFolders.where((e) => e.sourceRaw.isNotEmpty).map((e) => e).join(',');
 
-    bool requiresDownload = false;
-    try {
-      if (Platform.isAndroid) {
-        final didOpen = await NamidaChannel.inst.openNamidaSync(backupFolder, musicFoldersJoined);
-        if (!didOpen) requiresDownload = true;
-      } else if (Platform.isWindows) {
-        File? exeFile = File(r'C:\Program Files\namida_sync\namida_sync.exe');
-        if (!await exeFile.exists()) {
-          exeFile = await NamidaFileBrowser.pickFile(note: "${lang.pickFromStorage}: namida_sync.exe", allowedExtensions: NamidaFileExtensionsWrapper.exe);
-        }
-        if (exeFile == null || !await exeFile.exists()) {
-          requiresDownload = true;
-        } else {
-          final args = ['--backupPath="$backupFolder"', '--musicFolders="$musicFoldersJoined"'];
-          await Process.run(exeFile.path, args);
-        }
-      } else if (Platform.isLinux) {
-        File? exeFile;
-        final commonPaths = [
-          '/usr/local/bin/namida_sync',
-          '/usr/bin/namida_sync',
-          '${NamidaPlatformBuilder.linuxUserHome ?? '~'}/.local/bin/namida_sync',
-        ];
+  //   bool requiresDownload = false;
+  //   try {
+  //     if (Platform.isAndroid) {
+  //       final didOpen = await NamidaChannel.inst.openNamidaSync(backupFolder, musicFoldersJoined);
+  //       if (!didOpen) requiresDownload = true;
+  //     } else if (Platform.isWindows) {
+  //       File? exeFile = File(r'C:\Program Files\namida_sync\namida_sync.exe');
+  //       if (!await exeFile.exists()) {
+  //         exeFile = await NamidaFileBrowser.pickFile(note: "${lang.pickFromStorage}: namida_sync.exe", allowedExtensions: NamidaFileExtensionsWrapper.exe);
+  //       }
+  //       if (exeFile == null || !await exeFile.exists()) {
+  //         requiresDownload = true;
+  //       } else {
+  //         final args = ['--backupPath="$backupFolder"', '--musicFolders="$musicFoldersJoined"'];
+  //         await Process.run(exeFile.path, args);
+  //       }
+  //     } else if (Platform.isLinux) {
+  //       File? exeFile;
+  //       final commonPaths = [
+  //         '/usr/local/bin/namida_sync',
+  //         '/usr/bin/namida_sync',
+  //         '${NamidaPlatformBuilder.linuxUserHome ?? '~'}/.local/bin/namida_sync',
+  //       ];
 
-        for (final path in commonPaths) {
-          final file = File(path);
-          if (await file.exists()) {
-            exeFile = file;
-            break;
-          }
-        }
-        exeFile ??= await NamidaFileBrowser.pickFile(
-          note: "${lang.pickFromStorage}: namida_sync",
-          allowedExtensions: null,
-        );
+  //       for (final path in commonPaths) {
+  //         final file = File(path);
+  //         if (await file.exists()) {
+  //           exeFile = file;
+  //           break;
+  //         }
+  //       }
+  //       exeFile ??= await NamidaFileBrowser.pickFile(
+  //         note: "${lang.pickFromStorage}: namida_sync",
+  //         allowedExtensions: null,
+  //       );
 
-        if (exeFile == null || !await exeFile.exists()) {
-          requiresDownload = true;
-        } else {
-          final args = ['--backupPath="$backupFolder"', '--musicFolders="$musicFoldersJoined"'];
-          await Process.run(exeFile.path, args);
-        }
-      } else {
-        final uri = Uri(
-          scheme: 'namidasync',
-          host: 'config',
-          queryParameters: {
-            'backupPath': backupFolder,
-            'musicFolders': musicFoldersJoined,
-          },
-        );
-        final url = uri.toString();
-        final didOpen = await NamidaLinkUtils.openLink(url);
-        if (!didOpen) requiresDownload = true;
-      }
-    } catch (e) {
-      snackyy(message: e.toString(), isError: true);
-    }
+  //       if (exeFile == null || !await exeFile.exists()) {
+  //         requiresDownload = true;
+  //       } else {
+  //         final args = ['--backupPath="$backupFolder"', '--musicFolders="$musicFoldersJoined"'];
+  //         await Process.run(exeFile.path, args);
+  //       }
+  //     } else {
+  //       final uri = Uri(
+  //         scheme: 'namidasync',
+  //         host: 'config',
+  //         queryParameters: {
+  //           'backupPath': backupFolder,
+  //           'musicFolders': musicFoldersJoined,
+  //         },
+  //       );
+  //       final url = uri.toString();
+  //       final didOpen = await NamidaLinkUtils.openLink(url);
+  //       if (!didOpen) requiresDownload = true;
+  //     }
+  //   } catch (e) {
+  //     snackyy(message: e.toString(), isError: true);
+  //   }
 
-    if (requiresDownload) {
-      try {
-        await NamidaLinkUtils.openLink(AppSocial.NAMIDA_SYNC_GITHUB_RELEASE);
-      } catch (e) {
-        snackyy(message: e.toString(), isError: true);
-      }
-    }
-  }
+  //   if (requiresDownload) {
+  //     try {
+  //       await NamidaLinkUtils.openLink(AppSocial.NAMIDA_SYNC_GITHUB_RELEASE);
+  //     } catch (e) {
+  //       snackyy(message: e.toString(), isError: true);
+  //     }
+  //   }
+  // }
 
   void _ensureNewBackupItemsIncluded(List<AppPathsBackupEnum> items) {
     int includedCount = 0;
@@ -578,12 +579,13 @@ class BackupAndRestore extends SettingSubpageProvider {
           ),
 
           getItemWrapper(
-            key: _BackupAndRestoreKeys.crossPlatformSync,
+            key: _BackupAndRestoreKeys.sync,
             child: CustomListTile(
-              bgColor: getBgColor(_BackupAndRestoreKeys.crossPlatformSync),
-              title: lang.crossPlatformSync,
+              bgColor: getBgColor(_BackupAndRestoreKeys.sync),
+              title: lang.sync,
+              subtitle: lang.syncAppDataBetweenYourDevices,
               icon: Broken.cloud_change,
-              onTap: _openNamidaSync,
+              onTap: const NamidaSyncManagerPage().navigate,
             ),
           ),
 

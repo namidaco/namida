@@ -9,6 +9,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/pages/sync_manager_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
@@ -280,12 +281,15 @@ class _QuickSuggestionsForSettings extends StatelessWidget {
               const SizedBox(width: 8.0),
               _QuickSuggestionsTile(
                 expanded: false,
-                icon: Broken.box_add,
-                title: lang.createBackup,
+                icon: null,
+                leading: (color) => SyncStatusIconWrapper(
+                  iconSize: 20.0,
+                  color: color,
+                ),
+                title: lang.sync,
                 subtitle: '',
                 onTap: () {
-                  final backup = BackupAndRestore();
-                  backup.promptCreateBackup(context);
+                  const NamidaSyncManagerPage().navigate();
                 },
               ),
             ],

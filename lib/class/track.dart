@@ -99,6 +99,7 @@ class TrackStats extends PlayableItemStats {
     required super.moods,
     required super.lastPositionInMs,
     required super.audioTrackId,
+    super.modifiedDate,
   });
 
   factory TrackStats.fromJson(Map<String, dynamic> json) {
@@ -114,6 +115,7 @@ class TrackStats extends PlayableItemStats {
       moods: stats.moods,
       lastPositionInMs: stats.lastPositionInMs,
       audioTrackId: stats.audioTrackId,
+      modifiedDate: stats.modifiedDate,
     );
   }
 
@@ -155,12 +157,15 @@ class PlayableItemStats {
 
   String? audioTrackId;
 
+  int modifiedDate = 0;
+
   PlayableItemStats({
     required this.rating,
     required this.tags,
     required this.moods,
     required this.lastPositionInMs,
     required this.audioTrackId,
+    this.modifiedDate = 0,
   });
 
   static List<String>? _parseList(dynamic listJson) {
@@ -182,6 +187,7 @@ class PlayableItemStats {
       moods: _parseList(json['moods']) ?? [],
       lastPositionInMs: json['pms'] ?? json['lastPositionInMs'] ?? 0,
       audioTrackId: json['aid'],
+      modifiedDate: json['_mt'] ?? 0,
     );
   }
 
@@ -196,6 +202,7 @@ class PlayableItemStats {
       if (audioTrackId != null) 'aid': audioTrackId,
     };
     if (map.isEmpty) return null;
+    if (modifiedDate > 0) map['_mt'] = modifiedDate;
     return map;
   }
 

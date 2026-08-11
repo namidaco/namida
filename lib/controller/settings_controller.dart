@@ -16,6 +16,7 @@ import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.dart';
+import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';

@@ -912,6 +912,7 @@ class NamidaButton extends StatelessWidget {
   final bool isMinimumSquared;
   final bool? tooltipPreferBelow;
   final bool isCentered;
+  final Axis direction;
 
   const NamidaButton({
     super.key,
@@ -938,6 +939,7 @@ class NamidaButton extends StatelessWidget {
     this.isMinimumSquared = false,
     this.tooltipPreferBelow,
     this.isCentered = true,
+    this.direction = Axis.horizontal,
   });
 
   static const double kDefaultMinHeight = 36.0;
@@ -1060,12 +1062,17 @@ class NamidaButton extends StatelessWidget {
             boxShadow: boxShadow,
           ),
           padding: padding,
-          child: Row(
+          child: Flex(
+            direction: direction,
             mainAxisAlignment: isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
             mainAxisSize: .min,
             children: [
               ?iconChild,
-              if (iconChild != null && textChild != null) const SizedBox(width: 8.0),
+              if (iconChild != null && textChild != null)
+                switch (direction) {
+                  Axis.horizontal => const SizedBox(width: 8.0),
+                  Axis.vertical => const SizedBox(height: 2.0),
+                },
               if (textChild != null)
                 Flexible(
                   child: textChild,
@@ -1305,6 +1312,7 @@ class SmallListTile extends StatelessWidget {
 class ListTileWithCheckMark extends StatelessWidget {
   final bool active;
   final RxBase<bool>? activeRx;
+  final bool halfActive;
   final void Function()? onTap;
   final String? title;
   final String subtitle;
@@ -1321,6 +1329,7 @@ class ListTileWithCheckMark extends StatelessWidget {
     super.key,
     this.active = false,
     this.activeRx,
+    this.halfActive = false,
     this.onTap,
     this.title,
     this.subtitle = '',
@@ -1384,7 +1393,13 @@ class ListTileWithCheckMark extends StatelessWidget {
                   : Flexible(
                       child: titleWidgetFinal,
                     ),
-              activeRx != null
+              halfActive
+                  ? Icon(
+                      Broken.minus,
+                      size: 18.0,
+                      color: theme.colorScheme.secondary,
+                    )
+                  : activeRx != null
                   ? ObxO(
                       rx: activeRx!,
                       builder: (context, active) => NamidaCheckMark(
@@ -7756,6 +7771,7 @@ class NamidaCoolBox extends StatelessWidget {
   final bool reducedColors;
   final BorderRadius? borderRadius;
   final double hPadding;
+  final double vPadding;
 
   const NamidaCoolBox({
     super.key,
@@ -7767,11 +7783,12 @@ class NamidaCoolBox extends StatelessWidget {
     this.reducedColors = false,
     this.borderRadius,
     this.hPadding = 12.0,
+    this.vPadding = 6.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    double vPadding = 6.0;
+    double vPadding = this.vPadding;
     if (extraVPadding) vPadding += 4.0;
     return DecoratedBox(
       decoration: BoxDecoration(

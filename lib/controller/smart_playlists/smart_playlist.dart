@@ -19,6 +19,8 @@ class SmartPlaylist {
   final List<String> moods;
   final List<SmartPlaylistRuleGroup> ruleGroups;
 
+  final int modifiedDate;
+
   const SmartPlaylist({
     required this.name,
     required this.creationDate,
@@ -27,6 +29,7 @@ class SmartPlaylist {
     required this.sortReverse,
     required this.moods,
     required this.ruleGroups,
+    this.modifiedDate = 0,
   });
 
   List<Track> resolve() {
@@ -112,6 +115,7 @@ class SmartPlaylist {
       sortReverse: map['sortReverse'] as bool,
       moods: (map['moods'] as List).cast<String>(),
       ruleGroups: (map['ruleGroups'] as List).map(SmartPlaylistRuleGroup.fromMap).toList(),
+      modifiedDate: map['_mt'] as int? ?? 0,
     );
   }
 
@@ -124,6 +128,7 @@ class SmartPlaylist {
       'sortReverse': sortReverse,
       'moods': moods,
       'ruleGroups': ruleGroups.map((e) => e.toMap()).toFixedList(),
+      if (modifiedDate > 0) '_mt': modifiedDate,
     };
   }
 
@@ -135,6 +140,7 @@ class SmartPlaylist {
     bool? sortReverse,
     List<String>? moods,
     List<SmartPlaylistRuleGroup>? ruleGroups,
+    int? modifiedDate,
   }) => SmartPlaylist(
     name: name ?? this.name,
     creationDate: creationDate ?? this.creationDate,
@@ -143,6 +149,7 @@ class SmartPlaylist {
     sortReverse: sortReverse ?? this.sortReverse,
     moods: moods ?? this.moods,
     ruleGroups: ruleGroups ?? this.ruleGroups,
+    modifiedDate: modifiedDate ?? this.modifiedDate,
   );
 }
 

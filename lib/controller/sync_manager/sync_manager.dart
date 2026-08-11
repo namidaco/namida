@@ -1,22 +1,30 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Colors;
 
+import 'package:basic_audio_handler/basic_audio_handler.dart' show PlayerConfig;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:mdns_dart/mdns_dart.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -25,16 +33,23 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/class/youtube_subscription.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
+part 'sync_actions_log.dart';
 part 'sync_discovery.dart';
 part 'sync_enums.dart';
 part 'sync_exceptions.dart';
+part 'sync_fingerprints.dart';
 part 'sync_framing.dart';
 part 'sync_messages/sync_messages.dart';
+part 'sync_messages/sync_messages_files.dart';
 part 'sync_messages/sync_messages_local.dart';
 part 'sync_messages/sync_messages_yt.dart';
 part 'sync_network_device.dart';
+part 'sync_sender.dart';
 part 'sync_server_wrapper.dart';
 part 'sync_utils.dart';
