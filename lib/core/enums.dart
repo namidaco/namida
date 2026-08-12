@@ -782,6 +782,8 @@ enum AlbumIdentifier {
   albumName,
   year,
   albumArtist,
+  mbAlbumId,
+  mbAlbumArtistId,
 }
 
 enum OnYoutubeLinkOpenAction {

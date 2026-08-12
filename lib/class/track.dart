@@ -516,6 +516,8 @@ class TrackExtended {
             album: originalAlbum,
             albumArtist: albumArtist,
             year: year?.toString() ?? '',
+            mbAlbumId: '',
+            mbAlbumArtistId: '',
           ),
         );
       }
@@ -872,6 +874,8 @@ extension TrackExtUtils on TrackExtended {
         albums: finalalbums,
         albumArtist: albumArtist,
         year: yearText,
+        mbAlbumId: tag.mbAlbumId ?? albumsIdentifiersWrappers.firstOrNull?.mbAlbumId ?? '',
+        mbAlbumArtistId: tag.mbAlbumArtistId ?? albumsIdentifiersWrappers.firstOrNull?.mbAlbumArtistId ?? '',
       ),
       isVideo: isVideo,
       hashKey: newHashKey,

@@ -70,6 +70,8 @@ class _TagsExtractorTagLib extends TagsExtractor {
             albumName: taglibInfoProps?.album,
             albumArtist: taglibInfoProps?.albumArtist,
             year: taglibInfoProps?.date,
+            mbAlbumId: taglibInfoProps?.MUSICBRAINZ_ALBUMID,
+            mbAlbumArtistId: taglibInfoProps?.MUSICBRAINZ_ALBUMARTISTID,
             title: taglibInfoProps?.title,
             artist: taglibInfoProps?.artist,
           ),

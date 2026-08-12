@@ -172,6 +172,8 @@ class TagLibRes {
         country: info.country,
         recordLabel: info.recordLabel,
         bpm: parsy(info.bpm),
+        mbAlbumId: info.MUSICBRAINZ_ALBUMID,
+        mbAlbumArtistId: info.MUSICBRAINZ_ALBUMARTISTID,
         gainData: ReplayGainData.fromTagLibMap(properties),
         sortInfo: FTagsSortInfo.fromTagLibMap(properties),
         ratingPercentage: FTags.ratingToPercentage(info.rating),

@@ -300,6 +300,10 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
           val year = tag.getFirst(FieldKey.YEAR)
           val album = tag.getFirst(FieldKey.ALBUM)
           val albumArtist = tag.getFirst(FieldKey.ALBUM_ARTIST)
+          val mbAlbumId = try { tag.getFirst(FieldKey.MUSICBRAINZ_RELEASEID) } catch (_: Exception) { "" }
+          val mbAlbumArtistId = try { tag.getFirst(FieldKey.MUSICBRAINZ_RELEASEARTISTID) } catch (_: Exception) { "" }
+          metadata["mbAlbumId"] = mbAlbumId
+          metadata["mbAlbumArtistId"] = mbAlbumArtistId
           val ratingRaw = tag.getFirst(FieldKey.RATING)
           metadata["bpm"] = tag.getFirst(FieldKey.BPM)
           metadata["country"] = tag.getAll(FieldKey.COUNTRY)
@@ -393,6 +397,12 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
                         }
                         if (artworkIdentifiers[ArtworkIdentifier.year] == true) {
                           if (year != null) parts += year
+                        }
+                        if (artworkIdentifiers[ArtworkIdentifier.mbAlbumId] == true) {
+                          if (mbAlbumId != null) parts += mbAlbumId
+                        }
+                        if (artworkIdentifiers[ArtworkIdentifier.mbAlbumArtistId] == true) {
+                          if (mbAlbumArtistId != null) parts += mbAlbumArtistId
                         }
                         artworkFilenameToUse = cleanupFilename(parts, artworkDirectory)
                       }
@@ -602,6 +612,8 @@ enum class ArtworkIdentifier {
   albumName,
   year,
   albumArtist,
+  mbAlbumId,
+  mbAlbumArtistId,
 }
 
 fun String.toFastHashKey(): String {

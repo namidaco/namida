@@ -113,6 +113,8 @@ abstract class TagsExtractor {
         albumName: trExt?.originalAlbum,
         albumArtist: trExt?.albumArtist,
         year: trExt?.year.toString(),
+        mbAlbumId: trExt?.albumsIdentifiersWrappers.firstOrNull?.mbAlbumId,
+        mbAlbumArtistId: trExt?.albumsIdentifiersWrappers.firstOrNull?.mbAlbumArtistId,
         title: trExt?.title,
         artist: trExt?.originalArtist,
       ),
@@ -131,6 +133,8 @@ abstract class TagsExtractor {
       String? albumName,
       String? albumArtist,
       String? year,
+      String? mbAlbumId,
+      String? mbAlbumArtistId,
       String? title,
       String? artist,
     })
@@ -162,6 +166,8 @@ abstract class TagsExtractor {
       String? albumName,
       String? albumArtist,
       String? year,
+      String? mbAlbumId,
+      String? mbAlbumArtistId,
       String? title,
       String? artist,
     })
@@ -182,6 +188,8 @@ abstract class TagsExtractor {
         albumName: info.albumName,
         albumArtist: info.albumArtist,
         year: info.year,
+        mbAlbumId: info.mbAlbumId,
+        mbAlbumArtistId: info.mbAlbumArtistId,
         identifiers: identifiersSet,
         parentDirPath: parentDirPath,
       );
@@ -215,6 +223,8 @@ abstract class TagsExtractor {
     required String? albumName,
     required String? albumArtist,
     required String? year,
+    required String? mbAlbumId,
+    required String? mbAlbumArtistId,
     required Set<AlbumIdentifier> identifiers,
     required String parentDirPath,
   }) {
@@ -222,6 +232,8 @@ abstract class TagsExtractor {
     if (albumName != null && identifiers.contains(AlbumIdentifier.albumName)) buffer.write(albumName);
     if (albumArtist != null && identifiers.contains(AlbumIdentifier.albumArtist)) buffer.write(albumArtist);
     if (year != null && identifiers.contains(AlbumIdentifier.year)) buffer.write(year);
+    if (mbAlbumId != null && identifiers.contains(AlbumIdentifier.mbAlbumId)) buffer.write(mbAlbumId);
+    if (mbAlbumArtistId != null && identifiers.contains(AlbumIdentifier.mbAlbumArtistId)) buffer.write(mbAlbumArtistId);
     return DownloadTaskFilename.cleanupFilename(
       buffer.toString(),
       parentDirPath: parentDirPath,
@@ -233,6 +245,8 @@ abstract class TagsExtractor {
       albumName: data?.tags.album,
       albumArtist: data?.tags.albumArtist,
       year: data?.tags.year,
+      mbAlbumId: data?.tags.mbAlbumId,
+      mbAlbumArtistId: data?.tags.mbAlbumArtistId,
       identifiers: identifiers,
       parentDirPath: parentDirPath,
     );

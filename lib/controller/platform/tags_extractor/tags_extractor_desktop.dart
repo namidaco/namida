@@ -46,6 +46,8 @@ class _TagsExtractorDesktop extends TagsExtractor {
             albumName: ffmpegInfo?.format?.tags?.album,
             albumArtist: ffmpegInfo?.format?.tags?.albumArtist,
             year: ffmpegInfo?.format?.tags?.date,
+            mbAlbumId: ffmpegInfo?.format?.tags?.mbAlbumId,
+            mbAlbumArtistId: ffmpegInfo?.format?.tags?.mbAlbumArtistId,
             title: ffmpegInfo?.format?.tags?.title,
             artist: ffmpegInfo?.format?.tags?.artist,
           ),

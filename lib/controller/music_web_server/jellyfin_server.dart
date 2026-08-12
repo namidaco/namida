@@ -199,6 +199,8 @@ class _JellyfinServer extends MusicWebServer {
         albums: albumsList,
         albumArtist: albumArtist,
         year: yearString,
+        mbAlbumId: '',
+        mbAlbumArtistId: '',
       ),
     );
   }

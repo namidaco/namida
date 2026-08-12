@@ -253,6 +253,8 @@ class _SubsonicWebServer extends MusicWebServer {
         albums: albums,
         albumArtist: albumArtist,
         year: yearString,
+        mbAlbumId: '',
+        mbAlbumArtistId: '',
       ),
     );
   }

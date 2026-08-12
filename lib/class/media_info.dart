@@ -147,6 +147,8 @@ class MIFormatTags {
   final String? tags;
   final String? compatibleBrands;
   final String? mood;
+  final String? mbAlbumId;
+  final String? mbAlbumArtistId;
   final ReplayGainData? gainData;
   final FTagsSortInfo? sortInfo;
 
@@ -182,6 +184,8 @@ class MIFormatTags {
     required this.tags,
     required this.compatibleBrands,
     required this.mood,
+    this.mbAlbumId,
+    this.mbAlbumArtistId,
     required this.gainData,
     required this.sortInfo,
   });
@@ -237,6 +241,8 @@ class MIFormatTags {
       tempo: map.getOrUpperCase("tempo"),
       compatibleBrands: map.getOrUpperCase("compatible_brands"),
       mood: map.getOrUpperCase("mood") ?? map["Mood"],
+      mbAlbumId: map.getOrLowerCase("MUSICBRAINZ_ALBUMID") ?? map["MusicBrainz Album Id"],
+      mbAlbumArtistId: map.getOrLowerCase("MUSICBRAINZ_ALBUMARTISTID") ?? map["MusicBrainz Album Artist Id"],
       gainData: ReplayGainData.fromPropertiesMap(map),
       sortInfo: FTagsSortInfo.fromFFmpegMap(map),
     );
@@ -274,6 +280,8 @@ class MIFormatTags {
     "tags": tags,
     "compatible_brands": compatibleBrands,
     "mood": mood,
+    "MUSICBRAINZ_ALBUMID": mbAlbumId,
+    "MUSICBRAINZ_ALBUMARTISTID": mbAlbumArtistId,
     "gainData": gainData?.toMap(),
     "sortInfo": sortInfo?.toMap(),
   };

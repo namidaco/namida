@@ -133,6 +133,8 @@ class _TagsExtractorAndroid extends TagsExtractor {
               albumName: trackInfo?.tags.album,
               albumArtist: trackInfo?.tags.albumArtist,
               year: trackInfo?.tags.year,
+              mbAlbumId: trackInfo?.tags.mbAlbumId,
+              mbAlbumArtistId: trackInfo?.tags.mbAlbumArtistId,
               title: trackInfo?.tags.title,
               artist: trackInfo?.tags.artist,
             ),

@@ -94,6 +94,8 @@ class FTags {
   final String? country;
   final String? recordLabel;
   final int? bpm;
+  final String? mbAlbumId;
+  final String? mbAlbumArtistId;
 
   final double? ratingPercentage;
   final ReplayGainData? gainData;
@@ -129,6 +131,8 @@ class FTags {
     required this.country,
     required this.recordLabel,
     required this.bpm,
+    this.mbAlbumId,
+    this.mbAlbumArtistId,
     required this.ratingPercentage,
     required this.gainData,
     required this.sortInfo,
@@ -164,6 +168,8 @@ class FTags {
     this.country,
     this.recordLabel,
     this.bpm,
+    this.mbAlbumId,
+    this.mbAlbumArtistId,
     this.ratingPercentage,
     this.gainData,
     this.sortInfo,
@@ -231,6 +237,8 @@ class FTags {
       country: _listToString(map["country"]) ?? map["COUNTRY"],
       recordLabel: _listToString(map["recordLabel"]) ?? map["RECORDLABEL"] ?? map["label"] ?? map["LABEL"],
       bpm: MediaInfo.extractInt(map["bpm"]),
+      mbAlbumId: map["mbAlbumId"] ?? map["MUSICBRAINZ_ALBUMID"] ?? map["MusicBrainz Album Id"],
+      mbAlbumArtistId: map["mbAlbumArtistId"] ?? map["MUSICBRAINZ_ALBUMARTISTID"] ?? map["MusicBrainz Album Artist Id"],
       ratingPercentage: ratingToPercentage(ratingString),
       gainData: ReplayGainData.fromPropertiesMap(map),
       sortInfo: FTagsSortInfo.fromAndroidMap(map),
@@ -268,6 +276,8 @@ class FTags {
       "recordLabel": recordLabel,
       "bpm": bpm,
       "language": language,
+      "mbAlbumId": mbAlbumId,
+      "mbAlbumArtistId": mbAlbumArtistId,
       "gainData": gainData?.toMap(),
       "sortInfo": sortInfo?.toMap(),
     };

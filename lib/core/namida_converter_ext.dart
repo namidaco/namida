@@ -314,6 +314,8 @@ extension FAudioModelExtensions on FAudioModel {
         country: original.tags.country ?? this.tags.country,
         recordLabel: original.tags.recordLabel ?? this.tags.recordLabel,
         bpm: original.tags.bpm ?? this.tags.bpm,
+        mbAlbumId: original.tags.mbAlbumId ?? this.tags.mbAlbumId,
+        mbAlbumArtistId: original.tags.mbAlbumArtistId ?? this.tags.mbAlbumArtistId,
         ratingPercentage: original.tags.ratingPercentage ?? this.tags.ratingPercentage,
         gainData: original.tags.gainData ?? this.tags.gainData,
         sortInfo: original.tags.sortInfo ?? this.tags.sortInfo,
@@ -371,6 +373,8 @@ extension MediaInfoToFAudioModel on MediaInfo {
         country: info?.country,
         recordLabel: info?.label,
         bpm: info?.bpm,
+        mbAlbumId: info?.mbAlbumId,
+        mbAlbumArtistId: info?.mbAlbumArtistId,
         gainData: info?.gainData,
         sortInfo: info?.sortInfo,
         ratingPercentage: info?.rating,
@@ -1481,17 +1485,6 @@ extension RouteUtils on NamidaRoute {
         shouldShow: JsonToHistoryParser.inst.shouldShowMissingEntriesDialog,
       ),
 
-      if (kDebugMode || isKuru)
-        _getAnimatedCrossFade(
-          child: NamidaAppBarIcon(
-            icon: Broken.cloud_change,
-            onPressed: () {
-              NamidaNavigator.inst.navigateTo(const NamidaSyncManagerPage());
-            },
-          ),
-          shouldShow: true,
-        ),
-
       _getAnimatedCrossFade(
         child: ObxO(
           rx: MusicWebServerAuthDetails.manager.hasMissingAuthRx,
@@ -1859,6 +1852,8 @@ extension AlbumIdentifierL10n on AlbumIdentifier {
     AlbumIdentifier.albumName => lang.name,
     AlbumIdentifier.albumArtist => lang.albumArtist,
     AlbumIdentifier.year => lang.year,
+    AlbumIdentifier.mbAlbumId => 'MusicBrainz Album ID',
+    AlbumIdentifier.mbAlbumArtistId => 'MusicBrainz Album Artist ID',
   };
 }
 
