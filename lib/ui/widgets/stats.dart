@@ -68,6 +68,11 @@ class StatsSection extends StatelessWidget {
                   value: Indexer.inst.mainMapGenres.valueR.length.formatDecimal(),
                 ),
                 StatsContainer(
+                  icon: Broken.brush_1,
+                  title: '${lang.styles} :',
+                  value: Indexer.inst.mainMapStyles.valueR.length.formatDecimal(),
+                ),
+                StatsContainer(
                   icon: Broken.music_library_2,
                   title: '${lang.totalTracksDuration} :',
                   value: allTracks.totalDurationFormatted,

@@ -299,6 +299,8 @@ class TrackExtended {
   final String albumArtist;
   final String originalGenre;
   final List<String> genresList;
+  final String originalStyle;
+  final List<String> stylesList;
   final String originalMood;
   final List<String> moodList;
   final String composer;
@@ -350,6 +352,8 @@ class TrackExtended {
     required this.albumArtist,
     required this.originalGenre,
     required this.genresList,
+    required this.originalStyle,
+    required this.stylesList,
     required this.originalMood,
     required this.moodList,
     required this.composer,
@@ -538,6 +542,11 @@ class TrackExtended {
         json['originalGenre'],
         config: splitConfig.genresConfig,
       ),
+      originalStyle: json['originalStyle'] ?? '',
+      stylesList: Indexer.splitStyle(
+        json['originalStyle'],
+        config: splitConfig.genresConfig,
+      ),
       originalMood: json['originalMood'] ?? '',
       moodList: Indexer.splitGeneral(
         json['originalMood'],
@@ -590,6 +599,7 @@ class TrackExtended {
       if (originalAlbum.isNotEmpty) 'originalAlbum': originalAlbum,
       if (albumArtist.isNotEmpty) 'albumArtist': albumArtist,
       if (originalGenre.isNotEmpty) 'originalGenre': originalGenre,
+      if (originalStyle.isNotEmpty) 'originalStyle': originalStyle,
       if (originalMood.isNotEmpty) 'originalMood': originalMood,
       if (composer.isNotEmpty) 'composer': composer,
       if (trackNo > 0) 'trackNo': trackNo,
@@ -643,6 +653,7 @@ extension TrackExtUtils on TrackExtended {
   bool get hasUnknownComposer => composer == '' || composer == UnknownTags.COMPOSER;
   bool get hasUnknownArtist => artistsList.isEmpty || artistsList.first == UnknownTags.ARTIST;
   bool get hasUnknownGenre => genresList.isEmpty || genresList.first == UnknownTags.GENRE;
+  bool get hasUnknownStyle => stylesList.isEmpty || stylesList.first == UnknownTags.STYLE;
   bool get hasUnknownMood => moodList.isEmpty || moodList.first == UnknownTags.MOOD || moodList.first == UnknownTags.GENRE; // cuz moods get parsed like genres
 
   bool get isPhysical => !isNetwork;
@@ -807,6 +818,12 @@ extension TrackExtUtils on TrackExtended {
             config: splittersConfigs.genresConfig,
           )
         : genresList;
+    final finalstyles = tag.style != null
+        ? Indexer.splitStyle(
+            tag.style,
+            config: splittersConfigs.genresConfig,
+          )
+        : stylesList;
     final finalmoods = tag.mood != null
         ? Indexer.splitGeneral(
             tag.mood,
@@ -836,6 +853,8 @@ extension TrackExtUtils on TrackExtended {
       albumArtist: albumArtist,
       originalGenre: tag.genre ?? originalGenre,
       genresList: finalgenres,
+      originalStyle: tag.style ?? originalStyle,
+      stylesList: finalstyles,
       originalMood: tag.mood ?? originalMood,
       moodList: finalmoods,
       composer: tag.composer ?? composer,
@@ -892,6 +911,8 @@ extension TrackExtUtils on TrackExtended {
     String? albumArtist,
     String? originalGenre,
     List<String>? genresList,
+    String? originalStyle,
+    List<String>? stylesList,
     String? originalMood,
     List<String>? moodList,
     String? composer,
@@ -942,6 +963,8 @@ extension TrackExtUtils on TrackExtended {
       albumArtist: albumArtist ?? this.albumArtist,
       originalGenre: originalGenre ?? this.originalGenre,
       genresList: genresList ?? this.genresList,
+      originalStyle: originalStyle ?? this.originalStyle,
+      stylesList: stylesList ?? this.stylesList,
       originalMood: originalMood ?? this.originalMood,
       moodList: moodList ?? this.moodList,
       composer: composer ?? this.composer,
@@ -1005,6 +1028,8 @@ extension TrackUtils on Track {
   String get albumArtist => toTrackExt().albumArtist;
   String get originalGenre => toTrackExt().originalGenre;
   List<String> get genresList => toTrackExt().genresList;
+  String get originalStyle => toTrackExt().originalStyle;
+  List<String> get stylesList => toTrackExt().stylesList;
   String get originalMood => toTrackExt().originalMood;
   List<String> get moodList => toTrackExt().moodList;
   List<String> get tagsList => toTrackExt().tagsList;

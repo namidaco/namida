@@ -1048,6 +1048,8 @@ const kDummyExtendedTrack = TrackExtended(
   albumArtist: "",
   originalGenre: "",
   genresList: [],
+  originalStyle: "",
+  stylesList: [],
   originalMood: "",
   moodList: [],
   composer: "",
@@ -1093,6 +1095,7 @@ class UnknownTags {
   static const ALBUMARTIST = '';
   static const ARTIST = 'Unknown Artist';
   static const GENRE = 'Unknown Genre';
+  static const STYLE = '';
   static const MOOD = '';
   static const COMPOSER = 'Unknown Composer';
 }

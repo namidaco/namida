@@ -502,7 +502,8 @@ class CurrentColor {
           RouteType.SUBPAGE_artistTracks ||
           RouteType.SUBPAGE_albumArtistTracks ||
           RouteType.SUBPAGE_composerTracks ||
-          RouteType.SUBPAGE_genreTracks:
+          RouteType.SUBPAGE_genreTracks ||
+          RouteType.SUBPAGE_styleTracks:
         currentRoute?.updateColorScheme();
       default:
         null;

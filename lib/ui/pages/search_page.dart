@@ -325,6 +325,7 @@ class _SearchPageState extends State<SearchPage> {
                                     final albumArtistSearchTemp = !activeList.contains(MediaType.albumArtist) ? null : SearchSortController.inst.albumArtistSearchTemp.valueR;
                                     final composerSearchTemp = !activeList.contains(MediaType.composer) ? null : SearchSortController.inst.composerSearchTemp.valueR;
                                     final genreSearchTemp = !activeList.contains(MediaType.genre) ? null : SearchSortController.inst.genreSearchTemp.valueR;
+                                    final styleSearchTemp = !activeList.contains(MediaType.style) ? null : SearchSortController.inst.styleSearchTemp.valueR;
                                     final playlistSearchTemp = !activeList.contains(MediaType.playlist) ? null : SearchSortController.inst.playlistSearchTemp.valueR;
                                     final moodSearchTemp = !activeList.contains(MediaType.mood) ? null : SearchSortController.inst.moodSearchTemp.valueR;
                                     final tagSearchTemp = !activeList.contains(MediaType.tag) ? null : SearchSortController.inst.tagSearchTemp.valueR;
@@ -443,6 +444,36 @@ class _SearchPageState extends State<SearchPage> {
                                                   heroTag: 'genre_$genreName',
                                                   showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genreName),
                                                   onTap: () => NamidaOnTaps.inst.onGenreTap(genreName),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+
+                                        // == Styles ==
+                                        if (styleSearchTemp != null && styleSearchTemp.isNotEmpty) ...[
+                                          SliverToBoxAdapter(
+                                            child: SearchPageTitleRow(
+                                              title: '${lang.styles} • ${styleSearchTemp.length}',
+                                              icon: Broken.brush_1,
+                                            ),
+                                          ),
+                                          _horizontalSliverList(
+                                            height: 138.0,
+                                            itemExtent: 108.0,
+                                            list: styleSearchTemp,
+                                            builder: (item) {
+                                              final styleName = item;
+                                              return Container(
+                                                width: 130.0,
+                                                margin: const EdgeInsets.only(left: 2.0),
+                                                child: MultiArtworkCard(
+                                                  tracks: styleName.getStylesTracks(),
+                                                  name: styleName,
+                                                  countPerRow: Dimensions.genreSearchGridCount,
+                                                  heroTag: 'style_$styleName',
+                                                  showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(styleName, MediaType.style),
+                                                  onTap: () => NamidaOnTaps.inst.onGenreTap(styleName, MediaType.style),
                                                 ),
                                               );
                                             },

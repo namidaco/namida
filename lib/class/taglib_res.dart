@@ -154,6 +154,7 @@ class TagLibRes {
         artist: info.artist,
         composer: info.composer,
         genre: info.genre,
+        style: info.style,
         trackNumber: info.trackNumber,
         trackTotal: info.trackTotal,
         discNumber: info.discNumber,

@@ -85,6 +85,7 @@ class Indexer<T extends Track> {
   LibraryItemMap get mainMapAlbumArtists => mainMapsGroup.mainMapAlbumArtists;
   LibraryItemMap get mainMapComposer => mainMapsGroup.mainMapComposer;
   LibraryItemMap get mainMapGenres => mainMapsGroup.mainMapGenres;
+  LibraryItemMap get mainMapStyles => mainMapsGroup.mainMapStyles;
   RxMap<Folder, List<T>> get mainMapFoldersTracksAndVideos => mainMapsGroup.mainMapFoldersTracksAndVideos;
   RxMap<Folder, List<T>> get mainMapFoldersTracks => mainMapsGroup.mainMapFoldersTracks;
   RxMap<VideoFolder, List<Video>> get mainMapFoldersVideos => mainMapsGroup.mainMapFoldersVideos;
@@ -95,6 +96,14 @@ class Indexer<T extends Track> {
       MediaType.albumArtist => Indexer.inst.mainMapAlbumArtists,
       MediaType.composer => Indexer.inst.mainMapComposer,
       _ => Indexer.inst.mainMapArtists,
+    };
+  }
+
+  LibraryItemMap getGenreMapFor(MediaType type) {
+    return switch (type) {
+      MediaType.genre => Indexer.inst.mainMapGenres,
+      MediaType.style => Indexer.inst.mainMapStyles,
+      _ => Indexer.inst.mainMapGenres,
     };
   }
 
@@ -225,6 +234,10 @@ class Indexer<T extends Track> {
         ),
         genresList: Indexer.splitGenre(
           oldtr.originalGenre,
+          config: splitConfig.genresConfig,
+        ),
+        stylesList: Indexer.splitStyle(
+          oldtr.originalStyle,
           config: splitConfig.genresConfig,
         ),
         moodList: Indexer.splitGeneral(
@@ -398,7 +411,8 @@ class Indexer<T extends Track> {
         MediaType.artist ||
         MediaType.albumArtist ||
         MediaType.composer ||
-        MediaType.genre => () => SearchSortController.inst.searchMedia(e.toLibraryTab().textSearchController?.text ?? '', e),
+        MediaType.genre ||
+        MediaType.style => () => SearchSortController.inst.searchMedia(e.toLibraryTab().textSearchController?.text ?? '', e),
         MediaType.folder => FoldersController.tracksAndVideos.refreshAfterSorting,
         MediaType.folderMusic => FoldersController.tracks.refreshAfterSorting,
         MediaType.folderVideo => FoldersController.videos.refreshAfterSorting,
@@ -435,6 +449,7 @@ class Indexer<T extends Track> {
           MediaType.albumArtist => settings.artistSort.value.requiresHistory,
           MediaType.composer => settings.artistSort.value.requiresHistory,
           MediaType.genre => settings.genreSort.value.requiresHistory,
+          MediaType.style => settings.genreSort.value.requiresHistory,
           MediaType.playlist => settings.playlistSort.value.requiresHistory,
           MediaType.folder => settings.mediaItemsTrackSorting.value[MediaType.folder]?.firstOrNull?.requiresHistory ?? false,
           MediaType.folderMusic => settings.mediaItemsTrackSorting.value[MediaType.folderMusic]?.firstOrNull?.requiresHistory ?? false,
@@ -474,6 +489,9 @@ class Indexer<T extends Track> {
     for (var genre in trExt.genresList) {
       removeAndDeleteEmpty(mainMapGenres.value, genre);
     }
+    for (var style in trExt.stylesList) {
+      removeAndDeleteEmpty(mainMapStyles.value, style);
+    }
 
     tr is Video ? removeAndDeleteEmpty(mainMapFoldersVideos.value, tr.folder) : removeAndDeleteEmpty(mainMapFoldersTracks.value, tr.folder);
     removeAndDeleteEmpty(mainMapFoldersTracksAndVideos.value, tr.folder);
@@ -487,6 +505,7 @@ class Indexer<T extends Track> {
     final mainMapAlbumArtists = this.mainMapAlbumArtists.value;
     final mainMapComposer = this.mainMapComposer.value;
     final mainMapGenres = this.mainMapGenres.value;
+    final mainMapStyles = this.mainMapStyles.value;
     final mainMapFoldersTracksAndVideos = this.mainMapFoldersTracksAndVideos.value;
     final mainMapFoldersTracks = this.mainMapFoldersTracks.value;
     final mainMapFoldersVideos = this.mainMapFoldersVideos.value;
@@ -497,6 +516,7 @@ class Indexer<T extends Track> {
       MediaType.albumArtist: (map: mainMapAlbumArtists, newKeys: [], modifiedKeys: {}),
       MediaType.composer: (map: mainMapComposer, newKeys: [], modifiedKeys: {}),
       MediaType.genre: (map: mainMapGenres, newKeys: [], modifiedKeys: {}),
+      MediaType.style: (map: mainMapStyles, newKeys: [], modifiedKeys: {}),
       MediaType.folder: (map: mainMapFoldersTracksAndVideos, newKeys: [], modifiedKeys: {}),
       MediaType.folderMusic: (map: mainMapFoldersTracks, newKeys: [], modifiedKeys: {}),
       MediaType.folderVideo: (map: mainMapFoldersVideos, newKeys: [], modifiedKeys: {}),
@@ -574,6 +594,15 @@ class Indexer<T extends Track> {
       }
       for (final genOld in newOldGenres.$2) {
         removeCustom(MediaType.genre, mainMapGenres, genOld, oldTrack);
+      }
+
+      // -- Assigning Styles
+      final newOldStyles = oldtr == null ? (newtr.stylesList, const []) : differenceLists(newtr.stylesList, oldtr.stylesList);
+      for (final styNew in newOldStyles.$1) {
+        addCustom(MediaType.style, mainMapStyles, null, styNew, newTrack);
+      }
+      for (final styOld in newOldStyles.$2) {
+        removeCustom(MediaType.style, mainMapStyles, styOld, oldTrack);
       }
 
       // -- Assigning Folders
@@ -718,6 +747,8 @@ class Indexer<T extends Track> {
         albumArtist: UnknownTags.ALBUMARTIST,
         originalGenre: UnknownTags.GENRE,
         genresList: [UnknownTags.GENRE],
+        originalStyle: UnknownTags.STYLE,
+        stylesList: [UnknownTags.STYLE],
         composer: UnknownTags.COMPOSER,
         originalMood: UnknownTags.MOOD,
         moodList: [UnknownTags.MOOD],
@@ -788,6 +819,12 @@ class Indexer<T extends Track> {
           config: splittersConfigs.genresConfig,
         );
 
+        // -- Split Styles
+        final styles = splitStyle(
+          tags.style,
+          config: splittersConfigs.genresConfig,
+        );
+
         // -- Split Moods
         final moods = splitGeneral(
           tags.mood,
@@ -816,6 +853,8 @@ class Indexer<T extends Track> {
           albumArtist: doMagic(tags.albumArtist),
           originalGenre: doMagic(tags.genre),
           genresList: genres,
+          originalStyle: doMagic(tags.style),
+          stylesList: styles,
           originalMood: doMagic(tags.mood),
           moodList: moods,
           composer: doMagic(tags.composer),
@@ -1894,6 +1933,16 @@ class Indexer<T extends Track> {
     );
   }
 
+  static List<String> splitStyle(
+    String? originalStyle, {
+    required GenresSplitConfig config,
+  }) {
+    return config.splitText(
+      originalStyle,
+      fallback: UnknownTags.STYLE,
+    );
+  }
+
   static List<String> splitGeneral(
     String? originalText, {
     required GeneralSplitConfig config,
@@ -2019,6 +2068,8 @@ class Indexer<T extends Track> {
         albumArtist: albumArtist ?? UnknownTags.ALBUMARTIST,
         originalGenre: e.genre ?? UnknownTags.GENRE,
         genresList: genres,
+        originalStyle: UnknownTags.STYLE,
+        stylesList: const [],
         originalMood: mood ?? '',
         moodList: moods,
         composer: e.composer ?? '',

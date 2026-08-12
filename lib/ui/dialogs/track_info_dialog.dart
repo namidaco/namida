@@ -368,6 +368,13 @@ Future<void> showTrackInfoDialog(
                                   icon: trackExt.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
                                 ),
 
+                              if (shouldShowTheField(trackExt.hasUnknownStyle))
+                                TrackInfoListTile(
+                                  title: trackExt.stylesList.length == 1 ? lang.style : lang.styles,
+                                  value: trackExt.hasUnknownStyle ? UnknownTags.STYLE : trackExt.stylesList.join(', '),
+                                  icon: Broken.brush_1,
+                                ),
+
                               if (shouldShowTheField(trackExt.hasUnknownMood))
                                 TrackInfoListTile(
                                   title: trackExt.moodList.length == 1 ? lang.mood : lang.moods,

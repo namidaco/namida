@@ -417,6 +417,7 @@ extension DisplayKeywords on int {
   String get displayAlbumKeyword => lang.countAlbums(count: this);
   String get displayArtistKeyword => lang.countArtists(count: this);
   String get displayGenreKeyword => lang.countGenres(count: this);
+  String get displayStyleKeyword => lang.countStyles(count: this);
   String get displayFilesKeyword => lang.countFiles(count: this);
   String get displayFolderKeyword => lang.countFolders(count: this);
   String get displayPlaylistKeyword => lang.countPlaylists(count: this);
@@ -548,7 +549,8 @@ extension TRACKPLAYMODE on TrackPlayMode {
                 (SearchSortController.inst.trackSearchTemp.value.isNotEmpty ? SearchSortController.inst.trackSearchTemp.value : SearchSortController.inst.trackSearchList.value),
           TrackPlayMode.trackAlbum => track.albumsIdentifiersModified.firstOrNull?.getAlbumTracks(),
           TrackPlayMode.trackArtist => track.artistsList.firstOrNull?.getArtistTracks(),
-          TrackPlayMode.trackGenre => track.artistsList.firstOrNull?.getGenresTracks(),
+          TrackPlayMode.trackGenre => track.genresList.firstOrNull?.getGenresTracks(),
+          TrackPlayMode.trackStyle => track.stylesList.firstOrNull?.getStylesTracks(),
         } ??
         [trackPre];
 

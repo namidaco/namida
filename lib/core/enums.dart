@@ -233,6 +233,7 @@ enum TrackTileItem {
   artists,
   albumArtist,
   genres,
+  styles,
   composer,
   trackNumber,
   discNumber,
@@ -271,6 +272,7 @@ enum TrackSearchFilter {
   artist,
   albumartist,
   genre,
+  style,
   composer,
   comment,
   description(canAffectPerformance: true),
@@ -312,6 +314,7 @@ enum TrackPlayMode {
   trackAlbum,
   trackArtist,
   trackGenre,
+  trackStyle,
   ;
 
   final bool shouldBeIndex0;
@@ -327,6 +330,7 @@ enum QueueSourceEnum {
   albumArtist(false, supportResuming: true),
   composer(false, supportResuming: true),
   genre(false, supportResuming: true),
+  style(false, supportResuming: true),
   playlist(true, supportResuming: true),
   folder(false),
   folderMusic(false),
@@ -416,6 +420,7 @@ class QueueSource extends QueueSourceBase<QueueSourceEnum> {
   static QueueSource albumArtist(String? name) => QueueSource._(QueueSourceEnum.albumArtist, title: name);
   static QueueSource composer(String? name) => QueueSource._(QueueSourceEnum.composer, title: name);
   static QueueSource genre(String? name) => QueueSource._(QueueSourceEnum.genre, title: name);
+  static QueueSource style(String? name) => QueueSource._(QueueSourceEnum.style, title: name);
   static QueueSource playlist(String? name) => QueueSource._(QueueSourceEnum.playlist, title: name);
   static QueueSource folder(String? name) => QueueSource._(QueueSourceEnum.folder, title: name);
   static QueueSource folderMusic(String? name) => QueueSource._(QueueSourceEnum.folderMusic, title: name);
@@ -565,6 +570,7 @@ enum TagField {
   albumArtist,
   composer,
   genre,
+  style,
   mood,
   year,
   trackNumber,
@@ -626,6 +632,7 @@ enum RouteType {
   SUBPAGE_albumArtistTracks,
   SUBPAGE_composerTracks,
   SUBPAGE_genreTracks,
+  SUBPAGE_styleTracks,
   SUBPAGE_playlistTracks,
   SUBPAGE_favPlaylistTracks,
   SUBPAGE_historyTracks,
@@ -672,6 +679,7 @@ enum MediaType {
   albumArtist,
   composer,
   genre,
+  style,
   playlist,
   mood,
   tag,

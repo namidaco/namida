@@ -132,6 +132,7 @@ class MIFormatTags {
   final String? minorVersion;
   final String? albumArtist;
   final String? genre;
+  final String? style;
   final String? country;
   final String? label;
   final String? comment;
@@ -169,6 +170,7 @@ class MIFormatTags {
     required this.minorVersion,
     required this.albumArtist,
     required this.genre,
+    this.style,
     required this.country,
     required this.label,
     required this.comment,
@@ -226,6 +228,7 @@ class MIFormatTags {
       minorVersion: map.getOrUpperCase("minor_version"),
       albumArtist: map.getOrUpperCase("album_artist") ?? map["Album Artist"],
       genre: map.getOrUpperCase("genre") ?? map["Genre"],
+      style: map.getOrUpperCase("style") ?? map["Style"],
       country: map.getOrUpperCase("country") ?? map["Country"],
       label: map.getOrLowerCase("LABEL") ?? map["Label"],
       comment: map.getOrUpperCase("comment") ?? map["Comment"],
@@ -265,6 +268,7 @@ class MIFormatTags {
     "minor_version": minorVersion,
     "album_artist": albumArtist,
     "genre": genre,
+    "style": style,
     "Country": country,
     "LABEL": label,
     "comment": comment,

@@ -233,7 +233,7 @@ class SortByMenuGenres with SortByMenuBase {
       child: ListTileWithCheckMark(
         borderRadius: 10.0,
         activeRx: settings.genreSortReversed,
-        onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, reverse: !settings.genreSortReversed.value),
+        onTap: () => SearchSortController.inst.sortMedia(settings.activeGenreType.value, reverse: !settings.genreSortReversed.value),
       ),
     ),
     ...GroupSortType.forGenres().map(

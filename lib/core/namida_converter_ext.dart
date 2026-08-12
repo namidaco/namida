@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:history_manager/history_manager.dart';
@@ -96,7 +95,7 @@ extension MediaTypeUtils on MediaType {
       MediaType.track => LibraryTab.tracks,
       MediaType.album => LibraryTab.albums,
       MediaType.artist || MediaType.albumArtist || MediaType.composer => LibraryTab.artists,
-      MediaType.genre => LibraryTab.genres,
+      MediaType.genre || MediaType.style => LibraryTab.genres,
       MediaType.folder => LibraryTab.folders,
       MediaType.folderMusic => LibraryTab.foldersMusic,
       MediaType.folderVideo => LibraryTab.foldersVideos,
@@ -293,6 +292,7 @@ extension FAudioModelExtensions on FAudioModel {
         artist: original.tags.artist ?? this.tags.artist,
         composer: original.tags.composer ?? this.tags.composer,
         genre: original.tags.genre ?? this.tags.genre,
+        style: original.tags.style ?? this.tags.style,
         trackNumber: original.tags.trackNumber ?? this.tags.trackNumber,
         trackTotal: original.tags.trackTotal ?? this.tags.trackTotal,
         discNumber: original.tags.discNumber ?? this.tags.discNumber,
@@ -357,6 +357,7 @@ extension MediaInfoToFAudioModel on MediaInfo {
         artist: info?.artist ?? audioStream?.tags?.artist,
         composer: info?.composer,
         genre: info?.genre,
+        style: info?.style,
         trackNumber: trackNumberTotal?.first ?? info?.track ?? audioStream?.tags?.track,
         trackTotal: info?.trackTotal ?? (trackNumberTotal?.length == 2 ? trackNumberTotal?.last : null),
         discNumber: discNumberTotal?.first ?? info?.disc,
@@ -488,6 +489,7 @@ extension FFMPEGTagFieldUtilsC on FFMPEGTagField {
     FFMPEGTagField.artist => lang.artist,
     FFMPEGTagField.albumArtist => lang.albumArtist,
     FFMPEGTagField.genre => lang.genre,
+    FFMPEGTagField.style => lang.style,
     FFMPEGTagField.mood => lang.mood,
     FFMPEGTagField.composer => lang.composer,
     FFMPEGTagField.comment => lang.comment,
@@ -519,6 +521,7 @@ extension FFMPEGTagFieldUtilsC on FFMPEGTagField {
     FFMPEGTagField.artist => Broken.microphone,
     FFMPEGTagField.albumArtist => Broken.user,
     FFMPEGTagField.genre => Broken.smileys,
+    FFMPEGTagField.style => Broken.brush_1,
     FFMPEGTagField.mood => Broken.happyemoji,
     FFMPEGTagField.composer => Broken.profile_2user,
     FFMPEGTagField.comment => Broken.text_block,
@@ -1209,6 +1212,7 @@ extension RouteUtils on NamidaRoute {
       RouteType.SUBPAGE_albumArtistTracks => QueueSource.albumArtist(name),
       RouteType.SUBPAGE_composerTracks => QueueSource.composer(name),
       RouteType.SUBPAGE_genreTracks => QueueSource.genre(name),
+      RouteType.SUBPAGE_styleTracks => QueueSource.style(name),
       RouteType.SUBPAGE_queueTracks => QueueSource.queuePageByName(name),
       RouteType.SUBPAGE_playlistTracks => QueueSource.playlist(name),
       RouteType.SUBPAGE_favPlaylistTracks => QueueSource.favourites,
@@ -1244,6 +1248,7 @@ extension RouteUtils on NamidaRoute {
           RouteType.SUBPAGE_albumArtistTracks => name?.getAlbumArtistTracks(),
           RouteType.SUBPAGE_composerTracks => name?.getComposerTracks(),
           RouteType.SUBPAGE_genreTracks => name?.getGenresTracks(),
+          RouteType.SUBPAGE_styleTracks => name?.getStylesTracks(),
           RouteType.SUBPAGE_moodsTracks => Indexer.inst.getTracksForMood(name),
           RouteType.SUBPAGE_tagsTracks => Indexer.inst.getTracksForTag(name),
           RouteType.SUBPAGE_ratingTracks => Indexer.inst.getTracksForRating(name),
@@ -1287,6 +1292,7 @@ extension RouteUtils on NamidaRoute {
           RouteType.SUBPAGE_albumArtistTracks => _registerAndReturn(name?.getAlbumArtistTracks(), () => Indexer.inst.mainMapAlbumArtists.valueR),
           RouteType.SUBPAGE_composerTracks => _registerAndReturn(name?.getComposerTracks(), () => Indexer.inst.mainMapComposer.valueR),
           RouteType.SUBPAGE_genreTracks => _registerAndReturn(name?.getGenresTracks(), () => Indexer.inst.mainMapGenres.valueR),
+          RouteType.SUBPAGE_styleTracks => _registerAndReturn(name?.getStylesTracks(), () => Indexer.inst.mainMapStyles.valueR),
 
           RouteType.SUBPAGE_moodsTracks => _registerAndReturn(
             Indexer.inst.getTracksForMood(name),
@@ -1437,6 +1443,7 @@ extension RouteUtils on NamidaRoute {
         route == RouteType.SUBPAGE_albumArtistTracks ||
         route == RouteType.SUBPAGE_composerTracks ||
         route == RouteType.SUBPAGE_genreTracks ||
+        route == RouteType.SUBPAGE_styleTracks ||
         route == RouteType.SUBPAGE_moodsTracks ||
         route == RouteType.SUBPAGE_tagsTracks ||
         route == RouteType.SUBPAGE_ratingTracks ||
@@ -1590,7 +1597,10 @@ extension RouteUtils on NamidaRoute {
               NamidaDialogs.inst.showArtistDialog(name, MediaType.composer);
               break;
             case RouteType.SUBPAGE_genreTracks:
-              NamidaDialogs.inst.showGenreDialog(name);
+              NamidaDialogs.inst.showGenreDialog(name, MediaType.genre);
+              break;
+            case RouteType.SUBPAGE_styleTracks:
+              NamidaDialogs.inst.showGenreDialog(name, MediaType.style);
               break;
             case RouteType.SUBPAGE_moodsTracks:
               NamidaDialogs.inst.showMoodDialog(name, tracksListInside().whereType<Track>().toList());
@@ -1669,6 +1679,11 @@ extension TracksFromMaps on String {
   List<Track> getAlbumArtistTracks() => Indexer.inst.mainMapAlbumArtists.value[this] ?? [];
   List<Track> getComposerTracks() => Indexer.inst.mainMapComposer.value[this] ?? [];
   List<Track> getGenresTracks() => Indexer.inst.mainMapGenres.value[this] ?? [];
+  List<Track> getStylesTracks() => Indexer.inst.mainMapStyles.value[this] ?? [];
+
+  List<Track> getGenresTracksFor(MediaType type) {
+    return Indexer.inst.getGenreMapFor(type).value[this] ?? [];
+  }
 
   Queue? getQueue() => QueueController.inst.queuesMap.value[int.tryParse(this)];
 }
@@ -1837,6 +1852,7 @@ extension MediaTypeL10n on MediaType {
     MediaType.albumArtist => lang.albumArtists,
     MediaType.composer => lang.composer,
     MediaType.genre => lang.genres,
+    MediaType.style => lang.styles,
     MediaType.playlist => lang.playlists,
     MediaType.folder => lang.folders,
     MediaType.mood => lang.moods,
@@ -2025,6 +2041,7 @@ extension TrackTileItemL10n on TrackTileItem {
     TrackTileItem.album => lang.album,
     TrackTileItem.albumArtist => lang.albumArtist,
     TrackTileItem.genres => lang.genres,
+    TrackTileItem.styles => lang.styles,
     TrackTileItem.composer => lang.composer,
     TrackTileItem.year => lang.year,
     TrackTileItem.bitrate => lang.bitrate,
@@ -2062,6 +2079,7 @@ extension TrackTileItemL10n on TrackTileItem {
     TrackTileItem.album => Broken.music_dashboard,
     TrackTileItem.albumArtist => Broken.user,
     TrackTileItem.genres => Broken.smileys,
+    TrackTileItem.styles => Broken.brush_1,
     TrackTileItem.composer => Broken.profile_2user,
     TrackTileItem.year => Broken.calendar,
     TrackTileItem.bitrate => Broken.voice_cricle,
@@ -2102,6 +2120,7 @@ extension QueueSourceL10n on QueueSourceEnum {
     QueueSourceEnum.albumArtist => lang.albumArtist,
     QueueSourceEnum.composer => lang.composer,
     QueueSourceEnum.genre => lang.genre,
+    QueueSourceEnum.style => lang.style,
     QueueSourceEnum.playlist => lang.playlist,
     QueueSourceEnum.favourites => lang.favourites,
     QueueSourceEnum.history => lang.history,
@@ -2156,6 +2175,7 @@ extension TagFieldL10n on TagField {
     TagField.artist => lang.artist,
     TagField.albumArtist => lang.albumArtist,
     TagField.genre => lang.genre,
+    TagField.style => lang.style,
     TagField.mood => lang.mood,
     TagField.composer => lang.composer,
     TagField.comment => lang.comment,
@@ -2187,6 +2207,7 @@ extension TagFieldL10n on TagField {
     TagField.artist => Broken.microphone,
     TagField.albumArtist => Broken.user,
     TagField.genre => Broken.smileys,
+    TagField.style => Broken.brush_1,
     TagField.mood => Broken.happyemoji,
     TagField.composer => Broken.profile_2user,
     TagField.comment => Broken.text_block,
@@ -2259,6 +2280,7 @@ extension TrackPlayModeL10n on TrackPlayMode {
     TrackPlayMode.trackAlbum => lang.trackPlayModeTrackAlbum,
     TrackPlayMode.trackArtist => lang.trackPlayModeTrackArtist,
     TrackPlayMode.trackGenre => lang.trackPlayModeTrackGenre,
+    TrackPlayMode.trackStyle => lang.trackPlayModeTrackStyle,
   };
 
   IconData toIcon() => switch (this) {
@@ -2267,6 +2289,7 @@ extension TrackPlayModeL10n on TrackPlayMode {
     TrackPlayMode.trackAlbum => Broken.music_dashboard,
     TrackPlayMode.trackArtist => Broken.profile_2user,
     TrackPlayMode.trackGenre => Broken.smileys,
+    TrackPlayMode.trackStyle => Broken.brush_1,
   };
 }
 
@@ -2440,6 +2463,7 @@ extension TrackSearchFilterL10n on TrackSearchFilter {
     TrackSearchFilter.artist => lang.artist,
     TrackSearchFilter.albumartist => lang.albumArtist,
     TrackSearchFilter.genre => lang.genre,
+    TrackSearchFilter.style => lang.style,
     TrackSearchFilter.composer => lang.composer,
     TrackSearchFilter.comment => lang.comment,
     TrackSearchFilter.description => lang.description,

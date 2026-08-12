@@ -111,10 +111,11 @@ class NamidaOnTaps {
     ).navigate();
   }
 
-  Future<void> onGenreTap(String name) async {
+  Future<void> onGenreTap(String name, [MediaType type = MediaType.genre]) async {
     GenreTracksPage(
       name: name,
-      tracks: name.getGenresTracks(),
+      tracks: name.getGenresTracksFor(type),
+      type: type,
     ).navigate();
   }
 
@@ -266,6 +267,7 @@ class NamidaOnTaps {
       MediaType.album: [SortType.trackNo, SortType.year, SortType.title],
       MediaType.artist: [SortType.year, SortType.title],
       MediaType.genre: [SortType.year, SortType.title],
+      MediaType.style: [SortType.year, SortType.title],
       MediaType.folder: [SortType.filename],
       MediaType.folderMusic: [SortType.filename],
       MediaType.folderVideo: [SortType.filename],

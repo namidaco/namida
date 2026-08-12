@@ -160,6 +160,8 @@ class _JellyfinServer extends MusicWebServer {
       albumArtist: albumArtist,
       originalGenre: originalGenre,
       genresList: genresList,
+      originalStyle: '',
+      stylesList: const [],
       originalMood: '',
       moodList: [],
       composer: '',

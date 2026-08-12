@@ -305,6 +305,8 @@ class _SettingsController with SettingsFileWriter {
 
   final activeArtistType = MediaType.artist.obs;
 
+  final activeGenreType = MediaType.genre.obs;
+
   final activeSearchMediaTypes = <MediaType>[
     MediaType.track,
     MediaType.album,
@@ -323,6 +325,7 @@ class _SettingsController with SettingsFileWriter {
     MediaType.albumArtist: [SortType.year, SortType.title],
     MediaType.composer: [SortType.year, SortType.title],
     MediaType.genre: [SortType.year, SortType.title],
+    MediaType.style: [SortType.year, SortType.title],
     MediaType.folder: [SortType.filename],
     MediaType.folderMusic: [SortType.filename],
     MediaType.folderVideo: [SortType.filename],
@@ -333,6 +336,7 @@ class _SettingsController with SettingsFileWriter {
     MediaType.album: false,
     MediaType.artist: false,
     MediaType.genre: false,
+    MediaType.style: false,
     MediaType.folder: false,
     MediaType.folderMusic: false,
     MediaType.folderVideo: false,
@@ -486,6 +490,7 @@ class _SettingsController with SettingsFileWriter {
       if (homePageItemsFromStorage is List) homePageItems.value = homePageItemsFromStorage.map((e) => HomePageItems.values.getEnum(e)).toListy();
 
       activeArtistType.value = MediaType.values.getEnum(json['activeArtistType']) ?? activeArtistType.value;
+      activeGenreType.value = MediaType.values.getEnum(json['activeGenreType']) ?? activeGenreType.value;
 
       final activeSearchMediaTypesFromStorage = json['activeSearchMediaTypes'];
       if (activeSearchMediaTypesFromStorage is List) activeSearchMediaTypes.value = activeSearchMediaTypesFromStorage.map((e) => MediaType.values.getEnum(e)).toListy();
@@ -784,6 +789,7 @@ class _SettingsController with SettingsFileWriter {
     'libraryTabs': libraryTabs.value.map((element) => element.name).toFixedList(),
     'homePageItems': homePageItems.value.map((element) => element.name).toFixedList(),
     'activeArtistType': activeArtistType.value.name,
+    'activeGenreType': activeGenreType.value.name,
     'activeSearchMediaTypes': activeSearchMediaTypes.value.map((element) => element.name).toFixedList(),
     'albumIdentifiers': albumIdentifiers.value.map((element) => element.name).toFixedList(),
     'borderRadiusMultiplier': borderRadiusMultiplier.value,
@@ -967,6 +973,7 @@ class _SettingsController with SettingsFileWriter {
     List<LibraryTab>? libraryTabs,
     List<HomePageItems>? homePageItems,
     MediaType? activeArtistType,
+    MediaType? activeGenreType,
     List<MediaType>? activeSearchMediaTypes,
     List<AlbumIdentifier>? albumIdentifiers,
     double? borderRadiusMultiplier,
@@ -1141,6 +1148,7 @@ class _SettingsController with SettingsFileWriter {
       }
     }
     if (activeArtistType != null) this.activeArtistType.value = activeArtistType;
+    if (activeGenreType != null) this.activeGenreType.value = activeGenreType;
     if (activeSearchMediaTypes != null) {
       for (var t in activeSearchMediaTypes) {
         if (!this.activeSearchMediaTypes.contains(t)) {

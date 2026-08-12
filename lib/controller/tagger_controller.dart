@@ -145,6 +145,7 @@ class NamidaTaggerController {
             albumArtist: editedTags[TagField.albumArtist],
             composer: editedTags[TagField.composer],
             genre: editedTags[TagField.genre],
+            style: editedTags[TagField.style],
             mood: editedTags[TagField.mood],
             trackNumber: editedTags[TagField.trackNumber],
             discNumber: editedTags[TagField.discNumber],

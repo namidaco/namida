@@ -104,15 +104,15 @@ class NamidaDialogs {
     );
   }
 
-  Future<void> showGenreDialog(String name) async {
-    final tracks = name.getGenresTracks();
+  Future<void> showGenreDialog(String name, [MediaType type = MediaType.genre]) async {
+    final tracks = name.getGenresTracksFor(type);
     await showGeneralPopupDialog(
       tracks,
       name,
       [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
-      QueueSource.genre(name),
+      type == MediaType.style ? QueueSource.style(name) : QueueSource.genre(name),
       extractColor: false,
-      heroTag: 'genre_$name',
+      heroTag: type == MediaType.style ? 'style_$name' : 'genre_$name',
       forceSquared: true,
     );
   }

@@ -48,6 +48,7 @@ class TracksSearchWrapper {
               'album': e.originalAlbum,
               'albumArtist': e.albumArtist,
               'genre': e.originalGenre,
+              'style': e.originalStyle,
               'composer': e.composer,
               'year': e.year,
               'comment': e.comment,
@@ -85,6 +86,7 @@ class TracksSearchWrapper {
     final salbumartist = tsf.contains(TrackSearchFilter.albumartist);
     final sartist = tsf.contains(TrackSearchFilter.artist);
     final sgenre = tsf.contains(TrackSearchFilter.genre);
+    final sstyle = tsf.contains(TrackSearchFilter.style);
     final scomposer = tsf.contains(TrackSearchFilter.composer);
     final scomment = tsf.contains(TrackSearchFilter.comment);
     final sdescription = tsf.contains(TrackSearchFilter.description);
@@ -153,6 +155,16 @@ class TracksSearchWrapper {
               ? _mapListCleanedAndCleanedMinor(
                   Indexer.splitGenre(
                     trMap['genre'],
+                    config: splitConfig.genresConfig,
+                  ),
+                  textCleanedForSearch,
+                  textCleanedMinorForSearch,
+                )
+              : null,
+          splitStyle: sstyle
+              ? _mapListCleanedAndCleanedMinor(
+                  Indexer.splitStyle(
+                    trMap['style'],
                     config: splitConfig.genresConfig,
                   ),
                   textCleanedForSearch,
@@ -432,6 +444,7 @@ class _CustomTrackExtended {
   final _Property? splitAlbumArtist;
   final _Property? splitArtist;
   final _Property? splitGenre;
+  final _Property? splitStyle;
   final _Property? splitComposer;
   final _Property? splitComment;
   final _PropertySimple? description;
@@ -451,6 +464,7 @@ class _CustomTrackExtended {
     required this.splitAlbumArtist,
     required this.splitArtist,
     required this.splitGenre,
+    required this.splitStyle,
     required this.splitComposer,
     required this.splitComment,
     required this.description,
@@ -601,6 +615,7 @@ class _ScoreCalculator {
     if (scorePropertyAndIsEnough(trExt.splitFolder)) return score;
     if (scorePropertyAndIsEnough(trExt.splitAlbumArtist)) return score;
     if (scorePropertyAndIsEnough(trExt.splitGenre)) return score;
+    if (scorePropertyAndIsEnough(trExt.splitStyle)) return score;
     if (scorePropertyAndIsEnough(trExt.splitComposer)) return score;
     if (scorePropertyAndIsEnough(trExt.splitComment)) return score;
     if (scorePropertySimpleAndIsEnough(trExt.description)) return score;

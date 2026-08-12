@@ -217,6 +217,7 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
       artist: ffmpegTags[FFMPEGTagField.artist.tagKey],
       composer: ffmpegTags[FFMPEGTagField.composer.tagKey],
       genre: ffmpegTags[FFMPEGTagField.genre.tagKey],
+      style: ffmpegTags[FFMPEGTagField.style.tagKey],
       trackNumber: ffmpegTags[FFMPEGTagField.trackNumber.tagKey],
       trackTotal: ffmpegTags[FFMPEGTagField.trackTotal.tagKey],
       discNumber: ffmpegTags[FFMPEGTagField.discNumber.tagKey],

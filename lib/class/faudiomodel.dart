@@ -62,7 +62,6 @@ class FTags {
 
   String? get label => recordLabel;
   String? get date => year;
-  String? get style => null; // TODO: add style
 
   /// Used for bulk extractions.
   final String path;
@@ -73,6 +72,7 @@ class FTags {
   final String? artist;
   final String? composer;
   final String? genre;
+  final String? style;
   final String? trackNumber;
   final String? trackTotal;
   final String? discNumber;
@@ -110,6 +110,7 @@ class FTags {
     required this.artist,
     required this.composer,
     required this.genre,
+    required this.style,
     required this.trackNumber,
     required this.trackTotal,
     required this.discNumber,
@@ -147,6 +148,7 @@ class FTags {
     this.artist,
     this.composer,
     this.genre,
+    this.style,
     this.trackNumber,
     this.trackTotal,
     this.discNumber,
@@ -216,6 +218,7 @@ class FTags {
       artist: _listToString(map["artist"]) ?? map["ARTIST"],
       composer: _listToString(map["composer"]) ?? map["COMPOSER"],
       genre: _listToString(map["genre"]) ?? map["GENRE"],
+      style: _listToString(map["style"]) ?? map["STYLE"],
       trackNumber: map["trackNumber"] ?? map["TRACKNUMBER"],
       trackTotal: map["trackTotal"] ?? map["TRACKTOTAL"],
       discNumber: map["discNumber"] ?? map["DISCNUMBER"],
@@ -255,6 +258,7 @@ class FTags {
       "artist": artist,
       "composer": composer,
       "genre": genre,
+      "style": style,
       "comment": comment,
       "description": description,
       "synopsis": synopsis,

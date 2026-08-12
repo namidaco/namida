@@ -17,15 +17,17 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class GenreTracksPage extends StatefulWidget with NamidaRouteWidget {
   @override
-  RouteType get route => RouteType.SUBPAGE_genreTracks;
+  RouteType get route => type == MediaType.style ? RouteType.SUBPAGE_styleTracks : RouteType.SUBPAGE_genreTracks;
 
   @override
   final String name;
   final List<Track> tracks;
+  final MediaType type;
   const GenreTracksPage({
     super.key,
     required this.name,
     required this.tracks,
+    this.type = MediaType.genre,
   });
 
   @override
@@ -39,13 +41,15 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Ma
   }
 
   @override
-  RxBaseCore listChangesListenerRx() => Indexer.inst.mainMapGenres.rx;
+  RxBaseCore listChangesListenerRx() => Indexer.inst.getGenreMapFor(widget.type).rx;
 
   @override
   Widget build(BuildContext context) {
     final name = widget.name;
     final tracks = widget.tracks;
-    final queueSource = QueueSource.genre(name);
+    final isStyle = widget.type == MediaType.style;
+    final queueSource = isStyle ? QueueSource.style(name) : QueueSource.genre(name);
+    final heroTag = isStyle ? 'style_$name' : 'genre_$name';
     return AnimationLimiter(
       child: BackgroundWrapper(
         child: TrackTilePropertiesProvider(
@@ -54,7 +58,7 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Ma
           ),
           builder: (properties) => Obx(
             (context) {
-              Indexer.inst.mainMapGenres.valueR; // to update after sorting
+              Indexer.inst.getGenreMapFor(widget.type).valueR; // to update after sorting
               return NamidaListView(
                 stickyHeader: TracksSearchWidgetBox(
                   state: this,
@@ -62,7 +66,7 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Ma
                     tracks.displayTrackKeyword,
                     tracks.totalDurationFormatted,
                   ].join(' - '),
-                  type: MediaType.genre,
+                  type: widget.type,
                   pageTitle: name,
                 ),
                 infoBox: (maxWidth) => SubpageInfoContainer(
@@ -70,10 +74,10 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Ma
                   title: name,
                   source: queueSource,
                   subtitle: tracks.map((e) => e.originalArtist).takeUnique(10).join(', '),
-                  heroTag: 'genre_$name',
+                  heroTag: heroTag,
                   imageBuilder: (size) => MultiArtworkContainer(
                     size: size,
-                    heroTag: 'genre_$name',
+                    heroTag: heroTag,
                     tracks: tracks.toImageTracks(),
                   ),
                   tracksFn: () => tracks,
