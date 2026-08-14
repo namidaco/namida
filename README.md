@@ -465,10 +465,4 @@ Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LI
 
 <a href="https://trendshift.io/repositories/9581" target="_blank"><img src="https://trendshift.io/api/badge/repositories/9581" alt="namidaco%2Fnamida | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-<a href="https://star-history.com/#namidaco/namida&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=namidaco/namida&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=namidaco/namida&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=namidaco/namida&type=Date" />
- </picture>
-</a>
+<img src="some stuff/star_history.svg"></img>
