@@ -18,6 +18,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -239,6 +240,26 @@ class _AlbumsRow extends StatelessWidget {
           titleText: "$title: ${identifiers.length}",
           initiallyExpanded: identifiers.isNotEmpty && initiallyExpanded,
           onExpansionChanged: identifiers.isEmpty ? null : onExpansionChanged,
+          trailingBuilder: (iconWidget) => Row(
+            mainAxisSize: .min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 1.0),
+                child: NamidaIconButton(
+                  icon: Broken.export_2,
+                  iconSize: 18.0,
+                  disableColor: true,
+                  onPressed: () {
+                    final page = AlbumCustomResultsPage(
+                      albumIdentifiers: identifiers,
+                    );
+                    page.navigate();
+                  },
+                ),
+              ),
+              iconWidget,
+            ],
+          ),
           children: identifiers.isEmpty
               ? const []
               : [

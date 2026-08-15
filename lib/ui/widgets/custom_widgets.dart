@@ -1525,19 +1525,17 @@ class _NamidaExpansionTileState extends State<NamidaExpansionTile> {
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
-    final trailingIconWidget = IgnorePointer(
-      child: ObxO(
+    final trailingIconWidget = ObxO(
         rx: _rotationTurns,
         builder: (context, turns) => AnimatedRotation(
           turns: turns,
           duration: const Duration(milliseconds: 300),
           curve: Curves.fastEaseInToSlowEaseOut,
-          child: IconButton(
-            onPressed: () {},
-            icon: Icon(
+        child: Padding(
+          padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0, vertical: 4.0),
+          child: Icon(
               Broken.arrow_down_2,
               size: widget.trailingIconSize,
-            ),
           ),
         ),
       ),
@@ -4979,7 +4977,8 @@ class CustomAnimatedSwitcher extends StatelessWidget {
   final Duration? reverseDuration;
   final Curve switchInCurve;
   final Curve switchOutCurve;
-  final AnimatedSwitcherLayoutBuilder layoutBuilder;
+  final AlignmentGeometry alignment;
+  final AnimatedSwitcherLayoutBuilder? layoutBuilder;
   final Widget? child;
 
   const CustomAnimatedSwitcher({
@@ -4989,8 +4988,16 @@ class CustomAnimatedSwitcher extends StatelessWidget {
     this.reverseDuration,
     this.switchInCurve = Curves.linear,
     this.switchOutCurve = Curves.linear,
-    this.layoutBuilder = AnimatedSwitcher.defaultLayoutBuilder,
+    this.alignment = Alignment.center,
+    this.layoutBuilder,
   });
+
+  Widget defaultLayoutBuilder(Widget? currentChild, List<Widget> previousChildren) {
+    return Stack(
+      alignment: alignment,
+      children: <Widget>[...previousChildren, ?currentChild],
+    );
+  }
 
   static Widget defaultTransitionBuilder(Widget child, Animation<double> animation) {
     return FadeTransition(
@@ -5004,7 +5011,7 @@ class CustomAnimatedSwitcher extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
-      layoutBuilder: layoutBuilder,
+      layoutBuilder: layoutBuilder ?? defaultLayoutBuilder,
       transitionBuilder: CustomAnimatedSwitcher.defaultTransitionBuilder,
       child: child,
     );

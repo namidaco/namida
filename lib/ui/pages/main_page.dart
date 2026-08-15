@@ -764,6 +764,43 @@ class AlbumSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
   }
 }
 
+class AlbumCustomResultsPage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.SEARCH_albumCustomResults;
+
+  final List<AlbumIdentifierWrapper> albumIdentifiers;
+  const AlbumCustomResultsPage({super.key, required this.albumIdentifiers});
+
+  @override
+  State<AlbumCustomResultsPage> createState() => _AlbumCustomResultsPageState();
+}
+
+class _AlbumCustomResultsPageState extends State<AlbumCustomResultsPage> {
+  final _albumIdentifiersRx = RxList<AlbumIdentifierWrapper>(const []);
+
+  @override
+  void initState() {
+    _albumIdentifiersRx.value = widget.albumIdentifiers;
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _albumIdentifiersRx.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlbumsPage(
+      albumIdentifiers: _albumIdentifiersRx,
+      countPerRow: settings.mediaGridCounts.value.get(LibraryTab.albums),
+      enableGridIconButton: false,
+      enableHeader: false,
+    );
+  }
+}
+
 class ArtistSearchResultsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.SEARCH_artistResults;

@@ -22,6 +22,7 @@ class ExpandableBox extends StatefulWidget {
   final SortByMenu sortByMenuWidget;
   final CustomTextField textField;
   final bool disableSorting;
+  final bool enableSearch;
   final double? textFieldHeight;
   final ChangeGridCountWidget? gridWidget;
   final List<Widget>? leftWidgets;
@@ -39,6 +40,7 @@ class ExpandableBox extends StatefulWidget {
     required this.sortByMenuWidget,
     required this.textField,
     this.disableSorting = false,
+    this.enableSearch = true,
     this.textFieldHeight = 46.0,
     this.gridWidget,
     this.leftWidgets,
@@ -164,13 +166,14 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                                 const SizedBox(width: 4.0),
                                 if (!widget.disableSorting) widget.sortByMenuWidget,
                                 if (!widget.disableSorting) const SizedBox(width: 6.0),
-                                NamidaIconButton(
-                                  horizontalPadding: 6.0,
-                                  icon: Broken.filter_search,
-                                  onPressed: _onFilterIconTap,
-                                  onLongPress: widget.onFilterIconLongPress,
-                                  iconSize: 20.0,
-                                ),
+                                if (widget.enableSearch)
+                                  NamidaIconButton(
+                                    horizontalPadding: 6.0,
+                                    icon: Broken.filter_search,
+                                    onPressed: _onFilterIconTap,
+                                    onLongPress: widget.onFilterIconLongPress,
+                                    iconSize: 20.0,
+                                  ),
                                 const SizedBox(width: 6.0),
                               ],
                             ),
@@ -181,17 +184,18 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                   ),
                 ),
               ),
-              ObxO(
-                rx: _canShowSearchBoxRx,
-                builder: (context, canShowSearchBox) => AnimatedShow(
-                  duration: const Duration(milliseconds: 250),
-                  show: canShowSearchBox,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: textFieldRow,
+              if (widget.enableSearch)
+                ObxO(
+                  rx: _canShowSearchBoxRx,
+                  builder: (context, canShowSearchBox) => AnimatedShow(
+                    duration: const Duration(milliseconds: 250),
+                    show: canShowSearchBox,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: textFieldRow,
+                    ),
                   ),
                 ),
-              ),
             ],
           );
         },

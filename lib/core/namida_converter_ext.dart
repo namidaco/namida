@@ -1387,7 +1387,7 @@ extension RouteUtils on NamidaRoute {
         displaySettingSearch = true;
         finalWidget = getTextWidget(name ?? '');
         break;
-      case RouteType.SEARCH_albumResults:
+      case RouteType.SEARCH_albumResults || RouteType.SEARCH_albumCustomResults:
         finalWidget = getTextWidget(lang.albums);
         break;
       case RouteType.SEARCH_artistResults:
@@ -1404,6 +1404,7 @@ extension RouteUtils on NamidaRoute {
     }
 
     return CustomAnimatedSwitcher(
+      alignment: AlignmentDirectional.centerStart,
       duration: const Duration(milliseconds: 400),
       child:
           displaySettingSearch //

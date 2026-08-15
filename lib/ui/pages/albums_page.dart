@@ -31,6 +31,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
   final RxList<AlbumIdentifierWrapper>? albumIdentifiers;
   final CountPerRow countPerRow;
   final bool enableGridIconButton;
+  final bool enableHeader;
   final bool animateTiles;
   final bool enableHero;
 
@@ -39,6 +40,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
     this.albumIdentifiers,
     required this.countPerRow,
     this.enableGridIconButton = true,
+    this.enableHeader = true,
     this.animateTiles = true,
     this.enableHero = true,
   });
@@ -75,7 +77,8 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
 
                   return ExpandableBox(
                     enableHero: enableHero,
-                    gridWidget: enableGridIconButton
+                    enableSearch: enableHeader,
+                    gridWidget: enableGridIconButton && enableHeader
                         ? ChangeGridCountWidget(
                             tab: libraryTab,
                             forStaggered: settings.useAlbumStaggeredGridView.valueR,
@@ -85,6 +88,8 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                     leftText: '',
                     leftWidgets: [
                       NamidaPopupWrapper(
+                        openOnTap: enableHeader,
+                        openOnLongPress: enableHeader,
                         children: _getSinglesAndAlbumsToggles,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,

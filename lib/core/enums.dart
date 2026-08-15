@@ -649,6 +649,7 @@ enum RouteType {
   // ----- Search Results -----
   SEARCH_albumResults,
   SEARCH_artistResults,
+  SEARCH_albumCustomResults,
 
   // ----- Youtube -----
   YOUTUBE_HOME_LOCAL,
