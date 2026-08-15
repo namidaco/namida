@@ -12,6 +12,7 @@ import 'package:youtipie/core/enum.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/search_box_manager.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -20,6 +21,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -45,6 +47,11 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   final RenderObjectWidget? Function(W list, YoutubeMainPageFetcherItemBuilder<T, W> itemBuilder, Widget dummyCard)? sliverListBuilder;
   final bool showRefreshInsteadOfRefreshing;
   final ValueKey? fetchTimeMapKey;
+
+  /// Provides search capability, a search box is shown when this is provided.
+  /// [sliverListBuilder] must be null.
+  final String? Function(T item)? searchTextResolver;
+  final String? searchHintText;
 
   final Widget? pageHeader;
   final Widget? headerTrailing;
@@ -76,6 +83,8 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
     this.sliverListBuilder,
     this.showRefreshInsteadOfRefreshing = false,
     this.fetchTimeMapKey,
+    this.searchTextResolver,
+    this.searchHintText,
     this.pageHeader,
     this.headerTrailing,
     this.onHeaderTap,
@@ -121,6 +130,8 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   final _refreshButtonShown = false.obs;
   final _currentFeed = Rxn<W>();
   Rxn<YoutiPieItemsSort>? _currentSort;
+
+  SearchBoxManager? _searchBoxManager;
 
   bool get _hasConnection => ConnectivityController.inst.hasConnection;
   void _showNetworkError() {
@@ -189,6 +200,9 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   void initState() {
     super.initState();
     if (widget.isSortable) _currentSort = Rxn<YoutiPieItemsSort>();
+    if (widget.searchTextResolver != null) {
+      _searchBoxManager = SearchBoxManager();
+    }
     widget.onInitState?.call(_currentFeed);
     YoutubeAccountController.current.addOnAccountChanged(_onAccChanged);
     if (widget.onListUpdated != null) _currentFeed.addListener(_onListUpdated);
@@ -206,6 +220,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     _currentFeed.close();
     _currentSort?.close();
     _lastFetchWasCached.close();
+    _searchBoxManager?.dispose();
     super.dispose();
   }
 
@@ -242,6 +257,43 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     }
   }
 
+  Widget _buildDefaultSliverList(W listItems) {
+    final searchBoxManager = _searchBoxManager;
+    if (searchBoxManager == null) return _buildDefaultSliverListRaw(listItems, listItems.items);
+    final searchTextResolver = widget.searchTextResolver;
+    if (searchTextResolver == null) return _buildDefaultSliverListRaw(listItems, listItems.items);
+    final searchQuery = searchBoxManager.searchQuery;
+    return ObxO(
+      rx: searchQuery,
+      builder: (context, query) {
+        List<T>? filteredItems;
+        if (query.isNotEmpty) {
+          filteredItems = searchBoxManager.filterPlaylistNamesWithResolver(listItems.items, query, searchTextResolver).toList();
+        }
+        return _buildDefaultSliverListRaw(listItems, filteredItems ?? listItems.items);
+      },
+    );
+  }
+
+  Widget _buildDefaultSliverListRaw(W listItems, List<T> items) {
+    return widget.itemExtent == null
+        ? SliverList.builder(
+            itemCount: items.length,
+            itemBuilder: (context, i) {
+              final item = items[i];
+              return widget.itemBuilder(item, i, listItems);
+            },
+          )
+        : SliverFixedExtentList.builder(
+            itemCount: items.length,
+            itemExtent: widget.itemExtent!,
+            itemBuilder: (context, i) {
+              final item = items[i];
+              return widget.itemBuilder(item, i, listItems);
+            },
+          );
+  }
+
   Future<bool> _fetchFeedNext() async {
     bool fetched = false;
     final feed = _currentFeed;
@@ -257,6 +309,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
+    final searchBoxManager = _searchBoxManager;
     Widget headerTitle = Text(
       widget.title,
       style: textTheme.displayLarge?.copyWith(fontSize: 28.0),
@@ -355,11 +408,18 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
             const SizedBox(width: 12.0),
             refreshIconWidget,
             if (widget.headerTrailing != null) widget.headerTrailing!,
+            if (searchBoxManager != null)
+              NamidaIconButton(
+                horizontalPadding: 5.0,
+                icon: Broken.filter_search,
+                iconSize: 22.0,
+                onPressed: searchBoxManager.toggleSearchBoxVisibility,
+              ),
             if (widget.onHeaderTap != null) const SizedBox(width: 12.0),
             if (widget.onHeaderTap != null) const Icon(Broken.arrow_right_3),
           ],
         );
-    const headerMaxHorizontalPadding = 24.0;
+    const headerMaxHorizontalPadding = 16.0;
     const headerMaxVerticalPadding = 16.0;
 
     if (widget.onHeaderTap != null) {
@@ -495,6 +555,41 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                                     SliverToBoxAdapter(
                                       child: header,
                                     ),
+                                  if (searchBoxManager != null && !widget.isHorizontal)
+                                    SliverToBoxAdapter(
+                                      child: ObxO(
+                                        rx: searchBoxManager.searchBoxVisible,
+                                        builder: (context, searchBoxVisible) => AnimatedShow(
+                                          show: searchBoxVisible,
+                                          duration: const Duration(milliseconds: 250),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                            child: Row(
+                                              children: [
+                                                const SizedBox(width: 12.0),
+                                                Expanded(
+                                                  child: SizedBox(
+                                                    height: 42.0,
+                                                    child: CustomTextField(
+                                                      focusNode: searchBoxManager.searchFocusNode,
+                                                      textFieldController: searchBoxManager.searchController,
+                                                      textFieldHintText: widget.searchHintText ?? '',
+                                                      onTextFieldValueChanged: searchBoxManager.updateSearchQuery,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6.0),
+                                                NamidaIconButton(
+                                                  onPressed: searchBoxManager.onSearchCloseButtonPressed,
+                                                  icon: Broken.close_circle,
+                                                ),
+                                                const SizedBox(width: 8.0),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   isLoadingCurrentFeed
                                       ? SliverToBoxAdapter(
                                           child: ShimmerWrapper(
@@ -514,23 +609,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                                         )
                                       : listItems == null
                                       ? const SliverToBoxAdapter()
-                                      : widget.sliverListBuilder?.call(listItems, widget.itemBuilder, widget.dummyCard) ??
-                                            (widget.itemExtent == null
-                                                ? SliverList.builder(
-                                                    itemCount: listItems.items.length,
-                                                    itemBuilder: (context, i) {
-                                                      final item = listItems.items[i];
-                                                      return widget.itemBuilder(item, i, listItems);
-                                                    },
-                                                  )
-                                                : SliverFixedExtentList.builder(
-                                                    itemCount: listItems.items.length,
-                                                    itemExtent: widget.itemExtent!,
-                                                    itemBuilder: (context, i) {
-                                                      final item = listItems.items[i];
-                                                      return widget.itemBuilder(item, i, listItems);
-                                                    },
-                                                  )),
+                                      : widget.sliverListBuilder?.call(listItems, widget.itemBuilder, widget.dummyCard) ?? _buildDefaultSliverList(listItems),
                                   SliverToBoxAdapter(
                                     child: ObxO(
                                       rx: _isLoadingNext,
