@@ -5,6 +5,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/pages/home_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/pages/youtube_feed_page.dart';
 import 'package:namida/youtube/pages/youtube_notifications_page.dart';
@@ -43,13 +44,35 @@ class YouTubeHomeView extends StatelessWidget with NamidaRouteWidget {
           settings.extra.save(ytInitialHomePage: YTHomePages.values[index]);
         },
         children: const [
-          YoutubeHomeFeedPage(),
+          _HomePage(),
           YoutubeNotificationsPage(),
           _ChannelsPage(),
           _PlaylistsPage(),
           YTDownloadsPage(),
         ],
       ),
+    );
+  }
+}
+
+class _HomePage extends StatelessWidget {
+  const _HomePage();
+
+  @override
+  Widget build(BuildContext context) {
+    return SplitPage(
+      initialIndex: settings.extra.ytHomePageIndex ?? settings.extra.getPreferredTabIndexIfLoggedInYT(),
+      onIndexChanged: (index) => settings.extra.save(ytHomePageIndex: index),
+      pages: [
+        SplitPageInfo(
+          title: lang.local,
+          page: const YTHomePageLocal(),
+        ),
+        SplitPageInfo(
+          title: lang.youtube,
+          page: const YoutubeHomeFeedPage(),
+        ),
+      ],
     );
   }
 }

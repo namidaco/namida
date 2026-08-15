@@ -30,6 +30,7 @@ class _ExtraSettings with SettingsFileWriter {
   int? ytAddToPlaylistsTabIndex;
   int? ytPlaylistsPageIndex;
   int? ytChannelsPageIndex;
+  int? ytHomePageIndex;
   int? audioConfigPageIndex;
 
   bool windowMaximized = false;
@@ -54,6 +55,7 @@ class _ExtraSettings with SettingsFileWriter {
     int? ytAddToPlaylistsTabIndex,
     int? ytPlaylistsPageIndex,
     int? ytChannelsPageIndex,
+    int? ytHomePageIndex,
     int? audioConfigPageIndex,
     Rect? windowBounds,
     bool? windowMaximized,
@@ -76,6 +78,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (ytAddToPlaylistsTabIndex != null) this.ytAddToPlaylistsTabIndex = ytAddToPlaylistsTabIndex;
     if (ytPlaylistsPageIndex != null) this.ytPlaylistsPageIndex = ytPlaylistsPageIndex;
     if (ytChannelsPageIndex != null) this.ytChannelsPageIndex = ytChannelsPageIndex;
+    if (ytHomePageIndex != null) this.ytHomePageIndex = ytHomePageIndex;
     if (audioConfigPageIndex != null) this.audioConfigPageIndex = audioConfigPageIndex;
     if (windowBounds != null) this.windowBounds = windowBounds;
     if (windowMaximized != null) this.windowMaximized = windowMaximized;
@@ -115,6 +118,7 @@ class _ExtraSettings with SettingsFileWriter {
       ytAddToPlaylistsTabIndex = json['ytAddToPlaylistsTabIndex'] ?? ytAddToPlaylistsTabIndex;
       ytPlaylistsPageIndex = json['ytPlaylistsPageIndex'] ?? ytPlaylistsPageIndex;
       ytChannelsPageIndex = json['ytChannelsPageIndex'] ?? ytChannelsPageIndex;
+      ytHomePageIndex = json['ytHomePageIndex'] ?? ytHomePageIndex;
       audioConfigPageIndex = json['audioConfigPageIndex'] ?? audioConfigPageIndex;
 
       final windowBoundsJson = json['windowBounds'];
@@ -153,6 +157,7 @@ class _ExtraSettings with SettingsFileWriter {
     'ytAddToPlaylistsTabIndex': ?ytAddToPlaylistsTabIndex,
     'ytPlaylistsPageIndex': ?ytPlaylistsPageIndex,
     'ytChannelsPageIndex': ?ytChannelsPageIndex,
+    'ytHomePageIndex': ?ytHomePageIndex,
     'audioConfigPageIndex': ?audioConfigPageIndex,
     if (windowBounds != null)
       'windowBounds': {

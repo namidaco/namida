@@ -15,6 +15,13 @@ class _YoutubeSettings with SettingsFileWriter {
 
   final ytVisibleShorts = <YTVisibleShortPlaces, bool>{}.obs;
   final ytVisibleMixes = <YTVisibleMixesPlaces, bool>{}.obs;
+
+  final ytHomePageItems = <HomePageItems>[
+    HomePageItems.mixes,
+    HomePageItems.recentListens,
+    HomePageItems.topRecentListens,
+    HomePageItems.lostMemories,
+  ].obso;
   final showChannelWatermarkFullscreen = true.obs;
   final showVideoEndcards = true.obs;
   final autoStartRadio = false.obs;
@@ -60,6 +67,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final ryd = ReturnYoutubeDislikeSettings().obs;
 
   void save({
+    List<HomePageItems>? ytHomePageItems,
     bool? showChannelWatermarkFullscreen,
     bool? showVideoEndcards,
     bool? autoStartRadio,
@@ -99,6 +107,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? enableGifThumbnails,
     int? maxPageCacheDurationMin,
   }) {
+    if (ytHomePageItems != null) this.ytHomePageItems.value = ytHomePageItems;
     if (showChannelWatermarkFullscreen != null) this.showChannelWatermarkFullscreen.value = showChannelWatermarkFullscreen;
     if (showVideoEndcards != null) this.showVideoEndcards.value = showVideoEndcards;
     if (autoStartRadio != null) this.autoStartRadio.value = autoStartRadio;
@@ -203,6 +212,9 @@ class _YoutubeSettings with SettingsFileWriter {
       tapToSeek.value = YTSeekActionMode.values.getEnum(json['tapToSeek']) ?? tapToSeek.value;
       dragToSeek.value = YTSeekActionMode.values.getEnum(json['dragToSeek']) ?? dragToSeek.value;
 
+      final ytHomePageItemsFromStorage = json['ytHomePageItems'];
+      if (ytHomePageItemsFromStorage is List) ytHomePageItems.value = ytHomePageItemsFromStorage.map((e) => HomePageItems.values.getEnum(e)).toListy();
+
       ytVisibleShorts.value = (json['ytVisibleShorts'] as Map?)?.map((key, value) => MapEntry(YTVisibleShortPlaces.values.getEnum(key)!, value)) ?? ytVisibleShorts.value;
       ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? ytVisibleMixes.value;
       downloadFilenameBuilder.value = json['downloadFilenameBuilder'] ?? downloadFilenameBuilder.value;
@@ -258,6 +270,7 @@ class _YoutubeSettings with SettingsFileWriter {
     'onYoutubeLinkOpen': onYoutubeLinkOpen.value.name,
     'tapToSeek': tapToSeek.value.name,
     'dragToSeek': dragToSeek.value.name,
+    'ytHomePageItems': ytHomePageItems.value.map((element) => element.name).toFixedList(),
     'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.name, value)),
     'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.name, value)),
     'downloadFilenameBuilder': downloadFilenameBuilder.value,

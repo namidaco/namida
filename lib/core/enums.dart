@@ -372,6 +372,7 @@ enum QueueSourceYoutubeIDEnum {
   ytFavourites(false, supportResuming: true),
   ytExternalLink(true),
   ytHomeFeed(false),
+  ytHomePageItem(false),
   ytNotificationsHosted(false),
   ytRelatedVideos(false),
   ytHistoryFilteredHosted(false),
@@ -507,6 +508,7 @@ class QueueSourceYoutubeID extends QueueSourceBase<QueueSourceYoutubeIDEnum> {
   static const ytFavourites = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytFavourites);
   static const ytExternalLink = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytExternalLink);
   static const ytHomeFeed = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHomeFeed);
+  static const ytHomePageItem = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHomePageItem);
   static const ytNotificationsHosted = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytNotificationsHosted);
   static const ytRelatedVideos = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytRelatedVideos);
   static const ytHistoryFilteredHosted = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHistoryFilteredHosted);
@@ -649,6 +651,7 @@ enum RouteType {
   SEARCH_artistResults,
 
   // ----- Youtube -----
+  YOUTUBE_HOME_LOCAL,
   YOUTUBE_HOME,
   YOUTUBE_PLAYLISTS,
   YOUTUBE_PLAYLIST_SUBPAGE,
