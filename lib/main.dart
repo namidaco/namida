@@ -680,8 +680,18 @@ class _NamidaState extends State<Namida> {
               if (shouldAddEdgeAbsorbers)
                 SizedBox(
                   height: 18.0,
-                  width: context.height,
+                  width: context.width,
                   child: VerticalDragDetector(
+                    onUpdate: (_) {},
+                  ),
+                ),
+
+              // prevent accidental miniplayer/queue swipe horizontal when performing home scween horizontal gesture
+              if (shouldAddEdgeAbsorbers)
+                SizedBox(
+                  height: 18.0,
+                  width: context.width,
+                  child: HorizontalDragDetector(
                     onUpdate: (_) {},
                   ),
                 ),
