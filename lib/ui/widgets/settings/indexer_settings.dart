@@ -2031,23 +2031,37 @@ class _ExtractingPathsWidget extends StatefulWidget {
 }
 
 class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
+  final _scrollController = ScrollController();
   bool _isPathsExpanded = false;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
     return NamidaInkWell(
       onTap: () => setState(() => _isPathsExpanded = !_isPathsExpanded),
-      child: Obx(
-        (context) {
-          final paths = NamidaTaggerController.inst.currentPathsBeingExtracted.values;
+      child: ObxO(
+        rx: NamidaTaggerController.inst.currentPathsBeingExtracted,
+        builder: (context, pathsMap) {
+          final paths = pathsMap.values.toFixedList();
           return paths.isEmpty
               ? const SizedBox()
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: paths
-                      .map(
-                        (e) => Padding(
+              : SizedBox(
+                  height: 128.0,
+                  child: NamidaScrollbar(
+                    showOnStart: true,
+                    controller: _scrollController,
+                    child: SuperSmoothListView.builder(
+                      controller: _scrollController,
+                      itemCount: paths.length,
+                      itemBuilder: (context, index) {
+                        final e = paths[index];
+                        return Padding(
                           padding: widget.itemPadding,
                           child: Text(
                             e,
@@ -2055,9 +2069,10 @@ class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
                             overflow: _isPathsExpanded ? null : TextOverflow.ellipsis,
                             style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
                           ),
-                        ),
-                      )
-                      .toFixedList(),
+                        );
+                      },
+                    ),
+                  ),
                 );
         },
       ),

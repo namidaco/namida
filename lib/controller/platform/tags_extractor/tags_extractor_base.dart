@@ -16,6 +16,7 @@ abstract class TagsExtractor {
   }
 
   final _streamControllers = <int, StreamController<FAudioModel>>{};
+  final currentPathsBeingExtracted = <int, String>{}.obsThrottle(const Duration(milliseconds: 20));
 
   static final _safDeniedVolumes = <String>{};
   static void resetSafDeniedVolumes() => _safDeniedVolumes.clear();

@@ -25,7 +25,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
     required bool isNetwork,
     String? networkId,
   }) async {
-    final ffmpegInfo = await executer?.extractMetadata(trackPath) ?? await ffmpegController.ffmpegExtractMetadata(trackPath);
+    final ffmpegInfo = executer != null ? await executer.extractMetadata(trackPath) : await ffmpegController.ffmpegExtractMetadata(trackPath);
 
     if (ffmpegInfo != null && isVideo) {
       try {

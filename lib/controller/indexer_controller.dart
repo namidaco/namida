@@ -1326,11 +1326,12 @@ class Indexer<T extends Track> {
 
       final finalAudios = prevDuplicated ? audioFilesWithoutDuplicates : audioFiles.toList();
       int listParts;
+      const int listPartsMultiplier = 30; // more is okay with taglib, most work is io
       if (Platform.isAndroid || Platform.isIOS) {
-        listParts = (Platform.numberOfProcessors * 0.5).round().withMinimum(2);
+        listParts = (Platform.numberOfProcessors * 0.5 * listPartsMultiplier).round().withMinimum(2);
       } else {
         // lil bit more luxurious on desktop
-        listParts = (Platform.numberOfProcessors * 0.8).round().withMinimum(2);
+        listParts = (Platform.numberOfProcessors * 0.8 * listPartsMultiplier).round().withMinimum(2);
       }
       final audioFilesParts = finalAudios.split(listParts);
       final audioFilesCompleters = List.generate(audioFilesParts.length, (_) => Completer<void>());

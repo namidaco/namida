@@ -39,17 +39,17 @@ class _TagsExtractorTagLib extends TagsExtractor {
     required bool isNetwork,
     String? networkId,
   }) async {
-    final taglibInfo =
-        await executer?.read(
-          _TagLibIsolateRequestReadTags(
-            path: trackPath,
+    final taglibInfo = executer != null
+        ? await executer.read(
+            _TagLibIsolateRequestReadTags(
+              path: trackPath,
+              extractArtwork: extractArtwork,
+            ),
+          )
+        : await TagLibRes.readIsolate(
+            trackPath,
             extractArtwork: extractArtwork,
-          ),
-        ) ??
-        await TagLibRes.readIsolate(
-          trackPath,
-          extractArtwork: extractArtwork,
-        );
+          );
 
     if (taglibInfo != null && isVideo) {
       try {
@@ -60,8 +60,8 @@ class _TagsExtractorTagLib extends TagsExtractor {
 
     final taglibInfoProps = taglibInfo?.properties;
     FArtwork artwork = taglibInfoProps?.artwork ?? FArtwork();
-    if (extractArtwork && (artwork.file == null && artwork.bytes == null)) {
-      if (artworkDirectory != null) {
+    if (extractArtwork) {
+      if (artworkDirectory != null && artwork.file == null) {
         final filename = TagsExtractor.buildImageFilename(
           path: trackPath,
           identifiers: identifiers,
@@ -81,21 +81,35 @@ class _TagsExtractorTagLib extends TagsExtractor {
         );
 
         final possibleThumbFile = FileParts.join(artworkDirectory, filename);
-        artwork.file = possibleThumbFile;
 
-        // specified directory to save in, the file is expected to exist here.
-        File? artworkFile = artwork.file;
-        if (overrideArtwork || artworkFile == null || !await artworkFile.exists()) {
-          final File? thumbFile = await TagsExtractor.extractThumbnailCustom(
-            trackPath: trackPath,
-            filename: filename,
-            artworkDirectory: artworkDirectory,
-            isVideo: isVideo,
-            overrideOldArtwork: overrideArtwork,
-          );
-          artwork.file = thumbFile;
+        final artworkBytes = artwork.bytes;
+        if (artworkBytes != null && artworkBytes.isNotEmpty) {
+          // -- embedded artwork already extracted, save it to the artwork directory & return the file only.
+          try {
+            if (overrideArtwork || !await possibleThumbFile.exists()) {
+              await possibleThumbFile.writeAsBytes(artworkBytes);
+            }
+            artwork.file = possibleThumbFile;
+            artwork.bytes = null;
+          } catch (_) {
+            // -- keep bytes if saving failed
+          }
+        } else {
+          artwork.file = possibleThumbFile;
+
+          File? artworkFile = artwork.file;
+          if (overrideArtwork || artworkFile == null || !await artworkFile.exists()) {
+            final File? thumbFile = await TagsExtractor.extractThumbnailCustom(
+              trackPath: trackPath,
+              filename: filename,
+              artworkDirectory: artworkDirectory,
+              isVideo: isVideo,
+              overrideOldArtwork: overrideArtwork,
+            );
+            artwork.file = thumbFile;
+          }
         }
-      } else {
+      } else if (artworkDirectory == null && artwork.file == null && artwork.bytes == null) {
         // -- otherwise the artwork should be within info as bytes.
         Uint8List? artworkBytes = artwork.bytes;
         if (overrideArtwork || artworkBytes == null || artworkBytes.isEmpty) {
