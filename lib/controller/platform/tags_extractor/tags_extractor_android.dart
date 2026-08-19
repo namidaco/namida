@@ -312,45 +312,51 @@ class _TagsExtractorAndroid extends TagsExtractor {
   }
 
   @override
-  Future<bool> writeTags({
+  Future<String?> writeTags({
     required String path,
     required FTags newTags,
     required String? commentToInsert,
     required String? oldComment,
     required bool displayFFmpegFallbackWarning,
   }) async {
-    // -- 1. try tagger
-    String? error = await _writeTagsInternal(
+    return TagsExtractor.executeWriteWithSafFallback(
       path: path,
-      tags: newTags,
-    );
-
-    bool didUpdate = error == null || error == '';
-
-    if (!didUpdate) {
-      // -- 2. try with ffmpeg
-      final ffmpegTagsMap = commentToInsert != null && commentToInsert.isNotEmpty
-          ? <String, String?>{
-              FFMPEGTagField.comment.tagKey: oldComment == null || oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
-            }
-          : FFMPEGTagField.createTagsMapfromFTag(newTags);
-      didUpdate = await ffmpegController.ffmpegEditMetadata(
-        path: path,
-        tagsMap: ffmpegTagsMap,
-      );
-
-      final imageFile = newTags.artwork.file;
-      if (imageFile != null) {
-        await ffmpegController.editAudioThumbnail(audioPath: path, thumbnailPath: imageFile.path);
-      }
-      if (displayFFmpegFallbackWarning) {
-        snackyy(
-          title: lang.warning,
-          message: 'FFMPEG was used. Some tags might not have been updated',
-          isError: true,
+      operation: (effectivePath) async {
+        // -- 1. try tagger
+        String? error = await _writeTagsInternal(
+          path: effectivePath,
+          tags: newTags,
         );
-      }
-    }
-    return didUpdate;
+
+        bool didUpdate = error == null || error == '';
+
+        if (!didUpdate) {
+          // -- 2. try with ffmpeg
+          final ffmpegTagsMap = commentToInsert != null && commentToInsert.isNotEmpty
+              ? <String, String?>{
+                  FFMPEGTagField.comment.tagKey: oldComment == null || oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
+                }
+              : FFMPEGTagField.createTagsMapfromFTag(newTags);
+          didUpdate = await ffmpegController.ffmpegEditMetadata(
+            path: effectivePath,
+            tagsMap: ffmpegTagsMap,
+          );
+
+          final imageFile = newTags.artwork.file;
+          if (imageFile != null) {
+            await ffmpegController.editAudioThumbnail(audioPath: effectivePath, thumbnailPath: imageFile.path);
+          }
+          if (didUpdate && displayFFmpegFallbackWarning) {
+            snackyy(
+              title: lang.warning,
+              message: 'FFMPEG was used. Some tags might not have been updated',
+              isError: true,
+            );
+          }
+        }
+        if (didUpdate) return null;
+        return error;
+      },
+    );
   }
 }

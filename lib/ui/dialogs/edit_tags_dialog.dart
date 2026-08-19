@@ -34,11 +34,12 @@ import 'package:namida/youtube/pages/yt_search_results_page.dart';
 final _editingInProgress = <String, bool>{}.obs;
 
 /// Tested And Working on:
-/// - Android 9 (API 29): Internal ✓, External X `Needs SAF`
+/// - Android 9 (API 29): Internal ✓, External ✓ `Via SAF`
 /// - Android 11 (API 31): Internal ✓, External ✓
 /// - Android 13 (API 33): Internal ✓, External ✓
 ///
-/// TODO: Implement [Android <= 9] SD Card Editing Using SAF (Storage Access Framework).
+/// SD Card editing on [Android <= 10] requires SAF (Storage Access Framework),
+/// supported in `TagsExtractor.executeWriteWithSafFallback`.
 Future<void> showEditTracksTagsDialog(List<PhysicalMedia> tracks, Color? colorScheme, {bool instantEditArtwork = false}) async {
   if (tracks.isEmpty) return;
   if (tracks.length == 1) {
@@ -479,7 +480,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                             trimWhiteSpaces: trimWhiteSpaces.value,
                             onEdit: (didUpdate, error, track) {
                               if (!didUpdate) {
-                                snackyy(title: lang.metadataEditFailed, message: error ?? '', isError: true);
+                                snackyy(title: lang.metadataEditFailed, message: error ?? 'Unknown Error', isError: true);
                               }
                             },
                           )

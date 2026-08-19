@@ -16,7 +16,9 @@ abstract class TagsExtractor {
   }
 
   final _streamControllers = <int, StreamController<FAudioModel>>{};
-  final currentPathsBeingExtracted = <int, String>{}.obs;
+
+  static final _safDeniedVolumes = <String>{};
+  static void resetSafDeniedVolumes() => _safDeniedVolumes.clear();
 
   Future<void> initializeForWrite();
   Future<void> disposeForWrite();
@@ -49,13 +51,82 @@ abstract class TagsExtractor {
     required bool isVideo,
   });
 
-  Future<bool> writeTags({
+  Future<String?> writeTags({
     required String path,
     required FTags newTags,
     required String? commentToInsert,
     required String? oldComment,
     required bool displayFFmpegFallbackWarning,
   });
+
+  static Future<String?> _canWriteDirectlyOrError(String path) async {
+    try {
+      final raf = await File(path).open(mode: FileMode.append);
+      await raf.close();
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  static Future<String?> executeWriteWithSafFallback({
+    required String path,
+    required Future<String?> Function(String effectivePath) operation,
+  }) async {
+    String? error;
+
+    // -- the reason we try first is because all file permission is required, so usually saf is not required
+    // -- except on android <= 10 sdcard, where there is no other way to grant permission
+    error = await operation(path);
+    if (error == null) return null;
+
+    if (!Platform.isAndroid) return 'Unknown Error'; // -- below is for saf, which is android only
+
+    // -- but even if for heavenly reasons we bypassed permission, let's just give it a try with saf
+    // -- (uncomment to enfore permission)
+    // if (NamidaFeaturesAvailablity.android11and_plus.resolve()) return 'Grant all-files-access permission instead';
+
+    final originalFile = File(path);
+    if (!await originalFile.exists()) return 'File does not exist';
+
+    // -- write failed for a reason other than permission, saf won't help
+    error = await _canWriteDirectlyOrError(path);
+    if (error != null) return error;
+
+    final storage = NamidaStorage.inst;
+    bool hasAccess = await storage.safHasAccess(path);
+    if (!hasAccess) {
+      final directoryPath = path.getDirectoryPath;
+      if (_safDeniedVolumes.contains(directoryPath)) return 'Permission for "$directoryPath" was denied';
+      hasAccess = await storage.safRequestAccess(path, note: 'Please select grand access to "$directoryPath" to allow editing files inside it');
+      if (!hasAccess) {
+        _safDeniedVolumes.add(directoryPath);
+        return 'Storage access was not granted, cannot edit "$path"';
+      }
+    }
+
+    String ext = '';
+    try {
+      ext = path.getExtension;
+    } catch (_) {}
+    final tempFile = FileParts.join(AppDirs.APP_CACHE, '.saf_tag_edit_${path.hashCode}${ext.isEmpty ? '' : '.$ext'}');
+    try {
+      await originalFile.copy(tempFile.path);
+    } catch (e) {
+      error = e.toString();
+      return error;
+    }
+
+    try {
+      error = await operation(tempFile.path);
+      error ??= await storage.safCopyFile(tempFile.path, path);
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      tempFile.tryDeleting();
+    }
+    return error;
+  }
 
   static Future<File?> extractThumbnailCustom({
     required String trackPath,

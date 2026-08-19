@@ -34,6 +34,10 @@ abstract class NamidaStorage {
   });
 
   Future<String?> pickDirectory({String? note, String? initialDirectory});
+
+  Future<bool> safHasAccess(String path) async => false;
+  Future<bool> safRequestAccess(String path, {String? note}) async => false;
+  Future<String?> safCopyFile(String sourcePath, String destPath) async => 'SAF is not supported on this platform';
 }
 
 enum NamidaStorageFileMemeType {

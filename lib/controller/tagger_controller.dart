@@ -82,7 +82,7 @@ class NamidaTaggerController {
     );
   }
 
-  Future<bool> writeTagsRaw({
+  Future<String?> writeTagsRaw({
     required String path,
     required FTags newTags,
   }) async {
@@ -224,7 +224,7 @@ class NamidaTaggerController {
         await file.executeAndKeepStats(
           () async {
             // -- 1. try tagger
-            final didUpdate = await _extractor.writeTags(
+            error = await _extractor.writeTags(
               path: track.path,
               newTags: newTags,
               commentToInsert: commentToInsert,
@@ -232,14 +232,14 @@ class NamidaTaggerController {
               displayFFmpegFallbackWarning: displayFFmpegFallbackWarning,
             );
 
-            if (didUpdate) {
+            if (error == null) {
               final trExt = track.toTrackExt();
               final newTrExt = trExt.copyWithTag(tag: newTags, splittersConfigs: splittersConfigs, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
               tracksMap[track] = newTrExt;
               if (imageFile != null) await imageFile.copy(newTrExt.pathToImage);
             }
-            printo('Did Update Metadata: $didUpdate', isError: !didUpdate);
-            if (onEdit != null) onEdit(didUpdate, error, track);
+            printo('Did Update Metadata: $error', isError: error != null);
+            if (onEdit != null) onEdit(error == null, error, track);
 
             // -- update app-related stats even if tags editing failed.
             if (shouldEditStats) {

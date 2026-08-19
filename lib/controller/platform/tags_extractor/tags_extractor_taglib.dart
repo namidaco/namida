@@ -9,6 +9,7 @@ class _TagsExtractorTagLib extends TagsExtractor {
   @override
   Future<void> initializeForWrite() async {
     _isolateWriteExecuterClients++;
+    if (_isolateWriteExecuterClients == 1) TagsExtractor.resetSafDeniedVolumes(); // -- new batch
     if (_isolateWriteExecuter != null) return;
 
     _isolateWriteExecuter = _TagLibIsolateManager();
@@ -191,7 +192,26 @@ class _TagsExtractorTagLib extends TagsExtractor {
   }
 
   @override
-  Future<bool> writeTags({
+  Future<String?> writeTags({
+    required String path,
+    required FTags newTags,
+    required String? commentToInsert,
+    required String? oldComment,
+    required bool displayFFmpegFallbackWarning,
+  }) {
+    return TagsExtractor.executeWriteWithSafFallback(
+      path: path,
+      operation: (effectivePath) => _writeTagsAndFallback(
+        path: effectivePath,
+        newTags: newTags,
+        commentToInsert: commentToInsert,
+        oldComment: oldComment,
+        displayFFmpegFallbackWarning: displayFFmpegFallbackWarning,
+      ),
+    );
+  }
+
+  Future<String?> _writeTagsAndFallback({
     required String path,
     required FTags newTags,
     required String? commentToInsert,
@@ -222,7 +242,7 @@ class _TagsExtractorTagLib extends TagsExtractor {
       if (imageFile != null) {
         await ffmpegController.editAudioThumbnail(audioPath: path, thumbnailPath: imageFile.path);
       }
-      if (displayFFmpegFallbackWarning) {
+      if (didUpdate && displayFFmpegFallbackWarning) {
         snackyy(
           title: lang.warning,
           message: 'FFMPEG was used. Some tags might not have been updated',
@@ -230,7 +250,8 @@ class _TagsExtractorTagLib extends TagsExtractor {
         );
       }
     }
-    return didUpdate;
+    if (didUpdate) return null;
+    return error;
   }
 }
 

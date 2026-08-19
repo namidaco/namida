@@ -26,6 +26,10 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.Log;
 import java.io.File
 import java.util.concurrent.CompletableFuture
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class NamidaMainActivity : FlutterActivity() {
   companion object {
@@ -47,6 +51,10 @@ class NamidaMainActivity : FlutterActivity() {
     get() {
       return storageUtilsCompleter.get()
     }
+
+  private val safUtils by lazy { SafUtils(context) }
+  private var pendingSafAccessResult: MethodChannel.Result? = null
+  private var pendingSafAccessPath: String? = null
 
   override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
@@ -277,6 +285,47 @@ class NamidaMainActivity : FlutterActivity() {
           if (error != null) showToast(error, 3)
         }
 
+        "safHasAccess" -> {
+          val path = call.argument<String?>("path")
+          result.success(path != null && safUtils.findDocumentUri(path) != null)
+        }
+
+        "safRequestAccess" -> {
+          val path = call.argument<String?>("path")
+          if (path == null || pendingSafAccessResult != null) {
+            result.success(false)
+          } else {
+            val note = call.argument<String?>("note")
+            if (note != null && note != "") showToast(note, 5)
+            pendingSafAccessResult = result
+            pendingSafAccessPath = path
+            try {
+              startActivityForResult(
+                safUtils.buildPickerIntent(path),
+                NamidaRequestCodes.REQUEST_CODE_SAF_ACCESS_PICKER
+              )
+            } catch (e: Exception) {
+              pendingSafAccessResult = null
+              pendingSafAccessPath = null
+              showToast(e.message, 3)
+              result.success(false)
+            }
+          }
+        }
+
+        "safCopyFile" -> {
+          val source = call.argument<String?>("source")
+          val dest = call.argument<String?>("dest")
+          if (source == null || dest == null) {
+            result.success("source or dest parameters aren't provided")
+          } else {
+            CoroutineScope(Dispatchers.IO).launch {
+              val error = safUtils.copyFileToDocument(source, dest)
+              withContext(Dispatchers.Main) { result.success(error) }
+            }
+          }
+        }
+
         else -> result.notImplemented()
       }
     }
@@ -339,6 +388,12 @@ class NamidaMainActivity : FlutterActivity() {
     channel.invokeMethod("onResume", null)
     if (FileSysPicker.pendingPickerResult != null) {
       FileSysPicker.finishWithSuccess(mutableListOf())
+    }
+    if (pendingSafAccessResult != null) {
+      // -- onActivityResult is normally called before onResume, just for safety
+      pendingSafAccessResult?.success(false)
+      pendingSafAccessResult = null
+      pendingSafAccessPath = null
     }
     super.onResume()
   }
@@ -486,6 +541,25 @@ class NamidaMainActivity : FlutterActivity() {
       } else if (resultCode == RESULT_CANCELED) {
         FileSysPicker.finishWithSuccess(mutableListOf())
       }
+    } else if (requestCode == NamidaRequestCodes.REQUEST_CODE_SAF_ACCESS_PICKER) {
+      val pendingResult = pendingSafAccessResult
+      val requestedPath = pendingSafAccessPath
+      pendingSafAccessResult = null
+      pendingSafAccessPath = null
+      var granted = false
+      if (resultCode == RESULT_OK) {
+        val uri = data?.data
+        if (uri != null) {
+          try {
+            safUtils.persistPermission(uri)
+            // -- the user might have picked a folder that doesn't contain the requested path
+            granted = requestedPath != null && safUtils.findDocumentUri(requestedPath) != null
+          } catch (e: Exception) {
+            showToast(e.message, 3)
+          }
+        }
+      }
+      pendingResult?.success(granted)
     }
   }
 
@@ -556,6 +630,7 @@ class NamidaRequestCodes {
     val REQUEST_CODE_OPEN_EQ = 47
     val REQUEST_CODE_WRITE_SETTINGS = 9696
     val REQUEST_CODE_FILES_PICKER = 911
+    val REQUEST_CODE_SAF_ACCESS_PICKER = 913
     val REQUEST_CODE_STORAGE_READ_PERMISSION = 899
   }
 }

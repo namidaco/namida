@@ -142,7 +142,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
   }
 
   @override
-  Future<bool> writeTags({
+  Future<String?> writeTags({
     required String path,
     required FTags newTags,
     required String? commentToInsert,
@@ -165,7 +165,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
       await ffmpegController.editAudioThumbnail(audioPath: path, thumbnailPath: imageFile.path);
     }
 
-    if (displayFFmpegFallbackWarning) {
+    if (didUpdate && displayFFmpegFallbackWarning) {
       snackyy(
         title: lang.warning,
         message: 'FFMPEG was used. Some tags might not have been updated',
@@ -173,6 +173,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
       );
     }
 
-    return didUpdate;
+    if (didUpdate) return null;
+    return 'Unknown Error';
   }
 }

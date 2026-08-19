@@ -95,4 +95,39 @@ class _NamidaStorageAndroid extends NamidaStorage {
     }
     return null;
   }
+
+  @override
+  Future<bool> safHasAccess(String path) async {
+    try {
+      return await _channel.invokeMethod<bool>('safHasAccess', {'path': path}) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> safRequestAccess(String path, {String? note}) async {
+    try {
+      return await _channel.invokeMethod<bool>('safRequestAccess', {
+            'path': path,
+            'note': note,
+          }) ??
+          false;
+    } catch (e) {
+      snackyy(title: lang.error, message: e.toString(), isError: true);
+      return false;
+    }
+  }
+
+  @override
+  Future<String?> safCopyFile(String sourcePath, String destPath) async {
+    try {
+      return await _channel.invokeMethod<String?>('safCopyFile', {
+        'source': sourcePath,
+        'dest': destPath,
+      });
+    } catch (e) {
+      return e.toString();
+    }
+  }
 }
