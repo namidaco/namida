@@ -1,22 +1,17 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
-import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
-import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
-import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -24,9 +19,9 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/video_card_info_fetcher_wrapper.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/yt_card_like_status_mixin.dart';
-import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
@@ -334,15 +329,14 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
 
     if (newVideoId != videoId) {
       videoId = newVideoId;
-      refreshState(
-        () {
-          _infoFinal = null;
-          _videoTitle = ' ';
-          _videoChannel = ' ';
-          _duration = null;
-        },
-      );
-      _initValues(videoId).whenComplete(tryFetchLikeStatus);
+      final info = widget.info?.call(item);
+      if (info != null) {
+        refreshState(() => _infoFetcher.assign(info));
+        tryFetchLikeStatus();
+      } else {
+        refreshState(() => _infoFetcher.reset(newVideoId));
+        _infoFetcher.fetchMissing(preferFetchNewInfo: widget.preferFetchNewInfo).whenComplete(tryFetchLikeStatus);
+      }
     } else {
       refreshState();
     }
@@ -353,113 +347,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
   String videoId = '';
   late YTWatch? videoWatch;
 
-  bool _isInitializingValues = false;
-  StreamInfoItem? _infoFinal;
-  VideoStreamInfo? _infoVideoFinal;
-  String? _videoTitle = ' '; // nice hack to preserve an empty verical place for the future title :D
-  String? _videoChannel = ' ';
-  String? _duration;
-  bool _isVideoUnavailable = false;
-
-  Future<void> _initValues(String videoId) async {
-    if (_isInitializingValues) return;
-
-    StreamInfoItem? infoFinal = this.widget.info?.call(item);
-    if (infoFinal != null) {
-      _infoFinal = infoFinal;
-      _videoTitle = _infoFinal?.title;
-      _videoChannel = _infoFinal?.channelName?.nullifyEmpty() ?? _infoFinal?.channel?.title?.nullifyEmpty();
-      _duration = infoFinal.durSeconds?.secondsLabel;
-      return;
-    }
-
-    // -- basic init to reduce eliminate flashes, checkFromStorage is always false to prevent ui blocking
-    _infoFinal = YoutubeInfoController.utils.tempVideoInfosFromStreams[videoId];
-    _videoTitle = YoutubeInfoController.utils.getVideoNameSync(videoId, checkFromStorage: false);
-    _videoChannel = YoutubeInfoController.utils.getVideoChannelNameSync(videoId, checkFromStorage: false);
-    _duration = YoutubeInfoController.utils.getVideoDurationSecondsSyncTemp(videoId)?.secondsLabel;
-
-    _isInitializingValues = true;
-
-    final newInfo = await YoutubeInfoController.utils.getStreamInfo(videoId);
-    refreshState(
-      () {
-        _infoFinal = newInfo;
-        _videoTitle = _infoFinal?.title;
-        _videoChannel = _infoFinal?.channelName?.nullifyEmpty() ?? _infoFinal?.channel?.title?.nullifyEmpty();
-        _duration = newInfo?.durSeconds?.secondsLabel;
-      },
-    );
-
-    String? newVideoTitle = _videoTitle;
-    String? newVideoChannel = _videoChannel;
-    String? newDuration = _duration;
-    bool newIsVideoUnavailable = _isVideoUnavailable;
-
-    await [
-      () async {
-        if (newDuration?.isEmpty ?? true) {
-          final dur = await YoutubeInfoController.utils.getVideoDurationSeconds(videoId);
-          newDuration = dur?.secondsLabel;
-        }
-      }(),
-      () async {
-        if (newVideoTitle?.isEmpty ?? true) {
-          newVideoTitle = await YoutubeInfoController.utils.getVideoName(
-            videoId,
-            onMissingInfo: () {
-              VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
-              newIsVideoUnavailable = true;
-            },
-          );
-        } else if (newVideoTitle?.isYTTitleFaulty() == true) {
-          VideoController.inst.videosPriorityManager.setVideoPriority(videoId, CacheVideoPriority.VIP);
-          newIsVideoUnavailable = true;
-          newVideoTitle = await YoutubeInfoController.utils.getVideoName(videoId, onMissingInfo: null);
-        }
-      }(),
-      () async {
-        if (newVideoChannel?.isEmpty ?? true) {
-          newVideoChannel = await YoutubeInfoController.utils.getVideoChannelName(videoId);
-        }
-      }(),
-    ].wait;
-
-    if (newVideoTitle != _videoTitle || newVideoChannel != _videoChannel || newDuration != _duration || newIsVideoUnavailable != _isVideoUnavailable) {
-      refreshState(
-        () {
-          _videoTitle = newVideoTitle;
-          _videoChannel = newVideoChannel;
-          _duration = newDuration;
-          _isVideoUnavailable = newIsVideoUnavailable;
-        },
-      );
-    }
-
-    if (mounted && (_videoTitle?.isEmpty ?? true)) {
-      await _fetchNewInfo();
-    }
-
-    _isInitializingValues = false;
-  }
-
-  Future<void> _fetchNewInfo() async {
-    if (!ConnectivityController.inst.hasConnection) return;
-    // -- from cache only, if title is missing then most likely video is deleted/etc so no need to refetch (unless enforced)
-    final newInfo = widget.preferFetchNewInfo
-        ? await YoutubeInfoController.video.fetchVideoStreams(videoId, forceRequest: false)
-        : await YoutubeInfoController.video.fetchVideoStreamsCache(videoId, infoOnly: true);
-    if (newInfo != null) {
-      refreshState(
-        () {
-          _infoVideoFinal = newInfo.info;
-          _videoTitle = newInfo.info?.title;
-          _videoChannel = newInfo.info?.channelName?.nullifyEmpty();
-          _duration = (newInfo.info?.durSeconds ?? newInfo.audioStreams.firstOrNull?.duration?.inSeconds)?.secondsLabel;
-        },
-      );
-    }
-  }
+  late final _infoFetcher = VideoCardInfoFetcherWrapper(this, fetchExtraDetails: false);
 
   @override
   Widget build(BuildContext context) {
@@ -476,8 +364,8 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
       thumbWidth -= YTHistoryVideoCardBase.minimalCardExtraThumbCropWidth;
     }
 
-    final info = _infoFinal;
-    final duration = _duration;
+    final info = _infoFetcher.infoFinal;
+    final duration = _infoFetcher.duration;
 
     String? dateText;
     if (configs.displayTimeAgo) {
@@ -509,8 +397,8 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
 
     final willSleepAfterThis = properties.sleepingIndex == index;
 
-    final videoTitle = _videoTitle;
-    final videoChannel = _videoChannel;
+    final videoTitle = _infoFetcher.videoTitle;
+    final videoChannel = _infoFetcher.videoChannel;
 
     final displayVideoChannel = videoChannel != null && videoChannel.isNotEmpty;
     final displayDateText = dateText != null && dateText.isNotEmpty;
@@ -556,11 +444,11 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
                 height: thumbHeight,
                 videoId: videoId,
                 preferLowerRes: true,
-                customUrl: _infoVideoFinal?.thumbnails.pick()?.url ?? info?.liveThumbs.pick()?.url,
+                customUrl: _infoFetcher.infoVideoFinal?.thumbnails.pick()?.url ?? info?.liveThumbs.pick()?.url,
                 smallBoxText: duration,
                 smallBoxIcon: willSleepAfterThis
                     ? Broken.timer_1
-                    : _isVideoUnavailable
+                    : _infoFetcher.isVideoUnavailable
                     ? Broken.danger
                     : null,
                 reduceInitialFlashes: configs.draggingEnabled,
@@ -676,9 +564,9 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
         playlistInfo: configs.playlistInfo,
         streamInfoItem: info,
         videoId: videoId,
-        channelID: _infoVideoFinal?.channelId ?? info?.channelId ?? info?.channel?.id,
+        channelID: _infoFetcher.channelId,
         playlistID: configs.playlistID,
-        idsNamesLookup: {videoId: _infoVideoFinal?.title},
+        idsNamesLookup: {videoId: _infoFetcher.infoVideoFinal?.title},
         playlistName: configs.playlistName,
         videoYTID: itemToYTIDPlay(item),
       ),
@@ -759,7 +647,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
                     playlistInfo: configs.playlistInfo,
                     streamInfoItem: info,
                     videoId: videoId,
-                    channelID: _infoVideoFinal?.channelId ?? info?.channelId ?? info?.channel?.id,
+                    channelID: _infoFetcher.channelId,
                     playlistID: configs.playlistID,
                     idsNamesLookup: {videoId: videoTitle},
                     playlistName: configs.playlistName,

@@ -15,6 +15,7 @@ class _YoutubeInfoUtils {
   final _tempInfoChannelID = <String, String?>{};
   final _tempInfoVideoReleaseDate = <String, DateTime?>{};
   final _tempInfoVideoDurationSeconds = <String, int?>{};
+  final _tempInfoViewsCount = <String, int?>{};
 
   Future<void> fillBackupInfoMap() async {
     tempBackupVideoInfo = await _parseBackupHistoryInfoIsolate.thready(AppDirs.YT_STATS);
@@ -248,6 +249,23 @@ class _YoutubeInfoUtils {
         (await getStreamInfo(videoId))?.durSeconds ?? //
         (await _getVideoStreamResult(videoId))?.info?.durSeconds ?? //
         (await _getMissingInfo(videoId))?.durSeconds;
+  }
+
+  Future<int?> getVideoViewsCount(String videoId) async {
+    final cached = tempVideoInfosFromStreams[videoId]?.viewsCount;
+    if (cached != null) return cached;
+    return _tempInfoViewsCount[videoId] ??=
+        (await getStreamInfo(videoId))?.viewsCount ?? //
+        (await _getVideoStreamResult(videoId))?.info?.viewsCount ?? //
+        (await _getVideoPageResult(videoId))?.videoInfo?.viewsCount;
+  }
+
+  Future<List<YoutiPieThumbnail>?> getVideoChannelThumbnails(String videoId) async {
+    var thumbnails = tempVideoInfosFromStreams[videoId]?.channel?.thumbnails;
+    if (thumbnails != null && thumbnails.isNotEmpty) return thumbnails;
+    thumbnails = (await getStreamInfo(videoId))?.channel?.thumbnails;
+    if (thumbnails != null && thumbnails.isNotEmpty) return thumbnails;
+    return (await _getVideoPageResult(videoId))?.channelInfo?.thumbnails;
   }
 
   FutureOr<bool?> isShortContent(String videoId) {

@@ -18,6 +18,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/video_card_info_fetcher_wrapper.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/yt_card_like_status_mixin.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -69,10 +70,29 @@ class _YoutubeVideoCardState extends State<YoutubeVideoCard> with YTCardLikeStat
   @override
   String get cardVideoId => widget.video.id;
 
+  late final _infoFetcher = VideoCardInfoFetcherWrapper(this, fetchExtraDetails: true);
+
   @override
   void initState() {
+    _initInfo();
     tryFetchLikeStatus();
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant YoutubeVideoCard oldWidget) {
+    if (oldWidget.video != widget.video) {
+      _initInfo();
+      if (oldWidget.video.id != widget.video.id) tryFetchLikeStatus();
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  void _initInfo() {
+    _infoFetcher.assign(widget.video);
+    if (_infoFetcher.isTitleMissing || _infoFetcher.isViewsAndDateMissing) {
+      _infoFetcher.fetchMissing(preferFetchNewInfo: false);
+    }
   }
 
   FutureOr<List<NamidaPopupItem>> getMenuItems() {
@@ -84,9 +104,9 @@ class _YoutubeVideoCardState extends State<YoutubeVideoCard> with YTCardLikeStat
       playlistId: widget.playlistIndexAndCount?.playlistId,
       streamInfoItem: widget.video,
       videoId: videoId,
-      channelID: widget.video.channel?.id,
+      channelID: _infoFetcher.channelId,
       playlistID: widget.playlistID,
-      idsNamesLookup: {videoId: widget.video.title},
+      idsNamesLookup: {videoId: _infoFetcher.videoTitle},
       playlistName: widget.playlist?.basicInfo.title ?? '',
     );
   }
@@ -94,24 +114,24 @@ class _YoutubeVideoCardState extends State<YoutubeVideoCard> with YTCardLikeStat
   @override
   Widget build(BuildContext context) {
     final videoId = widget.video.id;
-    final viewsCount = widget.video.viewsCount;
-    String? viewsCountText = widget.video.viewsText;
+    final viewsCount = _infoFetcher.viewsCount;
+    String? viewsCountText = _infoFetcher.viewsText;
     if (viewsCount != null) {
       viewsCountText = viewsCount.displayViewsKeywordShort;
     }
 
-    DateTime? publishedDate = widget.video.publishedAt.date;
+    DateTime? publishedDate = _infoFetcher.publishedDate;
     final uploadDateAgo = publishedDate == null ? null : TimeAgoController.dateFromNow(publishedDate);
 
     final percentageWatched = widget.video.percentageWatched;
 
-    final smallBoxText = widget.video.durSeconds?.secondsLabel;
+    final smallBoxText = _infoFetcher.duration;
     final firstBadge = smallBoxText == null || smallBoxText.isEmpty ? widget.video.badges?.firstOrNull : null;
 
     final enableGifThumbnails = settings.youtube.enableGifThumbnails;
     final thumbnailGifUrl = enableGifThumbnails ? widget.video.thumbnailGifUrl : null;
     final channelThumbnailUrl =
-        widget.video.channel?.thumbnails.pick()?.url ?? //
+        _infoFetcher.channelThumbnailUrl ?? //
         YoutubeInfoController.utils.getVideoChannelThumbnailsSync(videoId, checkFromStorage: false)?.pick()?.url;
     // -- we only need channel id as a fallback for channel thumbnail
     // final channelID = channelThumbnailUrl == null ? YoutubeInfoController.utils.getVideoChannelIDSync(videoId, checkFromStorage: false) : null;
@@ -129,13 +149,13 @@ class _YoutubeVideoCardState extends State<YoutubeVideoCard> with YTCardLikeStat
         videoId: thumbnailGifUrl != null ? null : videoId,
         thumbnailUrl: thumbnailGifUrl,
         shimmerEnabled: false,
-        title: widget.video.title,
+        title: _infoFetcher.videoTitle ?? videoId,
         subtitle: [
           if (viewsCountText != null && viewsCountText.isNotEmpty) viewsCountText,
           ?uploadDateAgo,
         ].join(' - '),
         displaythirdLineText: widget.showThirdLine,
-        thirdLineText: widget.dateInsteadOfChannel ? widget.video.badges?.join(' - ') ?? '' : widget.video.channelName ?? '',
+        thirdLineText: widget.dateInsteadOfChannel ? widget.video.badges?.join(' - ') ?? '' : _infoFetcher.videoChannel ?? '',
         displayChannelThumbnail: !widget.dateInsteadOfChannel,
         channelThumbnailUrl: channelThumbnailUrl,
         onTap:
@@ -150,6 +170,7 @@ class _YoutubeVideoCardState extends State<YoutubeVideoCard> with YTCardLikeStat
               );
             },
         smallBoxText: smallBoxText,
+        smallBoxIcon: _infoFetcher.isVideoUnavailable ? Broken.danger : null,
         bottomRightWidgets: YTUtils.getVideoCacheStatusIcons(
           videoId: videoId,
           context: context,
