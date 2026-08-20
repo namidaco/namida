@@ -24,6 +24,7 @@ import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/music_web_server/server_auth_model.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -57,6 +58,9 @@ abstract class MusicWebServer {
   Future<MusicWebServerError?> ping();
   Future<Set<ServerShareWrapper>?> getAvailableShares() async => null;
   Future<void> fetchAllMusicAndProcess(Map<String, int> serverTracksInLibrary, void Function(TrackExtended trExt) callback, {required bool forceReIndex});
+
+  /// Supply [knownChangedMS] to allow skipping fetching playlist again if didn't change
+  Future<List<WebServerPlaylist>?> fetchPlaylists({required int? Function(String remoteId) knownChangedMS}) async => null;
   FutureOr<WebStreamUriDetails?> getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal});
   Future<Uint8List?> getImage(String id);
   void dispose();
@@ -169,6 +173,29 @@ class MediaUrlParseResult {
       id: id,
     );
   }
+}
+
+class WebServerPlaylist {
+  final String id;
+  final String name;
+  final String? comment;
+  final int? createdMS;
+  final int? changedMS;
+
+  final String? coverArtId;
+
+  /// null means the playlist didn't change, a workaround for when [changedMS] is unknown
+  final Iterable<TrackExtended>? tracks;
+
+  const WebServerPlaylist({
+    required this.id,
+    required this.name,
+    this.comment,
+    this.createdMS,
+    this.changedMS,
+    this.coverArtId,
+    required this.tracks,
+  });
 }
 
 class ServerShareWrapper {

@@ -11,6 +11,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -207,6 +208,20 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                 value: m3usyncstartup,
               ),
             ),
+            ObxO(
+              rx: settings.importServerPlaylists,
+              builder: (context, importServerPlaylists) => CustomSwitchListTile(
+                leading: const StackedIcon(
+                  baseIcon: Broken.cloud,
+                  secondaryIcon: Broken.refresh_square_2,
+                  secondaryIconSize: 12.0,
+                ),
+                title: lang.playlistsImportServerAutoImport,
+                subtitle: lang.playlistsImportServer,
+                onChanged: (isTrue) => settings.save(importServerPlaylists: !isTrue),
+                value: importServerPlaylists,
+              ),
+            ),
           ],
         ),
       ),
@@ -284,7 +299,12 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
           final c = scrollController;
           if (c != null) onPointerMove(c, event);
         },
-        onPointerUp: (event) => onRefresh(PlaylistController.inst.prepareM3UPlaylists),
+        onPointerUp: (event) => onRefresh(
+          () => Future.wait([
+            PlaylistController.inst.prepareM3UPlaylists(),
+            Indexer.inst.refreshServerPlaylists(),
+          ]),
+        ),
         onPointerCancel: (event) => onVerticalDragFinish(),
         child: NamidaScrollbar(
           controller: scrollController,
@@ -650,8 +670,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                           final shouldReSort = existingStatus.isEmpty; // sort only once, so that refresh won't make them jump around
 
                                           for (final key in playlistSearchListPre) {
-                                            playlistSearchListSorted.add(key);
                                             final playlist = playlistsMap[key]!;
+                                            if (playlist.isReadOnly) continue; // -- can't add tracks to read-only playlists
+                                            playlistSearchListSorted.add(key);
                                             final allTracksExist = tracksToAdd.every((trackToAdd) => playlist.tracks.firstWhereEff((e) => e.track == trackToAdd) != null);
                                             existingStatus[key] = allTracksExist;
                                           }
@@ -706,6 +727,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                   final key = playlistSearchList[i];
                                                   final playlist = playlistsMap[key]!;
                                                   final extraText = extraTextResolver?.call(playlist);
+                                                  final remoteInfo = playlist.getRemoteInfo();
                                                   return AnimatingGrid(
                                                     countPerRowResolved: countPerRowResolved,
                                                     columnCount: playlistSearchList.length,
@@ -729,7 +751,26 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                               message: () => "${lang.m3uPlaylist}\n${playlist.m3uPath?.formatPath()}",
                                                               child: const Icon(Broken.music_filter, size: 18.0),
                                                             ),
+                                                          )
+                                                        else if (remoteInfo != null) ...[
+                                                          Positioned(
+                                                            bottom: 8.0,
+                                                            right: 8.0,
+                                                            child: NamidaTooltip(
+                                                              message: () => "${lang.readOnlyPlaylist}\n${remoteInfo.$1}",
+                                                              child: remoteInfo.$2 != null
+                                                                  ? Image.asset(
+                                                                      remoteInfo.$2!,
+                                                                      height: 16.0,
+                                                                    )
+                                                                  : const Icon(
+                                                                      Broken.cloud,
+                                                                      size: 18.0,
+                                                                    ),
+                                                            ),
                                                           ),
+                                                          const SizedBox(width: 2.0),
+                                                        ],
                                                         if (extraText != null && extraText.isNotEmpty)
                                                           Positioned(
                                                             top: 0,

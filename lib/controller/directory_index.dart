@@ -112,6 +112,13 @@ final class DirectoryIndexServer extends DirectoryIndex {
     return DirectoryIndexServer.raw(uriCleanText, type ?? DirectoryIndexType.unknown, username ?? '');
   }
 
+  static String? parseWithoutLibraryIdAndCleanTry(String url) {
+    try {
+      return parseWithoutLibraryIdAndClean(url);
+    } catch (_) {}
+    return null;
+  }
+
   static String parseWithoutLibraryIdAndClean(String url) {
     final uriPre = Uri.parse(url);
     final cleanParams = Map<String, String>.from(uriPre.queryParameters)..remove('_libraryId');

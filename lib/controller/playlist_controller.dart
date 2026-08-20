@@ -14,7 +14,10 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/http_manager.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/generators_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -217,6 +220,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     // -- which will be seen if the m3u file got deleted/renamed
     await prepareM3UPlaylists();
     if (!_m3uPlaylistsCompleter.isCompleted) _m3uPlaylistsCompleter.complete(true);
+    unawaited(Indexer.inst.refreshServerPlaylists());
   }
 
   static String getUnusedM3uFilePathInStorage(String name) {
@@ -402,6 +406,184 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
     httpManager?.closeClients();
   }
+
+  // ==================== Server Playlists ====================
+
+  Map<String, int> getServerPlaylistsModifiedDates(String serverKey) {
+    final map = <String, int>{};
+    for (final pl in playlistsMap.value.values) {
+      final rs = pl.remoteSource;
+      if (rs != null && rs.sourceKey == serverKey) map[rs.remoteId] = pl.modifiedDate;
+    }
+    return map;
+  }
+
+  Future<void> updateServerPlaylists(
+    String serverKey,
+    List<WebServerPlaylist> serverPlaylists, {
+    MusicWebServer? server,
+    Track Function(TrackExtended trExt)? resolveTrack,
+  }) async {
+    await waitForPlaylistsLoad;
+
+    final existingByRemoteId = <String, LocalPlaylist>{};
+    for (final pl in playlistsMap.value.values) {
+      final rs = pl.remoteSource;
+      if (rs != null && rs.sourceKey == serverKey) existingByRemoteId[rs.remoteId] = pl;
+    }
+
+    bool anyChanged = false;
+    final seenRemoteIds = <String>{};
+
+    for (final spl in serverPlaylists) {
+      seenRemoteIds.add(spl.id);
+      final existing = existingByRemoteId[spl.id];
+      final tracksExt = spl.tracks;
+
+      if (tracksExt == null) {
+        // -- unchanged or error, keep it and just ensure artwork exists
+        if (existing != null) _ensureServerPlaylistArtworkExists(existing.name, spl, server);
+        continue;
+      }
+
+      final nameBase = spl.name.replaceAll(cleanupFilenameRegex, '_').trimAll();
+      final name = _resolveServerPlaylistName(nameBase.isEmpty ? spl.id : nameBase, existing);
+
+      // -- keep old dates for tracks that were already there
+      Map<Track, int>? oldDates;
+      if (existing != null) {
+        oldDates = {};
+        for (final twd in existing.tracks) {
+          oldDates[twd.track] ??= twd.dateAdded;
+        }
+      }
+      int dateCounter = spl.changedMS ?? spl.createdMS ?? currentTimeMS;
+      final newTracks = <TrackWithDate>[];
+      for (final trExt in tracksExt) {
+        final tr = resolveTrack != null ? resolveTrack(trExt) : trExt.asTrack();
+        newTracks.add(
+          TrackWithDate(
+            dateAdded: oldDates?[tr] ?? dateCounter++,
+            track: tr,
+          ),
+        );
+      }
+
+      if (existing != null && //
+          existing.name == name &&
+          existing.comment == (spl.comment ?? '') &&
+          (spl.changedMS == null || existing.modifiedDate == spl.changedMS)) {
+        if (_serverPlaylistTracksEqual(existing, newTracks)) {
+          _ensureServerPlaylistArtworkExists(name, spl, server);
+          continue; // -- after review, nothing really changed. keep it and just ensure artwork exists
+        }
+      }
+
+      if (existing != null && existing.name != name) {
+        // -- renamed on server, remove and re add (cuz cant edit)
+        await removePlaylist(existing);
+      }
+
+      final newPl = LocalPlaylist(
+        name: name,
+        tracks: newTracks,
+        creationDate: spl.createdMS ?? existing?.creationDate ?? currentTimeMS,
+        modifiedDate: spl.changedMS ?? currentTimeMS,
+        comment: spl.comment ?? '',
+        moods: existing?.moods ?? [],
+        isFav: false,
+        m3uPath: null,
+        sortsType: existing?.sortsType,
+        sortReverse: existing?.sortReverse ?? false,
+        remoteSource: PlaylistRemoteSource(sourceKey: serverKey, remoteId: spl.id),
+      );
+
+      await importPlaylistForce(newPl, sortPlaylists: false);
+
+      anyChanged = true;
+
+      _ensureServerPlaylistArtworkExists(name, spl, server);
+    }
+
+    // -- remove playlists that no longer exist on the server
+    final namesToRemove = <String>[];
+    for (final e in existingByRemoteId.entries) {
+      if (!seenRemoteIds.contains(e.key)) namesToRemove.add(e.value.name);
+    }
+    if (namesToRemove.isNotEmpty) {
+      await removePlaylists(namesToRemove); // -- sorts internally
+    } else if (anyChanged) {
+      sortPlaylists();
+    }
+  }
+
+  Future<void> removeServerPlaylists({bool Function(String sourceKey)? keepTest}) async {
+    await waitForPlaylistsLoad;
+    final namesToRemove = <String>[];
+    for (final e in playlistsMap.value.entries) {
+      final rs = e.value.remoteSource;
+      if (rs != null) {
+        if (keepTest == null || !keepTest(rs.sourceKey)) namesToRemove.add(e.key);
+      }
+    }
+    if (namesToRemove.isNotEmpty) await removePlaylists(namesToRemove);
+  }
+
+  String _resolveServerPlaylistName(String base, LocalPlaylist? existing) {
+    if (existing != null) {
+      // -- keep current name if matches the server name
+      final currentName = existing.name;
+      if (currentName == base || (currentName.startsWith('$base (') && currentName.endsWith(')'))) return currentName;
+    }
+    var name = base;
+    int i = 2;
+    while (isOneOfDefaultPlaylists(name) || playlistsMap.value.containsKey(name)) {
+      name = '$base ($i)';
+      i++;
+    }
+    return name;
+  }
+
+  bool _serverPlaylistTracksEqual(LocalPlaylist existing, List<TrackWithDate> newTracks) {
+    final oldTracks = existing.tracks;
+
+    if (oldTracks.length != newTracks.length) return false;
+
+    if (existing.sortsType?.isNotEmpty == true) {
+      // -- order is locally overridden by sorters, compare content only
+      final counts = <Track, int>{};
+      for (final twd in oldTracks) {
+        counts.update(twd.track, (v) => v + 1, ifAbsent: () => 1);
+      }
+      for (final twd in newTracks) {
+        final c = counts[twd.track];
+        if (c == null || c == 0) return false;
+        counts[twd.track] = c - 1;
+      }
+      return true;
+    }
+
+    for (int i = 0; i < newTracks.length; i++) {
+      if (oldTracks[i].track != newTracks[i].track) return false;
+    }
+
+    return true;
+  }
+
+  void _ensureServerPlaylistArtworkExists(String playlistName, WebServerPlaylist spl, MusicWebServer? server) async {
+    final coverArtId = spl.coverArtId;
+    if (server == null || coverArtId == null || coverArtId.isEmpty) return;
+    try {
+      final file = getArtworkFileForPlaylist(playlistName);
+      if (await file.exists()) return;
+      final bytes = await server.getImage(coverArtId);
+      if (bytes != null && bytes.isNotEmpty) {
+        await setArtworkForPlaylist(playlistName, artworkFile: null, artworkBytes: bytes);
+      }
+    } catch (_) {}
+  }
+
+  // ======================================================================
 
   /// saves each track m3u info for writing back
   var _pathsM3ULookup = <String, String?>{}; // {trackPath: EXTINFO}
@@ -675,6 +857,11 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   }
 
   @override
+  void onReadOnlyPlaylistError() {
+    snackyy(message: lang.notSupportedForNetworkFiles, isError: true);
+  }
+
+  @override
   void sortPlaylists() => SearchSortController.inst.sortMedia(MediaType.playlist);
 
   @override
@@ -846,4 +1033,22 @@ class _M3UPlaylistTempInfo {
     this.artUrl,
     required this.tracks,
   });
+}
+
+extension LocalPlaylistUtils on LocalPlaylist {
+  (String, String?)? getRemoteInfo() {
+    final remoteSource = this.remoteSource;
+    if (remoteSource == null) return null;
+
+    final server = DirectoryIndexServer.parseFromEncodedUrlPath(remoteSource.sourceKey);
+    final title = [
+      server.toSourceInfo(),
+      [
+        server.type.toText(),
+        server.username,
+      ].join(' - '),
+    ].join('\n');
+    final assetImagePath = server.type.toAssetImage();
+    return (title, assetImagePath);
+  }
 }

@@ -129,6 +129,66 @@ class _SubsonicWebServer extends MusicWebServer {
     }
   }
 
+  @override
+  Future<List<WebServerPlaylist>?> fetchPlaylists({required int? Function(String remoteId) knownChangedMS}) async {
+    final api = _api;
+    if (api == null) return null;
+
+    final server = authDetails.dir.toDbKey();
+    final serverUriParsed = Uri.parse(server);
+
+    final splitConfig = SplitArtistGenreConfigsWrapper.settings();
+
+    try {
+      final res = await api.api.getPlaylists();
+      if (res.response.error != null) {
+        _checkResError(authDetails.dir, res);
+        return null;
+      }
+
+      final playlists = res.response.data?.playlists ?? [];
+      final result = <WebServerPlaylist>[];
+      for (final pl in playlists) {
+        final createdMS = pl.created?.millisecondsSinceEpoch;
+        final changedMS = pl.changed?.millisecondsSinceEpoch ?? createdMS;
+
+        Iterable<TrackExtended>? tracks;
+        final known = knownChangedMS(pl.id);
+        if (known == null || changedMS == null || known != changedMS) {
+          final detail = await api.api.getPlaylist(pl.id);
+          if (detail.response.error != null) {
+            _checkResError(authDetails.dir, detail);
+          } else {
+            final songs = detail.response.data?.songs ?? [];
+            tracks = songs.map(
+              (s) => _mediaModelToTrackExtended(
+                s,
+                splitConfig: splitConfig,
+                server: server,
+                serverUriParsed: serverUriParsed,
+              ),
+            );
+          }
+        }
+
+        result.add(
+          WebServerPlaylist(
+            id: pl.id,
+            name: pl.name,
+            comment: pl.comment,
+            createdMS: createdMS,
+            changedMS: changedMS,
+            coverArtId: pl.coverArt,
+            tracks: tracks,
+          ),
+        );
+      }
+      return result;
+    } catch (_) {
+      return null;
+    }
+  }
+
   bool _checkResError(DirectoryIndex dir, SubsonicResponse res) {
     final err = res.response.error;
     if (err != null) {

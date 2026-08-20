@@ -189,6 +189,7 @@ class _SettingsController with SettingsFileWriter {
   final uniqueArtworkHash = false.obs;
   final enableM3USync = false.obs;
   final enableM3USyncStartup = true.obs;
+  final importServerPlaylists = true.obs;
   final prioritizeEmbeddedLyrics = true.obs;
   final swipeableDrawer = true.obs;
   final dismissibleMiniplayer = true.obs;
@@ -641,6 +642,7 @@ class _SettingsController with SettingsFileWriter {
       uniqueArtworkHash.value = json['uniqueArtworkHash'] ?? uniqueArtworkHash.value;
       enableM3USync.value = json['enableM3USync'] ?? enableM3USync.value;
       enableM3USyncStartup.value = json['enableM3USyncStartup'] ?? enableM3USyncStartup.value;
+      importServerPlaylists.value = json['importServerPlaylists'] ?? importServerPlaylists.value;
       prioritizeEmbeddedLyrics.value = json['prioritizeEmbeddedLyrics'] ?? prioritizeEmbeddedLyrics.value;
       swipeableDrawer.value = json['swipeableDrawer'] ?? swipeableDrawer.value;
       dismissibleMiniplayer.value = json['dismissibleMiniplayer'] ?? dismissibleMiniplayer.value;
@@ -891,6 +893,7 @@ class _SettingsController with SettingsFileWriter {
     'uniqueArtworkHash': uniqueArtworkHash.value,
     'enableM3USync': enableM3USync.value,
     'enableM3USyncStartup': enableM3USyncStartup.value,
+    'importServerPlaylists': importServerPlaylists.value,
     'prioritizeEmbeddedLyrics': prioritizeEmbeddedLyrics.value,
     'swipeableDrawer': swipeableDrawer.value,
     'dismissibleMiniplayer': dismissibleMiniplayer.value,
@@ -1088,6 +1091,7 @@ class _SettingsController with SettingsFileWriter {
     bool? uniqueArtworkHash,
     bool? enableM3USync,
     bool? enableM3USyncStartup,
+    bool? importServerPlaylists,
     bool? prioritizeEmbeddedLyrics,
     bool? swipeableDrawer,
     bool? dismissibleMiniplayer,
@@ -1343,6 +1347,7 @@ class _SettingsController with SettingsFileWriter {
     if (uniqueArtworkHash != null) this.uniqueArtworkHash.value = uniqueArtworkHash;
     if (enableM3USync != null) this.enableM3USync.value = enableM3USync;
     if (enableM3USyncStartup != null) this.enableM3USyncStartup.value = enableM3USyncStartup;
+    if (importServerPlaylists != null) this.importServerPlaylists.value = importServerPlaylists;
     if (prioritizeEmbeddedLyrics != null) this.prioritizeEmbeddedLyrics.value = prioritizeEmbeddedLyrics;
     if (swipeableDrawer != null) this.swipeableDrawer.value = swipeableDrawer;
     if (dismissibleMiniplayer != null) this.dismissibleMiniplayer.value = dismissibleMiniplayer;

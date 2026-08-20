@@ -12,6 +12,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -416,69 +417,71 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
                 ),
               ),
             ),
-          SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.availableAppContentWidth * 0.1),
-            sliver: SliverToBoxAdapter(
-              child: NamidaExpansionTile(
-                initiallyExpanded: isExpanded,
-                titleText: lang.add,
-                icon: Broken.add_circle,
-                onExpansionChanged: (value) => setState(() => isExpanded = value),
-                children: [
-                  Container(
-                    clipBehavior: Clip.antiAlias,
-                    height: context.height * 0.5,
-                    width: context.width,
-                    decoration: BoxDecoration(
-                      color: theme.cardColor,
-                      borderRadius: BorderRadius.circular(18.0.multipliedRadius),
-                    ),
-                    child: SuperSmoothListView.builder(
-                      itemExtent: Dimensions.inst.trackTileItemExtent,
-                      itemCount: randomTracks.length,
-                      itemBuilder: (context, i) {
-                        final tr = randomTracks[i];
-                        return TrackTile(
-                          properties: properties,
-                          trackOrTwd: tr,
-                          index: i,
-                          tracks: randomTracks,
-                          onTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
-                          onRightAreaTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
-                          trailingWidget: Obx(
-                            (context) => NamidaCheckMark(
-                              size: 22.0,
-                              active: tracksToAddMap[tr] == true,
+          if (!widget.playlist.isReadOnly)
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.availableAppContentWidth * 0.1),
+              sliver: SliverToBoxAdapter(
+                child: NamidaExpansionTile(
+                  initiallyExpanded: isExpanded,
+                  titleText: lang.add,
+                  icon: Broken.add_circle,
+                  onExpansionChanged: (value) => setState(() => isExpanded = value),
+                  children: [
+                    Container(
+                      clipBehavior: Clip.antiAlias,
+                      height: context.height * 0.5,
+                      width: context.width,
+                      decoration: BoxDecoration(
+                        color: theme.cardColor,
+                        borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+                      ),
+                      child: SuperSmoothListView.builder(
+                        itemExtent: Dimensions.inst.trackTileItemExtent,
+                        itemCount: randomTracks.length,
+                        itemBuilder: (context, i) {
+                          final tr = randomTracks[i];
+                          return TrackTile(
+                            properties: properties,
+                            trackOrTwd: tr,
+                            index: i,
+                            tracks: randomTracks,
+                            onTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
+                            onRightAreaTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
+                            trailingWidget: Obx(
+                              (context) => NamidaCheckMark(
+                                size: 22.0,
+                                active: tracksToAddMap[tr] == true,
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SliverPadding(padding: EdgeInsets.only(top: 12.0)),
-          SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.availableAppContentWidth * 0.2),
-            sliver: SliverToBoxAdapter(
-              child: SizedBox(
-                height: 42.0,
-                child: Obx(
-                  (context) {
-                    final trl = tracksToAddMap.entries.where((element) => element.value).length;
-                    return NamidaButton(
-                      enabled: trl > 0,
-                      icon: Broken.add,
-                      text: '${lang.add}: ${trl.displayTrackKeyword}',
-                      onTap: () => PlaylistController.inst.addTracksToPlaylist(widget.playlist, tracksToAddMap.keys.toList()),
-                    );
-                  },
+                  ],
                 ),
               ),
             ),
-          ),
+          const SliverPadding(padding: EdgeInsets.only(top: 12.0)),
+          if (!widget.playlist.isReadOnly)
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.availableAppContentWidth * 0.2),
+              sliver: SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 42.0,
+                  child: Obx(
+                    (context) {
+                      final trl = tracksToAddMap.entries.where((element) => element.value).length;
+                      return NamidaButton(
+                        enabled: trl > 0,
+                        icon: Broken.add,
+                        text: '${lang.add}: ${trl.displayTrackKeyword}',
+                        onTap: () => PlaylistController.inst.addTracksToPlaylist(widget.playlist, tracksToAddMap.keys.toList()),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
           SliverPadding(padding: EdgeInsets.only(bottom: context.height * 0.2)),
         ],
       ),
@@ -513,6 +516,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
   RxBaseCore listChangesListenerRx() => PlaylistController.inst.playlistsMap;
 
   late String? _playlistM3uPath = PlaylistController.inst.getPlaylist(widget.playlistName)?.m3uPath;
+  late String? _playlistRemoteSourceKey = PlaylistController.inst.getPlaylist(widget.playlistName)?.remoteSource?.sourceKey;
 
   @override
   Widget build(BuildContext context) {
@@ -529,6 +533,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
           final playlist = PlaylistController.inst.getPlaylist(widget.playlistName);
           if (playlist == null) return const SizedBox();
           _playlistM3uPath = playlist.m3uPath;
+          _playlistRemoteSourceKey = playlist.remoteSource?.sourceKey;
 
           final tracksWithDate = playlist.tracks;
           if (tracksWithDate.isEmpty) return EmptyPlaylistSubpage(playlist: playlist);
@@ -571,7 +576,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                 ),
                 onReorderStart: (index) => super.enablePullToRefresh = false,
                 onReorderEnd: (index) => super.enablePullToRefresh = true,
-                onReorder: isSearching ? null : (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
+                onReorder: isSearching || playlist.isReadOnly ? null : (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
                 stickyHeader: TracksSearchWidgetBoxBase(
                   state: this,
                   leftText: [
@@ -644,18 +649,21 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
     );
     return AnimationLimiter(
       child: BackgroundWrapper(
-        child: _playlistM3uPath != null
+        child: _playlistM3uPath != null || _playlistRemoteSourceKey != null
             ? Listener(
                 onPointerMove: (event) {
                   onPointerMove(scrollController, event);
                 },
                 onPointerUp: (event) async {
                   final m3uPath = _playlistM3uPath;
+                  final remoteSourceKey = _playlistRemoteSourceKey;
                   if (m3uPath != null) {
                     onRefresh(() async {
                       await PlaylistController.inst.prepareM3UPlaylists(forPaths: {m3uPath});
                       PlaylistController.inst.sortPlaylists();
                     });
+                  } else if (remoteSourceKey != null) {
+                    onRefresh(() => Indexer.inst.refreshServerPlaylists(forThisServerKey: remoteSourceKey));
                   } else {
                     onVerticalDragFinish();
                   }

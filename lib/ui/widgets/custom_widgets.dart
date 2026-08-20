@@ -6681,6 +6681,14 @@ class EnableDisablePlaylistReordering extends StatelessWidget {
         onPressed: () {
           final playlist = playlistManager.getPlaylist(playlistName);
           if (playlist == null) return;
+          if (playlist.isReadOnly) {
+            snackyy(
+              isError: true,
+              title: lang.warning,
+              message: lang.readOnlyPlaylist,
+            );
+            return;
+          }
           if (playlist.sortsType?.isNotEmpty ?? false) {
             snackyy(
               isError: true,

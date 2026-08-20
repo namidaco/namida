@@ -26,6 +26,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -1422,6 +1423,8 @@ class Indexer<T extends Track> {
 
     final tracksByServer = _getTracksGroupedByServer();
     final configuredServers = <String>{};
+    final importServerPlaylists = settings.importServerPlaylists.value;
+    final playlistsImportQueue = <_RemotePlaylistImportInfo>[];
 
     for (final dir in settings.directoriesToScan.value) {
       if (dir is DirectoryIndexServer) {
@@ -1445,6 +1448,18 @@ class Indexer<T extends Track> {
             },
             forceReIndex: forceReIndex,
           );
+
+          if (importServerPlaylists) {
+            final dbKeyCleaned = DirectoryIndexServer.parseWithoutLibraryIdAndCleanTry(dbKey);
+            playlistsImportQueue.add(
+              _RemotePlaylistImportInfo(
+                server: server,
+                dbKey: dbKey,
+                serverKey: dbKeyCleaned ?? dbKey,
+              ),
+            );
+          }
+
           // -- now without the tracks that was seen again on server
           yield serverTracksInLibrary;
         }
@@ -1457,6 +1472,152 @@ class Indexer<T extends Track> {
         yield entry.value;
       }
     }
+
+    // -- import playlists after all music is fetched
+    _processServerPlaylistsImportQueue(
+      playlistsImportQueue: playlistsImportQueue,
+      configuredServers: configuredServers,
+      tracksByServer: tracksByServer,
+    ).whenComplete(
+      () {
+        // -- remove imported playlists of servers that no longer exist (or all if disabled)
+        final configuredServersIdentities = importServerPlaylists ? configuredServers.map(DirectoryIndexServer.parseWithoutLibraryIdAndCleanTry).toSet() : null;
+        PlaylistController.inst.removeServerPlaylists(
+          keepTest: configuredServersIdentities?.contains,
+        );
+      },
+    );
+  }
+
+  // -- same logic of what's in _addServerTracksIfAvailable,
+  // -- but there its a lil more performant (reuses some values & has tracksByServer)
+  Future<void> refreshServerPlaylists({String? forThisServerKey}) async {
+    if (!settings.importServerPlaylists.value) return;
+
+    final playlistsImportQueue = <_RemotePlaylistImportInfo>[];
+    final configuredServers = <String>{};
+    for (final dir in settings.directoriesToScan.value) {
+      if (dir is DirectoryIndexServer) {
+        final dbKey = dir.toDbKey();
+        final serverKey = DirectoryIndexServer.parseWithoutLibraryIdAndCleanTry(dbKey);
+        if (forThisServerKey != null && serverKey != forThisServerKey) continue;
+        final server = dir.toWebServer();
+        if (server != null) {
+          configuredServers.add(dbKey);
+          playlistsImportQueue.add(
+            _RemotePlaylistImportInfo(
+              server: server,
+              dbKey: dbKey,
+              serverKey: serverKey ?? dbKey,
+            ),
+          );
+        }
+      }
+    }
+    return _processServerPlaylistsImportQueue(
+      playlistsImportQueue: playlistsImportQueue,
+      configuredServers: configuredServers,
+      tracksByServer: const {},
+    );
+  }
+
+  var _serverPlaylistsImportLock = Future<void>.value();
+
+  Future<void> _processServerPlaylistsImportQueue({
+    required List<_RemotePlaylistImportInfo> playlistsImportQueue,
+    required Set<String> configuredServers,
+    required Map<String, Map<String, int>> tracksByServer,
+  }) async {
+    if (playlistsImportQueue.isEmpty) return;
+
+    Future<void> execute() async {
+      Map<String, Map<String, String>>? mediaIdsToPathsPerServer;
+      if (playlistsImportQueue.any((item) => item.dbKey != item.serverKey)) {
+        mediaIdsToPathsPerServer = _getServerTracksPathsGroupedByMediaId(configuredServers);
+      }
+      // -- to prevent fetching from same server with different library id
+      final processedServers = <String>{};
+      for (final item in playlistsImportQueue) {
+        final serverKey = item.serverKey;
+        if (!processedServers.contains(serverKey)) {
+          final success = await _importServerPlaylists(
+            item.server,
+            serverKey,
+            mediaIdsToPaths: mediaIdsToPathsPerServer?[serverKey],
+            tracksByServer: tracksByServer,
+          );
+          if (success) processedServers.add(serverKey);
+        }
+      }
+    }
+
+    final future = _serverPlaylistsImportLock.then((_) => execute());
+    _serverPlaylistsImportLock = future.catchError((_) {});
+    return future;
+  }
+
+  Future<bool> _importServerPlaylists(
+    MusicWebServer server,
+    String serverKey, {
+    required Map<String, String>? mediaIdsToPaths,
+    required Map<String, Map<String, int>> tracksByServer,
+  }) async {
+    await PlaylistController.inst.waitForPlaylistsLoad;
+    final knownModifiedDates = PlaylistController.inst.getServerPlaylistsModifiedDates(serverKey);
+    final serverPlaylists = await server.fetchPlaylists(
+      knownChangedMS: (remoteId) => knownModifiedDates[remoteId],
+    );
+    if (serverPlaylists == null) return false;
+
+    Track resolveTrack(TrackExtended trExt) {
+      // -- prefer already indexed track, cuz this one coming from playlist request, might be missing anything idk
+      final existingPath = mediaIdsToPaths?[trExt.hashKey];
+      if (existingPath != null && existingPath != trExt.path) {
+        final existingTrExt = allTracksMappedByPath[existingPath];
+        if (existingTrExt != null) return existingTrExt.asTrack();
+      }
+      return trExt.asTrack();
+    }
+
+    for (final spl in serverPlaylists) {
+      final plTracks = spl.tracks;
+      if (plTracks != null) {
+        for (final trExt in plTracks) {
+          final path = resolveTrack(trExt).path;
+          if (path == trExt.path && !allTracksMappedByPath.containsKey(path)) {
+            _addTrackToLists(trExt, null);
+          }
+          // -- remove from tracksByServer means keep in library, see _addServerTracksIfAvailable it returns paths to remove
+          final trackServer = allTracksMappedByPath[path]?.server ?? trExt.server;
+          if (trackServer != null) tracksByServer[trackServer]?.remove(path);
+        }
+      }
+    }
+
+    await PlaylistController.inst.updateServerPlaylists(
+      serverKey,
+      serverPlaylists,
+      server: server,
+      resolveTrack: resolveTrack,
+    );
+
+    return true;
+  }
+
+  Map<String, Map<String, String>> _getServerTracksPathsGroupedByMediaId(Set<String> configuredServers) {
+    final map = <String, Map<String, String>>{};
+    final identityKeysCache = <String, String?>{};
+    for (final trExt in allTracksMappedByPath.values) {
+      final server = trExt.server;
+      final mediaId = trExt.hashKey;
+      if (server != null && server.isNotEmpty && mediaId != null && mediaId.isNotEmpty && configuredServers.contains(server)) {
+        final identityKey = identityKeysCache[server] ??= DirectoryIndexServer.parseWithoutLibraryIdAndCleanTry(server);
+        if (identityKey != null) {
+          (map[identityKey] ??= <String, String>{})[mediaId] = trExt.path;
+        }
+      }
+    }
+    return map;
   }
 
   Map<String, Map<String, int>> _getTracksGroupedByServer() {
@@ -2417,4 +2578,16 @@ class FileStatsAdv {
       size: stat.size,
     );
   }
+}
+
+class _RemotePlaylistImportInfo {
+  final MusicWebServer server;
+  final String dbKey;
+  final String serverKey;
+
+  const _RemotePlaylistImportInfo({
+    required this.server,
+    required this.dbKey,
+    required this.serverKey,
+  });
 }

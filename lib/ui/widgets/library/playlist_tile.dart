@@ -67,6 +67,8 @@ class PlaylistTile extends StatelessWidget {
                   if (playlist == null) return const SizedBox();
                   final tracksRaw = playlist.tracks.toTracks();
 
+                  final remoteInfo = playlist.getRemoteInfo();
+
                   return Row(
                     children: [
                       MultiArtworkContainer(
@@ -130,11 +132,25 @@ class PlaylistTile extends StatelessWidget {
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 2.0),
+                      const SizedBox(width: 4.0),
                       if (playlist.m3uPath != null) ...[
                         NamidaTooltip(
                           message: () => "${lang.m3uPlaylist}\n${playlist.m3uPath?.formatPath()}",
                           child: const Icon(Broken.music_filter, size: 18.0),
+                        ),
+                        const SizedBox(width: 2.0),
+                      ] else if (remoteInfo != null) ...[
+                        NamidaTooltip(
+                          message: () => "${lang.readOnlyPlaylist}\n${remoteInfo.$1}",
+                          child: remoteInfo.$2 != null
+                              ? Image.asset(
+                                  remoteInfo.$2!,
+                                  height: 16.0,
+                                )
+                              : const Icon(
+                                  Broken.cloud,
+                                  size: 18.0,
+                                ),
                         ),
                         const SizedBox(width: 2.0),
                       ],

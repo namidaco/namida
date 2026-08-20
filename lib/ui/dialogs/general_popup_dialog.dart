@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 
+import 'package:playlist_manager/playlist_manager.dart';
 import 'package:rhttp/rhttp.dart';
 
 import 'package:namida/class/file_matcher.dart';
@@ -137,7 +138,12 @@ Future<void> showGeneralPopupDialog(
   final numberOfRepeats = 1.obso;
 
   bool shoulShowPlaylistUtils() => comingFromPlaylistMenu && playlistName != null && !PlaylistController.inst.isOneOfDefaultPlaylists(playlistName);
-  bool shoulShowRemoveFromPlaylist() => !comingFromPlaylistMenu && tracksWithDates.isNotEmpty && playlistName != null && playlistName != k_PLAYLIST_NAME_MOST_PLAYED;
+  bool shoulShowRemoveFromPlaylist() =>
+      !comingFromPlaylistMenu &&
+      tracksWithDates.isNotEmpty &&
+      playlistName != null &&
+      playlistName != k_PLAYLIST_NAME_MOST_PLAYED &&
+      PlaylistController.inst.getPlaylist(playlistName)?.isReadOnly != true;
 
   if (networkArtworkInfo != null) {
     // -- nullify if network not allowed
@@ -319,6 +325,16 @@ Future<void> showGeneralPopupDialog(
 
   Future<void> convertPlaylistToNormal() async {
     await deletePlaylist(deleteM3uFileOnly: true);
+  }
+
+  Future<void> detachServerPlaylist() async {
+    if (!shoulShowPlaylistUtils()) return;
+    NamidaNavigator.inst.closeDialog();
+    await PlaylistController.inst.updatePropertyInPlaylist(
+      playlistName!,
+      remoteSource: PlaylistRemoteSource.none,
+      modifiedDate: currentTimeMS,
+    );
   }
 
   Future<void> removePlaylistDuplicates() async {
@@ -619,6 +635,7 @@ Future<void> showGeneralPopupDialog(
 
   final playlist = playlistName == null ? null : PlaylistController.inst.getPlaylist(playlistName);
   final playlistIsM3u = playlist?.m3uPath != null;
+  final playlistIsReadOnly = playlist?.isReadOnly == true;
 
   final Widget? playlistUtilsRow = shoulShowPlaylistUtils()
       ? SizedBox(
@@ -640,27 +657,33 @@ Future<void> showGeneralPopupDialog(
                 ),
               ),
               const SizedBox(width: 8.0),
-              Expanded(child: bigIcon(Broken.edit_2, () => lang.renamePlaylist, renamePlaylist)),
-              const SizedBox(width: 8.0),
-              Expanded(
-                child: bigIcon(
-                  Broken.edit_2,
-                  () => lang.removeDuplicates,
-                  removePlaylistDuplicates,
-                  iconWidget: ObxO(
-                    rx: iconColor,
-                    builder: (context, iconColor) => StackedIcon(
-                      baseIcon: Broken.copy,
-                      secondaryIcon: Broken.broom,
-                      baseIconColor: iconColor,
-                      secondaryIconColor: iconColor,
+              if (!playlistIsReadOnly) ...[
+                Expanded(child: bigIcon(Broken.edit_2, () => lang.renamePlaylist, renamePlaylist)),
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: bigIcon(
+                    Broken.edit_2,
+                    () => lang.removeDuplicates,
+                    removePlaylistDuplicates,
+                    iconWidget: ObxO(
+                      rx: iconColor,
+                      builder: (context, iconColor) => StackedIcon(
+                        baseIcon: Broken.copy,
+                        secondaryIcon: Broken.broom,
+                        baseIconColor: iconColor,
+                        secondaryIconColor: iconColor,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8.0),
+                const SizedBox(width: 8.0),
+              ],
               Expanded(child: bigIcon(Broken.trash, () => lang.deletePlaylist, deletePlaylist)),
-              if (playlistIsM3u)
+              if (playlistIsReadOnly)
+                Expanded(
+                  child: bigIcon(Broken.cloud_cross, () => lang.convertToNormalPlaylist, detachServerPlaylist),
+                )
+              else if (playlistIsM3u)
                 Expanded(
                   child: bigIcon(Broken.driver_2, () => lang.convertToNormalPlaylist, convertPlaylistToNormal),
                 )

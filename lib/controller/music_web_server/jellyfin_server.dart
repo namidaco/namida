@@ -59,6 +59,51 @@ class _JellyfinServer extends MusicWebServer {
   }
 
   @override
+  Future<List<WebServerPlaylist>?> fetchPlaylists({required int? Function(String remoteId) knownChangedMS}) async {
+    final wrapper = _wrapper;
+
+    final server = authDetails.dir.toDbKey();
+    final serverUriParsed = Uri.parse(server);
+
+    final splitConfig = SplitArtistGenreConfigsWrapper.settings();
+
+    bool checkResError(Response<dynamic>? res) => _checkResError(authDetails.dir, res);
+
+    final playlistsItems = await wrapper.getPlaylists(checkResError: checkResError);
+    if (playlistsItems == null) return null;
+
+    final result = <WebServerPlaylist>[];
+    for (final playlistItem in playlistsItems) {
+      final id = playlistItem.id;
+      if (id == null || id.isEmpty) continue;
+
+      // -- jellyfin doesn't provide playlist changed date, we always fetch
+      final items = await wrapper.getPlaylistItems(id, checkResError: checkResError);
+      final tracks = items?.map(
+        (item) => _baseItemDtoToTrackExtended(
+          item,
+          splitConfig: splitConfig,
+          server: server,
+          serverUriParsed: serverUriParsed,
+        ),
+      );
+
+      result.add(
+        WebServerPlaylist(
+          id: id,
+          name: playlistItem.name ?? '',
+          comment: playlistItem.overview,
+          createdMS: playlistItem.dateCreated?.millisecondsSinceEpoch,
+          changedMS: null,
+          coverArtId: id,
+          tracks: tracks,
+        ),
+      );
+    }
+    return result;
+  }
+
+  @override
   Future<WebStreamUriDetails?> getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal}) async {
     final baseUri = _serverUri;
     if (baseUri == null) return null;
@@ -84,6 +129,7 @@ class _JellyfinServer extends MusicWebServer {
       }
       return true;
     }
+    if (statusCode != null && statusCode >= 400) return true;
     return false;
   }
 
@@ -445,12 +491,86 @@ class _JellyfinClientWrapper {
     return items.map((e) => ServerShareWrapper.fromJellyfinJson(e as Map<String, dynamic>)).toSet();
   }
 
+  Future<List<_JellyfinItem>?> getPlaylists({
+    int batchSize = 200,
+    required bool Function(Response<dynamic>? res) checkResError,
+  }) {
+    return _getItemsPaged(
+      '/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'Playlist',
+        'Recursive': true,
+        'Fields': 'DateCreated,Overview',
+      },
+      batchSize: batchSize,
+      checkResError: checkResError,
+    );
+  }
+
+  Future<List<_JellyfinItem>?> getPlaylistItems(
+    String playlistId, {
+    int batchSize = 400,
+    required bool Function(Response<dynamic>? res) checkResError,
+  }) async {
+    final items = await _getItemsPaged(
+      '/Playlists/$playlistId/Items',
+      queryParameters: {
+        'Fields': _JellyfinItemField.values.map((e) => e.value).join(','),
+      },
+      batchSize: batchSize,
+      checkResError: checkResError,
+    );
+    if (items == null) return null;
+    final allowedKinds = _JellyfinItemKind.values.map((e) => e.value).toSet();
+    items.retainWhere((item) => item.type == null || allowedKinds.contains(item.type));
+    return items;
+  }
+
+  Future<List<_JellyfinItem>?> _getItemsPaged(
+    String endpoint, {
+    required Map<String, dynamic> queryParameters,
+    required int batchSize,
+    required bool Function(Response<dynamic>? res) checkResError,
+  }) async {
+    if (!await ensureAuthenticated()) return null;
+    final items = <_JellyfinItem>[];
+    int offset = 0;
+    while (true) {
+      try {
+        final res = await _api.dio.get<Map<String, dynamic>>(
+          endpoint,
+          queryParameters: {
+            'UserId': _userId,
+            'StartIndex': offset,
+            'Limit': batchSize,
+            ...queryParameters,
+          },
+        );
+        final data = res.data?['Items'] as List<dynamic>?;
+        if (data == null) {
+          checkResError(res);
+          return null;
+        }
+        for (final e in data) {
+          items.add(_JellyfinItem.fromJson(e as Map<String, dynamic>));
+        }
+        if (data.length < batchSize) break;
+        offset += batchSize;
+      } on DioException catch (e) {
+        checkResError(e.response);
+        return null;
+      }
+    }
+    return items;
+  }
+
   Stream<_JellyfinItem> fetchAllMedia({
     int batchSize = 400,
     required bool Function(Response<dynamic>? res) checkResError,
   }) async* {
     int offset = 0;
-    while (true) {
+    bool hasMore = true;
+    while (hasMore) {
       try {
         final res = await _api.dio.get<Map<String, dynamic>>(
           '/Items',
@@ -469,14 +589,24 @@ class _JellyfinClientWrapper {
 
         final items = (res.data?['Items'] as List<dynamic>?)?.map((e) => _JellyfinItem.fromJson(e as Map<String, dynamic>)).toList() ?? [];
 
+        if (items.isEmpty) {
+          hasMore = false;
+          break;
+        }
+
         for (final item in items) {
           yield item;
         }
 
         if (items.length < batchSize) break;
         offset += batchSize;
-      } on DioException catch (e) {
+      } on DioException catch (e, st) {
         if (checkResError(e.response)) break;
+        logger.error('Failed to fetch all media for jellyfin', e: e, st: st);
+        return;
+      } catch (e, st) {
+        logger.error('Failed to fetch all media for jellyfin', e: e, st: st);
+        break;
       }
     }
   }
