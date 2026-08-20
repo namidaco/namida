@@ -34,6 +34,7 @@ enum _BackupAndRestoreKeys with SettingKeysBase {
   sync,
   importYT,
   importLastfm,
+  importSpotify,
 }
 
 class BackupAndRestore extends SettingSubpageProvider {
@@ -51,6 +52,7 @@ class BackupAndRestore extends SettingSubpageProvider {
     _BackupAndRestoreKeys.sync: [lang.sync, lang.syncAppDataBetweenYourDevices],
     _BackupAndRestoreKeys.importYT: [lang.importYoutubeHistory],
     _BackupAndRestoreKeys.importLastfm: [lang.importLastFmHistory],
+    _BackupAndRestoreKeys.importSpotify: [lang.importSpotifyHistory],
   };
 
   bool _canDoImport({required bool isYT}) {
@@ -528,6 +530,109 @@ class BackupAndRestore extends SettingSubpageProvider {
     );
   }
 
+  void _importGeneralNonYTSource({
+    required TrackSource source,
+    required String title,
+    required String guideWithLink,
+    required NamidaFileExtensionsWrapper allowedExtensions,
+  }) {
+    if (!_canDoImport(isYT: false)) return;
+
+    void onConfirm(bool pickDirectory) async {
+      var selectedFiles = <File>[];
+      Directory? mainDirectory;
+      if (pickDirectory) {
+        mainDirectory = await NamidaFileBrowser.pickDirectory(note: title);
+      } else {
+        selectedFiles = await NamidaFileBrowser.pickFiles(note: title, allowedExtensions: allowedExtensions);
+      }
+
+      if (selectedFiles.isNotEmpty || mainDirectory != null) {
+        final oldestDate = Rxn<DateTime>();
+        DateTime? newestDate;
+        final matchAll = false.obs;
+        NamidaNavigator.inst.navigateDialog(
+          onDisposing: () {
+            oldestDate.close();
+            matchAll.close();
+          },
+          dialog: CustomBlurryDialog(
+            horizontalInset: 38.0,
+            verticalInset: 38.0,
+            title: lang.configure,
+            actions: [
+              const CancelButton(),
+              Obx(
+                (context) => NamidaButton(
+                  text: oldestDate.valueR != null ? lang.importTimeRange : lang.importAll,
+                  onTap: () async {
+                    NamidaNavigator.inst.closeDialog();
+                    await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
+                      files: selectedFiles,
+                      mainDirectory: mainDirectory,
+                      source: source,
+                      oldestDate: oldestDate.value,
+                      newestDate: newestDate,
+                      matchAll: matchAll.value,
+                    );
+                  },
+                ),
+              ),
+            ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Obx(
+                  (context) => matchAllTracksListTile(
+                    active: matchAll.valueR,
+                    onTap: matchAll.toggle,
+                    displayPerfWarning: true,
+                  ),
+                ),
+                getDivider(),
+                BetweenDatesTextButton(
+                  useHistoryDates: false,
+                  maxToday: true,
+                  onConfirm: (dates) {
+                    NamidaNavigator.inst.closeDialog();
+                    oldestDate.value = dates.firstOrNull;
+                    newestDate = dates.lastOrNull;
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.guide,
+        actions: [
+          NamidaButton(
+            text: lang.folder,
+            onTap: () {
+              NamidaNavigator.inst.closeDialog();
+              onConfirm(true);
+            },
+          ),
+          SizedBox(width: 2.0),
+          NamidaButton(
+            text: lang.confirm,
+            onTap: () async {
+              NamidaNavigator.inst.closeDialog();
+              onConfirm(false);
+            },
+          ),
+        ],
+        child: NamidaSelectableAutoLinkText(
+          text: guideWithLink,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -747,7 +852,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                       ),
                     ],
                     child: NamidaSelectableAutoLinkText(
-                      text: lang.importYoutubeHistoryGuide(takeoutLink: 'https://takeout.google.com/takeout/custom/youtube'),
+                      text: lang.importYoutubeHistoryGuide(takeoutLink: AppSocial.YOUTUBE_TAKEOUT),
                     ),
                   ),
                 );
@@ -782,100 +887,48 @@ class BackupAndRestore extends SettingSubpageProvider {
                 ),
               ),
               onTap: () {
-                if (!_canDoImport(isYT: false)) return;
+                _importGeneralNonYTSource(
+                  source: TrackSource.lastfm,
+                  title: lang.importLastFmHistory,
+                  guideWithLink: lang.importLastFmHistoryGuide(lastfmCsvLink: 'https://benjaminbenben.com/lastfm-to-csv'),
+                  allowedExtensions: NamidaFileExtensionsWrapper.csv,
+                );
+              },
+            ),
+          ),
 
-                void onConfirm(bool pickDirectory) async {
-                  var csvFiles = <File>[];
-                  Directory? mainDirectory;
-                  if (pickDirectory) {
-                    mainDirectory = await NamidaFileBrowser.pickDirectory(note: lang.importLastFmHistory);
-                  } else {
-                    csvFiles = await NamidaFileBrowser.pickFiles(note: lang.importLastFmHistory, allowedExtensions: NamidaFileExtensionsWrapper.csv);
-                  }
-
-                  if (csvFiles.isNotEmpty || mainDirectory != null) {
-                    final oldestDate = Rxn<DateTime>();
-                    DateTime? newestDate;
-                    final matchAll = false.obs;
-                    NamidaNavigator.inst.navigateDialog(
-                      onDisposing: () {
-                        oldestDate.close();
-                        matchAll.close();
-                      },
-                      dialog: CustomBlurryDialog(
-                        horizontalInset: 38.0,
-                        verticalInset: 38.0,
-                        title: lang.configure,
-                        actions: [
-                          const CancelButton(),
-                          Obx(
-                            (context) => NamidaButton(
-                              text: oldestDate.valueR != null ? lang.importTimeRange : lang.importAll,
-                              onTap: () async {
-                                NamidaNavigator.inst.closeDialog();
-                                await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
-                                  files: csvFiles,
-                                  mainDirectory: mainDirectory,
-                                  source: TrackSource.lastfm,
-                                  oldestDate: oldestDate.value,
-                                  newestDate: newestDate,
-                                  matchAll: matchAll.value,
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Obx(
-                              (context) => matchAllTracksListTile(
-                                active: matchAll.valueR,
-                                onTap: matchAll.toggle,
-                                displayPerfWarning: true,
-                              ),
-                            ),
-                            getDivider(),
-                            BetweenDatesTextButton(
-                              useHistoryDates: false,
-                              maxToday: true,
-                              onConfirm: (dates) {
-                                NamidaNavigator.inst.closeDialog();
-                                oldestDate.value = dates.firstOrNull;
-                                newestDate = dates.lastOrNull;
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                }
-
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    title: lang.guide,
-                    actions: [
-                      NamidaButton(
-                        text: lang.folder,
-                        onTap: () {
-                          NamidaNavigator.inst.closeDialog();
-                          onConfirm(true);
-                        },
-                      ),
-                      SizedBox(width: 2.0),
-                      NamidaButton(
-                        text: lang.confirm,
-                        onTap: () async {
-                          NamidaNavigator.inst.closeDialog();
-                          onConfirm(false);
-                        },
-                      ),
-                    ],
-                    child: NamidaSelectableAutoLinkText(
-                      text: lang.importLastFmHistoryGuide(lastfmCsvLink: 'https://benjaminbenben.com/lastfm-to-csv/'),
-                    ),
+          // -- Import Spotify History
+          getItemWrapper(
+            key: _BackupAndRestoreKeys.importSpotify,
+            child: CustomListTile(
+              bgColor: getBgColor(_BackupAndRestoreKeys.importSpotify),
+              title: lang.importSpotifyHistory,
+              leading: StackedIcon(
+                baseIcon: Broken.import_2,
+                smallChild: BorderRadiusClip(
+                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                  child: Image.asset(
+                    'assets/icons/spotify.png',
+                    width: 12,
+                    height: 12,
                   ),
+                ),
+              ),
+              trailing: const SizedBox(
+                height: 32.0,
+                width: 32.0,
+                child: ParsingJsonPercentage(
+                  size: 32.0,
+                  source: TrackSource.spotify,
+                  forceDisplay: false,
+                ),
+              ),
+              onTap: () {
+                _importGeneralNonYTSource(
+                  source: TrackSource.spotify,
+                  title: lang.importSpotifyHistory,
+                  guideWithLink: lang.importSpotifyHistoryGuide(link: 'https://www.spotify.com/account/privacy'),
+                  allowedExtensions: NamidaFileExtensionsWrapper.jsonAndZip,
                 );
               },
             ),

@@ -459,6 +459,20 @@ class JsonToHistoryParser {
           datesAdded.addAll(res.historyDays);
         }
         break;
+
+      case TrackSource.spotify:
+        currentParsingSource.value = TrackSource.spotify;
+        final res = await _addSpotifySource(
+          files: files,
+          matchAll: matchAll,
+          oldestDate: oldestDate,
+          newestDate: newestDate,
+        );
+        if (res != null) {
+          allMissingEntries = res.missingEntries;
+          datesAdded.addAll(res.historyDays);
+        }
+        break;
       case TrackSource.local:
         break;
     }
@@ -523,40 +537,60 @@ class JsonToHistoryParser {
     final int total = contents.length;
     if (total == 0) return [];
 
-    if (source == TrackSource.youtube || source == TrackSource.youtubeMusic) {
-      for (final file in contents) {
-        progress++;
-        onProgress(progress, total);
-        if (file is File) {
-          await executeFileEnsureZipExtracted(
-            file,
-            (file) {
-              if (NamidaFileExtensionsWrapper.json.isPathValid(file.path)) {
-                final name = file.path.getFilename;
-                if (name.contains('watch-history')) files.add(file);
-              }
-            },
-          );
+    switch (source) {
+      case TrackSource.youtube || TrackSource.youtubeMusic:
+        for (final file in contents) {
+          progress++;
+          onProgress(progress, total);
+          if (file is File) {
+            await executeFileEnsureZipExtracted(
+              file,
+              (file) {
+                if (NamidaFileExtensionsWrapper.json.isPathValid(file.path)) {
+                  final name = file.path.getFilename;
+                  if (name.contains('watch-history')) files.add(file);
+                }
+              },
+            );
+          }
         }
-      }
-    } else {
-      for (final file in contents) {
-        progress++;
-        onProgress(progress, total);
-        if (file is File) {
-          await executeFileEnsureZipExtracted(
-            file,
-            (file) {
-              if (NamidaFileExtensionsWrapper.csv.isPathValid(file.path)) {
-                // folder shouldnt contain yt playlists/etc csv files tho, otherwise wer cooked
-                final name = file.path.getFilename;
-                if (name != 'subscriptions.csv') files.add(file);
-              }
-            },
-          );
+
+      case TrackSource.lastfm:
+        for (final file in contents) {
+          progress++;
+          onProgress(progress, total);
+          if (file is File) {
+            await executeFileEnsureZipExtracted(
+              file,
+              (file) {
+                if (NamidaFileExtensionsWrapper.csv.isPathValid(file.path)) {
+                  // folder shouldnt contain yt playlists/etc csv files tho, otherwise wer cooked
+                  final name = file.path.getFilename;
+                  if (name != 'subscriptions.csv') files.add(file);
+                }
+              },
+            );
+          }
         }
-      }
+      case TrackSource.spotify:
+        for (final file in contents) {
+          progress++;
+          onProgress(progress, total);
+          if (file is File) {
+            await executeFileEnsureZipExtracted(
+              file,
+              (file) {
+                if (NamidaFileExtensionsWrapper.json.isPathValid(file.path)) {
+                  files.add(file);
+                }
+              },
+            );
+          }
+        }
+      case TrackSource.local:
+        null;
     }
+
     return files;
   }
 
@@ -1032,12 +1066,43 @@ class JsonToHistoryParser {
     return tracksToAdd;
   }
 
-  /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   Future<({List<int> historyDays, Map<_MissingListenEntry, List<int>> missingEntries})?> _addLastFmSource({
     required List<File> files,
     required bool matchAll,
     required DateTime? oldestDate,
     required DateTime? newestDate,
+  }) async {
+    return await _addGeneralSource(
+      files: files,
+      matchAll: matchAll,
+      oldestDate: oldestDate,
+      newestDate: newestDate,
+      callback: (params) => Isolate.run(() => _addLastFmSourceIsolate(params)),
+    );
+  }
+
+  Future<({List<int> historyDays, Map<_MissingListenEntry, List<int>> missingEntries})?> _addSpotifySource({
+    required List<File> files,
+    required bool matchAll,
+    required DateTime? oldestDate,
+    required DateTime? newestDate,
+  }) async {
+    return await _addGeneralSource(
+      files: files,
+      matchAll: matchAll,
+      oldestDate: oldestDate,
+      newestDate: newestDate,
+      callback: (params) => Isolate.run(() => _addSpotifySourceIsolate(params)),
+    );
+  }
+
+  /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
+  Future<({List<int> historyDays, Map<_MissingListenEntry, List<int>> missingEntries})?> _addGeneralSource({
+    required List<File> files,
+    required bool matchAll,
+    required DateTime? oldestDate,
+    required DateTime? newestDate,
+    required Future<_GeneralSourceResult?> Function(Map params) callback,
   }) async {
     final portProgressParsed = RawReceivePort((message) {
       parsedHistoryJson.value += message as int;
@@ -1083,7 +1148,7 @@ class JsonToHistoryParser {
 
     HistoryController.inst.setIdleStatus(true);
 
-    final res = await _addLastFmSourceIsolate.thready(params);
+    final res = await callback(params);
 
     portProgressParsed.close();
     portProgressAdded.close();
@@ -1091,7 +1156,7 @@ class JsonToHistoryParser {
     if (res != null) {
       HistoryController.inst.historyMap.value = res.localHistory;
       if (res.addedHistoryCount > 0) {
-        HistoryController.inst.totalHistoryItemsCount.value = res.addedHistoryCount;
+        HistoryController.inst.totalHistoryItemsCount.value += res.addedHistoryCount;
         HistoryController.inst.totalHistoryItemsCount.refresh();
       }
     }
@@ -1107,15 +1172,7 @@ class JsonToHistoryParser {
   }
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
-  static Future<
-    ({
-      List<int> daysToSaveLocal,
-      int addedHistoryCount,
-      SplayTreeMap<int, List<TrackWithDate>> localHistory,
-      Map<_MissingListenEntry, List<int>> missingEntries,
-    })?
-  >
-  _addLastFmSourceIsolate(Map params) async {
+  static Future<_GeneralSourceResult?> _addLastFmSourceIsolate(Map params) async {
     final allTracks = params['tracks'] as List<Map>;
     final oldestDay = params['oldestDay'] as int?;
     final newestDay = params['newestDay'] as int?;
@@ -1277,7 +1334,172 @@ class JsonToHistoryParser {
     portProgressParsed.send(totalParsed);
     portProgressAdded.send(totalAdded);
 
-    return (
+    return _GeneralSourceResult(
+      daysToSaveLocal: daysToSaveLocal,
+      addedHistoryCount: addedHistoryCount,
+      localHistory: localHistory,
+      missingEntries: missingEntries,
+    );
+  }
+
+  /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
+  static Future<_GeneralSourceResult?> _addSpotifySourceIsolate(Map params) async {
+    final allTracks = params['tracks'] as List<Map>;
+    final oldestDay = params['oldestDay'] as int?;
+    final newestDay = params['newestDay'] as int?;
+    final files = params['files'] as List<File>;
+    final matchAll = params['matchAll'] as bool;
+    final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
+
+    final localHistory = params['localHistory'] as SplayTreeMap<int, List<TrackWithDate>>;
+
+    int addedHistoryCount = 0;
+
+    final portProgressParsed = params['portProgressParsed'] as SendPort;
+    final portProgressAdded = params['portProgressAdded'] as SendPort;
+    final portLoadingProgress = params['portLoadingProgress'] as SendPort;
+
+    int jsonResponseTotal = 0;
+    for (final file in files) {
+      jsonResponseTotal += await JsonToHistoryParser._countJsonObjectsInList(file);
+    }
+    portLoadingProgress.send(jsonResponseTotal); // 1
+
+    final tracksLookupTitlesMap = <String, List<Map>>{};
+    final tracksLookupArtistsMap = <String, List<Map>>{};
+
+    final reverseTitleMatcher = ReverseSearchMatcher<Map>();
+    final reverseArtistMatcher = ReverseSearchMatcher<Map>();
+
+    for (final trMap in allTracks) {
+      final title = trMap['title'] as String;
+      tracksLookupTitlesMap.addForce(title.cleanUpForComparison, trMap);
+      reverseTitleMatcher.addItemWithTokens(trMap, title.splitFirst('(').splitFirst('['));
+
+      final originalArtist = trMap['artist'] as String;
+      final artistsList = Indexer.splitArtist(
+        title: title,
+        originalArtist: originalArtist,
+        config: artistsSplitConfig,
+      );
+      for (final ar in artistsList) {
+        tracksLookupArtistsMap.addForce(ar.cleanUpForComparison, trMap);
+      }
+      if (artistsList.isNotEmpty) {
+        reverseArtistMatcher.addItemWithTokens(trMap, artistsList.first);
+      }
+    }
+
+    final missingEntries = <_MissingListenEntry, List<int>>{};
+    int totalParsed = 0;
+    int totalAdded = 0;
+    final daysToSaveLocal = <int>[];
+    const chunkSize = 20;
+
+    for (final file in files) {
+      List? list = jsonDecode(file.readAsStringSync()) as List?;
+      if (list == null) continue;
+
+      for (final map in list) {
+        totalParsed++;
+
+        try {
+          final mapMsPlayed = map['ms_played'] as int?;
+          if (mapMsPlayed != null && mapMsPlayed == 0) {
+            // -- wasn't really played, skip... (or should we?)
+            continue;
+          }
+          final mapTimestamp = DateTime.parse(map['ts'] ?? '');
+          final mapTitle = map['master_metadata_track_name'] as String;
+          final mapArtist = map['master_metadata_album_artist_name'] as String;
+          // final mapAlbum = map['master_metadata_album_album_name'] as String;
+
+          // -- skips if the date is not inside date range specified.
+          if (oldestDay != null && newestDay != null) {
+            final watchAsDSE = mapTimestamp.toDaysSince1970();
+            if (watchAsDSE < oldestDay || watchAsDSE > newestDay) continue;
+          }
+
+          final dateMSSE = mapTimestamp.millisecondsSinceEpoch;
+
+          final tracks = <Map>[];
+          final mapTitleCleaned = mapTitle.cleanUpForComparison;
+          final mapArtistCleaned = mapArtist.cleanUpForComparison;
+
+          final titleMatching = tracksLookupTitlesMap[mapTitleCleaned];
+          final artistMatching = tracksLookupArtistsMap[mapArtistCleaned];
+          if (titleMatching != null && titleMatching.isNotEmpty && artistMatching != null && artistMatching.isNotEmpty) {
+            final intersection = titleMatching.where((track) => artistMatching.contains(track));
+            if (intersection.isNotEmpty) {
+              if (matchAll) {
+                tracks.addAll(intersection);
+              } else {
+                tracks.add(intersection.first);
+              }
+            }
+          }
+
+          if (tracks.isEmpty) {
+            /// matching has to meet 2 conditons:
+            /// [map artist] contains [track.artistsList.first]
+            /// [map title] contains [track.title], anything after ( or [ is ignored.
+            final titleMatches = reverseTitleMatcher.matchContainedIn(mapTitleCleaned);
+            final artistMatches = reverseArtistMatcher.matchContainedIn(mapArtistCleaned);
+            final matched = titleMatches.intersection(artistMatches);
+            if (matchAll) {
+              tracks.addAll(matched);
+            } else if (matched.isNotEmpty) {
+              tracks.add(matched.first);
+            }
+          }
+
+          totalAdded += tracks.length;
+          if (tracks.isNotEmpty) {
+            for (final trMap in tracks) {
+              final twd = TrackWithDate(
+                dateAdded: dateMSSE,
+                track: Track.decide(trMap['path'] ?? '', trMap['v']),
+                source: TrackSource.spotify,
+              );
+              final day = twd.dateAdded.toDaysSince1970();
+              final tracks = localHistory[day] ??= [];
+              if (!tracks.contains(twd)) {
+                daysToSaveLocal.add(day);
+                tracks.add(twd);
+                addedHistoryCount++;
+              }
+            }
+          } else {
+            final me = _MissingListenEntry(
+              youtubeID: null,
+              dateMSSE: dateMSSE,
+              source: TrackSource.spotify,
+              artistOrChannel: mapArtist,
+              title: mapTitle,
+            );
+            missingEntries.addForce(me, me.dateMSSE);
+          }
+
+          /// updates progress every [chunkSize] lines, calling on every loop affects benchmarks heavily.
+          if (totalParsed >= chunkSize) {
+            portProgressParsed.send(totalParsed);
+            totalParsed = 0;
+          }
+          if (totalAdded >= chunkSize) {
+            portProgressAdded.send(totalAdded);
+            totalAdded = 0;
+          }
+        } catch (e) {
+          printo(e, isError: true);
+          continue;
+        }
+      }
+    }
+    // normally the loop automatically adds every [chunkSize] tracks, this one is to ensure adding any tracks left.
+    portProgressParsed.send(totalParsed);
+    portProgressAdded.send(totalAdded);
+
+    return _GeneralSourceResult(
       daysToSaveLocal: daysToSaveLocal,
       addedHistoryCount: addedHistoryCount,
       localHistory: localHistory,
@@ -1444,4 +1666,18 @@ extension _YTWatchListExt on List<YTWatch> {
       if (!alrExists) this.add(item);
     }
   }
+}
+
+class _GeneralSourceResult {
+  final List<int> daysToSaveLocal;
+  final int addedHistoryCount;
+  final SplayTreeMap<int, List<TrackWithDate>> localHistory;
+  final Map<_MissingListenEntry, List<int>> missingEntries;
+
+  const _GeneralSourceResult({
+    required this.daysToSaveLocal,
+    required this.addedHistoryCount,
+    required this.localHistory,
+    required this.missingEntries,
+  });
 }
