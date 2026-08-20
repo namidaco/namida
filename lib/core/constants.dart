@@ -544,9 +544,12 @@ class AppPathsBackupEnumCategories {
     AppPathsBackupEnum.YT_DOWNLOAD_TASKS,
     AppPathsBackupEnum.VIDEO_ID_STATS_DB_INFO,
     AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY,
+    AppPathsBackupEnum.RECENTLY_DELETED,
   ];
   static List<AppPathsBackupEnum> database_yt = [
     AppPathsBackupEnum.YT_STATS,
+    AppPathsBackupEnum.YT_SUBSCRIPTIONS,
+    AppPathsBackupEnum.YT_SUBSCRIPTIONS_GROUPS_ALL,
   ];
 
   static List<AppPathsBackupEnum> playlists = [
@@ -556,6 +559,7 @@ class AppPathsBackupEnumCategories {
     AppPathsBackupEnum.PLAYLISTS_ARTWORKS,
     AppPathsBackupEnum.PLAYLISTS_METADATA,
     AppPathsBackupEnum.FAVOURITES_PLAYLIST,
+    AppPathsBackupEnum.M3UBackup,
   ];
   static List<AppPathsBackupEnum> playlists_yt = [
     AppPathsBackupEnum.YT_PLAYLISTS,
@@ -934,6 +938,8 @@ class AppSocial {
   static const GITHUB_RELEASES_BETA = '$GITHUB_SNAPSHOTS/releases/';
   static const EMAIL = 'namida.coo@gmail.com';
   static const TRANSLATION_REPO = 'https://github.com/namidaco/namida-translations';
+
+  static const YOUTUBE_TAKEOUT = 'https://takeout.google.com/takeout/custom/youtube';
 
   static const NAMIDA_SYNC_GITHUB_RELEASE = 'https://github.com/010101-sans/namida_sync/releases';
 }

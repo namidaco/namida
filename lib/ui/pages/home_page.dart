@@ -1079,6 +1079,7 @@ class _YoutubeHomePageState extends _HomePageStateBase<YoutubeID, String, YTHome
     String? subtitle,
     Widget? thirdWidget,
     ScrollController? controller,
+    bool extraHeight = false,
   }) {
     return SliverToBoxAdapter(
       child: VideoTilePropertiesProvider(
@@ -1094,7 +1095,7 @@ class _YoutubeHomePageState extends _HomePageStateBase<YoutubeID, String, YTHome
           thirdWidget: thirdWidget,
           controller: controller,
           onTap: onTap,
-          height: 156.0,
+          height: 144.0 + (extraHeight ? 12.0 : 0.0),
           itemCount: _isLoading ? _shimmerList.length : itemCount,
           itemExtent: _cardExtent,
           itemBuilder: (context, index) {
@@ -1123,6 +1124,7 @@ class _YoutubeHomePageState extends _HomePageStateBase<YoutubeID, String, YTHome
       element: element,
       itemCount: _recentListened.length,
       onTap: YTUtils.onYoutubeHistoryPlaylistTap,
+      extraHeight: true,
       itemBuilder: (context, index, properties) => YTHistoryVideoCard(
         properties: properties,
         minimalCard: true,

@@ -141,14 +141,14 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
   late final bool Function(DateTime? trackDate) _dateFnRaw = switch (filter) {
     SmartPlaylistRuleFilterDateTime.isSame => (trackDate) => _normalizedData != null && trackDate?.isAtSameMomentAs(_normalizedData) == true,
     SmartPlaylistRuleFilterDateTime.isNotSame => (trackDate) => _normalizedData != null && trackDate?.isAtSameMomentAs(_normalizedData) == false,
-    SmartPlaylistRuleFilterDateTime.isBefore => (trackDate) => _normalizedData != null && trackDate?.isBefore(_normalizedData) == true,
-    SmartPlaylistRuleFilterDateTime.isAfter => (trackDate) => _normalizedData != null && trackDate?.isAfter(_normalizedData) == true,
+    SmartPlaylistRuleFilterDateTime.isBefore => (trackDate) => _normalizedData != null && trackDate?.isBeforeOrEqual(_normalizedData) == true,
+    SmartPlaylistRuleFilterDateTime.isAfter => (trackDate) => _normalizedData != null && trackDate?.isAfterOrEqual(_normalizedData) == true,
     SmartPlaylistRuleFilterDateTime.isInBetween => (trackDate) {
       if (trackDate == null) return false;
       if (_crossesMidnight) {
-        return trackDate.isAfter(_normalizedData!) || trackDate.isBefore(_normalizedData2!);
+        return trackDate.isAfterOrEqual(_normalizedData!) || trackDate.isBeforeOrEqual(_normalizedData2!);
       }
-      return (_startDate != null && trackDate.isAfter(_startDate)) && trackDate.isBefore(_endDate ?? DateTime.now());
+      return (_startDate != null && trackDate.isAfterOrEqual(_startDate)) && trackDate.isBeforeOrEqual(_endDate ?? DateTime.now());
     },
     SmartPlaylistRuleFilterDateTime.isOutside => (trackDate) {
       if (trackDate == null) return false;
@@ -373,7 +373,7 @@ enum SmartPlaylistRelativeUnit {
   days,
   weeks,
   months,
-  years
+  years,
   ;
 
   String toText() => switch (this) {
@@ -434,4 +434,13 @@ class SmartPlaylistRelativeDuration {
 
   @override
   int get hashCode => amount.hashCode ^ unit.hashCode;
+}
+
+/// in dates world, one usually means an inclusive date.
+/// ex: in between 2015-2016, so both exact dates should be included as well.
+/// usually useful for types like: `isBefore`, `isAfter`, `isInBetween`.
+/// but not for types like: `isOutside`.
+extension on DateTime {
+  bool isBeforeOrEqual(DateTime other) => isBefore(other) || isAtSameMomentAs(other);
+  bool isAfterOrEqual(DateTime other) => isAfter(other) || isAtSameMomentAs(other);
 }

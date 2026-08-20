@@ -61,11 +61,17 @@ class Indexer<T extends Track> {
 
   late final _tracksDBManager = DBWrapper.openFromInfo(
     fileInfo: AppPaths.TRACKS_DB_INFO,
-    config: const DBConfig(createIfNotExist: true),
+    config: const DBConfig(
+      createIfNotExist: true,
+    ),
   );
   late final _trackStatsDBManager = DBWrapper.openFromInfo(
     fileInfo: AppPaths.TRACKS_STATS_DB_INFO,
-    config: const DBConfig(createIfNotExist: true),
+    config: const DBConfig(
+      createIfNotExist: true,
+      // -- somehow the only db having issues with being closed in the important times
+      autoDisposeTimerDuration: null,
+    ),
   );
 
   final isIndexing = false.obs;

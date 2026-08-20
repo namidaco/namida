@@ -1135,8 +1135,8 @@ class StatsContainer extends StatelessWidget {
   final Widget? child;
   final Widget? leading;
   final IconData? icon;
-  final String? title;
-  final String? value;
+  final String title;
+  final String value;
   final String? total;
 
   const StatsContainer({
@@ -1144,8 +1144,8 @@ class StatsContainer extends StatelessWidget {
     this.child,
     this.leading,
     this.icon,
-    this.title,
-    this.value,
+    required this.title,
+    required this.value,
     this.total,
   });
 
@@ -1153,6 +1153,7 @@ class StatsContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Container(
+      constraints: BoxConstraints(minHeight: 42.0),
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       decoration: BoxDecoration(
         color: theme.cardTheme.color?.withAlpha(200),
@@ -1168,12 +1169,18 @@ class StatsContainer extends StatelessWidget {
                   Icon(
                     icon,
                     color: context.defaultIconColor(),
+                    size: 22.0,
                   ),
               const SizedBox(width: 8.0),
-              Text(title ?? ''),
-              const SizedBox(width: 8.0),
-              Text(value ?? ''),
-              if (total != null) Text(" ${lang.ofLabel} $total"),
+              Text(title),
+              const SizedBox(width: 6.0),
+              if (total == null)
+                Text(value)
+              else
+                Text(
+                  '$value ${lang.ofLabel} $total',
+                  style: TextStyle(fontSize: 13.0),
+                ),
             ],
           ),
     );
@@ -1526,16 +1533,16 @@ class _NamidaExpansionTileState extends State<NamidaExpansionTile> {
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
     final trailingIconWidget = ObxO(
-        rx: _rotationTurns,
-        builder: (context, turns) => AnimatedRotation(
-          turns: turns,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.fastEaseInToSlowEaseOut,
+      rx: _rotationTurns,
+      builder: (context, turns) => AnimatedRotation(
+        turns: turns,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.fastEaseInToSlowEaseOut,
         child: Padding(
           padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0, vertical: 4.0),
           child: Icon(
-              Broken.arrow_down_2,
-              size: widget.trailingIconSize,
+            Broken.arrow_down_2,
+            size: widget.trailingIconSize,
           ),
         ),
       ),

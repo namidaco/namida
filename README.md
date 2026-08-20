@@ -335,9 +335,9 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 > (you may skip this if you used a package manager)
 >
 > ```bash
-> sudo pacman -S mpv     # Arch/Manjaro
-> sudo apt install mpv   # Debian/Ubuntu/Mint
-> sudo dnf install mpv   # Fedora/RHEL
+> sudo pacman -S mpv            # Arch/Manjaro
+> sudo apt install mpv          # Debian/Ubuntu/Mint
+> sudo dnf install mpv mpv-libs # Fedora/RHEL
 > ```
 
 > [!NOTE]

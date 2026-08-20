@@ -35,10 +35,13 @@ body:
       value: |
         <details>
         <summary>Logs</summary>
+
         ```
         <Replace this line by pasting your logs here>
         ```
+        
         </details>
+
     validations:
       required: true
   - type: textarea

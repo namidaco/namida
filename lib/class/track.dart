@@ -799,12 +799,12 @@ extension TrackExtUtils on TrackExtended {
   }) {
     final finaltitle = tag.title ?? title;
     final originalAlbum = tag.album ?? this.originalAlbum;
-    final finalalbums = tag.tags != null
+    final finalalbums = tag.album != null
         ? Indexer.splitAlbum(
             originalAlbum,
             config: splittersConfigs.albumConfig,
           )
-        : tagsList;
+        : albumsList;
     final finalartists = tag.artist != null
         ? Indexer.splitArtist(
             title: finaltitle,

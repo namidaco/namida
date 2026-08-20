@@ -18,6 +18,7 @@ import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -1097,8 +1098,11 @@ class IndexerSettings extends SettingSubpageProvider {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            height: 50,
+            height: 52.0,
+            width: context.width,
             child: FittedBox(
+              fit: .scaleDown,
+              alignment: Dimensions.inst.availableAppContentWidthContext(context) < 664.0 ? AlignmentDirectional.center : AlignmentDirectional.centerStart,
               child: ObxO(
                 rx: Indexer.inst.allAudioFiles,
                 builder: (context, allAudioFiles) => Row(
@@ -1108,7 +1112,7 @@ class IndexerSettings extends SettingSubpageProvider {
                       rx: Indexer.inst.tracksInfoList,
                       builder: (context, tracksInfoList) => StatsContainer(
                         icon: Broken.info_circle,
-                        title: '${lang.tracksInfo} :',
+                        title: '${lang.tracksInfo}:',
                         value: tracksInfoList.length.formatDecimal(),
                         total: allAudioFiles.isEmpty ? null : allAudioFiles.length.formatDecimal(),
                       ),
@@ -1117,7 +1121,7 @@ class IndexerSettings extends SettingSubpageProvider {
                       rx: Indexer.inst.artworksInStorage,
                       builder: (context, artworksInStorage) => StatsContainer(
                         icon: Broken.image,
-                        title: '${lang.artworks} :',
+                        title: '${lang.artworks}:',
                         value: artworksInStorage == 0 ? '?' : artworksInStorage.formatDecimal(),
                         total: allAudioFiles.isEmpty ? null : allAudioFiles.length.formatDecimal(),
                       ),

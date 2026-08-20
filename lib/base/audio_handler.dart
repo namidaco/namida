@@ -2751,7 +2751,9 @@ UriSource _buildCacheableAVSource(
     // -- usually required for yt new urls that enforces chunk streaming
     cacheConfig.requestHeaders['Range'] = 'bytes=0-${size - 1}';
   }
-  cacheConfig.onCacheDone = onFirstCacheDone;
+  cacheConfig.onCacheDone = (stream, file) {
+    onFirstCacheDone(file);
+  };
   final cacheStream = HttpCacheManager.instance.createStream(
     uriDDL,
     file: cacheFile,

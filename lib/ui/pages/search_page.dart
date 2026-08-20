@@ -175,6 +175,7 @@ class _SearchPageState extends State<SearchPage> {
     final filterIChipsTypes = MediaType.values.toList();
     filterIChipsTypes.remove(MediaType.track);
     filterIChipsTypes.remove(MediaType.folder);
+    filterIChipsTypes.remove(MediaType.rating);
 
     final filterChipsChildren = <Widget>[];
 

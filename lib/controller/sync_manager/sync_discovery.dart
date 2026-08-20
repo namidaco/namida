@@ -323,7 +323,7 @@ class _ClientSide extends RxNotifier {
 
     late final localeInterfacesSet = SyncUtils.getLocalInterfaceAddresses();
     Future<bool> isSelf(NetworkDevice s) async {
-      if (kDebugMode || isKuru) return false; // TODO: testing only
+      if (kDebugMode && isKuru && Platform.isWindows) return false;
       final discoveredAddress = s.address;
       final interfacesSet = await localeInterfacesSet;
       if (interfacesSet.contains(discoveredAddress)) return true;

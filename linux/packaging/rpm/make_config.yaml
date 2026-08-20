@@ -13,6 +13,7 @@ build_arch: x86_64
 
 requires:
   - mpv # (has mpv-devel as sub)
+  - mpv-libs
   - libepoxy
   - bzip2-libs
 

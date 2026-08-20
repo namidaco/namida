@@ -320,8 +320,13 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                           );
                         },
                       ),
+                      const SizedBox(height: 4.0),
 
-                      const SizedBox(height: 8.0),
+                      NamidaContainerDivider(
+                        margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                      ),
+
+                      const SizedBox(height: 4.0),
                       _SectionTitle(
                         title: lang.connectedDevices,
                         count: devices.length,
@@ -335,7 +340,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                         ),
                       ),
 
-                      const SizedBox(height: 8.0),
+                      const SizedBox(height: 12.0),
                       _SectionTitle(
                         title: lang.availableDevices,
                         count: availableNotKnown.length,
@@ -346,11 +351,17 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                         ),
                       ),
 
-                      const SizedBox(height: 8.0),
+                      const SizedBox(height: 4.0),
+
+                      NamidaContainerDivider(
+                        margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                      ),
+
+                      const SizedBox(height: 4.0),
                       ObxO(
                         rx: settings.sync.syncItems,
                         builder: (context, syncItems) => _SectionTitle(
-                          title: lang.dataToSend,
+                          title: lang.dataToSendAndReceive,
                           count: syncItems?.length ?? settings.sync.syncItems.fallback.length,
                           total: SyncDataItem.values.length,
                           trailing: Row(
@@ -455,6 +466,7 @@ class _SectionTitle extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
+        crossAxisAlignment: .start,
         children: [
           if (count != null)
             ConstrainedBox(

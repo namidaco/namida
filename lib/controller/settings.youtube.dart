@@ -230,7 +230,7 @@ class _YoutubeSettings with SettingsFileWriter {
       }
 
       markVideoWatched = json['markVideoWatched'] ?? markVideoWatched;
-      innertubeClient = InnertubeClients.values.getEnum(json['innertubeClient']);
+      innertubeClient = InnertubeClients.values.getEnum(json['innertubeClient_v2']);
       whiteVideoBGInLightMode = json['whiteVideoBGInLightMode'] ?? whiteVideoBGInLightMode;
       enableDimInLightMode = json['enableDimInLightMode'] ?? enableDimInLightMode;
       allowExperimentalCodecs = json['allowExperimentalCodecs'] ?? allowExperimentalCodecs;
@@ -279,7 +279,7 @@ class _YoutubeSettings with SettingsFileWriter {
     'ryd': ryd.value.toJson(),
     'initialDefaultMetadataTags': initialDefaultMetadataTags,
     'markVideoWatched': markVideoWatched,
-    'innertubeClient': innertubeClient?.name,
+    'innertubeClient_v2': innertubeClient?.name,
     'whiteVideoBGInLightMode': whiteVideoBGInLightMode,
     'enableDimInLightMode': enableDimInLightMode,
     'allowExperimentalCodecs': allowExperimentalCodecs,
