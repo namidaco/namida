@@ -110,6 +110,9 @@ class SyncSender extends RxNotifier {
     _fingerprintsSentTo.remove(deviceId);
     SyncPathResolver.clearForDevice(deviceId);
     SyncActionsLog.inst.onDeviceDisconnected(deviceId);
+
+    // -- just extra
+    SyncDiscovery.batchProgressForDeviceIdRx[deviceId] = null;
   }
 
   /// sends local tracks db fingerprints once per connection, so the receiver
@@ -185,21 +188,39 @@ class SyncSender extends RxNotifier {
     if (items.isEmpty) return;
     _sendingToDeviceIds.add(deviceId);
     _refresh();
+    int itemProgress = 1;
+    final totalItemsCount = items.length;
+    final batchInfoMsgInfo = await SyncUtils.createMessageInfo(.manifest);
     try {
       for (final item in items) {
-        await _sendItem(item, deviceId);
+        // -- send batch info before actual info
+        final batchInfo = BatchInfoMessage(
+          messageInfo: batchInfoMsgInfo,
+          progressItem: item,
+          progress: itemProgress,
+          total: totalItemsCount,
+        );
+        await SyncDiscovery.sendAndUpdateBatchProgress(deviceId, batchInfo);
+
+        await _sendItem(item, deviceId, batchInfo);
+
+        itemProgress++;
       }
+      await SyncDiscovery.sendAndUpdateBatchProgress(deviceId, BatchInfoMessage.dummy(batchInfoMsgInfo));
     } catch (e, st) {
       final deviceName = settings.sync.deviceIdNames[deviceId] ?? deviceId;
       snackyy(message: '${lang.failed}: "$deviceName": $e', isError: true);
       logger.error('Error sending to "$deviceName"', e: e, st: st);
+      try {
+        await SyncDiscovery.sendAndUpdateBatchProgress(deviceId, BatchInfoMessage.dummy(batchInfoMsgInfo));
+      } catch (_) {}
     } finally {
       _sendingToDeviceIds.remove(deviceId);
       _refresh();
     }
   }
 
-  Future<void> _sendItem(SyncDataItem item, String deviceId) async {
+  Future<void> _sendItem(SyncDataItem item, String deviceId, BatchInfoMessage batchInfoMessage) async {
     final BaseMessage? msg = switch (item) {
       SyncDataItem.history => HistoryListensMessage(
         tracks: HistoryController.inst.historyTracks,
@@ -238,17 +259,17 @@ class SyncSender extends RxNotifier {
             ? await DbManifestRequestMessage.create(AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY)
             : await DbFileMessage.create(AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY),
       SyncDataItem.subscriptionsYt => await YTSubscriptionsMessage.createForCurrentDevice(),
-      SyncDataItem.queues => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.QUEUES),
-      SyncDataItem.lyrics => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.LYRICS),
-      SyncDataItem.videosCache => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.VIDEOS_CACHE),
-      SyncDataItem.audiosCache => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.AUDIOS_CACHE),
-      SyncDataItem.playlistsArtworks => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.PLAYLISTS_ARTWORKS),
-      SyncDataItem.smartPlaylistsArtworks => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.SMART_PLAYLISTS_ARTWORKS),
-      SyncDataItem.playlistsArtworksYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_PLAYLISTS_ARTWORKS),
-      SyncDataItem.artworksArtists => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.ARTWORKS_ARTISTS),
-      SyncDataItem.artworksAlbums => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.ARTWORKS_ALBUMS),
-      SyncDataItem.thumbnailsYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_THUMBNAILS),
-      SyncDataItem.thumbnailsChannelsYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_THUMBNAILS_CHANNELS),
+      SyncDataItem.queues => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.QUEUES, batchInfoMessage),
+      SyncDataItem.lyrics => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.LYRICS, batchInfoMessage),
+      SyncDataItem.videosCache => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.VIDEOS_CACHE, batchInfoMessage),
+      SyncDataItem.audiosCache => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.AUDIOS_CACHE, batchInfoMessage),
+      SyncDataItem.playlistsArtworks => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.PLAYLISTS_ARTWORKS, batchInfoMessage),
+      SyncDataItem.smartPlaylistsArtworks => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.SMART_PLAYLISTS_ARTWORKS, batchInfoMessage),
+      SyncDataItem.playlistsArtworksYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_PLAYLISTS_ARTWORKS, batchInfoMessage),
+      SyncDataItem.artworksArtists => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.ARTWORKS_ARTISTS, batchInfoMessage),
+      SyncDataItem.artworksAlbums => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.ARTWORKS_ALBUMS, batchInfoMessage),
+      SyncDataItem.thumbnailsYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_THUMBNAILS, batchInfoMessage),
+      SyncDataItem.thumbnailsChannelsYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_THUMBNAILS_CHANNELS, batchInfoMessage),
       SyncDataItem.playerQueue => await PlayerQueueMessage.createForCurrentDevice(),
       SyncDataItem.playback => await PlaybackStateMessage.createForCurrentDevice(),
     };

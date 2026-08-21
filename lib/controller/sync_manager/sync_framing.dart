@@ -3,7 +3,7 @@ part of 'sync_manager.dart';
 
 class _FrameWriter {
   final Socket _socket;
-  const _FrameWriter(this._socket);
+  _FrameWriter(this._socket);
 
   /// the frame payload is a utf8 json message.
   static const kFrameKindJson = 0;
@@ -15,11 +15,31 @@ class _FrameWriter {
   /// bytes preceding each frame payload: 4 length bytes + 1 kind byte.
   static const kFrameHeaderSize = 5;
 
+  Future<void> _writeLock = Future.value();
+
+  /// without the lock, there will always be an issue while trying to send payload while an operation is executing.
+  /// for example: sending disconnect command while sending files
+  Future<T> _synchronized<T>(Future<T> Function() action) async {
+    final previous = _writeLock;
+    final completer = Completer<void>();
+    _writeLock = completer.future;
+    await previous.catchError((_) {}); // wait our turn & ignore earlier failures
+    try {
+      return await action();
+    } finally {
+      completer.complete();
+    }
+  }
+
   /// sends the message json frame, followed by a raw binary frame
   /// if the message carries a binary payload.
   ///
   /// returns the total bytes written, including frame headers.
-  Future<int> sendMessage(BaseMessage message) async {
+  Future<int> sendMessage(BaseMessage message) {
+    return _synchronized(() => _sendMessageUnsafe(message));
+  }
+
+  Future<int> _sendMessageUnsafe(BaseMessage message) async {
     final jsonBytes = message.encodeBytes();
     add(jsonBytes, kFrameKindJson);
     int totalBytes = kFrameHeaderSize + jsonBytes.length;
@@ -45,6 +65,18 @@ class _FrameWriter {
   }
 
   Future<void> flush() => _socket.flush();
+
+  Future<void> closeSocket() {
+    return _synchronized(() async {
+      try {
+        await _socket.close();
+      } catch (_) {
+        // socket being swallowed by on going operation, whatever
+      } finally {
+        _socket.destroy();
+      }
+    });
+  }
 }
 
 // can be far more simpler, but this version has max performance

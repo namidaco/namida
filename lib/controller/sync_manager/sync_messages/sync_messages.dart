@@ -46,6 +46,7 @@ sealed class BaseMessage {
       MessageType.ping => PingMessage.fromMap,
       MessageType.connectionRequest => ConnectionRequestMessage.fromMap,
       MessageType.messageRequest => RequestMessage.fromMap,
+      MessageType.batchInfo => BatchInfoMessage.fromMap,
       MessageType.syncItemsRequest => SyncItemsRequestMessage.fromMap,
       // ------------- local -------------
       MessageType.historyListens => HistoryListensMessage.fromMap,
@@ -258,6 +259,47 @@ class SyncItemsRequestMessage extends BaseMessage {
   FutureOr<void> executeOnReceived() {
     if (items.isEmpty) return null;
     return SyncSender.inst.sendItemsToDevice(items, messageInfo.senderDeviceId);
+  }
+}
+
+class BatchInfoMessage extends BaseMessage {
+  final SyncDataItem? progressItem;
+  final int progress;
+  final int total;
+
+  const BatchInfoMessage({
+    required super.messageInfo,
+    required this.progressItem,
+    required this.progress,
+    required this.total,
+  }) : super(MessageType.batchInfo);
+
+  factory BatchInfoMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
+    return BatchInfoMessage(
+      progressItem: SyncDataItem.lookupMap[map['pi']],
+      progress: map['p'] as int,
+      total: map['t'] as int,
+      messageInfo: messageInfo,
+    );
+  }
+
+  factory BatchInfoMessage.dummy(BaseMessageInfo messageInfo) => BatchInfoMessage(
+    messageInfo: messageInfo,
+    progressItem: null,
+    progress: 0,
+    total: 0,
+  );
+
+  @override
+  Map<String, dynamic> _encodeToMap() => {
+    'pi': ?progressItem?.name,
+    'p': progress,
+    't': total,
+  };
+
+  @override
+  FutureOr<void> executeOnReceived() {
+    SyncDiscovery.batchProgressForDeviceIdRx[messageInfo.senderDeviceId] = this;
   }
 }
 

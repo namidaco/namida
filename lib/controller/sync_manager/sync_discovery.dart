@@ -12,6 +12,13 @@ class SyncDiscovery {
 
   static final serverRunning = false.obs;
 
+  static final batchProgressForDeviceIdRx = <String, BatchInfoMessage?>{}.obs;
+
+  static Future<void> sendAndUpdateBatchProgress(String deviceId, BatchInfoMessage message) async {
+    SyncDiscovery.batchProgressForDeviceIdRx[deviceId] = message;
+    await SyncDiscovery.sendMessage(message, deviceId);
+  }
+
   static void _updateConnectionFlags() {
     anyDeviceConnected.value = client._connectedServers.isNotEmpty || server._clientsSockets.isNotEmpty;
   }
@@ -122,7 +129,7 @@ class _ServerSide extends RxNotifier {
                 existing._socket.destroy();
               } catch (_) {}
             }
-            final wrapper = _SocketWrapper.simple(socket, reader);
+            final wrapper = _SocketWrapper.simple(senderDeviceId, socket, reader);
             _clientsSockets[senderDeviceId] = wrapper;
             SyncDiscovery._recordSessionDevice(senderDeviceId, remoteAddress: wrapper.remoteAddressSafe, asServer: true);
             SyncDiscovery._updateConnectionFlags();
@@ -259,6 +266,7 @@ class _ServerSide extends RxNotifier {
 
   /// client is just telling us they will be gone.. (most likely we kicked them hehe)
   Future<void> disconnectConnection(String senderDeviceId) async {
+    SyncDiscovery.batchProgressForDeviceIdRx[senderDeviceId] = null;
     final wrapper = _clientsSockets.remove(senderDeviceId);
     if (wrapper == null) return;
     SyncSender.inst.onDeviceDisconnected(senderDeviceId);
@@ -435,6 +443,8 @@ class _ClientSide extends RxNotifier {
       (syncSettings) => syncSettings.allowedServerIds.remove(serverDeviceId),
     );
 
+    SyncDiscovery.batchProgressForDeviceIdRx[serverDeviceId] = null;
+
     final socket = _connectedServers.remove(serverDeviceId);
     if (socket != null) {
       SyncSender.inst.onDeviceDisconnected(serverDeviceId);
@@ -524,21 +534,30 @@ class _ClientSide extends RxNotifier {
     await disconnectFromServer(msg.messageInfo.senderDeviceId);
   }
 
-  Future<void> onConnectionUnBlocked(ConnectionRequestMessage msg) async {}
+  Future<void> onConnectionUnBlocked(ConnectionRequestMessage msg) async {
+    // -- do nothing
+  }
 }
 
 class _SocketWrapper {
+  final String deviceId;
   final Socket _socket;
   final _FrameWriter _writer;
   final _FrameReader? _reader;
 
   const _SocketWrapper({
+    required this.deviceId,
     required this._socket,
     required this._writer,
     this._reader,
   });
 
-  _SocketWrapper.simple(this._socket, [this._reader]) : _writer = _FrameWriter(_socket);
+  _SocketWrapper.simple(
+    this.deviceId,
+    this._socket, [
+    // ignore: unused_element_parameter
+    this._reader,
+  ]) : _writer = _FrameWriter(_socket);
 
   String? get remoteAddressSafe {
     try {
@@ -576,6 +595,7 @@ class _SocketWrapper {
       socket: socket,
       writer: writer,
       reader: reader,
+      deviceId: device.deviceId,
     );
   }
 
@@ -585,8 +605,9 @@ class _SocketWrapper {
   }
 
   Future<void> dispose() async {
-    await _socket.close();
-    _socket.destroy();
+    await _writer.closeSocket();
+
+    SyncDiscovery.batchProgressForDeviceIdRx[deviceId] = null;
   }
 }
 

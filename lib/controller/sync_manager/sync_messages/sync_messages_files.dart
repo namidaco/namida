@@ -35,15 +35,18 @@ abstract final class _DirFilesSyncUtils {
 
 class DirFilesManifestRequestMessage extends BaseMessage {
   final AppPathsBackupEnum subtype;
+  final BatchInfoMessage batchInfoMessage;
 
   const DirFilesManifestRequestMessage({
     required this.subtype,
+    required this.batchInfoMessage,
     required super.messageInfo,
   }) : super(MessageType.dirFilesManifestRequest);
 
-  static Future<DirFilesManifestRequestMessage> create(AppPathsBackupEnum subtype) async {
+  static Future<DirFilesManifestRequestMessage> create(AppPathsBackupEnum subtype, BatchInfoMessage batchInfoMessage) async {
     return DirFilesManifestRequestMessage(
       subtype: subtype,
+      batchInfoMessage: batchInfoMessage,
       messageInfo: await SyncUtils.createMessageInfo(.manifest),
     );
   }
@@ -51,12 +54,14 @@ class DirFilesManifestRequestMessage extends BaseMessage {
   factory DirFilesManifestRequestMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return DirFilesManifestRequestMessage(
       subtype: AppPathsBackupEnum.values.getEnum(map['st'] as String)!,
+      batchInfoMessage: BatchInfoMessage.fromMap(map['bim'], messageInfo),
       messageInfo: messageInfo,
     );
   }
 
   @override
   Map<String, dynamic> _encodeToMap() => {
+    'bim': batchInfoMessage._encodeToMap(),
     'st': subtype.name,
   };
 
@@ -66,6 +71,7 @@ class DirFilesManifestRequestMessage extends BaseMessage {
     final manifest = await _DirFilesSyncUtils.buildManifest(subtype);
     final msg = DirFilesManifestResponseMessage(
       subtype: subtype,
+      batchInfoMessage: batchInfoMessage,
       files: manifest,
       messageInfo: await SyncUtils.createMessageInfo(.manifest),
     );
@@ -75,12 +81,14 @@ class DirFilesManifestRequestMessage extends BaseMessage {
 
 class DirFilesManifestResponseMessage extends BaseMessage {
   final AppPathsBackupEnum subtype;
+  final BatchInfoMessage batchInfoMessage;
 
   /// `{fileName: [size, mtimeMS]}` of the files already existing on the other device.
   final Map<String, dynamic> files;
 
   const DirFilesManifestResponseMessage({
     required this.subtype,
+    required this.batchInfoMessage,
     required this.files,
     required super.messageInfo,
   }) : super(MessageType.dirFilesManifestResponse);
@@ -88,6 +96,7 @@ class DirFilesManifestResponseMessage extends BaseMessage {
   factory DirFilesManifestResponseMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return DirFilesManifestResponseMessage(
       subtype: AppPathsBackupEnum.values.getEnum(map['st'] as String)!,
+      batchInfoMessage: BatchInfoMessage.fromMap(map['bim'], messageInfo),
       files: (map['f'] as Map).cast<String, dynamic>(),
       messageInfo: messageInfo,
     );
@@ -96,6 +105,7 @@ class DirFilesManifestResponseMessage extends BaseMessage {
   @override
   Map<String, dynamic> _encodeToMap() => {
     'st': subtype.name,
+    'bim': batchInfoMessage._encodeToMap(),
     'f': files,
   };
 
@@ -119,6 +129,17 @@ class DirFilesManifestResponseMessage extends BaseMessage {
 
     int sentCount = 0;
     int skippedLargeCount = 0;
+
+    try {
+      final batchInfoMessageModified = BatchInfoMessage(
+        // -- new msg info so that progress applies to correct device
+        messageInfo: await SyncUtils.createMessageInfo(batchInfoMessage.messageInfo.action),
+        progressItem: batchInfoMessage.progressItem,
+        progress: batchInfoMessage.progress,
+        total: batchInfoMessage.total,
+      );
+      await SyncDiscovery.sendAndUpdateBatchProgress(receiverDeviceId, batchInfoMessageModified);
+    } catch (_) {}
 
     await for (final e in dir.list(followLinks: false)) {
       if (e is! File) continue;

@@ -1358,40 +1358,69 @@ class _ReceiveProgress extends StatelessWidget {
 
   const _ReceiveProgress({required this.deviceId});
 
-  static const _minTotalToShow = 128 * 1024;
-
   @override
   Widget build(BuildContext context) {
-    final progressRx = SyncDiscovery.receiveProgressOf(deviceId);
-    if (progressRx == null) return const SizedBox();
     return ObxO(
-      rx: progressRx,
-      builder: (context, progress) {
-        if (progress == null) return const SizedBox();
-        final (received, total) = progress;
-        if (total < _minTotalToShow) return const SizedBox();
-        return Padding(
-          padding: const EdgeInsets.only(top: 12.0),
-          child: Column(
-            crossAxisAlignment: .start,
-            mainAxisSize: .min,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4.0.multipliedRadius),
-                child: LinearProgressIndicator(
-                  borderRadius: BorderRadius.circular(99.0),
-                  value: received >= total ? 1.0 : received / total,
-                  minHeight: 3.0,
-                  backgroundColor: context.theme.colorScheme.onSurface.withOpacityExt(0.1),
-                ),
+      rx: SyncDiscovery.batchProgressForDeviceIdRx,
+      builder: (context, batchProgressForDeviceIdRx) {
+        final batchInfo = batchProgressForDeviceIdRx[deviceId];
+        final batchInfoItem = batchInfo?.progressItem;
+        if (batchInfo == null || (batchInfo.progress <= 0 && batchInfo.total <= 0)) return const SizedBox();
+
+        final progressRx = SyncDiscovery.receiveProgressOf(deviceId);
+        return ObxOrNull(
+          rx: progressRx,
+          builder: (context, progress) {
+            final received = progress?.$1;
+            final total = progress?.$2;
+            final barValue = received == null || total == null
+                ? null
+                : received >= total
+                ? 1.0
+                : received / total;
+            return Padding(
+              padding: const EdgeInsets.only(top: 12.0),
+              child: Column(
+                crossAxisAlignment: .start,
+                mainAxisSize: .min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4.0.multipliedRadius),
+                    child: LinearProgressIndicator(
+                      borderRadius: BorderRadius.circular(99.0),
+                      value: barValue,
+                      minHeight: 3.0,
+                      backgroundColor: context.theme.colorScheme.onSurface.withOpacityExt(0.1),
+                    ),
+                  ),
+                  const SizedBox(height: 4.0),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Text(
+                            batchInfoItem == null ? '${batchInfo.progress}/${batchInfo.total}' : '${batchInfo.progress} / ${batchInfo.total} • ${batchInfoItem.toText()}',
+                            style: context.theme.textTheme.displaySmall,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4.0),
+
+                      if (received != null)
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: Text(
+                            '${received.fileSizeFormatted} / ${total?.fileSizeFormatted ?? '?'}',
+                            style: context.theme.textTheme.displaySmall,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 4.0),
-              Text(
-                '${received.fileSizeFormatted} / ${total.fileSizeFormatted}',
-                style: context.theme.textTheme.displaySmall,
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );

@@ -4,6 +4,7 @@ enum MessageType {
   ping(isDataTransfer: false, carriesSenderPaths: false),
   connectionRequest(isDataTransfer: false, carriesSenderPaths: false),
   messageRequest(isDataTransfer: false, carriesSenderPaths: false),
+  batchInfo(isDataTransfer: false, carriesSenderPaths: false),
   syncItemsRequest(isDataTransfer: false, carriesSenderPaths: false),
   historyListens(isDataTransfer: true, carriesSenderPaths: true),
   playlists(isDataTransfer: true, carriesSenderPaths: true),

@@ -94,6 +94,7 @@ class SyncActionsLog extends RxNotifier {
       PingMessage() ||
       ConnectionRequestMessage() ||
       RequestMessage() ||
+      BatchInfoMessage() ||
       SyncItemsRequestMessage() ||
       TracksDbFingerprintsMessage() ||
       PlaylistsManifestResponseMessage() ||
