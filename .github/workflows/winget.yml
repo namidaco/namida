@@ -1,0 +1,48 @@
+# Publishes stable Windows releases to winget (microsoft/winget-pkgs) by opening a PR
+# from the fork at github.com/MSOB7YY/winget-pkgs.
+#
+# Triggers when a stable release is published (drafts don't count, prereleases are skipped),
+# or manually via workflow_dispatch with a release tag.
+
+name: winget
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag in namidaco/namida (e.g. 6.0.1+260418125)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Resolve release tag & winget version
+        id: v
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          # 6.0.1+260418125 -> 6.0.1 ; v6.0.1 -> 6.0.1
+          VERSION="${TAG#v}"
+          VERSION="${VERSION%%[+-]*}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG version=$VERSION"
+
+      - name: Submit to winget-pkgs
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: namidaco.Namida
+          version: ${{ steps.v.outputs.version }}
+          release-tag: ${{ steps.v.outputs.tag }}
+          installers-regex: 'Namida-x86_64-.*-Installer\.exe$'
+          max-versions-to-keep: 5
+          fork-user: MSOB7YY
+          token: ${{ secrets.WINGET_TOKEN }}

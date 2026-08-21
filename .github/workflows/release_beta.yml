@@ -291,32 +291,11 @@ jobs:
             exit 1
           }
 
-      - name: Build iss script
-        run: dart run inno_bundle:build --no-app --release --no-installer
-
-      - name: Fix ISS script languages
-        run: |
-          $issPath = "./build/windows/${{ matrix.arch }}/installer/Release/inno-script.iss"
-          $content = Get-Content $issPath -Raw
-          # Remove any language line whose .isl file doesn't exist on disk
-          $lines = Get-Content $issPath
-          $fixed = $lines | Where-Object {
-            if ($_ -match '\.isl"') {
-              $match = [regex]::Match($_, '"([^"]+\.isl)"')
-              if ($match.Success) {
-                $path = $match.Groups[1].Value
-                Test-Path $path  # only keep line if file actually exists
-              } else { $true }
-            } else { $true }
-          }
-          $fixed | Set-Content $issPath
-          Write-Host "Final languages in ISS:"
-          $fixed | Where-Object { $_ -match '\.isl' }
-
       - name: Build installer
-        uses: C0rn3j/Inno-Setup-Action@v1.2.8
-        with:
-          path: ./build/windows/${{ matrix.arch }}/installer/Release/inno-script.iss
+        # --app-version `6.0.1` instead of `6.0.1+260418125`, for menus/winget/etc..
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # avoids api rate limits if inno_bundle has to download inno setup
+        run: dart run inno_bundle --no-app --release --app-version ${{ needs.create_release.outputs.version_name }}
 
       - name: Move Windows installer
         run: |
