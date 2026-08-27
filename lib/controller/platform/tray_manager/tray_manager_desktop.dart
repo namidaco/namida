@@ -33,6 +33,12 @@ class _TrayManagerDesktop extends NamidaTrayManager with TrayListener {
   void onTrayIconRightMouseDown() => trayManager.popUpContextMenu();
 
   @override
+  void onTrayThemeChanged(bool isSystemThemeLight) {
+    TrayIcons.refreshIsWindowsSystemThemeLight(isSystemThemeLight);
+    Player.inst.refreshPlatformIcons();
+  }
+
+  @override
   void onTrayMenuItemClick(MenuItem menuItem) async {
     NamidaTrayManager.executeKey(menuItem.key);
   }

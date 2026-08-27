@@ -185,6 +185,7 @@ dependencies:
       url: https://github.com/MSOB7YY/frb_plugins
       path: packages/smtc_windows
   windows_taskbar: ^1.1.2
+  win32_registry: ^3.0.3
   super_drag_and_drop:
     git:
       url: https://github.com/MSOB7YY/super_native_extensions
@@ -255,6 +256,7 @@ flutter:
     - assets/fonts/
     - assets/icons/
     - assets/icons/media_ico/
+    - assets/icons/media_ico/dark/
     - assets/logos/
     - assets/
   fonts:

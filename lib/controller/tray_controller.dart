@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:path/path.dart' as p;
 import 'package:tray_manager/tray_manager.dart';
+import 'package:win32_registry/win32_registry.dart' as win32_registry;
 
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/tray_manager/tray_manager.dart';
@@ -48,8 +49,6 @@ class TrayIcons {
     required this.repeatAllShuffle,
   });
 
-  static final instance = TrayIcons.platform();
-
   static TrayIcons? platform() {
     return NamidaPlatformBuilder.init(
       android: () => null,
@@ -60,6 +59,25 @@ class TrayIcons {
     );
   }
 
+  static bool _isWindowsSystemThemeLight = _getSystemIsWindowsSystemThemeLight();
+
+  static void refreshIsWindowsSystemThemeLight([bool? isLight]) {
+    _isWindowsSystemThemeLight = isLight ?? _getSystemIsWindowsSystemThemeLight();
+    TrayIcons.windows = _buildWindowsIcons();
+  }
+
+  static bool _getSystemIsWindowsSystemThemeLight() {
+    try {
+      final value = win32_registry.CURRENT_USER.getInt(
+        'SystemUsesLightTheme',
+        path: r'Software\Microsoft\Windows\CurrentVersion\Themes\Personalize',
+      );
+      return value == 1;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static String _getWindowsIco(String name) {
     String parent;
     if (kDebugMode) {
@@ -68,10 +86,13 @@ class TrayIcons {
       final processDir = p.dirname(Platform.resolvedExecutable);
       parent = '${p.join(processDir, 'data', 'flutter_assets').replaceAll(r'\', '/')}/';
     }
-    return '${parent}assets/icons/media_ico/$name.ico';
+    final prefix = _isWindowsSystemThemeLight ? 'dark/' : '';
+    final variant = _isWindowsSystemThemeLight ? '_dark' : '';
+    return '${parent}assets/icons/media_ico/$prefix$name$variant.ico';
   }
 
-  static final windows = TrayIcons(
+  static TrayIcons windows = _buildWindowsIcons();
+  static TrayIcons _buildWindowsIcons() => TrayIcons(
     appIcon: _getWindowsIco('app_icon'),
     showWindow: _getWindowsIco('app_icon'),
     icStatMusicnote: _getWindowsIco('ic_stat_musicnote'),

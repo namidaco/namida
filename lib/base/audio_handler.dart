@@ -425,7 +425,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   void _refreshTrayService(bool isPlaying, bool? isFavourite) async {
     final tc = TrayController.instance;
     if (tc != null) {
-      final trayIcons = TrayIcons.instance;
+      final trayIcons = TrayIcons.platform();
 
       isFavourite ??= currentItem.value?.execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: (finalItem) => finalItem.isFavourite);
 
@@ -473,6 +473,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       );
       tc.update(menu, title);
     }
+  }
+
+  void refreshPlatformIcons() {
+    _refreshWindowsTaskbar(_willPlayWhenReady, null);
+    _refreshTrayService(_willPlayWhenReady, null);
   }
 
   // =================================================================================

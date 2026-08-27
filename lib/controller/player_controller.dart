@@ -159,6 +159,8 @@ class Player {
 
   bool get isModifyingQueue => _audioHandler.isModifyingQueue;
 
+  void refreshPlatformIcons() => _audioHandler.refreshPlatformIcons();
+
   // -- error playing track
   void cancelPlayErrorSkipTimer() => _audioHandler.cancelPlayErrorSkipTimer();
   RxBaseCore<int> get playErrorRemainingSecondsToSkip => _audioHandler.playErrorRemainingSecondsToSkip;
