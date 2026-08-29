@@ -35,6 +35,7 @@ enum _BackupAndRestoreKeys with SettingKeysBase {
   importYT,
   importLastfm,
   importSpotify,
+  importListenBrainz,
 }
 
 class BackupAndRestore extends SettingSubpageProvider {
@@ -53,6 +54,7 @@ class BackupAndRestore extends SettingSubpageProvider {
     _BackupAndRestoreKeys.importYT: [lang.importYoutubeHistory],
     _BackupAndRestoreKeys.importLastfm: [lang.importLastFmHistory],
     _BackupAndRestoreKeys.importSpotify: [lang.importSpotifyHistory],
+    _BackupAndRestoreKeys.importListenBrainz: [lang.importListenBrainzHistory],
   };
 
   bool _canDoImport({required bool isYT}) {
@@ -633,6 +635,43 @@ class BackupAndRestore extends SettingSubpageProvider {
     );
   }
 
+  Widget _buildImportTileWidget({
+    required _BackupAndRestoreKeys key,
+    required String title,
+    String? assetImageName,
+    required TrackSource trackSource,
+    required VoidCallback onTap,
+  }) {
+    return getItemWrapper(
+      key: key,
+      child: CustomListTile(
+        bgColor: getBgColor(key),
+        title: title,
+        leading: StackedIcon(
+          baseIcon: Broken.import_2,
+          smallChild: BorderRadiusClip(
+            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+            child: Image.asset(
+              'assets/icons/${assetImageName ?? trackSource.name}.png',
+              width: 12,
+              height: 12,
+            ),
+          ),
+        ),
+        trailing: SizedBox(
+          height: 32.0,
+          width: 32.0,
+          child: ParsingJsonPercentage(
+            size: 32.0,
+            source: trackSource,
+            forceDisplay: false,
+          ),
+        ),
+        onTap: onTap,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -861,77 +900,48 @@ class BackupAndRestore extends SettingSubpageProvider {
           ),
 
           // -- Import last.fm History
-          getItemWrapper(
+          _buildImportTileWidget(
             key: _BackupAndRestoreKeys.importLastfm,
-            child: CustomListTile(
-              bgColor: getBgColor(_BackupAndRestoreKeys.importLastfm),
-              title: lang.importLastFmHistory,
-              leading: StackedIcon(
-                baseIcon: Broken.import_2,
-                smallChild: BorderRadiusClip(
-                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                  child: Image.asset(
-                    'assets/icons/lastfm.png',
-                    width: 12,
-                    height: 12,
-                  ),
-                ),
-              ),
-              trailing: const SizedBox(
-                height: 32.0,
-                width: 32.0,
-                child: ParsingJsonPercentage(
-                  size: 32.0,
-                  source: TrackSource.lastfm,
-                  forceDisplay: false,
-                ),
-              ),
-              onTap: () {
-                _importGeneralNonYTSource(
-                  source: TrackSource.lastfm,
-                  title: lang.importLastFmHistory,
-                  guideWithLink: lang.importLastFmHistoryGuide(lastfmCsvLink: 'https://benjaminbenben.com/lastfm-to-csv'),
-                  allowedExtensions: NamidaFileExtensionsWrapper.csv,
-                );
-              },
-            ),
+            title: lang.importLastFmHistory,
+            trackSource: TrackSource.lastfm,
+            onTap: () {
+              _importGeneralNonYTSource(
+                source: TrackSource.lastfm,
+                title: lang.importLastFmHistory,
+                guideWithLink: lang.importLastFmHistoryGuide(lastfmCsvLink: 'https://benjaminbenben.com/lastfm-to-csv'),
+                allowedExtensions: NamidaFileExtensionsWrapper.csv,
+              );
+            },
           ),
 
           // -- Import Spotify History
-          getItemWrapper(
+          _buildImportTileWidget(
             key: _BackupAndRestoreKeys.importSpotify,
-            child: CustomListTile(
-              bgColor: getBgColor(_BackupAndRestoreKeys.importSpotify),
-              title: lang.importSpotifyHistory,
-              leading: StackedIcon(
-                baseIcon: Broken.import_2,
-                smallChild: BorderRadiusClip(
-                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                  child: Image.asset(
-                    'assets/icons/spotify.png',
-                    width: 12,
-                    height: 12,
-                  ),
-                ),
-              ),
-              trailing: const SizedBox(
-                height: 32.0,
-                width: 32.0,
-                child: ParsingJsonPercentage(
-                  size: 32.0,
-                  source: TrackSource.spotify,
-                  forceDisplay: false,
-                ),
-              ),
-              onTap: () {
-                _importGeneralNonYTSource(
-                  source: TrackSource.spotify,
-                  title: lang.importSpotifyHistory,
-                  guideWithLink: lang.importSpotifyHistoryGuide(link: 'https://www.spotify.com/account/privacy'),
-                  allowedExtensions: NamidaFileExtensionsWrapper.jsonAndZip,
-                );
-              },
-            ),
+            title: lang.importSpotifyHistory,
+            trackSource: TrackSource.spotify,
+            onTap: () {
+              _importGeneralNonYTSource(
+                source: TrackSource.spotify,
+                title: lang.importSpotifyHistory,
+                guideWithLink: lang.importSpotifyHistoryGuide(link: 'https://www.spotify.com/account/privacy'),
+                allowedExtensions: NamidaFileExtensionsWrapper.jsonAndZip,
+              );
+            },
+          ),
+
+          // -- Import ListenBrainz History
+          _buildImportTileWidget(
+            key: _BackupAndRestoreKeys.importListenBrainz,
+            title: lang.importListenBrainzHistory,
+            trackSource: TrackSource.listenbrainz,
+            onTap: () {
+              _importGeneralNonYTSource(
+                source: TrackSource.listenbrainz,
+                title: lang.importListenBrainzHistory,
+                guideWithLink: lang.importListenBrainzHistoryGuide(link: 'https://listenbrainz.org/settings/export'),
+                allowedExtensions: NamidaFileExtensionsWrapper.jsonlAndZip,
+              );
+            },
           ),
         ],
       ),

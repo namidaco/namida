@@ -1034,8 +1034,10 @@ class NamidaFileExtensionsWrapper {
   static const m3u = NamidaFileExtensionsWrapper._({'m3u', 'm3u8'});
   static const csv = NamidaFileExtensionsWrapper._({'csv'});
   static const json = NamidaFileExtensionsWrapper._({'json'});
+  static const jsonl = NamidaFileExtensionsWrapper._({'jsonl'});
   static const zip = NamidaFileExtensionsWrapper._(_zipExtensions);
   static const jsonAndZip = NamidaFileExtensionsWrapper._({'json', ..._zipExtensions});
+  static const jsonlAndZip = NamidaFileExtensionsWrapper._({'jsonl', ..._zipExtensions});
   static const compressed = NamidaFileExtensionsWrapper._({..._zipExtensions, 'tar', 'gz', 'bz2', 'xz', 'cab', 'iso', 'jar'});
   static const lrcOrTxt = NamidaFileExtensionsWrapper._({'lrc', 'xml', 'ttml', 'txt'});
   static const lrc = NamidaFileExtensionsWrapper._({'lrc', 'xml', 'ttml'});
