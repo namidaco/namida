@@ -54,7 +54,7 @@ enum _IndexerSettingsKeys with SettingKeysBase {
   extensionsBlacklist,
   minimumFileSize,
   minimumTrackDur,
-  useMediaStore(NamidaFeaturesAvailablity.android),
+  // useMediaStore(NamidaFeaturesAvailablity.android),
   includeVideos,
   refreshOnStartup,
   missingTracks,
@@ -65,9 +65,7 @@ enum _IndexerSettingsKeys with SettingKeysBase {
   foldersToExclude,
   ;
 
-  @override
-  final NamidaFeaturesAvailablityBase? availability;
-  const _IndexerSettingsKeys([this.availability]);
+  const _IndexerSettingsKeys();
 }
 
 class IndexerSettings extends SettingSubpageProvider {
@@ -95,7 +93,7 @@ class IndexerSettings extends SettingSubpageProvider {
     _IndexerSettingsKeys.extensionsBlacklist: ['${lang.extension} (${lang.blacklist})'],
     _IndexerSettingsKeys.minimumFileSize: [lang.minFileSize],
     _IndexerSettingsKeys.minimumTrackDur: [lang.minFileDuration],
-    _IndexerSettingsKeys.useMediaStore: [lang.useMediaStore, lang.useMediaStoreSubtitle],
+    // _IndexerSettingsKeys.useMediaStore: [lang.useMediaStore, lang.useMediaStoreSubtitle],
     _IndexerSettingsKeys.includeVideos: [lang.includeVideos],
     _IndexerSettingsKeys.refreshOnStartup: [lang.refreshOnStartup],
     _IndexerSettingsKeys.missingTracks: [lang.missingTracks],
@@ -672,24 +670,24 @@ class IndexerSettings extends SettingSubpageProvider {
     );
   }
 
-  Widget getMediaStoreWidget() {
-    return getItemWrapper(
-      key: _IndexerSettingsKeys.useMediaStore,
-      child: Obx(
-        (context) => CustomSwitchListTile(
-          bgColor: getBgColor(_IndexerSettingsKeys.useMediaStore),
-          icon: Broken.airdrop,
-          title: lang.useMediaStore,
-          subtitle: lang.useMediaStoreSubtitle,
-          value: settings.useMediaStore.valueR,
-          onChanged: (isTrue) {
-            settings.save(useMediaStore: !isTrue);
-            _maybeShowRefreshPromptDialog(false);
-          },
-        ),
-      ),
-    );
-  }
+  // Widget getMediaStoreWidget() {
+  //   return getItemWrapper(
+  //     key: _IndexerSettingsKeys.useMediaStore,
+  //     child: Obx(
+  //       (context) => CustomSwitchListTile(
+  //         bgColor: getBgColor(_IndexerSettingsKeys.useMediaStore),
+  //         icon: Broken.airdrop,
+  //         title: lang.useMediaStore,
+  //         subtitle: lang.useMediaStoreSubtitle,
+  //         value: settings.useMediaStore.valueR,
+  //         onChanged: (isTrue) {
+  //           settings.save(useMediaStore: !isTrue);
+  //           _maybeShowRefreshPromptDialog(false);
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget getIncludeVideosWidget() {
     return getItemWrapper(
@@ -1073,7 +1071,7 @@ class IndexerSettings extends SettingSubpageProvider {
     const refreshIconKey1 = 'kurukuru';
     const refreshIconKey2 = 'kururin';
 
-    final useMediaStoreWidget = getMediaStoreWidget();
+    // final useMediaStoreWidget = getMediaStoreWidget();
     final includeVideosWidget = getIncludeVideosWidget();
     return SettingsCard(
       title: lang.indexer,
@@ -1353,7 +1351,7 @@ class IndexerSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          useMediaStoreWidget,
+          // useMediaStoreWidget,
           includeVideosWidget,
           getItemWrapper(
             key: _IndexerSettingsKeys.refreshOnStartup,

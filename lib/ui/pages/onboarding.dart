@@ -94,7 +94,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     Dimensions.inst.availableAppContentWidth = maxWidth;
 
     const indexer = IndexerSettings(isInFirstConfigScreen: true);
-    final useMediaStore = indexer.getMediaStoreWidget();
+    // final useMediaStore = indexer.getMediaStoreWidget();
     final includeVideosWidget = indexer.getIncludeVideosWidget();
     final addFolderWidget = indexer.getAddFolderWidget();
     final foldersToScan = indexer.getFoldersToScanWidget(context: context, initiallyExpanded: false);
@@ -158,7 +158,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                 addFolderWidget,
                                 foldersToScan,
                                 foldersToExclude,
-                                useMediaStore,
+                                // useMediaStore,
                                 artworkCacheWidget,
                               ],
                             ),

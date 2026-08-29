@@ -507,7 +507,7 @@ class _SettingsController with SettingsFileWriter {
       albumThumbnailSizeinList.value = json['albumThumbnailSizeinList'] ?? albumThumbnailSizeinList.value;
       albumListTileHeight.value = json['albumListTileHeight'] ?? albumListTileHeight.value;
 
-      useMediaStore.value = json['useMediaStore'] ?? useMediaStore.value;
+      useMediaStore.value = json['useMediaStore_v2'] ?? useMediaStore.value;
       includeVideos.value = json['includeVideos'] ?? includeVideos.value;
       cacheArtworks.value = json['cacheArtworks'] ?? cacheArtworks.value;
       displayTrackNumberinAlbumPage.value = json['displayTrackNumberinAlbumPage'] ?? displayTrackNumberinAlbumPage.value;
@@ -802,7 +802,7 @@ class _SettingsController with SettingsFileWriter {
     'albumThumbnailSizeinList': albumThumbnailSizeinList.value,
     'albumListTileHeight': albumListTileHeight.value,
 
-    'useMediaStore': useMediaStore.value,
+    'useMediaStore_v2': useMediaStore.value,
     'includeVideos': includeVideos.value,
     'cacheArtworks': cacheArtworks.value,
     'displayTrackNumberinAlbumPage': displayTrackNumberinAlbumPage.value,
