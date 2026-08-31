@@ -4,7 +4,9 @@
 
 A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in Flutter
 
-<a href="https://github.com/flutter/flutter">![](https://img.shields.io/badge/Built%20in-Flutter-%23369FE7)
+<a href="https://namida.app">![](https://img.shields.io/badge/-Website-%23463e35)
+</a>
+<a href="https://docs.namida.app">![](https://img.shields.io/badge/-Docs-%23f1d6b6)
 </a>
 <a href="https://t.me/namida_official">![](https://img.shields.io/badge/Channel-blue?link=https%3A%2F%2Ft.me%2Fnamida_officialt&logo=telegram&logoColor=white)
 </a>
@@ -14,6 +16,8 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 </a>
 <a href="https://github.com/namidaco/namida/releases">
 ![](https://img.shields.io/github/downloads/namidaco/namida/total.svg)
+</a>
+<a href="https://github.com/flutter/flutter">![](https://img.shields.io/badge/Built%20in-Flutter-%23369FE7)
 </a>
 <a href="https://github.com/namidaco/namida/releases">
 [![Hits-of-Code](https://hitsofcode.com/github/namidaco/namida?branch=main)](https://hitsofcode.com/github/namidaco/namida/view?branch=main)
@@ -32,8 +36,13 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
   </a>
 </div>
 
+# Documentation
+
+New to Namida or want to discover more? **[Checkout the docs here](https://docs.namida.app)**
+
 # Sections:
 
+- [Documentation](#documentation)
 - [Features](#-features)
   - [Library \& Indexing](#library--indexing)
   - [Look \& Feel](#look--feel)
@@ -87,7 +96,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - Tags config for downloads
 - Optional Auto title/artist/album extraction for downloads and scrobbling
 - Downloads output filename builder (similar to yt-dlp)
-- Multi Library Support (Local/YT/Subsonic/WebDAV)
+- Multi Library Support (Local/YT/Subsonic/Jellyfin/WebDAV/SMB)
 
 <details>
 
@@ -150,9 +159,12 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
 - Most Played Playlist
   - find out your top tracks based on your history record.
 - Custom Playlists Order & Ability to set custom artworks
+- Auto Import Playlists from M3U files & Music Web Servers (Jellyfin, Subsonic/Navidrome, etc)
 - Left & Right swipe actions for tracks and videos
 - Artwork Gestures (tap and long press)
 - Support for `cover.jpg` etc images for folders, & `.info.txt` for displaying small info
+- Sync between devices <sub><code>new</code></sub>
+  - sync your history, playlists, favourites, queues, lyrics, caches & more over local network.
 
 ## Some additional cool features:
 
@@ -179,7 +191,7 @@ A Beautiful and Feature-rich Music & Video Player with Youtube Support, Built in
   - The "Recommended" tracks addition in queue lets you add tracks you usually listened to with the current one
   - The "Similar Release Date" tracks addition in queue lets you add tracks released around the same time as the current one
 - <p>CAN IMPORT YOUTUBE HISTORY <img src="some stuff/ong.png" width=16 height=16/></p>
-- <p>LASTFM TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/></p>
+- <p>LASTFM, SPOTIFY & LISTENBRAINZ TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/></p>
 - you gonna find decent amount of options/customizations in the settings and inside dialogs so make sure to check them out.
 
 # Video Integration
@@ -217,7 +229,7 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 </summary>
 
 - looks up in the track comment tag (as they are mostly done by @yt-dlp) or filename for any matching youtube link, if found then it starts downloading (and caches) and plays once it's ready, streaming here isn't a good idea as the priority goes for the music file itself.
-  - for comment tag, any url format should get matched normally.
+  - for comment tag, any url format should get matched normally (example: `https://youtu.be/video_id`).
   - for filenames, it should contain `v=video_id` or `id=video_id` in order to get matched.
 
 </details>
@@ -252,8 +264,8 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 ### Usage Preview
 
-| Animating Thumbnail | Recommends & Listens |
-| --- | --- |
+| Animating Thumbnail                                                                                       | Recommends & Listens                                                                                      |
+| --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | <video src="https://github.com/namidaco/namida/assets/85245079/da47c270-9f45-4ff5-a08e-e99e4b7ebb7c.mp4"> | <video src="https://github.com/namidaco/namida/assets/85245079/72e978b3-6e15-4b4e-948a-03b470802b30.mp4"> |
 
 # Installation
@@ -330,13 +342,14 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 ### Linux Installation
 
 1. **Install Dependencies**
+
 > [!IMPORTANT]
 > Install dependencies: **mpv** for playback
 > (you may skip this if you used a package manager)
 >
 > ```bash
 > sudo pacman -S mpv            # Arch/Manjaro
-> sudo apt install mpv          # Debian/Ubuntu/Mint
+> sudo apt install mpv libmpv2  # Debian/Ubuntu/Mint
 > sudo dnf install mpv mpv-libs # Fedora/RHEL
 > ```
 
@@ -357,6 +370,7 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 > ```
 
 2. **Install Namida**
+
 ```bash
 # Quick Install
 curl -fsSL https://raw.githubusercontent.com/namidaco/namida/main/scripts/install_linux_tar.sh | sudo bash
@@ -448,8 +462,8 @@ sudo dnf install ./namida.rpm   # Fedora/RHEL (download .rpm from beta releases)
   - [Discord](https://discord.gg/WeY7DTVChT)
 
 > [!WARNING]
-> There are no websites for namidaco/namida other than GitHub & Telegram,
-> we are not resposible for downloading from other sources.
+> Namida is only available through [namida.app](https://namida.app), GitHub & Telegram.
+> We are not responsible for downloads from other sources.
 
 # LICENSE
 
@@ -466,3 +480,7 @@ Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LI
 <a href="https://trendshift.io/repositories/9581" target="_blank"><img src="https://trendshift.io/api/badge/repositories/9581" alt="namidaco%2Fnamida | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 <img src="some stuff/star_history.svg"></img>
+
+> Made by human, **not** vibe coded. AI usage is minimal and very selective.
+> Every design choice comes after thoughtful decisions and series of refining, down to every pixel.
+> Parts that are built by ai will have a disclaimer. [See here](https://github.com/namidaco/namida/issues/945) for more info.
