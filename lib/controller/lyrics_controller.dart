@@ -42,7 +42,7 @@ class Lyrics {
   final currentLyricsLRC = Rxn<Lrc>();
   final lyricsCanBeAvailable = true.obs;
 
-  bool get _lyricsEnabled => settings.enableLyrics.value;
+  bool get _lyricsEnabled => settings.enableLyrics.value || settings.enableSimpleLyricsLine.value;
   bool get _lyricsPrioritizeEmbedded => settings.prioritizeEmbeddedLyrics.value;
   LyricsSource get _lyricsSource => settings.lyricsSource.value;
 

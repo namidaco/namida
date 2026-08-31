@@ -41,6 +41,7 @@ enum _ExtraSettingsKeys with SettingKeysBase {
   prioritizeEmbeddedLyrics,
   lyricsSource,
   stretchLyricsDuration,
+  simpleLyricsLine,
   imageSource,
   imageSourceAlbum,
   imageSourceArtist,
@@ -77,6 +78,7 @@ class ExtrasSettings extends SettingSubpageProvider {
     _ExtraSettingsKeys.prioritizeEmbeddedLyrics: [lang.prioritizeEmbeddedLyrics],
     _ExtraSettingsKeys.lyricsSource: [lang.lyricsSource],
     _ExtraSettingsKeys.stretchLyricsDuration: [lang.stretchLyricsDuration],
+    _ExtraSettingsKeys.simpleLyricsLine: [lang.simpleLyricsLine, lang.simpleLyricsLineSubtitle],
     _ExtraSettingsKeys.imageSource: [lang.imageSource, lang.album, lang.albums],
     _ExtraSettingsKeys.imageSourceAlbum: [lang.imageSource, lang.album, lang.albums],
     _ExtraSettingsKeys.imageSourceArtist: [lang.imageSource, lang.artist, lang.artists],
@@ -690,6 +692,26 @@ class ExtrasSettings extends SettingSubpageProvider {
                 subtitle: 'spedup/slowed/nightcore',
                 value: stretch,
                 onChanged: (val) => settings.save(stretchLyricsDuration: !val),
+              ),
+            ),
+          ),
+          getItemWrapper(
+            key: _ExtraSettingsKeys.simpleLyricsLine,
+            child: ObxO(
+              rx: settings.enableSimpleLyricsLine,
+              builder: (context, enableSimpleLyricsLine) => CustomSwitchListTile(
+                bgColor: getBgColor(_ExtraSettingsKeys.simpleLyricsLine),
+                icon: Broken.text,
+                title: lang.simpleLyricsLine,
+                subtitle: lang.simpleLyricsLineSubtitle,
+                value: enableSimpleLyricsLine,
+                onChanged: (isTrue) {
+                  settings.save(enableSimpleLyricsLine: !isTrue);
+                  final currentItem = Player.inst.currentItem.value;
+                  if (currentItem != null) {
+                    Lyrics.inst.updateLyrics(currentItem);
+                  }
+                },
               ),
             ),
           ),
