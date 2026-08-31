@@ -1,4 +1,4 @@
-/// _FrameWriter and _FrameReader are gnerated by claude.ai
+/// _FrameWriter and _FrameReader are built by claude.ai
 part of 'sync_manager.dart';
 
 class _FrameWriter {

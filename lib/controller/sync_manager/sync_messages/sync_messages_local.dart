@@ -197,6 +197,7 @@ class PlaybackStateMessage extends BaseMessage {
       final msg = RequestMessage(
         msgRequestType: .playerQueue,
         messageInfo: await SyncUtils.createMessageInfo(.manifest),
+        batchRef: null,
       );
       await SyncDiscovery.sendMessage(msg, senderDeviceId);
       return;
@@ -486,21 +487,24 @@ class PlaylistsMessage extends BaseMessage {
 
 class PlaylistsManifestResponseMessage extends BaseMessage {
   final List<PlaylistManifest> available;
+  final SyncBatchRef? batchRef;
 
   const PlaylistsManifestResponseMessage({
     required super.messageInfo,
     required this.available,
+    required this.batchRef,
   }) : super(MessageType.playlistsManifestResponse);
 
   factory PlaylistsManifestResponseMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return PlaylistsManifestResponseMessage(
       available: PlaylistManifest.fromMapAsList(map),
+      batchRef: SyncBatchRef.fromMap(map['br']),
       messageInfo: messageInfo,
     );
   }
 
   @override
-  Map<String, dynamic> _encodeToMap() => PlaylistsManifestResponseMessageUtils.encodeToMap(available);
+  Map<String, dynamic> _encodeToMap() => PlaylistsManifestResponseMessageUtils.encodeToMap(available, batchRef);
 
   @override
   FutureOr<void> executeOnReceived() => PlaylistsManifestResponseMessageUtils.sendRequiredPlaylists(
@@ -508,6 +512,7 @@ class PlaylistsManifestResponseMessage extends BaseMessage {
     available: available,
     playlistsManager: PlaylistController.inst,
     tracksArePaths: true,
+    batchRef: batchRef,
     createPlaylistsMessage: (playlistsToSend, createdMessageInfo) => PlaylistsMessage(
       playlists: playlistsToSend,
       messageInfo: createdMessageInfo,

@@ -191,21 +191,24 @@ class YTLikesMessage extends BaseMessage {
 
 class YTPlaylistsManifestResponseMessage extends BaseMessage {
   final List<PlaylistManifest> available;
+  final SyncBatchRef? batchRef;
 
   const YTPlaylistsManifestResponseMessage({
     required super.messageInfo,
     required this.available,
+    required this.batchRef,
   }) : super(MessageType.ytPlaylistsManifestResponse);
 
   factory YTPlaylistsManifestResponseMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return YTPlaylistsManifestResponseMessage(
       available: PlaylistManifest.fromMapAsList(map),
+      batchRef: SyncBatchRef.fromMap(map['br']),
       messageInfo: messageInfo,
     );
   }
 
   @override
-  Map<String, dynamic> _encodeToMap() => PlaylistsManifestResponseMessageUtils.encodeToMap(available);
+  Map<String, dynamic> _encodeToMap() => PlaylistsManifestResponseMessageUtils.encodeToMap(available, batchRef);
 
   @override
   FutureOr<void> executeOnReceived() => PlaylistsManifestResponseMessageUtils.sendRequiredPlaylists(
@@ -213,6 +216,7 @@ class YTPlaylistsManifestResponseMessage extends BaseMessage {
     available: available,
     playlistsManager: YoutubePlaylistController.inst,
     tracksArePaths: false,
+    batchRef: batchRef,
     createPlaylistsMessage: (playlistsToSend, createdMessageInfo) => YTPlaylistsMessage(
       playlists: playlistsToSend,
       messageInfo: createdMessageInfo,

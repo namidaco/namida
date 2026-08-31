@@ -10,6 +10,7 @@ import 'package:basic_audio_handler/basic_audio_handler.dart' show PlayerConfig;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:mdns_dart/mdns_dart.dart';
 import 'package:playlist_manager/playlist_manager.dart';
+import 'package:queue/queue.dart' show Queue;
 import 'package:uuid/uuid.dart';
 
 import 'package:namida/class/file_parts.dart';
@@ -40,6 +41,7 @@ import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 
 part 'sync_actions_log.dart';
+part 'sync_batch.dart';
 part 'sync_discovery.dart';
 part 'sync_enums.dart';
 part 'sync_exceptions.dart';

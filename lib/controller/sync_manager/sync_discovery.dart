@@ -12,11 +12,17 @@ class SyncDiscovery {
 
   static final serverRunning = false.obs;
 
-  static final batchProgressForDeviceIdRx = <String, BatchInfoMessage?>{}.obs;
+  /// progress of the batches we are sending, keyed by receiver device id.
+  /// maintained by [SyncBatch], which owns the state.
+  static final batchProgressOutgoingRx = <String, BatchInfoMessage?>{}.obs;
 
-  static Future<void> sendAndUpdateBatchProgress(String deviceId, BatchInfoMessage message) async {
-    SyncDiscovery.batchProgressForDeviceIdRx[deviceId] = message;
-    await SyncDiscovery.sendMessage(message, deviceId);
+  /// progress of the batches being sent to us, keyed by sender device id.
+  /// it's just the last snapshot received, see [BatchInfoMessage].
+  static final batchProgressIncomingRx = <String, BatchInfoMessage?>{}.obs;
+
+  static void clearProgressFor(String deviceId) {
+    batchProgressOutgoingRx[deviceId] = null;
+    batchProgressIncomingRx[deviceId] = null;
   }
 
   static void _updateConnectionFlags() {
@@ -266,7 +272,7 @@ class _ServerSide extends RxNotifier {
 
   /// client is just telling us they will be gone.. (most likely we kicked them hehe)
   Future<void> disconnectConnection(String senderDeviceId) async {
-    SyncDiscovery.batchProgressForDeviceIdRx[senderDeviceId] = null;
+    SyncDiscovery.clearProgressFor(senderDeviceId);
     final wrapper = _clientsSockets.remove(senderDeviceId);
     if (wrapper == null) return;
     SyncSender.inst.onDeviceDisconnected(senderDeviceId);
@@ -443,7 +449,7 @@ class _ClientSide extends RxNotifier {
       (syncSettings) => syncSettings.allowedServerIds.remove(serverDeviceId),
     );
 
-    SyncDiscovery.batchProgressForDeviceIdRx[serverDeviceId] = null;
+    SyncDiscovery.clearProgressFor(serverDeviceId);
 
     final socket = _connectedServers.remove(serverDeviceId);
     if (socket != null) {
@@ -606,8 +612,7 @@ class _SocketWrapper {
 
   Future<void> dispose() async {
     await _writer.closeSocket();
-
-    SyncDiscovery.batchProgressForDeviceIdRx[deviceId] = null;
+    SyncDiscovery.clearProgressFor(deviceId);
   }
 }
 
@@ -637,7 +642,9 @@ class _FrameDispatcher {
         // -- still think we have their fingerprints), request & defer execution
         SyncPathResolver.stashUntilFingerprints(msg);
       } else {
-        msg.executeOnReceived();
+        msg.executeOnReceivedWithQueue().catchError((e, st) {
+          logger.error('Error executing json payload message', e: e, st: st);
+        });
       }
       if (_kEnableSyncDebug) _debugNotify('✔ Received | ${msg.runtimeType}(${data.length.fileSizeFormatted}):\n${msg.toRawInfo()}');
       return msg;
@@ -663,11 +670,11 @@ class _FrameDispatcher {
     SyncActionsLog.inst.onMessageActivity(.received, pending, pending.messageInfo.senderDeviceId, _FrameWriter.kFrameHeaderSize + data.length, isExtraPayload: true);
     // -- no copy needed, the reader detaches its buffer for binary frames
     pending.binaryPayload = data;
-    try {
-      pending.executeOnReceived();
-    } catch (e, st) {
+
+    pending.executeOnReceivedWithQueue().catchError((e, st) {
       logger.error('Error executing binary payload message', e: e, st: st);
-    }
+    });
+
     if (_kEnableSyncDebug) _debugNotify('✔ Received binary payload (${data.length.fileSizeFormatted}) for ${pending.runtimeType}');
     return null;
   }

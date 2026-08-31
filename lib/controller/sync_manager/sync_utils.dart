@@ -6,7 +6,7 @@ class SyncUtils {
   static const kDefaultNamidaPort = 62310; // 2023-10, v1 of namida
 
   /// increment this only when introducing breaking changes
-  static const kSyncVersion = 1;
+  static const kSyncVersion = 2;
 
   /// if enabled, will directly edit library on receiving valid data
   /// if disabled, will only display a snackbar with the received info

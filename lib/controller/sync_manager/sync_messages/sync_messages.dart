@@ -31,11 +31,24 @@ sealed class BaseMessage {
   final BaseMessageInfo messageInfo;
   const BaseMessage(this.type, {required this.messageInfo});
 
+  // because it would execute as soon as manifest info is received,
+  // causing minor inconveniences like progress flashing for different items
+  static final _queue = Queue(parallel: 1);
+
+  /// calls [executeOnReceived]. if [type] is a manifest response, it adds [executeOnReceived] to a queue first.
+  Future<void> executeOnReceivedWithQueue() async {
+    if (type.isManifestResponse) {
+      return _queue.add(() async => executeOnReceived());
+    }
+    return executeOnReceived();
+  }
+
   Map<String, dynamic> _encodeToMap();
 
   /// Code to execute on receiving this message.
   ///
   /// ex: show snackbar, update database, add to history, etc...
+  @visibleForOverriding
   FutureOr<void> executeOnReceived();
 
   String toRawInfo() => _encodeToMap().toString();
@@ -157,15 +170,18 @@ class PingMessage extends BaseMessage {
 
 class RequestMessage extends BaseMessage {
   final MessageRequestType msgRequestType;
+  final SyncBatchRef? batchRef;
 
   const RequestMessage({
     required super.messageInfo,
     required this.msgRequestType,
+    required this.batchRef,
   }) : super(MessageType.messageRequest);
 
   factory RequestMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return RequestMessage(
       msgRequestType: MessageRequestType.lookupMap[map['msgRequestType']]!,
+      batchRef: SyncBatchRef.fromMap(map['br']),
       messageInfo: messageInfo,
     );
   }
@@ -173,6 +189,7 @@ class RequestMessage extends BaseMessage {
   @override
   Map<String, dynamic> _encodeToMap() => {
     'msgRequestType': msgRequestType.name,
+    'br': ?batchRef?.toMap(),
   };
 
   @override
@@ -203,10 +220,12 @@ class RequestMessage extends BaseMessage {
       MessageRequestType.playlistsManifest => PlaylistsManifestResponseMessage(
         messageInfo: createdMessageInfo,
         available: available,
+        batchRef: batchRef,
       ),
       MessageRequestType.ytPlaylistsManifest => YTPlaylistsManifestResponseMessage(
         messageInfo: createdMessageInfo,
         available: available,
+        batchRef: batchRef,
       ),
       MessageRequestType.playerQueue || MessageRequestType.tracksDbFingerprints => throw Exception('playlist manifest only'),
     };
@@ -262,44 +281,79 @@ class SyncItemsRequestMessage extends BaseMessage {
   }
 }
 
+/// a progress snapshot of a [SyncBatch], built & sent by the origin device only.
+///
+/// snapshots are self contained & travel on the same socket, so they always
+/// arrive in order & the receiver can simply display the latest one, no matter
+/// how out of order the items themselves completed.
 class BatchInfoMessage extends BaseMessage {
-  final SyncDataItem? progressItem;
+  final String batchId;
+
+  /// how many items of the batch are fully done.
   final int progress;
   final int total;
 
+  /// items currently transferring, the last one is the most recently started.
+  final List<SyncDataItem> activeItems;
+
+  /// sub-progress within a single item (dir files, db entries..), if any.
+  final SyncItemProgress? itemProgress;
+
+  /// the batch ended (finished or aborted), the receiver drops it.
+  final bool finished;
+
   const BatchInfoMessage({
     required super.messageInfo,
-    required this.progressItem,
+    required this.batchId,
     required this.progress,
     required this.total,
+    required this.activeItems,
+    required this.itemProgress,
+    required this.finished,
   }) : super(MessageType.batchInfo);
 
   factory BatchInfoMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return BatchInfoMessage(
-      progressItem: SyncDataItem.lookupMap[map['pi']],
+      batchId: map['b'] as String,
       progress: map['p'] as int,
       total: map['t'] as int,
+      activeItems: (map['ai'] as List?)?.map((e) => SyncDataItem.lookupMap[e]).nonNulls.toList() ?? const [],
+      itemProgress: SyncItemProgress.fromList(map['ip']),
+      finished: map['f'] as bool? ?? false,
       messageInfo: messageInfo,
     );
   }
 
-  factory BatchInfoMessage.dummy(BaseMessageInfo messageInfo) => BatchInfoMessage(
-    messageInfo: messageInfo,
-    progressItem: null,
-    progress: 0,
-    total: 0,
-  );
-
   @override
   Map<String, dynamic> _encodeToMap() => {
-    'pi': ?progressItem?.name,
+    'b': batchId,
     'p': progress,
     't': total,
+    'ai': activeItems.map((e) => e.name).toFixedList(),
+    'ip': ?itemProgress?.toList(),
+    'f': finished,
   };
 
   @override
+  String toRawInfo() => 'BatchInfo($progress/$total${finished ? ', finished' : ''}${activeItems.isEmpty ? '' : ', ${activeItems.map((e) => e.name).join('+')}'})';
+
+  /// the item to display, the most recently started one.
+  SyncDataItem? get headlineItem => itemProgress?.item ?? (activeItems.isEmpty ? null : activeItems.last);
+
+  /// how many items are running besides [headlineItem].
+  int get extraActiveItemsCount => activeItems.isEmpty ? 0 : activeItems.length - 1;
+
+  /// 0..1 of the whole batch, counting the running item's own progress as a
+  /// fraction of one item. null when there is nothing to base it on.
+  double? get overallFraction {
+    if (total <= 0) return null;
+    final itemFraction = itemProgress?.fraction ?? 0.0;
+    return ((progress + itemFraction) / total).clampDouble(0.0, 1.0);
+  }
+
+  @override
   FutureOr<void> executeOnReceived() {
-    SyncDiscovery.batchProgressForDeviceIdRx[messageInfo.senderDeviceId] = this;
+    SyncDiscovery.batchProgressIncomingRx[messageInfo.senderDeviceId] = finished ? null : this;
   }
 }
 
@@ -430,30 +484,38 @@ class ConnectionRequestMessage extends BaseMessage {
 abstract class PlaylistsManifestResponseMessageUtils {
   PlaylistsManifestResponseMessageUtils._();
 
-  static Map<String, dynamic> encodeToMap(List<PlaylistManifest> available) => {
+  static Map<String, dynamic> encodeToMap(List<PlaylistManifest> available, SyncBatchRef? batchRef) => {
     'available': available.map((e) => e.toMap()).toFixedList(),
+    'br': ?batchRef?.toMap(),
   };
 
-  static FutureOr<void> sendRequiredPlaylists<T extends PlaylistItemWithDate, E, S>({
+  static Future<void> sendRequiredPlaylists<T extends PlaylistItemWithDate, E, S>({
     required BaseMessageInfo messageInfo,
     required List<PlaylistManifest> available,
     required PlaylistManager<T, E, S> playlistsManager,
     required bool tracksArePaths,
+    required SyncBatchRef? batchRef,
     required BaseMessage Function(List<GeneralPlaylist<T, S>> playlistsToSend, BaseMessageInfo createdMessageInfo) createPlaylistsMessage,
   }) async {
-    final alreadyAvailableOnOtherDevice = available;
-    final playlistsToSend = <GeneralPlaylist<T, S>>[];
-    for (final plInLibrary in playlistsManager.playlistsMap.value.values) {
-      final plAlrOnOther = alreadyAvailableOnOtherDevice.firstWhereEff((e) => e.name == plInLibrary.name);
-      if (plAlrOnOther == null || plInLibrary.modifiedDate > plAlrOnOther.modifiedDate) {
-        playlistsToSend.add(plInLibrary);
+    batchRef?.markTransferring();
+    try {
+      final alreadyAvailableOnOtherDevice = available;
+      final playlistsToSend = <GeneralPlaylist<T, S>>[];
+      for (final plInLibrary in playlistsManager.playlistsMap.value.values) {
+        final plAlrOnOther = alreadyAvailableOnOtherDevice.firstWhereEff((e) => e.name == plInLibrary.name);
+        if (plAlrOnOther == null || plInLibrary.modifiedDate > plAlrOnOther.modifiedDate) {
+          playlistsToSend.add(plInLibrary);
+        }
       }
+      if (playlistsToSend.isEmpty) return; // -- they are up to date
+      final receiverDeviceId = messageInfo.senderDeviceId;
+      final createdMessageInfo = await SyncUtils.createMessageInfo(.add);
+      final msg = createPlaylistsMessage(playlistsToSend, createdMessageInfo);
+      if (tracksArePaths) await SyncSender.inst.ensureFingerprintsSent(receiverDeviceId);
+      await SyncDiscovery.sendMessage(msg, receiverDeviceId);
+    } finally {
+      batchRef?.markDone();
     }
-    final receiverDeviceId = messageInfo.senderDeviceId;
-    final createdMessageInfo = await SyncUtils.createMessageInfo(.add);
-    final msg = createPlaylistsMessage(playlistsToSend, createdMessageInfo);
-    if (tracksArePaths) await SyncSender.inst.ensureFingerprintsSent(receiverDeviceId);
-    await SyncDiscovery.sendMessage(msg, receiverDeviceId);
   }
 }
 

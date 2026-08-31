@@ -35,18 +35,18 @@ abstract final class _DirFilesSyncUtils {
 
 class DirFilesManifestRequestMessage extends BaseMessage {
   final AppPathsBackupEnum subtype;
-  final BatchInfoMessage batchInfoMessage;
+  final SyncBatchRef? batchRef;
 
   const DirFilesManifestRequestMessage({
     required this.subtype,
-    required this.batchInfoMessage,
+    required this.batchRef,
     required super.messageInfo,
   }) : super(MessageType.dirFilesManifestRequest);
 
-  static Future<DirFilesManifestRequestMessage> create(AppPathsBackupEnum subtype, BatchInfoMessage batchInfoMessage) async {
+  static Future<DirFilesManifestRequestMessage> create(AppPathsBackupEnum subtype, SyncBatchRef batchRef) async {
     return DirFilesManifestRequestMessage(
       subtype: subtype,
-      batchInfoMessage: batchInfoMessage,
+      batchRef: batchRef,
       messageInfo: await SyncUtils.createMessageInfo(.manifest),
     );
   }
@@ -54,24 +54,23 @@ class DirFilesManifestRequestMessage extends BaseMessage {
   factory DirFilesManifestRequestMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return DirFilesManifestRequestMessage(
       subtype: AppPathsBackupEnum.values.getEnum(map['st'] as String)!,
-      batchInfoMessage: BatchInfoMessage.fromMap(map['bim'], messageInfo),
+      batchRef: SyncBatchRef.fromMap(map['br']),
       messageInfo: messageInfo,
     );
   }
 
   @override
   Map<String, dynamic> _encodeToMap() => {
-    'bim': batchInfoMessage._encodeToMap(),
+    'br': ?batchRef?.toMap(),
     'st': subtype.name,
   };
 
   @override
   FutureOr<void> executeOnReceived() async {
-    if (!_DirFilesSyncUtils.isAllowedSubtype(subtype)) return;
-    final manifest = await _DirFilesSyncUtils.buildManifest(subtype);
+    final manifest = _DirFilesSyncUtils.isAllowedSubtype(subtype) ? await _DirFilesSyncUtils.buildManifest(subtype) : const <String, dynamic>{};
     final msg = DirFilesManifestResponseMessage(
       subtype: subtype,
-      batchInfoMessage: batchInfoMessage,
+      batchRef: batchRef,
       files: manifest,
       messageInfo: await SyncUtils.createMessageInfo(.manifest),
     );
@@ -81,14 +80,14 @@ class DirFilesManifestRequestMessage extends BaseMessage {
 
 class DirFilesManifestResponseMessage extends BaseMessage {
   final AppPathsBackupEnum subtype;
-  final BatchInfoMessage batchInfoMessage;
+  final SyncBatchRef? batchRef;
 
   /// `{fileName: [size, mtimeMS]}` of the files already existing on the other device.
   final Map<String, dynamic> files;
 
   const DirFilesManifestResponseMessage({
     required this.subtype,
-    required this.batchInfoMessage,
+    required this.batchRef,
     required this.files,
     required super.messageInfo,
   }) : super(MessageType.dirFilesManifestResponse);
@@ -96,7 +95,7 @@ class DirFilesManifestResponseMessage extends BaseMessage {
   factory DirFilesManifestResponseMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return DirFilesManifestResponseMessage(
       subtype: AppPathsBackupEnum.values.getEnum(map['st'] as String)!,
-      batchInfoMessage: BatchInfoMessage.fromMap(map['bim'], messageInfo),
+      batchRef: SyncBatchRef.fromMap(map['br']),
       files: (map['f'] as Map).cast<String, dynamic>(),
       messageInfo: messageInfo,
     );
@@ -105,7 +104,7 @@ class DirFilesManifestResponseMessage extends BaseMessage {
   @override
   Map<String, dynamic> _encodeToMap() => {
     'st': subtype.name,
-    'bim': batchInfoMessage._encodeToMap(),
+    'br': ?batchRef?.toMap(),
     'f': files,
   };
 
@@ -115,6 +114,18 @@ class DirFilesManifestResponseMessage extends BaseMessage {
   /// we requested this manifest earlier, now send the files the other device needs.
   @override
   FutureOr<void> executeOnReceived() async {
+    final batchRef = this.batchRef;
+    batchRef?.markTransferring();
+    try {
+      await _sendRequiredFiles(batchRef);
+    } finally {
+      // -- the item is done no matter how this went, otherwise the batch
+      // -- would never complete & progress would hang forever.
+      batchRef?.markDone();
+    }
+  }
+
+  Future<void> _sendRequiredFiles(SyncBatchRef? batchRef) async {
     if (!_DirFilesSyncUtils.isAllowedSubtype(subtype)) return;
 
     final receiverDeviceId = messageInfo.senderDeviceId;
@@ -125,21 +136,17 @@ class DirFilesManifestResponseMessage extends BaseMessage {
     // -- only the sent file's own info travels, the map is a local by-filename lookup
     // -- (the cache map is keyed by id), built lazily when a file actually gets sent.
     final isVideosCache = subtype == AppPathsBackupEnum.VIDEOS_CACHE;
-    Map<String, Map<String, dynamic>>? cacheVideosInfo;
+    late final cacheVideosInfo = isVideosCache ? VideoController.inst.buildCacheVideosSyncInfoByFilename() : null;
+
+    final newMessageInfoForSend = await SyncUtils.createMessageInfo(.add);
 
     int sentCount = 0;
+    int sentBytes = 0;
     int skippedLargeCount = 0;
 
-    try {
-      final batchInfoMessageModified = BatchInfoMessage(
-        // -- new msg info so that progress applies to correct device
-        messageInfo: await SyncUtils.createMessageInfo(batchInfoMessage.messageInfo.action),
-        progressItem: batchInfoMessage.progressItem,
-        progress: batchInfoMessage.progress,
-        total: batchInfoMessage.total,
-      );
-      await SyncDiscovery.sendAndUpdateBatchProgress(receiverDeviceId, batchInfoMessageModified);
-    } catch (_) {}
+    final messagesToSend = <_DirFileMessageWrapper>[];
+    int messagesToSendTotalCount = 0;
+    int messagesToSendTotalSizeBytes = 0;
 
     await for (final e in dir.list(followLinks: false)) {
       if (e is! File) continue;
@@ -165,25 +172,43 @@ class DirFilesManifestResponseMessage extends BaseMessage {
         if (stat.modified.millisecondsSinceEpoch <= otherMtime) continue; // -- theirs is newer
       }
 
-      final Uint8List bytes;
-      try {
-        bytes = await e.readAsBytes();
-      } catch (_) {
-        continue;
-      }
-
-      if (isVideosCache) cacheVideosInfo ??= VideoController.inst.buildCacheVideosSyncInfoByFilename();
-
       final msg = DirFileMessage(
         subtype: subtype,
         fileName: name,
         mtime: stat.modified.millisecondsSinceEpoch,
         info: cacheVideosInfo?[name],
-        bytes: bytes,
-        messageInfo: await SyncUtils.createMessageInfo(.add),
+        bytes: null,
+        messageInfo: newMessageInfoForSend,
       );
-      await SyncDiscovery.sendMessage(msg, receiverDeviceId);
+      final msgWrapper = _DirFileMessageWrapper._(
+        msg: msg,
+        localFile: e,
+        sizeBytes: stat.size,
+      );
+      messagesToSend.add(msgWrapper);
+      messagesToSendTotalCount++;
+      messagesToSendTotalSizeBytes += stat.size;
+    }
+
+    if (messagesToSendTotalCount == 0) return; // -- they are up to date
+
+    batchRef?.setProgress(count: 0, totalCount: messagesToSendTotalCount, bytes: 0, totalBytes: messagesToSendTotalSizeBytes);
+
+    for (final msgWrapper in messagesToSend) {
+      final Uint8List bytes;
+      try {
+        bytes = await msgWrapper.localFile.readAsBytes();
+      } catch (_) {
+        continue;
+      }
+      msgWrapper.msg.binaryPayload = bytes;
+
+      await SyncDiscovery.sendMessage(msgWrapper.msg, receiverDeviceId);
       sentCount++;
+      sentBytes += msgWrapper.sizeBytes;
+
+      // -- throttled inside, sending a snapshot per file would double the frames
+      batchRef?.setProgress(count: sentCount, totalCount: messagesToSendTotalCount, bytes: sentBytes, totalBytes: messagesToSendTotalSizeBytes);
     }
 
     if (_kEnableSyncDebug) _debugNotify('==> dir files sent[${subtype.name}]: $sentCount, skipped large: $skippedLargeCount');
@@ -282,15 +307,18 @@ class DbFileMessage extends BaseMessage with BinaryPayloadMessage {
 /// 3. A -> B: [DbEntriesMessage] chunks with the entries B is missing or would replace.
 class DbManifestRequestMessage extends BaseMessage {
   final AppPathsBackupEnum subtype;
+  final SyncBatchRef? batchRef;
 
   const DbManifestRequestMessage({
     required this.subtype,
+    required this.batchRef,
     required super.messageInfo,
   }) : super(MessageType.dbManifestRequest);
 
-  static Future<DbManifestRequestMessage> create(AppPathsBackupEnum subtype) async {
+  static Future<DbManifestRequestMessage> create(AppPathsBackupEnum subtype, SyncBatchRef batchRef) async {
     return DbManifestRequestMessage(
       subtype: subtype,
+      batchRef: batchRef,
       messageInfo: await SyncUtils.createMessageInfo(.manifest),
     );
   }
@@ -298,6 +326,7 @@ class DbManifestRequestMessage extends BaseMessage {
   factory DbManifestRequestMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return DbManifestRequestMessage(
       subtype: AppPathsBackupEnum.values.getEnum(map['st'] as String)!,
+      batchRef: SyncBatchRef.fromMap(map['br']),
       messageInfo: messageInfo,
     );
   }
@@ -305,11 +334,13 @@ class DbManifestRequestMessage extends BaseMessage {
   @override
   Map<String, dynamic> _encodeToMap() => {
     'st': subtype.name,
+    'br': ?batchRef?.toMap(),
   };
 
   @override
   FutureOr<void> executeOnReceived() async {
-    if (!DbFileMessage.isAllowedSubtype(subtype)) return;
+    // -- the response is sent back even for a rejected subtype, otherwise
+    // -- the origin's batch item would stay pending until it times out.
     final manifest = await switch (subtype) {
       AppPathsBackupEnum.VIDEO_ID_STATS_DB_INFO => YoutubeController.inst.statsManager.buildSyncManifest(),
       AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY => VideoController.inst.videosPriorityManager.buildSyncManifest(),
@@ -318,6 +349,7 @@ class DbManifestRequestMessage extends BaseMessage {
     final msg = DbManifestResponseMessage(
       subtype: subtype,
       manifest: manifest,
+      batchRef: batchRef,
       messageInfo: await SyncUtils.createMessageInfo(.manifest),
     );
     await SyncDiscovery.sendMessage(msg, messageInfo.senderDeviceId);
@@ -330,9 +362,12 @@ class DbManifestResponseMessage extends BaseMessage {
   /// `{key: token}` of the entries already existing on the other device.
   final Map<String, dynamic> manifest;
 
+  final SyncBatchRef? batchRef;
+
   const DbManifestResponseMessage({
     required this.subtype,
     required this.manifest,
+    required this.batchRef,
     required super.messageInfo,
   }) : super(MessageType.dbManifestResponse);
 
@@ -343,6 +378,7 @@ class DbManifestResponseMessage extends BaseMessage {
     return DbManifestResponseMessage(
       subtype: AppPathsBackupEnum.values.getEnum(map['st'] as String)!,
       manifest: (map['m'] as Map).cast<String, dynamic>(),
+      batchRef: SyncBatchRef.fromMap(map['br']),
       messageInfo: messageInfo,
     );
   }
@@ -351,6 +387,7 @@ class DbManifestResponseMessage extends BaseMessage {
   Map<String, dynamic> _encodeToMap() => {
     'st': subtype.name,
     'm': manifest,
+    'br': ?batchRef?.toMap(),
   };
 
   @override
@@ -359,6 +396,18 @@ class DbManifestResponseMessage extends BaseMessage {
   /// we requested this manifest earlier, now send the entries the other device needs.
   @override
   FutureOr<void> executeOnReceived() async {
+    final batchRef = this.batchRef;
+    batchRef?.markTransferring();
+    try {
+      await _sendRequiredEntries(batchRef);
+    } finally {
+      // -- the item is done no matter how this went, otherwise the batch
+      // -- would never complete & progress would hang forever.
+      batchRef?.markDone();
+    }
+  }
+
+  Future<void> _sendRequiredEntries(SyncBatchRef? batchRef) async {
     if (!DbFileMessage.isAllowedSubtype(subtype)) return;
 
     final receiverDeviceId = messageInfo.senderDeviceId;
@@ -367,17 +416,27 @@ class DbManifestResponseMessage extends BaseMessage {
       AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY => VideoController.inst.videosPriorityManager.buildSyncEntriesToSend(manifest),
       _ => Future.value(<String, Map<String, dynamic>>{}),
     };
-    if (entries.isEmpty) return;
+    if (entries.isEmpty) return; // -- they are up to date
+
+    final totalCount = entries.length;
+    int sentCount = 0;
+    batchRef?.setProgress(count: 0, totalCount: totalCount);
 
     var chunk = <String, dynamic>{};
     for (final e in entries.entries) {
       chunk[e.key] = e.value;
       if (chunk.length >= _kEntriesChunkSize) {
+        sentCount += chunk.length;
         await _sendChunk(chunk, receiverDeviceId);
+        batchRef?.setProgress(count: sentCount, totalCount: totalCount);
         chunk = {};
       }
     }
-    if (chunk.isNotEmpty) await _sendChunk(chunk, receiverDeviceId);
+    if (chunk.isNotEmpty) {
+      sentCount += chunk.length;
+      await _sendChunk(chunk, receiverDeviceId);
+      batchRef?.setProgress(count: sentCount, totalCount: totalCount);
+    }
   }
 
   Future<void> _sendChunk(Map<String, dynamic> chunk, String receiverDeviceId) async {
@@ -435,6 +494,18 @@ class DbEntriesMessage extends BaseMessage {
     };
     if (_kEnableSyncDebug) _debugNotify('==> db entries merged[${subtype.name}]: $changed/${entries.length}');
   }
+}
+
+class _DirFileMessageWrapper {
+  final DirFileMessage msg;
+  final File localFile;
+  final int sizeBytes;
+
+  const _DirFileMessageWrapper._({
+    required this.msg,
+    required this.localFile,
+    required this.sizeBytes,
+  });
 }
 
 class DirFileMessage extends BaseMessage with BinaryPayloadMessage {

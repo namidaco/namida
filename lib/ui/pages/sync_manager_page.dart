@@ -1190,7 +1190,7 @@ class _DeviceCard extends StatelessWidget {
                   // ),
                 ],
               ),
-              _ReceiveProgress(deviceId: deviceId),
+              _DeviceProgress(deviceId: deviceId),
               const SizedBox(height: 12.0),
               _DeviceActionsRow(
                 colorScheme: colorScheme,
@@ -1353,76 +1353,150 @@ class _DeviceActionsRow extends StatelessWidget {
   }
 }
 
-class _ReceiveProgress extends StatelessWidget {
+class _DeviceProgress extends StatelessWidget {
   final String deviceId;
-
-  const _ReceiveProgress({required this.deviceId});
+  const _DeviceProgress({required this.deviceId});
 
   @override
   Widget build(BuildContext context) {
     return ObxO(
-      rx: SyncDiscovery.batchProgressForDeviceIdRx,
-      builder: (context, batchProgressForDeviceIdRx) {
-        final batchInfo = batchProgressForDeviceIdRx[deviceId];
-        final batchInfoItem = batchInfo?.progressItem;
-        if (batchInfo == null || (batchInfo.progress <= 0 && batchInfo.total <= 0)) return const SizedBox();
+      rx: SyncDiscovery.batchProgressOutgoingRx,
+      builder: (context, outgoingForDeviceId) => ObxO(
+        rx: SyncDiscovery.batchProgressIncomingRx,
+        builder: (context, incomingForDeviceId) {
+          final outgoing = outgoingForDeviceId[deviceId];
+          final incoming = incomingForDeviceId[deviceId];
+          if (outgoing == null && incoming == null) return const SizedBox();
+          return Column(
+            mainAxisSize: .min,
+            children: [
+              if (outgoing != null)
+                _SyncProgressRow(
+                  icon: Broken.send_2,
+                  info: outgoing,
+                ),
+              if (incoming != null)
+                _SyncProgressRow(
+                  icon: Broken.received,
+                  info: incoming,
+                  // -- only meaningful while bytes are landing on our socket
+                  incomingDeviceId: deviceId,
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
 
-        final progressRx = SyncDiscovery.receiveProgressOf(deviceId);
-        return ObxOrNull(
-          rx: progressRx,
-          builder: (context, progress) {
-            final received = progress?.$1;
-            final total = progress?.$2;
-            final barValue = received == null || total == null
-                ? null
-                : received >= total
-                ? 1.0
-                : received / total;
-            return Padding(
-              padding: const EdgeInsets.only(top: 12.0),
-              child: Column(
-                crossAxisAlignment: .start,
-                mainAxisSize: .min,
-                children: [
-                  ClipRRect(
+class _SyncProgressRow extends StatelessWidget {
+  final IconData icon;
+  final BatchInfoMessage info;
+  final String? incomingDeviceId;
+
+  const _SyncProgressRow({
+    required this.icon,
+    required this.info,
+    this.incomingDeviceId,
+  });
+
+  Widget _socketProgressText(String incomingDeviceId) {
+    final progressRx = SyncDiscovery.receiveProgressOf(incomingDeviceId);
+    if (progressRx == null) return const SizedBox();
+    return ObxO(
+      rx: progressRx,
+      builder: (context, progress) => progress == null
+          ? const SizedBox()
+          : Text(
+              '${progress.$1.fileSizeFormatted} / ${progress.$2.fileSizeFormatted}',
+              style: context.theme.textTheme.displaySmall,
+            ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final headlineItem = info.headlineItem;
+    final extraItemsCount = info.extraActiveItemsCount;
+    final itemProgress = info.itemProgress;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12.0),
+      child: Column(
+        crossAxisAlignment: .start,
+        mainAxisSize: .min,
+        children: [
+          Row(
+            children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 18.0),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(4.0.multipliedRadius),
-                    child: LinearProgressIndicator(
-                      borderRadius: BorderRadius.circular(99.0),
-                      value: barValue,
-                      minHeight: 3.0,
-                      backgroundColor: context.theme.colorScheme.onSurface.withOpacityExt(0.1),
+                    color: theme.colorScheme.secondaryContainer.withOpacityExt(0.3),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                    child: Row(
+                      mainAxisSize: .min,
+                      children: [
+                        Icon(
+                          icon,
+                          size: 12.0,
+                          color: context.defaultIconColor(),
+                        ),
+                        const SizedBox(width: 4.0),
+                        Flexible(
+                          child: Text(
+                            '${info.progress}/${info.total}',
+                            style: theme.textTheme.displaySmall?.copyWith(
+                              color: theme.colorScheme.secondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4.0),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: Text(
-                            batchInfoItem == null ? '${batchInfo.progress}/${batchInfo.total}' : '${batchInfo.progress} / ${batchInfo.total} • ${batchInfoItem.toText()}',
-                            style: context.theme.textTheme.displaySmall,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 4.0),
-
-                      if (received != null)
-                        Align(
-                          alignment: AlignmentDirectional.centerEnd,
-                          child: Text(
-                            '${received.fileSizeFormatted} / ${total?.fileSizeFormatted ?? '?'}',
-                            style: context.theme.textTheme.displaySmall,
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            );
-          },
-        );
-      },
+              const SizedBox(width: 4.0),
+              Expanded(
+                child: headlineItem == null
+                    ? const SizedBox()
+                    : Text(
+                        extraItemsCount > 0 ? '${headlineItem.toText()} +$extraItemsCount' : headlineItem.toText(),
+                        style: theme.textTheme.displaySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+              ),
+              const SizedBox(width: 4.0),
+              if (itemProgress != null)
+                Text(
+                  itemProgress.totalBytes > 0
+                      ? '${itemProgress.count}/${itemProgress.totalCount} • ${itemProgress.bytes.fileSizeFormatted} / ${itemProgress.totalBytes.fileSizeFormatted}'
+                      : '${itemProgress.count}/${itemProgress.totalCount}',
+                  style: theme.textTheme.displaySmall?.copyWith(
+                    fontSize: 12.0,
+                  ),
+                )
+              else if (incomingDeviceId != null)
+                _socketProgressText(incomingDeviceId!),
+            ],
+          ),
+          const SizedBox(height: 6.0),
+          LinearProgressIndicator(
+            borderRadius: BorderRadius.circular(99.0),
+            value: info.overallFraction,
+            minHeight: 3.0,
+            backgroundColor: theme.colorScheme.onSurface.withOpacityExt(0.1),
+          ),
+        ],
+      ),
     );
   }
 }

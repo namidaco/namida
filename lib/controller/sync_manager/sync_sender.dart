@@ -111,8 +111,9 @@ class SyncSender extends RxNotifier {
     SyncPathResolver.clearForDevice(deviceId);
     SyncActionsLog.inst.onDeviceDisconnected(deviceId);
 
-    // -- just extra
-    SyncDiscovery.batchProgressForDeviceIdRx[deviceId] = null;
+    // -- releases anything still awaiting something from us
+    SyncBatch.abortForDevice(deviceId);
+    SyncDiscovery.clearProgressFor(deviceId);
   }
 
   /// sends local tracks db fingerprints once per connection, so the receiver
@@ -135,9 +136,7 @@ class SyncSender extends RxNotifier {
 
   Future<void> sendItemsToAllConnected(List<SyncDataItem> items) async {
     final deviceIds = SyncDiscovery.getAllConnectedDeviceIdsSet();
-    for (final deviceId in deviceIds) {
-      await sendItemsToDevice(items, deviceId);
-    }
+    await Future.wait(deviceIds.map((deviceId) => sendItemsToDevice(items, deviceId)));
   }
 
   /// asks [deviceId] to send us [items], see [SyncItemsRequestMessage].
@@ -188,40 +187,31 @@ class SyncSender extends RxNotifier {
     if (items.isEmpty) return;
     _sendingToDeviceIds.add(deviceId);
     _refresh();
-    int itemProgress = 1;
-    final totalItemsCount = items.length;
-    final batchInfoMsgInfo = await SyncUtils.createMessageInfo(.manifest);
+    final batch = await SyncBatch.start(deviceId, items);
     try {
-      for (final item in items) {
-        // -- send batch info before actual info
-        final batchInfo = BatchInfoMessage(
-          messageInfo: batchInfoMsgInfo,
-          progressItem: item,
-          progress: itemProgress,
-          total: totalItemsCount,
-        );
-        await SyncDiscovery.sendAndUpdateBatchProgress(deviceId, batchInfo);
-
-        await _sendItem(item, deviceId, batchInfo);
-
-        itemProgress++;
+      for (final item in batch.items) {
+        batch.markItemActive(item);
+        final msg = await _buildMessageForItem(item, batch.refFor(item));
+        if (msg != null) {
+          await _sendItem(item, msg, deviceId);
+          if (msg.type.isManifestRequest) continue;
+        }
+        batch.markItemDone(item); // -- nothing to send, or already sent
       }
-      await SyncDiscovery.sendAndUpdateBatchProgress(deviceId, BatchInfoMessage.dummy(batchInfoMsgInfo));
+      await batch.completion;
     } catch (e, st) {
+      batch.finish();
       final deviceName = settings.sync.deviceIdNames[deviceId] ?? deviceId;
       snackyy(message: '${lang.failed}: "$deviceName": $e', isError: true);
       logger.error('Error sending to "$deviceName"', e: e, st: st);
-      try {
-        await SyncDiscovery.sendAndUpdateBatchProgress(deviceId, BatchInfoMessage.dummy(batchInfoMsgInfo));
-      } catch (_) {}
     } finally {
       _sendingToDeviceIds.remove(deviceId);
       _refresh();
     }
   }
 
-  Future<void> _sendItem(SyncDataItem item, String deviceId, BatchInfoMessage batchInfoMessage) async {
-    final BaseMessage? msg = switch (item) {
+  Future<BaseMessage?> _buildMessageForItem(SyncDataItem item, SyncBatchRef batchRef) async {
+    return switch (item) {
       SyncDataItem.history => HistoryListensMessage(
         tracks: HistoryController.inst.historyTracks,
         messageInfo: await SyncUtils.createMessageInfo(.add),
@@ -233,10 +223,12 @@ class SyncSender extends RxNotifier {
       SyncDataItem.playlists => RequestMessage(
         msgRequestType: .playlistsManifest,
         messageInfo: await SyncUtils.createMessageInfo(.manifest),
+        batchRef: batchRef,
       ),
       SyncDataItem.playlistsYt => RequestMessage(
         msgRequestType: .ytPlaylistsManifest,
         messageInfo: await SyncUtils.createMessageInfo(.manifest),
+        batchRef: batchRef,
       ),
       SyncDataItem.favourites => FavouritesMessage(
         tracks: PlaylistController.inst.favouritesPlaylist.value.tracks,
@@ -249,31 +241,33 @@ class SyncSender extends RxNotifier {
       SyncDataItem.stats => await TrackStatsMessage.createForCurrentDevice(),
       SyncDataItem.statsYt =>
         SyncUtils.kUseDbEntriesSync
-            ? await DbManifestRequestMessage.create(AppPathsBackupEnum.VIDEO_ID_STATS_DB_INFO)
+            ? await DbManifestRequestMessage.create(AppPathsBackupEnum.VIDEO_ID_STATS_DB_INFO, batchRef)
             : await DbFileMessage.create(AppPathsBackupEnum.VIDEO_ID_STATS_DB_INFO),
       SyncDataItem.latestPlayedForSource => await LatestPlayedForSourceMessage.createForCurrentDevice(),
       SyncDataItem.audioConfigs => await AudioConfigsMessage.createForCurrentDevice(),
       SyncDataItem.smartPlaylists => await SmartPlaylistsMessage.createForCurrentDevice(),
       SyncDataItem.videosPriority =>
         SyncUtils.kUseDbEntriesSync
-            ? await DbManifestRequestMessage.create(AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY)
+            ? await DbManifestRequestMessage.create(AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY, batchRef)
             : await DbFileMessage.create(AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY),
       SyncDataItem.subscriptionsYt => await YTSubscriptionsMessage.createForCurrentDevice(),
-      SyncDataItem.queues => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.QUEUES, batchInfoMessage),
-      SyncDataItem.lyrics => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.LYRICS, batchInfoMessage),
-      SyncDataItem.videosCache => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.VIDEOS_CACHE, batchInfoMessage),
-      SyncDataItem.audiosCache => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.AUDIOS_CACHE, batchInfoMessage),
-      SyncDataItem.playlistsArtworks => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.PLAYLISTS_ARTWORKS, batchInfoMessage),
-      SyncDataItem.smartPlaylistsArtworks => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.SMART_PLAYLISTS_ARTWORKS, batchInfoMessage),
-      SyncDataItem.playlistsArtworksYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_PLAYLISTS_ARTWORKS, batchInfoMessage),
-      SyncDataItem.artworksArtists => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.ARTWORKS_ARTISTS, batchInfoMessage),
-      SyncDataItem.artworksAlbums => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.ARTWORKS_ALBUMS, batchInfoMessage),
-      SyncDataItem.thumbnailsYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_THUMBNAILS, batchInfoMessage),
-      SyncDataItem.thumbnailsChannelsYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_THUMBNAILS_CHANNELS, batchInfoMessage),
+      SyncDataItem.queues => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.QUEUES, batchRef),
+      SyncDataItem.lyrics => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.LYRICS, batchRef),
+      SyncDataItem.videosCache => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.VIDEOS_CACHE, batchRef),
+      SyncDataItem.audiosCache => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.AUDIOS_CACHE, batchRef),
+      SyncDataItem.playlistsArtworks => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.PLAYLISTS_ARTWORKS, batchRef),
+      SyncDataItem.smartPlaylistsArtworks => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.SMART_PLAYLISTS_ARTWORKS, batchRef),
+      SyncDataItem.playlistsArtworksYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_PLAYLISTS_ARTWORKS, batchRef),
+      SyncDataItem.artworksArtists => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.ARTWORKS_ARTISTS, batchRef),
+      SyncDataItem.artworksAlbums => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.ARTWORKS_ALBUMS, batchRef),
+      SyncDataItem.thumbnailsYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_THUMBNAILS, batchRef),
+      SyncDataItem.thumbnailsChannelsYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_THUMBNAILS_CHANNELS, batchRef),
       SyncDataItem.playerQueue => await PlayerQueueMessage.createForCurrentDevice(),
       SyncDataItem.playback => await PlaybackStateMessage.createForCurrentDevice(),
     };
+  }
 
+  Future<void> _sendItem(SyncDataItem item, BaseMessage? msg, String deviceId) async {
     if (msg == null) return; // -- nothing to send (ex: no latest queue)
 
     if (item.needsFingerprints) await ensureFingerprintsSent(deviceId);
