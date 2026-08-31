@@ -444,3 +444,122 @@ jobs:
           # disable root user check for makepkg, very annoying
           sed -i 's/if (( EUID == 0 ))/if (( EUID == -1 ))/' $(which makepkg)
           bash bump.sh "$PKGVER" "$BUILDNUMBER" "$TARBALL"
+
+  # Portable Linux payload, built on the oldest glibc we target (ubuntu-24.04 = glibc 2.39, libmpv2)
+  # instead of the arch container, so the AppImage / Flatpak run on non-rolling distros.
+  # Non-login variant only (WPE WebKit is not bundled). Produces:
+  #   - Namida-x86_64-<ver>.AppImage (+ .zsync)      -> release asset
+  #   - namida-linux-portable.tar.gz                  -> workflow artifact consumed by build_flatpak
+  build_linux_portable:
+    if: ${{ inputs.is_beta }}
+    needs: create_release
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            libmpv-dev libasound2-dev libepoxy-dev curl
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: pubspec.yaml
+
+      - name: Setup credentials
+        run: |
+          git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
+          git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
+
+      - name: Setup dependencies
+        run: |
+          flutter clean
+          flutter pub upgrade
+          git submodule update --init --remote --recursive
+
+      - name: Build Linux App
+        env:
+          DISABLE_WPE_WEBKIT: "1"
+        run: |
+          flutter config --enable-linux-desktop
+          flutter build linux --release -v
+
+      - name: Package tarball (input for the flatpak job)
+        run: |
+          mkdir -p build_final
+          tar -czf build_final/namida-linux-portable.tar.gz -C build/linux/x64/release/bundle .
+
+      - name: Build AppImage
+        run: |
+          IFS=/ read -r REPO_OWNER REPO_NAME <<< "${{ needs.create_release.outputs.target_repo }}"
+          # lets AppImageUpdate / AppImageLauncher self-update from the latest release of the target repo
+          export APPIMAGE_UPDATE_INFO="gh-releases-zsync|${REPO_OWNER}|${REPO_NAME}|latest|Namida-x86_64-*.AppImage.zsync"
+          bash scripts/make_appimage.sh build/linux/x64/release/bundle \
+            "build_final/Namida-x86_64-${{ needs.create_release.outputs.version_name }}.AppImage"
+
+      - name: Upload tarball artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: namida-linux-portable
+          path: build_final/namida-linux-portable.tar.gz
+          retention-days: 3
+
+      - name: Upload AppImage to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: ${{ needs.create_release.outputs.target_repo }}
+          make_latest: true
+          draft: ${{ !inputs.is_beta }}
+          tag_name: ${{ needs.create_release.outputs.version }}
+          files: |
+            build_final/*.AppImage
+            build_final/*.AppImage.zsync
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
+
+  # Flatpak bundle from the portable tarball. libass/libplacebo/ffmpeg/mpv are compiled by the manifest
+  # (cached between runs on the manifest hash), the app is dropped in prebuilt.
+  build_flatpak:
+    if: ${{ inputs.is_beta }}
+    needs: [create_release, build_linux_portable]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: namida-linux-portable
+          path: linux/packaging/flatpak
+
+      - name: Place tarball where the manifest expects it
+        run: mv linux/packaging/flatpak/namida-linux-portable.tar.gz linux/packaging/flatpak/namida-linux.tar.gz
+
+      - name: Build Flatpak
+        uses: flathub-infra/flatpak-github-actions/flatpak-builder@933e9e8ca36e85046ebca8e211f0785c6becac40
+        with:
+          manifest-path: linux/packaging/flatpak/com.msob7y.namida.yml
+          bundle: Namida-x86_64-${{ needs.create_release.outputs.version_name }}.flatpak
+          arch: x86_64
+          cache-key: flatpak-builder-${{ hashFiles('linux/packaging/flatpak/com.msob7y.namida.yml') }}
+          upload-artifact: false
+
+      - name: Upload Flatpak to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: ${{ needs.create_release.outputs.target_repo }}
+          make_latest: true
+          draft: ${{ !inputs.is_beta }}
+          tag_name: ${{ needs.create_release.outputs.version }}
+          files: Namida-x86_64-*.flatpak
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}

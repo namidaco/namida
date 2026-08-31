@@ -1,25 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
   <id>com.msob7y.namida</id>
-  
+  <launchable type="desktop-id">com.msob7y.namida.desktop</launchable>
+
   <name>Namida</name>
   <summary>A Beautiful and Feature-rich Music Player, With YouTube &amp; Video Support Built in Flutter</summary>
-  
-  <metadata_license>FTL</metadata_license>
-  <project_license>EULA</project_license>
-  
+  <developer id="com.msob7y">
+    <name>namidaco</name>
+  </developer>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+
+  <url type="homepage">https://github.com/namidaco/namida</url>
+  <url type="bugtracker">https://github.com/namidaco/namida/issues</url>
+  <url type="donation">https://www.buymeacoffee.com/namidaco</url>
+
   <supports>
     <control>pointing</control>
     <control>keyboard</control>
     <control>touch</control>
   </supports>
-  
+
   <description>
     <p>
       A Beautiful and Feature-rich Music Player, With YouTube &amp; Video Support Built in Flutter
     </p>
   </description>
-  
+
+  <categories>
+    <category>AudioVideo</category>
+    <category>Audio</category>
+    <category>Video</category>
+    <category>Player</category>
+  </categories>
+
+  <content_rating type="oars-1.1" />
+
   <screenshots>
     <screenshot type="default">
       <image>https://github.com/namidaco/namida/raw/main/screens/collection_light_1.jpg</image>

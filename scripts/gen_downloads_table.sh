@@ -68,7 +68,9 @@ if [ "$IS_BETA" = "true" ]; then
   row "Linux" \
     "${PREFIX}.linux.tar.gz|namida-${PREFIX}.linux.tar.gz" \
     "${PREFIX}.linux.deb|namida-${PREFIX}.linux.deb" \
-    "${PREFIX}.linux.rpm|namida-${PREFIX}.linux.rpm"
+    "${PREFIX}.linux.rpm|namida-${PREFIX}.linux.rpm" \
+    "${PREFIX}.AppImage|Namida-x86_64-${PREFIXRAW}.AppImage" \
+    "${PREFIX}.flatpak|Namida-x86_64-${PREFIXRAW}.flatpak"
   row "Linux (Login)" \
     "${PREFIX}_login.linux.tar.gz|namida-${PREFIX}_login.linux.tar.gz" \
     "${PREFIX}_login.linux.deb|namida-${PREFIX}_login.linux.deb" \

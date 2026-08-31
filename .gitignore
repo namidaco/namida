@@ -249,3 +249,9 @@ dist/
 scripts/bundle_output*
 
 lib/core/translations/arb/*
+
+# flatpak local build inputs/outputs
+linux/packaging/flatpak/namida-linux.tar.gz
+linux/packaging/flatpak/.flatpak-builder/
+linux/packaging/flatpak/build-dir/
+linux/packaging/flatpak/repo/
