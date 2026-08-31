@@ -461,9 +461,11 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           );
         },
       ),
-      imageBuilder: (item, brMultiplier) => _TrackImage(
-        track: (item as Selectable).track,
-        brMultiplier: brMultiplier,
+      imageBuilder: (item, brMultiplier) => _AdjacentThumbnailScale(
+        child: _TrackImage(
+          track: (item as Selectable).track,
+          brMultiplier: brMultiplier,
+        ),
       ),
       currentImageBuilder: (item, brMultiplier, maxHeight, maxWidth) => _AnimatingTrackImage(
         track: (item as Selectable).track,
@@ -742,9 +744,11 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
           );
         },
       ),
-      imageBuilder: (item, brMultiplier) => _YoutubeIDImage(
-        video: item as YoutubeID,
-        brMultiplier: brMultiplier,
+      imageBuilder: (item, brMultiplier) => _AdjacentThumbnailScale(
+        child: _YoutubeIDImage(
+          video: item as YoutubeID,
+          brMultiplier: brMultiplier,
+        ),
       ),
       currentImageBuilder: (item, brMultiplier, maxHeight, maxWidth) => _AnimatingYoutubeIDImage(
         video: item as YoutubeID,
@@ -764,6 +768,25 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
 }
 
 final _lrcAdditionalScale = 0.0.obs;
+
+class _AdjacentThumbnailScale extends StatelessWidget {
+  final Widget child;
+  const _AdjacentThumbnailScale({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.animatingThumbnailInversed,
+      builder: (context, isInversed) => ObxO(
+        rx: settings.animatingThumbnailScaleMultiplier,
+        builder: (context, userScaleMultiplier) => Transform.scale(
+          scale: (isInversed ? 1.22 : 1.13) * userScaleMultiplier,
+          child: child,
+        ),
+      ),
+    );
+  }
+}
 
 class _AnimatingTrackImage extends StatelessWidget {
   final Track track;

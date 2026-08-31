@@ -48,6 +48,7 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
+import 'package:namida/ui/widgets/simple_lyrics_line.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
@@ -708,12 +709,17 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       rx: Player.inst.currentQueue,
       builder: (context, queue) {
         if (queue.isEmpty) return const SizedBox();
-        return ObxO(
-          rx: Player.inst.currentIndex,
-          builder: (context, currentIndex) {
-            final indminus = refine(currentIndex - 1);
-            final indplus = refine(currentIndex + 1);
-            final currentItem = queue[currentIndex];
+        return Obx(
+          (context) {
+            // -- animation index is for items animating, they use frozen index until animation is done
+            // -- real index is to update text instantly, use for parts that has no swipe animation
+            final currentIndexReal = Player.inst.currentIndex.valueR;
+            int currentIndexAnimationUI = MiniPlayerController.inst.displayIndexOverride.valueR ?? currentIndexReal;
+            if (currentIndexAnimationUI >= queue.length) currentIndexAnimationUI = currentIndexReal; // -- queue changed while frozen
+            final indminusAnimationUI = refine(currentIndexAnimationUI - 1);
+            final indplusAnimationUI = refine(currentIndexAnimationUI + 1);
+            final currentItem = queue[currentIndexReal];
+            final currentItemAnimationUI = queue[currentIndexAnimationUI];
             final currentDefaultDurationInMS = widget.getDurationMS?.call(currentItem) ?? 0;
 
             Widget? previousImageWidget;
@@ -722,8 +728,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             MiniplayerInfoData? nextText;
 
             if (queue.isNotEmpty) {
-              final prevItem = queue[indminus];
-              final nextItem = queue[indplus];
+              final prevItem = queue[indminusAnimationUI];
+              final nextItem = queue[indplusAnimationUI];
 
               prevText = widget.textBuilder(prevItem);
               nextText = widget.textBuilder(nextItem);
@@ -732,7 +738,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
               nextImageWidget = widget.imageBuilder(nextItem, (borderRadius) => borderRadius.br);
             }
 
-            final currentText = widget.textBuilder(currentItem);
+            final currentText = widget.textBuilder(currentItemAnimationUI);
 
             final topText = widget.topText(currentItem);
             final focusedMenuOptions = widget.focusedMenuOptions(currentItem);
@@ -760,7 +766,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            "${currentIndex + 1}/${queue.length}",
+                            "${currentIndexReal + 1}/${queue.length}",
                             style: TextStyle(
                               color: onSecondary.withOpacityExt(.8),
                               fontSize: 12.0.fontSize,
@@ -1248,10 +1254,10 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                       imagePaddingAll,
                     );
                     final imageEmptyRightSpace = screenSize.width - imageSize;
-                    final imageLeftOffset = ((imageEmptyRightSpace / 2) - imagePadding.left - rightInset) * bcp;
+                    final imageLeftOffset = (((imageEmptyRightSpace / 2) - imagePadding.left - rightInset) * bcp);
 
                     Widget currentImage = widget.currentImageBuilder(
-                      currentItem,
+                      currentItemAnimationUI,
                       (borderRadius) => borderRadius.br,
                       _imageHeightActual == null ? null : (imageMaxHeightPre * 0.7),
                       imageWidthBig,
@@ -1259,7 +1265,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 
                     if (settings.artworkTapAction.value != TrackExecuteActions.none) {
                       currentImage = TapDetector(
-                        onTap: () => settings.artworkTapAction.value.executePlayingItem(currentItem),
+                        onTap: () => settings.artworkTapAction.value.executePlayingItem(currentItemAnimationUI),
                         child: currentImage,
                       );
                     }
@@ -1273,7 +1279,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                         }
                         final longPressAction = settings.artworkLongPressAction.value;
                         if (longPressAction != TrackExecuteActions.none) {
-                          longPressAction.executePlayingItem(currentItem);
+                          longPressAction.executePlayingItem(currentItemAnimationUI);
                         }
                       },
                       child: currentImage,
@@ -1695,14 +1701,19 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                         opacity: leftOpacityAnim,
                                         child: MatrixTransition(
                                           animation: sAnim,
-                                          onTransform: (animationValue) =>
-                                              Matrix4.translationValues(-animationValue * sMaxOffset / kSiParallax - sMaxOffset / kSiParallax, 0.0, 0.0),
+                                          onTransform: (animationValue) {
+                                            final horizontalOffset = -animationValue * sMaxOffset / kSiParallax - sMaxOffset / kSiParallax;
+                                            return Matrix4.translationValues(horizontalOffset + imageLeftOffset, 0.0, 0.0);
+                                          },
                                           child: Transform.translate(
                                             offset: Offset(0.0, vOffsetImage),
                                             child: _RawImageContainer(
                                               size: imageSize,
                                               padding: imagePadding,
-                                              child: previousImageWidget,
+                                              child: Padding(
+                                                padding: EdgeInsets.all(12.0 * (1 - bcp)),
+                                                child: previousImageWidget,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -1755,14 +1766,19 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                         opacity: rightOpacityAnim,
                                         child: MatrixTransition(
                                           animation: sAnim,
-                                          onTransform: (animationValue) =>
-                                              Matrix4.translationValues(-animationValue * sMaxOffset / kSiParallax + sMaxOffset / kSiParallax, 0.0, 0.0),
+                                          onTransform: (animationValue) {
+                                            final horizontalOffset = -animationValue * sMaxOffset / kSiParallax + sMaxOffset / kSiParallax;
+                                            return Matrix4.translationValues(horizontalOffset + imageLeftOffset, 0.0, 0.0);
+                                          },
                                           child: Transform.translate(
                                             offset: Offset(0.0, vOffsetImage),
                                             child: _RawImageContainer(
                                               size: imageSize,
                                               padding: imagePadding,
-                                              child: nextImageWidget,
+                                              child: Padding(
+                                                padding: EdgeInsets.all(12.0 * (1 - bcp)),
+                                                child: nextImageWidget,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -1771,6 +1787,44 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                 );
                               },
                             ),
+                          ),
+                        ),
+
+                        /// Simple current lyrics line (under artwork)
+                        ObxO(
+                          rx: settings.enableSimpleLyricsLine,
+                          builder: (context, enableSimpleLyricsLine) => ObxO(
+                            rx: settings.enableLyrics,
+                            builder: (context, enableLyrics) => enableSimpleLyricsLine && !enableLyrics
+                                ? ClipRect(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(bottom: navBarHeight * cp),
+                                      child: FadeIgnoreTransition(
+                                        completelyKillWhenPossible: true,
+                                        opacity: fastOpacityAnimation,
+                                        child: FadeIgnoreTransition(
+                                          completelyKillWhenPossible: true,
+                                          opacity: centerItemFadeAnimation,
+                                          child: Transform.translate(
+                                            offset: Offset(0.0, vOffsetTrackInfo - trackInfoBoxHeight * bcp + 6.0.spaceYForce * bcp),
+                                            child: Align(
+                                              alignment: Alignment.bottomCenter,
+                                              child: Padding(
+                                                padding: EdgeInsets.symmetric(horizontal: 32.0.spaceX),
+                                                child: SimpleLyricsLineWidget(
+                                                  style: textTheme.displayMedium?.copyWith(
+                                                    fontSize: 14.0.fontSize,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(),
                           ),
                         ),
 

@@ -222,6 +222,15 @@ class MiniPlayerController {
   static const double kStParallax = 1.0;
   static const double kSiParallax = 1.15;
 
+  /// [sAnim] is driven slightly past the actuation distance while dragging, so that a full
+  /// swipe reaches the bounds before the finger crosses the whole screen.
+  static const double _kSDragOvershoot = 1.25;
+
+  final displayIndexOverride = Rxn<int>();
+  int _snapGeneration = 0;
+  int? _pendingSnapDir;
+  Future<void>? _pendingIndexChange;
+
   bool bounceUp = false;
   bool bounceDown = false;
 
@@ -340,6 +349,16 @@ class MiniPlayerController {
 
   void gestureDetectorOnHorizontalDragStart(DragStartDetails details) {
     if (_offset > maxOffset) return;
+
+    if (sAnim.isAnimating || _pendingSnapDir != null) {
+      // -- a transition is still running (or done but waiting for the player to catch up), take over
+      // -- from where it visually is, otherwise the first drag update would teleport [sAnim] back to
+      // -- the stale [_sOffset] of the previous snap.
+      _snapGeneration++; // -- the running snap no longer owns the animation, dont let it reset us
+      sAnim.stop();
+      _sOffset = sAnim.value * sMaxOffset / _kSDragOvershoot;
+    }
+
     _sPrevOffset = _sOffset;
   }
 
@@ -350,7 +369,7 @@ class MiniPlayerController {
     _sOffset -= details.primaryDelta ?? 0.0;
     _sOffset = _sOffset.clampDouble(-sMaxOffset, sMaxOffset);
 
-    sAnim.animateTo(_sOffset / sMaxOffset * 1.25, duration: Duration.zero);
+    sAnim.animateTo(_sOffset / sMaxOffset * _kSDragOvershoot, duration: Duration.zero);
   }
 
   void gestureDetectorOnHorizontalDragEnd(DragEndDetails details) {
@@ -521,33 +540,101 @@ class MiniPlayerController {
     if (haptic && (_prevOffset - _offset).abs() > _actuationOffset) VibratorController.interfaceHapticOrNull?.verylight();
   }
 
-  Future<void> snapToPrev() async {
-    if (Player.inst.canJumpToPrevious) {
-      _sOffset = -sMaxOffset;
-      _sOffset = 0;
-      // await sAnim.animateTo(-1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
-      sAnim.animateTo(0.0, duration: Duration.zero);
-
-      if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) VibratorController.interfaceHapticOrNull?.verylight();
-      Player.inst.previous();
-    }
-  }
+  Future<void> snapToPrev() => _snapToAdjacent(forward: false);
 
   void _snapToCurrent() {
-    _sOffset = 0;
-    sAnim.animateTo(0.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
+    // -- if a transition is in flight then "current" is the item it was heading to,
+    // -- the player already jumped there, so settling back to `0.0` would show a stale item.
+    final target = _pendingSnapDir?.toDouble() ?? 0.0;
+    _sOffset = target * sMaxOffset / _kSDragOvershoot;
+
+    final gen = ++_snapGeneration;
+    sAnim
+        .animateTo(
+          target,
+          curve: Curves.fastLinearToSlowEaseIn,
+          duration: const Duration(milliseconds: 600),
+        )
+        .whenComplete(() => _settleIndexAnimation(gen));
+
     if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) VibratorController.interfaceHapticOrNull?.verylight();
   }
 
-  Future<void> snapToNext() async {
-    if (Player.inst.canJumpToNext) {
-      _sOffset = sMaxOffset;
-      _sOffset = 0;
-      // await sAnim.animateTo(1.0, curve: _bouncingCurve, duration: const Duration(milliseconds: 300));
-      sAnim.animateTo(0.0, duration: Duration.zero);
+  Future<void> snapToNext() => _snapToAdjacent(forward: true);
 
-      if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) VibratorController.interfaceHapticOrNull?.verylight();
-      Player.inst.next();
+  /// mirrors `refine()` in the miniplayer, the queue wraps around on both ends.
+  int _refineIndex(int index) {
+    final length = Player.inst.currentQueue.value.length;
+    if (length <= 0) return 0;
+    if (index <= -1) return length - 1;
+    if (index >= length) return 0;
+    return index;
+  }
+
+  void _resetIndexAnimation() {
+    sAnim.stop();
+    sAnim.value = 0.0;
+    _sOffset = 0; // -- keep it in sync with [sAnim], otherwise the next drag would jump
+    displayIndexOverride.value = null;
+    _pendingSnapDir = null;
+    _pendingIndexChange = null;
+  }
+
+  /// Drops the frozen index once the transition settled. The player is jumped to asynchronously,
+  /// so we wait for it to actually report the new index first, otherwise clearing the override
+  /// would fall back to the stale index and flash the old item for a frame.
+  void _settleIndexAnimation(int gen) {
+    if (gen != _snapGeneration) return;
+
+    final dir = _pendingSnapDir;
+    final base = displayIndexOverride.value;
+    final pendingIndexChange = _pendingIndexChange;
+    if (dir == null || base == null || pendingIndexChange == null || Player.inst.currentIndex.value == _refineIndex(base + dir)) {
+      _resetIndexAnimation();
+      return;
+    }
+
+    pendingIndexChange.whenComplete(
+      () {
+        if (gen == _snapGeneration) _resetIndexAnimation();
+      },
+    );
+  }
+
+  Future<void> _snapToAdjacent({required bool forward}) async {
+    if (!(forward ? Player.inst.canJumpToNext : Player.inst.canJumpToPrevious)) {
+      _snapToCurrent(); // -- snap back if was dragged, settling on whatever is still in flight
+      return;
+    }
+
+    final gen = ++_snapGeneration;
+    final dir = forward ? 1 : -1;
+
+    _sOffset = 0;
+    if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) VibratorController.interfaceHapticOrNull?.verylight();
+
+    final pendingDir = _pendingSnapDir;
+    final base = displayIndexOverride.value;
+    sAnim.stop();
+    if (pendingDir != null && base != null) {
+      displayIndexOverride.value = _refineIndex(base + pendingDir);
+      sAnim.value = (sAnim.value - pendingDir).clampDouble(-1.0, 1.0);
+    } else {
+      displayIndexOverride.value = Player.inst.currentIndex.value;
+    }
+    _pendingSnapDir = dir;
+
+    final indexChangeFuture = forward ? Player.inst.next() : Player.inst.previous();
+    _pendingIndexChange = indexChangeFuture;
+
+    try {
+      await sAnim.animateTo(
+        dir.toDouble(),
+        curve: Curves.fastLinearToSlowEaseIn,
+        duration: const Duration(milliseconds: 600),
+      );
+    } finally {
+      _settleIndexAnimation(gen);
     }
   }
 }
