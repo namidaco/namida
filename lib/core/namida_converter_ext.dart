@@ -1399,6 +1399,12 @@ extension RouteUtils on NamidaRoute {
           builder: (context, qmap) => getTextWidget("${lang.queues} • ${qmap.length}"),
         );
         break;
+      case RouteType.PAGE_smartPlaylists:
+        finalWidget = ObxO(
+          rx: SmartPlaylistsController.inst.smartPlaylistsMap,
+          builder: (context, spmap) => getTextWidget("${lang.smartPlaylists} • ${spmap.length}"),
+        );
+        break;
       default:
         null;
     }

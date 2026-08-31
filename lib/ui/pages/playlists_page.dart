@@ -31,6 +31,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/create_smart_playlist_dialog.dart';
 import 'package:namida/ui/pages/queues_page.dart';
+import 'package:namida/ui/pages/smart_playlists_page.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/smart_playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -520,53 +521,71 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                               if (smartPlaylists.isEmpty) return const SizedBox();
                               return SizedBox(
                                 height: 48.0,
-                                child: SuperSmoothListView.builder(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: smartPlaylists.length,
-                                  itemBuilder: (context, index) {
-                                    final smplWrapper = smartPlaylists[index];
-                                    final imgFile = SmartPlaylistsController.inst.getArtworkFileForPlaylist(smplWrapper.value);
-                                    return ConstrainedBox(
-                                      constraints: BoxConstraints(maxWidth: context.width * 0.75),
-                                      child: NamidaInkWell(
-                                        margin: const EdgeInsets.symmetric(horizontal: 2.0),
-                                        padding: const EdgeInsets.symmetric(vertical: 2.0),
-                                        onTap: () {
-                                          SmartPlaylistTracksPage(
-                                            smartPlaylistWrapper: smplWrapper,
-                                          ).navigate();
-                                        },
-                                        onLongPress: () => NamidaDialogs.inst.showSmartPlaylistDialog(smplWrapper),
-                                        borderRadius: 8.0,
-                                        bgColor: context.theme.colorScheme.secondary.withOpacityExt(0.12),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const SizedBox(width: 4.0),
-                                            ArtworkWidget(
-                                              key: ValueKey(imgFile),
-                                              track: null,
-                                              thumbnailSize: 48.0,
-                                              path: imgFile.path,
-                                              forceSquared: true,
-                                              icon: Broken.magicpen,
-                                            ),
-                                            const SizedBox(width: 6.0),
-                                            Flexible(
-                                              child: Text(
-                                                smplWrapper.value.name,
-                                                softWrap: false,
-                                                overflow: TextOverflow.fade,
-                                                style: textTheme.displayMedium,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: SuperSmoothListView.builder(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: smartPlaylists.length,
+                                        itemBuilder: (context, index) {
+                                          final smplWrapper = smartPlaylists[index];
+                                          final imgFile = SmartPlaylistsController.inst.getArtworkFileForPlaylist(smplWrapper.value);
+                                          return ConstrainedBox(
+                                            constraints: BoxConstraints(maxWidth: context.width * 0.75),
+                                            child: NamidaInkWell(
+                                              margin: const EdgeInsets.symmetric(horizontal: 2.0),
+                                              padding: const EdgeInsets.symmetric(vertical: 2.0),
+                                              onTap: () {
+                                                SmartPlaylistTracksPage(
+                                                  smartPlaylistWrapper: smplWrapper,
+                                                ).navigate();
+                                              },
+                                              onLongPress: () => NamidaDialogs.inst.showSmartPlaylistDialog(smplWrapper),
+                                              borderRadius: 8.0,
+                                              bgColor: context.theme.colorScheme.secondary.withOpacityExt(0.12),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const SizedBox(width: 4.0),
+                                                  ArtworkWidget(
+                                                    key: ValueKey(imgFile),
+                                                    track: null,
+                                                    thumbnailSize: 48.0,
+                                                    path: imgFile.path,
+                                                    forceSquared: true,
+                                                    icon: Broken.magicpen,
+                                                  ),
+                                                  const SizedBox(width: 6.0),
+                                                  Flexible(
+                                                    child: Text(
+                                                      smplWrapper.value.name,
+                                                      softWrap: false,
+                                                      overflow: TextOverflow.fade,
+                                                      style: textTheme.displayMedium,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12.0),
+                                                ],
                                               ),
                                             ),
-                                            const SizedBox(width: 12.0),
-                                          ],
-                                        ),
+                                          );
+                                        },
                                       ),
-                                    );
-                                  },
+                                    ),
+                                    const SizedBox(width: 6.0),
+                                    NamidaButton(
+                                      dense: true,
+                                      iconSize: 20.0,
+                                      borderRadius: 12.0,
+                                      isMinimumSquared: true,
+                                      colors: .normal,
+                                      icon: Broken.export_1,
+                                      tooltip: () => lang.viewAll,
+                                      onTap: const SmartPlaylistsPage().navigate,
+                                    ),
+                                    const SizedBox(width: 12.0),
+                                  ],
                                 ),
                               );
                             },

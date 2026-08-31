@@ -616,6 +616,7 @@ enum RouteType {
   PAGE_folders_music,
   PAGE_folders_videos,
   PAGE_queue,
+  PAGE_smartPlaylists,
   PAGE_moods,
   PAGE_tags,
   PAGE_rating,
