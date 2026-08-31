@@ -8,6 +8,7 @@ import 'dart:isolate';
 import 'package:flutter/material.dart';
 
 import 'package:lrc/lrc.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:rhttp/rhttp.dart';
 
 import 'package:namida/base/ports_provider.dart';
@@ -20,6 +21,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -332,6 +334,16 @@ class _LRCSearchManager with PortsProvider<SendPort> {
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
 
+    String appVersion = '';
+    try {
+      final res = await PackageInfo.fromPlatform();
+      appVersion = res.version;
+    } catch (_) {}
+
+    final defaultHeaders = {
+      'User-Agent': 'namida $appVersion (${AppSocial.GITHUB})',
+    };
+
     String substringArtist(String artist) {
       int maxIndex = -1;
       maxIndex = artist.indexOf('(');
@@ -370,9 +382,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
         try {
           final response = await mainRequester.getUrl(
             url,
-            headers: {
-              'User-Agent': 'namida',
-            },
+            headers: defaultHeaders,
             cancelToken: null,
           );
           final jsonLists = (jsonDecode(response.body) as List<dynamic>?) ?? [];

@@ -838,6 +838,11 @@ class _YTPlayerInnerPage extends StatelessWidget {
     final videoViewCount = this.videoViewCount;
     final channelSubs = this.channelSubs;
     final channelID = this.channelID;
+    late final videoFeather = _VideoFeather(
+      key: const Key('actual_glow'),
+      height: 48.0,
+      color: mainTheme.scaffoldBackgroundColor,
+    );
     return IgnorePointer(
       ignoring: !_canScrollQueue,
       child: VideoTilePropertiesProvider(
@@ -1660,37 +1665,10 @@ class _YTPlayerInnerPage extends StatelessWidget {
               ),
               ObxO(
                 rx: _shouldShowGlowUnderVideo,
-                builder: (context, shouldShowGlowUnderVideo) {
-                  const containerHeight = 12.0;
-                  return CustomAnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: shouldShowGlowUnderVideo
-                        ? Stack(
-                            key: const Key('actual_glow'),
-                            children: [
-                              Container(
-                                height: containerHeight,
-                                color: mainTheme.scaffoldBackgroundColor,
-                              ),
-                              Container(
-                                height: containerHeight,
-                                transform: Matrix4.translationValues(0, containerHeight / 2, 0),
-                                decoration: BoxDecoration(
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: mainTheme.scaffoldBackgroundColor,
-                                      spreadRadius: containerHeight * 0.25,
-                                      offset: const Offset(0, 0),
-                                      blurRadius: 8.0,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          )
-                        : const SizedBox(key: Key('empty_glow')),
-                  );
-                },
+                builder: (context, shouldShowGlowUnderVideo) => CustomAnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: shouldShowGlowUnderVideo ? videoFeather : const SizedBox(key: Key('empty_glow')),
+                ),
               ),
             ],
           ),
@@ -1823,6 +1801,38 @@ class _StreamSegmentsRowState extends State<_StreamSegmentsRow> {
             );
           },
         ).toFixedList(),
+      ),
+    );
+  }
+}
+
+/// by claude
+class _VideoFeather extends StatelessWidget {
+  final Color color;
+  final double height;
+
+  const _VideoFeather({
+    super.key,
+    required this.color,
+    this.height = 28.0,
+  });
+
+  static const _alphas = <double>[1.0, 0.99144, 0.94208, 0.83692, 0.68256, 0.5, 0.31744, 0.16308, 0.05792, 0.00856, 0.0];
+  static const _stops = <double>[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [for (final a in _alphas) color.withValues(alpha: a)],
+            stops: _stops,
+          ),
+        ),
+        child: SizedBox(height: height, width: double.infinity),
       ),
     );
   }

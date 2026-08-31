@@ -161,31 +161,34 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                             '⤷ ',
                             style: chipTextStyle,
                           ),
-                          NamidaInkWell(
-                            borderRadius: 4.0,
-                            bgColor: theme.cardColor.withOpacityExt(0.2),
-                            padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0, vertical: 2.0),
-                            onTap: () {
-                              showCalendarDialog(
-                                title: lang.choose,
-                                buttonText: lang.confirm,
-                                useHistoryDates: true,
-                                historyController: historyController,
-                                calendarType: NamidaCalendarDatePickerType.single,
-                                firstDate: dateCustom.oldest,
-                                onGenerate: (dates) {
-                                  final newDate = dates.first;
-                                  _onSelectingTimeRange(
-                                    dateCustom: DateRange(oldest: dateCustom.oldest, newest: newDate),
-                                    mptr: MostPlayedTimeRange.custom,
-                                  );
-                                },
-                              );
-                            },
-                            child: Text(
-                              dateCustom.newest.dateFormattedOriginal,
-                              style: chipTextStyle,
-                              softWrap: false,
+                          Padding(
+                            padding: const EdgeInsets.only(top: 1.0),
+                            child: NamidaInkWell(
+                              borderRadius: 4.0,
+                              bgColor: theme.cardColor.withOpacityExt(0.2),
+                              padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0, vertical: 2.0),
+                              onTap: () {
+                                showCalendarDialog(
+                                  title: lang.choose,
+                                  buttonText: lang.confirm,
+                                  useHistoryDates: true,
+                                  historyController: historyController,
+                                  calendarType: NamidaCalendarDatePickerType.single,
+                                  firstDate: dateCustom.oldest,
+                                  onGenerate: (dates) {
+                                    final newDate = dates.first;
+                                    _onSelectingTimeRange(
+                                      dateCustom: DateRange(oldest: dateCustom.oldest, newest: newDate),
+                                      mptr: MostPlayedTimeRange.custom,
+                                    );
+                                  },
+                                );
+                              },
+                              child: Text(
+                                dateCustom.newest.dateFormattedOriginal,
+                                style: chipTextStyle,
+                                softWrap: false,
+                              ),
                             ),
                           ),
                         ],

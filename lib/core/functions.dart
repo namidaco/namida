@@ -482,8 +482,10 @@ class NamidaOnTaps {
     );
   }
 
-  void openSoundControl() {
-    NamidaNavigator.inst.navigateToRoot(const SoundControlPage());
+  void openSoundControl() async {
+    NamidaNavigator.inst.isInSoundControlSubpage = true;
+    await NamidaNavigator.inst.navigateToRoot(const SoundControlPage());
+    NamidaNavigator.inst.isInSoundControlSubpage = false;
   }
 
   static Map<int, int> _getQueuesSize(String dir) {

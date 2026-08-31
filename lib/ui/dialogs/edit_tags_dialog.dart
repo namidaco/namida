@@ -50,6 +50,8 @@ Future<void> showEditTracksTagsDialog(List<PhysicalMedia> tracks, Color? colorSc
 }
 
 Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme, {bool autoOpenSearch = false}) async {
+  if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
+
   // -- even tho we can modify the link in comment (app only), the next refresh would nuke it instantly, so better prevent it alltogether.
   final singleTrack = singleTrackPre.asPhysicalOrError();
   if (singleTrack == null) return;
@@ -81,7 +83,6 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme,
               tracks: [singleTrack],
               editedTags: {},
               commentToInsert: controller.text,
-              trimWhiteSpaces: false,
             )
             .ignoreError();
       } else {
@@ -289,7 +290,6 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
     tags.gainData,
   );
 
-  final trimWhiteSpaces = true.obs;
   final canEditTags = false.obs;
   final didAutoExtractFromFilename = false.obs;
   final currentImagePath = ''.obs;
@@ -373,7 +373,6 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
   await NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       color.close();
-      trimWhiteSpaces.close();
       canEditTags.close();
       didAutoExtractFromFilename.close();
       currentImagePath.close();
@@ -433,29 +432,6 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                   ),
                 ),
               ],
-              // leftAction: NamidaInkWell(
-              //   bgColor: theme.cardColor,
-              //   onTap: trimWhiteSpaces.toggle,
-              //   padding: const EdgeInsets.all(8.0),
-              //   child: Row(
-              //     mainAxisSize: MainAxisSize.min,
-              //     children: [
-              //       Obx(
-              //         (context) => NamidaCheckMark(
-              //           size: 18.0,
-              //           active: trimWhiteSpaces.valueR,
-              //         ),
-              //       ),
-              //       const SizedBox(
-              //         width: 8.0,
-              //       ),
-              //       Text(
-              //         lang.removeWhitespaces,
-              //         style: namida.textTheme.displaySmall,
-              //       ),
-              //     ],
-              //   ),
-              // ),
               actions: [
                 Obx(
                   (context) => CancelButtonDisabledRaw(
@@ -477,7 +453,6 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                             tracks: [track],
                             editedTags: editedTags,
                             imagePath: currentImagePath.value,
-                            trimWhiteSpaces: trimWhiteSpaces.value,
                             onEdit: (didUpdate, error, track) {
                               if (!didUpdate) {
                                 snackyy(title: lang.metadataEditFailed, message: error ?? 'Unknown Error', isError: true);
@@ -688,7 +663,6 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
     ],
   );
 
-  final trimWhiteSpaces = true.obs;
   final canEditTags = false.obs;
   final currentImagePath = ''.obs;
 
@@ -762,7 +736,6 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
   await NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
       tracksGoingToBeEditedRx.close();
-      trimWhiteSpaces.close();
       canEditTags.close();
       currentImagePath.close();
       for (final c in tagsControllers.values) {
@@ -819,9 +792,6 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                           text: lang.confirm,
                           onTap: () async {
                             NamidaNavigator.inst.closeDialog();
-                            if (trimWhiteSpaces.value) {
-                              editedTags.updateAll((key, value) => value.trimAll());
-                            }
 
                             final successfullEdits = 0.obs;
                             final RxList<Track> failedEditsTracks = <Track>[].obs;
@@ -929,7 +899,6 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                                 .updateTracksMetadata(
                                   tracks: tracksGoingToBeEditedRx.value.keys.toList(),
                                   editedTags: editedTags,
-                                  trimWhiteSpaces: trimWhiteSpaces.value,
                                   imagePath: currentImagePath.value,
                                   onEdit: (didUpdate, error, track) {
                                     if (didUpdate) {
@@ -970,29 +939,6 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
             },
           ),
         ],
-        // leftAction: NamidaInkWell(
-        //   bgColor: namida.theme.cardColor,
-        //   onTap: trimWhiteSpaces.toggle,
-        //   padding: const EdgeInsets.all(8.0),
-        //   child: Row(
-        //     mainAxisSize: MainAxisSize.min,
-        //     children: [
-        //       Obx(
-        //         (context) => NamidaCheckMark(
-        //           size: 18.0,
-        //           active: trimWhiteSpaces.valueR,
-        //         ),
-        //       ),
-        //       const SizedBox(
-        //         width: 8.0,
-        //       ),
-        //       Text(
-        //         lang.removeWhitespaces,
-        //         style: namida.textTheme.displaySmall,
-        //       ),
-        //     ],
-        //   ),
-        // ),
         child: ObxO(
           rx: tracksGoingToBeEditedRx,
           builder: (context, tracksGoingToBeEditedAll) {

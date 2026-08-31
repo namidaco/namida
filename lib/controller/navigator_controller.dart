@@ -53,6 +53,7 @@ class NamidaNavigator {
   bool isytLocalSearchInFullPage = false;
   bool isInYTCommentsSubpage = false;
   bool isInYTCommentRepliesSubpage = false;
+  bool isInSoundControlSubpage = false;
   bool isQueueSheetOpen = false;
 
   final currentWidgetStack = <NamidaRoute>[].obs;
@@ -548,6 +549,10 @@ class NamidaNavigator {
         ytMiniplayerCommentsPageKey.currentState?.pop();
         isInYTCommentsSubpage = false;
         return;
+      } else if (isInSoundControlSubpage) {
+        popRoot();
+        isInSoundControlSubpage = false;
+        return;
       } else if (!Dimensions.inst.miniplayerIsWideScreen) {
         MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
         return;
@@ -651,7 +656,11 @@ enum SnackDisplayDuration {
   const SnackDisplayDuration(this.milliseconds);
 }
 
-final _snackbarsStack = <SnackbarController>[];
+enum SnackbarType {
+  playerInfo,
+}
+
+final _snackbarsStackManager = _SnackbarStackManager();
 
 SnackbarController snackyy({
   IconData? icon,
@@ -669,6 +678,7 @@ SnackbarController snackyy({
   SnackbarButton? button,
   bool? isError,
   int? maxLinesMessage,
+  SnackbarType? type,
 }) {
   isError ??= title == lang.error;
   final context = namida.context;
@@ -676,12 +686,10 @@ SnackbarController snackyy({
   final backgroundColor = context?.theme.scaffoldBackgroundColor.withOpacityExt(0.3) ?? Colors.black54;
   final itemsColor = context?.theme.colorScheme.onSurface.withOpacityExt(0.7) ?? Colors.white54;
 
-  final displayDurationEffective = Duration(milliseconds: displayDuration.milliseconds);
   // -- add extra duration to older snackbars,
   // -- so that they don't close while the current one is covering or drawing attention
-  for (final s in _snackbarsStack) {
-    s.addDuration(displayDurationEffective);
-  }
+  final displayDurationEffective = Duration(milliseconds: displayDuration.milliseconds);
+  _snackbarsStackManager.addDurationForGenericSnackbars(displayDurationEffective);
 
   TextStyle getTextStyle(FontWeight fontWeight, double size, {bool action = false}) => TextStyle(
     fontWeight: fontWeight,
@@ -835,9 +843,9 @@ SnackbarController snackyy({
   );
 
   snackbarController = SnackbarController(snackbar);
-  _snackbarsStack.add(snackbarController);
+  _snackbarsStackManager.add(type, snackbarController);
   snackbarController.show().whenComplete(
-    () => _snackbarsStack.remove(snackbarController),
+    () => _snackbarsStackManager.remove(type, snackbarController),
   );
   return snackbarController;
 }
@@ -852,6 +860,38 @@ class SnackbarButton {
     this.icon,
     required this.function,
   });
+}
+
+class _SnackbarStackManager {
+  final _snackbarsStackMap = <SnackbarType?, List<SnackbarController>>{};
+
+  void add(SnackbarType? type, SnackbarController controller) {
+    final list = _snackbarsStackMap[type] ??= [];
+
+    // -- X close previous snackbars of the same type (null excluded)
+    // -- but sadly can result in snackbars instantly nuked,
+    // -- main issue is better solved inside [addDurationForGenericSnackbars]
+    // if (type != null && list.isNotEmpty) {
+    //   for (final s in list) {
+    //     s.close();
+    //   }
+    // }
+    list.add(controller);
+  }
+
+  void remove(SnackbarType? type, SnackbarController controller) {
+    _snackbarsStackMap[type]?.remove(controller);
+  }
+
+  void addDurationForGenericSnackbars(Duration displayDurationEffective) {
+    for (final e in _snackbarsStackMap.entries) {
+      if (e.key == null) {
+        for (final s in e.value) {
+          s.addDuration(displayDurationEffective);
+        }
+      }
+    }
+  }
 }
 
 class _OpenedNumbersManager {

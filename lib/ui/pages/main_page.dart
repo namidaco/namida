@@ -397,14 +397,16 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final searchProgressWidget = Builder(
-      builder: (context) {
-        return CircularProgressIndicator(
-          strokeWidth: 2.0,
-          strokeCap: StrokeCap.round,
-          color: theme.colorScheme.onSecondaryContainer.withOpacityExt(0.4),
-        );
-      },
+    final searchProgressWidget = IgnorePointer(
+      child: Builder(
+        builder: (context) {
+          return CircularProgressIndicator(
+            strokeWidth: 2.0,
+            strokeCap: StrokeCap.round,
+            color: theme.colorScheme.onSecondaryContainer.withOpacityExt(0.4),
+          );
+        },
+      ),
     );
     return Builder(
       builder: (context) => ObxO(

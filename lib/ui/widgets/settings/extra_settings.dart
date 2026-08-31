@@ -1245,6 +1245,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                 value: settings.extra.ytStyleButtonSwitcher ?? false,
                 onChanged: (isTrue) => setState(() => settings.extra.save(ytStyleButtonSwitcher: !isTrue)),
                 title: 'yt_style_player_button_switcher'.toUpperCase(),
+                subtitle: 'shows a button to switch between local style player and youtube style player',
               ),
 
               if (NamidaFeaturesVisibility.equalizerAvailable)

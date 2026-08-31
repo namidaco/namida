@@ -1916,7 +1916,6 @@ void showSetTrackStatsDialog({
                       }
                     },
                     keepFileDates: true,
-                    trimWhiteSpaces: false, // we did here
                     displayFFmpegFallbackWarning: false,
                   )
                   .ignoreError();
@@ -2017,7 +2016,6 @@ void showSetTrackStatsDialogSimple({
             }
           },
           keepFileDates: true,
-          trimWhiteSpaces: false,
           displayFFmpegFallbackWarning: false,
         )
         .ignoreError();

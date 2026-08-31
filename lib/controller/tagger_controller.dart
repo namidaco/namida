@@ -99,7 +99,6 @@ class NamidaTaggerController {
   Future<void> updateTracksMetadata({
     required List<Track> tracks,
     required Map<TagField, String> editedTags,
-    required bool trimWhiteSpaces,
     String imagePath = '',
     String commentToInsert = '',
     void Function(bool didUpdate, String? error, Track track)? onEdit,
@@ -108,10 +107,6 @@ class NamidaTaggerController {
     void Function(TrackStats newStats)? onStatsEdit,
     bool displayFFmpegFallbackWarning = true,
   }) async {
-    if (trimWhiteSpaces) {
-      editedTags.updateAll((key, value) => value.trimAll());
-    }
-
     final imageFile = imagePath.isNotEmpty ? File(imagePath) : null;
 
     String oldComment = '';

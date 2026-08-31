@@ -27,10 +27,18 @@ class _TrayManagerLinuxDBus extends NamidaTrayManager {
       onScroll: (delta, orientation) async {
         if (delta.isNegative) {
           final newVol = Player.inst.volumeDown();
-          snackyy(message: "${lang.volume} ↓: ${newVol.roundDecimals(2)}");
+          snackyy(
+            message: "${lang.volume} ↓: ${newVol.roundDecimals(2)}",
+            top: false,
+            type: SnackbarType.playerInfo,
+          );
         } else {
           final newVol = Player.inst.volumeUp();
-          snackyy(message: "${lang.volume} ↑: ${newVol.roundDecimals(2)}");
+          snackyy(
+            message: "${lang.volume} ↑: ${newVol.roundDecimals(2)}",
+            top: false,
+            type: SnackbarType.playerInfo,
+          );
         }
       },
       onActivate: (x, y) async {

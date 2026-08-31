@@ -242,7 +242,6 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
                   }
                 },
                 keepFileDates: true,
-                trimWhiteSpaces: true,
                 displayFFmpegFallbackWarning: false,
               );
             } catch (e) {
@@ -380,6 +379,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       message: message,
       borderColor: Colors.green.withOpacityExt(0.6),
       top: false,
+      type: SnackbarType.playerInfo,
     );
   }
 
