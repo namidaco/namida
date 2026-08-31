@@ -944,6 +944,50 @@ class AppSocial {
   static const NAMIDA_SYNC_GITHUB_RELEASE = 'https://github.com/010101-sans/namida_sync/releases';
 }
 
+/// Links to the documentation website.
+class AppDocsLinks {
+  final String link;
+  const AppDocsLinks._(this.link);
+
+  static const BASE = AppDocsLinks._('https://docs.namida.app');
+  static const _BASE_RAW = 'https://docs.namida.app';
+  static const _SETTINGS_RAW = '$_BASE_RAW/settings/';
+  static const _SETTINGS_YOUTUBE_RAW = '${_SETTINGS_RAW}5-youtube-settings/';
+
+  static const FEATURES = AppDocsLinks._('$_BASE_RAW/features/');
+  static const PAGES = AppDocsLinks._('$_BASE_RAW/pages/');
+  static const GUIDES = AppDocsLinks._('$_BASE_RAW/guides/');
+  static const TIPS = AppDocsLinks._('$_BASE_RAW/tips/');
+  static const FAQ = AppDocsLinks._('$_BASE_RAW/faq/');
+  static const NOT_PLANNED = AppDocsLinks._('$_BASE_RAW/not-planned/');
+  static const PERMISSIONS = AppDocsLinks._('$_BASE_RAW/permissions/');
+
+  static const SETTINGS = AppDocsLinks._(_SETTINGS_RAW);
+  static const SETTINGS_THEME = AppDocsLinks._('${_SETTINGS_RAW}1-theme-settings/');
+  static const SETTINGS_INDEXER = AppDocsLinks._('${_SETTINGS_RAW}2-indexer-settings/');
+  static const SETTINGS_PLAYBACK = AppDocsLinks._('${_SETTINGS_RAW}3-playback-settings/');
+  static const SETTINGS_CUSTOMIZATION = AppDocsLinks._('${_SETTINGS_RAW}4-customization-settings/');
+  static const SETTINGS_YOUTUBE = AppDocsLinks._('${_SETTINGS_RAW}5-youtube-settings/');
+  static const SETTINGS_EXTRA = AppDocsLinks._('${_SETTINGS_RAW}6-extras-settings/');
+  static const SETTINGS_BACKUP_RESTORE = AppDocsLinks._('${_SETTINGS_RAW}7-backup-restore-settings/');
+  static const SETTINGS_ADVANCED = AppDocsLinks._('${_SETTINGS_RAW}8-advanced-settings/');
+
+  static const SETTINGS_SPONSORBLOCK = AppDocsLinks._('$_SETTINGS_YOUTUBE_RAW#sponsorblock');
+  static const SETTINGS_RETURN_YOUTUBE_DISLIKE = AppDocsLinks._('$_SETTINGS_YOUTUBE_RAW#return-youtube-dislike');
+  static const SETTINGS_SYNC = AppDocsLinks._('$_SETTINGS_YOUTUBE_RAW#sync');
+
+  static AppDocsLinks getForSettingsPage(SettingSubpageEnum page) => switch (page) {
+    SettingSubpageEnum.theme => SETTINGS_THEME,
+    SettingSubpageEnum.indexer => SETTINGS_INDEXER,
+    SettingSubpageEnum.playback => SETTINGS_PLAYBACK,
+    SettingSubpageEnum.customization => SETTINGS_CUSTOMIZATION,
+    SettingSubpageEnum.youtube => SETTINGS_YOUTUBE,
+    SettingSubpageEnum.extra => SETTINGS_EXTRA,
+    SettingSubpageEnum.backupRestore => SETTINGS_BACKUP_RESTORE,
+    SettingSubpageEnum.advanced => SETTINGS_ADVANCED,
+  };
+}
+
 class LibraryCategory {
   static const localTracks = 'tr';
   static const localVideos = 'vid';

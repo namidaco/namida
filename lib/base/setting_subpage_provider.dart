@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:namida/controller/settings_search_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -12,6 +13,8 @@ abstract class SettingSubpageProvider extends StatelessWidget {
   final Enum? initialItem;
 
   const SettingSubpageProvider({super.key, this.initialItem});
+
+  AppDocsLinks get docsLink => AppDocsLinks.getForSettingsPage(settingPage);
 
   GlobalKey getSettingWidgetGlobalKey(Enum key) {
     return SettingsSearchController.inst.getSettingWidgetGlobalKey(settingPage, key);

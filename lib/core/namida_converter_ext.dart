@@ -1188,6 +1188,18 @@ extension SponsorBlockActionExt on SponsorBlockAction {
 extension RouteUtils on NamidaRoute {
   AlbumIdentifierWrapper? get routeDataAlbumIdentifier => routeData is AlbumIdentifierWrapper ? (routeData as AlbumIdentifierWrapper) : null;
 
+  AppDocsLinks? getDocsLink() {
+    final routeData = this.routeData;
+    if (routeData is AppDocsLinks) return routeData;
+
+    return switch (route) {
+      RouteType.SETTINGS_page => AppDocsLinks.SETTINGS,
+      RouteType.PAGE_Sync => AppDocsLinks.SETTINGS_SYNC,
+      RouteType.PAGE_about => AppDocsLinks.BASE,
+      _ => null,
+    };
+  }
+
   List<Selectable> tracksListInside() {
     final iter = tracksInside();
     return iter is List ? iter as List<Selectable> : iter.toList();
@@ -1383,7 +1395,7 @@ extension RouteUtils on NamidaRoute {
         displaySettingSearch = true;
         finalWidget = getTextWidget(lang.settings);
         break;
-      case RouteType.SETTINGS_subpage:
+      case RouteType.SETTINGS_subpage || RouteType.PAGE_Sync:
         displaySettingSearch = true;
         finalWidget = getTextWidget(name ?? '');
         break;
@@ -1470,6 +1482,8 @@ extension RouteUtils on NamidaRoute {
         route != RouteType.YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE &&
         route != RouteType.YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE;
     final shouldShowSettingsIcon = !showMainMenu && !showPlaylistMenu && shouldShowInitialActions;
+
+    final docsLink = this.getDocsLink();
 
     return <Widget>[
       const SizedBox(width: 2.0),
@@ -1638,6 +1652,15 @@ extension RouteUtils on NamidaRoute {
           NamidaDialogs.inst.showPlaylistDialog(name);
         }),
         shouldShow: showPlaylistMenu && name != null,
+      ),
+
+      _getAnimatedCrossFade(
+        child: NamidaAppBarIcon(
+          icon: Broken.message_question,
+          tooltip: () => lang.guide,
+          onPressed: docsLink == null ? null : () => NamidaLinkUtils.openLink(docsLink.link),
+        ),
+        shouldShow: docsLink != null,
       ),
 
       // -- Settings Icon

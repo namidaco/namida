@@ -193,6 +193,7 @@ class ExtrasSettings extends SettingSubpageProvider {
       trailing: NamidaIconButton(
         icon: Broken.flag,
         tooltip: () => lang.refreshLibrary,
+        iconColor: context.defaultIconColor(),
         onPressed: _showExtrasFlagsDialog,
       ),
       child: Column(

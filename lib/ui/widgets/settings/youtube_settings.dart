@@ -225,6 +225,7 @@ class YoutubeSettings extends SettingSubpageProvider {
       trailing: NamidaIconButton(
         icon: Broken.flag,
         tooltip: () => lang.refreshLibrary,
+        iconColor: context.defaultIconColor(),
         onPressed: _showYTFlagsDialog,
       ),
       child: Column(
@@ -249,6 +250,7 @@ class YoutubeSettings extends SettingSubpageProvider {
               onTap: () {
                 SettingsSubPage(
                   title: () => lang.sponsorblock,
+                  docsLink: AppDocsLinks.SETTINGS_SPONSORBLOCK,
                   child: const SponsorBlockSettingsPage(),
                 ).navigate();
               },
@@ -264,6 +266,7 @@ class YoutubeSettings extends SettingSubpageProvider {
               onTap: () {
                 SettingsSubPage(
                   title: () => lang.returnYoutubeDislike,
+                  docsLink: AppDocsLinks.SETTINGS_RETURN_YOUTUBE_DISLIKE,
                   child: const ReturnYoutubeDislikeSettingsPage(),
                 ).navigate();
               },
@@ -1031,6 +1034,7 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                     settings.youtube.save(showLikeStatusOnCards: !isTrue);
                   },
                   title: 'show_like_status_on_cards'.toUpperCase(),
+                  subtitle: 'can increase data usage',
                 ),
               ),
               ObxO(

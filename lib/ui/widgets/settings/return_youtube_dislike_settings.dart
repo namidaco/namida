@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:namida/class/route.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -15,11 +13,8 @@ import 'package:namida/youtube/class/return_youtube_dislike.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
-class ReturnYoutubeDislikeSettingsPage extends StatelessWidget with NamidaRouteWidget {
+class ReturnYoutubeDislikeSettingsPage extends StatelessWidget {
   const ReturnYoutubeDislikeSettingsPage({super.key});
-
-  @override
-  RouteType get route => RouteType.YOUTUBE_RETURN_YOUTUBE_DISLIKE_SUBPAGE;
 
   ReturnYoutubeDislikeSettings get _currentConfigValue => settings.youtube.ryd.value;
   RxBaseCore<ReturnYoutubeDislikeSettings> get _currentConfig => settings.youtube.ryd;

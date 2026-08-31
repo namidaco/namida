@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -19,11 +17,8 @@ import 'package:namida/youtube/class/sponsorblock.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 
-class SponsorBlockSettingsPage extends StatelessWidget with NamidaRouteWidget {
+class SponsorBlockSettingsPage extends StatelessWidget {
   const SponsorBlockSettingsPage({super.key});
-
-  @override
-  RouteType get route => RouteType.YOUTUBE_SPONSORBLOCK_SUBPAGE;
 
   SponsorBlockSettings get _currentConfigValue => settings.youtube.sponsorBlockSettings.value;
   RxBaseCore<SponsorBlockSettings> get _currentConfig => settings.youtube.sponsorBlockSettings;

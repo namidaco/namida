@@ -248,6 +248,12 @@ class _AboutPageState extends State<AboutPage> {
               child: Column(
                 children: [
                   NamidaAboutListTile(
+                    icon: Broken.message_question,
+                    title: lang.guide,
+                    subtitle: lang.learnMore,
+                    link: AppDocsLinks.BASE.link,
+                  ),
+                  NamidaAboutListTile(
                     icon: Broken.message_programming,
                     title: 'GitHub',
                     subtitle: lang.seeProjectCodeOnSite(site: 'Github'),

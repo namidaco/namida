@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -87,9 +89,16 @@ class SettingsSubPage extends StatelessWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.SETTINGS_subpage;
 
+  @override
+  AppDocsLinks? get routeData {
+    final child = this.child;
+    return docsLink ?? (child is SettingSubpageProvider ? child.docsLink : null);
+  }
+
   final String Function() title;
   final Widget child;
-  const SettingsSubPage({super.key, required this.child, required this.title});
+  final AppDocsLinks? docsLink;
+  const SettingsSubPage({super.key, required this.child, required this.title, this.docsLink});
   @override
   Widget build(BuildContext context) {
     final double horizontalMargin = Dimensions.inst.getSettingsHorizontalMargin(context);
