@@ -970,14 +970,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     final replayGainType = settings.player.replayGainType.value;
     if (replayGainType.isAnyEnabled) {
-      final gainData = item.track.toTrackExt().gainData;
-      if (replayGainType.isLoudnessEnhancerEnabled) {
-        final gainToUse = gainData?.gainToUse;
-        if (gainToUse != null) await loudnessEnhancerExtended?.setTargetGainTrack(gainToUse);
-      } else if (replayGainType.isVolumeEnabled) {
-        final vol = gainData?.calculateGainAsVolume();
-        replayGainLinearVolumeMultiplierRx.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
-      }
+      await _applyReplayGainForSelectable(item, replayGainType);
     }
 
     if (preparedConfig?.videoOptions == null) VideoController.inst.updateCurrentVideo(tr, returnEarly: false);
@@ -993,35 +986,33 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final replayGainType = settings.player.replayGainType.value;
     if (replayGainType.isAnyEnabled) {
       return item?.execute<FutureOr<void>>(
-        selectable: (finalItem) {
-          final gainData = finalItem.track.toTrackExt().gainData;
-          if (replayGainType.isLoudnessEnhancerEnabled) {
-            final gainToUse = gainData?.gainToUse;
-            if (gainToUse != null) return loudnessEnhancerExtended?.setTargetGainTrack(gainToUse);
-          } else if (replayGainType.isVolumeEnabled) {
-            final vol = gainData?.calculateGainAsVolume();
-            replayGainLinearVolumeMultiplierRx.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
-          }
-          return null;
-        },
+        selectable: (finalItem) => _applyReplayGainForSelectable(finalItem, replayGainType),
         youtubeID: (finalItem) async {
           final replayGainType = settings.player.replayGainType.value;
           if (replayGainType.isAnyEnabled) {
             streamsResult ??= await YoutubeInfoController.video.fetchVideoStreamsCache(finalItem.id);
-            if (streamsResult != null) {
-              final loudnessDb = streamsResult?.loudnessDBData?.loudnessDb;
-
-              if (replayGainType.isLoudnessEnhancerEnabled) {
-                if (loudnessDb != null) return loudnessEnhancerExtended?.setTargetGainTrack(-loudnessDb.toDouble());
-              } else if (replayGainType.isVolumeEnabled) {
-                final vol = loudnessDb == null ? null : ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
-                replayGainLinearVolumeMultiplierRx.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
-              }
-            }
+            final loudnessDb = streamsResult?.loudnessDBData?.loudnessDb;
+            await _applyReplayGain(loudnessDb == null ? null : -loudnessDb.toDouble(), replayGainType);
           }
         },
       );
     }
+  }
+
+  FutureOr<void> _applyReplayGainForSelectable(Selectable item, ReplayGainType replayGainType) {
+    return _applyReplayGain(item.track.toTrackExt().gainData?.gainToUse, replayGainType);
+  }
+
+  FutureOr<void> _applyReplayGain(double? gain, ReplayGainType replayGainType) {
+    if (replayGainType.isLoudnessEnhancerEnabled) {
+      return loudnessEnhancerExtended?.setTargetGainTrack(gain ?? 0.0);
+    } else if (replayGainType.isVolumeEnabled) {
+      final vol = gain == null ? null : ReplayGainData.convertGainToVolume(gain: gain);
+      replayGainLinearVolumeMultiplierRx.value = vol ?? ReplayGainData.kDefaultFallbackVolume; // save in memory only
+      // -- the volume was already applied to the player using the previous item multiplier, refresh it.
+      refreshVolumeForReplayGain();
+    }
+    return null;
   }
 
   @override
