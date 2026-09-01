@@ -1086,7 +1086,7 @@ class NamidaFileExtensionsWrapper {
   static const jsonlAndZip = NamidaFileExtensionsWrapper._({'jsonl', ..._zipExtensions});
   static const compressed = NamidaFileExtensionsWrapper._({..._zipExtensions, 'tar', 'gz', 'bz2', 'xz', 'cab', 'iso', 'jar'});
   static const lrcOrTxt = NamidaFileExtensionsWrapper._({'lrc', 'xml', 'ttml', 'txt'});
-  static const lrc = NamidaFileExtensionsWrapper._({'lrc', 'xml', 'ttml'});
+  static const lrc = NamidaFileExtensionsWrapper._({'lrc', 'xml', 'ttml', 'srt', 'vtt', 'sbv', 'ssa', 'ass'});
   static const txt = NamidaFileExtensionsWrapper._({'txt'});
 
   static const exe = NamidaFileExtensionsWrapper._({'exe'});

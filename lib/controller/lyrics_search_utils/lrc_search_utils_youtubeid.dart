@@ -37,7 +37,7 @@ class LrcSearchUtilsYoutubeID extends LrcSearchUtils {
   File get cachedLRCFile => File(p.join(mainLyricsCacheDirectory, "${video.id}.lrc"));
 
   @override
-  List<File Function()> get deviceLRCFiles => <File Function()>[]; // none
+  Future<File?> firstDeviceLRCFile() => Future.value(null);
 
   @override
   Future<int> getItemDurationMS() async {

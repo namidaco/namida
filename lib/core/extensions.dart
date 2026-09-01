@@ -627,6 +627,10 @@ extension LRCParsingUtils on String {
       if (ttmlAsLrc.lyrics.isNotEmpty) return ttmlAsLrc;
     } catch (_) {}
     try {
+      final subtitleAsLrc = SubtitleParser.parse(this);
+      if (subtitleAsLrc.lyrics.isNotEmpty) return subtitleAsLrc;
+    } catch (_) {}
+    try {
       final res = LRCParserSmart(this).parseLines();
       if (res.isNotEmpty) {
         final lines = <LrcLine>[];
@@ -656,7 +660,7 @@ extension LRCParsingUtils on String {
   bool isValidLRC() {
     bool valid = false;
     try {
-      valid = LrcParser.isValid(this) || TtmlParser.isValid(this);
+      valid = LrcParser.isValid(this) || TtmlParser.isValid(this) || SubtitleParser.isValid(this);
     } catch (_) {}
     if (!valid) {
       try {

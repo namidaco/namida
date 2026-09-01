@@ -41,7 +41,6 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
   final embedded = lrcUtils.embeddedLyrics;
   final cachedTxt = lrcUtils.cachedTxtFile;
   final cachedLRC = lrcUtils.cachedLRCFile;
-  final localLRCFiles = lrcUtils.deviceLRCFiles;
 
   if (embedded != '') {
     availableLyrics.add(
@@ -79,23 +78,21 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       ),
     );
   }
-  for (final lrcGetter in localLRCFiles) {
-    var localLRC = lrcGetter();
-    if (await localLRC.exists()) {
-      availableLyrics.add(
-        LyricsModel(
-          lyrics: await localLRC.readLrcString(),
-          synced: true,
-          fromInternet: false,
-          isInCache: false,
-          file: localLRC,
-          isEmbedded: false,
-        ),
-      );
-      // only pick first file, since uppercase variants may also appear duplicated
-      // and usually one doesn't have more than 1 lrc file for a track
-      break;
-    }
+
+  // only pick first file, since uppercase variants may also appear duplicated
+  // and usually one doesn't have more than 1 lrc file for a track
+  final deviceLrcFile = await lrcUtils.firstDeviceLRCFile();
+  if (deviceLrcFile != null) {
+    availableLyrics.add(
+      LyricsModel(
+        lyrics: await deviceLrcFile.readLrcString(),
+        synced: true,
+        fromInternet: false,
+        isInCache: false,
+        file: deviceLrcFile,
+        isEmbedded: false,
+      ),
+    );
   }
 
   void markRequiresUpdating() {

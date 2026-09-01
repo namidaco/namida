@@ -181,15 +181,8 @@ class Lyrics {
       }
 
       if (lrcContent == null) {
-        final lyricsFilesLocal = lrcUtils.deviceLRCFiles;
-        for (final lfn in lyricsFilesLocal) {
-          final lf = lfn();
-          if (await lf.existsAndValid()) {
-            lrcContent = await lf.readLrcString();
-
-            break;
-          }
-        }
+        final deviceLrcFile = await lrcUtils.firstDeviceLRCFile();
+        lrcContent = await deviceLrcFile?.readLrcString();
       }
       if (lrcContent == null && trackLyrics != '') {
         lrcContent = trackLyrics;

@@ -238,14 +238,8 @@ class TracksSearchWrapper {
       lrcContent = embedded;
     }
     if (lrcContent == null) {
-      final lyricsFilesLocal = lrcUtils.deviceLRCFiles;
-      for (final lfn in lyricsFilesLocal) {
-        final lf = lfn();
-        if (lf.existsAndValidSync()) {
-          lrcContent = lf.readLrcStringSync();
-          break;
-        }
-      }
+      final deviceLrcFile = lrcUtils.firstDeviceLRCFileSync();
+      lrcContent = deviceLrcFile?.readLrcStringSync();
     }
     if (lrcContent == null) {
       final textInCache = lrcUtils.cachedTxtFile;

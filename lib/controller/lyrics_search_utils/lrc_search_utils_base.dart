@@ -8,7 +8,6 @@ import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_youtubeid.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
@@ -41,7 +40,8 @@ abstract class LrcSearchUtils {
   String get embeddedLyrics;
   File get cachedTxtFile;
   File get cachedLRCFile;
-  List<File Function()> get deviceLRCFiles;
+
+  Future<File?> firstDeviceLRCFile();
 
   Future<int> getItemDurationMS();
 
@@ -54,7 +54,7 @@ abstract class LrcSearchUtils {
 
   @mustCallSuper
   Future<bool> hasLyrics() async {
-    return await cachedLRCFile.exists() || await deviceLRCFiles.anyAsync((element) => element().exists()) || await cachedTxtFile.exists();
+    return await cachedLRCFile.exists() || await firstDeviceLRCFile() != null || await cachedTxtFile.exists();
   }
 
   List<LRCSearchDetails> searchDetailsQueries();

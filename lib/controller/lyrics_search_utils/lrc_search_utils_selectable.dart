@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:path/path.dart' as p;
 
@@ -30,11 +31,39 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
   File get cachedLRCFile => File(p.join(mainLyricsCacheDirectory, "${track.rawCacheKey(mainLyricsCacheDirectory)}.lrc"));
 
   @override
-  List<File Function()> get deviceLRCFiles {
-    if (track.isNetwork) return [];
-    final dirPath = track.path.getDirectoryPath;
-    final fwoe = track.filenameWOExt;
-    final fwe = track.filename;
+  Future<File?> firstDeviceLRCFile() {
+    final path = this.track.path;
+
+    // -- network track
+    if (path.startsWith('http')) return Future.value(null);
+
+    return Isolate.run(() => _firstDeviceLRCFileSkipCheckSync(path));
+  }
+
+  File? firstDeviceLRCFileSync() {
+    final path = this.track.path;
+
+    // -- network track
+    if (path.startsWith('http')) return null;
+
+    return _firstDeviceLRCFileSkipCheckSync(path);
+  }
+
+  static File? _firstDeviceLRCFileSkipCheckSync(String localTrackPath) {
+    final lyricsFilesLocal = _buildDeviceLRCFilesCallbacks(localTrackPath);
+    for (final lfn in lyricsFilesLocal) {
+      final lf = lfn();
+      if (lf.existsAndValidSync()) {
+        return lf;
+      }
+    }
+    return null;
+  }
+
+  static List<File Function()> _buildDeviceLRCFilesCallbacks(String localTrackPath) {
+    final dirPath = localTrackPath.getDirectoryPath;
+    final fwoe = localTrackPath.getFilenameWOExt;
+    final fwe = localTrackPath.getFilename;
     return [
       () => File(p.join(dirPath, "$fwoe.lrc")),
       () => File(p.join(dirPath, "$fwe.lrc")),
@@ -42,6 +71,11 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
       () => File(p.join(dirPath, "$fwe.ttml")),
       () => File(p.join(dirPath, "$fwoe.LRC")),
       () => File(p.join(dirPath, "$fwe.LRC")),
+      () => File(p.join(dirPath, "$fwoe.srt")),
+      () => File(p.join(dirPath, "$fwoe.vtt")),
+      () => File(p.join(dirPath, "$fwoe.sbv")),
+      () => File(p.join(dirPath, "$fwoe.ssa")),
+      () => File(p.join(dirPath, "$fwoe.ass")),
     ];
   }
 
