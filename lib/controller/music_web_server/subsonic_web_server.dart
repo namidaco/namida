@@ -50,6 +50,8 @@ class _SubsonicWebServer extends MusicWebServer {
     return WebStreamUriDetails.fromUri(uri);
   }
 
+  static final _cachedArtworksForAlbumIds = <String, Completer<Uint8List>>{};
+
   @override
   Future<Uint8List?> getImage(String id) async {
     final baseUri = _serverUri;
@@ -58,18 +60,68 @@ class _SubsonicWebServer extends MusicWebServer {
     if (api == null) return null;
 
     final res = await api.api.getCoverArt(id);
-    return res.response.data;
+    final data = res.response.data;
+    int? possibleErrorCode;
+    if (data is Uint8List) {
+      possibleErrorCode = _checkIfBytesActuallyJsonErrorReturnCode(data);
+      if (possibleErrorCode == null) return data;
+    }
 
-    // if (data is Uint8List) {
-    //   return data;
-    // }
+    if (possibleErrorCode == 70) {
+      // -- track has no cover. fetch info to get album id then fetch its artwork
+
+      final songRes = await api.api.getSong(id);
+      final media = songRes.response.data;
+      if (media != null) {
+        final coverId = media.coverArt ?? media.albumId;
+
+        if (coverId != null) {
+          final cachedArtworkC = _cachedArtworksForAlbumIds[coverId];
+          if (cachedArtworkC != null) return cachedArtworkC.future;
+
+          _cachedArtworksForAlbumIds[coverId] = Completer<Uint8List>();
+
+          final fallbackRes = await api.api.getCoverArt(coverId);
+          final data = fallbackRes.response.data;
+          if (data is Uint8List) {
+            final possibleErrorCode = _checkIfBytesActuallyJsonErrorReturnCode(data);
+            if (possibleErrorCode == null) {
+              _cachedArtworksForAlbumIds[coverId]?.completeIfWasnt(data);
+              return data;
+            }
+          }
+        }
+      }
+    }
 
     // if (data is Map) {
     //   // -- is error
     //   return null;
     // }
 
-    // return null;
+    return null;
+  }
+
+  int? _checkIfBytesActuallyJsonErrorReturnCode(Uint8List bytes) {
+    final errorMap = _checkIfBytesActuallyJsonError(bytes);
+    try {
+      final error = errorMap!['subsonic-response']!['error'];
+      final code = error!['code'] as int;
+      return code;
+    } catch (_) {}
+    return null;
+  }
+
+  Map? _checkIfBytesActuallyJsonError(Uint8List bytes) {
+    // -- check if starts with {
+    // -- application/json in headers is not guranteed
+    if (bytes.isNotEmpty && bytes[0] == 123) {
+      try {
+        final errorMap = jsonDecode(String.fromCharCodes(bytes)) as Map;
+        return errorMap;
+      } catch (_) {}
+    }
+    return null;
   }
 
   @override
