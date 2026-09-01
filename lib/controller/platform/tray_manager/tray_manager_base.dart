@@ -47,6 +47,16 @@ abstract class NamidaTrayManager {
         Player.inst.next().ignoreError();
       case TrayMenuKey.showWindow:
         await showWindow();
+      case TrayMenuKey.miniLyricsWindow:
+        final windowController = WindowController.instance;
+        if (windowController != null) {
+          if (windowController.inMiniLyricsMode) {
+            await windowController.exitMiniLyricsMode();
+          } else {
+            await showWindow();
+            await windowController.enterMiniLyricsMode();
+          }
+        }
       case TrayMenuKey.exit:
         await Namida.disposeAllResourcesAndExit();
       case null:
@@ -66,6 +76,7 @@ class TrayMenuKey {
   static const String playPause = 'play_pause';
   static const String next = 'next';
   static const String showWindow = 'show_window';
+  static const String miniLyricsWindow = 'mini_lyrics_window';
   static const String exit = 'exit';
 }
 

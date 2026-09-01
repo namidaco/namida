@@ -49,6 +49,12 @@ class _WindowManagerDesktop extends NamidaWindowManager {
   Future<void> ensurePositionRestored({bool isStartup = true}) async {
     // -- sometimes waitUntilReadyToShow is not enough for linux
 
+    if (NamidaWindowManager.isMiniLyricsMode.value) {
+      await windowManager.show();
+      await windowManager.focus();
+      return;
+    }
+
     if (isStartup) {
       final bounds = settings.extra.windowBounds;
       if (bounds != null) {
@@ -70,6 +76,78 @@ class _WindowManagerDesktop extends NamidaWindowManager {
 
     await windowManager.show();
     await windowManager.focus();
+  }
+
+  @override
+  Future<void> enterMiniLyricsMode() async {
+    if (NamidaWindowManager.isMiniLyricsMode.value) return;
+
+    final wasMaximized = await windowManager.isMaximized();
+    if (wasMaximized) {
+      settings.extra.save(windowMaximized: true);
+    } else {
+      settings.extra.save(windowMaximized: false, windowBounds: await windowManager.getBounds());
+    }
+
+    settings.save(enableLyrics: true);
+
+    NamidaWindowManager.isMiniLyricsMode.value = true;
+
+    if (wasMaximized) await windowManager.unmaximize();
+    if (await windowManager.isFullScreen()) await windowManager.setFullScreen(false);
+
+    await windowManager.setMinimumSize(NamidaWindowManager.kMiniLyricsMinSize);
+    await windowManager.setAsFrameless();
+    await windowManager.setHasShadow(false).ignoreError();
+    await windowManager.setBackgroundColor(Colors.transparent);
+    await windowManager.setBounds(await _resolveMiniLyricsBounds());
+    await windowManager.setAlwaysOnTop(true);
+    await windowManager.setSkipTaskbar(true);
+    await windowManager.setVisibleOnAllWorkspaces(true).ignoreError();
+    await windowManager.show();
+    await windowManager.focus();
+  }
+
+  @override
+  Future<void> exitMiniLyricsMode() async {
+    if (!NamidaWindowManager.isMiniLyricsMode.value) return;
+
+    settings.extra.save(miniLyricsWindowBounds: await windowManager.getBounds());
+
+    NamidaWindowManager.isMiniLyricsMode.value = false;
+
+    await windowManager.setAlwaysOnTop(false);
+    await windowManager.setSkipTaskbar(false);
+    await windowManager.setVisibleOnAllWorkspaces(false).ignoreError();
+    await windowManager.setHasShadow(true).ignoreError();
+    await windowManager.setMinimumSize(Size.zero);
+    await windowManager.setTitleBarStyle(
+      usingCustomWindowTitleBar ? TitleBarStyle.hidden : TitleBarStyle.normal,
+      windowButtonVisibility: !usingCustomWindowTitleBar,
+    );
+    await ensurePositionRestored(isStartup: true);
+  }
+
+  Future<Rect> _resolveMiniLyricsBounds() async {
+    final saved = settings.extra.miniLyricsWindowBounds;
+    if (saved != null) return await _ensureBoundsWithinScreenSizeShift(saved);
+
+    const size = NamidaWindowManager.kMiniLyricsDefaultSize;
+    Rect bounds;
+    try {
+      final display = await screenRetriever.getPrimaryDisplay();
+      final position = display.visiblePosition ?? Offset.zero;
+      final displaySize = display.visibleSize ?? display.size;
+      bounds = Rect.fromLTWH(
+        position.dx + (displaySize.width - size.width) / 2,
+        position.dy + displaySize.height - size.height - 64.0,
+        size.width,
+        size.height,
+      );
+    } catch (_) {
+      bounds = Rect.fromLTWH(0.0, 0.0, size.width, size.height);
+    }
+    return await _ensureBoundsWithinScreenSizeShift(bounds);
   }
 
   Future<Rect> _ensureBoundsWithinScreenSizeShift(Rect bounds) async {
@@ -158,12 +236,19 @@ class _NamidaWindowListenerEnhanced extends _NamidaWindowListener {
 class _NamidaWindowListener with WindowListener {
   Future<void> _saveBounds() async {
     final currentBounds = await windowManager.getBounds();
-    if (currentBounds != settings.extra.windowBounds) {
-      settings.extra.save(windowBounds: currentBounds);
+    if (NamidaWindowManager.isMiniLyricsMode.value) {
+      if (currentBounds != settings.extra.miniLyricsWindowBounds) {
+        settings.extra.save(miniLyricsWindowBounds: currentBounds);
+      }
+    } else {
+      if (currentBounds != settings.extra.windowBounds) {
+        settings.extra.save(windowBounds: currentBounds);
+      }
     }
   }
 
   void _saveMaximized({required bool isNowMaximized}) {
+    if (NamidaWindowManager.isMiniLyricsMode.value) return;
     if (isNowMaximized != settings.extra.windowMaximized) {
       settings.extra.save(windowMaximized: isNowMaximized);
     }
@@ -197,6 +282,11 @@ class _NamidaWindowListener with WindowListener {
 
   @override
   Future<void> onWindowClose() async {
+    if (NamidaWindowManager.isMiniLyricsMode.value) {
+      await WindowController.instance?.exitMiniLyricsMode();
+      return;
+    }
+
     if (settings.player.killAfterDismissingApp.value.resolveShouldKill()) {
       await Namida.disposeAllResourcesAndExit();
     } else {

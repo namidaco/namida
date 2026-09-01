@@ -5,7 +5,6 @@ import 'package:lrc/lrc.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
 /// built by claude (based on lyrics_lrc_parsed_view.dart)
@@ -13,12 +12,14 @@ class SimpleLyricsLineWidget extends StatefulWidget {
   final TextStyle? style;
   final TextAlign textAlign;
   final int maxLines;
+  final bool softWrap;
 
   const SimpleLyricsLineWidget({
     super.key,
     this.style,
     this.textAlign = TextAlign.center,
     this.maxLines = 1,
+    this.softWrap = false,
   });
 
   @override
@@ -113,7 +114,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
                   textAlign: widget.textAlign,
                   textDirection: line.isRTL == true ? TextDirection.rtl : TextDirection.ltr,
                   maxLines: widget.maxLines,
-                  softWrap: false,
+                  softWrap: widget.softWrap,
                   overflow: TextOverflow.fade,
                 ),
         );

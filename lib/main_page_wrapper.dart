@@ -662,6 +662,12 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                                     onTap: NamidaOnTaps.inst.openSoundControl,
                                   ),
                                   _DesktopShortcutIcon(
+                                    type: _DesktopShortcutActionType.performsAction,
+                                    tooltip: lang.miniLyricsWindow,
+                                    icon: Broken.subtitle,
+                                    onTap: () => WindowController.instance?.enterMiniLyricsMode(),
+                                  ),
+                                  _DesktopShortcutIcon(
                                     type: _DesktopShortcutActionType.opensDialog,
                                     tooltip: lang.refreshLibrary,
                                     icon: Broken.refresh_2,

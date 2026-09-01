@@ -35,6 +35,7 @@ class _ExtraSettings with SettingsFileWriter {
 
   bool windowMaximized = false;
   Rect? windowBounds;
+  Rect? miniLyricsWindowBounds;
 
   void save({
     LibraryTab? selectedLibraryTab,
@@ -59,6 +60,7 @@ class _ExtraSettings with SettingsFileWriter {
     int? audioConfigPageIndex,
     Rect? windowBounds,
     bool? windowMaximized,
+    Rect? miniLyricsWindowBounds,
   }) {
     if (selectedLibraryTab != null) this.selectedLibraryTab.value = selectedLibraryTab;
     if (staticLibraryTab != null) this.staticLibraryTab.value = staticLibraryTab;
@@ -82,6 +84,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (audioConfigPageIndex != null) this.audioConfigPageIndex = audioConfigPageIndex;
     if (windowBounds != null) this.windowBounds = windowBounds;
     if (windowMaximized != null) this.windowMaximized = windowMaximized;
+    if (miniLyricsWindowBounds != null) this.miniLyricsWindowBounds = miniLyricsWindowBounds;
     _writeToStorage();
   }
 
@@ -131,6 +134,16 @@ class _ExtraSettings with SettingsFileWriter {
         );
       }
       windowMaximized = json['windowMaximized'] ?? windowMaximized;
+
+      final miniLyricsWindowBoundsJson = json['miniLyricsWindowBounds'];
+      if (miniLyricsWindowBoundsJson is Map) {
+        this.miniLyricsWindowBounds = Rect.fromLTRB(
+          miniLyricsWindowBoundsJson['l'],
+          miniLyricsWindowBoundsJson['t'],
+          miniLyricsWindowBoundsJson['r'],
+          miniLyricsWindowBoundsJson['b'],
+        );
+      }
     } catch (e, st) {
       printy(e, isError: true);
       logger.report(e, st);
@@ -167,6 +180,13 @@ class _ExtraSettings with SettingsFileWriter {
         'b': windowBounds!.bottom,
       },
     'windowMaximized': windowMaximized,
+    if (miniLyricsWindowBounds != null)
+      'miniLyricsWindowBounds': {
+        'l': miniLyricsWindowBounds!.left,
+        't': miniLyricsWindowBounds!.top,
+        'r': miniLyricsWindowBounds!.right,
+        'b': miniLyricsWindowBounds!.bottom,
+      },
   };
 
   Future<void> _writeToStorage() async => await writeToStorage();

@@ -42,6 +42,7 @@ import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/platform/permission_manager/permission_manager.dart';
+import 'package:namida/controller/platform/window_manager/window_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -70,6 +71,7 @@ import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/pages/onboarding.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/mini_lyrics_window.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -541,7 +543,22 @@ class _NamidaState extends State<Namida> {
 
             return Theme(
               data: theme,
-              child: mainChild,
+              child: WindowController.instance == null
+                  ? mainChild
+                  : ObxO(
+                      rx: NamidaWindowManager.isMiniLyricsMode,
+                      builder: (context, isMiniLyricsMode) => Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Visibility(
+                            maintainState: true,
+                            visible: !isMiniLyricsMode,
+                            child: mainChild,
+                          ),
+                          if (isMiniLyricsMode) const MiniLyricsWindow(),
+                        ],
+                      ),
+                    ),
             );
           },
         ),
@@ -607,118 +624,121 @@ class _NamidaState extends State<Namida> {
       textDirection: TextDirection.ltr,
       child: ObxO(
         rx: NamidaChannel.inst.isInPip,
-        builder: (context, showPipOnly) => Container(
-          color: Colors.black,
-          alignment: Alignment.topLeft,
-          child: Stack(
-            alignment: Alignment.bottomLeft,
-            children: [
-              Visibility(
-                maintainState: true,
-                visible: !showPipOnly,
-                child: ObxO(
-                  rx: settings.fontScaleFactor,
-                  builder: (context, fontScaleFactor) => MediaQuery(
-                    data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(fontScaleFactor)),
-                    child: MaterialApp(
-                      color: kDefaultIconLightColor,
-                      key: const Key('namida_app'),
-                      debugShowCheckedModeBanner: false,
-                      navigatorKey: namida.rootNavigatorKey,
-                      title: 'Namida',
-                      // restorationScopeId: 'Namida',
-                      // -- we use custom logic to avoid context based translations
-                      // locale: currentLanguage?.locale,
-                      // supportedLocales: AppLocalizations.supportedLocales,
-                      localizationsDelegates: [
-                        GlobalMaterialLocalizations.delegate,
-                        GlobalCupertinoLocalizations.delegate,
-                        GlobalWidgetsLocalizations.delegate,
-                        const FallbackMaterialLocalizationsDelegate(),
-                        const FallbackCupertinoLocalizationsDelegate(),
-                        const FallbackWidgetsLocalizationsDelegate(),
-                      ],
-                      builder: (context, widget) {
-                        Brightness platformBrightness = MediaQuery.platformBrightnessOf(context);
-                        // overlay entries get rebuilt on any insertion/removal, so we create app here.
+        builder: (context, showPipOnly) => ObxO(
+          rx: NamidaWindowManager.isMiniLyricsMode,
+          builder: (context, isMiniLyricsMode) => Container(
+            color: isMiniLyricsMode ? Colors.transparent : Colors.black,
+            alignment: Alignment.topLeft,
+            child: Stack(
+              alignment: Alignment.bottomLeft,
+              children: [
+                Visibility(
+                  maintainState: true,
+                  visible: !showPipOnly,
+                  child: ObxO(
+                    rx: settings.fontScaleFactor,
+                    builder: (context, fontScaleFactor) => MediaQuery(
+                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(fontScaleFactor)),
+                      child: MaterialApp(
+                        color: kDefaultIconLightColor,
+                        key: const Key('namida_app'),
+                        debugShowCheckedModeBanner: false,
+                        navigatorKey: namida.rootNavigatorKey,
+                        title: 'Namida',
+                        // restorationScopeId: 'Namida',
+                        // -- we use custom logic to avoid context based translations
+                        // locale: currentLanguage?.locale,
+                        // supportedLocales: AppLocalizations.supportedLocales,
+                        localizationsDelegates: [
+                          GlobalMaterialLocalizations.delegate,
+                          GlobalCupertinoLocalizations.delegate,
+                          GlobalWidgetsLocalizations.delegate,
+                          const FallbackMaterialLocalizationsDelegate(),
+                          const FallbackCupertinoLocalizationsDelegate(),
+                          const FallbackWidgetsLocalizationsDelegate(),
+                        ],
+                        builder: (context, widget) {
+                          Brightness platformBrightness = MediaQuery.platformBrightnessOf(context);
+                          // overlay entries get rebuilt on any insertion/removal, so we create app here.
 
-                        Widget mainApp = buildMainApp(widget!, platformBrightness);
+                          Widget mainApp = buildMainApp(widget!, platformBrightness);
 
-                        return Overlay(
-                          initialEntries: [
-                            OverlayEntry(
-                              builder: (context) {
-                                final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
-                                if (newPlatformBrightness != platformBrightness) {
-                                  platformBrightness = newPlatformBrightness;
-                                  mainApp = buildMainApp(widget, platformBrightness);
-                                  YoutubeMiniplayerUiController.inst.startDimTimer(brightness: platformBrightness);
-                                }
-                                return mainApp;
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                      home: mainPageWrapper,
+                          return Overlay(
+                            initialEntries: [
+                              OverlayEntry(
+                                builder: (context) {
+                                  final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
+                                  if (newPlatformBrightness != platformBrightness) {
+                                    platformBrightness = newPlatformBrightness;
+                                    mainApp = buildMainApp(widget, platformBrightness);
+                                    YoutubeMiniplayerUiController.inst.startDimTimer(brightness: platformBrightness);
+                                  }
+                                  return mainApp;
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                        home: mainPageWrapper,
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              // prevent accidental opening for drawer when performing back gesture
-              if (shouldAddEdgeAbsorbers)
-                SizedBox(
-                  width: 18.0,
-                  height: context.height * 0.8,
-                  child: HorizontalDragDetector(
-                    onUpdate: (_) {},
-                  ),
-                ),
-
-              // prevent accidental miniplayer/queue swipe up when performing home scween gesture
-              if (shouldAddEdgeAbsorbers)
-                SizedBox(
-                  height: 18.0,
-                  width: context.width,
-                  child: VerticalDragDetector(
-                    onUpdate: (_) {},
-                  ),
-                ),
-
-              // prevent accidental miniplayer/queue swipe horizontal when performing home scween horizontal gesture
-              if (shouldAddEdgeAbsorbers)
-                SizedBox(
-                  height: 18.0,
-                  width: context.width,
-                  child: HorizontalDragDetector(
-                    onUpdate: (_) {},
-                  ),
-                ),
-
-              // prevent accidental miniplayer swipe when performing back gesture
-              if (shouldAddEdgeAbsorbers)
-                Positioned(
-                  right: 0,
-                  child: SizedBox(
-                    width: 12.0,
-                    height: context.height,
+                // prevent accidental opening for drawer when performing back gesture
+                if (shouldAddEdgeAbsorbers)
+                  SizedBox(
+                    width: 18.0,
+                    height: context.height * 0.8,
                     child: HorizontalDragDetector(
                       onUpdate: (_) {},
                     ),
                   ),
-                ),
 
-              if (showPipOnly)
-                const NamidaVideoControls(
-                  key: Key('pip_widget_child'),
-                  isFullScreen: true,
-                  showControls: false,
-                  forceEnableSponsorBlock: false,
-                  onMinimizeTap: null,
-                  isLocal: true,
-                ),
-            ],
+                // prevent accidental miniplayer/queue swipe up when performing home scween gesture
+                if (shouldAddEdgeAbsorbers)
+                  SizedBox(
+                    height: 18.0,
+                    width: context.width,
+                    child: VerticalDragDetector(
+                      onUpdate: (_) {},
+                    ),
+                  ),
+
+                // prevent accidental miniplayer/queue swipe horizontal when performing home scween horizontal gesture
+                if (shouldAddEdgeAbsorbers)
+                  SizedBox(
+                    height: 18.0,
+                    width: context.width,
+                    child: HorizontalDragDetector(
+                      onUpdate: (_) {},
+                    ),
+                  ),
+
+                // prevent accidental miniplayer swipe when performing back gesture
+                if (shouldAddEdgeAbsorbers)
+                  Positioned(
+                    right: 0,
+                    child: SizedBox(
+                      width: 12.0,
+                      height: context.height,
+                      child: HorizontalDragDetector(
+                        onUpdate: (_) {},
+                      ),
+                    ),
+                  ),
+
+                if (showPipOnly)
+                  const NamidaVideoControls(
+                    key: Key('pip_widget_child'),
+                    isFullScreen: true,
+                    showControls: false,
+                    forceEnableSponsorBlock: false,
+                    onMinimizeTap: null,
+                    isLocal: true,
+                  ),
+              ],
+            ),
           ),
         ),
       ),

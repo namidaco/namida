@@ -23,4 +23,24 @@ abstract class NamidaWindowManager {
   Future<void> init();
   Future<void> restorePosition();
   Future<void> ensurePositionRestored({bool isStartup = true});
+
+  // ================== Mini Lyrics Window ==================
+
+  static final isMiniLyricsMode = false.obs;
+
+  bool get inMiniLyricsMode => isMiniLyricsMode.value;
+
+  static const kMiniLyricsDefaultSize = Size(620.0, 92.0);
+  static const kMiniLyricsMinSize = Size(120.0, 48.0);
+
+  Future<void> enterMiniLyricsMode();
+  Future<void> exitMiniLyricsMode();
+
+  Future<void> toggleMiniLyricsMode() async {
+    if (isMiniLyricsMode.value) {
+      await exitMiniLyricsMode();
+    } else {
+      await enterMiniLyricsMode();
+    }
+  }
 }

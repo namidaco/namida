@@ -10,6 +10,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/tray_manager/tray_manager.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/window_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';

@@ -277,8 +277,21 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => lang.fullscreen,
     ),
     ShortcutKeyActivator(
+      key: LogicalKeyboardKey.keyL,
+      control: true,
+      alt: true,
+      callback: () => WindowController.instance?.toggleMiniLyricsMode(),
+      title: () => lang.miniLyricsWindow,
+    ),
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.escape,
-      callback: NamidaNavigator.inst.back,
+      callback: () {
+        if (NamidaWindowManager.isMiniLyricsMode.value) {
+          WindowController.instance?.exitMiniLyricsMode();
+        } else {
+          NamidaNavigator.inst.back();
+        }
+      },
       title: () => lang.exit,
     ),
   ];

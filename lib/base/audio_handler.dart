@@ -463,6 +463,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             icon: trayIcons?.showWindow,
             label: lang.open,
           ),
+          TrayMenuItem(
+            key: TrayMenuKey.miniLyricsWindow,
+            icon: trayIcons?.icStatMusicnote,
+            label: lang.miniLyricsWindow,
+          ),
           TrayMenuItem.separator(),
           TrayMenuItem(
             key: TrayMenuKey.exit,
