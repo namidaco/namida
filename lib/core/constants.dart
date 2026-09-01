@@ -147,7 +147,7 @@ final kMainColorDarkOldValue = const Color(0xFF4e4c72).intValue;
 const isKuru = bool.fromEnvironment('IS_KURU_BUILD');
 const isWindowsPortable = bool.fromEnvironment('WINDOWS_PORTABLE');
 
-const kEnableFancyAnimations = false;
+const kEnableFancyAnimations = true;
 
 abstract class NamidaLinkRegex {
   static const url = r'https?://([\w-]+\.)+[\w-]+(/[\w-./?%&@\$=~#+]*)?';
@@ -951,12 +951,16 @@ class AppDocsLinks {
   final String link;
   const AppDocsLinks._(this.link);
 
-  static const BASE = AppDocsLinks._('https://docs.namida.app');
+  Future<bool> launch() => NamidaLinkUtils.openLink(this.link);
+
   static const _BASE_RAW = 'https://docs.namida.app';
   static const _SETTINGS_RAW = '$_BASE_RAW/settings/';
   static const _SETTINGS_YOUTUBE_RAW = '${_SETTINGS_RAW}5-youtube-settings/';
+  static const _FEATURES_RAW = '$_BASE_RAW/features/';
 
-  static const FEATURES = AppDocsLinks._('$_BASE_RAW/features/');
+  static const BASE = AppDocsLinks._(_BASE_RAW);
+
+  static const FEATURES = AppDocsLinks._(_FEATURES_RAW);
   static const PAGES = AppDocsLinks._('$_BASE_RAW/pages/');
   static const GUIDES = AppDocsLinks._('$_BASE_RAW/guides/');
   static const TIPS = AppDocsLinks._('$_BASE_RAW/tips/');
@@ -977,6 +981,8 @@ class AppDocsLinks {
   static const SETTINGS_SPONSORBLOCK = AppDocsLinks._('$_SETTINGS_YOUTUBE_RAW#sponsorblock');
   static const SETTINGS_RETURN_YOUTUBE_DISLIKE = AppDocsLinks._('$_SETTINGS_YOUTUBE_RAW#return-youtube-dislike');
   static const SETTINGS_SYNC = AppDocsLinks._('$_SETTINGS_YOUTUBE_RAW#sync');
+
+  static const YT_CACHING = AppDocsLinks._('${_FEATURES_RAW}youtube/#caching');
 
   static AppDocsLinks getForSettingsPage(SettingSubpageEnum page) => switch (page) {
     SettingSubpageEnum.theme => SETTINGS_THEME,

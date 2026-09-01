@@ -1661,7 +1661,7 @@ extension RouteUtils on NamidaRoute {
         child: NamidaAppBarIcon(
           icon: Broken.message_question,
           tooltip: () => lang.guide,
-          onPressed: docsLink == null ? null : () => NamidaLinkUtils.openLink(docsLink.link),
+          onPressed: docsLink?.launch,
         ),
         shouldShow: docsLink != null,
       ),

@@ -6806,14 +6806,24 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
                   children: [
                     const Icon(
                       Broken.info_circle,
-                      size: 14.0,
+                      size: 16.0,
                     ),
                     const SizedBox(width: 6.0),
-                    Text(
-                      lang.priority,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.displaySmall,
+                    Expanded(
+                      child: Text(
+                        lang.priority,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.displaySmall,
+                      ),
+                    ),
+                    const SizedBox(width: 6.0),
+                    NamidaIconButton(
+                      horizontalPadding: 4.0,
+                      iconSize: 14.0,
+                      icon: Broken.message_question,
+                      tooltip: () => lang.learnMore,
+                      onPressed: AppDocsLinks.YT_CACHING.launch,
                     ),
                   ],
                 ),
