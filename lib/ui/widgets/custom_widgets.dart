@@ -1137,6 +1137,7 @@ class StatsContainer extends StatelessWidget {
   final IconData? icon;
   final String title;
   final String value;
+  final Widget? valueWidget;
   final String? total;
 
   const StatsContainer({
@@ -1146,6 +1147,7 @@ class StatsContainer extends StatelessWidget {
     this.icon,
     required this.title,
     required this.value,
+    this.valueWidget,
     this.total,
   });
 
@@ -1175,7 +1177,7 @@ class StatsContainer extends StatelessWidget {
               Text(title),
               const SizedBox(width: 6.0),
               if (total == null)
-                Text(value)
+                valueWidget ?? Text(value)
               else
                 Text(
                   '$value ${lang.ofLabel} $total',

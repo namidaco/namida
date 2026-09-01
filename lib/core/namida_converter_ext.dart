@@ -1417,6 +1417,9 @@ extension RouteUtils on NamidaRoute {
           builder: (context, spmap) => getTextWidget("${lang.smartPlaylists} • ${spmap.length}"),
         );
         break;
+      case RouteType.PAGE_discover:
+        finalWidget = getTextWidget(lang.discover);
+        break;
       default:
         null;
     }

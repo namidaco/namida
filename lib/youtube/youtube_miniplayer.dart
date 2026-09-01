@@ -36,6 +36,7 @@ import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/packages/three_arched_circle.dart';
+import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
@@ -1182,6 +1183,13 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                     titleWidget: videoPercText == null && audioPercText == null && isDownloading ? const LoadingIndicator() : null,
                                     title: videoPercText ?? audioPercText ?? lang.download,
                                     icon: icon,
+                                    iconWidget: kEnableFancyAnimations
+                                        ? CAMorphCheckIcon(
+                                            icon: icon,
+                                            isSuccess: icon == Broken.tick_circle,
+                                            identity: currentId,
+                                          )
+                                        : null,
                                     onLongPress: () async =>
                                         await showDownloadVideoBottomSheet(videoId: currentId, originalIndex: null, totalLength: null, playlistId: null, streamInfoItem: null),
                                     onPressed: () async {

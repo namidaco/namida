@@ -43,6 +43,7 @@ import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/pages/equalizer_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
+import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -1483,78 +1484,88 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                               child: Obx(
                                                 (context) {
                                                   final isButtonHighlighed = MiniPlayerController.inst.isPlayPauseButtonHighlighted.valueR;
+                                                  Widget playPauseButtonChild = AnimatedScale(
+                                                    duration: const Duration(milliseconds: 400),
+                                                    scale: isButtonHighlighed ? 0.97 : 1.0,
+                                                    child: AnimatedDecoration(
+                                                      duration: const Duration(milliseconds: 400),
+                                                      decoration: BoxDecoration(
+                                                        color: isButtonHighlighed
+                                                            ? Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(233), Colors.white)
+                                                            : CurrentColor.inst.miniplayerColor,
+                                                        gradient: LinearGradient(
+                                                          begin: Alignment.topLeft,
+                                                          end: Alignment.bottomRight,
+                                                          colors: [
+                                                            CurrentColor.inst.miniplayerColor,
+                                                            Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(200), Colors.grey),
+                                                          ],
+                                                          stops: const [0, 0.7],
+                                                        ),
+                                                        shape: BoxShape.circle,
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: CurrentColor.inst.miniplayerColor.withAlpha(160),
+                                                            blurRadius: 8.0,
+                                                            spreadRadius: isButtonHighlighed ? 3.0 : 1.0,
+                                                            offset: const Offset(0.0, 2.0),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: Stack(
+                                                        alignment: Alignment.center,
+                                                        children: [
+                                                          Padding(
+                                                            padding: EdgeInsets.all(iconButtonExtraPadding),
+                                                            child: ObxO(
+                                                              rx: Player.inst.playWhenReady,
+                                                              builder: (context, playWhenReady) => CustomAnimatedSwitcher(
+                                                                duration: const Duration(milliseconds: 200),
+                                                                child: playWhenReady
+                                                                    ? Icon(
+                                                                        Broken.pause,
+                                                                        size: iconSize,
+                                                                        key: const Key("pauseicon"),
+                                                                        color: Colors.white.withAlpha(180),
+                                                                      )
+                                                                    : Icon(
+                                                                        Broken.play,
+                                                                        size: iconSize,
+                                                                        key: const Key("playicon"),
+                                                                        color: Colors.white.withAlpha(180),
+                                                                      ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          if (widget.canShowBuffering(currentItem))
+                                                            IgnorePointer(
+                                                              child: Obx(
+                                                                (context) => Player.inst.shouldShowLoadingIndicatorR
+                                                                    ? ThreeArchedCircle(
+                                                                        color: Colors.white.withAlpha(120),
+                                                                        size: iconSize * 1.4,
+                                                                      )
+                                                                    : const SizedBox(),
+                                                              ),
+                                                            ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  );
+                                                  if (kEnableFancyAnimations) {
+                                                    playPauseButtonChild = CAMagneticButton(
+                                                      radius: iconBoxSize,
+                                                      pullFactor: 0.08,
+                                                      maxSkewRadians: 0.08,
+                                                      pressScale: 0.98,
+                                                      child: playPauseButtonChild,
+                                                    );
+                                                  }
                                                   return NamidaMouseRegion(
                                                     child: TapDetector(
                                                       onTap: null,
                                                       initializer: _playPauseTapInitializer,
-                                                      child: AnimatedScale(
-                                                        duration: const Duration(milliseconds: 400),
-                                                        scale: isButtonHighlighed ? 0.97 : 1.0,
-                                                        child: AnimatedDecoration(
-                                                          duration: const Duration(milliseconds: 400),
-                                                          decoration: BoxDecoration(
-                                                            color: isButtonHighlighed
-                                                                ? Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(233), Colors.white)
-                                                                : CurrentColor.inst.miniplayerColor,
-                                                            gradient: LinearGradient(
-                                                              begin: Alignment.topLeft,
-                                                              end: Alignment.bottomRight,
-                                                              colors: [
-                                                                CurrentColor.inst.miniplayerColor,
-                                                                Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(200), Colors.grey),
-                                                              ],
-                                                              stops: const [0, 0.7],
-                                                            ),
-                                                            shape: BoxShape.circle,
-                                                            boxShadow: [
-                                                              BoxShadow(
-                                                                color: CurrentColor.inst.miniplayerColor.withAlpha(160),
-                                                                blurRadius: 8.0,
-                                                                spreadRadius: isButtonHighlighed ? 3.0 : 1.0,
-                                                                offset: const Offset(0.0, 2.0),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          child: Stack(
-                                                            alignment: Alignment.center,
-                                                            children: [
-                                                              Padding(
-                                                                padding: EdgeInsets.all(iconButtonExtraPadding),
-                                                                child: ObxO(
-                                                                  rx: Player.inst.playWhenReady,
-                                                                  builder: (context, playWhenReady) => CustomAnimatedSwitcher(
-                                                                    duration: const Duration(milliseconds: 200),
-                                                                    child: playWhenReady
-                                                                        ? Icon(
-                                                                            Broken.pause,
-                                                                            size: iconSize,
-                                                                            key: const Key("pauseicon"),
-                                                                            color: Colors.white.withAlpha(180),
-                                                                          )
-                                                                        : Icon(
-                                                                            Broken.play,
-                                                                            size: iconSize,
-                                                                            key: const Key("playicon"),
-                                                                            color: Colors.white.withAlpha(180),
-                                                                          ),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                              if (widget.canShowBuffering(currentItem))
-                                                                IgnorePointer(
-                                                                  child: Obx(
-                                                                    (context) => Player.inst.shouldShowLoadingIndicatorR
-                                                                        ? ThreeArchedCircle(
-                                                                            color: Colors.white.withAlpha(120),
-                                                                            size: iconSize * 1.4,
-                                                                          )
-                                                                        : const SizedBox(),
-                                                                  ),
-                                                                ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ),
+                                                      child: playPauseButtonChild,
                                                     ),
                                                   );
                                                 },

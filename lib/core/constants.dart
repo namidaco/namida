@@ -147,6 +147,8 @@ final kMainColorDarkOldValue = const Color(0xFF4e4c72).intValue;
 const isKuru = bool.fromEnvironment('IS_KURU_BUILD');
 const isWindowsPortable = bool.fromEnvironment('WINDOWS_PORTABLE');
 
+const kEnableFancyAnimations = false;
+
 abstract class NamidaLinkRegex {
   static const url = r'https?://([\w-]+\.)+[\w-]+(/[\w-./?%&@\$=~#+]*)?';
   static const phoneNumber = r'[+0]\d+[\d-]+\d';

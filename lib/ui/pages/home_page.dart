@@ -36,6 +36,7 @@ import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/artist_card.dart';
@@ -597,7 +598,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
                                     return buildTopRecentListensSliver(context, element, _buildTopRecentsDaysChips(context));
 
                                   case HomePageItems.lostMemories:
-                                    final subtitle = lang.lostMemoriesSubtitle(number: DateTime.now().year - currentYearLostMemories);
+                                    final subtitle = lang.lostMemoriesSubtitle(number: currentYearLostMemories == 0 ? 0 : DateTime.now().year - currentYearLostMemories);
                                     return buildLostMemoriesSliver(context, element, subtitle, _buildLostMemoriesYearsChips(context));
 
                                   case HomePageItems.recentQueues:
@@ -1450,6 +1451,23 @@ class _HorizontalList extends StatelessWidget {
     required this.isLoading,
   });
 
+  Widget _buildListView(CAElasticRevealWrapper? wrap) {
+    return SuperSmoothListView.builder(
+      key: ValueKey(isLoading),
+      controller: controller,
+      itemExtent: itemExtent,
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+      scrollDirection: Axis.horizontal,
+      itemCount: itemCount,
+      itemBuilder: wrap == null
+          ? itemBuilder
+          : (context, index) {
+              final item = itemBuilder(context, index);
+              return item == null ? null : wrap(index, item);
+            },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -1478,10 +1496,17 @@ class _HorizontalList extends StatelessWidget {
                       style: textTheme.displayLarge,
                     ),
                     if (subtitle != null)
-                      Text(
-                        subtitle!,
-                        style: textTheme.displaySmall,
-                      ),
+                      kEnableFancyAnimations && homepageItem == HomePageItems.lostMemories
+                          ? CAKineticTypeText(
+                              wordDuration: const Duration(milliseconds: 400),
+                              staggerStep: const Duration(milliseconds: 100),
+                              text: subtitle!,
+                              style: textTheme.displaySmall,
+                            )
+                          : Text(
+                              subtitle!,
+                              style: textTheme.displaySmall,
+                            ),
                     ?thirdWidget,
                   ],
                 ),
@@ -1526,15 +1551,11 @@ class _HorizontalList extends StatelessWidget {
                     ),
                   ),
                 )
-              : SuperSmoothListView.builder(
-                  key: ValueKey(isLoading),
-                  controller: controller,
-                  itemExtent: itemExtent,
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: itemCount,
-                  itemBuilder: itemBuilder,
-                ),
+              : kEnableFancyAnimations && !isLoading
+              ? CAElasticRevealScope(
+                  builder: (context, wrap) => _buildListView(wrap),
+                )
+              : _buildListView(null),
         ),
       ],
     );

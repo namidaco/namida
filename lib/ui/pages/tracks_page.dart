@@ -10,6 +10,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -17,6 +18,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -36,6 +38,17 @@ class TracksPage extends StatefulWidget with NamidaRouteWidget {
 
 class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, PullToRefreshMixin {
   bool get _shouldAnimate => widget.animateTiles && LibraryTab.tracks.shouldAnimateTiles;
+
+  void _onAddFolderTap(BuildContext context) {
+    SettingsSearchController.inst
+        .onResultTap(
+          settingPage: SettingSubpageEnum.indexer,
+          key: IndexerSettingsKeysGlobal.addFolder,
+          context: context,
+        )
+        .ignoreError();
+    const IndexerSettings().promptAddFolderType();
+  }
 
   final _animationKey = 'tracks_page';
 
@@ -130,35 +143,44 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                 rx: SearchSortController.inst.trackSearchList,
                 builder: (context, trackSearchList) => trackSearchList.isEmpty
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              lang.noTracksFound,
-                              style: context.textTheme.displayLarge,
-                            ),
-                            const SizedBox(height: 8.0),
-                            NamidaInkWell(
-                              borderRadius: 8.0,
-                              bgColor: context.theme.cardColor,
-                              padding: const EdgeInsetsGeometry.symmetric(horizontal: 12.0, vertical: 6.0),
-                              onTap: () {
-                                SettingsSearchController.inst
-                                    .onResultTap(
-                                      settingPage: SettingSubpageEnum.indexer,
-                                      key: IndexerSettingsKeysGlobal.addFolder,
-                                      context: context,
-                                    )
-                                    .ignoreError();
-                                const IndexerSettings().promptAddFolderType();
-                              },
-                              child: Text(
-                                lang.addFolder,
-                                style: context.textTheme.displayLarge,
+                        child: kEnableFancyAnimations
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CAEmptyStateCTA(
+                                    header: Text(
+                                      lang.noTracksFound,
+                                      style: context.textTheme.displayLarge,
+                                    ),
+                                    child: NamidaButton(
+                                      borderRadius: 8.0,
+                                      icon: Broken.folder_add,
+                                      text: lang.addFolder,
+                                      onTap: () => _onAddFolderTap(context),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    lang.noTracksFound,
+                                    style: context.textTheme.displayLarge,
+                                  ),
+                                  const SizedBox(height: 8.0),
+                                  NamidaInkWell(
+                                    borderRadius: 8.0,
+                                    bgColor: context.theme.cardColor,
+                                    padding: const EdgeInsetsGeometry.symmetric(horizontal: 12.0, vertical: 6.0),
+                                    onTap: () => _onAddFolderTap(context),
+                                    child: Text(
+                                      lang.addFolder,
+                                      style: context.textTheme.displayLarge,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
-                        ),
                       )
                     : NamidaListView(
                         itemExtent: Dimensions.inst.trackTileItemExtent,
