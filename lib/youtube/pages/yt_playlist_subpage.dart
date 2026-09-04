@@ -48,9 +48,10 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
 
   const YTMostPlayedVideosPage({super.key});
 
-  static Widget getChipRow(BuildContext context) {
+  static Widget getChipRow(BuildContext context, {VoidCallback? onTimeRangeChanged}) {
     return MostPlayedItemsPage(
       isInFullPage: false,
+      onTimeRangeChanged: onTimeRangeChanged,
       itemExtent: Dimensions.youtubeCardItemExtent,
       historyController: YoutubeHistoryController.inst,
       onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {

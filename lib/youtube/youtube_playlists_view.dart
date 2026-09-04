@@ -292,7 +292,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                       onPageOpen: YTUtils.onYoutubeMostPlayedPlaylistTap,
                       padding: const EdgeInsets.only(top: 8.0),
                       videos: videos,
-                      subHeader: YTMostPlayedVideosPage.getChipRow(context),
+                      subHeader: (scrollToStart) => YTMostPlayedVideosPage.getChipRow(context, onTimeRangeChanged: scrollToStart),
                       playlistName: '',
                       playlistID: k_PLAYLIST_NAME_MOST_PLAYED,
                       totalVideosCountInMainList: videos.length,
@@ -702,7 +702,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
   }
 }
 
-class _HorizontalSliverList extends StatelessWidget {
+class _HorizontalSliverList extends StatefulWidget {
   final QueueSourceYoutubeID queueSource;
   final String title;
   final IconData icon;
@@ -713,7 +713,7 @@ class _HorizontalSliverList extends StatelessWidget {
   final String playlistID;
   final PlaylistBasicInfo Function()? playlistInfo;
   final int totalVideosCountInMainList;
-  final Widget? subHeader;
+  final Widget Function(VoidCallback scrollToStart)? subHeader;
   final EdgeInsets padding;
   final bool displayTimeAgo;
   final bool displayShimmer;
@@ -738,22 +738,46 @@ class _HorizontalSliverList extends StatelessWidget {
   });
 
   @override
+  State<_HorizontalSliverList> createState() => _HorizontalSliverListState();
+}
+
+class _HorizontalSliverListState extends State<_HorizontalSliverList> {
+  ScrollController? _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.subHeader != null) _scrollController = NamidaScrollController.create();
+  }
+
+  @override
+  void dispose() {
+    _scrollController?.dispose();
+    super.dispose();
+  }
+
+  void _scrollToStart() {
+    final sc = _scrollController;
+    if (sc != null && sc.hasClients) sc.jumpTo(0);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    final finalVideos = videos is List<YoutubeID> ? videos as List<YoutubeID> : videos.toList();
-    final remainingVideosCount = totalVideosCountInMainList - finalVideos.length;
+    final finalVideos = widget.videos is List<YoutubeID> ? widget.videos as List<YoutubeID> : widget.videos.toList();
+    final remainingVideosCount = widget.totalVideosCountInMainList - finalVideos.length;
 
     const thumbHeight = 24.0 * 3.2;
     const thumbWidth = thumbHeight * 16 / 9;
 
     return VideoTilePropertiesProvider(
       configs: VideoTilePropertiesConfigs(
-        queueSource: queueSource,
-        playlistName: playlistName,
-        playlistID: PlaylistID(id: playlistID),
-        displayTimeAgo: displayTimeAgo,
-        playlistInfo: playlistInfo,
+        queueSource: widget.queueSource,
+        playlistName: widget.playlistName,
+        playlistID: PlaylistID(id: widget.playlistID),
+        displayTimeAgo: widget.displayTimeAgo,
+        playlistInfo: widget.playlistInfo,
       ),
       builder: (properties) => SliverToBoxAdapter(
         child: Column(
@@ -761,23 +785,23 @@ class _HorizontalSliverList extends StatelessWidget {
           children: [
             NamidaInkWell(
               margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-              padding: padding,
-              onTap: onPageOpen,
+              padding: widget.padding,
+              onTap: widget.onPageOpen,
               child: Column(
                 children: [
                   SearchPageTitleRow(
-                    title: title,
-                    subtitle: totalVideosCountInMainList.displayVideoKeyword,
-                    icon: icon,
+                    title: widget.title,
+                    subtitle: widget.totalVideosCountInMainList.displayVideoKeyword,
+                    icon: widget.icon,
                     trailing: const Icon(Broken.arrow_right_3),
                   ),
-                  ?subHeader,
+                  ?widget.subHeader?.call(_scrollToStart),
                 ],
               ),
             ),
             SizedBox(
-              height: displayTimeAgo ? 132.0 : 124.0,
-              child: displayShimmer
+              height: widget.displayTimeAgo ? 132.0 : 124.0,
+              child: widget.displayShimmer
                   ? ShimmerWrapper(
                       shimmerEnabled: true,
                       child: SuperSmoothListView.builder(
@@ -795,6 +819,7 @@ class _HorizontalSliverList extends StatelessWidget {
                       ),
                     )
                   : SuperSmoothListView.builder(
+                      controller: _scrollController,
                       padding: const EdgeInsets.symmetric(horizontal: 6.0),
                       scrollDirection: Axis.horizontal,
                       itemCount: finalVideos.length + 1,
@@ -803,7 +828,7 @@ class _HorizontalSliverList extends StatelessWidget {
                           return remainingVideosCount <= 0
                               ? const SizedBox()
                               : NamidaInkWell(
-                                  onTap: onPlusTap != null ? () => onPlusTap!(finalVideos[finalVideos.length - 1]) : onPageOpen,
+                                  onTap: widget.onPlusTap != null ? () => widget.onPlusTap!(finalVideos[finalVideos.length - 1]) : widget.onPageOpen,
                                   margin: const EdgeInsets.all(12.0),
                                   padding: const EdgeInsets.all(12.0),
                                   child: Center(
@@ -822,7 +847,7 @@ class _HorizontalSliverList extends StatelessWidget {
                           day: null,
                           minimalCardWidth: thumbWidth,
                           thumbnailHeight: thumbHeight,
-                          overrideListens: listensMap?[finalVideos[index].id] ?? [],
+                          overrideListens: widget.listensMap?[finalVideos[index].id] ?? [],
                           preferFetchNewInfo: true,
                         );
                       },

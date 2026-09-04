@@ -13,7 +13,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
+class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatefulWidget {
   final HistoryManager<T, E> historyController;
   final void Function({required MostPlayedTimeRange? mptr, DateRange? dateCustom, bool? isStartOfDay}) onSavingTimeRange;
   final double itemExtent;
@@ -22,6 +22,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   final Widget Function(BuildContext context, int i) itemBuilder;
   final int itemsCount;
   final bool isInFullPage;
+  final VoidCallback? onTimeRangeChanged;
 
   const MostPlayedItemsPage({
     super.key,
@@ -33,7 +34,35 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     required this.itemBuilder,
     required this.itemsCount,
     required this.isInFullPage,
+    this.onTimeRangeChanged,
   });
+
+  @override
+  State<MostPlayedItemsPage<T, E>> createState() => _MostPlayedItemsPageState<T, E>();
+}
+
+class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPlayedItemsPage<T, E>> {
+  ScrollController? _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isInFullPage) _scrollController = NamidaScrollController.create();
+  }
+
+  @override
+  void dispose() {
+    _scrollController?.dispose();
+    super.dispose();
+  }
+
+  void _onTimeRangeChanged() {
+    widget.onTimeRangeChanged?.call();
+    try {
+      final sc = _scrollController;
+      if (sc != null && sc.hasClients) sc.jumpTo(0);
+    } catch (_) {}
+  }
 
   void _onSelectingTimeRange({
     required MostPlayedTimeRange mptr,
@@ -42,17 +71,18 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   }) {
     if (mptr != .custom && dateCustom == null) {
       final now = DateTime.now();
-      final oldest = historyController.resolveOldDate(mptr, now, isStartOfDay, null);
+      final oldest = widget.historyController.resolveOldDate(mptr, now, isStartOfDay, null);
       if (oldest != null) {
         dateCustom = DateRange(oldest: oldest, newest: now);
       }
     }
-    onSavingTimeRange(mptr: mptr, dateCustom: dateCustom, isStartOfDay: isStartOfDay);
-    historyController.updateTempMostPlayedPlaylist(
+    widget.onSavingTimeRange(mptr: mptr, dateCustom: dateCustom, isStartOfDay: isStartOfDay);
+    widget.historyController.updateTempMostPlayedPlaylist(
       mptr: mptr,
       customDateRange: dateCustom,
       isStartOfDay: isStartOfDay,
     );
+    _onTimeRangeChanged();
     NamidaNavigator.inst.closeDialog();
   }
 
@@ -62,7 +92,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   // }) {
   //   if (mptr == .custom && dateCustom != null) {
   //     final now = DateTime.now();
-  //     final oldest = historyController.resolveOldDate(mptr, now, null, dateCustom);
+  //     final oldest = widget.historyController.resolveOldDate(mptr, now, null, dateCustom);
   //     if (oldest != null) {
   //       final range = DateRange(oldest: oldest, newest: now);
 
@@ -88,7 +118,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2.0),
       child: ObxO(
-        rx: historyController.currentMostPlayedTimeRange,
+        rx: widget.historyController.currentMostPlayedTimeRange,
         builder: (context, activeChip) {
           final isActive = activeChip == mptr;
           final textColor = isActive ? const Color.fromARGB(200, 255, 255, 255) : null;
@@ -136,7 +166,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                             title: lang.choose,
                             buttonText: lang.confirm,
                             useHistoryDates: true,
-                            historyController: historyController,
+                            historyController: widget.historyController,
                             calendarType: NamidaCalendarDatePickerType.single,
                             lastDate: dateCustom.newest,
                             onGenerate: (dates) {
@@ -172,7 +202,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                                   title: lang.choose,
                                   buttonText: lang.confirm,
                                   useHistoryDates: true,
-                                  historyController: historyController,
+                                  historyController: widget.historyController,
                                   calendarType: NamidaCalendarDatePickerType.single,
                                   firstDate: dateCustom.oldest,
                                   onGenerate: (dates) {
@@ -219,7 +249,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
             children: [
               const SizedBox(width: 8.0),
               ObxO(
-                rx: historyController.currentMostPlayedTimeRange,
+                rx: widget.historyController.currentMostPlayedTimeRange,
                 builder: (context, activeChip) => NamidaInkWell(
                   animationDurationMS: 200,
                   borderRadius: 6.0,
@@ -251,7 +281,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                       title: lang.choose,
                       buttonText: lang.confirm,
                       useHistoryDates: true,
-                      historyController: historyController,
+                      historyController: widget.historyController,
                       onGenerate: (dates) => _onSelectingTimeRange(
                         dateCustom: DateRange(oldest: dates.first, newest: dates.last),
                         mptr: MostPlayedTimeRange.custom,
@@ -278,15 +308,15 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
               ),
             ],
           ),
-          if (isInFullPage) const SizedBox(height: 2.0),
-          if (isInFullPage)
+          if (widget.isInFullPage) const SizedBox(height: 2.0),
+          if (widget.isInFullPage)
             ObxO(
-              rx: historyController.mostPlayedCustomDateRange,
+              rx: widget.historyController.mostPlayedCustomDateRange,
               builder: (context, customRange) => ObxO(
-                rx: historyController.currentMostPlayedTimeRange,
+                rx: widget.historyController.currentMostPlayedTimeRange,
                 builder: (context, mptr) {
-                  final oldestMS = historyController.oldestTrack?.dateAddedMS;
-                  final newestMS = historyController.newestTrack?.dateAddedMS;
+                  final oldestMS = widget.historyController.oldestTrack?.dateAddedMS;
+                  final newestMS = widget.historyController.newestTrack?.dateAddedMS;
                   if (oldestMS == null || newestMS == null) return const SizedBox();
                   final oldestDay = oldestMS.toDaysSince1970();
                   final newestDay = newestMS.toDaysSince1970();
@@ -303,7 +333,9 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                     MostPlayedTimeRange.year => const Duration(days: 365),
                     MostPlayedTimeRange.allTime => Duration(days: (totalDaysInBetween / 2).ceil()),
                   };
-                  final rangesCount = (totalDaysInBetween / effectiveRangePrefferedInterval.inDays).ceil();
+
+                  final effectiveRangePrefferedIntervalDays = effectiveRangePrefferedInterval.inDays;
+                  final rangesCount = totalDaysInBetween <= 0 || effectiveRangePrefferedIntervalDays <= 0 ? 1 : (totalDaysInBetween / effectiveRangePrefferedIntervalDays).ceil();
 
                   int rangesCurrentIndex() {
                     final intervalMS = effectiveRangePrefferedInterval.inMilliseconds;
@@ -345,7 +377,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                           FittedBox(
                             fit: .scaleDown,
                             child: ObxO(
-                              rx: historyController.mostPlayedCustomDateRange,
+                              rx: widget.historyController.mostPlayedCustomDateRange,
                               builder: (context, dateRange) => SizedBox(
                                 width: customChipWidth,
                                 child: Padding(
@@ -498,36 +530,38 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomWidget = getChipsRow(context);
-    if (!isInFullPage) return bottomWidget;
+    if (!widget.isInFullPage) return bottomWidget;
 
     final theme = context.theme;
     const bottomPadding = 0.0;
     final headerWidget = ColoredBox(
       color: theme.scaffoldBackgroundColor,
-      child: header?.call(bottomWidget, bottomPadding),
+      child: widget.header?.call(bottomWidget, bottomPadding),
     );
 
     return BackgroundWrapper(
-      child: infoBox == null
+      child: widget.infoBox == null
           // -- different widget just to put scrollbar under header x.x
           ? Column(
               children: [
                 headerWidget,
                 Expanded(
-                  child: NamidaScrollbarWithController(
-                    child: (sc) => SuperSmoothListView.builder(
-                      controller: sc,
+                  child: NamidaScrollbar(
+                    controller: _scrollController,
+                    child: SuperSmoothListView.builder(
+                      controller: _scrollController,
                       padding: const EdgeInsets.only(bottom: Dimensions.globalBottomPaddingTotal),
-                      itemExtent: itemExtent,
-                      itemBuilder: itemBuilder,
-                      itemCount: itemsCount,
+                      itemExtent: widget.itemExtent,
+                      itemBuilder: widget.itemBuilder,
+                      itemCount: widget.itemsCount,
                     ),
                   ),
                 ),
               ],
             )
           : NamidaListViewRaw(
-              infoBox: (maxWidth) => infoBox!(bottomWidget, bottomPadding, maxWidth),
+              scrollController: _scrollController,
+              infoBox: (maxWidth) => widget.infoBox!(bottomWidget, bottomPadding, maxWidth),
               slivers: [
                 SliverMainAxisGroup(
                   slivers: [
@@ -535,9 +569,9 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatelessWidget {
                       child: headerWidget,
                     ),
                     SliverFixedExtentList.builder(
-                      itemExtent: itemExtent,
-                      itemBuilder: itemBuilder,
-                      itemCount: itemsCount,
+                      itemExtent: widget.itemExtent,
+                      itemBuilder: widget.itemBuilder,
+                      itemCount: widget.itemsCount,
                     ),
                   ],
                 ),
