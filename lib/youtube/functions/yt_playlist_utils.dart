@@ -465,7 +465,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
           trailing: activeAccount != null
               ? YoutubeThumbnail(
                   type: ThumbnailType.channel,
-                  key: Key(activeAccount.id),
+                  key: ValueKey(activeAccount),
                   width: 20.0,
                   height: 20.0,
                   forceSquared: false,

@@ -115,7 +115,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
   List<NamidaPopupItem> _getCommentPopupItems() {
     final comment = widget.comment;
     final activeChannel = YoutubeAccountController.current.activeAccountChannel.value;
-    final isUserOwnedComment = activeChannel != null && (activeChannel.id == comment?.author?.channelId);
+    final isUserOwnedComment = comment?.author?.isCurrentUser == true || (activeChannel != null && activeChannel.id == comment?.author?.channelId);
 
     NamidaPopupItem? editCommentOrReply;
     NamidaPopupItem? deleteCommentOrReply;

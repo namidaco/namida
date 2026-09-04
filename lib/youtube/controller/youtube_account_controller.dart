@@ -7,9 +7,9 @@ import 'package:namico_subscription_manager/class/supabase_sub.dart';
 import 'package:namico_subscription_manager/class/support_tier.dart';
 import 'package:namico_subscription_manager/core/enum.dart';
 import 'package:namico_subscription_manager/namico_subscription_manager.dart';
-import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/user_channel_info.dart';
 import 'package:youtipie/core/enum.dart';
-import 'package:youtipie/managers/acount_manager.dart';
+import 'package:youtipie/managers/account_manager.dart';
 import 'package:youtipie/youtipie.dart' hide logger;
 
 import 'package:namida/class/route.dart';
@@ -223,7 +223,7 @@ class YoutubeAccountController {
       }
     } else {
       canSignIn = true;
-      current.canAddMultiAccounts = false;
+      current.canAddMultiAccounts = userMembershipType == MembershipType.pookie || userMembershipType == MembershipType.patootie;
 
       // -- this was if we didnt allow sign in before membership
       // if (userMembershipType == MembershipType.cutie) {
@@ -239,7 +239,7 @@ class YoutubeAccountController {
     return canSignIn;
   }
 
-  static Future<ChannelInfoItem?> _youtubeSignInButton({
+  static Future<UserChannelInfo?> _youtubeSignInButton({
     required LoginPageConfiguration pageConfig,
     required bool forceSignIn,
     required YoutiLoginProgressCallback onProgress,
@@ -289,7 +289,7 @@ class YoutubeAccountController {
     snackyy(message: msg, title: title ?? '', displayDuration: SnackDisplayDuration.long);
   }
 
-  static Future<ChannelInfoItem?> signIn({required LoginPageConfiguration pageConfig, required bool forceSignIn}) async {
+  static Future<UserChannelInfo?> signIn({required LoginPageConfiguration pageConfig, required bool forceSignIn}) async {
     void onProgress(YoutiLoginProgress p, [AccountCookiesValidity? cookiesValidity]) {
       _signInProgress.value = p;
       if (p == YoutiLoginProgress.canceled) {
@@ -304,11 +304,11 @@ class YoutubeAccountController {
     return res;
   }
 
-  static void signOut({required ChannelInfoItem userChannel}) {
+  static void signOut({required UserChannelInfo userChannel}) {
     YoutiPie.cookies.signOut(userChannel);
   }
 
-  static void setAccountActive({required ChannelInfoItem userChannel}) {
+  static void setAccountActive({required UserChannelInfo userChannel}) {
     YoutiPie.cookies.setAccount(userChannel);
   }
 

@@ -1120,7 +1120,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
                               ? const SizedBox()
                               : YoutubeThumbnail(
                                   type: ThumbnailType.channel,
-                                  key: Key(acc.id),
+                                  key: ValueKey(acc),
                                   width: 32.0,
                                   forceSquared: false,
                                   isImportantInCache: true,

@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:namico_login_manager/namico_login_manager.dart';
 import 'package:namico_subscription_manager/core/enum.dart';
 import 'package:namico_subscription_manager/namico_subscription_manager.dart';
-import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/user_channel_info.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
@@ -133,7 +133,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
     );
   }
 
-  void _onRemoveChannel(ChannelInfoItem channel, bool active) {
+  void _onRemoveChannel(UserChannelInfo channel, bool active) {
     String bodyText;
     void Function() singOutFn;
     if (active) {
@@ -163,7 +163,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
     );
   }
 
-  void _onSetAccount(ChannelInfoItem channel) {
+  void _onSetAccount(UserChannelInfo channel) {
     YoutubeAccountController.setAccountActive(userChannel: channel);
   }
 
@@ -224,7 +224,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                               itemCount: signedInAccounts.length,
                               itemBuilder: (context, index) {
                                 final acc = signedInAccounts[index];
-                                final active = currentChannel?.id == acc.id;
+                                final active = currentChannel == acc;
                                 return NamidaInkWell(
                                   padding: const EdgeInsetsGeometry.symmetric(vertical: 8.0),
                                   bgColor: active ? accountColorActive : accountColorNonActive,
@@ -235,7 +235,7 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                                       const SizedBox(width: 12.0),
                                       YoutubeThumbnail(
                                         type: ThumbnailType.channel,
-                                        key: Key(acc.id),
+                                        key: ValueKey(acc),
                                         width: 52.0,
                                         forceSquared: false,
                                         isImportantInCache: true,
@@ -252,10 +252,11 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                                               acc.title ?? '',
                                               style: theme.textTheme.displayMedium,
                                             ),
-                                            Text(
-                                              acc.handler,
-                                              style: theme.textTheme.displaySmall,
-                                            ),
+                                            if (acc.handler.isNotEmpty)
+                                              Text(
+                                                acc.handler,
+                                                style: theme.textTheme.displaySmall,
+                                              ),
                                           ],
                                         ),
                                       ),

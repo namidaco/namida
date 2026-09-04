@@ -131,7 +131,7 @@ class _AccountHeader extends StatelessWidget {
               const SizedBox(width: 24.0),
               YoutubeThumbnail(
                 type: ThumbnailType.channel,
-                key: Key(acc.id),
+                key: ValueKey(acc),
                 width: 54.0,
                 forceSquared: false,
                 isImportantInCache: true,

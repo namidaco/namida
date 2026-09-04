@@ -270,7 +270,7 @@ class _YTUtilsCommentActions {
                   const SizedBox(width: 12.0),
                   YoutubeThumbnail(
                     type: ThumbnailType.channel,
-                    key: Key(activeAccountChannel.id),
+                    key: ValueKey(activeAccountChannel),
                     width: 32.0,
                     forceSquared: false,
                     isImportantInCache: true,
