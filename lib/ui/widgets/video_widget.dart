@@ -1957,7 +1957,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                       iconColor: itemsColor,
                                                       onPressed: () {
                                                         _startTimer();
-                                                        NamidaNavigator.inst.setDeviceOrientations(!NamidaNavigator.inst.isInLanscape);
+                                                        NamidaNavigator.inst.setDeviceOrientations(null);
                                                       },
                                                     ),
                                                     const SizedBox(width: 10.0),

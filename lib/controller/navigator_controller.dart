@@ -7,6 +7,8 @@ import 'package:flutter/material.dart' as material;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:native_device_orientation/native_device_orientation.dart';
+
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -201,10 +203,48 @@ class NamidaNavigator {
     );
   }
 
-  Future<void> setDeviceOrientations(bool lanscape) async {
-    _isInLanscape = lanscape;
-    final orientations = lanscape ? [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight] : DeviceOrientation.values;
+  static const _landscapeOrientations = [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight];
+
+  Future<void> setDeviceOrientations(bool? lanscape) async {
+    if (lanscape != null) _isInLanscape = lanscape;
+
+    final orientations = lanscape == true
+        ? await _resolveLandscapeOrientations()
+        : lanscape == null
+        ? await _resolveActualOrientation()
+        : DeviceOrientation.values;
+
+    if (lanscape == null) {
+      _isInLanscape = _landscapeOrientations.any((landscape) => orientations.contains(landscape));
+    }
+
     await SystemChrome.setPreferredOrientations(orientations);
+  }
+
+  /// prefer based on sensor, otherwise system will pick the first
+  Future<List<DeviceOrientation>> _resolveLandscapeOrientations() async {
+    if (!NamidaFeaturesVisibility.deviceOrientationSensorAvailable) return _landscapeOrientations;
+    try {
+      final communicator = NativeDeviceOrientationCommunicator();
+      final physical = (await communicator.orientation(useSensor: true).timeout(const Duration(milliseconds: 500))).deviceOrientation;
+      if (physical == null || !_landscapeOrientations.contains(physical)) return _landscapeOrientations;
+      final window = (await communicator.orientation()).deviceOrientation;
+      return physical == window ? _landscapeOrientations : [physical];
+    } catch (_) {
+      return _landscapeOrientations;
+    }
+  }
+
+  Future<List<DeviceOrientation>> _resolveActualOrientation() async {
+    if (!NamidaFeaturesVisibility.deviceOrientationSensorAvailable) return _landscapeOrientations;
+    try {
+      final communicator = NativeDeviceOrientationCommunicator();
+      final physical = (await communicator.orientation(useSensor: true).timeout(const Duration(milliseconds: 500))).deviceOrientation;
+      if (physical == null) return _landscapeOrientations;
+      return [physical];
+    } catch (_) {
+      return _landscapeOrientations;
+    }
   }
 
   bool get isInFullScreen => _isInFullScreen;
