@@ -1143,7 +1143,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
         if (checkInterrupted()) return;
         if (newStreams != null) YoutubeInfoController.current.currentYTStreams.value = newStreams;
-        VideoStream? sameStream = newStreams?.videoStreams.firstWhereEff((e) => e.itag == stream.itag);
+        VideoStream? sameStream = YoutubeController.matchVideoStreamOrSimilar(newStreams?.videoStreams, stream);
         if (sameStream == null && newStreams != null) {
           sameStream = YoutubeController.getPreferredStreamQuality(newStreams.videoStreams, preferIncludeWebm: false);
         }
@@ -1229,7 +1229,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
         if (checkInterrupted()) return;
         if (newStreams != null) YoutubeInfoController.current.currentYTStreams.value = newStreams;
-        final sameStream = newStreams?.audioStreams.firstWhereEff((e) => e.itag == stream.itag) ?? YoutubeController.getPreferredAudioStream(newStreams?.audioStreams);
+        final sameStream = YoutubeController.matchAudioStreamOrSimilar(newStreams?.audioStreams, stream) ?? YoutubeController.getPreferredAudioStream(newStreams?.audioStreams);
 
         if (sameStream != null) {
           try {

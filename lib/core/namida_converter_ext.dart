@@ -7,6 +7,7 @@ import 'package:history_manager/history_manager.dart';
 import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
+import 'package:youtipie/class/streams/audio_track.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/core/enum.dart';
@@ -208,6 +209,16 @@ extension YTVideoQuality on String {
           '4320': '8k',
         }[val] ??
         '144';
+  }
+}
+
+extension AudioTrackUtils on AudioTrack {
+  String? get displayNameOrLangCode {
+    final name = displayName;
+    if (name != null && name.isNotEmpty) return name;
+    final code = langCode;
+    if (code != null && code.isNotEmpty) return code.toUpperCase();
+    return null;
   }
 }
 

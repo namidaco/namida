@@ -176,16 +176,22 @@ Future<void> showDownloadVideoBottomSheet({
     if (sInfo != null) videoInfo.value = sInfo;
 
     final audioStreams = streamResultRx.value?.audioStreams;
-    selectedAudioOnlyStream.value = YoutubeController.getPreferredAudioStream(audioStreams);
-    if (selectedAudioOnlyStream.value == null) {
-      selectedAudioOnlyStream.value = streams?.audioStreams.firstOrNull;
-      if (selectedAudioOnlyStream.value?.isWebm == true) {
-        showAudioWebm.value = true;
-      }
-    }
+    // -- keeping the already chosen stream (language included) if this was opened for an existing config
+    selectedAudioOnlyStream.value =
+        YoutubeController.matchAudioStreamOrSimilar(audioStreams, initialItemConfig?.audioStream, prefferedItag: initialItemConfig?.prefferedAudioQualityID) ??
+        YoutubeController.getPreferredAudioStream(audioStreams) ??
+        audioStreams?.firstOrNull;
+    if (selectedAudioOnlyStream.value?.isWebm == true) showAudioWebm.value = true;
+
     if (settings.downloadAudioOnly.value == false) {
-      selectedVideoOnlyStream.value =
-          await streams?.videoStreams.firstWhereEffAsync(
+      final videoStreams = streams?.videoStreams;
+      selectedVideoOnlyStream.value = YoutubeController.matchVideoStreamOrSimilar(
+        videoStreams,
+        initialItemConfig?.videoStream,
+        prefferedItag: initialItemConfig?.prefferedVideoQualityID,
+      );
+      selectedVideoOnlyStream.value ??=
+          await videoStreams?.firstWhereEffAsync(
             (e) async {
               final cached = await e.getCachedFile(videoId);
               if (cached != null) return true;
@@ -193,7 +199,8 @@ Future<void> showDownloadVideoBottomSheet({
               return !e.isWebm && settings.youtubeVideoQualities.contains(strQualityLabel);
             },
           ) ??
-          streams?.videoStreams.firstWhereEff((e) => !e.isWebm);
+          videoStreams?.firstWhereEff((e) => !e.isWebm);
+      if (selectedVideoOnlyStream.value?.isWebm == true) showVideoWebm.value = true;
     }
 
     onAudioSelectionChanged();
@@ -294,24 +301,32 @@ Future<void> showDownloadVideoBottomSheet({
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(width: horizontalPadding),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: textTheme.displayMedium?.copyWith(
-                  fontSize: 12.0,
-                ),
-              ),
-              if (subtitle != '')
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 196.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Text(
-                  subtitle,
-                  style: textTheme.displaySmall?.copyWith(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.displayMedium?.copyWith(
                     fontSize: 12.0,
                   ),
                 ),
-            ],
+                if (subtitle != '')
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.displaySmall?.copyWith(
+                      fontSize: 12.0,
+                    ),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(width: 6.0),
           Icon(cacheExists ? Broken.tick_circle : Broken.import, size: 18.0),
@@ -584,7 +599,15 @@ Future<void> showDownloadVideoBottomSheet({
                                         (context) {
                                           final webmIconEnabled = showAudioWebm.valueR;
                                           final e = selectedAudioOnlyStream.valueR;
-                                          final subtitle = e == null ? null : "${e.bitrateText()} • ${e.codecInfo.container} • ${e.sizeInBytes.fileSizeFormatted}";
+                                          final language = e?.audioTrack?.displayNameOrLangCode;
+                                          final subtitle = e == null
+                                              ? null
+                                              : [
+                                                  ?language,
+                                                  e.bitrateText(),
+                                                  e.codecInfo.container,
+                                                  e.sizeInBytes.fileSizeFormatted,
+                                                ].join(' • ');
                                           return getTextWidget(
                                             hasWebm: hasAudioWebm,
                                             title: lang.audio,
@@ -626,11 +649,16 @@ Future<void> showDownloadVideoBottomSheet({
                                                     return Obx(
                                                       (context) {
                                                         final cacheFile = element.getCachedFileSync(videoId);
+                                                        final language = element.audioTrack?.displayNameOrLangCode;
                                                         return getQualityButton(
                                                           selected: selectedAudioOnlyStream.valueR == element,
                                                           cacheExists: cacheFile != null,
-                                                          title: "${element.codecInfo.codecCleaned()} • ${element.sizeInBytes.fileSizeFormatted}",
-                                                          subtitle: "${element.codecInfo.container} • ${element.bitrateText()}",
+                                                          title: language == null
+                                                              ? "${element.codecInfo.codecCleaned()} • ${element.sizeInBytes.fileSizeFormatted}"
+                                                              : "$language • ${element.sizeInBytes.fileSizeFormatted}",
+                                                          subtitle: language == null
+                                                              ? "${element.codecInfo.container} • ${element.bitrateText()}"
+                                                              : "${element.codecInfo.codecCleaned()} • ${element.bitrateText()}",
                                                           onTap: () {
                                                             selectedAudioOnlyStream.value = element;
                                                             onAudioSelectionChanged();
@@ -812,7 +840,9 @@ Future<void> showDownloadVideoBottomSheet({
                                                     playlistInfo: playlistInfo,
                                                     id: DownloadTaskVideoId(videoId: videoId),
                                                     groupName: group,
-                                                    filename: DownloadTaskFilename.create(initialFilename: videoOutputFilenameController.text),
+                                                    filename:
+                                                        initialItemConfig?.filename.copyWithNewName(videoOutputFilenameController.text) ??
+                                                        DownloadTaskFilename.create(initialFilename: videoOutputFilenameController.text),
                                                     ffmpegTags: tagsMap,
                                                     fileDate: videoDateTime,
                                                     videoStream: selectedVideoOnlyStream.value,

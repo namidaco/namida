@@ -142,7 +142,10 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   void _addAllYTIDsToSelectedExceptAlrDownloaded() {
-    _selectedList.assignAll(widget.ids.map((e) => e.id).where((id) => YoutubeController.inst.doesIDHasFileDownloadedInGroup(id, _groupName.value) == null));
+    final groupName = _groupName.value;
+    _selectedList.assignAll(
+      widget.ids.where((e) => YoutubeController.inst.doesIDHasFileDownloadedInGroup(DownloadTaskVideoId(videoId: e.id), groupName) == null).map((e) => e.id),
+    );
     _didManuallyEditSelection = false;
   }
 
@@ -436,8 +439,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           return Obx(
                             (context) {
                               final isSelected = _selectedList.contains(id);
-                              final filename = _configMap[id]?.filenameR;
-                              final fileExists = filename == null ? false : YoutubeController.inst.doesIDHasFileDownloadedInGroup(id, _groupName.valueR) != null;
+                              final config = _configMap[id];
+                              final fileExists = config == null ? false : YoutubeController.inst.doesIDHasFileDownloadedInGroup(config.id, _groupName.valueR) != null;
                               return NamidaInkWell(
                                 animationDurationMS: 200,
                                 height: Dimensions.youtubeCardItemHeight * _hmultiplier,
@@ -599,24 +602,26 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         if (!await requestManageStoragePermission()) return;
                         final timeNow = DateTime.now();
                         final group = _groupName.value;
-                        final itemsConfig = _selectedList.value.map(
-                          (id) =>
-                              _configMap.value[id]?.copyWith(
-                                // -- in case they were changed
-                                addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
-                                autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
-                                keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
-                                downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
-                                deleteOldFile: settings.downloadOverrideOldFiles.value,
-                              ) ??
-                              // -- this is not really used since initState() calls onRenameAllTasks() which fills _configMap
-                              _getDummyDownloadConfig(
-                                id,
-                                widget.ids.indexWhere((element) => element.id == id),
-                                group,
-                                timeNow: timeNow,
-                              ),
-                        );
+                        final itemsConfig = _selectedList.value
+                            .map(
+                              (id) =>
+                                  _configMap.value[id]?.copyWith(
+                                    // -- in case they were changed
+                                    addAudioToLocalLibrary: settings.downloadAddAudioToLocalLibrary.value,
+                                    autoExtractTitleAndArtist: settings.youtube.autoExtractVideoTagsFromInfo.value,
+                                    keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
+                                    downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
+                                    deleteOldFile: settings.downloadOverrideOldFiles.value,
+                                  ) ??
+                                  // -- this is not really used since initState() calls onRenameAllTasks() which fills _configMap
+                                  _getDummyDownloadConfig(
+                                    id,
+                                    widget.ids.indexWhere((element) => element.id == id),
+                                    group,
+                                    timeNow: timeNow,
+                                  ),
+                            )
+                            .toList();
                         NamidaNavigator.inst.popPage();
                         YoutubeController.inst.downloadYoutubeVideos(
                           groupName: group,

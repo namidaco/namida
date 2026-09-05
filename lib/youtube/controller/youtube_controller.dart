@@ -116,6 +116,14 @@ class YoutubeController {
   /// {groupName: {filename: YoutubeItemDownloadConfig}}
   final youtubeDownloadTasksMap = <DownloadTaskGroupName, Map<DownloadTaskFilename, YoutubeItemDownloadConfig>>{}.obs;
 
+  /// Mirrors [youtubeDownloadTasksMap] but keyed by video id, to allow O(1) lookups by id.
+  ///
+  /// a single video can have more than one task, ex. downloaded into 2 groups, or twice in the
+  /// same group with different qualities/filenames. so each id keeps all of its tasks, practically always one.
+  ///
+  /// {videoId: [(groupName, YoutubeItemDownloadConfig)]}
+  final _downloadTasksIdsMap = <DownloadTaskVideoId, List<(DownloadTaskGroupName, YoutubeItemDownloadConfig)>>{};
+
   /// {groupName: {filename: bool}}
   /// - `true` -> is in queue, will be downloaded when reached.
   /// - `false` -> is paused. will be skipped when reached.
@@ -170,6 +178,93 @@ class YoutubeController {
         await vFile.rename(newPath);
       }
     }
+  }
+
+  // by claude
+  static AudioStream? matchAudioStreamOrSimilar(List<AudioStream>? streams, AudioStream? target, {String? prefferedItag}) {
+    if (streams == null || streams.isEmpty) return null;
+
+    final targetItag = prefferedItag == null ? target?.itag : int.tryParse(prefferedItag) ?? target?.itag;
+    final targetTrack = target?.audioTrack;
+    final targetTrackId = targetTrack?.id;
+    final targetLangCode = targetTrack?.langCode;
+
+    if (targetTrackId == null && targetLangCode == null) {
+      // -- single track video, itag is enough
+      return targetItag == null ? null : streams.firstWhereEff((e) => e.itag == targetItag);
+    }
+
+    final targetContainer = target?.codecInfo.container;
+    final targetBitrate = target?.bitrate ?? 0;
+
+    AudioStream? sameTrackClosestBitrate;
+    int? sameTrackClosestBitrateDiff;
+    AudioStream? sameTrackAny;
+    AudioStream? sameLangAny;
+
+    for (final e in streams) {
+      final track = e.audioTrack;
+      if (targetTrackId != null && track?.id == targetTrackId) {
+        if (targetItag != null && e.itag == targetItag) return e; // -- exact match
+        sameTrackAny ??= e;
+        if (e.codecInfo.container == targetContainer) {
+          final diff = (e.bitrate - targetBitrate).abs();
+          if (sameTrackClosestBitrateDiff == null || diff < sameTrackClosestBitrateDiff) {
+            sameTrackClosestBitrateDiff = diff;
+            sameTrackClosestBitrate = e;
+          }
+        }
+      } else if (targetLangCode != null && track?.langCode == targetLangCode) {
+        sameLangAny ??= e;
+      }
+    }
+
+    return sameTrackClosestBitrate ?? sameTrackAny ?? sameLangAny;
+  }
+
+  // by claude
+  static VideoStream? matchVideoStreamOrSimilar(List<VideoStream>? streams, VideoStream? target, {String? prefferedItag}) {
+    if (streams == null || streams.isEmpty) return null;
+
+    final targetItag = prefferedItag == null ? target?.itag : int.tryParse(prefferedItag) ?? target?.itag;
+    if (targetItag != null) {
+      final exact = streams.firstWhereEff((e) => e.itag == targetItag);
+      if (exact != null) return exact;
+    }
+    if (target == null) return null;
+
+    final targetHeight = target.height;
+    final targetFps = target.fps;
+    final targetContainer = target.codecInfo.container;
+    final targetCodec = target.codecInfo.codecCleaned();
+
+    VideoStream? sameQualitySameCodec;
+    VideoStream? sameQualitySameContainer;
+    VideoStream? sameQualityAny;
+    VideoStream? closestQuality;
+    int? closestQualityDiff;
+
+    for (final e in streams) {
+      if (e.height == targetHeight) {
+        if (e.fps == targetFps) {
+          if (e.codecInfo.codecCleaned() == targetCodec) return e; // -- same quality & codec
+          sameQualitySameCodec ??= e;
+        }
+        if (e.codecInfo.container == targetContainer) sameQualitySameContainer ??= e;
+        sameQualityAny ??= e;
+      } else {
+        // -- lower qualities are preferred over higher ones
+        final diff = e.height < targetHeight ? targetHeight - e.height : (e.height - targetHeight) * 2;
+        if (closestQualityDiff == null || diff < closestQualityDiff) {
+          closestQualityDiff = diff;
+          closestQuality = e;
+        }
+      }
+    }
+
+    return sameQualitySameCodec ?? sameQualitySameContainer ?? sameQualityAny ?? closestQuality;
+  }
+
   static bool isSameVideoStream(VideoStream? a, VideoStream? b) {
     if (a == null || b == null) return false;
     if (identical(a, b) || a.itag == b.itag) return true;
@@ -393,26 +488,64 @@ class YoutubeController {
     downloadsVideoProgressMap.value = res.downloadsVideoProgressMap.._addAllEntries(downloadsVideoProgressMap.value);
     downloadsAudioProgressMap.value = res.downloadsAudioProgressMap.._addAllEntries(downloadsAudioProgressMap.value);
     latestEditedGroupDownloadTask = res.latestEditedGroupDownloadTask..addAll(latestEditedGroupDownloadTask);
+    _rebuildTasksIdsIndex();
     isLoadingDownloadTasks.value = false;
   }
 
-  File? doesIDHasFileDownloaded(String id) {
-    for (final groupName in youtubeDownloadTasksMap.value.keys) {
-      final f = doesIDHasFileDownloadedInGroup(id, groupName);
-      if (f != null) return f;
+  void _rebuildTasksIdsIndex() {
+    _downloadTasksIdsMap.clear();
+    for (final entry in youtubeDownloadTasksMap.value.entries) {
+      final groupName = entry.key;
+      for (final config in entry.value.values) {
+        (_downloadTasksIdsMap[config.id] ??= []).add((groupName, config));
+      }
+    }
+  }
+
+  void _indexAddTask(DownloadTaskGroupName groupName, YoutubeItemDownloadConfig config) {
+    final tasks = _downloadTasksIdsMap[config.id] ??= [];
+    final filenameKey = config.filename.key;
+    for (int i = 0; i < tasks.length; i++) {
+      if (tasks[i].$2.filename.key == filenameKey) {
+        tasks[i] = (groupName, config);
+        return;
+      }
+    }
+    tasks.add((groupName, config));
+  }
+
+  void _indexRemoveTask(YoutubeItemDownloadConfig config) {
+    final tasks = _downloadTasksIdsMap[config.id];
+    if (tasks == null) return;
+    final filenameKey = config.filename.key;
+    for (int i = 0; i < tasks.length; i++) {
+      if (tasks[i].$2.filename.key == filenameKey) {
+        tasks.removeAt(i);
+        break;
+      }
+    }
+    if (tasks.isEmpty) _downloadTasksIdsMap.remove(config.id);
+  }
+
+  File? doesIDHasFileDownloaded(DownloadTaskVideoId id) {
+    final tasks = _downloadTasksIdsMap[id];
+    if (tasks == null) return null;
+    for (int i = 0; i < tasks.length; i++) {
+      final task = tasks[i];
+      final file = downloadedFilesMap.value[task.$1]?[task.$2.filename];
+      if (file != null) return file;
     }
     return null;
   }
 
-  File? doesIDHasFileDownloadedInGroup(String id, DownloadTaskGroupName groupName) {
-    final groupWithConfigs = youtubeDownloadTasksMap.value[groupName];
-    if (groupWithConfigs == null) return null;
-    for (final config in groupWithConfigs.values) {
-      if (config.id.videoId == id) {
-        final file = downloadedFilesMap.value[groupName]?[config.filename];
-        if (file != null) {
-          return file;
-        }
+  File? doesIDHasFileDownloadedInGroup(DownloadTaskVideoId id, DownloadTaskGroupName groupName) {
+    final tasks = _downloadTasksIdsMap[id];
+    if (tasks == null) return null;
+    for (int i = 0; i < tasks.length; i++) {
+      final task = tasks[i];
+      if (task.$1 == groupName) {
+        final file = downloadedFilesMap.value[groupName]?[task.$2.filename];
+        if (file != null) return file;
       }
     }
     return null;
@@ -422,14 +555,12 @@ class YoutubeController {
     required List<DownloadTaskVideoId> videosIds,
     required void Function(DownloadTaskGroupName groupName, YoutubeItemDownloadConfig config) onMatch,
   }) {
-    for (final e in youtubeDownloadTasksMap.value.entries) {
-      for (final config in e.value.values) {
-        final groupName = e.key;
-        for (var e in videosIds) {
-          if (e == config.id) {
-            onMatch(groupName, config);
-          }
-        }
+    for (final id in videosIds) {
+      final tasks = _downloadTasksIdsMap[id];
+      if (tasks == null) continue;
+      // -- copied, [onMatch] can modify the list.
+      for (final task in tasks.toList()) {
+        onMatch(task.$1, task.$2);
       }
     }
   }
@@ -530,7 +661,7 @@ class YoutubeController {
   }
 
   Future<void> _updateDownloadTask({
-    required Iterable<YoutubeItemDownloadConfig> itemsConfig,
+    required List<YoutubeItemDownloadConfig> itemsConfig,
     required DownloadTaskGroupName groupName,
     bool remove = false,
     bool delete = false,
@@ -558,12 +689,17 @@ class YoutubeController {
         if (!keepInListIfRemoved) {
           youtubeDownloadTasksMap.value[groupName]?.remove(c.filename);
           youtubeDownloadTasksInQueueMap[groupName]?.remove(c.filename);
-          YTOnGoingFinishedDownloads.inst.youtubeDownloadTasksTempList.remove((groupName, c));
+          _indexRemoveTask(c);
         }
         if (delete) {
           FileParts.join(directory.path, c.filename.filename).tryDeleting();
         }
         downloadedFilesMap[groupName]?[c.filename] = null;
+      }
+      if (keepInListIfRemoved) {
+        YTOnGoingFinishedDownloads.inst.onTasksStatusChanged(groupName, itemsToCancel);
+      } else {
+        YTOnGoingFinishedDownloads.inst.onTasksRemoved(groupName, itemsToCancel);
       }
       // downloadTasksGroupDB.claimFreeSpaceAndCheckpoint();
 
@@ -579,10 +715,12 @@ class YoutubeController {
         (c) {
           youtubeDownloadTasksMap.value[groupName]![c.filename] = c;
           youtubeDownloadTasksInQueueMap[groupName]![c.filename] = true; // hehe
+          _indexAddTask(groupName, c);
           final key = c.filename.key;
           return MapEntry(key, c.toJson());
         },
       );
+      YTOnGoingFinishedDownloads.inst.onTasksStatusChanged(groupName, itemsConfig);
     }
 
     youtubeDownloadTasksMap.refresh();
@@ -594,7 +732,7 @@ class YoutubeController {
   final _completersVAI = <YoutubeItemDownloadConfig, Completer<VideoStreamsResult?>?>{};
 
   Future<void> downloadYoutubeVideos({
-    required Iterable<YoutubeItemDownloadConfig> itemsConfig,
+    required List<YoutubeItemDownloadConfig> itemsConfig,
     DownloadTaskGroupName groupName = const DownloadTaskGroupName.defaulty(),
     int parallelDownloads = 1,
     required bool useCachedVersionsIfAvailable,
@@ -645,13 +783,9 @@ class YoutubeController {
         if (config.fetchMissingVideo == true) {
           final videos = streams.videoStreams;
 
-          if (config.videoStream != null) {
-            // -- refresh the current audio stream (vip to avoid outdated links after restarts/etc)
-            config.videoStream = videos.firstWhereEff((e) => e.itag == config.videoStream!.itag);
-          }
-          if (config.prefferedVideoQualityID != null) {
-            config.videoStream = videos.firstWhereEff((e) => e.itag.toString() == config.prefferedVideoQualityID);
-          }
+          // -- refresh the current video stream (vip to avoid outdated links after restarts/etc)
+          config.videoStream = matchVideoStreamOrSimilar(videos, config.videoStream, prefferedItag: config.prefferedVideoQualityID);
+
           // `config.videoStream?.buildUrl()?.host.isNotEmpty != true` means if null || empty || fkedup then assign
           if (config.videoStream == null || config.videoStream?.buildUrl()?.host.isNotEmpty != true) {
             final webm = config.filename.filename.endsWith('.webm') || config.filename.filename.endsWith('.WEBM');
@@ -663,16 +797,21 @@ class YoutubeController {
           // -- audio
           final audios = streams.audioStreams;
 
-          if (config.audioStream != null) {
-            // -- refresh the current audio stream (vip to avoid outdated links after restarts/etc)
-            config.audioStream = audios.firstWhereEff((e) => e.itag == config.audioStream!.itag);
-          }
-          if (config.prefferedAudioQualityID != null) {
-            config.audioStream = audios.firstWhereEff((e) => e.itag.toString() == config.prefferedAudioQualityID);
-          }
+          // -- refresh the current audio stream (vip to avoid outdated links after restarts/etc)
+          config.audioStream = matchAudioStreamOrSimilar(audios, config.audioStream, prefferedItag: config.prefferedAudioQualityID);
+
           if (config.audioStream == null || config.audioStream?.buildUrl()?.host.isNotEmpty != true) {
             config.audioStream = getPreferredAudioStream(audios) ?? audios.firstOrNull;
           }
+        }
+
+        if (config.fetchMissingVideo == true && config.videoStream == null && config.audioStream != null) {
+          // -- otherwise an audio-only file is silently downloaded while video was requested
+          snackyy(
+            title: lang.warning,
+            message: 'No video streams available for "${config.filename.filename}", downloading audio only',
+            top: false,
+          );
         }
 
         // -- meta info
@@ -812,8 +951,8 @@ class YoutubeController {
       downloadedFilesMap.refresh();
       final dtqmg = youtubeDownloadTasksInQueueMap.value[groupName] ??= {};
       dtqmg[config.filename] = null;
-      downloadedFilesMap.refresh();
-      YTOnGoingFinishedDownloads.inst.refreshList();
+      youtubeDownloadTasksInQueueMap.refresh();
+      YTOnGoingFinishedDownloads.inst.onTasksStatusChanged(groupName, [config]);
       await onFileDownloaded?.call(downloadedFile);
     }
 

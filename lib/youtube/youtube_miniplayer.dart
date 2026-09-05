@@ -284,7 +284,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
               return ObxO(
                 rx: YoutubeController.inst.downloadedFilesMap,
                 builder: (context, _) {
-                  final downloadedFileExists = YoutubeController.inst.doesIDHasFileDownloaded(currentId) != null;
+                  final downloadedFileExists = YoutubeController.inst.doesIDHasFileDownloaded(currentIdTask) != null;
                   return ObxO(
                     rx: YoutubeInfoController.current.currentYTStreams,
                     builder: (context, streams) => ObxO(

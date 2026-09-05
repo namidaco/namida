@@ -25,7 +25,6 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
-import 'package:namida/youtube/controller/youtube_ongoing_finished_downloads.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/widgets/video_info_dialog.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -99,7 +98,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     );
   }
 
-  void _onResumeDownloadTap(Iterable<YoutubeItemDownloadConfig> itemsConfig, BuildContext context) {
+  void _onResumeDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig, BuildContext context) {
     YoutubeController.inst.downloadYoutubeVideos(
       useCachedVersionsIfAvailable: true,
       itemsConfig: itemsConfig,
@@ -278,7 +277,6 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
       onConfirmButtonTap: (groupName, newConfig) {
         _onCancelDeleteDownloadTap([config], keepInList: true, delete: true);
         _onResumeDownloadTap([newConfig], context);
-        YTOnGoingFinishedDownloads.inst.refreshList();
         return true;
       },
     );
@@ -329,7 +327,6 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
 
   late Directory directory;
   late YoutubeItemDownloadConfig item;
-  late File downloadedFile;
   late DownloadTaskVideoId videoIdWrapper;
   String videoId = '';
 
@@ -352,7 +349,6 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
   void _assignItemInfoFromIndex() {
     directory = Directory(FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, widget.groupName.groupName));
     item = widget.videos[widget.index];
-    downloadedFile = FileParts.join(directory.path, item.filename.filename);
     videoIdWrapper = item.id;
     final newVideoId = videoIdWrapper.videoId;
 
@@ -446,6 +442,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
             Expanded(
               child: Obx((context) {
                 final filename = item.filenameR;
+                final downloadedFile = FileParts.join(directory.path, filename.filename);
                 final isDownloading = YoutubeController.inst.isDownloading[videoIdWrapper]?[filename] ?? false;
                 final isFetchingData = YoutubeController.inst.isFetchingData[videoIdWrapper]?[filename] ?? false;
                 final audioP = YoutubeController.inst.downloadsAudioProgressMap[videoIdWrapper]?[filename];
@@ -478,7 +475,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                   children: [
                     const SizedBox(height: 6.0),
                     Text(
-                      item.filename.filename,
+                      filename.filename,
                       style: textTheme.displaySmall,
                     ),
                     const SizedBox(height: 6.0),

@@ -148,8 +148,8 @@ class YoutubeItemDownloadConfig {
     return id == other.id && groupName == other.groupName && filename == other.filename;
   }
 
-  /// only [id], [groupName] && [filename] are matched, since map lookup will
-  /// recognize this and update accordingly
+  /// only [id], [groupName] && [filename] are matched. [filename] hashes by its immutable
+  /// key, so this stays stable across [rename].
   @override
   int get hashCode => id.videoId.hashCode ^ groupName.hashCode ^ filename.hashCode;
 }

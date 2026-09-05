@@ -37,6 +37,8 @@ class DownloadTaskFilename {
     required String? key,
   }) : this.key = key ?? _createKey();
 
+  DownloadTaskFilename copyWithNewName(String newFilename) => DownloadTaskFilename._(filename: newFilename, key: key);
+
   static String _createKey() => ((_numberKey++).hashCode ^ DateTime.now().microsecondsSinceEpoch.hashCode).toString();
 
   @override
@@ -65,11 +67,11 @@ class DownloadTaskFilename {
 
   @override
   bool operator ==(other) {
-    return other is DownloadTaskFilename && filename == other.filename && key == other.key;
+    return other is DownloadTaskFilename && key == other.key;
   }
 
   @override
-  int get hashCode => filename.hashCode ^ key.hashCode;
+  int get hashCode => key.hashCode;
 }
 
 class DownloadTaskVideoId {
