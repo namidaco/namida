@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -89,6 +90,8 @@ class FocusedMenuOptions {
   });
 }
 
+typedef MiniplayerImageSize = ({double? maxHeight, double maxWidth});
+
 class MiniplayerInfoData<E, S> {
   final String firstLine;
   final String secondLine;
@@ -136,7 +139,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   final void Function(Playable currentItem, TapUpDetails details) onMenuOpen;
   final FocusedMenuOptions Function(Playable item) focusedMenuOptions;
   final Widget Function(Playable item, double Function(double borderRadius) brMultiplier) imageBuilder;
-  final Widget Function(Playable item, double Function(double borderRadius) brMultiplier, double? maxHeight, double? maxWidth) currentImageBuilder;
+  final Widget Function(Playable item, double Function(double borderRadius) brMultiplier, ValueListenable<MiniplayerImageSize> size) currentImageBuilder;
   final MiniplayerInfoData<E, S> Function(Playable item) textBuilder;
   final bool Function(Playable item) canShowBuffering;
   final TrackTilePropertiesConfigs? trackTileConfigs;
@@ -268,6 +271,11 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
   double? _imageHeightMultiplier;
   double? _imageHeightActual;
 
+  final _currentImageSize = ValueNotifier<MiniplayerImageSize>((maxHeight: null, maxWidth: 0.0));
+
+  /// used to skip implicit decoration animations while the miniplayer itself is animating.
+  double _lastAnimationP = 0.0;
+
   Playable<Object> get _getcurrentItem => Player.inst.currentQueue.value[Player.inst.currentIndex.value];
 
   @override
@@ -284,6 +292,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
   @override
   void dispose() {
     isMenuOpened.close();
+    _currentImageSize.dispose();
     Player.inst.videoPlayerInfo.removeListener(_videoInfoListener);
     MiniPlayerController.inst.screenValuesVersion.removeListener(_screenValuesListener);
     super.dispose();
@@ -754,6 +763,34 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             }
 
             final currentText = widget.textBuilder(currentItemAnimationUI);
+
+            Widget currentImage = widget.currentImageBuilder(
+              currentItemAnimationUI,
+              (borderRadius) => borderRadius.br,
+              _currentImageSize,
+            );
+
+            if (settings.artworkTapAction.valueR != TrackExecuteActions.none) {
+              currentImage = TapDetector(
+                onTap: () => settings.artworkTapAction.value.executePlayingItem(currentItemAnimationUI),
+                child: currentImage,
+              );
+            }
+
+            currentImage = LongPressDetector(
+              onLongPress: () {
+                final lrcState = Lyrics.inst.lrcViewKey.currentState;
+                if (lrcState != null) {
+                  lrcState.enterFullScreen();
+                  return;
+                }
+                final longPressAction = settings.artworkLongPressAction.value;
+                if (longPressAction != TrackExecuteActions.none) {
+                  longPressAction.executePlayingItem(currentItemAnimationUI);
+                }
+              },
+              child: currentImage,
+            );
 
             final topText = widget.topText(currentItem);
             final focusedMenuOptions = widget.focusedMenuOptions(currentItem);
@@ -1299,34 +1336,13 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     final imageEmptyRightSpace = screenSize.width - imageSize;
                     final imageLeftOffset = (((imageEmptyRightSpace / 2) - imagePadding.left - rightInset) * bcp);
 
-                    Widget currentImage = widget.currentImageBuilder(
-                      currentItemAnimationUI,
-                      (borderRadius) => borderRadius.br,
-                      _imageHeightActual == null ? null : (imageMaxHeightPre * 0.7),
-                      imageWidthBig,
+                    _currentImageSize.value = (
+                      maxHeight: _imageHeightActual == null ? null : (imageMaxHeightPre * 0.7),
+                      maxWidth: imageWidthBig,
                     );
 
-                    if (settings.artworkTapAction.value != TrackExecuteActions.none) {
-                      currentImage = TapDetector(
-                        onTap: () => settings.artworkTapAction.value.executePlayingItem(currentItemAnimationUI),
-                        child: currentImage,
-                      );
-                    }
-
-                    currentImage = LongPressDetector(
-                      onLongPress: () {
-                        final lrcState = Lyrics.inst.lrcViewKey.currentState;
-                        if (lrcState != null) {
-                          lrcState.enterFullScreen();
-                          return;
-                        }
-                        final longPressAction = settings.artworkLongPressAction.value;
-                        if (longPressAction != TrackExecuteActions.none) {
-                          longPressAction.executePlayingItem(currentItemAnimationUI);
-                        }
-                      },
-                      child: currentImage,
-                    );
+                    final animateDecoration = p == _lastAnimationP;
+                    _lastAnimationP = p;
 
                     return Stack(
                       children: [
@@ -1345,6 +1361,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                     height: velpy(a: 82.0, b: panelFinal, c: cp),
                                     width: double.infinity,
                                     child: _AnimatedDecorationOrDecoration(
+                                      animate: animateDecoration,
                                       duration: const Duration(milliseconds: kThemeAnimationDurationMS),
                                       decoration: BoxDecoration(
                                         color: theme.scaffoldBackgroundColor,
@@ -1360,7 +1377,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                         alignment: Alignment.bottomLeft,
                                         children: [
                                           Positioned.fill(
-                                            child: AnimatedDecoration(
+                                            child: _AnimatedDecorationOrDecoration(
+                                              animate: animateDecoration,
                                               duration: const Duration(milliseconds: kThemeAnimationDurationMS),
                                               // clipBehavior: Clip.antiAlias,
                                               decoration: BoxDecoration(
@@ -1379,6 +1397,10 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                                       CurrentColor.inst.miniplayerColor,
                                                     ).withOpacityExt(velpy(a: .1, b: .22, c: icp)),
                                                   ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
 
                                           if (NamidaJellys.enabled)
                                             Positioned.fill(
@@ -2209,19 +2231,21 @@ class _MPQualityButton extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final Color? bgColor;
+  final bool selected;
   final Widget? trailing;
   final double padding;
   final void Function()? onTap;
+  final double? progress;
 
   const _MPQualityButton({
     required this.title,
     this.subtitle = '',
     required this.icon,
-    this.bgColor,
+    this.selected = false,
     this.trailing,
     this.padding = 4.0,
     required this.onTap,
+    this.progress,
   });
 
   @override
@@ -2259,8 +2283,8 @@ class _MPQualityButton extends StatelessWidget {
             SizedBox(width: 4.0.spaceX),
             progress == null
                 ? Icon(
-              icon,
-              size: 18.0.size,
+                    icon,
+                    size: 18.0.size,
                   )
                 : SizedBox(
                     width: 18.0.size,
@@ -2274,7 +2298,7 @@ class _MPQualityButton extends StatelessWidget {
                         ),
                       ),
                     ),
-            ),
+                  ),
             SizedBox(width: 6.0.spaceX),
             Expanded(
               child: Column(
@@ -2419,18 +2443,20 @@ class _SeekForwardDetectorWidget extends StatelessWidget {
 class _AnimatedDecorationOrDecoration extends StatelessWidget {
   final Duration duration;
   final Decoration decoration;
-  final Widget child;
+  final Widget? child;
+  final bool animate;
 
   const _AnimatedDecorationOrDecoration({
     super.key,
     required this.duration,
     required this.decoration,
-    required this.child,
+    required this.animate,
+    this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    return settings.animatedTheme.value
+    return animate && settings.animatedTheme.value
         ? AnimatedDecoration(
             decoration: decoration,
             duration: duration,

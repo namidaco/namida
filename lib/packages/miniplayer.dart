@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
@@ -62,49 +63,58 @@ class MiniPlayerParent extends StatelessWidget {
     return Obx(
       (context) => Theme(
         data: AppThemes.inst.getAppTheme(CurrentColor.inst.miniplayerColor, !context.isDarkMode),
-        child: Stack(
-          children: [
-            // -- MiniPlayer Wallpaper
-            Positioned.fill(
-              child: RepaintBoundary(
-                child: FadeIgnoreTransition(
-                  completelyKillWhenPossible: true,
-                  opacity: NamidaMiniPlayerBase.clampedAnimationCP,
-                  child: const Wallpaper(
-                    gradient: false,
-                    particleOpacity: 0.3,
-                  ),
-                ),
-              ),
-            ),
-
-            // -- MiniPlayers
-            RepaintBoundary(
-              child: ObxO(
-                rx: settings.mixedQueue,
-                builder: (context, mixedQueue) => mixedQueue
-                    ? const NamidaMiniPlayerMixed()
-                    : ObxO(
-                        rx: Player.inst.currentItem,
-                        builder: (context, currentItem) => currentItem is YoutubeID
-                            ? ObxO(
-                                rx: settings.youtube.youtubeStyleMiniplayer,
-                                builder: (context, youtubeStyleMiniplayer) => CustomAnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 300),
-                                  child: youtubeStyleMiniplayer
-                                      ? YoutubeMiniPlayer(key: YoutubeMiniplayerUiController.inst.ytMiniplayerKey) //
-                                      : const NamidaMiniPlayerYoutubeID(key: Key('local_miniplayer_yt')),
-                                ),
-                              )
-                            : currentItem is Selectable
-                            ? const NamidaMiniPlayerTrack(key: Key('local_miniplayer'))
-                            : const SizedBox(key: Key('empty_miniplayer')),
-                      ),
-              ),
-            ),
-          ],
-        ),
+        child: const _MiniPlayerParentBody(),
       ),
+    );
+  }
+}
+
+class _MiniPlayerParentBody extends StatelessWidget {
+  const _MiniPlayerParentBody();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // -- MiniPlayer Wallpaper
+        Positioned.fill(
+          child: RepaintBoundary(
+            child: FadeIgnoreTransition(
+              completelyKillWhenPossible: true,
+              opacity: NamidaMiniPlayerBase.clampedAnimationCP,
+              child: const Wallpaper(
+                gradient: false,
+                particleOpacity: 0.3,
+              ),
+            ),
+          ),
+        ),
+
+        // -- MiniPlayers
+        RepaintBoundary(
+          child: ObxO(
+            rx: settings.mixedQueue,
+            builder: (context, mixedQueue) => mixedQueue
+                ? const NamidaMiniPlayerMixed()
+                : ObxO(
+                    rx: Player.inst.currentItem,
+                    builder: (context, currentItem) => currentItem is YoutubeID
+                        ? ObxO(
+                            rx: settings.youtube.youtubeStyleMiniplayer,
+                            builder: (context, youtubeStyleMiniplayer) => CustomAnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: youtubeStyleMiniplayer
+                                  ? YoutubeMiniPlayer(key: YoutubeMiniplayerUiController.inst.ytMiniplayerKey) //
+                                  : const NamidaMiniPlayerYoutubeID(key: Key('local_miniplayer_yt')),
+                            ),
+                          )
+                        : currentItem is Selectable
+                        ? const NamidaMiniPlayerTrack(key: Key('local_miniplayer'))
+                        : const SizedBox(key: Key('empty_miniplayer')),
+                  ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -152,10 +162,8 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
       imageBuilder: (item, brMultiplier) {
         return item is Selectable ? trackConfig.imageBuilder(item, brMultiplier) : ytConfig.imageBuilder(item, brMultiplier);
       },
-      currentImageBuilder: (item, brMultiplier, maxHeight, maxWidth) {
-        return item is Selectable
-            ? trackConfig.currentImageBuilder(item, brMultiplier, maxHeight, maxWidth)
-            : ytConfig.currentImageBuilder(item, brMultiplier, maxHeight, maxWidth);
+      currentImageBuilder: (item, brMultiplier, size) {
+        return item is Selectable ? trackConfig.currentImageBuilder(item, brMultiplier, size) : ytConfig.currentImageBuilder(item, brMultiplier, size);
       },
       textBuilder: (item) {
         return item is Selectable
@@ -452,7 +460,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         downloadingStream: VideoController.inst.currentVideoConfig.currentDownloadingStream,
         downloadedBytes: VideoController.inst.currentVideoConfig.currentDownloadedBytes,
         onLocalVideoTap: (item, video) => VideoController.inst.setVideoQualityFromLocal(
-            track: (item as Selectable).track,
+          track: (item as Selectable).track,
           video: video,
         ),
         onStreamVideoTap: (item, videoId, stream, cacheFile, streams) => VideoController.inst.setVideoQualityFromStream(
@@ -469,11 +477,10 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           brMultiplier: brMultiplier,
         ),
       ),
-      currentImageBuilder: (item, brMultiplier, maxHeight, maxWidth) => _AnimatingTrackImage(
+      currentImageBuilder: (item, brMultiplier, size) => _AnimatingTrackImage(
         track: (item as Selectable).track,
         brMultiplier: brMultiplier,
-        maxHeight: maxHeight,
-        maxWidth: maxWidth,
+        size: size,
       ),
       textBuilder: textBuilder,
       canShowBuffering: (currentItem) => (currentItem as Selectable).track.isNetwork,
@@ -763,11 +770,10 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
           brMultiplier: brMultiplier,
         ),
       ),
-      currentImageBuilder: (item, brMultiplier, maxHeight, maxWidth) => _AnimatingYoutubeIDImage(
+      currentImageBuilder: (item, brMultiplier, size) => _AnimatingYoutubeIDImage(
         video: item as YoutubeID,
         brMultiplier: brMultiplier,
-        maxHeight: maxHeight,
-        maxWidth: maxWidth,
+        size: size,
       ),
       textBuilder: (item) => textBuilder(context, item),
       canShowBuffering: (currentItem) => true,
@@ -804,14 +810,12 @@ class _AdjacentThumbnailScale extends StatelessWidget {
 class _AnimatingTrackImage extends StatelessWidget {
   final Track track;
   final double Function(double borderRadius) brMultiplier;
-  final double? maxHeight;
-  final double? maxWidth;
+  final ValueListenable<MiniplayerImageSize> size;
 
   const _AnimatingTrackImage({
     required this.track,
     required this.brMultiplier,
-    required this.maxHeight,
-    required this.maxWidth,
+    required this.size,
   });
 
   @override
@@ -819,8 +823,7 @@ class _AnimatingTrackImage extends StatelessWidget {
     return _AnimatingThumnailWidget(
       brMultiplier: brMultiplier,
       isLocal: true,
-      maxHeight: maxHeight,
-      maxWidth: maxWidth,
+      size: size,
       fallback: _TrackImage(
         track: track,
         brMultiplier: brMultiplier,
@@ -833,15 +836,13 @@ class _AnimatingThumnailWidget extends StatelessWidget {
   final double Function(double borderRadius) brMultiplier;
   final bool isLocal;
   final Widget fallback;
-  final double? maxHeight;
-  final double? maxWidth;
+  final ValueListenable<MiniplayerImageSize> size;
 
   const _AnimatingThumnailWidget({
     required this.brMultiplier,
     required this.isLocal,
     required this.fallback,
-    required this.maxHeight,
-    required this.maxWidth,
+    required this.size,
   });
 
   @override
@@ -906,11 +907,14 @@ class _AnimatingThumnailWidget extends StatelessWidget {
                 final animatedScaleChild = CustomAnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   child: shoulShowLyricsView
-                      ? LyricsLRCParsedView(
-                          key: Lyrics.inst.lrcViewKey,
-                          videoOrImage: videoOrImage,
-                          maxWidth: maxWidth,
-                          maxHeight: maxHeight, // limit height for when sizes are internally mutated
+                      ? ValueListenableBuilder(
+                          valueListenable: size,
+                          builder: (context, size, _) => LyricsLRCParsedView(
+                            key: Lyrics.inst.lrcViewKey,
+                            videoOrImage: videoOrImage,
+                            maxWidth: size.maxWidth,
+                            maxHeight: size.maxHeight,
+                          ),
                         )
                       : KeyedSubtree(
                           key: const ValueKey('no_lyrics'),
@@ -1033,14 +1037,12 @@ class _YoutubeIDImage extends StatelessWidget {
 class _AnimatingYoutubeIDImage extends StatelessWidget {
   final YoutubeID video;
   final double Function(double borderRadius) brMultiplier;
-  final double? maxHeight;
-  final double? maxWidth;
+  final ValueListenable<MiniplayerImageSize> size;
 
   const _AnimatingYoutubeIDImage({
     required this.video,
     required this.brMultiplier,
-    required this.maxHeight,
-    required this.maxWidth,
+    required this.size,
   });
 
   @override
@@ -1048,8 +1050,7 @@ class _AnimatingYoutubeIDImage extends StatelessWidget {
     return _AnimatingThumnailWidget(
       brMultiplier: brMultiplier,
       isLocal: false,
-      maxHeight: maxHeight,
-      maxWidth: maxWidth,
+      size: size,
       fallback: _YoutubeIDImage(
         video: video,
         brMultiplier: brMultiplier,
@@ -1075,9 +1076,29 @@ class Wallpaper extends StatefulWidget {
 }
 
 class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMixin {
+  late final _particleBehaviour = RandomParticleBehaviour(options: _buildParticleOptions(Colors.transparent, 0));
+
+  ParticleOptions _buildParticleOptions(Color baseColor, double bpm) {
+    return ParticleOptions(
+      baseColor: baseColor,
+      spawnMaxRadius: 4,
+      spawnMinRadius: 2,
+      spawnMaxSpeed: 60 + bpm * 2,
+      spawnMinSpeed: bpm,
+      maxOpacity: widget.particleOpacity,
+      minOpacity: 0,
+      particleCount: 50,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final particlesChild = AnimatedBackground(
+      vsync: this,
+      behaviour: _particleBehaviour,
+      child: const SizedBox(),
+    );
     return Material(
       color: theme.scaffoldBackgroundColor,
       child: Stack(
@@ -1119,25 +1140,11 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
                   builder: (context, nowPlayingPosition) {
                     final scale = WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
                     final bpm = (2000 * scale).withMinimum(0);
+                    _particleBehaviour.options = _buildParticleOptions(theme.colorScheme.secondary, bpm);
                     return AnimatedScale(
                       duration: const Duration(milliseconds: 300),
                       scale: 1.0 + scale * 1.5,
-                      child: AnimatedBackground(
-                        vsync: this,
-                        behaviour: RandomParticleBehaviour(
-                          options: ParticleOptions(
-                            baseColor: theme.colorScheme.secondary,
-                            spawnMaxRadius: 4,
-                            spawnMinRadius: 2,
-                            spawnMaxSpeed: 60 + bpm * 2,
-                            spawnMinSpeed: bpm,
-                            maxOpacity: widget.particleOpacity,
-                            minOpacity: 0,
-                            particleCount: 50,
-                          ),
-                        ),
-                        child: const SizedBox(),
-                      ),
+                      child: particlesChild,
                     );
                   },
                 ),

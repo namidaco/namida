@@ -82,8 +82,9 @@ class CurrentColor {
 
   final _colorSchemeOfSubPages = Rxn<Color>();
 
-  final paletteFirstHalf = <Color>[].obs;
-  final paletteSecondHalf = <Color>[].obs;
+  final partyPalette = <Color>[].obs;
+  final partyPaletteRotation = 0.obs;
+  static int partyPaletteSplitIndexOf(int paletteLength) => paletteLength <= 0 ? 0 : (paletteLength - 1) ~/ 3 + 1;
 
   /// Same fields exists in [Player] class, they can be used but these ones ensure updating the color only after extracting.
   final currentPlayingTrack = Rxn<Selectable>();
@@ -108,10 +109,23 @@ class CurrentColor {
   final _colorsMapYTID = <String, NamidaColor>{};
 
   Timer? _colorsSwitchTimer;
+  int _partyContainersCount = 0;
+
+  void onPartyContainerMount() {
+    _partyContainersCount++;
+    if (_partyContainersCount == 1) switchColorPalettes();
+  }
+
+  void onPartyContainerUnmount() {
+    _partyContainersCount--;
+    if (_partyContainersCount <= 0) _colorsSwitchTimer?.cancel();
+  }
+
   void switchColorPalettes({bool? playWhenReady, Playable? item, bool? swapEnabled}) {
     _colorsSwitchTimer?.cancel();
 
-    if ((item ?? Player.inst.currentItem.value) == null || //
+    if (_partyContainersCount <= 0 || // -- no widget is displaying the palettes
+        (item ?? Player.inst.currentItem.value) == null || //
         (swapEnabled ?? settings.enablePartyModeColorSwap.value) == false) {
       return;
     }
@@ -120,16 +134,7 @@ class CurrentColor {
     final durms = isPlaying ? 150 : 2200;
     _colorsSwitchTimer = Timer.periodic(Duration(milliseconds: durms), (timer) {
       if (settings.enablePartyModeColorSwap.value) {
-        if (paletteFirstHalf.isEmpty) return;
-
-        final lastItem1 = paletteFirstHalf.value.last;
-        paletteFirstHalf.remove(lastItem1);
-        paletteFirstHalf.insertSafe(0, lastItem1);
-
-        if (paletteSecondHalf.isEmpty) return;
-        final lastItem2 = paletteSecondHalf.value.last;
-        paletteSecondHalf.remove(lastItem2);
-        paletteSecondHalf.insertSafe(0, lastItem2);
+        partyPaletteRotation.value++;
       }
     });
   }
@@ -171,7 +176,7 @@ class CurrentColor {
       if (namidaColor != null) {
         _namidaColor.set(namidaColor);
         _refreshColorsRx();
-        _updateCurrentPaletteHalfs(namidaColor);
+        _updateCurrentPartyPalette(namidaColor);
       }
     }
   }
@@ -265,27 +270,27 @@ class CurrentColor {
       return;
     }
 
-      _fnLimiter.execute(() async {
-        NamidaColor? namidaColor;
+    _fnLimiter.execute(() async {
+      NamidaColor? namidaColor;
 
-        final trColors = await getColorPalette();
-        if (trColors == null || !stillPlaying()) return; // -- check current item
-        if (trColors != _namidaColorMiniplayer.value) _namidaColorMiniplayer.value = trColors;
+      final trColors = await getColorPalette();
+      if (trColors == null || !stillPlaying()) return; // -- check current item
+      if (trColors != _namidaColorMiniplayer.value) _namidaColorMiniplayer.value = trColors;
 
-        if (settings.autoColor.value) {
-          if (_shouldUpdateFromDeviceWallpaper) {
-            namidaColor = await getPlayerColorFromDeviceWallpaper();
-          } else {
-            namidaColor = trColors;
-          }
-          if (namidaColor != null && namidaColor != _namidaColor.value) {
-            _namidaColor.value = namidaColor;
-            _updateCurrentPaletteHalfs(
-              settings.forceMiniplayerTrackColor.value ? trColors : namidaColor,
-            );
-          }
+      if (settings.autoColor.value) {
+        if (_shouldUpdateFromDeviceWallpaper) {
+          namidaColor = await getPlayerColorFromDeviceWallpaper();
+        } else {
+          namidaColor = trColors;
         }
-      });
+        if (namidaColor != null && namidaColor != _namidaColor.value) {
+          _namidaColor.value = namidaColor;
+          _updateCurrentPartyPalette(
+            settings.forceMiniplayerTrackColor.value ? trColors : namidaColor,
+          );
+        }
+      }
+    });
   }
 
   void resetCurrentPlayingTrack() {
@@ -626,26 +631,9 @@ class CurrentColor {
     if (nc != null) _colorsMap[filenameWoExt] = nc;
   }
 
-  void _updateCurrentPaletteHalfs(NamidaColor nc) {
-    final halfIndex = (nc.palette.length - 1) / 3;
-    paletteFirstHalf.clear();
-    paletteSecondHalf.clear();
-
-    paletteFirstHalf.execute(
-      (firstPart) {
-        paletteSecondHalf.execute(
-          (secondPart) {
-            nc.palette.loopAdv((c, i) {
-              if (i <= halfIndex) {
-                firstPart.add(c);
-              } else {
-                secondPart.add(c);
-              }
-            });
-          },
-        );
-      },
-    );
+  void _updateCurrentPartyPalette(NamidaColor nc) {
+    partyPaletteRotation.set(0);
+    partyPalette.value = nc.palette;
   }
 
   Future<void> generateAllColorPalettes() async {

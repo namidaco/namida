@@ -2565,7 +2565,7 @@ class NamidaAppBarIcon extends StatelessWidget {
   }
 }
 
-class NamidaPartyContainer extends StatelessWidget {
+class NamidaPartyContainer extends StatefulWidget {
   final double spreadRadiusMultiplier;
   final double? width;
   final double? height;
@@ -2577,7 +2577,27 @@ class NamidaPartyContainer extends StatelessWidget {
   });
 
   @override
+  State<NamidaPartyContainer> createState() => _NamidaPartyContainerState();
+}
+
+class _NamidaPartyContainerState extends State<NamidaPartyContainer> {
+  @override
+  void initState() {
+    super.initState();
+    CurrentColor.inst.onPartyContainerMount();
+  }
+
+  @override
+  void dispose() {
+    CurrentColor.inst.onPartyContainerUnmount();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final spreadRadiusMultiplier = widget.spreadRadiusMultiplier;
+    final width = widget.width;
+    final height = widget.height;
     if (!settings.enablePartyModeColorSwap.value) {
       return ObxO(
         rx: Player.inst.nowPlayingPosition,
@@ -2601,59 +2621,91 @@ class NamidaPartyContainer extends StatelessWidget {
       );
     } else {
       return ObxO(
-        rx: Player.inst.nowPlayingPosition,
-        builder: (context, nowPlayingPosition) {
-          final finalScale = WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
-          return height != null
-              ? ObxO(
-                  rx: CurrentColor.inst.paletteFirstHalf,
-                  builder: (context, firstHalf) => Row(
-                    children: [
-                      ...firstHalf.map(
-                        (e) => AnimatedSizedBox(
-                          duration: const Duration(milliseconds: 400),
-                          height: height,
-                          width: width ?? Dimensions.inst.miniplayerMaxWidth / firstHalf.length,
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: e.withAlpha(150),
-                                spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
-                                blurRadius: 10 + (200 * finalScale),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+        rx: CurrentColor.inst.partyPalette,
+        builder: (context, palette) {
+          final splitIndex = CurrentColor.partyPaletteSplitIndexOf(palette.length);
+          final isFirstPart = height != null;
+          final start = isFirstPart ? 0 : splitIndex;
+          final count = isFirstPart ? splitIndex : palette.length - splitIndex;
+          if (count <= 0) return const SizedBox();
+
+          final boxes = List<Widget>.generate(
+            count,
+            (index) => _PartyPaletteBox(
+              index: index,
+              start: start,
+              count: count,
+              height: height ?? context.height / count,
+              width: isFirstPart ? width ?? Dimensions.inst.miniplayerMaxWidth / count : width,
+              spreadRadius: isFirstPart ? 150 * spreadRadiusMultiplier : 140 * spreadRadiusMultiplier,
+            ),
+          );
+          return isFirstPart
+              ? Row(
+                  children: boxes,
                 )
-              : ObxO(
-                  rx: CurrentColor.inst.paletteSecondHalf,
-                  builder: (context, secondHalf) => Column(
-                    children: [
-                      ...secondHalf.map(
-                        (e) => AnimatedSizedBox(
-                          duration: const Duration(milliseconds: 400),
-                          height: height ?? context.height / secondHalf.length,
-                          width: width,
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: e.withAlpha(150),
-                                spreadRadius: 140 * finalScale * spreadRadiusMultiplier,
-                                blurRadius: 10 + (200 * finalScale),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+              : Column(
+                  children: boxes,
                 );
         },
       );
     }
+  }
+}
+
+class _PartyPaletteBox extends StatelessWidget {
+  final int index;
+  final int start;
+  final int count;
+  final double? width;
+  final double? height;
+  final double spreadRadius;
+
+  const _PartyPaletteBox({
+    required this.index,
+    required this.start,
+    required this.count,
+    required this.width,
+    required this.height,
+    required this.spreadRadius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: CurrentColor.inst.partyPaletteRotation,
+      builder: (context, rotation) {
+        final palette = CurrentColor.inst.partyPalette.value;
+        if (palette.isEmpty) {
+          return SizedBox(
+            width: width,
+            height: height,
+          );
+        }
+        final colorIndex = (start + ((index - rotation) % count)) % palette.length;
+        final color = palette[colorIndex];
+        return ObxO(
+          rx: Player.inst.nowPlayingPosition,
+          builder: (context, nowPlayingPosition) {
+            final finalScale = WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
+            return AnimatedSizedBox(
+              duration: const Duration(milliseconds: 400),
+              height: height,
+              width: width,
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withAlpha(150),
+                    spreadRadius: spreadRadius * finalScale,
+                    blurRadius: 10 + (200 * finalScale),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }
 

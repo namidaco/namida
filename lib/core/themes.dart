@@ -16,10 +16,101 @@ class AppThemes {
   static const fontFamily = "LexendDeca";
   static const fontFamilyFallback = ['sans-serif', 'Roboto'];
 
+  static const _iconThemeLight = IconThemeData(color: Color.fromARGB(200, 40, 40, 40));
+  static const _iconThemeDark = IconThemeData(color: Color.fromARGB(200, 233, 233, 233));
+
+  static const _textButtonThemeDesktop = TextButtonThemeData(
+    style: ButtonStyle(
+      padding: WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      ),
+      visualDensity: VisualDensity.comfortable,
+    ),
+  );
+  static const _textButtonThemeMobile = TextButtonThemeData(
+    style: ButtonStyle(
+      padding: WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+      ),
+      visualDensity: VisualDensity.compact,
+    ),
+  );
+
+  static const _inputDecorationThemeDesktop = InputDecorationTheme(contentPadding: EdgeInsetsDirectional.fromSTEB(12.0, 18.0, 12.0, 18.0));
+  static const _inputDecorationThemeMobile = InputDecorationTheme();
+
+  static final _textThemeLight = _buildTextTheme(true);
+  static final _textThemeDark = _buildTextTheme(false);
+
+  static TextTheme _buildTextTheme(bool light) {
+    return TextTheme(
+      bodyMedium: const TextStyle(
+        fontSize: 14.0,
+        fontWeight: FontWeight.normal,
+        fontFamilyFallback: fontFamilyFallback,
+      ),
+      bodySmall: const TextStyle(
+        fontSize: 14.0,
+        fontWeight: FontWeight.normal,
+        fontFamilyFallback: fontFamilyFallback,
+      ),
+      titleSmall: const TextStyle(
+        fontSize: 14.0,
+        fontWeight: FontWeight.w600,
+        fontFamilyFallback: fontFamilyFallback,
+      ),
+      titleLarge: const TextStyle(
+        fontSize: 20.0,
+        fontWeight: FontWeight.w600,
+        fontFamilyFallback: fontFamilyFallback,
+      ),
+      displayLarge: TextStyle(
+        fontWeight: FontWeight.w700,
+        fontSize: 17.0,
+        color: light ? Colors.black.withAlpha(160) : Colors.white.withAlpha(210),
+        fontFamilyFallback: fontFamilyFallback,
+      ),
+      displayMedium: TextStyle(
+        fontWeight: FontWeight.w600,
+        fontSize: 15.0,
+        color: light ? Colors.black.withAlpha(150) : Colors.white.withAlpha(180),
+        fontFamilyFallback: fontFamilyFallback,
+      ),
+      displaySmall: TextStyle(
+        fontWeight: FontWeight.w400,
+        fontSize: 13.0,
+        color: light ? Colors.black.withAlpha(120) : Colors.white.withAlpha(170),
+        fontFamilyFallback: fontFamilyFallback,
+      ),
+      headlineMedium: const TextStyle(
+        fontWeight: FontWeight.normal,
+        fontSize: 14.0,
+        fontFamilyFallback: fontFamilyFallback,
+      ),
+      headlineSmall: const TextStyle(
+        fontWeight: FontWeight.normal,
+        fontSize: 14.0,
+        fontFamilyFallback: fontFamilyFallback,
+      ),
+    );
+  }
+
+  static const _cacheMaxLength = 20;
+  final _cache = <_ThemeCacheKey, ThemeData>{};
+
   ThemeData getAppTheme([Color? color, bool? light, bool lighterDialog = true]) {
     color ??= CurrentColor.inst.color;
     light ??= namida.brightness == Brightness.light;
 
+    final key = (color, light, lighterDialog, settings.pitchBlack.value, settings.borderRadiusMultiplier.value);
+    final cached = _cache.remove(key);
+    if (cached != null) return _cache[key] = cached; // -- re-insert to keep it as most recently used
+
+    if (_cache.length >= _cacheMaxLength) _cache.remove(_cache.keys.first);
+    return _cache[key] = _buildAppTheme(color, light, lighterDialog);
+  }
+
+  ThemeData _buildAppTheme(Color color, bool light, bool lighterDialog) {
     final shouldUseAMOLED = !light && settings.pitchBlack.value;
     final pitchBlack = shouldUseAMOLED ? const Color.fromARGB(255, 0, 0, 0) : null;
     final mainColorMultiplier = pitchBlack == null ? 0.8 : 0.1; // makes colors that rely on mainColor, a bit darker.
@@ -28,7 +119,7 @@ class AppThemes {
     final useDesktopDecoration = isDesktop;
 
     int getColorAlpha(int a) => (a * mainColorMultiplier).round();
-    Color getMainColorWithAlpha(int a) => color!.withAlpha(getColorAlpha(a));
+    Color getMainColorWithAlpha(int a) => color.withAlpha(getColorAlpha(a));
 
     final cardTheme = CardThemeData(
       elevation: 12.0,
@@ -70,9 +161,7 @@ class AppThemes {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         backgroundColor: pitchBlack ?? (light ? Color.alphaBlend(color.withAlpha(25), Colors.white) : null),
-        actionsIconTheme: IconThemeData(
-          color: light ? const Color.fromARGB(200, 40, 40, 40) : const Color.fromARGB(200, 233, 233, 233),
-        ),
+        actionsIconTheme: light ? _iconThemeLight : _iconThemeDark,
       ),
       secondaryHeaderColor: light ? const Color.fromARGB(200, 240, 240, 240) : const Color.fromARGB(222, 10, 10, 10),
       navigationBarTheme: pitchBlack == null
@@ -88,9 +177,7 @@ class AppThemes {
               backgroundColor: pitchBlack,
               indicatorColor: Color.alphaBlend(color.withAlpha(120), pitchBlack),
             ),
-      iconTheme: IconThemeData(
-        color: light ? const Color.fromARGB(200, 40, 40, 40) : const Color.fromARGB(200, 233, 233, 233),
-      ),
+      iconTheme: light ? _iconThemeLight : _iconThemeDark,
       shadowColor: light ? const Color.fromARGB(180, 100, 100, 100) : const Color.fromARGB(222, 10, 10, 10),
       dividerTheme: const DividerThemeData(
         thickness: 4,
@@ -170,24 +257,8 @@ class AppThemes {
           light ? const Color.fromARGB(200, 55, 55, 55) : const Color.fromARGB(255, 228, 228, 228),
         ),
       ),
-      inputDecorationTheme: InputDecorationTheme(
-        contentPadding: useDesktopDecoration ? const EdgeInsetsDirectional.fromSTEB(12.0, 18.0, 12.0, 18.0) : null,
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: useDesktopDecoration
-            ? const ButtonStyle(
-                padding: WidgetStatePropertyAll(
-                  EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                ),
-                visualDensity: VisualDensity.comfortable,
-              )
-            : const ButtonStyle(
-                padding: WidgetStatePropertyAll(
-                  EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
-                ),
-                visualDensity: VisualDensity.compact,
-              ),
-      ),
+      inputDecorationTheme: useDesktopDecoration ? _inputDecorationThemeDesktop : _inputDecorationThemeMobile,
+      textButtonTheme: useDesktopDecoration ? _textButtonThemeDesktop : _textButtonThemeMobile,
       dividerColor: light ? const Color.fromARGB(100, 100, 100, 100) : const Color.fromARGB(200, 50, 50, 50),
       tooltipTheme: TooltipThemeData(
         margin: EdgeInsets.symmetric(horizontal: 24.0),
@@ -219,56 +290,9 @@ class AppThemes {
         ),
         color: light ? Color.alphaBlend(cardColor.withAlpha(180), Colors.white) : Color.alphaBlend(cardColor.withAlpha(180), Colors.black),
       ),
-      textTheme: TextTheme(
-        bodyMedium: const TextStyle(
-          fontSize: 14.0,
-          fontWeight: FontWeight.normal,
-          fontFamilyFallback: fontFamilyFallback,
-        ),
-        bodySmall: const TextStyle(
-          fontSize: 14.0,
-          fontWeight: FontWeight.normal,
-          fontFamilyFallback: fontFamilyFallback,
-        ),
-        titleSmall: const TextStyle(
-          fontSize: 14.0,
-          fontWeight: FontWeight.w600,
-          fontFamilyFallback: fontFamilyFallback,
-        ),
-        titleLarge: const TextStyle(
-          fontSize: 20.0,
-          fontWeight: FontWeight.w600,
-          fontFamilyFallback: fontFamilyFallback,
-        ),
-        displayLarge: TextStyle(
-          fontWeight: FontWeight.w700,
-          fontSize: 17.0,
-          color: light ? Colors.black.withAlpha(160) : Colors.white.withAlpha(210),
-          fontFamilyFallback: fontFamilyFallback,
-        ),
-        displayMedium: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 15.0,
-          color: light ? Colors.black.withAlpha(150) : Colors.white.withAlpha(180),
-          fontFamilyFallback: fontFamilyFallback,
-        ),
-        displaySmall: TextStyle(
-          fontWeight: FontWeight.w400,
-          fontSize: 13.0,
-          color: light ? Colors.black.withAlpha(120) : Colors.white.withAlpha(170),
-          fontFamilyFallback: fontFamilyFallback,
-        ),
-        headlineMedium: const TextStyle(
-          fontWeight: FontWeight.normal,
-          fontSize: 14.0,
-          fontFamilyFallback: fontFamilyFallback,
-        ),
-        headlineSmall: const TextStyle(
-          fontWeight: FontWeight.normal,
-          fontSize: 14.0,
-          fontFamilyFallback: fontFamilyFallback,
-        ),
-      ),
+      textTheme: light ? _textThemeLight : _textThemeDark,
     );
   }
 }
+
+typedef _ThemeCacheKey = (Color color, bool light, bool lighterDialog, bool pitchBlack, double borderRadiusMultiplier);
