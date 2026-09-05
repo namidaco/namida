@@ -752,12 +752,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       () async {
         return await item.execute(
           selectable: (finalItem) async {
-            final twd = finalItem.trackWithDate;
-            if (twd != null) {
-              final qs = twd.queueSource;
+            final qs = finalItem.trackWithDate?.queueSource;
               if (qs != null && qs.supportResuming) {
                 QueueController.latestPlayedForSourceManager.update(qs, finalItem);
               }
+            if (QueueSourceEnum.queuePage.supportResuming) {
+              QueueController.inst.updateLatestPlayedForCurrentQueue(finalItem, alreadyUpdatedSource: qs);
             }
 
             await onItemPlaySelectable(item, finalItem, index, skipItem, preparedItemInfo: preparedItemInfo);

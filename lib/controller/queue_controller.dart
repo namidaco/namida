@@ -34,6 +34,32 @@ class QueueController {
 
   /// faster way to access latest queue
   int _latestAddedQueueDate = 0;
+  int _sessionQueueDate = 0;
+  Playable? _sessionQueuePendingItem;
+
+  void _bindSessionQueueDate(int date) {
+    if (date <= 0) return;
+    _sessionQueueDate = date;
+    final pendingItem = _sessionQueuePendingItem;
+    if (pendingItem != null) {
+      _sessionQueuePendingItem = null;
+      _updateLatestPlayedForQueueDate(date, pendingItem);
+    }
+  }
+
+  void _updateLatestPlayedForQueueDate(int date, Playable item) {
+    latestPlayedForSourceManager.update(QueueSource.queuePageByName(date.toString()), item);
+  }
+
+  void updateLatestPlayedForCurrentQueue(Playable item, {QueueSourceBase? alreadyUpdatedSource}) {
+    final date = _sessionQueueDate;
+    if (date <= 0) {
+      _sessionQueuePendingItem = item;
+      return;
+    }
+    if (alreadyUpdatedSource != null && alreadyUpdatedSource.s == QueueSourceEnum.queuePage && int.tryParse(alreadyUpdatedSource.title ?? '') == date) return;
+    _updateLatestPlayedForQueueDate(date, item);
+  }
 
   static const kMaxQueueTracksCountToSave = 2000;
 
@@ -64,8 +90,10 @@ class QueueController {
     // -- Prevents saving [allTracksAll] source over and over.
     final latestQueue = _latestQueueInMap;
     if (latestQueue != null) {
-      if ((source.s == QueueSourceEnum.allTracksAll && latestQueue.source.s == QueueSourceEnum.allTracksAll) ||
-          (dateComparison == latestQueue.date && (source == latestQueue.source || source.s == QueueSourceEnum.queuePage))) {
+      final isSameAllTracksAll = source.s == QueueSourceEnum.allTracksAll && latestQueue.source.s == QueueSourceEnum.allTracksAll;
+      final isSameQueuePage = dateComparison == latestQueue.date && (source == latestQueue.source || source.s == QueueSourceEnum.queuePage);
+      if (isSameAllTracksAll || isSameQueuePage) {
+        if (isSameQueuePage) date = latestQueue.date;
         await removeQueue(latestQueue);
       }
     }
@@ -73,6 +101,7 @@ class QueueController {
     final q = Queue(source: source, homePageItem: homePageItem, date: date, isFav: false, tracks: tracks);
     _updateMap(q);
     _latestAddedQueueDate = q.date;
+    _bindSessionQueueDate(q.date);
     printy("Added New Queue");
     await _saveQueueToStorage(q);
   }
@@ -121,6 +150,7 @@ class QueueController {
   }
 
   Future<void> updateLatestQueue(List<Playable> items, {required QueueSourceBase<Enum> source, HomePageItems? homePageItem}) async {
+    _sessionQueueDate = 0;
     _playerQueueModifiedTime = _pendingSyncQueueTimestamp ?? currentTimeMS;
     await Future.wait([
       _saveLatestQueueToStorage(items),
@@ -158,6 +188,7 @@ class QueueController {
               homePageItem: homePageItem,
             ),
           );
+          _bindSessionQueueDate(latestQueueInsideMap.date);
         } else {
           await this.addNewQueue(
             source: source,
@@ -247,6 +278,7 @@ class QueueController {
     final mapAndLatest = await _readQueueFilesCompute.thready(AppDirs.QUEUES);
     queuesMap.value = mapAndLatest.$1;
     _latestAddedQueueDate = mapAndLatest.$2;
+    _bindSessionQueueDate(mapAndLatest.$2);
     _queuesLoad.completeIfWasnt(true);
   }
 
