@@ -498,19 +498,15 @@ class MainPageFABResumeButton extends StatelessWidget {
 
     NamidaNavigator.inst.hideStuff();
 
+    void jumpFn() => MainPageFABResumeButton.jumpToItem(index, Dimensions.inst.trackTileItemExtent, routeType!);
+
     if (openTracksPage) {
       ScrollSearchController.inst.animatePageController(LibraryTab.tracks, jumpToTopIfSamePage: false);
+      // -- waiting for the route transition
+      Future.delayed(const Duration(milliseconds: 500), jumpFn);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => jumpFn());
     }
-
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) {
-        MainPageFABResumeButton.jumpToItem(
-          index,
-          Dimensions.inst.trackTileItemExtent,
-          routeType!,
-        );
-      },
-    );
     return true;
   }
 
@@ -551,21 +547,19 @@ class MainPageFABResumeButton extends StatelessWidget {
             };
       var offset = topOffset + ((index - 2) * itemExtent);
 
-      await NamidaScrollController.executeOnLatestController(
-        (c) async {
-          final controllerPositions = c.positions;
-          for (final controllerPosition in controllerPositions) {
-            final maxOffset = controllerPosition.maxScrollExtent;
-            if (offset > maxOffset) {
-              offset = maxOffset + 32.0;
-            }
-            await controllerPosition.animateToEff(
-              offset,
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.fastLinearToSlowEaseIn,
-            );
-          }
-        },
+      final position = await NamidaScrollController.findVisiblePositionAfterSettle(
+        withinAncestor: NamidaNavigator.inst.navKey.currentContext?.findRenderObject(),
+      );
+      if (position == null) return;
+
+      final maxOffset = position.maxScrollExtent;
+      if (offset > maxOffset) {
+        offset = maxOffset + 32.0;
+      }
+      await position.animateToEff(
+        offset,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.fastLinearToSlowEaseIn,
       );
     } catch (_) {}
   }
