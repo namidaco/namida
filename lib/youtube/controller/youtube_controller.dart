@@ -170,8 +170,23 @@ class YoutubeController {
         await vFile.rename(newPath);
       }
     }
+  static bool isSameVideoStream(VideoStream? a, VideoStream? b) {
+    if (a == null || b == null) return false;
+    if (identical(a, b) || a.itag == b.itag) return true;
+    return a.height == b.height && a.fps == b.fps && a.codecInfo.codecCleaned() == b.codecInfo.codecCleaned();
+  }
 
-    YTOnGoingFinishedDownloads.inst.refreshList();
+  static void removeDuplicateCachedQualities(List<NamidaVideo> cachedVideos, Iterable<VideoStream>? streams, String? videoId) {
+    if (cachedVideos.isEmpty || streams == null) return;
+    final id = videoId != null && videoId.isNotEmpty ? videoId : null;
+
+    bool isSameVideo(VideoStream ytq, NamidaVideo cq) {
+      if (id != null && ytq.cachePath(id) == cq.path) return true;
+      if (ytq.sizeInBytes > 0 && ytq.sizeInBytes == cq.sizeInBytes) return true;
+      return cq.height > 0 && ytq.height == cq.height && ytq.bitrate == cq.bitrate;
+    }
+
+    cachedVideos.removeWhere((cq) => streams.any((ytq) => isSameVideo(ytq, cq)));
   }
 
   static AudioStream? getPreferredAudioStream(List<AudioStream>? audiostreams) {
@@ -1422,9 +1437,13 @@ class YoutubeController {
     return dv;
   }
 
+  void stopLatestSingleDownload() {
+    _downloadManager.stopDownload(file: _latestSingleDownloadingFile);
+  }
+
   void dispose({bool closeCurrentDownloadClient = true, bool closeAllClients = false}) {
     if (closeCurrentDownloadClient) {
-      _downloadManager.stopDownload(file: _latestSingleDownloadingFile);
+      stopLatestSingleDownload();
     }
 
     if (closeAllClients) {

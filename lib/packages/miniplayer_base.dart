@@ -51,6 +51,7 @@ import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/ui/widgets/simple_lyrics_line.dart';
 import 'package:namida/ui/widgets/waveform.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_queue_chip.dart';
@@ -62,6 +63,9 @@ class FocusedMenuOptions {
   final RxList<NamidaVideo> localVideos;
   final String? Function(Playable item) currentId;
   final Rxn<VideoStreamsResult> streams;
+  final bool Function(VideoStream stream, File? cacheFile) isStreamSelected;
+  final Rxn<VideoStream>? downloadingStream;
+  final Rxn<int>? downloadedBytes;
   final Future<void> Function(Playable item)? loadQualities;
   final void Function(Playable item)? onSearch;
   final Future<void> Function(Playable item, NamidaVideo video) onLocalVideoTap;
@@ -74,6 +78,9 @@ class FocusedMenuOptions {
     required this.currentId,
     required this.localVideos,
     required this.streams,
+    required this.isStreamSelected,
+    required this.downloadingStream,
+    required this.downloadedBytes,
     required this.loadQualities,
     required this.onSearch,
     required this.onLocalVideoTap,
@@ -865,12 +872,14 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                         menuWidget: Obx(
                           (context) {
                             final currentId = focusedMenuOptions.currentId(currentItem);
-                            final availableVideos = focusedMenuOptions.localVideos.valueR;
                             final ytVideos = focusedMenuOptions.streams.valueR?.videoStreams.withoutWebmIfNeccessaryOrExperimentalCodecs(
                               allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs,
                             );
+                            final availableVideos = List<NamidaVideo>.from(focusedMenuOptions.localVideos.valueR);
+                            YoutubeController.removeDuplicateCachedQualities(availableVideos, ytVideos, currentId);
 
                             final audioTracks = Player.inst.audioTracks.valueR;
+                            final downloadingStream = focusedMenuOptions.downloadingStream?.valueR;
 
                             final currentVideoConfig = VideoController.inst.currentVideoConfig;
                             return SuperSmoothListView(
@@ -906,7 +915,6 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                   _MPQualityButton(
                                     title: lang.search,
                                     icon: Broken.search_normal,
-                                    bgColor: null,
                                     onTap: () {
                                       focusedMenuOptions.onSearch?.call(currentItem);
                                     },
@@ -915,7 +923,6 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                   _MPQualityButton(
                                     title: lang.checkForMore,
                                     icon: Broken.chart,
-                                    bgColor: null,
                                     trailing: currentVideoConfig.isLoadingCurrentYTStreams.valueR ? const LoadingIndicator() : null,
                                     onTap: () => focusedMenuOptions.loadQualities!(currentItem),
                                   ),
@@ -924,7 +931,6 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                   const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
                                   _MPQualityButton(
                                     onTap: () => Player.inst.setAudioTrackAndSave(null),
-                                    bgColor: null,
                                     icon: Broken.audio_square,
                                     title: lang.auto,
                                   ),
@@ -934,7 +940,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                       final title = e.displayName;
                                       return _MPQualityButton(
                                         onTap: () => Player.inst.setAudioTrackAndSave(e.id),
-                                        bgColor: isCurrent ? CurrentColor.inst.miniplayerColor.withAlpha(20) : null,
+                                        selected: isCurrent,
                                         icon: Broken.audio_square,
                                         title: [
                                           title.capitalizeFirst(),
@@ -965,7 +971,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                         final isCurrent = element.path == (VideoController.inst.currentVideo.valueR?.path ?? Player.inst.currentCachedVideo.valueR?.path);
                                         return _MPQualityButton(
                                           onTap: () => focusedMenuOptions.onLocalVideoTap(currentItem, element),
-                                          bgColor: isCurrent ? CurrentColor.inst.miniplayerColor.withAlpha(20) : null,
+                                          selected: isCurrent,
                                           icon: Broken.video,
                                           title: [
                                             "${element.resolution}p${element.framerateText()}",
@@ -986,17 +992,46 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                 ),
                                 ...?ytVideos?.map(
                                   (element) {
-                                    final currentId = focusedMenuOptions.currentId(currentItem);
                                     final cacheFile = currentId == null ? null : element.getCachedFileSync(currentId);
                                     final cacheExists = cacheFile != null;
                                     var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
                                     var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
+                                    final title = "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}";
+                                    final subtitle = "${element.codecInfo.container} • ${element.bitrateText()}$codecIdentifierText";
+
+                                    void onTap() => focusedMenuOptions.onStreamVideoTap(currentItem, currentId, element, cacheFile, focusedMenuOptions.streams.value);
+
+                                    final isCurrent = focusedMenuOptions.isStreamSelected(element, cacheFile);
+
+                                    final downloadedBytesRx = focusedMenuOptions.downloadedBytes;
+                                    if (downloadedBytesRx != null && YoutubeController.isSameVideoStream(downloadingStream, element)) {
+                                      final totalBytes = element.sizeInBytes;
+                                      return ObxO(
+                                        rx: downloadedBytesRx,
+                                        builder: (context, downloadedBytes) => _MPQualityButton(
+                                          onTap: onTap,
+                                          selected: isCurrent,
+                                          icon: Broken.import,
+                                          title: title,
+                                          subtitle: subtitle,
+                                          progress: totalBytes <= 0 ? null : (downloadedBytes ?? 0) / totalBytes,
+                                          trailing: totalBytes <= 0 ? const LoadingIndicator() : null,
+                                        ),
+                                      );
+                                    }
+
                                     return _MPQualityButton(
-                                      onTap: () => focusedMenuOptions.onStreamVideoTap(currentItem, currentId, element, cacheFile, focusedMenuOptions.streams.value),
-                                      bgColor: cacheExists ? CurrentColor.inst.miniplayerColor.withAlpha(40) : null,
+                                      onTap: onTap,
+                                      selected: isCurrent,
                                       icon: cacheExists ? Broken.tick_circle : Broken.import,
-                                      title: "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}",
-                                      subtitle: "${element.codecInfo.container} • ${element.bitrateText()}$codecIdentifierText",
+                                      title: title,
+                                      subtitle: subtitle,
+                                      trailing: isCurrent
+                                          ? NamidaCheckMark(
+                                              active: true,
+                                              size: 12.0.size,
+                                            )
+                                          : null,
                                     );
                                   },
                                 ),
@@ -2170,6 +2205,9 @@ class _MPQualityButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
+    final progress = this.progress?.clampDouble(0.0, 1.0);
+    final color = CurrentColor.inst.miniplayerColor;
+    final bgColor = selected ? color.withOpacityExt(0.7) : null;
     return ConstrainedBox(
       constraints: BoxConstraints(minHeight: 36.0.spaceY),
       child: NamidaInkWell(
@@ -2177,14 +2215,43 @@ class _MPQualityButton extends StatelessWidget {
         padding: EdgeInsets.all(padding),
         onTap: onTap,
         borderRadius: 8.0.br,
-        width: context.width,
-        bgColor: bgColor,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: progress != null ? null : bgColor,
+          gradient: progress == null
+              ? null
+              : LinearGradient(
+                  begin: AlignmentDirectional.centerStart,
+                  end: AlignmentDirectional.centerEnd,
+                  colors: [
+                    color.withOpacityExt(0.7),
+                    color.withOpacityExt(0.7),
+                    color.withOpacityExt(0.3),
+                    color.withOpacityExt(0.3),
+                  ],
+                  stops: [0.0, progress, progress, 1.0],
+                ),
+        ),
         child: Row(
           children: [
             SizedBox(width: 4.0.spaceX),
-            Icon(
+            progress == null
+                ? Icon(
               icon,
               size: 18.0.size,
+                  )
+                : SizedBox(
+                    width: 18.0.size,
+                    child: FittedBox(
+                      fit: .scaleDown,
+                      child: Text(
+                        "${(progress * 100).toStringAsFixed(0)}%",
+                        textAlign: TextAlign.center,
+                        style: textTheme.displaySmall?.copyWith(
+                          fontSize: 12.0.fontSize,
+                        ),
+                      ),
+                    ),
             ),
             SizedBox(width: 6.0.spaceX),
             Expanded(

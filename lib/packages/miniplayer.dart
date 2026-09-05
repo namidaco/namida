@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:animated_background/animated_background.dart';
+import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/youtipie.dart' show CodecInfoUtils;
 
 import 'package:namida/base/yt_video_like_manager.dart';
@@ -446,20 +447,20 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         loadQualities: (item) => VideoController.inst.fetchYTQualitiesForCurrent((item as Selectable).track),
         localVideos: VideoController.inst.currentVideoConfig.currentPossibleLocalVideos,
         streams: VideoController.inst.currentVideoConfig.currentYTStreams,
-        onLocalVideoTap: (item, video) async {
-          VideoController.inst.ensureVideoPlaybackActive();
-          VideoController.inst.playVideoCurrent(video: video, track: (item as Selectable).track);
-        },
-        onStreamVideoTap: (item, videoId, stream, cacheFile, streams) async {
-          VideoController.inst.ensureVideoPlaybackActive();
-          final cacheExists = cacheFile != null;
-          if (!cacheExists) await VideoController.inst.getVideoFromYoutubeAndUpdate(videoId, stream: stream);
-          VideoController.inst.playVideoCurrent(
-            video: null,
-            cacheIdAndPath: (videoId ?? '', cacheFile?.path ?? ''),
+        isStreamSelected: VideoController.inst.isStreamCurrentlySelected,
+        downloadingStream: VideoController.inst.currentVideoConfig.currentDownloadingStream,
+        downloadedBytes: VideoController.inst.currentVideoConfig.currentDownloadedBytes,
+        onLocalVideoTap: (item, video) => VideoController.inst.setVideoQualityFromLocal(
             track: (item as Selectable).track,
-          );
-        },
+          video: video,
+        ),
+        onStreamVideoTap: (item, videoId, stream, cacheFile, streams) => VideoController.inst.setVideoQualityFromStream(
+          track: (item as Selectable).track,
+          videoId: videoId,
+          stream: stream,
+          cacheFile: cacheFile,
+          mainStreams: streams,
+        ),
       ),
       imageBuilder: (item, brMultiplier) => _AdjacentThumbnailScale(
         child: _TrackImage(
@@ -540,6 +541,14 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         videoId: video.id,
       ),
     );
+  }
+
+  static bool isYoutubeStreamSelected(VideoStream stream, File? cacheFile) {
+    if (settings.youtube.isAudioOnlyMode.valueR) return false;
+    final currentStream = Player.inst.currentVideoStream.valueR;
+    if (currentStream != null) return currentStream.itag == stream.itag;
+    if (cacheFile == null) return false;
+    return Player.inst.currentCachedVideo.valueR?.path == cacheFile.path;
   }
 
   static MiniplayerInfoData<String, YTSortType> textBuilder(BuildContext context, Playable playbale) {
@@ -724,6 +733,9 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         loadQualities: null,
         localVideos: YoutubeInfoController.current.currentCachedQualities,
         streams: YoutubeInfoController.current.currentYTStreams,
+        isStreamSelected: isYoutubeStreamSelected,
+        downloadingStream: null,
+        downloadedBytes: null,
         onLocalVideoTap: (item, video) async {
           Player.inst.onItemPlayYoutubeIDSetQuality(
             stream: null,

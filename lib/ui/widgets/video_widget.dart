@@ -40,6 +40,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
@@ -466,22 +467,55 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     required bool isCached,
     Widget? trailing,
     bool popOnTap = true,
+    double? progress,
   }) {
     final textTheme = context.textTheme;
+    progress = progress?.clampDouble(0.0, 1.0);
+    final color = CurrentColor.inst.miniplayerColor;
+    final bgColor = selected ? color.withOpacityExt(0.7) : null;
     return NamidaInkWell(
       onTap: () {
         _startTimer();
         if (popOnTap) NamidaNavigator.inst.popMenu();
         onPlay(selected);
       },
-      decoration: const BoxDecoration(),
+      decoration: BoxDecoration(
+        color: progress != null ? null : bgColor,
+        gradient: progress == null
+            ? null
+            : LinearGradient(
+                begin: AlignmentDirectional.centerStart,
+                end: AlignmentDirectional.centerEnd,
+                colors: [
+                  color.withOpacityExt(0.7),
+                  color.withOpacityExt(0.7),
+                  color.withOpacityExt(0.3),
+                  color.withOpacityExt(0.3),
+                ],
+                stops: [0.0, progress, progress, 1.0],
+              ),
+      ),
       borderRadius: 6.0,
-      bgColor: selected ? CurrentColor.inst.miniplayerColor.withAlpha(100) : null,
       margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
       padding: const EdgeInsets.all(6.0),
       child: Row(
         children: [
-          Icon(icon ?? (isCached ? Broken.tick_circle : Broken.story), size: 20.0),
+          progress == null
+              ? Icon(
+                  icon ?? (isCached ? Broken.tick_circle : Broken.story),
+                  size: 20.0,
+                )
+              : SizedBox(
+                  width: 20.0,
+                  child: FittedBox(
+                    fit: .scaleDown,
+                    child: Text(
+                      "${(progress * 100).toStringAsFixed(0)}%",
+                      textAlign: TextAlign.center,
+                      style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                    ),
+                  ),
+                ),
           const SizedBox(width: 4.0),
           Column(
             mainAxisSize: MainAxisSize.min,
@@ -1570,7 +1604,11 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
                                               onPlay: (isSelected) {
                                                 // sometimes video is not initialized so we need the second check
-                                                if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized != true) {
+                                                if (isSelected && Player.inst.videoPlayerInfo.value?.isInitialized == true) return;
+                                                final localTrack = currentSelectable?.track;
+                                                if (widget.isLocal && localTrack != null) {
+                                                  VideoController.inst.setVideoQualityFromLocal(track: localTrack, video: element);
+                                                } else {
                                                   Player.inst.onItemPlayYoutubeIDSetQuality(
                                                     mainStreams: streams,
                                                     stream: null,
@@ -1579,10 +1617,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                     useCache: true,
                                                     videoId: Player.inst.currentVideo?.id ?? '',
                                                   );
-                                                  if (widget.isLocal) {
-                                                    VideoController.inst.currentVideo.value = element;
-                                                    settings.save(enableVideoPlayback: true);
-                                                  }
                                                 }
                                               },
                                               selected: widget.isLocal
@@ -1598,30 +1632,56 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                           return Obx(
                                             (context) {
                                               if (widget.isLocal) {
-                                                final id = Player.inst.currentVideoR?.id;
-                                                final selectedVideo = VideoController.inst.currentVideo.valueR;
-                                                final isSelected = element.height == selectedVideo?.height && element.bitrate == selectedVideo?.bitrate;
+                                                final cacheFile = element.getCachedFileSync(currentLocalVideoId);
+                                                final isSelected = VideoController.inst.isStreamCurrentlySelected(element, cacheFile);
 
                                                 var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
                                                 var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
+                                                final thirdLine = "${element.bitrateText()}$codecIdentifierText";
+
+                                                void setQuality() {
+                                                  final localTrack = currentSelectable?.track;
+                                                  if (localTrack == null) return;
+                                                  VideoController.inst.setVideoQualityFromStream(
+                                                    track: localTrack,
+                                                    videoId: currentLocalVideoId,
+                                                    stream: element,
+                                                    cacheFile: cacheFile,
+                                                    mainStreams: streams,
+                                                  );
+                                                }
+
+                                                void onPlay(bool isSelected) {
+                                                  if (isSelected && Player.inst.videoPlayerInfo.value?.isInitialized == true) return;
+                                                  setQuality();
+                                                }
+
+                                                final videoConfig = VideoController.inst.currentVideoConfig;
+                                                if (YoutubeController.isSameVideoStream(videoConfig.currentDownloadingStream.valueR, element)) {
+                                                  final totalBytes = element.sizeInBytes;
+                                                  return ObxO(
+                                                    rx: videoConfig.currentDownloadedBytes,
+                                                    builder: (context, downloadedBytes) => _getQualityChip(
+                                                      title: element.qualityLabel,
+                                                      subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
+                                                      thirdLine: thirdLine,
+                                                      onPlay: (_) => setQuality(),
+                                                      selected: isSelected,
+                                                      isCached: false,
+                                                      icon: Broken.import,
+                                                      progress: totalBytes <= 0 ? null : (downloadedBytes ?? 0) / totalBytes,
+                                                      trailing: totalBytes <= 0 ? const LoadingIndicator() : null,
+                                                    ),
+                                                  );
+                                                }
 
                                                 return _getQualityChip(
                                                   title: element.qualityLabel,
                                                   subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
-                                                  thirdLine: "${element.bitrateText()}$codecIdentifierText",
-                                                  onPlay: (isSelected) {
-                                                    if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized != true) {
-                                                      Player.inst.onItemPlayYoutubeIDSetQuality(
-                                                        mainStreams: streams,
-                                                        stream: element,
-                                                        cachedFile: null,
-                                                        useCache: true,
-                                                        videoId: id ?? '',
-                                                      );
-                                                    }
-                                                  },
+                                                  thirdLine: thirdLine,
+                                                  onPlay: onPlay,
                                                   selected: isSelected,
-                                                  isCached: isSelected,
+                                                  isCached: cacheFile != null,
                                                 );
                                               } else {
                                                 final id = Player.inst.currentVideoR?.id;
@@ -1691,8 +1751,17 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                 icon = Broken.setting;
 
                                                 if (widget.isLocal) {
-                                                  final video = VideoController.inst.currentVideo.valueR;
-                                                  qt = video == null ? null : '${video.resolution}p${video.framerateText()}';
+                                                  final videoConfig = VideoController.inst.currentVideoConfig;
+                                                  final downloadingStream = videoConfig.currentDownloadingStream.valueR;
+                                                  if (downloadingStream != null) {
+                                                    final totalBytes = downloadingStream.sizeInBytes;
+                                                    final downloadedBytes = videoConfig.currentDownloadedBytes.valueR ?? 0;
+                                                    final percentageText = totalBytes <= 0 ? '' : ' ${(downloadedBytes / totalBytes * 100).toStringAsFixed(0)}%';
+                                                    qt = '${downloadingStream.qualityLabel}$percentageText';
+                                                  } else {
+                                                    final video = videoConfig.currentVideo.valueR;
+                                                    qt = video == null ? null : '${video.resolution}p${video.framerateText()}';
+                                                  }
                                                 } else {
                                                   qt = Player.inst.currentVideoStream.valueR?.qualityLabel;
                                                   if (qt == null) {

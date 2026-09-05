@@ -445,9 +445,72 @@ class VideoController {
     return video.durationMS < trackDurationMS * p;
   }
 
-  Future<void> ensureVideoPlaybackActive() async {
-    if (settings.enableVideoPlayback.value) return;
-    this.toggleVideoPlayback();
+  void _ensureVideoPlaybackEnabled() {
+    if (!settings.enableVideoPlayback.value) settings.save(enableVideoPlayback: true);
+  }
+
+  Future<void> setVideoQualityFromLocal({required Track track, required NamidaVideo video}) async {
+    cancelCurrentVideoDownload();
+    _ensureVideoPlaybackEnabled();
+    await playVideoCurrent(video: video, track: track);
+  }
+
+  void cancelCurrentVideoDownload() {
+    if (currentVideoConfig.currentDownloadingStream.value == null) return;
+    _downloadSessionId++;
+    _resetVideoDownloadState();
+    YoutubeController.inst.stopLatestSingleDownload();
+  }
+
+  bool isStreamCurrentlySelected(VideoStream stream, File? cacheFile) {
+    final current = currentVideo.valueR;
+    if (current == null) return false;
+    if (cacheFile != null) return current.path == cacheFile.path;
+    return current.height == stream.height && current.bitrate == stream.bitrate;
+  }
+
+  Future<void> setVideoQualityFromStream({
+    required Track track,
+    required String? videoId,
+    required VideoStream stream,
+    required File? cacheFile,
+    required VideoStreamsResult? mainStreams,
+  }) async {
+    final downloadingStream = currentVideoConfig.currentDownloadingStream.value;
+    if (downloadingStream != null) {
+      cancelCurrentVideoDownload();
+      if (YoutubeController.isSameVideoStream(downloadingStream, stream)) return;
+    }
+
+    _ensureVideoPlaybackEnabled();
+
+    final id = videoId ?? '';
+    if (cacheFile != null) {
+      var video = _videoCacheIDMap[id]?.firstWhereEff((e) => e.path == cacheFile.path);
+      if (video == null) {
+        video = _buildNVFromStream(id: id, stream: stream, path: cacheFile.path);
+        addYTVideoToCacheMap(id, video);
+      }
+      return playVideoCurrent(video: video, track: track);
+    }
+
+    final downloadedVideo = await getVideoFromYoutubeAndUpdate(id, stream: stream, mainStreams: mainStreams);
+    if (downloadedVideo != null) await playVideoCurrent(video: downloadedVideo, track: track);
+  }
+
+  NamidaVideo _buildNVFromStream({required String id, required VideoStream stream, required String path}) {
+    return NamidaVideo(
+      path: path,
+      ytID: id,
+      nameInCache: path.getFilenameWOExt,
+      height: stream.height,
+      width: stream.width,
+      sizeInBytes: stream.sizeInBytes,
+      frameratePrecise: stream.fps.toDouble(),
+      creationTimeMS: 0,
+      durationMS: stream.duration?.inMilliseconds ?? 0,
+      bitrate: stream.bitrate,
+    );
   }
 
   Future<void> toggleVideoPlayback() async {
@@ -469,9 +532,19 @@ class VideoController {
   }
 
   Timer? _downloadTimer;
+  int _downloadSessionId = 0;
+  NamidaVideo? _videoBeforeDownloading;
   void _downloadTimerCancel() {
     _downloadTimer?.cancel();
     _downloadTimer = null;
+  }
+
+  void _resetVideoDownloadState() {
+    _downloadTimerCancel();
+    currentVideoConfig.currentDownloadedBytes.value = null;
+    currentVideoConfig.currentDownloadingStream.value = null;
+    if (currentVideo.value?.path == '') currentVideo.value = _videoBeforeDownloading;
+    _videoBeforeDownloading = null;
   }
 
   bool _canExecuteForCurrentTrackOnly(Track? initialTrack) {
@@ -499,11 +572,11 @@ class VideoController {
     final tr = Player.inst.currentTrack?.track;
     if (tr == null) return null;
     final dv = await fetchVideoFromYoutube(id, stream: stream, mainStreams: mainStreams, canContinue: () => settings.enableVideoPlayback.value);
-    if (!settings.enableVideoPlayback.value) return null;
+    if (dv == null || !settings.enableVideoPlayback.value) return null;
     if (_canExecuteForCurrentTrackOnly(tr)) {
       currentVideo.value = dv;
       currentVideoConfig.currentYTStreams.refresh();
-      if (dv != null) currentVideoConfig.currentPossibleLocalVideos.addNoDuplicates(dv);
+      currentVideoConfig.currentPossibleLocalVideos.addNoDuplicates(dv);
       currentVideoConfig.currentPossibleLocalVideos.sortByReverseAlt(
         (e) {
           if (e.resolution != 0) return e.resolution;
@@ -525,11 +598,27 @@ class VideoController {
     _downloadTimerCancel();
     if (id == null || id == '') return null;
     currentVideoConfig.currentDownloadedBytes.value = null;
+    currentVideoConfig.currentDownloadingStream.value = stream;
 
     final initialTrack = Player.inst.currentTrack?.track;
+    final sessionId = ++_downloadSessionId;
+    bool isSessionCurrent() => sessionId == _downloadSessionId;
+
+    final videoBefore = currentVideo.value;
+    if (videoBefore?.path != '') _videoBeforeDownloading = videoBefore;
+
+    void onDownloadEnd() {
+      if (!isSessionCurrent()) return;
+      if (_canExecuteForCurrentTrackOnly(initialTrack)) {
+        _resetVideoDownloadState();
+      } else {
+        _downloadTimerCancel();
+      }
+    }
 
     int downloaded = 0;
     void updateCurrentBytes() {
+      if (!isSessionCurrent()) return;
       if (!_canExecuteForCurrentTrackOnly(initialTrack)) return;
 
       if (downloaded > 0) currentVideoConfig.currentDownloadedBytes.value = downloaded;
@@ -548,22 +637,20 @@ class VideoController {
       }
     }
 
-    if (streamToUse == null || !canContinue()) {
-      if (_canExecuteForCurrentTrackOnly(initialTrack)) {
-        currentVideoConfig.currentDownloadedBytes.value = null;
-        _downloadTimerCancel();
-      }
+    if (streamToUse == null || !canContinue() || !isSessionCurrent()) {
+      onDownloadEnd();
       return null;
     }
 
     final downloadedVideo = await YoutubeController.inst.downloadYoutubeVideo(
-      canStartDownloading: () => settings.enableVideoPlayback.value,
+      canStartDownloading: () => settings.enableVideoPlayback.value && isSessionCurrent(),
       id: id,
       stream: streamToUse,
       creationDate: mainStreams?.info?.uploadDate.date ?? mainStreams?.info?.publishDate.date,
       onAvailableQualities: (availableStreams) {},
       onChoosingQuality: (choosenStream) {
-        if (_canExecuteForCurrentTrackOnly(initialTrack)) {
+        if (isSessionCurrent() && _canExecuteForCurrentTrackOnly(initialTrack)) {
+          currentVideoConfig.currentDownloadingStream.value = choosenStream;
           currentVideo.value = NamidaVideo(
             path: '',
             ytID: id,
@@ -595,11 +682,8 @@ class VideoController {
         _saveCachedVideos(ytId);
       }
     }
-    if (_canExecuteForCurrentTrackOnly(initialTrack)) {
-      currentVideoConfig.currentDownloadedBytes.value = null;
-      _downloadTimerCancel();
-    }
-    return downloadedVideo;
+    onDownloadEnd();
+    return isSessionCurrent() ? downloadedVideo : null;
   }
 
   List<String> _getPossibleVideosPathsFromAudioFile(String path) {
@@ -1031,6 +1115,8 @@ class CurrentVideoConfig {
   final isLoadingCurrentYTStreams = false.obs;
   final currentDownloadedBytes = Rxn<int>();
 
+  final currentDownloadingStream = Rxn<VideoStream>();
+
   /// Indicates that [updateCurrentVideo] didn't find any matching video.
   final isNoVideosAvailable = false.obs;
   final videoBlockedByType = Rxn<VideoFetchBlockedBy>();
@@ -1041,6 +1127,7 @@ class CurrentVideoConfig {
     currentYTStreams.value = other.currentYTStreams.value;
     isLoadingCurrentYTStreams.value = other.isLoadingCurrentYTStreams.value;
     currentDownloadedBytes.value = other.currentDownloadedBytes.value;
+    currentDownloadingStream.value = other.currentDownloadingStream.value;
     isNoVideosAvailable.value = other.isNoVideosAvailable.value;
     videoBlockedByType.value = other.videoBlockedByType.value;
   }
@@ -1051,6 +1138,7 @@ class CurrentVideoConfig {
     currentYTStreams.value = null;
     isLoadingCurrentYTStreams.value = false;
     currentDownloadedBytes.value = null;
+    currentDownloadingStream.value = null;
     isNoVideosAvailable.value = false;
     videoBlockedByType.value = null;
   }
