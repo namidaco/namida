@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:isolate';
-import 'dart:typed_data' show Uint32List;
+import 'dart:typed_data' show Uint32List, Uint64List;
 
 import 'package:history_manager/history_manager.dart';
 import 'package:lrc/lrc.dart';
@@ -15,9 +15,8 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
+// deep performance optimizations by claude, wrote some scary masking and bits shifting thingys
 class TracksSearchWrapper {
-  static final _matcher = _StringMatcher();
-
   final bool cleanup;
   final List<_CustomTrackExtended> _tracksExtended;
   final String Function(String) textCleanedForSearch;
@@ -195,7 +194,7 @@ class TracksSearchWrapper {
                     year.toString(),
                     textCleanedForSearch,
                     textCleanedMinorForSearch,
-                  ).joinedCleaned,
+                  ).cleaned.text,
                 ),
           lyrics: !slyrics
               ? null
@@ -260,9 +259,7 @@ class TracksSearchWrapper {
         }
       }
     }
-    return _PropertySimple._(
-      joined: lyricsBuffer.toString(),
-    );
+    return _PropertySimple.orNull(lyricsBuffer.toString());
   }
 
   static _Property _splitTextCleanedAndCleanedMinor(
@@ -271,13 +268,44 @@ class TracksSearchWrapper {
     String Function(String)? textCleanedMinorForSearch, {
     bool tryCutBeforeBrackets = false,
   }) {
-    return _mapListCleanedAndCleanedMinor(
-      text.split(' '),
-      textCleanedForSearch,
-      textCleanedMinorForSearch,
-      text: text,
-      tryCutBeforeBrackets: tryCutBeforeBrackets,
+    final joinedCleaned = textCleanedForSearch(text);
+    final joinedCleanedMinor = textCleanedMinorForSearch?.call(text);
+
+    final cleaned = _MatchText.splitJoined(joinedCleaned);
+    final cleanedMinor = joinedCleanedMinor == null
+        ? null
+        : joinedCleanedMinor == joinedCleaned
+        ? cleaned // -- cleanup changed nothing, share the same instance
+        : _MatchText.splitJoined(joinedCleanedMinor);
+
+    String? joinedCutCleaned;
+    String? joinedCutCleanedMinor;
+    if (tryCutBeforeBrackets) {
+      final cutAtIndex = _indexOfFirstBracketPart(text);
+      if (cutAtIndex != null) {
+        joinedCutCleaned = cleaned.parts.take(cutAtIndex).join(' ');
+        joinedCutCleanedMinor = cleanedMinor?.parts.take(cutAtIndex).join(' ');
+      }
+    }
+
+    return _Property._(
+      cleaned: cleaned,
+      cleanedMinor: cleanedMinor,
+      joinedCutCleaned: joinedCutCleaned,
+      joinedCutCleanedMinor: joinedCutCleanedMinor,
     );
+  }
+
+  /// index of the first part starting with a bracket, ignoring the first (0-1) chars.
+  static int? _indexOfFirstBracketPart(String text) {
+    int index = 0;
+    int charOffset = 0;
+    for (final item in text.split(' ')) {
+      if (charOffset > 1 && (item.startsWith('(') || item.startsWith('['))) return index;
+      index++;
+      charOffset += item.length;
+    }
+    return null;
   }
 
   static _Property? _mapListCleanedAndCleanedMinorOrNull(
@@ -286,82 +314,41 @@ class TracksSearchWrapper {
     String Function(String)? textCleanedMinorForSearch,
   ) {
     if (splitted == null) return null;
-    return _mapListCleanedAndCleanedMinor(
-      splitted,
-      textCleanedForSearch,
-      textCleanedMinorForSearch,
-      text: null,
-    );
+    return _mapListCleanedAndCleanedMinor(splitted, textCleanedForSearch, textCleanedMinorForSearch);
   }
 
   static _Property _mapListCleanedAndCleanedMinor(
     List<String> splitted,
     String Function(String) textCleanedForSearch,
-    String Function(String)? textCleanedMinorForSearch, {
-    String? text,
-    bool tryCutBeforeBrackets = false,
-  }) {
+    String Function(String)? textCleanedMinorForSearch,
+  ) {
     final cleanedParts = <String>[];
-    final cleanedMinorParts = <String>[];
+    final cleanedMinorParts = textCleanedMinorForSearch == null ? null : <String>[];
+    bool identicalToMinor = true;
 
-    int? cleanedCutAtIndex;
-    int? cleanedMinorCutAtIndex;
-
-    int index = 0;
-    int charOffset = 0;
     for (final item in splitted) {
-      var cleaned = textCleanedForSearch(item);
-      if (cleaned.isNotEmpty) {
-        cleanedParts.add(cleaned);
+      final cleaned = textCleanedForSearch(item);
+      if (cleaned.isNotEmpty) cleanedParts.add(cleaned);
+
+      if (cleanedMinorParts != null) {
+        final cleanedMinor = textCleanedMinorForSearch!(item);
+        if (cleanedMinor.isNotEmpty) cleanedMinorParts.add(cleanedMinor);
+        if (identicalToMinor && cleanedMinor != cleaned) identicalToMinor = false;
       }
-
-      var cleanedMinor = textCleanedMinorForSearch?.call(item);
-      if (cleanedMinor != null) {
-        if (cleanedMinor.isNotEmpty) {
-          cleanedMinorParts.add(cleanedMinor);
-        }
-      }
-
-      if (tryCutBeforeBrackets && cleanedCutAtIndex == null /* && cleanedMinorCutAtIndex == null */ ) {
-        // ignore first (0-1) chars
-        if (charOffset > 1) {
-          if (item.startsWith('(') || item.startsWith('[')) {
-            cleanedCutAtIndex = index;
-            cleanedMinorCutAtIndex = index;
-          }
-        }
-      }
-
-      index++;
-      charOffset += item.length;
     }
 
-    String joinedCleaned;
-    String joinedCleanedMinor;
-    if (text != null) {
-      joinedCleaned = textCleanedForSearch(text);
-      joinedCleanedMinor = textCleanedMinorForSearch?.call(text) ?? '';
-    } else {
-      joinedCleaned = cleanedParts.join(' ');
-      joinedCleanedMinor = cleanedMinorParts.join(' ');
-    }
-
-    String? joinedCutCleaned;
-    String? joinedCutCleanedMinor;
-    if (cleanedCutAtIndex != null) {
-      joinedCutCleaned = cleanedParts.take(cleanedCutAtIndex).join(' ');
-    }
-    if (cleanedMinorCutAtIndex != null) {
-      joinedCutCleanedMinor = cleanedMinorParts.take(cleanedMinorCutAtIndex).join(' ');
-    }
+    final cleaned = _MatchText(cleanedParts.join(' '), cleanedParts);
+    final cleanedMinor = cleanedMinorParts == null
+        ? null
+        : identicalToMinor
+        ? cleaned
+        : _MatchText(cleanedMinorParts.join(' '), cleanedMinorParts);
 
     return _Property._(
-      splitsCleaned: cleanedParts,
-      splitsCleanedMinor: cleanedMinorParts,
-      joinedCleaned: joinedCleaned,
-      joinedCleanedMinor: joinedCleanedMinor,
-      joinedCutCleaned: joinedCutCleaned,
-      joinedCutCleanedMinor: joinedCutCleanedMinor,
+      cleaned: cleaned,
+      cleanedMinor: cleanedMinor,
+      joinedCutCleaned: null,
+      joinedCutCleanedMinor: null,
     );
   }
 
@@ -384,19 +371,12 @@ class TracksSearchWrapper {
   }
 
   void _filter(String text, void Function(_CustomTrackExtended trExt) onMatch) {
-    text = text.trimAll();
-    final lctextCleaned = textCleanedForSearch(text);
-    final lctextCleanedMinor = textCleanedMinorForSearch == null ? null : textCleanedMinorForSearch!(text);
-    final lctextProperty = _splitTextCleanedAndCleanedMinor(text, textCleanedForSearch, textCleanedMinorForSearch);
-    final lctextSplitCleaned = lctextProperty.splitsCleaned;
-    final lctextSplitCleanedMinor = lctextProperty.splitsCleanedMinor;
+    final queryProperty = _splitTextCleanedAndCleanedMinor(text.trimAll(), textCleanedForSearch, textCleanedMinorForSearch);
 
     final calculator = _ScoreCalculator(
-      matcher: _matcher,
-      lctextCleaned: lctextCleaned,
-      lctextCleanedMinor: lctextCleanedMinor,
-      lctextSplitCleaned: lctextSplitCleaned,
-      lctextSplitCleanedMinor: lctextSplitCleanedMinor,
+      matcher: const _StringMatcher(),
+      query: queryProperty.cleaned,
+      queryMinor: queryProperty.cleanedMinor,
     );
 
     final scored = <int, List<_CustomTrackExtended>>{};
@@ -470,19 +450,56 @@ class _CustomTrackExtended {
   });
 }
 
+/// A text alongside everything needed to match against it, precomputed once.
+///
+/// [mask] & [partsMasks] are character-presence bitsets, they allow rejecting
+/// impossible substring matches without touching the strings themselves.
+///
+/// by claude
+class _MatchText {
+  final String text;
+  final int length;
+  final int mask;
+  final List<String> parts;
+  final Uint32List partsLengths;
+  final Uint32List partsMasks;
+
+  _MatchText(this.text, this.parts) : length = text.length, mask = charsMaskOf(text), partsLengths = Uint32List(parts.length), partsMasks = Uint32List(parts.length) {
+    for (int i = 0; i < parts.length; i++) {
+      final part = parts[i];
+      partsLengths[i] = part.length;
+      partsMasks[i] = charsMaskOf(part);
+    }
+  }
+
+  factory _MatchText.splitJoined(String joined) {
+    final parts = <String>[];
+    for (final part in joined.split(' ')) {
+      if (part.isNotEmpty) parts.add(part);
+    }
+    return _MatchText(joined, parts);
+  }
+
+  static int charsMaskOf(String text) {
+    int mask = 0;
+    for (int i = 0; i < text.length; i++) {
+      mask |= 1 << (text.codeUnitAt(i) & 31);
+    }
+    return mask;
+  }
+}
+
 class _Property {
-  final List<String> splitsCleaned;
-  final List<String>? splitsCleanedMinor;
-  final String joinedCleaned;
-  final String? joinedCleanedMinor;
+  final _MatchText cleaned;
+
+  /// null when cleanup is disabled, and identical to [cleaned] when cleanup changed nothing.
+  final _MatchText? cleanedMinor;
   final String? joinedCutCleaned;
   final String? joinedCutCleanedMinor;
 
   const _Property._({
-    required this.splitsCleaned,
-    required this.splitsCleanedMinor,
-    required this.joinedCleaned,
-    required this.joinedCleanedMinor,
+    required this.cleaned,
+    required this.cleanedMinor,
     required this.joinedCutCleaned,
     required this.joinedCutCleanedMinor,
   });
@@ -496,33 +513,36 @@ class _PropertySimple {
   });
 
   static _PropertySimple? orNull(String? joined) {
-    if (joined == null) return null;
+    if (joined == null || joined.isEmpty) return null;
     return _PropertySimple._(joined: joined);
   }
 }
 
 class _ScoreCalculator {
   final _StringMatcher matcher;
-  final String lctextCleaned;
-  final String? lctextCleanedMinor;
-  final List<String> lctextSplitCleaned;
-  final List<String>? lctextSplitCleanedMinor;
+  final _MatchText query;
+  final _MatchText? queryMinor;
 
-  const _ScoreCalculator({
+  /// cleanup changed nothing in the query, so a property that also wasn't
+  /// changed by cleanup would be matched against the exact same text twice.
+  final bool _queryMinorIsSame;
+
+  _ScoreCalculator({
     required this.matcher,
-    required this.lctextCleaned,
-    required this.lctextCleanedMinor,
-    required this.lctextSplitCleaned,
-    required this.lctextSplitCleanedMinor,
-  });
+    required this.query,
+    required this.queryMinor,
+  }) : _queryMinorIsSame = queryMinor == null || identical(queryMinor, query);
+
+  late final _FuzzyMatcher _queryFuzzy = _FuzzyMatcher(query.text);
+  late final _FuzzyMatcher? _queryMinorFuzzy = queryMinor == null ? null : _FuzzyMatcher(queryMinor!.text);
 
   static const int maxScore = 1200;
-  static int score = 0;
+  int score = 0;
 
   void scorePropertySimple(_PropertySimple? propertyString, {int multiplier = 1}) {
     if (propertyString == null) return;
 
-    if (propertyString.joined.contains(lctextCleaned)) {
+    if (propertyString.joined.contains(query.text)) {
       score += 20 * multiplier;
     }
   }
@@ -530,17 +550,19 @@ class _ScoreCalculator {
   void scoreProperty(_Property? property, {int multiplier = 1, bool allowFuzzy = false}) {
     if (property == null) return;
 
-    if (property.joinedCleaned.isEmpty) return;
-    if (lctextCleaned.isEmpty) return;
+    final cleaned = property.cleaned;
+    if (cleaned.length == 0) return;
+    if (query.length == 0) return;
+
+    final cleanedMinor = property.cleanedMinor;
+    final queryMinorText = queryMinor?.text;
 
     // -- exact match
     // -- ex: `"still here"` == `"still here"`
-    final propertyJoinedCleaned = property.joinedCleaned;
-    final propertyJoinedCleanedMinor = property.joinedCleanedMinor;
-    if (propertyJoinedCleaned == lctextCleaned) {
+    if (cleaned.text == query.text) {
       score += 400 * multiplier;
       return;
-    } else if (propertyJoinedCleanedMinor != null && propertyJoinedCleanedMinor == lctextCleanedMinor) {
+    } else if (cleanedMinor != null && cleanedMinor.text == queryMinorText) {
       score += 400 * multiplier;
       return;
     }
@@ -551,39 +573,27 @@ class _ScoreCalculator {
     // -- so this might not be always useful, but it shines when exact matches score better than
     // -- the ones with brackets, putting it further down instead of first.
     // -- (ex: "without" makes their score similar, but "without me" gives 'false?' advantage)
-    final propertyJoinedCutCleaned = property.joinedCutCleaned;
-    final propertyJoinedCutCleanedMinor = property.joinedCutCleanedMinor;
-    if (propertyJoinedCutCleaned != null && propertyJoinedCutCleaned == lctextCleaned) {
+    final joinedCutCleaned = property.joinedCutCleaned;
+    final joinedCutCleanedMinor = property.joinedCutCleanedMinor;
+    if (joinedCutCleaned != null && joinedCutCleaned == query.text) {
       score += 400 * multiplier;
       return;
-    } else if (propertyJoinedCutCleanedMinor != null && propertyJoinedCutCleanedMinor == lctextCleanedMinor) {
+    } else if (joinedCutCleanedMinor != null && joinedCutCleanedMinor == queryMinorText) {
       score += 400 * multiplier;
       return;
     }
 
-    final propertySplitsCleaned = property.splitsCleaned;
-    final matchingPercentageCleaned = matcher.compareMatchingPercentage(
-      lctextCleaned,
-      lctextSplitCleaned,
-      propertyJoinedCleaned,
-      propertySplitsCleaned,
-      allowFuzzy: allowFuzzy,
-    );
+    final matchingPercentageCleaned = matcher.compareMatchingPercentage(query, cleaned, fuzzy: allowFuzzy ? _queryFuzzy : null);
     score += (matchingPercentageCleaned * 200).round() * multiplier;
 
     if (score > 0) return;
 
-    final propertySplitsCleanedMinor = property.splitsCleanedMinor;
-    if (lctextCleanedMinor != null && lctextSplitCleanedMinor != null && propertyJoinedCleanedMinor != null && propertySplitsCleanedMinor != null) {
-      final matchingPercentageCleanedMinor = matcher.compareMatchingPercentage(
-        lctextCleanedMinor!,
-        lctextSplitCleanedMinor!,
-        propertyJoinedCleanedMinor,
-        propertySplitsCleanedMinor,
-        allowFuzzy: allowFuzzy,
-      );
-      score += (matchingPercentageCleanedMinor * 300).round() * multiplier;
-    }
+    if (cleanedMinor == null || queryMinor == null) return;
+    // -- both sides are untouched by cleanup, the pass above already did this exact comparison.
+    if (_queryMinorIsSame && identical(cleanedMinor, cleaned)) return;
+
+    final matchingPercentageCleanedMinor = matcher.compareMatchingPercentage(queryMinor!, cleanedMinor, fuzzy: allowFuzzy ? _queryMinorFuzzy : null);
+    score += (matchingPercentageCleanedMinor * 300).round() * multiplier;
   }
 
   bool scorePropertySimpleAndIsEnough(_PropertySimple? property, {int multiplier = 1}) {
@@ -627,138 +637,246 @@ class _StringMatcher {
 
   /// Does NOT check if [query] == [property]. this must be done manually before calling this function.
   double compareMatchingPercentage(
-    String query,
-    List<String> querySplits,
-    String property,
-    List<String> propertySplits, {
-    int roundDecimals = 1,
-    bool allowFuzzy = false,
+    _MatchText query,
+    _MatchText property, {
+    _FuzzyMatcher? fuzzy,
   }) {
-    double finalRatio = _simpleRatio(
-      query,
-      property,
-      queryMultiplier: 0.7,
-    );
+    double finalRatio = 0.0;
+
+    if (_maxSimpleRatio(query.length, property.length, 0.7, 1.0) > _kMinEffectiveRatio && _canContain(query.length, query.mask, property.length, property.mask)) {
+      finalRatio = _simpleRatio(query.text, query.length, property.text, property.length, 0.7, 1.0);
+    }
 
     if (finalRatio < 0.7) {
-      final ratioForSplits = _simpleRatioForSplits(
-        querySplits,
-        propertySplits,
-        queryMultiplier: 0.4,
-        queryMorePartsMultiplier: 0.5,
-      );
+      final ratioForSplits = _simpleRatioForSplits(query, property, _requiredRatio(finalRatio));
       if (ratioForSplits > finalRatio) finalRatio = ratioForSplits;
     }
 
-    if (allowFuzzy && finalRatio < _kMaxLevenshtienRatio) {
-      final levenshteinRatio = _levenshteinRatio(query, property) * _kMaxLevenshtienRatio;
-      if (levenshteinRatio > finalRatio) finalRatio = levenshteinRatio;
+    if (fuzzy != null && finalRatio < _kMaxLevenshtienRatio) {
+      final requiredRatio = _requiredRatio(finalRatio);
+      // -- distance is at least the length difference, so the ratio can never exceed min/max length
+      if (_maxSimpleRatio(query.length, property.length, _kMaxLevenshtienRatio, _kMaxLevenshtienRatio) > requiredRatio) {
+        final maxLen = query.length > property.length ? query.length : property.length;
+        final maxDistance = (maxLen * (1 - requiredRatio / _kMaxLevenshtienRatio)).floor();
+        final distance = fuzzy.distanceTo(property.text, property.length, maxDistance);
+        if (distance <= maxDistance) {
+          final levenshteinRatio = (1 - distance / maxLen) * _kMaxLevenshtienRatio;
+          if (levenshteinRatio > finalRatio) finalRatio = levenshteinRatio;
+        }
+      }
     }
 
-    if (roundDecimals > 0) {
-      finalRatio = finalRatio.roundDecimals(roundDecimals);
-    }
-
-    return finalRatio;
+    return finalRatio.roundDecimals(_kRoundDecimals);
   }
 
-  double _simpleRatioForSplits(
-    List<String> querySplits,
-    List<String> propertySplits, {
-    double queryMultiplier = 0.4,
-    double queryMorePartsMultiplier = 0.5,
-  }) {
-    final querySplitsLength = querySplits.length;
-    final propertySplitsLength = propertySplits.length;
+  /// anything below this rounds down to zero, so it doesn't affect the score
+  static double _requiredRatio(double finalRatio) => finalRatio > _kMinEffectiveRatio ? finalRatio : _kMinEffectiveRatio;
+
+  /// highest ratio [_simpleRatio] could possibly return for these lengths
+  static double _maxSimpleRatio(int queryLength, int propertyLength, double queryMultiplier, double propertyMultiplier) {
+    if (propertyLength < queryLength) {
+      if (queryLength == 0) return 0.0;
+      return (propertyLength / queryLength) * queryMultiplier;
+    }
+    if (propertyLength == 0) return 0.0;
+    return (queryLength / propertyLength) * propertyMultiplier;
+  }
+
+  /// whether the shorter text can be contained in the longer one, judging by their characters only.
+  static bool _canContain(int queryLength, int queryMask, int propertyLength, int propertyMask) {
+    return propertyLength < queryLength ? propertyMask & ~queryMask == 0 : queryMask & ~propertyMask == 0;
+  }
+
+  double _simpleRatioForSplits(_MatchText query, _MatchText property, double requiredRatio) {
+    final querySplitsLength = query.parts.length;
+    final propertySplitsLength = property.parts.length;
+    if (querySplitsLength == 0) return 0.0;
+
+    // -- ex: query="where go", property: "go"
+    // -- so decrease score to allow tracks with "where do we go" to appear
+    final queryMorePartsMultiplier = querySplitsLength > propertySplitsLength ? 0.5 : 1.0;
+    final requiredCombinedRatio = requiredRatio * querySplitsLength / queryMorePartsMultiplier;
+
+    final queryLengths = query.partsLengths;
+    final queryMasks = query.partsMasks;
+    final propertyLengths = property.partsLengths;
+    final propertyMasks = property.partsMasks;
+
     double combinedRatio = 0.0;
-    for (final qPart in querySplits) {
+    for (int qi = 0; qi < querySplitsLength; qi++) {
+      // -- even perfect matches for all the remaining parts wouldn't reach the required ratio
+      if (combinedRatio + (querySplitsLength - qi) <= requiredCombinedRatio) return 0.0;
+
+      final qLength = queryLengths[qi];
+      final qMask = queryMasks[qi];
+
       // -- max ratio has great advantage over combining all ratios
       // -- yes it will no longer favour shorter matches, but would
       // -- allow better sorting using other factors (ex: listens count)
       double maxRatioForQPart = 0.0;
-      for (final pPart in propertySplits) {
-        final qpRatio = _simpleRatio(qPart, pPart, queryMultiplier: queryMultiplier);
+      for (int pi = 0; pi < propertySplitsLength; pi++) {
+        final pLength = propertyLengths[pi];
+        if (_maxSimpleRatio(qLength, pLength, 0.4, 1.0) <= maxRatioForQPart) continue;
+        if (!_canContain(qLength, qMask, pLength, propertyMasks[pi])) continue;
+        final qpRatio = _simpleRatio(query.parts[qi], qLength, property.parts[pi], pLength, 0.4, 1.0);
         if (qpRatio > maxRatioForQPart) maxRatioForQPart = qpRatio;
         if (maxRatioForQPart >= 1.0) break;
       }
       combinedRatio += maxRatioForQPart;
     }
-    // -- ex: query="where go", property: "go"
-    // -- so decrease score to allow tracks with "where do we go" to appear
-    if (querySplitsLength > propertySplitsLength) combinedRatio *= queryMorePartsMultiplier;
 
-    final combinedRatioAverage = combinedRatio / querySplitsLength;
-    return combinedRatioAverage;
+    return combinedRatio * queryMorePartsMultiplier / querySplitsLength;
   }
 
   double _simpleRatio(
     String query,
-    String property, {
-    double queryMultiplier = 1.0,
-    double propertyMultiplier = 1.0,
-  }) {
-    if (property.length < query.length) {
+    int queryLength,
+    String property,
+    int propertyLength,
+    double queryMultiplier,
+    double propertyMultiplier,
+  ) {
+    if (propertyLength < queryLength) {
       final matchIndex = query.indexOf(property);
       if (matchIndex >= 0) {
-        final offsetMultiplier = 1 - (matchIndex / query.length);
-        return (property.length / query.length) * offsetMultiplier * queryMultiplier;
+        final offsetMultiplier = 1 - (matchIndex / queryLength);
+        return (propertyLength / queryLength) * offsetMultiplier * queryMultiplier;
       }
     } else {
       final matchIndex = property.indexOf(query);
       if (matchIndex >= 0) {
-        final offsetMultiplier = 1 - (matchIndex / property.length);
-        return (query.length / property.length) * offsetMultiplier * propertyMultiplier;
+        final offsetMultiplier = 1 - (matchIndex / propertyLength);
+        return (queryLength / propertyLength) * offsetMultiplier * propertyMultiplier;
       }
     }
     return 0.0;
   }
 
-  double _levenshteinRatio(String a, String b) {
-    final maxLen = a.length > b.length ? a.length : b.length;
-    if (maxLen == 0) return _kEmptyStringsCompareRatio;
-    final distance = _levenshteinDistance(a, b);
-    return 1 - distance / maxLen;
+  static const int _kRoundDecimals = 1;
+  static const double _kMaxLevenshtienRatio = 0.2;
+
+  /// lowest ratio that survives [_kRoundDecimals] rounding, minus an epsilon so it stays inclusive.
+  static const double _kMinEffectiveRatio = 0.05 - 1e-9;
+}
+
+/// Fuzzy matching of a fixed [query] against any number of properties.
+///
+/// A substitution costs `1 + `[_kSubstitutionExtraCost] which is dearer than a deletion plus an
+/// insertion, so the distance is always a pure insert/delete one, ie. `queryLength +
+/// propertyLength - 2 * lcsLength`. That lets a whole row be done in a few word operations over a
+/// bitset of the query character positions, instead of a cell per character pair.
+// by claude
+class _FuzzyMatcher {
+  final String query;
+  final int queryLength;
+
+  /// null when [query] has more characters than a single word can hold, [_levenshteinDistance] is used then.
+  final Uint64List? _asciiPositions;
+  final Map<int, int>? _otherPositions;
+  final int _queryPositionsMask;
+
+  _FuzzyMatcher._(this.query, this.queryLength, this._asciiPositions, this._otherPositions, this._queryPositionsMask);
+
+  factory _FuzzyMatcher(String query) {
+    final queryLength = query.length;
+    if (queryLength == 0 || queryLength > _kMaxBitsetLength) {
+      return _FuzzyMatcher._(query, queryLength, null, null, 0);
+    }
+
+    final asciiPositions = Uint64List(_kAsciiRange);
+    Map<int, int>? otherPositions;
+    for (int i = 0; i < queryLength; i++) {
+      final codeUnit = query.codeUnitAt(i);
+      if (codeUnit < _kAsciiRange) {
+        asciiPositions[codeUnit] |= 1 << i;
+      } else {
+        otherPositions ??= {};
+        otherPositions[codeUnit] = (otherPositions[codeUnit] ?? 0) | (1 << i);
+      }
+    }
+
+    final queryPositionsMask = queryLength >= _kMaxBitsetLength ? -1 : (1 << queryLength) - 1;
+    return _FuzzyMatcher._(query, queryLength, asciiPositions, otherPositions, queryPositionsMask);
   }
 
-  // by claude.ai
-  int _levenshteinDistance(String s1, String s2) {
-    if (s1.isEmpty) return s2.length;
-    if (s2.isEmpty) return s1.length;
+  /// Returns [maxDistance] + 1 as soon as the distance is known to exceed it.
+  int distanceTo(String property, int propertyLength, int maxDistance) {
+    final asciiPositions = _asciiPositions;
+    if (asciiPositions == null) return _levenshteinDistance(property, propertyLength, maxDistance);
 
-    final units1 = s1.codeUnits;
-    final units2 = s2.codeUnits;
-    final len2 = units2.length;
+    final otherPositions = _otherPositions;
+    int bits = -1;
+    for (int i = 0; i < propertyLength; i++) {
+      final codeUnit = property.codeUnitAt(i);
+      final positions = codeUnit < _kAsciiRange ? asciiPositions[codeUnit] : (otherPositions?[codeUnit] ?? 0);
+      final matched = bits & positions;
+      bits = (bits + matched) | (bits - matched);
+    }
 
-    var prevRow = Uint32List(len2 + 1);
-    for (var k = 0; k <= len2; k++) {
+    final lcsLength = queryLength - _popCount(bits & _queryPositionsMask);
+    return queryLength + propertyLength - 2 * lcsLength;
+  }
+
+  Uint32List _prevRow = Uint32List(_kInitialRowLength);
+  Uint32List _currRow = Uint32List(_kInitialRowLength);
+
+  int _levenshteinDistance(String property, int propertyLength, int maxDistance) {
+    if (queryLength == 0) return propertyLength;
+    if (propertyLength == 0) return queryLength;
+
+    var prevRow = _prevRow;
+    var currRow = _currRow;
+    if (prevRow.length <= propertyLength) {
+      prevRow = _prevRow = Uint32List(propertyLength + 1);
+      currRow = _currRow = Uint32List(propertyLength + 1);
+    }
+
+    for (var k = 0; k <= propertyLength; k++) {
       prevRow[k] = k;
     }
-    var currRow = Uint32List(len2 + 1);
 
-    for (var i = 0; i < units1.length; i++) {
+    for (var i = 0; i < queryLength; i++) {
       currRow[0] = i + 1;
-      final u1 = units1[i];
-      for (var j = 0; j < len2; j++) {
-        final cost = u1 == units2[j] ? 0 : 1 + _kSubstitutionExtraCost;
-        final deletion = prevRow[j + 1] + 1;
+      final u1 = query.codeUnitAt(i);
+      var rowMinimum = i + 1;
+      for (var j = 0; j < propertyLength; j++) {
+        final cost = u1 == property.codeUnitAt(j) ? 0 : 1 + _kSubstitutionExtraCost;
+        var best = prevRow[j + 1] + 1;
         final insertion = currRow[j] + 1;
-        final substitution = prevRow[j] + cost;
-
-        var best = deletion;
         if (insertion < best) best = insertion;
+        final substitution = prevRow[j] + cost;
         if (substitution < best) best = substitution;
         currRow[j + 1] = best;
+        if (best < rowMinimum) rowMinimum = best;
       }
+
+      // -- every path to the end goes through this row and costs can only add up
+      if (rowMinimum > maxDistance) break;
 
       final temp = prevRow;
       prevRow = currRow;
       currRow = temp;
+      if (i == queryLength - 1) {
+        _prevRow = prevRow;
+        _currRow = currRow;
+        return prevRow[propertyLength];
+      }
     }
 
-    return prevRow[len2];
+    _prevRow = prevRow;
+    _currRow = currRow;
+    return maxDistance + 1;
   }
 
+  static int _popCount(int bits) {
+    bits = bits - ((bits >>> 1) & 0x5555555555555555);
+    bits = (bits & 0x3333333333333333) + ((bits >>> 2) & 0x3333333333333333);
+    bits = (bits + (bits >>> 4)) & 0x0F0F0F0F0F0F0F0F;
+    return (bits * 0x0101010101010101) >>> 56;
+  }
+
+  static const int _kAsciiRange = 128;
+  static const int _kMaxBitsetLength = 64;
+  static const int _kInitialRowLength = 64;
   static const int _kSubstitutionExtraCost = 4;
-  static const double _kEmptyStringsCompareRatio = 0.0;
-  static const double _kMaxLevenshtienRatio = 0.2;
 }
