@@ -95,6 +95,11 @@ class NamidaMainActivity : FlutterActivity() {
           }
         }
 
+        "consumeSelfSentMediaCommand" -> {
+          result.success(NamidaConstants.selfSentMediaCommand)
+          NamidaConstants.selfSentMediaCommand = false
+        }
+
         "cancelToast" -> {
           cancelToast()
           result.success(true)

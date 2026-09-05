@@ -2464,6 +2464,28 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     return duration;
   }
 
+  Future<void> _waitForQueueRestore() {
+    return QueueController.inst.latestQueueRestored.timeout(const Duration(seconds: 20), onTimeout: () {});
+  }
+
+  @override
+  Future<List<MediaItem>> getChildren(String parentMediaId, [Map<String, dynamic>? options]) async {
+    await _waitForQueueRestore();
+    return super.getChildren(parentMediaId, options);
+  }
+
+  @override
+  Future<MediaItem?> getMediaItem(String mediaId) async {
+    await _waitForQueueRestore();
+    return super.getMediaItem(mediaId);
+  }
+
+  @override
+  Future<void> playFromMediaId(String mediaId, [Map<String, dynamic>? extras]) async {
+    await _waitForQueueRestore();
+    return super.playFromMediaId(mediaId, extras);
+  }
+
   @override
   Future<MediaItem> itemToMediaItem(Q item) {
     return item.execute(

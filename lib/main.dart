@@ -249,6 +249,7 @@ Future<bool> _mainAppInitialization() async {
       } else if (!shouldShowOnBoarding) {
         return ytInfoInitSyncItemsCompleter.future.whenComplete(QueueController.inst.prepareLatestQueueAndLatestPlayedForSourceAsync);
       }
+      QueueController.inst.markLatestQueueRestored();
     }
 
     YoutubeInfoController.initialize(ytInfoInitSyncItemsCompleter).catchError(logger.report);

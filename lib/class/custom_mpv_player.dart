@@ -23,6 +23,9 @@ class CustomMPVPlayer implements AVPlayer {
       if (event) {
         _processingState = ProcessingState.completed;
         _updateProcessingState();
+      } else if (_processingState == ProcessingState.completed) {
+        _processingState = _player.state.buffering ? ProcessingState.buffering : ProcessingState.ready;
+        _updateProcessingState();
       }
     });
 
@@ -209,46 +212,69 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   bool get hasVideoOptions => _videoOptions != null;
 
+  static const _durationWaitTimeout = Duration(seconds: 10);
+
   @override
   Future<Duration?> setSource<T>(ItemPrepareConfig<T, UriSource> config) async {
     _audioSource = config.source;
     if (config.keepOldVideoSource == false) _videoOptions = config.videoOptions;
 
-    final durationFuture = _player.stream.duration.firstWhere(
-      (e) => e > Duration.zero,
-      orElse: () => Duration.zero,
+    _processingState = ProcessingState.loading;
+    _updateProcessingState();
+
+    final durationCompleter = Completer<Duration?>();
+    StreamSubscription? durationSub;
+    Timer? durationTimer;
+    void completeDuration(Duration? duration) {
+      if (durationCompleter.isCompleted) return;
+      durationTimer?.cancel();
+      durationSub?.cancel();
+      durationCompleter.complete(duration);
+    }
+
+    durationSub = _player.stream.duration.listen(
+      (e) {
+        if (e > Duration.zero) completeDuration(e);
+      },
+      onError: (_) => completeDuration(null),
     );
 
-    final videoOptions = _videoOptions;
-    if (videoOptions == null) {
-      await _tryOpen(
-        mk.Media(
+    try {
+      final videoOptions = _videoOptions;
+      if (videoOptions == null) {
+        await _tryOpen(
+          mk.Media(
+            config.source.uri.toString(),
+            start: config.initialPosition,
+          ),
+        );
+      } else if (videoOptions.videoOnly) {
+        await _tryOpen(
+          mk.Media(
+            (videoOptions.source as UriSource).uri.toString(),
+            start: config.initialPosition,
+          ),
+        );
+      } else {
+        final mainMedia = mk.Media(
           config.source.uri.toString(),
           start: config.initialPosition,
-        ),
-      );
-    } else if (videoOptions.videoOnly) {
-      await _tryOpen(
-        mk.Media(
-          (videoOptions.source as UriSource).uri.toString(),
-          start: config.initialPosition,
-        ),
-      );
-    } else {
-      final mainMedia = mk.Media(
-        config.source.uri.toString(),
-        start: config.initialPosition,
-      );
+        );
 
-      await _tryOpen(mainMedia).then((_) async {
-        final videoTrack = mk.VideoTrack((videoOptions.source as UriSource).uri.toString(), null, null);
-        await _setVideoTrack(videoTrack);
-        _updateAudioTracks();
-      });
+        await _tryOpen(mainMedia).then((_) async {
+          final videoTrack = mk.VideoTrack((videoOptions.source as UriSource).uri.toString(), null, null);
+          await _setVideoTrack(videoTrack);
+          _updateAudioTracks();
+        });
+      }
+    } catch (_) {
+      completeDuration(null);
+      rethrow;
     }
 
     if (_checkIsSourceLive(config.source) || _checkIsSourceLive(config.videoOptions?.source)) {
       // -- not waiting for duration
+      completeDuration(null);
       return null;
     }
 
@@ -257,7 +283,11 @@ class CustomMPVPlayer implements AVPlayer {
       setAudioTrack(audioTrackId);
     }
 
-    return await durationFuture;
+    durationTimer = Timer(_durationWaitTimeout, () {
+      final dur = _player.state.duration;
+      completeDuration(dur > Duration.zero ? dur : null);
+    });
+    return await durationCompleter.future;
   }
 
   mk.Playable? _playableOpening;

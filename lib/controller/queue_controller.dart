@@ -10,6 +10,7 @@ import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/sync_manager/sync_manager.dart';
@@ -271,10 +272,20 @@ class QueueController {
     await File(AppPaths.LATEST_QUEUE).tryDeleting();
   }
 
+  /// media browser clients (android auto, wear, etc) can start the app on their own,
+  /// they have to wait for this before requesting anything
+  Future<void> get latestQueueRestored => _latestQueueRestoredCompleter.future;
+  final _latestQueueRestoredCompleter = Completer<void>();
+  void markLatestQueueRestored() {
+    if (!_latestQueueRestoredCompleter.isCompleted) _latestQueueRestoredCompleter.complete();
+  }
+
   Future<void> prepareLatestQueueAndLatestPlayedForSourceAsync() async {
     try {
       await _prepareLatestQueueAsync();
     } catch (_) {}
+
+    markLatestQueueRestored();
 
     unawaited(latestPlayedForSourceManager.prepareAll());
   }
@@ -287,11 +298,13 @@ class QueueController {
     int index = settings.extra.lastPlayedIndex;
     if (index > latestQueue.length - 1) index = 0;
 
+    final startPlaying = Player.inst.playWhenReady.value && await NamidaChannel.inst.consumeSelfSentMediaCommand();
+
     Player.inst.playOrPause(
       index,
       latestQueue,
       QueueSource.playerQueue,
-      startPlaying: Player.inst.playWhenReady.value, // false by default, unless started from home widget/quick settings
+      startPlaying: startPlaying,
       updateQueue: false,
       maximumItems: null,
     );

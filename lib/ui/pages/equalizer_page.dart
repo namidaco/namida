@@ -224,7 +224,7 @@ class _SoundControlMainSlidersColumnUpdateConfig {
         settings.equalizer.save(loudnessEnhancerEnabled: enabled);
 
         if (canApplyGlobalConfig()) {
-          loudnessEnhancer?.setEnabledUser(enabled);
+          if (loudnessEnhancer != null) Player.inst.executeWithPausedOutput(() => loudnessEnhancer.setEnabledUser(enabled));
         }
       },
       setLoudnessEnhancer: (loudnessEnhancer, val) async {
@@ -238,7 +238,7 @@ class _SoundControlMainSlidersColumnUpdateConfig {
         settings.equalizer.save(equalizerEnabled: enabled);
 
         if (canApplyGlobalConfig()) {
-          equalizer?.setEnabled(enabled).ignoreError();
+          if (equalizer != null) Player.inst.executeWithPausedOutput(() => equalizer.setEnabled(enabled));
         }
       },
       setEqualizer: (equalizer, band, entry) async {
@@ -310,7 +310,7 @@ class _SoundControlMainSlidersColumnUpdateConfig {
     },
     setLoudnessEnhancerEnabled: (loudnessEnhancer, enabled) async {
       loudnessEnhancerEnabledRx.value = enabled;
-      loudnessEnhancer?.setEnabledUser(enabled);
+      if (loudnessEnhancer != null) Player.inst.executeWithPausedOutput(() => loudnessEnhancer.setEnabledUser(enabled));
       if (saveToDb()) await Player.audioConfigs.updateProperty(item.key, (current) => current.copyWith(loudnessEnhancerEnabled: enabled));
     },
     setLoudnessEnhancer: (loudnessEnhancer, val) async {
@@ -320,7 +320,7 @@ class _SoundControlMainSlidersColumnUpdateConfig {
     },
     setEqualizerEnabled: (equalizer, enabled) async {
       equalizerEnabledRx.value = enabled;
-      equalizer?.setEnabled(enabled);
+      if (equalizer != null) Player.inst.executeWithPausedOutput(() => equalizer.setEnabled(enabled));
       if (saveToDb()) await Player.audioConfigs.updateProperty(item.key, (current) => current.copyWith(equalizerEnabled: enabled));
     },
     setEqualizer: (equalizer, band, entry) async {

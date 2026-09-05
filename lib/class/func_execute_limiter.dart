@@ -52,7 +52,7 @@ class FunctionExecuteLimiter<T> {
       _isRapidlyCallingTimer?.cancel();
       _valueCompleter?.completeIfWasnt(null);
       _valueCompleter = Completer<T?>();
-      _isRapidlyCallingTimer = Timer(const Duration(milliseconds: 800), () {
+      _isRapidlyCallingTimer = Timer(_executeAfter, () {
         fn().then((value) {
           _valueCompleter?.completeIfWasnt(value);
           if (onReExecute != null) onReExecute();

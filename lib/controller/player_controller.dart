@@ -79,6 +79,7 @@ class Player {
   AndroidEqualizerExtended? get equalizerExtended => _audioHandler.equalizerExtended;
   AndroidLoudnessEnhancerExtended? get loudnessEnhancerExtended => _audioHandler.loudnessEnhancerExtended;
   int? get androidSessionId => _audioHandler.androidSessionId;
+  Future<void> executeWithPausedOutput(Future<void> Function() fn) => _audioHandler.executeWithPausedOutput(fn);
   Rx<double> get replayGainLinearVolumeMultiplierRx => _audioHandler.replayGainLinearVolumeMultiplierRx;
 
   // RxBaseCore<VideoInfo?> get currentVideoInfo => _audioHandler.currentVideoInfo;

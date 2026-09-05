@@ -288,6 +288,7 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
 }
 
 fun sendMediaButtonIntent(context: Context, keyCode: Int) {
+  NamidaConstants.selfSentMediaCommand = true
   val isCreated =
     NamidaMainActivity.currentLifecycle?.currentState?.isAtLeast(Lifecycle.State.CREATED) ==
         true

@@ -69,6 +69,17 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
+  Future<bool> consumeSelfSentMediaCommand() async {
+    try {
+      final res = await _channel.invokeMethod<bool?>('consumeSelfSentMediaCommand');
+      return res ?? false;
+    } catch (_) {
+      // -- no activity (ex: service started by external command)
+      return false;
+    }
+  }
+
+  @override
   Future<bool> setMonoAudio(bool? enabled) async {
     final res = await _channel.invokeMethod<bool?>('setMonoAudio', {'enabled': enabled});
     return res ?? false;
