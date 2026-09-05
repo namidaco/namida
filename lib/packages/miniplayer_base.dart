@@ -45,6 +45,7 @@ import 'package:namida/ui/pages/equalizer_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
@@ -1372,10 +1373,25 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                                       CurrentColor.inst.miniplayerColor,
                                                     ).withOpacityExt(velpy(a: .1, b: .22, c: icp)),
                                                   ],
+
+                                          if (NamidaJellys.enabled)
+                                            Positioned.fill(
+                                              child: ClipRRect(
+                                                borderRadius: borderRadius,
+                                                child: Opacity(
+                                                  opacity: cp,
+                                                  child: NamidaJellyBackground(
+                                                    count: 4,
+                                                    opacity: 0.3,
+                                                    minHeight: 70.0,
+                                                    maxHeight: 210.0,
+                                                    reactToPlayback: true,
+                                                    enabled: cp > 0.01,
+                                                    seed: 7,
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
 
                                           /// Smol progress bar
                                           // Obx(

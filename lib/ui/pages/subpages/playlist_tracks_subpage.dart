@@ -31,6 +31,7 @@ import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/pages/subpages/most_played_subpage.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 
@@ -401,6 +402,20 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               height: isExpanded ? context.height * 0.1 : context.height * 0.3,
+              child: NamidaJellys.enabled
+                  ? ClipRect(
+                      child: Obx(
+                        (context) => Align(
+                          alignment: Alignment.bottomCenter,
+                          child: FloatingJelly(
+                            height: context.height * 0.26,
+                            tint: CurrentColor.inst.color,
+                            opacity: 0.85,
+                          ),
+                        ),
+                      ),
+                    )
+                  : null,
             ),
           ),
           if (!PlaylistController.inst.isOneOfDefaultPlaylists(widget.playlist.name))

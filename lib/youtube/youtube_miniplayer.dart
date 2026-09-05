@@ -38,6 +38,7 @@ import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -859,6 +860,17 @@ class _YTPlayerInnerPage extends StatelessWidget {
           listview: (controller) => Stack(
             key: Key("${currentId}_body_stack"),
             children: [
+              if (NamidaJellys.enabled)
+                const Positioned.fill(
+                  child: NamidaJellyBackground(
+                    count: 4,
+                    opacity: 0.25,
+                    minHeight: 100.0,
+                    maxHeight: 280.0,
+                    reactToPlayback: true,
+                    seed: 17,
+                  ),
+                ),
               SmoothCustomScrollView(
                 // key: PageStorageKey(currentId), // duplicate errors
                 physics: _canScrollQueue ? const ClampingScrollPhysicsModified() : const NeverScrollableScrollPhysics(),

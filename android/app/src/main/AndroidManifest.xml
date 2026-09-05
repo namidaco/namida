@@ -98,6 +98,21 @@
 
         <activity-alias
             android:enabled="false"
+            android:name="com.msob7y.namida.JellydaIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_jellyda"
+            android:roundIcon="@mipmap/ic_launcher_jellyda"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:enabled="false"
             android:name="com.msob7y.namida.SpaceIcon"
             android:targetActivity=".NamidaMainActivity"
             android:icon="@mipmap/ic_launcher_space"

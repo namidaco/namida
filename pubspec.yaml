@@ -258,6 +258,7 @@ flutter:
     - assets/icons/media_ico/
     - assets/icons/media_ico/dark/
     - assets/logos/
+    - assets/jellyda/
     - assets/
   fonts:
     - family: broken

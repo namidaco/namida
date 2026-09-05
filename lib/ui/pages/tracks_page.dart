@@ -4,6 +4,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -21,6 +22,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
@@ -143,7 +145,11 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                 rx: SearchSortController.inst.trackSearchList,
                 builder: (context, trackSearchList) => trackSearchList.isEmpty
                     ? Center(
-                        child: kEnableFancyAnimations
+                        child: NamidaJellys.enabled
+                            ? _JellyTracksEmptyState(
+                                onAddFolder: () => _onAddFolderTap(context),
+                              )
+                            : kEnableFancyAnimations
                             ? Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -188,6 +194,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                         scrollController: libraryTab.scrollController,
                         scrollStep: Dimensions.inst.trackTileItemExtent,
                         header: listHeader,
+                        footer: NamidaJellys.enabled ? const JellyListEnd() : null,
                         itemBuilder: (context, i) {
                           final track = trackSearchList[i];
                           return AnimatingTile(
@@ -216,6 +223,51 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
           ),
         ),
       ),
+    );
+  }
+}
+
+class _JellyTracksEmptyState extends StatelessWidget {
+  final VoidCallback onAddFolder;
+
+  const _JellyTracksEmptyState({required this.onAddFolder});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final tint = CurrentColor.inst.color;
+        // if (Indexer.inst.isIndexing.valueR) {
+        //   final total = Indexer.inst.allAudioFiles.valueR.length;
+        //   final done = Indexer.inst.tracksInfoList.valueR.length;
+        //   return JellyLoader(
+        //     percentage: total <= 0 ? null : done / total,
+        //     tint: tint,
+        //   );
+        // }
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            FloatingJelly(
+              height: 170.0,
+              tint: tint,
+              opacity: 0.9,
+            ),
+            const SizedBox(height: 8.0),
+            Text(
+              lang.noTracksFound,
+              style: context.textTheme.displayLarge,
+            ),
+            const SizedBox(height: 12.0),
+            NamidaButton(
+              borderRadius: 8.0,
+              icon: Broken.folder_add,
+              text: lang.addFolder,
+              onTap: onAddFolder,
+            ),
+          ],
+        );
+      },
     );
   }
 }

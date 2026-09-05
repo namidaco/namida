@@ -1,5 +1,6 @@
 // ignore_for_file: implementation_imports, depend_on_referenced_packages
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +29,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/ui/widgets/stats.dart';
@@ -63,6 +65,7 @@ class AboutPage extends StatefulWidget with NamidaRouteWidget {
 
 class _AboutPageState extends State<AboutPage> {
   late final _loadingChangelog = false.obso;
+  final _scrollOffset = ValueNotifier<double>(0.0);
 
   @override
   void initState() {
@@ -74,6 +77,7 @@ class _AboutPageState extends State<AboutPage> {
   @override
   void dispose() {
     _loadingChangelog.close();
+    _scrollOffset.dispose();
     super.dispose();
   }
 
@@ -106,336 +110,372 @@ class _AboutPageState extends State<AboutPage> {
     );
 
     final double horizontalMargin = Dimensions.inst.getSettingsHorizontalMargin(context);
-    return BackgroundWrapper(
-      child: ObxO(
-        rx: VersionController.inst.latestVersion,
-        builder: (context, latestVersion) => SuperSmoothListView(
-          padding: kBottomPaddingInsets.add(EdgeInsets.symmetric(horizontal: horizontalMargin)),
-          children: [
-            SizedBox(height: topPadding),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24.0),
-              decoration: BoxDecoration(
-                color: theme.cardColor.withOpacityExt(0.6),
-                borderRadius: BorderRadius.circular(20.0.multipliedRadius),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.topCenter,
-                children: [
-                  Column(
-                    children: [
-                      SizedBox(height: topPadding + textTopPadding),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: NamidaAboutListTile(
-                          trailing: const Icon(Broken.code_circle),
-                          leading: Container(
-                            clipBehavior: Clip.antiAlias,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color.fromRGBO(25, 25, 25, 0.8),
-                            ),
-                            child: Image.network(
-                              'https://avatars.githubusercontent.com/u/85245079',
-                              width: 48.0,
-                              height: 48.0,
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress?.cumulativeBytesLoaded == loadingProgress?.expectedTotalBytes) {
-                                  return child;
-                                }
-                                return fallbackAvatar;
-                              },
-                              errorBuilder: (context, error, stackTrace) => fallbackAvatar,
-                            ),
-                          ),
-                          title: lang.developer,
-                          subtitle: 'MSOB7YY',
-                          link: 'https://github.com/MSOB7YY',
-                        ),
-                      ),
-                    ],
-                  ),
-                  Positioned(
-                    top: -topPadding,
-                    child: Column(
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.all(4.0),
-                          width: imageSize,
-                          height: imageSize,
-                          clipBehavior: Clip.none,
+    final jellyBanner = NamidaJellys.enabled
+        ? _EnabledAppIconBuilder(
+            builder: (enabledIcon) => enabledIcon.isJelly
+                ? _JellydaBanner(
+                    scrollOffset: _scrollOffset,
+                    height: context.height * 0.42,
+                  )
+                : const SizedBox(),
+          )
+        : null;
+    final aboutPage = ObxO(
+      rx: VersionController.inst.latestVersion,
+      builder: (context, latestVersion) => SuperSmoothListView(
+        padding: kBottomPaddingInsets.add(EdgeInsets.symmetric(horizontal: horizontalMargin)),
+        children: [
+          SizedBox(height: topPadding),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24.0),
+            decoration: BoxDecoration(
+              color: theme.cardColor.withOpacityExt(0.6),
+              borderRadius: BorderRadius.circular(20.0.multipliedRadius),
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.topCenter,
+              children: [
+                Column(
+                  children: [
+                    SizedBox(height: topPadding + textTopPadding),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: NamidaAboutListTile(
+                        trailing: const Icon(Broken.code_circle),
+                        leading: Container(
+                          clipBehavior: Clip.antiAlias,
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Color.fromRGBO(25, 25, 25, 0.1),
+                            color: Color.fromRGBO(25, 25, 25, 0.8),
                           ),
-                          child: _KuruKuruActivator(
-                            child: FutureBuilder(
-                              future: NamidaChannel.inst.getEnabledAppIcon(),
-                              builder: (context, snapshot) {
-                                final enabledIcon = snapshot.data ?? NamidaChannel.defaultAppIconForPlatform;
-                                return Image.asset(
-                                  enabledIcon.assetPath,
-                                );
-                              },
-                            ),
+                          child: Image.network(
+                            'https://avatars.githubusercontent.com/u/85245079',
+                            width: 48.0,
+                            height: 48.0,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress?.cumulativeBytesLoaded == loadingProgress?.expectedTotalBytes) {
+                                return child;
+                              }
+                              return fallbackAvatar;
+                            },
+                            errorBuilder: (context, error, stackTrace) => fallbackAvatar,
                           ),
                         ),
-                        const SizedBox(height: 4.0),
-                        Text(
-                          "Namida",
-                          style: textTheme.displayLarge,
-                        ),
-                        if (currentVersionText != '')
-                          latestVersion?.isUpdate() ?? false
-                              ? Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      currentVersionText,
-                                      style: textTheme.displaySmall,
-                                    ),
-                                    const SizedBox(width: 4.0),
-                                    const Icon(
-                                      Broken.arrow_up_1,
-                                      size: 8.0,
-                                    ),
-                                  ],
-                                )
-                              : Text(
-                                  currentVersionText,
-                                  style: textTheme.displaySmall,
-                                ),
-                        if (buildDateDiff != '')
-                          Text(
-                            buildDateDiff,
-                            style: textTheme.displaySmall,
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SettingsCard(
-              icon: Broken.link_circle,
-              title: lang.socials,
-              subtitle: lang.socialsSubtitle,
-              child: Column(
-                children: [
-                  const NamidaAboutListTile(
-                    icon: Broken.send_2,
-                    title: 'Telegram',
-                    link: 'https://t.me/namida_official',
-                  ),
-                  NamidaAboutListTile(
-                    leading: Image.asset(
-                      'assets/icons/discord.png',
-                      color: context.defaultIconColor(),
-                      height: 24.0,
-                    ),
-                    title: 'Discord',
-                    link: 'https://discord.gg/WeY7DTVChT',
-                  ),
-                ],
-              ),
-            ),
-            const StatsSection(),
-            SettingsCard(
-              icon: Broken.hierarchy,
-              title: lang.development,
-              subtitle: null,
-              child: Column(
-                children: [
-                  NamidaAboutListTile(
-                    icon: Broken.message_question,
-                    title: lang.guide,
-                    subtitle: lang.learnMore,
-                    link: AppDocsLinks.BASE.link,
-                  ),
-                  NamidaAboutListTile(
-                    icon: Broken.message_programming,
-                    title: 'GitHub',
-                    subtitle: lang.seeProjectCodeOnSite(site: 'Github'),
-                    link: AppSocial.GITHUB,
-                  ),
-                  NamidaAboutListTile(
-                    // icon: Broken.bezier,
-                    icon: Broken.command_square,
-                    title: '${lang.issues}/${lang.features}',
-                    subtitle: lang.suggestionSubtitle(site: 'Github'),
-                    link: AppSocial.GITHUB_ISSUES,
-                  ),
-                  ObxO(
-                    rx: _loadingChangelog,
-                    builder: (context, isLoading) => NamidaAboutListTile(
-                      icon: Broken.activity,
-                      title: lang.changelog,
-                      subtitle: lang.changelogSubtitle,
-                      trailing: isLoading ? const LoadingIndicator() : null,
-                      onTap: () async {
-                        _loadingChangelog.value = true;
-                        final stringy = await Rhttp.get('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md');
-                        _loadingChangelog.value = false;
-                        NamidaNavigator.inst.showSheet(
-                          showDragHandle: true,
-                          isScrollControlled: true,
-                          heightPercentage: 0.6,
-                          builder: (context, bottomPadding, maxWidth, maxHeight) => Markdown(
-                            data: stringy.body,
-                            selectable: true,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  NamidaAboutListTile(
-                    icon: Broken.language_circle,
-                    title: lang.addLanguage,
-                    subtitle: lang.addLanguageSubtitle,
-                    link: AppSocial.TRANSLATION_REPO,
-                  ),
-                ],
-              ),
-            ),
-            SettingsCard(
-              icon: Broken.heart_circle,
-              title: lang.donate,
-              subtitle: lang.donateSubtitle,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => NamidaLinkUtils.openLink(AppSocial.DONATE_KOFI),
-                        child: CustomAnimatedSwitcher(
-                          duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                          child: context.isDarkMode
-                              ? Image.asset(
-                                  'assets/logos/donate_kofi_dark.png',
-                                  height: 48.0,
-                                  key: const Key('donate_kofi_dark'),
-                                )
-                              : Image.asset(
-                                  'assets/logos/donate_kofi_light.png',
-                                  height: 48.0,
-                                  key: const Key('donate_kofi_light'),
-                                ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 8.0),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE),
-                        child: Image.asset(
-                          'assets/logos/donate_bmc.webp',
-                          height: 48.0,
-                        ),
+                        title: lang.developer,
+                        subtitle: 'MSOB7YY',
+                        link: 'https://github.com/MSOB7YY',
                       ),
                     ),
                   ],
                 ),
-              ),
+                Positioned(
+                  top: -topPadding,
+                  child: Column(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.all(4.0),
+                        width: imageSize,
+                        height: imageSize,
+                        clipBehavior: Clip.none,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color.fromRGBO(25, 25, 25, 0.1),
+                        ),
+                        child: _KuruKuruActivator(
+                          child: _EnabledAppIconBuilder(
+                            builder: (enabledIcon) {
+                              return GestureDetector(
+                                onLongPress: NamidaJellys.enabled && enabledIcon.isJelly ? JellydaGallery.show : null,
+                                child: Image.asset(
+                                  enabledIcon.assetPath,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4.0),
+                      Text(
+                        "Namida",
+                        style: textTheme.displayLarge,
+                      ),
+                      if (currentVersionText != '')
+                        latestVersion?.isUpdate() ?? false
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    currentVersionText,
+                                    style: textTheme.displaySmall,
+                                  ),
+                                  const SizedBox(width: 4.0),
+                                  const Icon(
+                                    Broken.arrow_up_1,
+                                    size: 8.0,
+                                  ),
+                                ],
+                              )
+                            : Text(
+                                currentVersionText,
+                                style: textTheme.displaySmall,
+                              ),
+                      if (buildDateDiff != '')
+                        Text(
+                          buildDateDiff,
+                          style: textTheme.displaySmall,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            SettingsCard(
-              title: lang.others,
-              icon: Broken.record_circle,
-              subtitle: null,
-              child: Column(
-                children: [
-                  if (ShortcutsController.instance != null)
-                    NamidaAboutListTile(
-                      icon: Broken.flash_1,
-                      title: lang.shortcuts,
-                      onTap: () => AboutPage.showShortcutsDialog(context),
-                    ),
-                  NamidaAboutListTile(
-                    icon: Broken.archive_book,
-                    title: lang.license,
-                    subtitle: lang.licenseSubtitle,
-                    onTap: () {
-                      showLicensePage(
-                        context: context,
-                        useRootNavigator: true,
-                        applicationVersion: currentVersionText,
+          ),
+          SettingsCard(
+            icon: Broken.link_circle,
+            title: lang.socials,
+            subtitle: lang.socialsSubtitle,
+            child: Column(
+              children: [
+                const NamidaAboutListTile(
+                  icon: Broken.send_2,
+                  title: 'Telegram',
+                  link: 'https://t.me/namida_official',
+                ),
+                NamidaAboutListTile(
+                  leading: Image.asset(
+                    'assets/icons/discord.png',
+                    color: context.defaultIconColor(),
+                    height: 24.0,
+                  ),
+                  title: 'Discord',
+                  link: 'https://discord.gg/WeY7DTVChT',
+                ),
+              ],
+            ),
+          ),
+          const StatsSection(),
+          SettingsCard(
+            icon: Broken.hierarchy,
+            title: lang.development,
+            subtitle: null,
+            child: Column(
+              children: [
+                NamidaAboutListTile(
+                  icon: Broken.message_question,
+                  title: lang.guide,
+                  subtitle: lang.learnMore,
+                  link: AppDocsLinks.BASE.link,
+                ),
+                NamidaAboutListTile(
+                  icon: Broken.message_programming,
+                  title: 'GitHub',
+                  subtitle: lang.seeProjectCodeOnSite(site: 'Github'),
+                  link: AppSocial.GITHUB,
+                ),
+                NamidaAboutListTile(
+                  // icon: Broken.bezier,
+                  icon: Broken.command_square,
+                  title: '${lang.issues}/${lang.features}',
+                  subtitle: lang.suggestionSubtitle(site: 'Github'),
+                  link: AppSocial.GITHUB_ISSUES,
+                ),
+                ObxO(
+                  rx: _loadingChangelog,
+                  builder: (context, isLoading) => NamidaAboutListTile(
+                    icon: Broken.activity,
+                    title: lang.changelog,
+                    subtitle: lang.changelogSubtitle,
+                    trailing: isLoading ? const LoadingIndicator() : null,
+                    onTap: () async {
+                      _loadingChangelog.value = true;
+                      final stringy = await Rhttp.get('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md');
+                      _loadingChangelog.value = false;
+                      NamidaNavigator.inst.showSheet(
+                        showDragHandle: true,
+                        isScrollControlled: true,
+                        heightPercentage: 0.6,
+                        builder: (context, bottomPadding, maxWidth, maxHeight) => Markdown(
+                          data: stringy.body,
+                          selectable: true,
+                        ),
                       );
                     },
                   ),
-                  NamidaAboutListTile(
-                    icon: Broken.cpu,
-                    title: lang.appVersion,
-                    subtitle: currentVersionText,
-                    link: isBeta ? AppSocial.GITHUB_RELEASES_BETA : AppSocial.GITHUB_RELEASES,
-                    trailing: NamidaInkWell(
-                      borderRadius: 8.0,
-                      bgColor: theme.cardColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: latestVersion == null
-                            ? [
-                                Text(
-                                  '?',
-                                  style: textTheme.displaySmall,
-                                ),
-                              ]
-                            : latestVersion.isUpdate() ?? false
-                            ? [
-                                Text(
-                                  latestVersion.prettyVersion,
-                                  style: textTheme.displaySmall,
-                                ),
-                                const SizedBox(width: 4.0),
-                                const Icon(
-                                  Broken.arrow_up_1,
-                                  size: 14.0,
-                                ),
-                              ]
-                            : [
-                                const Icon(
-                                  Broken.tick_circle,
-                                  size: 14.0,
-                                ),
-                              ],
+                ),
+                NamidaAboutListTile(
+                  icon: Broken.language_circle,
+                  title: lang.addLanguage,
+                  subtitle: lang.addLanguageSubtitle,
+                  link: AppSocial.TRANSLATION_REPO,
+                ),
+              ],
+            ),
+          ),
+          SettingsCard(
+            icon: Broken.heart_circle,
+            title: lang.donate,
+            subtitle: lang.donateSubtitle,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => NamidaLinkUtils.openLink(AppSocial.DONATE_KOFI),
+                      child: CustomAnimatedSwitcher(
+                        duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                        child: context.isDarkMode
+                            ? Image.asset(
+                                'assets/logos/donate_kofi_dark.png',
+                                height: 48.0,
+                                key: const Key('donate_kofi_dark'),
+                              )
+                            : Image.asset(
+                                'assets/logos/donate_kofi_light.png',
+                                height: 48.0,
+                                key: const Key('donate_kofi_light'),
+                              ),
                       ),
                     ),
                   ),
-                  NamidaAboutListTile(
-                    icon: Broken.clipboard_text,
-                    title: lang.shareLogs,
-                    trailing: NamidaIconButton(
-                      iconColor: context.defaultIconColor(),
-                      icon: Broken.direct_send,
-                      tooltip: () => AppSocial.EMAIL,
-                      onPressed: () async {
-                        final attachments = await AppPaths.getAllExistingLogsAndSettingsAsZip();
-                        try {
-                          final mailOptions = MailOptions(
-                            body: 'pls look at this report im beggin u pls solve my issue pls i wa-',
-                            subject: 'Namida Logs Report',
-                            recipients: [AppSocial.EMAIL],
-                            attachments: attachments,
-                          );
-                          await FlutterMailer.send(mailOptions);
-                        } on MissingPluginException catch (_) {
-                          NamidaUtils.shareFiles(attachments);
-                        }
-                      },
+                  SizedBox(width: 8.0),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE),
+                      child: Image.asset(
+                        'assets/logos/donate_bmc.webp',
+                        height: 48.0,
+                      ),
                     ),
-                    onTap: () async {
-                      final filePaths = await AppPaths.getAllExistingLogsAndSettingsAsZip();
-                      NamidaUtils.shareFiles(filePaths);
-                    },
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+          SettingsCard(
+            title: lang.others,
+            icon: Broken.record_circle,
+            subtitle: null,
+            child: Column(
+              children: [
+                if (ShortcutsController.instance != null)
+                  NamidaAboutListTile(
+                    icon: Broken.flash_1,
+                    title: lang.shortcuts,
+                    onTap: () => AboutPage.showShortcutsDialog(context),
+                  ),
+                NamidaAboutListTile(
+                  icon: Broken.archive_book,
+                  title: lang.license,
+                  subtitle: lang.licenseSubtitle,
+                  onTap: () {
+                    showLicensePage(
+                      context: context,
+                      useRootNavigator: true,
+                      applicationVersion: currentVersionText,
+                    );
+                  },
+                ),
+                NamidaAboutListTile(
+                  icon: Broken.cpu,
+                  title: lang.appVersion,
+                  subtitle: currentVersionText,
+                  link: isBeta ? AppSocial.GITHUB_RELEASES_BETA : AppSocial.GITHUB_RELEASES,
+                  trailing: NamidaInkWell(
+                    borderRadius: 8.0,
+                    bgColor: theme.cardColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: latestVersion == null
+                          ? [
+                              Text(
+                                '?',
+                                style: textTheme.displaySmall,
+                              ),
+                            ]
+                          : latestVersion.isUpdate() ?? false
+                          ? [
+                              Text(
+                                latestVersion.prettyVersion,
+                                style: textTheme.displaySmall,
+                              ),
+                              const SizedBox(width: 4.0),
+                              const Icon(
+                                Broken.arrow_up_1,
+                                size: 14.0,
+                              ),
+                            ]
+                          : [
+                              const Icon(
+                                Broken.tick_circle,
+                                size: 14.0,
+                              ),
+                            ],
+                    ),
+                  ),
+                ),
+                NamidaAboutListTile(
+                  icon: Broken.clipboard_text,
+                  title: lang.shareLogs,
+                  trailing: NamidaIconButton(
+                    iconColor: context.defaultIconColor(),
+                    icon: Broken.direct_send,
+                    tooltip: () => AppSocial.EMAIL,
+                    onPressed: () async {
+                      final attachments = await AppPaths.getAllExistingLogsAndSettingsAsZip();
+                      try {
+                        final mailOptions = MailOptions(
+                          body: 'pls look at this report im beggin u pls solve my issue pls i wa-',
+                          subject: 'Namida Logs Report',
+                          recipients: [AppSocial.EMAIL],
+                          attachments: attachments,
+                        );
+                        await FlutterMailer.send(mailOptions);
+                      } on MissingPluginException catch (_) {
+                        NamidaUtils.shareFiles(attachments);
+                      }
+                    },
+                  ),
+                  onTap: () async {
+                    final filePaths = await AppPaths.getAllExistingLogsAndSettingsAsZip();
+                    NamidaUtils.shareFiles(filePaths);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
+    );
+    return BackgroundWrapper(
+      child: !NamidaJellys.enabled
+          ? aboutPage
+          : Stack(
+              children: [
+                ?jellyBanner,
+                const Positioned.fill(
+                  child: IgnorePointer(
+                    child: JellyField(
+                      count: 4,
+                      opacity: 0.3,
+                      minHeight: 90.0,
+                      maxHeight: 240.0,
+                      seed: 3,
+                    ),
+                  ),
+                ),
+                NotificationListener<ScrollUpdateNotification>(
+                  onNotification: (notification) {
+                    if (jellyBanner != null && notification.depth == 0) _scrollOffset.value = notification.metrics.pixels;
+                    return false;
+                  },
+                  child: aboutPage,
+                ),
+              ],
+            ),
     );
   }
 }
@@ -627,6 +667,22 @@ class NamidaAboutListTile extends StatelessWidget {
   }
 }
 
+class _EnabledAppIconBuilder extends StatelessWidget {
+  final Widget Function(NamidaAppIcons enabledIcon) builder;
+  const _EnabledAppIconBuilder({required this.builder});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: NamidaChannel.inst.getEnabledAppIcon(),
+      builder: (context, snapshot) {
+        final enabledIcon = snapshot.data ?? NamidaChannel.defaultAppIconForPlatform;
+        return builder(enabledIcon);
+      },
+    );
+  }
+}
+
 class _KuruKuruActivator extends StatefulWidget {
   final Widget child;
   const _KuruKuruActivator({required this.child});
@@ -744,6 +800,70 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
               turns: animation,
               child: child,
             ),
+    );
+  }
+}
+
+// by claude
+class _JellydaBanner extends StatelessWidget {
+  static const _parallaxFactor = 0.35;
+
+  final ValueListenable<double> scrollOffset;
+  final double height;
+
+  const _JellydaBanner({required this.scrollOffset, required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    final bgColor = context.theme.scaffoldBackgroundColor;
+    // -- artwork is oversized & the parallax clamped by the same amount, so its bottom edge never scrolls into view
+    final maxParallax = height * 0.5;
+    return SizedBox(
+      height: height,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            top: 0.0,
+            left: 0.0,
+            right: 0.0,
+            height: height + maxParallax,
+            child: ValueListenableBuilder<double>(
+              valueListenable: scrollOffset,
+              child: const JellyFullArt(
+                alignment: Alignment.topCenter,
+                opacity: 0.65,
+              ),
+              builder: (context, offset, child) => Transform.translate(
+                offset: Offset(0, -(offset * _parallaxFactor).clamp(0.0, maxParallax)),
+                child: child,
+              ),
+            ),
+          ),
+          // -- page background gradient over the bottom half, so the artwork dissolves into the page
+          Positioned(
+            left: 0.0,
+            right: 0.0,
+            bottom: 0.0,
+            height: height * 0.55,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    bgColor.withValues(alpha: 0.0),
+                    bgColor.withValues(alpha: 0.75),
+                    bgColor,
+                  ],
+                  stops: const [0.0, 0.6, 1.0],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

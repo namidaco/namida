@@ -14,6 +14,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/sync_manager_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
 import 'package:namida/ui/widgets/settings/backup_restore_settings.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
@@ -52,6 +53,9 @@ class SettingsPage extends StatelessWidget with NamidaRouteWidget {
             decoration: BoxDecoration(
               gradient: _bgLinearGradient(context),
             ),
+          ),
+          const Positioned.fill(
+            child: NamidaJellyBackground.forSettingsPage,
           ),
           ObxO(
             rx: settings.useSettingCollapsedTiles,
@@ -110,6 +114,9 @@ class SettingsSubPage extends StatelessWidget with NamidaRouteWidget {
             decoration: BoxDecoration(
               gradient: _bgLinearGradient(context),
             ),
+          ),
+          const Positioned.fill(
+            child: NamidaJellyBackground.forSettingsPage,
           ),
           SmoothSingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: horizontalMargin),

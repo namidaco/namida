@@ -175,6 +175,7 @@ class NamidaMainActivity : FlutterActivity() {
             "cutsie" -> LauncherIcon.CUTSIE
             "eddy" -> LauncherIcon.EDDY
             "namichin" -> LauncherIcon.NAMICHIN
+            "jellyda" -> LauncherIcon.JELLYDA
             "space" -> LauncherIcon.SPACE
             "retro" -> LauncherIcon.RETRO
             "ookami" -> LauncherIcon.OOKAMI
@@ -204,6 +205,7 @@ class NamidaMainActivity : FlutterActivity() {
             "cutsie" -> LauncherIcon.CUTSIE
             "eddy" -> LauncherIcon.EDDY
             "namichin" -> LauncherIcon.NAMICHIN
+            "jellyda" -> LauncherIcon.JELLYDA
             "space" -> LauncherIcon.SPACE
             "retro" -> LauncherIcon.RETRO
             "ookami" -> LauncherIcon.OOKAMI

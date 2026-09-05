@@ -25,6 +25,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -33,24 +34,28 @@ Color get playerStaticColor => namida.isDarkMode ? playerStaticColorDark : playe
 
 Color get playerStaticColorLight {
   final cInt = settings.staticColor.value;
-  return cInt != null ? Color(cInt) : kMainColorLight;
+  if (cInt != null) return Color(cInt);
+  return NamidaJellys.enabled ? NamidaJellys.paletteLight : kMainColorLight;
 }
 
 Color get playerStaticColorDark {
   final cInt = settings.staticColorDark.value;
-  return cInt != null ? Color(cInt) : kMainColorDark;
+  if (cInt != null) return Color(cInt);
+  return NamidaJellys.enabled ? NamidaJellys.paletteDark : kMainColorDark;
 }
 
 Color get playerStaticColorR => namida.isDarkMode ? playerStaticColorDark : playerStaticColorLight;
 
 Color get playerStaticColorLightR {
   final cInt = settings.staticColor.valueR;
-  return cInt != null ? Color(cInt) : kMainColorLight;
+  if (cInt != null) return Color(cInt);
+  return NamidaJellys.enabled ? NamidaJellys.paletteLight : kMainColorLight;
 }
 
 Color get playerStaticColorDarkR {
   final cInt = settings.staticColorDark.valueR;
-  return cInt != null ? Color(cInt) : kMainColorDark;
+  if (cInt != null) return Color(cInt);
+  return NamidaJellys.enabled ? NamidaJellys.paletteDark : kMainColorDark;
 }
 
 class CurrentColor {
@@ -199,6 +204,7 @@ class CurrentColor {
       _updatePlayerColorFromItem(
         getColorPalette: () async => await getTrackColors(track.track, networkArtworkInfo: null),
         stillPlaying: () => track.track == Player.inst.currentTrack?.track,
+        itemKey: track.track.path,
       );
     }
     if (track != null) {
@@ -237,6 +243,7 @@ class CurrentColor {
         return null;
       },
       stillPlaying: stillPlaying,
+      itemKey: id,
     );
   }
 
@@ -244,8 +251,20 @@ class CurrentColor {
   void _updatePlayerColorFromItem({
     required Future<NamidaColor?> Function() getColorPalette,
     required bool Function() stillPlaying,
+    required String itemKey,
   }) async {
-    if (_canAutoUpdateColor) {
+    if (!_canAutoUpdateColor) return;
+
+    if (NamidaJellys.enabled) {
+      final jellyColor = _jellyColorFor(itemKey);
+      if (jellyColor != _namidaColorMiniplayer.value) _namidaColorMiniplayer.value = jellyColor;
+      if (settings.autoColor.value && jellyColor != _namidaColor.value) {
+        _namidaColor.value = jellyColor;
+        _updateCurrentPartyPalette(jellyColor);
+      }
+      return;
+    }
+
       _fnLimiter.execute(() async {
         NamidaColor? namidaColor;
 
@@ -267,7 +286,6 @@ class CurrentColor {
           }
         }
       });
-    }
   }
 
   void resetCurrentPlayingTrack() {
@@ -302,6 +320,8 @@ class CurrentColor {
     bool delightnedAndAlpha = true,
     bool useIsolate = _defaultUseIsolate,
   }) {
+    if (NamidaJellys.enabled) return _jellyColorFor(track.path, delightnedAndAlpha: delightnedAndAlpha);
+
     final filename = networkArtworkInfo?.toArtworkIfExistsAndEnabled()?.path ?? track.cacheKeyForImage(_defaultPaletteDirectory.path);
 
     final valInMap = _colorsMap[filename];
@@ -334,6 +354,14 @@ class CurrentColor {
     return remainingCount;
   }
 
+  NamidaColor _jellyColorFor(String? key, {bool delightnedAndAlpha = true}) {
+    return _maybeDelightned(
+      NamidaJellys.namidaColorFor(key),
+      delightnedAndAlpha: delightnedAndAlpha,
+      fallbackToPlayerStaticColor: true,
+    );
+  }
+
   Future<NamidaColor> getTrackColors(
     Track track, {
     required NetworkArtworkInfo? networkArtworkInfo,
@@ -342,6 +370,8 @@ class CurrentColor {
     bool useIsolate = _defaultUseIsolate,
     bool forceReCheck = false,
   }) async {
+    if (NamidaJellys.enabled) return _jellyColorFor(track.path, delightnedAndAlpha: delightnedAndAlpha);
+
     if (!forceReCheck) {
       final cached = getTrackColorsSync(track, networkArtworkInfo: networkArtworkInfo);
 

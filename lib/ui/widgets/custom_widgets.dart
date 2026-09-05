@@ -4036,6 +4036,7 @@ class NamidaListView extends StatelessWidget {
   final void Function(int index)? onReorderStart;
   final void Function(int index)? onReorderEnd;
   final Widget? header;
+  final Widget? footer;
   final Widget? stickyHeader;
   final Widget Function(double maxWidth)? infoBox;
   final List<Widget>? widgetsInColumn;
@@ -4054,6 +4055,7 @@ class NamidaListView extends StatelessWidget {
     super.key,
     this.listBuilder,
     this.header,
+    this.footer,
     this.stickyHeader,
     this.infoBox,
     this.widgetsInColumn,
@@ -4110,6 +4112,7 @@ class NamidaListView extends StatelessWidget {
       scrollConfig: scrollConfig,
       scrollStep: scrollStep,
       header: header,
+      footer: footer,
       stickyHeader: stickyHeader,
       infoBox: infoBox,
       slivers: [list],

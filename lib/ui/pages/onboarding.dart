@@ -15,6 +15,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
 import 'package:namida/ui/widgets/settings/backup_restore_settings.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -115,6 +116,19 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
       child: Stack(
         alignment: Alignment.center,
         children: [
+          if (NamidaJellys.enabled)
+            const Positioned.fill(
+              child: IgnorePointer(
+                child: JellyField(
+                  count: 4,
+                  opacity: 0.3,
+                  minHeight: 90.0,
+                  maxHeight: 240.0,
+                  seed: 3,
+                ),
+              ),
+            ),
+
           SizedBox(
             height: context.height * 0.78,
             width: context.width,

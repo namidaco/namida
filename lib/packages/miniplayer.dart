@@ -38,6 +38,7 @@ import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -1094,6 +1095,19 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
                 ),
               ),
             ),
+
+          if (NamidaJellys.enabled)
+            const Positioned.fill(
+              child: NamidaJellyBackground(
+                count: 5,
+                opacity: 0.22,
+                minHeight: 140.0,
+                maxHeight: 380.0,
+                reactToPlayback: true,
+                seed: 13,
+              ),
+            ),
+
           if (settings.enableMiniplayerParticles.value)
             ObxO(
               rx: Player.inst.isPlaying,

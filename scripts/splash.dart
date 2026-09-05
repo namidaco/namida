@@ -307,6 +307,14 @@ final _appIcons = [
       _AuthorInfo('Scarecloud', null, _AuthorPlatform.discord, null),
     ],
   ),
+  _IconDetails.create(
+    'jellyda',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      _AuthorInfo('Tsuune', 'TsunekiHouse', _AuthorPlatform.telegram, null),
+      _AuthorInfo('Tsuune', 'tsuuneki', _AuthorPlatform.discord, null),
+    ],
+  ),
 
   _IconDetails.create(
     'space',

@@ -149,6 +149,8 @@ const isWindowsPortable = bool.fromEnvironment('WINDOWS_PORTABLE');
 
 const kEnableFancyAnimations = true;
 
+const kAllowJellysInvasion = true;
+
 abstract class NamidaLinkRegex {
   static const url = r'https?://([\w-]+\.)+[\w-]+(/[\w-./?%&@\$=~#+]*)?';
   static const phoneNumber = r'[+0]\d+[\d-]+\d';
