@@ -282,6 +282,8 @@ class NamidaNavigator {
     if (_isInFullScreen == false) return;
     _isInFullScreen = false;
 
+    MiniPlayerController.inst.updateScreenValuesInitial(); // -- updates were dropped while in fullscreen
+
     popRoot();
 
     setDefaultSystemUIOverlayStyle();

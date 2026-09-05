@@ -66,7 +66,18 @@ class MiniPlayerController {
       lowerBound: -0.2,
       value: 0.0,
     );
+    if (!_listeningToPipChanges) {
+      _listeningToPipChanges = true;
+      NamidaChannel.inst.isInPip.addListener(_onPipStateChanged);
+    }
     return animation;
+  }
+
+  bool _listeningToPipChanges = false;
+
+  void _onPipStateChanged() {
+    // -- screen value updates are dropped while in pip, so they are re-read once it's over.
+    if (!NamidaChannel.inst.isInPip.value) updateScreenValuesInitial();
   }
 
   AnimationController initializeSAnim(TickerProvider ticker) {
@@ -82,8 +93,9 @@ class MiniPlayerController {
 
   void updateScreenValuesInitial() {
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
-    final viewPadding = EdgeInsets.fromViewPadding(view.padding, view.devicePixelRatio);
-    return _updateScreenValuesInternal(view.physicalSize, viewPadding);
+    final devicePixelRatio = view.devicePixelRatio;
+    final viewPadding = EdgeInsets.fromViewPadding(view.padding, devicePixelRatio);
+    return _updateScreenValuesInternal(view.physicalSize / devicePixelRatio, viewPadding);
   }
 
   void updateScreenValues(BuildContext context) {
@@ -95,9 +107,9 @@ class MiniPlayerController {
   void _updateScreenValuesInternal(Size mediaSize, EdgeInsets viewPadding) {
     if (NamidaChannel.inst.isInPip.value || NamidaNavigator.inst.isInFullScreen) return; // messes up things so we ignore
 
-    topInset = viewPadding.top;
-    bottomInset = viewPadding.bottom;
-    rightInset = viewPadding.right / 2;
+    final newTopInset = viewPadding.top;
+    final newBottomInset = viewPadding.bottom;
+    final newRightInset = viewPadding.right / 2;
 
     final mediaSizeHeight = mediaSize.height - (WindowController.instance?.windowTitleBarHeightIfActive ?? 0.0);
 
@@ -107,11 +119,26 @@ class MiniPlayerController {
     );
     final isWidescreen = miniplayerDetails.isWidescreen;
     double maxWidth = miniplayerDetails.maxWidth;
-    if (isWidescreen) maxWidth += rightInset;
+    if (isWidescreen) maxWidth += newRightInset;
 
-    screenSize = Size(maxWidth, mediaSizeHeight);
-    maxOffset = screenSize.height;
+    final newScreenSize = Size(maxWidth, mediaSizeHeight);
+
+    final didChange =
+        !_screenValuesInitialized || //
+        newScreenSize != screenSize ||
+        newTopInset != topInset ||
+        newBottomInset != bottomInset ||
+        newRightInset != rightInset;
+    _screenValuesInitialized = true;
+
+    topInset = newTopInset;
+    bottomInset = newBottomInset;
+    rightInset = newRightInset;
+    screenSize = newScreenSize;
+    maxOffset = newScreenSize.height;
     sMaxOffset = maxWidth;
+
+    if (didChange) screenValuesVersion.value++;
 
     if (isWidescreen && !Dimensions.inst.miniplayerIsWideScreen) {
       WidgetsBinding.instance.addPostFrameCallback(
@@ -198,6 +225,10 @@ class MiniPlayerController {
   }
 
   late AnimationController animation;
+
+  final screenValuesVersion = 0.obs;
+  bool _screenValuesInitialized = false;
+
   late Size screenSize;
   late double topInset;
   late double bottomInset;
